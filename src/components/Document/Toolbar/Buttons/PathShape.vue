@@ -15,6 +15,7 @@ import {
     useRect,
     useStar
 } from "@/components/Document/Creator/execute";
+import { ImageLoader } from "@/utils/imageLoader";
 
 const { t } = useI18n();
 
@@ -28,6 +29,8 @@ const popover = ref<boolean>(false);
 const tipsVisible = ref<boolean>(false);
 const selected = ref<boolean>(false);
 const popoverXY = ref<XY>({ x: 0, y: 0 });
+const accept = 'image/png, image/jpeg, image/gif, image/svg+xml';
+const picker = ref<HTMLInputElement>();
 
 // 当前工具Icon
 const pattern = computed<string>(() => {
@@ -46,6 +49,8 @@ const pattern = computed<string>(() => {
             return 'pattern-polygon';
         case Action.Star:
             return 'pattern-star';
+        case Action.AddImage:
+            return 'picture';
         default:
             return 'pattern-rectangle';
     }
@@ -69,6 +74,8 @@ const tips = computed<string>(() => {
             return `${t('shape.polygon')}`;
         case Action.Star:
             return `${t('shape.star')}`;
+        case Action.AddImage:
+            return string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`);
         default:
             return defaultRect;
     }
@@ -107,6 +114,12 @@ function toolWatcher(t: number) {
             currentTool.value = action;
         }
     }
+    if (t === Tool.SELECT_IMAGE) {
+        const filepicker = document.getElementById('filepicker');
+        if (filepicker) {
+            filepicker.click();
+        }
+    }
 }
 
 function shot() {
@@ -131,6 +144,7 @@ function shot() {
 }
 
 function showMenu(e: MouseEvent) {
+    props.context.menu.menuMount()
     const el = (e.target as Element)!.closest('.path-button') as HTMLDivElement;
     if (!el) {
         return;
@@ -164,6 +178,22 @@ function blur(e: MouseEvent) {
     }
 }
 
+async function select() {
+    const filepicker = document.getElementById('filepicker');
+    if (filepicker) {
+        filepicker.click();
+    }
+}
+
+function change(e: Event) {
+    if (!e.target) return;
+    const files = (e.target as HTMLInputElement).files;
+    if (!files) return;
+    const loader = new ImageLoader(props.context);
+    loader.insertImageByPackages(files);
+    if (picker.value) (picker.value as HTMLInputElement).value = '';
+}
+
 const stop = watch(() => popover.value, (v) => {
     !v && document.removeEventListener('click', blur);
 })
@@ -182,96 +212,109 @@ onUnmounted(() => {
 </script>
 
 <template>
-<el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
-    <div :class="{'path-button': true, 'path-button-selected':selected}" @mouseenter.stop="enter"
-         @mouseleave.stop="leave" @click="shot">
-        <div class="svg-container">
-            <svg-icon :icon-class="pattern"></svg-icon>
+    <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
+        <div :class="{ 'path-button': true, 'path-button-selected': selected }" @mouseenter.stop="enter"
+            @mouseleave.stop="leave" @click="shot">
+            <div class="svg-container">
+                <svg-icon :icon-class="pattern"></svg-icon>
+            </div>
+            <div class="tool-pathshape-menu-trigger" @click.stop="showMenu">
+                <svg-icon icon-class="white-down"></svg-icon>
+            </div>
         </div>
-        <div class="tool-pathshape-menu-trigger" @click.stop="showMenu">
-            <svg-icon icon-class="white-down"></svg-icon>
+    </el-tooltip>
+    <div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
+        <!--矩形-->
+        <div class="item" @click="() => { useRect(context) }">
+            <div v-if="currentTool === Action.AddRect" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-rectangle"></svg-icon>
+                <span>{{ t('shape.rect') }}</span>
+            </div>
+            <div class="shortKey">R</div>
+        </div>
+        <!--圆形-->
+        <div class="item" @click="() => { useEllipse(context) }">
+            <div v-if="currentTool === Action.AddEllipse" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-oval"></svg-icon>
+                <span>{{ t('shape.oval') }}</span>
+            </div>
+            <div class="shortKey">O</div>
+        </div>
+        <!--线条-->
+        <div class="item" @click="() => { useLine(context) }">
+            <div v-if="currentTool === Action.AddLine" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-line"></svg-icon>
+                <span>{{ t('shape.line') }}</span>
+            </div>
+            <div class="shortKey">L</div>
+        </div>
+        <!--箭头-->
+        <div class="item" @click="() => { useArrow(context) }">
+            <div v-if="currentTool === Action.AddArrow" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-arrow"></svg-icon>
+                <span>{{ t('shape.arrow') }}</span>
+            </div>
+            <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
+        </div>
+        <div class="item" @click="() => { usePolygon(context) }">
+            <div v-if="currentTool === Action.Polygon" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-polygon"></svg-icon>
+                <span>{{ t('shape.polygon') }}</span>
+            </div>
+            <div class="shortKey"></div>
+        </div>
+        <!--星形-->
+        <div class="item" @click="() => { useStar(context) }">
+            <div v-if="currentTool === Action.Star" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-star"></svg-icon>
+                <span>{{ t('shape.star') }}</span>
+            </div>
+            <div class="shortKey"></div>
+        </div>
+        <!-- 图片 -->
+        <div class="item" @click="() => select()">
+            <div v-if="currentTool === Action.AddImage" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="picture"></svg-icon>
+                <span>{{ t('home.picture') }}</span>
+            </div>
+            <div class="shortKey">{{ string_by_sys('Shift Ctrl K') }}</div>
+            <input type="file" ref="picker" :accept="accept" :multiple="true" id="filepicker"
+                @change="(e: Event) => { change(e) }" />
+        </div>
+        <div class="line" />
+        <!--钢笔-->
+        <div class="item" @click="() => { usePen(context) }">
+            <div v-if="currentTool === Action.Pen" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-pen"></svg-icon>
+                <span>{{ t('shape.pen') }}</span>
+            </div>
+            <div class="shortKey">P</div>
         </div>
     </div>
-</el-tooltip>
-<div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
-    <!--矩形-->
-    <div class="item" @click="() => { useRect(context) }">
-        <div v-if="currentTool === Action.AddRect" class="check">
-            <svg-icon icon-class="white-select"></svg-icon>
-        </div>
-        <div class="desc">
-            <svg-icon icon-class="pattern-rectangle"></svg-icon>
-            <span>{{ t('shape.rect') }}</span>
-        </div>
-        <div class="shortKey">R</div>
-    </div>
-    <!--圆形-->
-    <div class="item" @click="() => { useEllipse(context) }">
-        <div v-if="currentTool === Action.AddEllipse" class="check">
-            <svg-icon icon-class="white-select"></svg-icon>
-        </div>
-        <div class="desc">
-            <svg-icon icon-class="pattern-oval"></svg-icon>
-            <span>{{ t('shape.oval') }}</span>
-        </div>
-        <div class="shortKey">O</div>
-    </div>
-    <!--线条-->
-    <div class="item" @click="() => { useLine(context) }">
-        <div v-if="currentTool === Action.AddLine" class="check">
-            <svg-icon icon-class="white-select"></svg-icon>
-        </div>
-        <div class="desc">
-            <svg-icon icon-class="pattern-line"></svg-icon>
-            <span>{{ t('shape.line') }}</span>
-        </div>
-        <div class="shortKey">L</div>
-    </div>
-    <!--箭头-->
-    <div class="item" @click="() => { useArrow(context) }">
-        <div v-if="currentTool === Action.AddArrow" class="check">
-            <svg-icon icon-class="white-select"></svg-icon>
-        </div>
-        <div class="desc">
-            <svg-icon icon-class="pattern-arrow"></svg-icon>
-            <span>{{ t('shape.arrow') }}</span>
-        </div>
-        <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
-    </div>
-    <div class="item" @click="() => { usePolygon(context) }">
-        <div v-if="currentTool === Action.Polygon" class="check">
-            <svg-icon icon-class="white-select"></svg-icon>
-        </div>
-        <div class="desc">
-            <svg-icon icon-class="pattern-polygon"></svg-icon>
-            <span>{{ t('shape.polygon') }}</span>
-        </div>
-        <div class="shortKey"></div>
-    </div>
-    <!--星形-->
-    <div class="item" @click="() => { useStar(context) }">
-        <div v-if="currentTool === Action.Star" class="check">
-            <svg-icon icon-class="white-select"></svg-icon>
-        </div>
-        <div class="desc">
-            <svg-icon icon-class="pattern-star"></svg-icon>
-            <span>{{ t('shape.star') }}</span>
-        </div>
-        <div class="shortKey"></div>
-    </div>
-    <div class="line"/>
-    <!--钢笔-->
-    <div class="item" @click="() => { usePen(context) }">
-        <div v-if="currentTool=== Action.Pen" class="check">
-            <svg-icon icon-class="white-select"></svg-icon>
-        </div>
-        <div class="desc">
-            <svg-icon icon-class="pattern-pen"></svg-icon>
-            <span>{{ t('shape.pen') }}</span>
-        </div>
-        <div class="shortKey">P</div>
-    </div>
-</div>
 </template>
 
 <style scoped lang="scss">
@@ -292,7 +335,7 @@ onUnmounted(() => {
         flex-direction: row-reverse;
         height: 100%;
 
-        > svg {
+        >svg {
             width: 18px;
             height: 18px;
         }
@@ -305,7 +348,7 @@ onUnmounted(() => {
         align-items: center;
         height: 100%;
 
-        > svg {
+        >svg {
             width: 12px;
             height: 12px;
             transition: 0.2s;
@@ -313,7 +356,7 @@ onUnmounted(() => {
     }
 
     .tool-pathshape-menu-trigger:hover {
-        > svg {
+        >svg {
             transform: translateY(2px);
         }
     }
@@ -362,7 +405,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
 
-            > svg {
+            >svg {
                 width: 12px;
                 height: 12px;
             }
@@ -373,12 +416,12 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
             }
 
-            > span {
+            >span {
                 margin-left: 8px;
             }
         }
@@ -394,5 +437,9 @@ onUnmounted(() => {
     height: 4px;
     border-bottom: 1px solid #434343;
     box-sizing: border-box;
+}
+
+#filepicker {
+    display: none;
 }
 </style>

@@ -52,14 +52,16 @@ function getViewBox() {
     let left;
     let top;
 
+    const size = props.size;
+
     if (height > width) {
         const delta = height - width;
-        const scale = height / 100;
+        const scale = height / size;
         top = box.top - scale * 2;
         left = box.left - (delta / 2) - (scale * 2);
     } else {
         const delta = width - height;
-        const scale = width / 100;
+        const scale = width / size;
         top = box.top - (delta / 2) - (scale * 2);
         left = box.left - scale * 2
     }
@@ -176,10 +178,11 @@ function getBase64(): Promise<string> {
         const context = canvas.getContext('2d');
         const _svg = svg.cloneNode(true) as SVGSVGElement;
         document.body.appendChild(_svg);
-        _svg.setAttribute('width', '100');
-        _svg.setAttribute('height', '100');
-        canvas.width = 100;
-        canvas.height = 100;
+        const size = props.size;
+        _svg.setAttribute('width', `${size}`);
+        _svg.setAttribute('height', `${size}`);
+        canvas.width = size;
+        canvas.height = size;
         const svgString = new XMLSerializer().serializeToString(_svg);
         document.body.removeChild(_svg);
         const img = new Image();
@@ -198,6 +201,6 @@ onUnmounted(unBind);
 <template>
 <div>
     <img v-if="assetsSrc" alt="static" :src="assetsSrc">
-    <svg v-else ref="pageSvg" :width="100" :height="100" :viewBox="viewBox"/>
+    <svg v-else ref="pageSvg" :width="size" :height="size" :viewBox="viewBox"/>
 </div>
 </template>

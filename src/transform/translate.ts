@@ -17,7 +17,8 @@ import {
     TransformRaw,
     TranslateUnit,
     Transporter, AutoLayout,
-    BorderPosition, ShapeFrame
+    BorderPosition, ShapeFrame,
+    Matrix
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
@@ -29,12 +30,14 @@ import { Tool } from "@/context/tool";
 import { message } from "@/utils/message";
 import { isTarget } from "@/utils/scout";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
+import { checkTidyUpShapesOrder, getHorShapeOutlineFrame, getShapesColsMapPosition, getShapesRowsMapPosition, getVerShapeOutlineFrame, layoutSpacing, tidyUpShapesOrder } from "@/utils/tidy_up";
+import { Point } from "@/components/Document/Selection/SelectionView.vue";
 
 type BaseFrame4Trans = {
     originTransform: Transform
 };
 
-type TranslateMode = 'normal' | 'layout' | 'absolute' | 'insert';
+type TranslateMode = 'normal' | 'layout' | 'absolute' | 'insert' | 'tidyUp';
 
 interface LayoutForInsert {
     row: {
@@ -95,6 +98,7 @@ function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
 
 export class TranslateHandler extends TransformHandler {
     shapes: ShapeView[];
+    shapes2: ShapeView[]; // 整理拖动时的图形
     shapesIdSet: Set<string>;
     shapesBackup: ShapeView[] = [];
 
@@ -130,20 +134,33 @@ export class TranslateHandler extends TransformHandler {
     preInsertLayout: ArtboradView | undefined;
     layoutForInsert: LayoutForInsert | undefined;
 
-    constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
+    noMigrate: boolean = false;
+
+    m_shapes_map_points: XY[][] = [];
+    m_shape_rows: ShapeView[][] = [];
+    cur_at_index: { row: number, col: number } = { row: -1, col: -1 }
+    m_dir: boolean = false; // 整理水平方向
+    tidy_up_space: { hor: number, ver: number } = { hor: 0, ver: 0 } // 整理图形之间的间距
+    tidy_up_start: { x: number, y: number } = { x: 0, y: 0 }; //整理开始的左上角位置
+    m_adjusted_shape_rows: ShapeView[][] = []; // 拖动完成后用来最后一次整理的图形数据
+    outline_frame: { x: number, y: number, height: number, width: number } = { x: 0, y: 0, height: 0, width: 0 }; // 拖动图形的root位置
+    outline_index: { i: number, j: number } = { i: -1, j: -1 }// 拖动图形的下标
+    moveClientXY: XY;
+
+    constructor(context: Context, event: MouseEvent, shapes: ShapeView[], shapes2?: ShapeView[]) {
         super(context, event);
         this.shapes = shapes;
+        this.shapes2 = shapes2 || shapes;
         this.shapesIdSet = new Set();
         this.livingPoint = this.workspace.getRootXY(event);
-
         this.fixedPoint = { ...this.livingPoint };
-
         context.assist.set_collect_target(shapes);
         context.assist.set_trans_target(shapes);
 
         this.clientXY = { x: event.clientX, y: event.clientY };
         this.downXY = { x: event.clientX, y: event.clientY };
-
+        this.moveClientXY = { x: event.clientX, y: event.clientY };
+        this.m_dir = context.selection.isTidyUpDir;
         this.getFrames();
     }
 
@@ -168,7 +185,13 @@ export class TranslateHandler extends TransformHandler {
             }
     }
 
-    setMode() {
+    setMode(m?: TranslateMode) {
+        if (m) {
+            this.mode = m;
+            this.getOutlineFrame();
+            this.getOrderShapes();
+            return;
+        }
         const shapes = this.shapes;
         const parents = new Set<ShapeView>();
         let allAbsolute = true;
@@ -213,7 +236,7 @@ export class TranslateHandler extends TransformHandler {
         return this.mode === "normal";
     }
 
-    async createApiCaller() {
+    async createApiCaller(mode?: 'tidyUp') {
         if (this.context.readonly) return;
         this.context.cursor.reset();
         this.context.cursor.cursor_freeze(true);
@@ -251,9 +274,37 @@ export class TranslateHandler extends TransformHandler {
         const except_envs = find_except_envs(this.context, this.shapes, this.fixedPoint);
         t.setExceptEnvs(except_envs);
         t.setCurrentEnv(except_envs[0] as any);
-
-        this.setMode();
+        this.setMode(mode);
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.downXY);
+    }
+
+    getOutlineFrame() {
+        const shapes = this.context.selection.selectedTidyUpShapes;
+        if (!shapes.length) return;
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            const matrix = new Matrix();
+            const matrix2 = new Matrix(this.context.workspace.matrix);
+            matrix.reset(matrix2);
+            const shape_root_m = shape.matrix2Root();
+            const m = makeShapeTransform2By1(shape_root_m).clone();
+            const clientTransform = makeShapeTransform2By1(matrix2);
+            m.addTransform(clientTransform); //root到视图
+            const { width, height } = shape.size;
+            const { col0, col1, col2, col3 } = m.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(width, 0),
+                ColVector3D.FromXY(width, height),
+                ColVector3D.FromXY(0, height)
+            ]);
+            const lt = { x: col0.x, y: col0.y }
+            const rt = { x: col1.x, y: col1.y }
+            const rb = { x: col2.x, y: col2.y }
+            const lb = { x: col3.x, y: col3.y }
+            const point = [lt, rt, rb, lb];
+            this.outline_frame = { ...shape._p_frame };
+            this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, shape._p_frame);
+        }
     }
 
     private getFrames() {
@@ -338,12 +389,16 @@ export class TranslateHandler extends TransformHandler {
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
     }
-
     execute(event: MouseEvent) {
         this.__updateLiving(event);
         this.clientXY = { x: event.clientX, y: event.clientY };
         this.migrate();
         this.__execute();
+        const diff = Math.hypot(event.clientX - this.moveClientXY.x, event.clientY - this.moveClientXY.y);
+        if (this.mode === 'tidyUp' && diff > 8) {
+            this.getMouseAtShapeIndex(event);
+            this.moveClientXY = { x: event.clientX, y: event.clientY }
+        }
     }
 
     private updateBoxByAssist() {
@@ -547,8 +602,8 @@ export class TranslateHandler extends TransformHandler {
 
         const transformUnits: TranslateUnit[] = [];
         const PIC = new Map<string, Transform>();
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
+        for (let i = 0; i < this.shapes2.length; i++) {
+            const shape = this.shapes2[i];
 
             const base = this.baseFrames4trans.get(shape.id);
             if (!base) continue;
@@ -563,7 +618,6 @@ export class TranslateHandler extends TransformHandler {
                 PIC.set(parent.id, __p);
                 PI = __p;
             }
-
             const __t = base.originTransform
                 .clone()
                 .translate(ColVector3D.FromXY(deltaX, deltaY))
@@ -574,7 +628,6 @@ export class TranslateHandler extends TransformHandler {
                 const intY = Math.round(decompose.y);
                 const offsetX = intX - decompose.x;
                 const offsetY = intY - decompose.y;
-
                 if (offsetX || offsetY) __t.translate(ColVector3D.FromXY(offsetX, offsetY));
             }
 
@@ -632,7 +685,7 @@ export class TranslateHandler extends TransformHandler {
                 const grid = grids[j];
                 if (xy.x > grid.start && xy.x < grid.end) {
                     if (this.__last_hover_grid_id !== grid.shape.id) {
-                        ctx.selection.notify(Selection.PRE_INSERT, { shape: grid.shape, layout: layoutEnv.autoLayout, env: layoutEnv, isEnd: j === grids.length -1 });
+                        ctx.selection.notify(Selection.PRE_INSERT, { shape: grid.shape, layout: layoutEnv.autoLayout, env: layoutEnv, isEnd: j === grids.length - 1 });
                     }
                     this.__last_hover_grid_id = grid.shape.id;
                     break;
@@ -650,6 +703,8 @@ export class TranslateHandler extends TransformHandler {
             this.__swap();
         } else if (this.mode === 'insert') {
             this.___pre_insert();
+        } else if (this.mode === 'tidyUp') {
+            this.__trans();
         }
     }
 
@@ -712,6 +767,8 @@ export class TranslateHandler extends TransformHandler {
     swapLayoutShape = throttle(this._swapLayoutShape, 160);
 
     private __migrate(tailCollect = true) {
+        if (this.noMigrate) return;
+
         const t = this.asyncApiCaller as Transporter;
         if (!t) return;
 
@@ -725,6 +782,7 @@ export class TranslateHandler extends TransformHandler {
             this.mode = "normal";
             ctx.selection.notify(Selection.PRE_INSERT);
         }
+        if (target_parent.id === t.current_env_id) return;
 
         if (target_parent.id === t.current_env_id) return;
 
@@ -784,6 +842,7 @@ export class TranslateHandler extends TransformHandler {
     tips4absolutePosition = debounce(this.__tips4absolutePosition, 3000)
 
     migrateOnce = debounce(this.__migrate, 80);
+    getMouseAtShapeIndex = throttle(this._getMouseAtShapeIndex, 160);
 
     getLayoutGridForInsert() {
         const env = this.preInsertLayout!;
@@ -836,17 +895,140 @@ export class TranslateHandler extends TransformHandler {
         })
         this.layoutForInsert = { shape: env, row: rows, layout };
     }
-
+    // 获取鼠标所在图形下标位置
+    _getMouseAtShapeIndex(e: MouseEvent) {
+        const xy = this.context.workspace.getContentXY(e);
+        for (let i = 0; i < this.m_shapes_map_points.length; i++) {
+            const points = this.m_shapes_map_points[i];
+            let exit = false;
+            for (let j = 0; j < points.length; j++) {
+                const point = points[j];
+                if (xy.x < point.x && xy.y < point.y) {
+                    if ((this.cur_at_index.row !== i || this.cur_at_index.col !== j) && this.cur_at_index.row !== -1) {
+                        if (i !== this.outline_index.i || j !== this.outline_index.j) {
+                            this.tidyUpAdjustShape(i, j, false);
+                        }
+                    }
+                    this.cur_at_index = { row: i, col: j }
+                    exit = true;
+                    break;
+                } else {
+                    if (this.m_dir) {
+                        if (xy.y > points[points.length - 1].y && xy.x < point.x) {
+                            if (this.cur_at_index.row !== i && this.cur_at_index.row !== -1) {
+                                this.tidyUpAdjustShape(i, points.length, true);
+                            }
+                            this.cur_at_index = { row: i, col: points.length }
+                            exit = true;
+                            break;
+                        }
+                    } else {
+                        if (xy.x > points[points.length - 1].x && xy.y < point.y) {
+                            if (this.cur_at_index.row !== i && this.cur_at_index.row !== -1) {
+                                this.tidyUpAdjustShape(i, points.length, true);
+                            }
+                            this.cur_at_index = { row: i, col: points.length }
+                            exit = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (exit) break;
+        }
+    }
+    // 根据下标位置来调整图形所在位置
+    tidyUpAdjustShape(_i: number, _j: number, end: boolean) {
+        const shape_rows: ShapeView[][] = [...this.m_shape_rows];
+        const targetShape = shape_rows[_i][_j];
+        this.outline_index = { i: _i, j: _j }
+        for (let i = 0; i < shape_rows.length; i++) {
+            const row = shape_rows[i];
+            const index = row.findIndex(s => s.id === this.shapes2[0].id);
+            if (index !== -1) {
+                shape_rows[i].splice(index, 1);
+                break;
+            }
+        }
+        if (!shape_rows[_i]) {
+            shape_rows[_i] = [];
+        }
+        if (end) {
+            shape_rows[_i].push(...this.shapes2);
+        } else {
+            shape_rows[_i].splice(_j, 0, ...this.shapes2);
+        }
+        if (targetShape) {
+            const frame = targetShape._p_frame;
+            (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x, frame.y);
+            this.getTidyUpOutileFrame(shape_rows);
+        } else {
+            const tarShape = shape_rows[_i][Math.max(_j - 1, 0)];
+            if (!tarShape) return;
+            this.getTidyUpOutileFrame(shape_rows);
+            const frame = tarShape._p_frame;
+            (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x + 1, frame.y + 1);
+        }
+        if (this.m_dir) {
+            this.m_shapes_map_points = getShapesColsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
+        } else {
+            this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
+        }
+        (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, this.tidy_up_start);
+        this.__trans();
+        this.m_adjusted_shape_rows = shape_rows;
+    }
+    // 画出拖动图形所在整理后的位置描边
+    getTidyUpOutileFrame(shape_rows: ShapeView[][]) {
+        if (this.m_dir) {
+            getVerShapeOutlineFrame(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start, this.shapes2[0].id);
+        } else {
+            getHorShapeOutlineFrame(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start, this.shapes2[0].id)
+        }
+    }
+    // 将选中的图形进行排序规定图形所在的区域位置
+    getOrderShapes() {
+        const shape_rows = checkTidyUpShapesOrder(this.shapes, this.m_dir);
+        this.m_shape_rows = shape_rows;
+        const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
+        const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
+        this.tidy_up_start = { x: minX, y: minY }
+        this.tidy_up_space = layoutSpacing(shape_rows, this.m_dir);
+        for (let i = 0; i < shape_rows.length; i++) {
+            const row = shape_rows[i];
+            let exit = false;
+            for (let j = 0; j < row.length; j++) {
+                const s = row[j];
+                if (s.id === this.shapes2[0].id) {
+                    this.outline_index = { i, j }
+                    exit = true;
+                    break;
+                }
+            }
+            if (exit) break;
+        }
+        if (this.m_dir) {
+            this.m_shapes_map_points = getShapesColsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
+        } else {
+            this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
+        }
+    }
     migrate() {
-        if (this.coping) return;
+        if (this.coping || this.mode === 'tidyUp') return;
         this.migrateOnce();
+    }
+    // 拖动结束后进行一次整理
+    _tidyUp() {
+        if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
+            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, this.tidy_up_start);
+        }
     }
 
     fulfil() {
+        this._tidyUp();
         this.__migrate(false);
         this.workspace.translating(false);
         this.workspace.setSelectionViewUpdater(true);
-
         if (this.altStatus) {
             this.context.selection.setLabelLivingGroup([]);
             this.context.selection.setLabelFixedGroup([]);
@@ -855,7 +1037,6 @@ export class TranslateHandler extends TransformHandler {
         if (this.mode === "insert") {
             this.context.selection.notify(Selection.PRE_INSERT);
         }
-
         super.fulfil();
         this.fulfilled = true;
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE);
@@ -882,6 +1063,9 @@ export class TranslateHandler extends TransformHandler {
             // this.isKeySPress = true;
             // this.shapesModifyStackPositioning(StackPositioning.ABSOLUTE);
         }
+        if (event.code === 'Space') {
+            this.noMigrate = true;
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -898,6 +1082,9 @@ export class TranslateHandler extends TransformHandler {
         if (event.code === 'KeyS') {
             // this.isKeySPress = false;
             // this.shapesModifyStackPositioning(StackPositioning.AUTO);
+        }
+        if (event.code === "Space") {
+            this.noMigrate = false;
         }
     }
 }

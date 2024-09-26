@@ -5,14 +5,6 @@ import { ISelection } from "./selection";
 import { IWorkspace } from "./workspace";
 import { IToolBox } from "./toolbox";
 
-// import { Selection } from "@/context/selection";
-
-// export interface Rect {
-//     x: number,
-//     y: number,
-//     width: number,
-//     height: number
-// }
 export interface IEscStack {
     save(key: string, call: () => boolean): void;
 

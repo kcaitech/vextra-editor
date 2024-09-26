@@ -44,6 +44,10 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     static NEW_ENV_MATRIX_CHANGE = 22;
     static TABLE_TEXT_GRADIENT_UPDATE = 23;
     static ROOT_UPDATE = 24;
+    static FONTLISR_ALL = WorkspaceEvents.add_local_font;
+    static LOCAL_FONT_LIST_UPDATE = 25;
+    static SCALING = 26;
+    static ROTATING = 27;
 
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -60,9 +64,11 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_font_name_list: { zh: Set<string>, en: Set<string>, local: Set<string>, failure_local: Set<string> } = { zh: new Set(), en: new Set(), local: new Set(), failure_local: new Set()};
+    private m_font_name_list: { zh: Set<string>, en: Set<string>, local: Set<string>, failure_local: Set<string> } = { zh: new Set(), en: new Set(), local: new Set(), failure_local: new Set() };
     private m_should_selection_view_update: boolean = true;
     private m_controller_path: string = '';
+    private m_origin_fontList: string[] = [];
+    private m_is_trans_tidy_up: boolean = false;
     private m_root: Root = {
         init: false,
         x: 250,
@@ -178,6 +184,14 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         return this.m_translating;
     }
 
+    get isScaling() {
+        return this.m_scaling;
+    }
+
+    get isRotating() {
+        return this.m_rotating;
+    }
+
     get controller() {
         return this.m_controller;
     }
@@ -272,10 +286,12 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
 
     scaling(v: boolean) {
         this.m_scaling = v;
+        this.notify(WorkSpace.SCALING);
     }
 
     rotating(v: boolean) {
         this.m_rotating = v;
+        this.notify(WorkSpace.ROTATING);
     }
 
     translating(v: boolean) {
@@ -323,14 +339,30 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         this.m_font_name_list.en.add(en);
     }
 
-    setFontNameListLocal(local: string[]) {
-        local.forEach(v => this.m_font_name_list.local.add(v));
+    setFontNameListLocal(local: string) {
+        this.m_font_name_list.local.add(local);
     }
-    setFontNameListFailureLocal(local: string[]) {
-        local.forEach(v => this.m_font_name_list.failure_local.add(v));
+    setFontNameListFailureLocal(local: string) {
+        this.m_font_name_list.failure_local.add(local);
     }
 
     get fontNameList() {
         return this.m_font_name_list;
+    }
+
+    setUserLocalFontList(list: string[]) {
+        this.m_origin_fontList = list;
+        this.notify(WorkSpace.LOCAL_FONT_LIST_UPDATE);
+    }
+    get userLocalFontList() {
+        return this.m_origin_fontList;
+    }
+
+    setTidyUpIsTrans(v: boolean) {
+        this.m_is_trans_tidy_up = v;
+    }
+
+    get tidyUpIsTrans() {
+        return this.m_is_trans_tidy_up;
     }
 }

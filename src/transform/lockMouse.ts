@@ -1,6 +1,7 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
 import { LockMouseHandler, ShapeView } from "@kcdesign/data";
+import { UniformScaleUnit } from "../../../kcdesign-data/src";
 
 export class LockMouse extends TransformHandler {
     private transType: 'scaling' | 'translating' | 'rotating' = 'translating';
@@ -12,13 +13,15 @@ export class LockMouse extends TransformHandler {
         this.shapes = shapes || context.selection.selectedShapes;
     }
 
-    createApiCaller(transType: 'scaling' | 'translating' | 'rotating') {
+    createApiCaller(transType?: 'scaling' | 'translating' | 'rotating') {
         this.asyncApiCaller = new LockMouseHandler(this.context.coopRepo, this.context.data, this.page);
-        this.workspace[transType](true);
-        this.workspace.setSelectionViewUpdater(false);
-
-        this.transType = transType;
-        this.workspace.translating(true); // 借用一下translating的特性
+        if(transType) {
+            this.workspace[transType](true);
+            this.workspace.setSelectionViewUpdater(false);
+    
+            this.transType = transType;
+            this.workspace.translating(true); // 借用一下translating的特性
+        }
     }
 
     fulfil() {
@@ -79,4 +82,22 @@ export class LockMouse extends TransformHandler {
         (this.asyncApiCaller as LockMouseHandler).executeShadowS(this.shapes, idx, s);
     }
 
+    executeTidyup(shapes_rows: ShapeView[][], hor: number, ver: number, dir: boolean) {
+        (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver, dir);
+    }
+
+    executeUniformScale(units: UniformScaleUnit[], ratio: number) {
+
+    }
+
+    modifyStartingAngleBy(shapes: ShapeView[], delta: number) {
+        (this.asyncApiCaller as LockMouseHandler).modifyStartingAngleBy(shapes, delta);
+    }
+
+    modifySweepBy(shapes: ShapeView[], delta: number) {
+        (this.asyncApiCaller as LockMouseHandler).modifySweepBy(shapes, delta);
+    }
+    modifyInnerRadiusBy(shapes: ShapeView[], delta: number) {
+        (this.asyncApiCaller as LockMouseHandler).modifyInnerRadiusBy(shapes, delta);
+    }
 }

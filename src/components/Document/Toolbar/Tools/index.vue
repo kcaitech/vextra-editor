@@ -49,17 +49,6 @@ function workspace_watcher(t: number) {
     }
 }
 
-// hooks
-onMounted(() => {
-    props.context.tool.watch(tool_watcher);
-    props.context.workspace.watch(workspace_watcher);
-});
-onUnmounted(() => {
-    props.context.tool.unwatch(tool_watcher);
-    props.context.tool.unwatch(workspace_watcher);
-})
-
-
 const readonly = watchReadyonly(props.context, () => {
     updateComps()
     updateDevComps()
@@ -111,14 +100,33 @@ function updateComps() {
                     },
                 }
             },
-            {
-                component: CreateImage,
-                params: {
-                    get active() {
-                        return selected.value === Action.AddImage
-                    }
-                }
-            },
+            // {
+            //     component: CreateImage,
+            //     params: {
+            //         get active() {
+            //             return selected.value === Action.AddImage
+            //         }
+            //     }
+            // },
+            // {
+            //     component: Cutout,
+            //     params: {
+            //         get active() {
+            //             return selected.value === Action.AddCutout
+            //         }
+            //     }
+            // },
+            { component: VertLine }
+        )
+        // const efficientPlugins = props.context.pluginsMgr.search2('toolbar.tools.efficient');
+        // comps.push(...efficientPlugins.begin)
+        // comps.push({ component: CompsVue })
+        comps.push({ component: GroupUngroup })
+        comps.push({ component: Mask });
+        // comps.push(...efficientPlugins.end)
+
+        comps.push({ component: VertLine })
+        comps.push(
             {
                 component: Table,
                 params: {
@@ -136,25 +144,11 @@ function updateComps() {
                     }
                 }
             },
-            {
-                component: Cutout,
-                params: {
-                    get active() {
-                        return selected.value === Action.AddCutout
-                    }
-                }
-            },
-            { component: VertLine }
         )
         const efficientPlugins = props.context.pluginsMgr.search2('toolbar.tools.efficient');
         comps.push(...efficientPlugins.begin)
-        comps.push({ component: CompsVue })
         comps.push(...efficientPlugins.end)
 
-        comps.push({ component: VertLine })
-
-        comps.push({ component: GroupUngroup })
-        comps.push({ component: Mask });
     } else {
         comps.push(
             {
@@ -201,21 +195,33 @@ function updateDevComps() {
 }
 
 updateDevComps()
+
+// hooks
+onMounted(() => {
+    props.context.tool.watch(tool_watcher);
+    props.context.workspace.watch(workspace_watcher);
+});
+onUnmounted(() => {
+    props.context.tool.unwatch(tool_watcher);
+    props.context.tool.unwatch(workspace_watcher);
+})
+
 </script>
 
 <template>
-<!-- 正常工具栏 --><!-- 可编辑或者只读 -->
-<div v-if="!isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
-    <component v-for="c in _comps" :is=c.component :context="props.context" :params="c.params"/>
-</div>
-<!-- 开发模式 --><!-- 可编辑或者只读 -->
-<div v-if="isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
-    <component v-for="c in devcomps" :is=c.component :context="props.context" :params="c.params"/>
-</div>
+    <!-- 路径编辑 -->
+    <PathEditTool v-if="is_path_edit" class="editor-tools" :context="props.context" @select="select"
+        :selected="selected" />
+    <!-- 开发模式 --><!-- 可编辑或者只读 -->
+    <div v-else-if="isLable" class="editor-tools" @dblclick.stop>
+        <component v-for="c in devcomps" :is=c.component :context="props.context" :params="c.params" />
+    </div>
+    <!-- 正常工具栏 --><!-- 可编辑或者只读 -->
+    <div v-else class="editor-tools" @dblclick.stop>
+        <component v-for="c in _comps" :is=c.component :context="props.context" :params="c.params" />
+    </div>
 
-<!-- 路径编辑 -->
-<PathEditTool v-if="is_path_edit" class="editor-tools" :context="props.context" @select="select"
-              :selected="selected"/>
+
 </template>
 
 <style scoped lang="scss">
@@ -228,11 +234,6 @@ updateDevComps()
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-
-    :deep(.tool-button) {
-        width: 56px;
-        height: 32px;
-    }
 
     &::-webkit-scrollbar {
         width: 0;

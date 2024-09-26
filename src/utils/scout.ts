@@ -192,7 +192,6 @@ function getBoxPath(transformMatrix: Matrix) {
 
 // 判定点是否在图形内
 export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
-    // 临时实验性方案
     const masked = shape.masked;
     if (masked) {
         const view = (shape.getPage() as PageView).getView(masked.id);
@@ -546,9 +545,7 @@ export function finder_container(scout: Scout, g: ShapeView[], position: PageXY,
 
     for (let i = 0, len = layers.length; i < len; i++) {
         const item = layers[i];
-        if (item.isVirtualShape) {
-            continue;
-        }
+        if (item.isVirtualShape) continue;
         if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && (!except?.get(item.id))) {
             return item;
         }

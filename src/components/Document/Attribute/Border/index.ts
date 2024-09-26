@@ -1,25 +1,48 @@
-import { BatchAction, Border, BorderSideSetting, ShapeType, ShapeView, SideType } from "@kcdesign/data";
+import {
+    BatchAction,
+    Border,
+    BorderSideSetting, PageView,
+    Shape,
+    ShapeType,
+    ShapeView,
+    SideType,
+    SymbolRefView
+} from "@kcdesign/data";
+
 export const can_custom = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion];
-export const getSideThickness = (side: BorderSideSetting): number | false => {
+export const getSideThickness = (side: BorderSideSetting, view?: ShapeView): number | false => {
     const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = side;
-    switch (sideType) {
-        case SideType.Top:
-            return thicknessTop;
-        case SideType.Left:
-            return thicknessLeft;
-        case SideType.Right:
-            return thicknessRight;
-        case SideType.Bottom:
-            return thicknessBottom;
-        case SideType.Custom:
-            if (thicknessBottom === thicknessLeft && thicknessLeft === thicknessRight && thicknessRight === thicknessTop) {
+    let t = (() => {
+        switch (sideType) {
+            case SideType.Top:
                 return thicknessTop;
-            } else {
-                return false;
-            }
-        default:
-            return thicknessTop;
-    }
+            case SideType.Left:
+                return thicknessLeft;
+            case SideType.Right:
+                return thicknessRight;
+            case SideType.Bottom:
+                return thicknessBottom;
+            case SideType.Custom:
+                if (thicknessBottom === thicknessLeft && thicknessLeft === thicknessRight && thicknessRight === thicknessTop) {
+                    return thicknessTop;
+                } else {
+                    return false;
+                }
+            default:
+                return thicknessTop;
+        }
+    })();
+
+    // if (typeof t === "number" && view) {
+    //     let parent: any = view;
+    //     while (parent) {
+    //         let scale = parent.scale;
+    //         if (scale && scale !== 1) t *= scale;
+    //         parent = parent.parent;
+    //     }
+    // }
+
+    return t;
 }
 
 

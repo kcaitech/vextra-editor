@@ -5,8 +5,9 @@ interface Props {
     icon: string;
     value: string | number;
 
-    disabled?: boolean; // 是否禁用
-    draggable?: boolean; // 是否可拖拽修改值
+    disabled?: boolean;
+    draggable?: boolean;
+    tidy_disabled?: boolean;
 }
 
 interface Emits {
@@ -110,13 +111,14 @@ function wheel(event: WheelEvent) {
 <template>
     <div :class="{ 'md-number-input': true, disabled, active }" @wheel="wheel">
         <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown="down" />
-        <input ref="inputEl" :value="value" @click="click" @change="change" @blur="blur" @focus="foucs" />
+        <input :disabled="tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur" @focus="foucs" />
     </div>
 </template>
 
 <style scoped lang="scss">
 .md-number-input {
     display: flex;
+    gap: 6px;
     align-items: center;
 
     width: 88px;
@@ -126,7 +128,7 @@ function wheel(event: WheelEvent) {
     background-color: var(--input-background);
     border-radius: var(--default-radius);
 
-    >svg {
+    > svg {
         flex: 0 0 12px;
         height: 12px;
         display: block;
@@ -138,7 +140,7 @@ function wheel(event: WheelEvent) {
         cursor: auto;
     }
 
-    >input {
+    > input {
         flex: 1;
         width: 100%;
         border: none;

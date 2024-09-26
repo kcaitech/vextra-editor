@@ -32,6 +32,7 @@ import { TranslateHandler } from '@/transform/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
 import { Translate2 } from "@/transform/translate2";
+import { Action } from "@/context/tool";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -68,7 +69,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         if (shape.pathType) {
             if (forbidden_to_modify_frame(shape) || !permIsEdit(context) || shape instanceof ContactLineView) return;
-            workspace.setPathEditMode(true);
+            context.tool.setAction(Action.AutoV);
+            workspace.setPathEditMode(true); // --开启对象编辑
             context.escstack.save('path-edit', exist_edit_mode);
         }
     }

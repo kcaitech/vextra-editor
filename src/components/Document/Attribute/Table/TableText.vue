@@ -69,7 +69,13 @@ const onShowFont = () => {
     props.context.workspace.focusText()
     if (showFont.value) return showFont.value = false
     showFont.value = true
-    document.addEventListener('click', onShowFontBlur);
+    props.context.escstack.save('onShowFont', () => {
+        const achieve = showFont.value;
+        showFont.value = false;
+        return achieve;
+    })
+
+    document.addEventListener('mousedown', onShowFontBlur);
 }
 
 const onShowFontBlur = (e: Event) => {
@@ -78,7 +84,7 @@ const onShowFontBlur = (e: Event) => {
             showFont.value = false;
             props.context.workspace.focusText()
             clearTimeout(timer)
-            document.removeEventListener('click', onShowFontBlur);
+            document.removeEventListener('mousedown', onShowFontBlur);
         }, 10)
     }
 }
@@ -1544,7 +1550,6 @@ onUnmounted(() => {
             .interval {
                 flex: 1;
                 height: 32px;
-                padding-right: 6px;
 
                 >div {
                     display: flex;

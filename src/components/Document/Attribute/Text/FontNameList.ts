@@ -1,9 +1,11 @@
+import { Context } from "@/context";
+
 export const fontNameListZh = [
     'PingFang SC', 'Adobe 仿宋 Std', 'Adobe 宋体 Std', 'Adobe 楷体 Std', 'Adobe 黑体 Std', 'Hei',
-    'Kai', 'Microsoft JhengHei', 'Microsoft JhengHei UI', 'Microsoft YaHei UI',
+    'Kai', 'Microsoft JhengHei', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', '宋体',
     'MingLiU', 'MingLiU_HKSCS', 'PMingLiU', 'STFangsong', 'STHeiti', 'STKaiti', '黑体-简',
     'STSong', '仿宋', '冬青黑体简体中文', '凌慧体-简', '华文中宋', '华文仿宋', '华文新魏',
-    '华文楷体', '华文琥珀', '华文行楷', '华文隶书', '娃娃体-简', '圆体-简', '宋体', '等线',
+    '华文楷体', '华文琥珀', '华文行楷', '华文隶书', '娃娃体-简', '圆体-简', '等线',
     '宋体-简', '微软雅黑', '手札体-简', '报隶-简', '新宋体', '楷体',
     '楷体-简', '翩翩体-简', '苹方-简', '行楷-简', '隶变-简', '雅痞-简', '魏碑-简', '黑体',
     'Apple LiGothic', 'Apple LiSung', 'BiauKai', 'Hiragino Sans CNS', 'LiHei Pro', 'LiSong Pro',
@@ -264,5 +266,57 @@ export const fontweightNameConvert = (weight: string) => {
             return { weight: 900, italic: true };
         default:
             return { weight: 400, italic: false };
+    }
+}
+
+
+export function timeSlicingTask(context: Context, fontList: string[], lang: string) {
+    let index = 0;
+    function executeBatch() {
+        const end = Math.min(index + 10, fontList.length);
+        for (let i = index; i < end; i++) {
+            try {
+                const results: string[] = isSupportFontFamily(fontList[i]);
+                if (lang === 'zh' && results.length > 0) {
+                    context.workspace.setFontNameListZh(results[0]);
+                } else if (lang === 'en' && results.length > 0) {
+                    context.workspace.setFontNameListEn(results[0]);
+                }
+            } catch (error) {
+                console.error('Error checking font availability:', error);
+            }
+        }
+        index = end;
+        if (index < fontList.length) {
+            requestAnimationFrame(executeBatch); // 利用 requestAnimationFrame 分帧执行任务
+        }
+    }
+    executeBatch();
+}
+
+export const screenFontList = (context: Context) => {
+    const fontList = context.workspace.userLocalFontList;
+    if (fontList.length) {
+        let index = 0;
+        function executeBatch() {
+            const end = Math.min(index + 10, fontList.length);
+            for (let i = index; i < end; i++) {
+                try {
+                    const results: string[] = isSupportFontFamily(fontList[i]);
+                    if (results.length > 0) {
+                        context.workspace.setFontNameListLocal(results[0]);
+                    } else {
+                        context.workspace.setFontNameListFailureLocal(fontList[i]);
+                    }
+                } catch (error) {
+                    console.error('Error checking font availability:', error);
+                }
+            }
+            index = end;
+            if (index < fontList.length) {
+                requestAnimationFrame(executeBatch);
+            }
+        }
+        executeBatch();
     }
 }
