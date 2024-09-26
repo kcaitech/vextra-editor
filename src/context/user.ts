@@ -6,10 +6,12 @@ interface UserInfo {
     avatar: string
 }
 
-interface UserConfig {
+export interface UserConfig {
     pixelAlignment: boolean;
     pixelGrid: boolean;
     rule: boolean;
+    slow: number;
+    fast: number;
 }
 
 export type DocSelectionData = {
@@ -35,6 +37,8 @@ export class User extends WatchableObject {
     private m_pixel_alignment: boolean = true;
     private m_pixel_grid: boolean = true;
     private m_rule: boolean = true;
+    private m_slow: number = 1;
+    private m_fast: number = 10;
 
     constructor() {
         super();
@@ -54,6 +58,24 @@ export class User extends WatchableObject {
 
     get isRuleVisible() {
         return this.m_rule;
+    }
+
+    get step() {
+        return { slow: this.m_slow, fast: this.m_fast }
+    }
+
+    modifysetStepSlow(v: number) {
+        const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        conf.slow = v;
+        this.m_slow = v;
+        localStorage.setItem('userConfig', JSON.stringify(conf));
+    }
+
+    modifysetStepFast(v: number) {
+        const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        conf.fast = v;
+        this.m_fast = v
+        localStorage.setItem('userConfig', JSON.stringify(conf));
     }
 
     modifyPixelAlignment(v: boolean) {
@@ -82,7 +104,9 @@ export class User extends WatchableObject {
     static CONF = {
         pixelAlignment: true,
         pixelGrid: true,
-        rule: true
+        rule: true,
+        slow: 1,
+        fast: 10,
     };
 
     get initConfig(): string {
@@ -103,10 +127,14 @@ export class User extends WatchableObject {
             conf.pixelAlignment = __temp.pixelAlignment || true;
             conf.pixelGrid = __temp.pixelGrid || true;
             conf.rule = __temp.rule || true;
+            conf.slow = __temp.slow || 1;
+            conf.fast = __temp.fast || 10;
         }
         this.m_pixel_alignment = conf.pixelAlignment;
         this.m_pixel_grid = conf.pixelGrid;
         this.m_rule = conf.rule;
+        this.m_slow = conf.slow;
+        this.m_fast = conf.fast;
 
         localStorage.setItem('userConfig', JSON.stringify(conf));
     }

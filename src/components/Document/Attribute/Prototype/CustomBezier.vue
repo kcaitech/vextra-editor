@@ -35,6 +35,7 @@ interface Position {
 const props = defineProps<{
     bezier: PrototypeEasingBezier | undefined
     trigger: any[],
+    byshapes: number,
 }>();
 const emits = defineEmits<{
     (e: "setBezier", data: PrototypeEasingBezier): void;
@@ -261,13 +262,12 @@ const dragcanvas = () => {
         drawbezier(cp1.value, cp2.value)
     })
 
-    watch(() => props.trigger, () => {
-        if (props.trigger.includes("easingFunction")) {
-            if (!props.bezier) return
-            customval.value = [props.bezier.x1.toString(), props.bezier.y1.toString(), props.bezier.x2.toString(), props.bezier.y2.toString()]
-            cp1.value = { x: +customval.value[0] / 0.01 + 40, y: 140 - +customval.value[1] / 0.01 }
-            cp2.value = { x: +customval.value[2] / 0.01 + 40, y: 140 - +customval.value[3] / 0.01 }
-        }
+    watch(() => props.byshapes, () => {
+        if (!props.bezier) return
+        customval.value = [props.bezier.x1.toString(), props.bezier.y1.toString(), props.bezier.x2.toString(), props.bezier.y2.toString()]
+        cp1.value = { x: +customval.value[0] / 0.01 + 40, y: 140 - +customval.value[1] / 0.01 }
+        cp2.value = { x: +customval.value[2] / 0.01 + 40, y: 140 - +customval.value[3] / 0.01 }
+
     })
 
     const move = (e: MouseEvent) => {
