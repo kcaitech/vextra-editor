@@ -47,6 +47,7 @@ onUnmounted(() => {
 }
 
 .blinking {
+    transition: 0.1s;
     stroke: var(--active-color);
     stroke-width: 4px;
     animation: blink 0.75s infinite;
