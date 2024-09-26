@@ -930,7 +930,7 @@ onUnmounted(() => {
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
-        <div class="tr" v-if="s_tidy_up">
+        <div class="tr" v-if="s_tidy_up" style="margin-bottom: 0">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
                 :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
                 @dragend="dragend">
@@ -939,8 +939,8 @@ onUnmounted(() => {
                 :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
                 @dragend="dragend">
             </MdNumberInput>
-            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? '0.4' : '1' }"
-                :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
+            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? 1 : 0.4 }"
+                :class="{ 'tidy-up-disable': !verTidyUp && !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
                     <svg-icon icon-class="tidy-up" style="outline: none;" />
                 </Tooltip>
@@ -1157,8 +1157,6 @@ onUnmounted(() => {
 }
 
 .tidy-up-disable {
-    &:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-    }
+    pointer-events: none;
 }
 </style>

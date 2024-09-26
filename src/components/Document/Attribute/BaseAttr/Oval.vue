@@ -251,7 +251,7 @@ onMounted(() => {
     border-radius: var(--default-radius);
     display: flex;
     gap: 1px;
-
+    margin-bottom: 8px;
     input {
         outline: none;
         border: none;
