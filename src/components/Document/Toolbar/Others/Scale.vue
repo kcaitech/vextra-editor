@@ -181,6 +181,7 @@ onUnmounted(() => {
         width: 100%;
         height: 100%;
         display: flex;
+        border-radius: 0 6px 6px 0;
 
         &:hover {
             background-color: rgba(255, 255, 255, 0.2);

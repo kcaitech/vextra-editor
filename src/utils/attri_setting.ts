@@ -1,6 +1,10 @@
 import {
-    adapt2Shape, ArtboradView,
-    BatchAction2, ContextSettings, export_text, MarkerType,
+    adapt2Shape,
+    ArtboradView,
+    BatchAction2,
+    ContextSettings,
+    export_text,
+    MarkerType,
     Matrix,
     PathShapeView,
     PolygonShape,
@@ -9,7 +13,11 @@ import {
     ShapeType,
     ShapeView,
     StarShape,
-    StarShapeView, SymbolRefView, SymbolView, Text, TextShapeView
+    StarShapeView,
+    SymbolRefView,
+    SymbolView,
+    Text,
+    TextShapeView
 } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
@@ -335,6 +343,13 @@ export const showCounts = (shapes: ShapeView[]) => {
         if ((shape.type === ShapeType.Polygon || shape.type === ShapeType.Star) && !shape.data.haveEdit) {
             return true;
         }
+    }
+    return false;
+}
+
+export const showOvalOptions = (shapes: ShapeView[]) => {
+    for (const shape of shapes) {
+        if (shape.type === ShapeType.Oval && !shape.data.haveEdit) return true;
     }
     return false;
 }

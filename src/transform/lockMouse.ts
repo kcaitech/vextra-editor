@@ -89,4 +89,15 @@ export class LockMouse extends TransformHandler {
     executeUniformScale(units: UniformScaleUnit[], ratio: number) {
 
     }
+
+    modifyStartingAngleBy(shapes: ShapeView[], delta: number) {
+        (this.asyncApiCaller as LockMouseHandler).modifyStartingAngleBy(shapes, delta);
+    }
+
+    modifySweepBy(shapes: ShapeView[], delta: number) {
+        (this.asyncApiCaller as LockMouseHandler).modifySweepBy(shapes, delta);
+    }
+    modifyInnerRadiusBy(shapes: ShapeView[], delta: number) {
+        (this.asyncApiCaller as LockMouseHandler).modifyInnerRadiusBy(shapes, delta);
+    }
 }

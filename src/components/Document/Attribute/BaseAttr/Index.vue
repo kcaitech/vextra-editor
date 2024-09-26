@@ -20,7 +20,7 @@ import {
     showCounts,
     showInnerAngle,
     get_shapes_inner_angle,
-    get_actions_inner_angle
+    get_actions_inner_angle, showOvalOptions
 } from '@/utils/attri_setting';
 import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
@@ -31,6 +31,7 @@ import { Attribute } from '@/context/atrribute';
 import { flip } from "@/transform/flip";
 import { Tool } from "@/context/tool";
 import { rotate as __rotate } from "@/transform/rotate"
+import Oval from "@/components/Document/Attribute/BaseAttr/Oval.vue";
 import { checkTidyUpShapesOrder, getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder, whetherNeedTidyUp } from '@/utils/tidy_up';
 import { WorkSpace } from '@/context/workspace';
 
@@ -47,6 +48,7 @@ interface LayoutOptions {
     s_length: boolean
     s_counts: boolean
     s_inner_angle: boolean
+    s_oval: boolean
 }
 
 interface ModelState {
@@ -60,6 +62,7 @@ interface ModelState {
     radius: boolean
     counts: boolean
     innerAngle: boolean
+    ovalOptions: boolean
 }
 
 const props = defineProps<Props>();
@@ -79,7 +82,15 @@ const verTidyUp = ref(true);
 const horSpace = ref<number | string>('');
 const verSpace = ref<number | string>('');
 const s_tidy_up = ref(false);
-const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false });
+const layout_options: LayoutOptions = reactive({
+    s_flip: true,
+    s_radius: false,
+    s_adapt: false,
+    s_length: false,
+    s_counts: false,
+    s_inner_angle: false,
+    s_oval: false
+});
 const model_disable_state: ModelState = reactive({
     x: false,
     y: false,
@@ -90,9 +101,10 @@ const model_disable_state: ModelState = reactive({
     flipVertical: false,
     radius: false,
     counts: false,
-    innerAngle: false
+    innerAngle: false,
+    ovalOptions: false
 });
-let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle } = layout_options;
+let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_oval } = layout_options;
 
 function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
@@ -367,6 +379,7 @@ function layout() {
     }
     s_counts = showCounts(selected);
     s_inner_angle = showInnerAngle(selected);
+    s_oval = showOvalOptions(selected);
 }
 
 function reset_layout() {
@@ -376,21 +389,23 @@ function reset_layout() {
     s_length = false;
     s_counts = false;
     s_inner_angle = false;
+    s_oval = false;
 }
 
 function check_model_state() {
     reset_model_state();
     const shapes = props.context.selection.selectedShapes;
-    if (shapes.length !== 1) {
-        return;
-    }
+    if (shapes.length !== 1) return;
     const shape = shapes[0];
 
     if (shape.type === ShapeType.Contact) {
-        model_disable_state.x = true, model_disable_state.y = true;
-        model_disable_state.width = true, model_disable_state.height = true;
+        model_disable_state.x = true;
+        model_disable_state.y = true;
+        model_disable_state.width = true;
+        model_disable_state.height = true;
         model_disable_state.rotation = true;
-        model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
+        model_disable_state.flipVertical = true;
+        model_disable_state.flipHorizontal = true;
         model_disable_state.radius = false;
         model_disable_state.counts = false;
         model_disable_state.innerAngle = false;
@@ -402,23 +417,31 @@ function check_model_state() {
 }
 
 function reset_model_state() {
-    model_disable_state.x = false, model_disable_state.y = false;
-    model_disable_state.width = false, model_disable_state.height = false;
+    model_disable_state.x = false;
+    model_disable_state.y = false;
+    model_disable_state.width = false;
+    model_disable_state.height = false;
     model_disable_state.rotation = false;
-    model_disable_state.flipVertical = false, model_disable_state.flipHorizontal = false;
+    model_disable_state.flipVertical = false;
+    model_disable_state.flipHorizontal = false;
     model_disable_state.radius = false;
     model_disable_state.counts = false;
     model_disable_state.innerAngle = false;
+    model_disable_state.ovalOptions = false;
 }
 
 function all_disable() {
-    model_disable_state.x = true, model_disable_state.y = true;
-    model_disable_state.width = true, model_disable_state.height = true;
+    model_disable_state.x = true;
+    model_disable_state.y = true;
+    model_disable_state.width = true;
+    model_disable_state.height = true;
     model_disable_state.rotation = true;
-    model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
+    model_disable_state.flipVertical = true;
+    model_disable_state.flipHorizontal = true;
     model_disable_state.radius = true;
     model_disable_state.counts = true;
     model_disable_state.innerAngle = true;
+    model_disable_state.ovalOptions = true;
 }
 
 const autoLayoutDisable = () => {
@@ -522,7 +545,6 @@ function draggingW(e: MouseEvent) {
 
     lockMouseHandler.executeW(e.movementX);
 }
-
 
 function draggingH(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
@@ -907,6 +929,7 @@ onUnmounted(() => {
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
+        <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
         <div class="tr" v-if="s_tidy_up">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
                 :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
