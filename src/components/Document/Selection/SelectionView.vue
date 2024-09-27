@@ -16,6 +16,9 @@ import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
 import gapAssist from "@/components/Document/Assist/gapAssist.vue";
+import AutoLayoutChildEdit from "./Controller/AutoLayoutController/AutoLayoutChildEdit.vue"
+import InsertBar from "@/components/Document/Selection/Controller/InsertBar.vue";
+import TidyUpOutline from "./TidyUpOutline.vue";
 
 export interface Point {
     x: number
@@ -209,6 +212,7 @@ function createController() {
         controller.value = false;
         return;
     }
+
     modify_controller_frame(selection);
     modify_controller_type(selection);
     modify_rotate(selection);
@@ -261,7 +265,6 @@ function modify_controller_frame(shapes: ShapeView[]) {
         controllerFrame.value = points;
         return;
     }
-
     const points: { x: number, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
@@ -409,6 +412,7 @@ function window_blur() {
     props.context.selection.setShowInterval(false);
 }
 
+
 //标注线
 const isLableLine = ref(false);
 const lableLineStatus = () => {
@@ -455,28 +459,34 @@ onUnmounted(() => {
 </script>
 
 <template>
-<!-- 描边 -->
-<svg v-if="tracing" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible"
-     :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-     style="transform: translate(0px, 0px); position: absolute;">
-    <path :d="tracingFrame.path" fill="none" stroke="transparent"
-          :stroke-width="context.selection.hoverStroke" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-    </path>
-    <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
-          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-    </path>
-</svg>
-<!-- 控制 -->
-<component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-           :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.params.matrix"
-           :shape="context.selection.selectedShapes[0]" :theme="theme">
-</component>
-<!-- 辅助 -->
-<Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
-<gapAssist :context="props.context"></gapAssist>
-<!-- 标注线 -->
-<LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
-           :update-trigger="updateTrigger"></LableLine>
-<!-- 选中大小 -->
-<ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
+    <!-- 描边 -->
+    <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+        style="transform: translate(0px, 0px); position: absolute;">
+        <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
+            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        </path>
+        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
+            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        </path>
+    </svg>
+    <TidyUpOutline :context="props.context" :controller-frame="controllerFrame"></TidyUpOutline>
+
+    <!-- 控制 -->
+    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
+        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.params.matrix"
+        :shape="context.selection.selectedShapes[0]" :theme="theme">
+    </component>
+
+    <AutoLayoutChildEdit :context="props.context" />
+    <InsertBar :context="props.context" />
+    <!-- 辅助 -->
+    <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
+    <gapAssist :context="props.context"></gapAssist>
+    <!-- 标注线 -->
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
+        :update-trigger="updateTrigger"></LableLine>
+    <!-- 选中大小 -->
+    <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>

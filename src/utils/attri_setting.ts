@@ -1,6 +1,10 @@
 import {
-    adapt2Shape, ArtboradView,
-    BatchAction2, ContextSettings, export_text, MarkerType,
+    adapt2Shape,
+    ArtboradView,
+    BatchAction2,
+    ContextSettings,
+    export_text,
+    MarkerType,
     Matrix,
     PathShapeView,
     PolygonShape,
@@ -9,7 +13,11 @@ import {
     ShapeType,
     ShapeView,
     StarShape,
-    StarShapeView, SymbolRefView, SymbolView, Text, TextShapeView
+    StarShapeView,
+    SymbolRefView,
+    SymbolView,
+    Text,
+    TextShapeView
 } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
@@ -24,14 +32,14 @@ export function get_actions_constrainer_proportions(shapes: ShapeView[], value: 
 }
 
 export function get_actions_frame_x(shapes: ShapeView[], value: number) {
-    const actions: { target: Shape, x: number }[] = [];
+    const actions: { target: ShapeView, x: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const parent = shape.parent!;
         let x = value;
         let dx = 0;
         const box = get_box(shape);
-
+        if ((parent as ArtboradView).autoLayout) continue;
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
             dx = value - m.computeCoord2(box.x, 0).x;
@@ -41,21 +49,21 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
 
         x = shape.transform.translateX + dx;
 
-        actions.push({ target: adapt2Shape(shape), x });
+        actions.push({ target: shape, x });
     }
 
     return actions;
 }
 
 export function get_actions_frame_y(shapes: ShapeView[], value: number) {
-    const actions: { target: Shape, y: number }[] = [];
+    const actions: { target: ShapeView, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const parent = shape.parent!;
         let y = value;
         let dy = 0;
         const box = get_box(shape);
-
+        if ((parent as ArtboradView).autoLayout) continue;
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
             dy = value - m.computeCoord2(0, box.y).y;
@@ -65,7 +73,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
 
         y = shape.transform.translateY + dy;
 
-        actions.push({ target: adapt2Shape(shape), y });
+        actions.push({ target: shape, y });
     }
 
     return actions;
@@ -335,6 +343,13 @@ export const showCounts = (shapes: ShapeView[]) => {
         if ((shape.type === ShapeType.Polygon || shape.type === ShapeType.Star) && !shape.data.haveEdit) {
             return true;
         }
+    }
+    return false;
+}
+
+export const showOvalOptions = (shapes: ShapeView[]) => {
+    for (const shape of shapes) {
+        if (shape.type === ShapeType.Oval && !shape.data.haveEdit) return true;
     }
     return false;
 }

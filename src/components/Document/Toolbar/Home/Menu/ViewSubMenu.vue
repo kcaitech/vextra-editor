@@ -12,6 +12,7 @@ interface Props {
     context: Context,
     width?: number,
     site?: { x: number, y: number }
+    fixed?: boolean
 }
 
 const props = defineProps<Props>();
@@ -119,7 +120,8 @@ onMounted(() => {
 })
 </script>
 <template>
-    <div ref="subMenu" class="subMenu" @mousemove.stop>
+    <div ref="subMenu" v-bind="$attrs" :style="{ position: fixed ? 'fixed' : 'absolute', top: props.y + 'px', left: props.x + 'px' }" class="subMenu"
+        @mousemove.stop>
         <div class="item" v-if="items.includes('half')" @click="(e: MouseEvent) => half(e)">
             <span>50%</span>
         </div>
@@ -173,15 +175,18 @@ onMounted(() => {
     left: 136px;
     top: -2px;
     color: var(--theme-color-anti);
-    width: 157px;
+    font-size: 12px;
+    width: 158px;
     display: flex;
     flex-direction: column;
     border-radius: 4px;
     box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
     background-color: #262626;
     overflow: hidden;
-    padding: 4px 0;
+    padding: 6px 0;
     border-left: 2px solid;
+    box-sizing: border-box;
+
 
     .line {
         width: 100%;
@@ -201,7 +206,7 @@ onMounted(() => {
         align-items: center;
         box-sizing: border-box;
 
-        > span {
+        >span {
             margin-left: 20px;
         }
 

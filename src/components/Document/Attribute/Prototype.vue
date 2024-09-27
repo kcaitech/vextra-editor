@@ -180,7 +180,7 @@
                                     </div>
                                     <CustomBezier
                                         v-if="action.actions.easingType === PrototypeEasingType.CUSTOMCUBIC && action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
-                                        :bezier="action.actions.easingFunction" :trigger="reflush_trigger"
+                                        :bezier="action.actions.easingFunction" :byshapes="reflush_by_shapes" :trigger="reflush_trigger" 
                                         @setBezier="setProtoTypeEasingFunction($event, action.id)"></CustomBezier>
                                 </div>
                             </div>
@@ -1435,6 +1435,8 @@ const scroll_behavior = () => {
 // 图层选区变化
 function _selection_change() {
     updateData()
+    watch_shapes();
+    reflush_by_shapes.value++;
 }
 
 const selection_change = debounce(_selection_change, 160, { leading: true });
@@ -1466,7 +1468,7 @@ function selection_watcher(t: number | string) {
 }
 
 // 选区图层变化
-function update_by_shapes(...args: any[]) {
+function update_by_shapes(...args: any[]) { 
     updateData()
     reflush_trigger.value = [...(args?.length ? args : [])];
     reflush_by_shapes.value++;

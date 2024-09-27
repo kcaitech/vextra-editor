@@ -274,32 +274,48 @@ const setWordSpace = () => {
     charSpacing.value?.blur()
 }
 
+const autoLineHeight = [
+    'auto',
+    '自动'
+]
+
+function parstLineHeight(value: string) {
+    if (autoLineHeight.indexOf(value) >= 0) return 'auto';
+    return Number(value)
+}
+
 const setRowHeight = () => {
     const editor = props.context.editor4TextShape(props.shape)
     if (rowHeight.value.length < 1) {
         rowHeight.value = 1
     }
+    const lh = parstLineHeight(rowHeight.value);
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        if (!isNaN(Number(rowHeight.value))) {
+        if (lh === 'auto' || !isNaN(lh)) {
             if (isSelectText()) {
-                editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
+                editor.setLineHeight(lh, 0, Infinity)
             } else {
-                editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
+                editor.setLineHeight(lh, textIndex, selectLength)
             }
         } else {
             textFormat()
         }
     } else {
-        if (!isNaN(Number(rowHeight.value))) {
-            editor.setLineHeightMulit(props.textShapes, Number(rowHeight.value));
+        if (lh === 'auto' || !isNaN(lh)) {
+            editor.setLineHeightMulit(props.textShapes, lh);
         } else {
             textFormat()
         }
     }
     const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.maximumLineHeight = Number(rowHeight.value);
-    textAttr.minimumLineHeight = Number(rowHeight.value);
+    if (lh === 'auto') {
+        textAttr.autoLineHeight = true;
+    } else {
+        textAttr.autoLineHeight = undefined;
+        textAttr.maximumLineHeight = lh;
+        textAttr.minimumLineHeight = lh;
+    }
     props.context.textSelection.setTextAttr(textAttr);
     lineHeight.value?.blur();
 }
@@ -368,7 +384,7 @@ const _textFormat = () => {
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
         }
         colorIsMulti.value = format.colorIsMulti
-        rowHeight.value = format_value(format.minimumLineHeight || 0)
+        rowHeight.value = format.autoLineHeight ? 'auto' : format_value(format.minimumLineHeight || 0)
         wordSpace.value = format_value(format.kerning || 0)
         highlightIsMulti.value = format.highlightIsMulti
         selectLevel.value = format.alignment || 'left'
@@ -383,7 +399,7 @@ const _textFormat = () => {
         isTilt.value = format.italic || false
         gradient.value = format.gradient;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
-        if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
+        if (format.minimumLineHeightIsMulti || format.autoLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
         if (format.italicIsMulti) weightMixed.value = true;
         if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
         if (format.weightIsMulti) weightMixed.value = true;
@@ -443,7 +459,7 @@ const _textFormat = () => {
                 format[key] = `unlikeness`;
             }
         }
-        rowHeight.value = format_value(format.minimumLineHeight || 0) as number;
+        rowHeight.value = format.autoLineHeight ? 'auto' : format_value(format.minimumLineHeight || 0) as number;
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
@@ -464,8 +480,8 @@ const _textFormat = () => {
             disableWeight.value = true;
             fontName.value = `${t('attr.more_value')}`;
         }
-        if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-        if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeight === 'unlikeness' || format.autoLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeightIsMulti === 'unlikeness' || format.autoLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
@@ -1549,7 +1565,6 @@ onUnmounted(() => {
             .interval {
                 flex: 1;
                 height: 32px;
-                padding-right: 6px;
 
                 > div {
                     display: flex;

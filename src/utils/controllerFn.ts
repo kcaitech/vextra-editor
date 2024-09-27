@@ -8,6 +8,7 @@ import { WorkSpace } from "@/context/workspace";
 import { Menu } from "@/context/menu";
 import { compare_layer_3 } from "./group_ungroup";
 import { get_symbolref_by_layer } from "./symbol";
+import { UserConfig } from "../context/user"
 
 export function keyboardHandle(e: KeyboardEvent, context: Context) {
     if (!permIsEdit(context) || context.tool.isLable) {
@@ -203,6 +204,10 @@ export class DirectionCalc {
     private m_right: boolean = false;
     private m_faster: boolean = false;
 
+    constructor() {
+
+    }
+
     is_catfish(code: string) {
         return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code);
     }
@@ -267,25 +272,26 @@ export class DirectionCalc {
     calc() {
         let x = 0;
         let y = 0;
+
+        const UserConfig:UserConfig = JSON.parse(localStorage.getItem('userConfig') as string)
+        const step = this.m_faster ? (UserConfig?.fast || DirectionCalc.STEP * 10) : (UserConfig?.slow || DirectionCalc.STEP);
+
         if (this.m_up) {
-            y = y - DirectionCalc.STEP;
+            y -= step;
         }
 
         if (this.m_down) {
-            y = y + DirectionCalc.STEP;
+            y += step;
         }
 
         if (this.m_left) {
-            x = x - DirectionCalc.STEP;
+            x -= step;
         }
 
         if (this.m_right) {
-            x = x + DirectionCalc.STEP;
-        }
+            x += step;
 
-        if (this.m_faster) {
-            x *= DirectionCalc.FASTER;
-            y *= DirectionCalc.FASTER;
+
         }
 
         return { x, y };

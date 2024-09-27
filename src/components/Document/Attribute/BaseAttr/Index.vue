@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ShapeType, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { ArtboradView, ShapeType, ShapeView, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -20,7 +20,7 @@ import {
     showCounts,
     showInnerAngle,
     get_shapes_inner_angle,
-    get_actions_inner_angle
+    get_actions_inner_angle, showOvalOptions
 } from '@/utils/attri_setting';
 import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
@@ -31,6 +31,9 @@ import { Attribute } from '@/context/atrribute';
 import { flip } from "@/transform/flip";
 import { Tool } from "@/context/tool";
 import { rotate as __rotate } from "@/transform/rotate"
+import Oval from "@/components/Document/Attribute/BaseAttr/Oval.vue";
+import { checkTidyUpShapesOrder, getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder, whetherNeedTidyUp } from '@/utils/tidy_up';
+import { WorkSpace } from '@/context/workspace';
 
 interface Props {
     context: Context
@@ -45,6 +48,7 @@ interface LayoutOptions {
     s_length: boolean
     s_counts: boolean
     s_inner_angle: boolean
+    s_oval: boolean
 }
 
 interface ModelState {
@@ -58,6 +62,7 @@ interface ModelState {
     radius: boolean
     counts: boolean
     innerAngle: boolean
+    ovalOptions: boolean
 }
 
 const props = defineProps<Props>();
@@ -72,7 +77,20 @@ const innerAngle = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const fix = 2;
 const mixed = t('attr.mixed');
-const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false });
+const horTidyUp = ref(true);
+const verTidyUp = ref(true);
+const horSpace = ref<number | string>('');
+const verSpace = ref<number | string>('');
+const s_tidy_up = ref(false);
+const layout_options: LayoutOptions = reactive({
+    s_flip: true,
+    s_radius: false,
+    s_adapt: false,
+    s_length: false,
+    s_counts: false,
+    s_inner_angle: false,
+    s_oval: false
+});
 const model_disable_state: ModelState = reactive({
     x: false,
     y: false,
@@ -83,9 +101,10 @@ const model_disable_state: ModelState = reactive({
     flipVertical: false,
     radius: false,
     counts: false,
-    innerAngle: false
+    innerAngle: false,
+    ovalOptions: false
 });
-let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle } = layout_options;
+let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_oval } = layout_options;
 
 function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
@@ -143,6 +162,7 @@ function _update_view() {
     } else {
         check_model_state();
     }
+    autoLayoutDisable();
 }
 
 const update_view = debounce(_update_view, 200, { leading: true });
@@ -359,6 +379,7 @@ function layout() {
     }
     s_counts = showCounts(selected);
     s_inner_angle = showInnerAngle(selected);
+    s_oval = showOvalOptions(selected);
 }
 
 function reset_layout() {
@@ -368,21 +389,23 @@ function reset_layout() {
     s_length = false;
     s_counts = false;
     s_inner_angle = false;
+    s_oval = false;
 }
 
 function check_model_state() {
     reset_model_state();
     const shapes = props.context.selection.selectedShapes;
-    if (shapes.length !== 1) {
-        return;
-    }
+    if (shapes.length !== 1) return;
     const shape = shapes[0];
 
     if (shape.type === ShapeType.Contact) {
-        model_disable_state.x = true, model_disable_state.y = true;
-        model_disable_state.width = true, model_disable_state.height = true;
+        model_disable_state.x = true;
+        model_disable_state.y = true;
+        model_disable_state.width = true;
+        model_disable_state.height = true;
         model_disable_state.rotation = true;
-        model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
+        model_disable_state.flipVertical = true;
+        model_disable_state.flipHorizontal = true;
         model_disable_state.radius = false;
         model_disable_state.counts = false;
         model_disable_state.innerAngle = false;
@@ -394,23 +417,39 @@ function check_model_state() {
 }
 
 function reset_model_state() {
-    model_disable_state.x = false, model_disable_state.y = false;
-    model_disable_state.width = false, model_disable_state.height = false;
+    model_disable_state.x = false;
+    model_disable_state.y = false;
+    model_disable_state.width = false;
+    model_disable_state.height = false;
     model_disable_state.rotation = false;
-    model_disable_state.flipVertical = false, model_disable_state.flipHorizontal = false;
+    model_disable_state.flipVertical = false;
+    model_disable_state.flipHorizontal = false;
     model_disable_state.radius = false;
     model_disable_state.counts = false;
     model_disable_state.innerAngle = false;
+    model_disable_state.ovalOptions = false;
 }
 
 function all_disable() {
-    model_disable_state.x = true, model_disable_state.y = true;
-    model_disable_state.width = true, model_disable_state.height = true;
+    model_disable_state.x = true;
+    model_disable_state.y = true;
+    model_disable_state.width = true;
+    model_disable_state.height = true;
     model_disable_state.rotation = true;
-    model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
+    model_disable_state.flipVertical = true;
+    model_disable_state.flipHorizontal = true;
     model_disable_state.radius = true;
     model_disable_state.counts = true;
     model_disable_state.innerAngle = true;
+    model_disable_state.ovalOptions = true;
+}
+
+const autoLayoutDisable = () => {
+    const shapes = props.context.selection.selectedShapes;
+    const every = shapes.every(item => item.parent && (item.parent as ArtboradView).autoLayout);
+    if (every) {
+        model_disable_state.x = true, model_disable_state.y = true;
+    }
 }
 
 const tel = ref<boolean>(false);
@@ -427,6 +466,9 @@ function updatePosition(movementX: number, movementY: number) {
     telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
 }
 
+let orderShapes: ShapeView[][] = [];
+let minHor = 0;
+let minVer = 0;
 async function modifyTelDown(e: MouseEvent) {
     tel.value = true;
     telX.value = e.clientX;
@@ -437,6 +479,11 @@ async function modifyTelDown(e: MouseEvent) {
             unadjustedMovement: true,
         });
     }
+    const selected = props.context.selection.selectedShapes;
+    const d = props.context.selection.isTidyUpDir;
+    orderShapes = checkTidyUpShapesOrder(selected, d);
+    minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+    minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
     lockMouseHandler = new LockMouse(props.context, e);
     document.addEventListener("pointerlockchange", pointerLockChange, false);
 }
@@ -499,7 +546,6 @@ function draggingW(e: MouseEvent) {
     lockMouseHandler.executeW(e.movementX);
 }
 
-
 function draggingH(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
@@ -561,6 +607,33 @@ function draggingInnerAngle(e: MouseEvent) {
     lockMouseHandler.executeInnerAngle(e.movementX / 1000);
 }
 
+
+function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    const d = props.context.selection.isTidyUpDir;
+    const frame = layoutSpacing(orderShapes, d);
+
+    let hor = frame.hor;
+    let ver = frame.ver;
+    if (dir === 'hor') {
+        hor += e.movementX;
+        horSpace.value = Math.max(hor, -minHor);
+    } else {
+        ver += e.movementX;
+        verSpace.value = Math.max(ver, -minVer);
+    }
+
+    disalbeTidyup(orderShapes, d);
+    lockMouseHandler.executeTidyup(orderShapes, Math.max(hor, -minHor), Math.max(ver, -minVer), d);
+}
+
 function dragend() {
     modifyTelUp();
 }
@@ -615,17 +688,136 @@ function wheelX(event: WheelEvent) {
     // updateHdl();
 }
 
+const tidyUp = () => {
+    if(!props.context.selection.isTidyUp) return;
+    const selected = props.context.selection.selectedShapes;
+    const { width, height } = getSelectedWidthHeight(props.context, selected);
+
+    const shapes = tidyUpShapesOrder(selected, height > width);
+    const frame = layoutSpacing(shapes, height > width);
+    horSpace.value = frame.hor;
+    verSpace.value = frame.ver;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width);
+}
+
+const changeHorTidyup = (value: string) => {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    const hor: number = Number.parseFloat(value);
+    if (isNaN(hor)) return;
+    const selected = props.context.selection.selectedShapes;
+    const dir = props.context.selection.isTidyUpDir;
+    const shapes = checkTidyUpShapesOrder(selected, dir);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    disalbeTidyup(shapes, dir);
+    const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+    horSpace.value = Math.max(hor, -minHor);
+    editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir);
+}
+const changeVerTidyup = (value: string) => {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    const ver: number = Number.parseFloat(value);
+    if (isNaN(ver)) return;
+    const selected = props.context.selection.selectedShapes;
+    const dir = props.context.selection.isTidyUpDir;
+    const shapes = checkTidyUpShapesOrder(selected, dir);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
+    disalbeTidyup(shapes, dir);
+    const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+    verSpace.value = Math.max(ver, -minVer);
+    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir);
+}
+
 function selection_change() {
     update_view();
     calc_attri();
     textBehaviour();
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length > 1) {
+        s_tidy_up.value = true;
+        whetherTidyUp();
+    } else {
+        s_tidy_up.value = false;
+        props.context.selection.whetherTidyUp(true, false);
+    }
 }
 
-const attr_watcher = (t: number) => {
+const _whetherTidyUp = () => {
+    if (props.context.workspace.tidyUpIsTrans) return;
+    const selected = props.context.selection.selectedShapes;
+    s_tidy_up.value = false;
+    if (selected.length <= 1) return;
+    s_tidy_up.value = true;
+    if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
+    const Info = whetherNeedTidyUp(props.context);
+    if (!Info) {
+        props.context.selection.whetherTidyUp(true, false);
+        return;
+    }
+    const { tidyup, hor, ver, shapes, dir } = Info;
+    if (!tidyup) {
+        horSpace.value = hor;
+        verSpace.value = ver;
+    } else {
+        horSpace.value = '';
+        verSpace.value = '';
+    }
+    verTidyUp.value = tidyup;
+    horTidyUp.value = tidyup;
+    disalbeTidyup(shapes, dir);
+    props.context.selection.whetherTidyUp(tidyup, dir);
+}
+
+const disalbeTidyup = (shapes: ShapeView[][], d: boolean) => {
+    if (d) {
+        if (shapes.length === 1) {
+            horTidyUp.value = true;
+            horSpace.value = '';
+        } else {
+            const v = shapes.every(s => s.length === 1);
+            if (v) {
+                verTidyUp.value = true;
+                verSpace.value = '';
+            }
+        }
+    } else {
+        if (shapes.length === 1) {
+            verTidyUp.value = true;
+            verSpace.value = '';
+        } else {
+            const v = shapes.every(s => s.length === 1);
+            if (v) {
+                horTidyUp.value = true;
+                horSpace.value = '';
+            }
+        }
+    }
+}
+
+const whetherTidyUp = debounce(_whetherTidyUp, 250);
+
+const attr_watcher = (t: number, params: any) => {
     if (t === Attribute.HOR_HILP) {
         fliph();
     } else if (t === Attribute.VER_HILP) {
         flipv();
+    } else if (t === Attribute.TIDY_UP_SPACE_CHANGE) {
+        if (typeof horSpace.value === 'number') {
+            horSpace.value = params.hor;
+        }
+        if (typeof verSpace.value === 'number') {
+            verSpace.value = params.ver;
+        }
     }
 }
 
@@ -647,10 +839,17 @@ const textBehaviour = () => {
     }
 }
 
+const workspace_watcher = (t: string | number) => {
+    if (t === WorkSpace.SCALING || t === WorkSpace.ROTATING) {
+        whetherTidyUp();
+    }
+}
+
 const stop1 = watch(() => props.selectionChange, selection_change);
 const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
         calc_attri();
+        whetherTidyUp();
     }
     if (v.includes('textBehaviour')) {
         textBehaviour();
@@ -660,82 +859,98 @@ const stop3 = watch(() => props.trigger, v => {
 onMounted(() => {
     selection_change();
     props.context.attr.watch(attr_watcher);
+    props.context.workspace.watch(workspace_watcher);
 });
 onUnmounted(() => {
     props.context.attr.unwatch(attr_watcher);
+    props.context.workspace.unwatch(workspace_watcher);
     stop1();
     stop3();
 })
 </script>
 
 <template>
-<div class="table">
-    <div class="tr">
-        <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
-                       @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX"></MdNumberInput>
-        <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
-                       @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
-        <div v-if="s_adapt" class="adapt" @click="adapt">
-            <Tooltip :content="t('attr.adapt')">
-                <svg-icon icon-class="adapt" style="outline: none;"/>
-            </Tooltip>
+    <div class="table">
+        <div class="tr">
+            <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX"></MdNumberInput>
+            <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
+            <div v-if="s_adapt" class="adapt" @click="adapt">
+                <Tooltip :content="t('attr.adapt')">
+                    <svg-icon icon-class="adapt" style="outline: none;" />
+                </Tooltip>
+            </div>
+            <div v-else style="width: 32px;height: 32px;"></div>
         </div>
-        <div v-else style="width: 32px;height: 32px;"></div>
-    </div>
-    <div class="tr">
-        <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
-                       @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
-        <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
-                       :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH"
-                       @dragend="dragend2">
-        </MdNumberInput>
-        <Tooltip :content="t('attr.constrainProportions')">
-            <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
-            </div>
-            <div v-else class="lock" style="background-color: #F4F5F5;opacity: 0.4; pointer-events: none">
-                <svg-icon icon-class="lock-open"></svg-icon>
-            </div>
-        </Tooltip>
-    </div>
-    <div class="tr">
-        <MdNumberInput icon="angle" draggable :value="formatRotate(rotate)" @change="changeR"
-                       :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
-                       @dragend="dragend"></MdNumberInput>
-        <div class="flip-wrapper">
-            <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
-                <div
-                    :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
-                    @click="fliph">
-                    <svg-icon icon-class="fliph"></svg-icon>
+        <div class="tr">
+            <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
+                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
+            <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
+                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2">
+            </MdNumberInput>
+            <Tooltip :content="t('attr.constrainProportions')">
+                <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
+                    <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
                 </div>
-            </Tooltip>
-            <Tooltip v-if="s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
-                <div
-                    :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
-                    @click="flipv">
-                    <svg-icon icon-class="flipv"></svg-icon>
+                <div v-else class="lock" style="background-color: #F4F5F5;opacity: 0.4; pointer-events: none">
+                    <svg-icon icon-class="lock-open"></svg-icon>
                 </div>
             </Tooltip>
         </div>
-        <div style="width: 32px;height: 32px;margin-left: 7px"></div>
+        <div class="tr">
+            <MdNumberInput icon="angle" draggable :value="formatRotate(rotate)" @change="changeR"
+                :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
+                @dragend="dragend"></MdNumberInput>
+            <div class="flip-wrapper">
+                <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                        @click="fliph">
+                        <svg-icon icon-class="fliph"></svg-icon>
+                    </div>
+                </Tooltip>
+                <Tooltip v-if="s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                        @click="flipv">
+                        <svg-icon icon-class="flipv"></svg-icon>
+                    </div>
+                </Tooltip>
+            </div>
+            <div style="width: 32px;height: 32px;margin-left: 7px"></div>
+        </div>
+        <div class="tr" v-if="s_counts">
+            <MdNumberInput icon="angle-count" draggable :value="format(counts)" @change="changeCounts"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
+                @dragend="dragend"></MdNumberInput>
+            <MdNumberInput v-if="s_inner_angle" icon="inner-angle" draggable
+                :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
+                @dragend="dragend"></MdNumberInput>
+            <div style="width: 32px;height: 32px;"></div>
+        </div>
+        <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
+        <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
+        <div class="tr" v-if="s_tidy_up" style="margin-bottom: 0">
+            <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
+                :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
+                @dragend="dragend">
+            </MdNumberInput>
+            <MdNumberInput icon="ver-space2" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyup"
+                :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
+                @dragend="dragend">
+            </MdNumberInput>
+            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? 1 : 0.4 }"
+                :class="{ 'tidy-up-disable': !verTidyUp && !horTidyUp }">
+                <Tooltip :content="t('attr.tidy_up')">
+                    <svg-icon icon-class="tidy-up" style="outline: none;" />
+                </Tooltip>
+            </div>
+        </div>
     </div>
-    <div class="tr" v-if="s_counts">
-        <MdNumberInput icon="angle-count" draggable :value="format(counts)" @change="changeCounts"
-                       :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
-                       @dragend="dragend"></MdNumberInput>
-        <MdNumberInput v-if="s_inner_angle" icon="inner-angle" draggable
-                       :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
-                       :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
-                       @dragend="dragend"></MdNumberInput>
-        <div style="width: 32px;height: 32px;"></div>
-    </div>
-    <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
-</div>
-<teleport to="body">
-    <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
-    </div>
-</teleport>
+    <teleport to="body">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+        </div>
+    </teleport>
 </template>
 
 <style scoped lang="scss">
@@ -764,7 +979,7 @@ onUnmounted(() => {
         margin-bottom: 8px;
 
 
-        > .icontext {
+        >.icontext {
             background-color: var(--input-background);
         }
 
@@ -787,13 +1002,13 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            > svg.active {
+            >svg.active {
                 color: #FFFFFF;
             }
         }
@@ -819,7 +1034,7 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 transition: 0.3s;
                 width: 14px;
                 height: 14px;
@@ -836,7 +1051,7 @@ onUnmounted(() => {
             height: 32px;
             border-radius: var(--default-radius);
 
-            > svg {
+            >svg {
                 width: 12px;
                 height: 12px;
             }
@@ -861,7 +1076,7 @@ onUnmounted(() => {
                 padding: 9px 14px;
                 box-sizing: border-box;
 
-                > svg {
+                >svg {
                     color: var(--coco-grey);
                     width: 14px;
                     height: 14px;
@@ -882,7 +1097,7 @@ onUnmounted(() => {
                 height: 32px;
                 border-radius: var(--default-radius);
 
-                > svg {
+                >svg {
                     color: var(--coco-grey);
                     width: 40%;
                     height: 40%;
@@ -907,14 +1122,14 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 transition: 0.3s;
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            > svg.active {
+            >svg.active {
                 color: #FFFFFF;
             }
         }
@@ -939,5 +1154,9 @@ onUnmounted(() => {
     background-position: center;
     background-size: 32px;
     z-index: 10000;
+}
+
+.tidy-up-disable {
+    pointer-events: none;
 }
 </style>

@@ -1339,7 +1339,7 @@ export function untie_instance(context: Context) {
     const ref_shapes = selection.selectedShapes;
     if (page) {
         const editor = context.editor4Page(page);
-        const shapes = editor.extractSymbol(ref_shapes.map(s => adapt2Shape(s)) as SymbolRefShape[]);
+        const shapes = editor.extractSymbol(ref_shapes as SymbolRefView[]);
         if (shapes) {
             context.nextTick(page, () => {
                 const select = shapes.reduce((pre, cur) => {

@@ -48,8 +48,9 @@ function onMenuBlur(e: MouseEvent) {
 
 const plugins = props.context.pluginsMgr.search2('toolbar.home.menu');
 const comps: { component: any, params?: any }[] = []
-comps.push(...plugins.begin)
-comps.push({component: ExportDocView}, {component: ExportVue}, {component: ViewVue})
+comps.push(...plugins.begin.slice(0, 2))
+comps.push({ component: ExportDocView }, { component: ExportVue })
+comps.push(...plugins.begin.slice(2, 3))
 comps.push(...plugins.end)
 
 function close() {
@@ -62,7 +63,7 @@ function close() {
         <svg-icon icon-class="menu"></svg-icon>
     </div>
     <div ref="popover" class="popover-f" v-if="popoverVisible">
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close"/>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close" />
     </div>
 </template>
 <style scoped lang="scss">
@@ -76,7 +77,7 @@ function close() {
     flex: 0 0 32px;
     cursor: pointer;
 
-    > svg {
+    >svg {
         width: 18px;
         height: 18px;
         color: #FFFFFF;
@@ -100,8 +101,8 @@ function close() {
     padding: 4px 0;
     box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
 
-    > div,
-    > span {
+    >div,
+    >span {
         position: relative;
         width: 100%;
         height: 32px;
@@ -116,10 +117,9 @@ function close() {
         }
     }
 
-    > .disabled {
+    >.disabled {
         opacity: 0.4;
         pointer-events: none;
     }
-
 }
 </style>

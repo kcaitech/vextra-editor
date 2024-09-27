@@ -69,8 +69,6 @@ const onShowFont = () => {
     props.context.workspace.focusText()
     if (showFont.value) return showFont.value = false
     showFont.value = true
-
-    
     props.context.escstack.save('onShowFont', () => {
         const achieve = showFont.value;
         showFont.value = false;
@@ -1552,7 +1550,6 @@ onUnmounted(() => {
             .interval {
                 flex: 1;
                 height: 32px;
-                padding-right: 6px;
 
                 >div {
                     display: flex;
