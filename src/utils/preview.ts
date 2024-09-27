@@ -167,7 +167,7 @@ export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], ho
     for (let i = scope.length - 1; i > -1; i--) {
         const item = scope[i];
 
-        if (!item.isVisible) {
+        if (!item.isVisible || !item.prototypeInterActions || !item.prototypeInterActions.length) {
             continue;
         }
         const path = item.getPath().clone();
