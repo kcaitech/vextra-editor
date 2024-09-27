@@ -161,9 +161,7 @@ export class Assist extends WatchableObject {
     set_collect_target(shapes: ShapeView[], collect_immediate = false) {
         const page = this.m_context.selection.selectedPage!;
 
-        if (!shapes.length) {
-            this.m_collect_target = page;
-        }
+        if (!shapes.length) this.m_collect_target = page;
 
         const parents: Map<string, ShapeView> = new Map();
         for (let i = 0; i < shapes.length; i++) {
@@ -211,13 +209,14 @@ export class Assist extends WatchableObject {
                     }
                 })
 
-                if (isCommon) {
-                    break;
-                }
+                if (isCommon) break;
             }
             this.m_collect_target = env;
         }
+
         collect_immediate && this.collect();
+
+        return this.m_collect_target;
     }
 
     set_collect_target_direct(target: ShapeView, needBubble: boolean, collect_immediate = false) {

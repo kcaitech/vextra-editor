@@ -7,7 +7,7 @@ import {
     ColVector3D,
     layoutShapesOrder,
     makeShapeTransform1By2,
-    Matrix,
+    Matrix, PageView,
     Shape,
     ShapeFrame,
     ShapeType,
@@ -25,13 +25,13 @@ import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { Tool } from "@/context/tool";
 import { Assist } from "@/context/assist";
 import { isTarget } from "@/utils/scout";
-import { throttle } from "lodash";
+import { debounce, throttle } from "lodash";
+import { compare_layer_3 } from "@/utils/group_ungroup";
 
 enum TranslateMode {
     Linear = 'linear',
     Prev = 'prev',
-    Flex = 'flex',
-    Fixed = 'fixed'
+    Flex = 'flex'
 }
 
 interface TranslateBaseItem {
@@ -55,8 +55,6 @@ class EnvRadar {
     private __root_envs: Map<ShapeView, Matrix> = new Map();
     private __env_tree: EnvLeaf[] | undefined;
 
-    placement: ShapeView | undefined;
-
     constructor(translate: Translate2, context: Context) {
         this.translate = translate;
         this.context = context;
@@ -69,23 +67,80 @@ class EnvRadar {
         return this.__current!;
     }
 
-    set current(view: ShapeView) {
+    set current(view) {
         this.__previous = this.__current;
         this.__current = view;
     }
 
+    private __except: Set<string> | undefined;
+
+    private __create_migrate_env() {
+        const set = new Set<string>();
+        deep(this.translate.selManager.shapes);
+        this.__except = set;
+
+        function deep(shapes: ShapeView[]) {
+            for (const view of shapes) {
+                const type = view.type;
+                if (type === ShapeType.SymbolRef || type === ShapeType.Table || type === ShapeType.BoolShape || type === ShapeType.SymbolUnion) continue;
+                if (type === ShapeType.Artboard || type === ShapeType.Symbol) set.add(view.id);
+                if (view.childs.length) deep(view.childs);
+            }
+        }
+    }
+
+    private __sweep_for_migrate() {
+        const except = this.__except!;
+        const isTarget = this.__is_target.bind(this);
+        const xy = this.translate.living;
+        return __sweep(this.__env_tree!) || this.translate.page;
+
+        function __sweep(leafs: EnvLeaf[]): ShapeView | undefined {
+            for (const { view, children } of leafs) {
+                if (except.has(view.id) || !isTarget(view, xy)) continue;
+
+                const result = __sweep(children);
+                return result ? result : view;
+            }
+        }
+    }
+
+    __migrate() {
+        const translate = this.translate;
+
+        if (!this.__env_tree) return;
+        if (!this.__except) this.__create_migrate_env();
+
+        const target = this.__sweep_for_migrate();
+
+        if (target === this.current) return;
+        if ((target as ArtboradView).autoLayout) return;
+
+        const shapes = compare_layer_3(translate.selManager.shapes);
+        const context = this.context;
+        if (translate.api!.migrate(target, shapes, context.workspace.t('compos.dlt'))) {
+            this.current = target;
+
+            if (target instanceof PageView) {
+                context.selection.unHoverShape();
+            } else {
+                context.selection.hoverShape(target);
+            }
+
+            context.nextTick(translate.page, () => {
+                translate.selModel.check();
+            });
+        }
+    }
+
+    migrate = debounce(this.__migrate, 36);
+
     private __return() {
-    }
-
-    private __migrate() {
-    }
-
-    migrate() {
     }
 
     private __build() {
         const root: Map<ShapeView, Matrix> = new Map();
-        const page = this.context.selection.selectedPage!;
+        const page = this.translate.page;
 
         this.__env_tree = collect(page.childs);
         this.__root_envs = root;
@@ -97,7 +152,7 @@ class EnvRadar {
                 if (!(view instanceof ArtboradView || view instanceof SymbolView)) continue;
                 const matrix = new Matrix(view.matrix2Root().inverse);
                 root.set(view, matrix);
-                result.push({view, children: collect(view.childs)});
+                result.push({ view, children: collect(view.childs) });
             }
             return result;
         }
@@ -106,20 +161,22 @@ class EnvRadar {
     private __is_target(view: ShapeView, xy: XY) {
         const matrix = this.__root_envs.get(view)!;
         const frame = view.frame;
-        const {x, y} = matrix.computeCoord3(xy);
+        const { x, y } = matrix.computeCoord3(xy);
         return x >= frame.x && x <= (frame.x + frame.width) && y >= frame.y && y <= (frame.y + frame.height);
     }
+
+    placement: ShapeView | undefined;
 
     sweep() {
         if (!this.__env_tree) this.__build();
         const isTarget = this.__is_target.bind(this);
         const xy = this.translate.living;
 
-        this.placement = __sweep(this.__env_tree!) || this.context.selection.selectedPage!;
+        this.placement = __sweep(this.__env_tree!) || this.translate.page;
         if (!this.__current) this.current = this.placement;
 
         function __sweep(leafs: EnvLeaf[]): ShapeView | undefined {
-            for (const {view, children} of leafs) {
+            for (const { view, children } of leafs) {
                 if (!isTarget(view, xy)) continue;
 
                 const result = __sweep(children);
@@ -152,7 +209,7 @@ class SelModel {
 
         const box = this.__box(transport.selManager.shapes);
         this.originSelBox = box;
-        this.livingSelBox = {...box};
+        this.livingSelBox = { ...box };
         const living = transport.living;
         this.offsetX = living.x - box.x;
         this.offsetY = living.y - box.y;
@@ -177,8 +234,8 @@ class SelModel {
 
             const matrix = shape.matrix2Parent();
             matrix.multiAtLeft(p2r);
-            const {x, y, width, height} = shape.frame;
-            const points = [{x, y}, {x: x + width, y}, {x: x + width, y: y + height}, {
+            const { x, y, width, height } = shape.frame;
+            const points = [{ x, y }, { x: x + width, y }, { x: x + width, y: y + height }, {
                 x,
                 y: y + height
             }].map(i => matrix.computeCoord3(i));
@@ -209,15 +266,19 @@ class SelModel {
         }
     }
 
+    update() {
+        const transport = this.transport;
+
+        this.livingSelBox.x = transport.living.x - this.offsetX;
+        this.livingSelBox.y = transport.living.y - this.offsetY;
+    }
+
     fix() {
         const transport = this.transport;
         const living = transport.living;
 
         const originSel = this.originSelBox;
         const livingSel = this.livingSelBox;
-
-        livingSel.x = living.x - this.offsetX;
-        livingSel.y = living.y - this.offsetY;
 
         if (transport.shiftStatus) {
             const fixed = this.fixed;
@@ -286,21 +347,21 @@ class SelModel {
                 {
                     x: l,
                     pre: [
-                        {x: l, y: t},
-                        {x: l, y: b}
+                        { x: l, y: t },
+                        { x: l, y: b }
                     ]
                 },
                 {
                     x: r,
                     pre: [
-                        {x: r, y: t},
-                        {x: r, y: b}
+                        { x: r, y: t },
+                        { x: r, y: b }
                     ]
                 },
                 {
                     x: cx,
                     pre: [
-                        {x: cx, y: cy}
+                        { x: cx, y: cy }
                     ]
                 }
             ]
@@ -342,22 +403,22 @@ class SelModel {
                 {
                     y: t,
                     pre: [
-                        {x: l, y: t},
-                        {x: r, y: t}
+                        { x: l, y: t },
+                        { x: r, y: t }
                     ]
                 },
                 {
                     y: b,
                     pre: [
-                        {x: l, y: b},
-                        {x: r, y: b}
+                        { x: l, y: b },
+                        { x: r, y: b }
 
                     ]
                 },
                 {
                     y: cy,
                     pre: [
-                        {x: cx, y: cy}
+                        { x: cx, y: cy }
                     ]
                 }
             ]
@@ -397,11 +458,17 @@ class SelModel {
         if (assistXWork || assistYWork) assist.notify(Assist.MULTI_LINE_ASSIST);
     }
 
+    private __last_env: ShapeView | undefined;
+
     collect() {
         const views = this.transport.selManager.shapes;
 
-        this.context.assist.set_collect_target(views);
+        this.__last_env = this.context.assist.set_collect_target(views);
         this.context.assist.set_trans_target(views);
+    }
+
+    check() {
+        (this.transport.radar.current !== this.__last_env) && this.collect();
     }
 }
 
@@ -412,7 +479,7 @@ class SelManager {
     readonly bases: Map<string, TranslateBaseItem>;
     private __shapes: ShapeView[];
     private __shapes_set: Set<string>;
-    private transport: Translate2;
+    private translate: Translate2;
     private __coping: boolean;
     private context: Context;
 
@@ -466,7 +533,7 @@ class SelManager {
             }
             const transform = view.transform2.clone();
             transform.addTransform(p2r);
-            map.set(view.id, {view, transform, transformRaw: view.transform.clone()});
+            map.set(view.id, { view, transform, transformRaw: view.transform.clone() });
         }
 
         this.bases = map;
@@ -474,7 +541,7 @@ class SelManager {
         this.context = context;
         this.__shapes = shapes;
         this.__shapes_set = new Set(shapes.map(i => i.id));
-        this.transport = transport;
+        this.translate = transport;
     }
 
     get coping() {
@@ -508,12 +575,12 @@ class SelManager {
         if (reset) {
             const transforms: TransformRaw[] = [];
             this.bases.forEach(i => transforms.push(i.transformRaw));
-            results = this.transport.api!.drawn(this.shapes, transforms)!;
+            results = this.translate.api!.drawn(this.shapes, transforms)!;
         } else {
-            results = this.transport.api!.drawn(this.shapes)!;
+            results = this.translate.api!.drawn(this.shapes)!;
         }
 
-        const page = this.context.selection.selectedPage!;
+        const page = this.translate.page;
         this.context.nextTick(page, () => {
             const selects: ShapeView[] = [];
             results.forEach((s) => {
@@ -531,7 +598,7 @@ class SelManager {
 
         const shapes = this.shapes;
         const baseShapes = this.baseShapes;
-        this.transport.api!.revert(shapes, baseShapes);
+        this.translate.api!.revert(shapes, baseShapes);
         this.shapes = baseShapes;
         this.context.selection.rangeSelectShape(this.shapes);
     }
@@ -555,6 +622,16 @@ class StyleManager {
     slidifyEnv(env: SymbolView | ArtboradView) {
         const children = env.childs;
         for (const shape of children) {
+            const el = (shape as ShapeDom).el;
+            if (!el) return;
+            el.classList.add(StyleManager.Slide);
+            this.__elements_with_slide.add(el);
+        }
+    }
+
+    slidifySel() {
+        const shapes = this.transport.selManager.shapes;
+        for (const shape of shapes) {
             const el = (shape as ShapeDom).el;
             if (!el) return;
             el.classList.add(StyleManager.Slide);
@@ -640,10 +717,10 @@ class Jumper {
             f.y = f.y + m.translateY
         } else {
             const corners = [
-                {x: f.x, y: f.y},
-                {x: f.x + f.width, y: f.y},
-                {x: f.x + f.width, y: f.y + f.height},
-                {x: f.x, y: f.y + f.height}]
+                { x: f.x, y: f.y },
+                { x: f.x + f.width, y: f.y },
+                { x: f.x + f.width, y: f.y + f.height },
+                { x: f.x, y: f.y + f.height }]
                 .map((p) => m.computeCoord(p));
             const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
             const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
@@ -736,7 +813,7 @@ export class TranslateByKeyboard {
 }
 
 function boundingBox(shape: Shape, includedBorder: boolean): ShapeFrame {
-    let frame = {...shape.frame};
+    let frame = { ...shape.frame };
     if (includedBorder) {
         const borders = shape.getBorders();
         let maxtopborder = 0;
@@ -765,10 +842,10 @@ function boundingBox(shape: Shape, includedBorder: boolean): ShapeFrame {
     }
     const m = shape.transform;
     const corners = [
-        {x: frame.x, y: frame.y},
-        {x: frame.x + frame.width, y: frame.y},
-        {x: frame.x + frame.width, y: frame.y + frame.height},
-        {x: frame.x, y: frame.y + frame.height}
+        { x: frame.x, y: frame.y },
+        { x: frame.x + frame.width, y: frame.y },
+        { x: frame.x + frame.width, y: frame.y + frame.height },
+        { x: frame.x, y: frame.y + frame.height }
     ].map((p) => m.computeCoord(p));
     const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
     const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
@@ -799,6 +876,7 @@ class Inserter {
 
     layoutEnv: ArtboradView | SymbolView | undefined;
     layout: AutoLayout | undefined;
+    placement: Grid | undefined;
 
     constructor(translate: Translate2, context: Context) {
         this.translate = translate;
@@ -872,15 +950,17 @@ class Inserter {
             if (!lastRowEnd) end += layout!.stackVerticalPadding;
             lastRowEnd = end;
 
-            rows.push({grids, start, end});
+            rows.push({ grids, start, end });
         }
         rows[rows.length - 1].end = Infinity;
         this.rows = rows;
     }
 
     private __render(grid: Grid) {
+        this.placement = grid;
+
         const layout = this.layout!;
-        const {view, position} = grid;
+        const { view, position } = grid;
         const isHor = (layout.stackMode || StackMode.Horizontal) === StackMode.Horizontal;
         const gap = (isHor ? layout.stackSpacing : layout.stackCounterSpacing) / 2;
         const frame = view.frame;
@@ -889,13 +969,13 @@ class Inserter {
         const cy = (frame.y + frame.height) / 2;
         let start;
         if (position > 0) {
-            if (isHor) start = {x: frame.x + frame.width + gap, y: cy - len / 2};
-            else start = {x: cx - len / 2, y: frame.y + frame.height + gap};
+            if (isHor) start = { x: frame.x + frame.width + gap, y: cy - len / 2 };
+            else start = { x: cx - len / 2, y: frame.y + frame.height + gap };
         } else {
-            if (isHor) start = {x: frame.x - gap, y: cy - len / 2};
-            else start = {x: cx - len / 2, y: frame.y - gap};
+            if (isHor) start = { x: frame.x - gap, y: cy - len / 2 };
+            else start = { x: cx - len / 2, y: frame.y - gap };
         }
-        let end = isHor ? {x: start.x, y: start.y + len} : {x: start.x + len, y: start.y};
+        let end = isHor ? { x: start.x, y: start.y + len } : { x: start.x + len, y: start.y };
         const matrix = view.matrix2Root();
         matrix.multiAtLeft(this.context.workspace.matrix);
         start = matrix.computeCoord3(start);
@@ -908,7 +988,7 @@ class Inserter {
         const env = this.layoutEnv!;
         const living = this.translate.living;
         const matrix = new Matrix(env.matrix2Root().inverse);
-        const {x, y} = matrix.computeCoord3(living);
+        const { x, y } = matrix.computeCoord3(living);
         const mode = this.layout!.stackMode || StackMode.Horizontal;
 
         const rows = this.rows;
@@ -929,6 +1009,29 @@ class Inserter {
             if (there) break;
         }
     }
+
+    insert() {
+        const translate = this.translate;
+        const style = translate.style;
+
+        style.disAlphaSel()
+        style.slidifySel();
+
+        const env = this.layoutEnv!;
+        style.slidifyEnv(env);
+
+        const context = this.context;
+        context.selection.notify(Selection.PRE_INSERT);
+
+        const placement = this.placement!;
+        const shapes = translate.selManager.shapes;
+        translate.api!.insert(env, placement.view, placement.position, shapes);
+        let timer: any = setTimeout(() => {
+            style.clearSlide();
+            clearTimeout(timer);
+            timer = undefined;
+        }, 240);
+    }
 }
 
 export class Translate2 extends TransformHandler {
@@ -939,7 +1042,6 @@ export class Translate2 extends TransformHandler {
     readonly radar: EnvRadar;
     readonly jumper: Jumper;
 
-    mode: TranslateMode;
     living: XY;
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
@@ -956,15 +1058,15 @@ export class Translate2 extends TransformHandler {
         // 根据选区类型初始化mode，初始化过程中，只可能产生两种mode
         const views = this.selManager.shapes;
 
-        this.mode = TranslateMode.Linear;
+        this.__mode = TranslateMode.Linear;
         for (const view of views) {
             if ((view.parent as ArtboradView).autoLayout) {
-                this.mode = TranslateMode.Flex;
+                this.__mode = TranslateMode.Flex;
                 break;
             }
         }
 
-        if (this.mode === TranslateMode.Linear) this.selModel.collect();
+        if (this.__mode === TranslateMode.Linear) this.selModel.collect();
     }
 
     private __api: Transporter | undefined;
@@ -981,8 +1083,8 @@ export class Translate2 extends TransformHandler {
         const model = this.selModel;
         const manager = this.selManager;
 
-        const {x, y} = model.originSelBox;
-        const {x: tx, y: ty} = model.livingSelBox;
+        const { x, y } = model.originSelBox;
+        const { x: tx, y: ty } = model.livingSelBox;
         const deltaX = tx - x;
         const deltaY = ty - y;
 
@@ -1012,7 +1114,7 @@ export class Translate2 extends TransformHandler {
 
             __t.addTransform(PI);
             const transform = makeShapeTransform1By2(__t) as TransformRaw;
-            transformUnits.push({shape, transform});
+            transformUnits.push({ shape, transform });
         }
 
         this.api!.execute(transformUnits);
@@ -1025,11 +1127,13 @@ export class Translate2 extends TransformHandler {
     }
 
     private __linear() {
+        this.selModel.update();
         this.selModel.fix();
         this.__trans();
     }
 
     private __prev() {
+        this.selModel.update();
         this.inserter.pre();
         this.__trans(false);
     }
@@ -1079,31 +1183,51 @@ export class Translate2 extends TransformHandler {
         }
     }
 
+    private __mode: TranslateMode;
+    private __last_mode: TranslateMode | undefined;
+
+    get mode() {
+        return this.__mode;
+    }
+
+    set mode(mode) {
+        this.__last_mode = this.__mode;
+        this.__mode = mode;
+
+        if (this.__mode === TranslateMode.Prev) {
+            const radar = this.radar;
+            this.style.alphaSel();
+            this.context.selection.hoverShape(this.inserter.env = radar.placement as ArtboradView);
+        }
+        if (this.__last_mode === TranslateMode.Prev) {
+            this.inserter.env = undefined;
+            this.style.disAlphaSel();
+            this.context.selection.unHoverShape();
+        }
+
+        if (this.__mode === TranslateMode.Linear) {
+        }
+        if (this.__last_mode === TranslateMode.Linear) {
+            this.context.assist.notify(Assist.CLEAR);
+        }
+    }
+
     private __check_mode() {
         const current = this.mode;
         const radar = this.radar;
 
         if ((radar.placement as ArtboradView).autoLayout && current === TranslateMode.Linear) {
-            this.inserter.env = (radar.placement as ArtboradView);
-            return this.mode = TranslateMode.Prev;
+            this.mode = TranslateMode.Prev;
         }
         if (!(radar.placement as ArtboradView).autoLayout && current === TranslateMode.Prev) {
-            this.inserter.env = undefined;
-            return this.mode = TranslateMode.Linear;
+            this.mode = TranslateMode.Linear;
         }
     }
 
     execute(event: MouseEvent) {
         this.living = this.workspace.getRootXY(event);
-        this.radar.sweep(); // 检测鼠标当前所处环境
-        // if ((this.radar.placement as ArtboradView).autoLayout) {
-        //     if (!this.inserter.layoutEnv) this.inserter.env = this.radar.placement as ArtboradView;
-        //     this.style.alphaSel();
-        // } else {
-        //     this.inserter.env = undefined;
-        //     this.style.disAlphaSel();
-        // }
-        // if (this.inserter.layoutEnv) this.inserter.pre();
+        this.radar.sweep();
+        this.radar.migrate();
         this.__check_mode();
         this.__execute();
     }
@@ -1114,6 +1238,9 @@ export class Translate2 extends TransformHandler {
     }
 
     fulfil() {
+        if (this.mode === TranslateMode.Prev) this.inserter.insert();
+        if (this.mode === TranslateMode.Flex) this.style.clearSlide();
+
         this.api?.commit();
 
         this.workspace.translating(false);
