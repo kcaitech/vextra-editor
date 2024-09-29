@@ -33,9 +33,12 @@ import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
 import { Translate2 } from "@/transform/translate2";
 import { Action } from "@/context/tool";
+import { Direction } from "@/transform/direction";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
+    const direction = new Direction(context);
+
     let timer: any;
     const duration: number = DBL_CLICK;
     let isDragging = false;
@@ -398,6 +401,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function dispose() {
         workspace.unwatch(workspace_watcher);
         selection.unwatch(selection_watcher);
+        direction.destroy();
         remove_blur_from_window(windowBlur);
         document.removeEventListener('keydown', keydown);
         document.removeEventListener('keyup', keyup);
