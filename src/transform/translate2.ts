@@ -27,6 +27,7 @@ import { Assist } from "@/context/assist";
 import { isTarget } from "@/utils/scout";
 import { debounce, throttle } from "lodash";
 import { compare_layer_3 } from "@/utils/group_ungroup";
+import { isShapeOut } from "@/utils/assist";
 
 enum TranslateMode {
     Linear = 'linear',
@@ -49,33 +50,32 @@ interface EnvLeaf {
  * @description 环境雷达
  */
 class EnvRadar {
-    private translate: Translate2;
-    private context: Context;
+    private readonly translate: Translate2;
+    private readonly context: Context;
 
     private __root_envs: Map<ShapeView, Matrix> = new Map();
     private __env_tree: EnvLeaf[] | undefined;
+    private __target: ShapeView | undefined;
 
     constructor(translate: Translate2, context: Context) {
         this.translate = translate;
         this.context = context;
     }
 
-    private __current: ShapeView | undefined;
-    private __previous: ShapeView | undefined;
+    placement: ShapeView | undefined;
 
-    get current() {
-        return this.__current!;
+    get target() {
+        return this.__target!;
     }
 
-    set current(view) {
-        this.__previous = this.__current;
-        this.__current = view;
+    set target(view) {
+        this.__target = view;
     }
 
     private __except: Set<string> | undefined;
 
     private __create_migrate_env() {
-        const set = new Set<string>();
+        const set: Set<string> = new Set();
         deep(this.translate.selManager.shapes);
         this.__except = set;
 
@@ -89,20 +89,8 @@ class EnvRadar {
         }
     }
 
-    private __sweep_for_migrate() {
-        const except = this.__except!;
-        const isTarget = this.__is_target.bind(this);
-        const xy = this.translate.living;
-        return __sweep(this.__env_tree!) || this.translate.page;
-
-        function __sweep(leafs: EnvLeaf[]): ShapeView | undefined {
-            for (const { view, children } of leafs) {
-                if (except.has(view.id) || !isTarget(view, xy)) continue;
-
-                const result = __sweep(children);
-                return result ? result : view;
-            }
-        }
+    private __can_not_land(view: ShapeView) {
+        return this.target === view;
     }
 
     __migrate() {
@@ -111,15 +99,16 @@ class EnvRadar {
         if (!this.__env_tree) return;
         if (!this.__except) this.__create_migrate_env();
 
-        const target = this.__sweep_for_migrate();
+        const target = this.placement!;
 
-        if (target === this.current) return;
+        if (this.__can_not_land(target)) return;
+
         if ((target as ArtboradView).autoLayout) return;
 
         const shapes = compare_layer_3(translate.selManager.shapes);
         const context = this.context;
         if (translate.api!.migrate(target, shapes, context.workspace.t('compos.dlt'))) {
-            this.current = target;
+            this.target = target;
 
             if (target instanceof PageView) {
                 context.selection.unHoverShape();
@@ -128,7 +117,7 @@ class EnvRadar {
             }
 
             context.nextTick(translate.page, () => {
-                translate.selModel.check();
+                translate.mode === TranslateMode.Linear && translate.selModel.check();
             });
         }
     }
@@ -138,46 +127,106 @@ class EnvRadar {
     private __return() {
     }
 
+    count: number = 1;
+
+    extract() {
+        const translate = this.translate;
+        const jumper = translate.jumper;
+
+        const env = jumper.env!;
+        const { x, y } = this.__get_matrix(env)!.computeCoord3(translate.living);
+
+        const frame = env.frame;
+        if (x >= frame.x && x <= frame.x + frame.width && y >= frame.y && y <= frame.y + frame.height) return;
+
+        const placement = this.placement!;
+
+        if (translate.api!.migrate(placement, compare_layer_3(translate.selManager.shapes), translate.workspace.t('compos.dlt'))) {
+            this.target = placement;
+
+            const context = this.context;
+            if (placement instanceof PageView) {
+                context.selection.unHoverShape();
+            } else {
+                context.selection.hoverShape(placement);
+            }
+
+            translate.check((placement as ArtboradView).autoLayout ? TranslateMode.Flex : TranslateMode.Linear);
+        }
+    }
+
+    private __get_matrix(view: ShapeView) {
+        let matrix = this.__root_envs.get(view)!;
+        if (!matrix) {
+            matrix = new Matrix(view.matrix2Root().inverse);
+            this.__root_envs.set(view, matrix);
+        }
+        return matrix;
+    }
+
     private __build() {
         const root: Map<ShapeView, Matrix> = new Map();
-        const page = this.translate.page;
-
-        this.__env_tree = collect(page.childs);
+        this.__env_tree = collect(this.translate.page.childs);
         this.__root_envs = root;
+
+        const set: Set<string> = new Set();
+        deep(this.translate.selManager.shapes);
+        this.__except = set;
 
         function collect(views: ShapeView[]) {
             const result: EnvLeaf[] = [];
             for (let i = views.length - 1; i > -1; i--) {
                 const view = views[i];
                 if (!(view instanceof ArtboradView || view instanceof SymbolView)) continue;
-                const matrix = new Matrix(view.matrix2Root().inverse);
-                root.set(view, matrix);
                 result.push({ view, children: collect(view.childs) });
             }
             return result;
         }
+
+        function deep(shapes: ShapeView[]) {
+            for (const view of shapes) {
+                const type = view.type;
+                if (type === ShapeType.SymbolRef || type === ShapeType.Table || type === ShapeType.BoolShape || type === ShapeType.SymbolUnion) continue;
+                if (type === ShapeType.Artboard || type === ShapeType.Symbol) set.add(view.id);
+                if (view.childs.length) deep(view.childs);
+            }
+        }
     }
 
     private __is_target(view: ShapeView, xy: XY) {
-        const matrix = this.__root_envs.get(view)!;
+        const matrix = this.__get_matrix(view);
         const frame = view.frame;
         const { x, y } = matrix.computeCoord3(xy);
         return x >= frame.x && x <= (frame.x + frame.width) && y >= frame.y && y <= (frame.y + frame.height);
     }
 
-    placement: ShapeView | undefined;
+    private __out_views: Map<ShapeView, boolean> = new Map();  // 视野
+
+    private __is_out_of_view(view: ShapeView) {
+        let val = this.__out_views.get(view);
+        if (val === undefined) {
+            val = isShapeOut(this.context, view);
+            this.__out_views.set(view, val);
+        }
+        return val;
+    }
 
     sweep() {
-        if (!this.__env_tree) this.__build();
+        !this.__env_tree && this.__build();
+
         const isTarget = this.__is_target.bind(this);
+        const isOutView = this.__is_out_of_view.bind(this);
+
+        const except = this.__except!;
         const xy = this.translate.living;
 
         this.placement = __sweep(this.__env_tree!) || this.translate.page;
-        if (!this.__current) this.current = this.placement;
+
+        if (!this.target) this.target = this.placement; // 初始化一个target
 
         function __sweep(leafs: EnvLeaf[]): ShapeView | undefined {
             for (const { view, children } of leafs) {
-                if (!isTarget(view, xy)) continue;
+                if (except.has(view.id) || isOutView(view) || !isTarget(view, xy)) continue;
 
                 const result = __sweep(children);
                 return result ? result : view;
@@ -468,7 +517,7 @@ class SelModel {
     }
 
     check() {
-        (this.transport.radar.current !== this.__last_env) && this.collect();
+        (this.transport.radar.target !== this.__last_env) && this.collect();
     }
 }
 
@@ -768,6 +817,10 @@ class Jumper {
     }
 
     swap = throttle(this.__swap, 60);
+
+    get env() {
+        return this.__env;
+    }
 }
 
 function tips4keyboard(context: Context) {
@@ -1130,12 +1183,14 @@ export class Translate2 extends TransformHandler {
         this.selModel.update();
         this.selModel.fix();
         this.__trans();
+        this.radar.migrate();
     }
 
     private __prev() {
         this.selModel.update();
         this.inserter.pre();
         this.__trans(false);
+        this.radar.migrate();
     }
 
     private __flex() {
@@ -1143,11 +1198,11 @@ export class Translate2 extends TransformHandler {
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, xy);
         if (!this.jumper.inited) this.jumper.init();
         this.jumper.swap();
+        this.radar.extract();
     }
 
     private __execute() {
         if (this.selManager.fixed) return;
-
         switch (this.mode) {
             case TranslateMode.Linear:
                 return this.__linear();
@@ -1194,25 +1249,38 @@ export class Translate2 extends TransformHandler {
         this.__last_mode = this.__mode;
         this.__mode = mode;
 
-        if (this.__mode === TranslateMode.Prev) {
-            const radar = this.radar;
-            this.style.alphaSel();
-            this.context.selection.hoverShape(this.inserter.env = radar.placement as ArtboradView);
-        }
         if (this.__last_mode === TranslateMode.Prev) {
             this.inserter.env = undefined;
             this.style.disAlphaSel();
             this.context.selection.unHoverShape();
         }
-
-        if (this.__mode === TranslateMode.Linear) {
+        if (this.__mode === TranslateMode.Prev) {
+            const radar = this.radar;
+            this.style.alphaSel();
+            this.context.selection.hoverShape(this.inserter.env = radar.placement as ArtboradView);
         }
+
         if (this.__last_mode === TranslateMode.Linear) {
             this.context.assist.notify(Assist.CLEAR);
         }
+        if (this.__mode === TranslateMode.Linear) {
+        }
+
+        if (this.__last_mode === TranslateMode.Flex) {
+            this.style.clearSlide();
+            this.jumper.inited = false;
+        }
+        if (this.__mode === TranslateMode.Flex) {
+            this.style.slidifyEnv(this.jumper.env!);
+            this.style.slidifySel();
+        }
     }
 
-    private __check_mode() {
+    check(mode?: TranslateMode) {
+        this.radar.sweep();
+
+        if (mode) return this.mode = mode;
+
         const current = this.mode;
         const radar = this.radar;
 
@@ -1226,9 +1294,9 @@ export class Translate2 extends TransformHandler {
 
     execute(event: MouseEvent) {
         this.living = this.workspace.getRootXY(event);
-        this.radar.sweep();
-        this.radar.migrate();
-        this.__check_mode();
+
+        this.check();
+
         this.__execute();
     }
 
