@@ -623,7 +623,7 @@ onUnmounted(() => {
         <path
             :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
             fill="transparent" />
-        <g v-if="!isTidyUp && !isHover">
+        <g v-if="!isTidyUp && !isHover && !cursor_down">
             <circle v-for="(dot, index) in dots" :key="index" :cx="dot.x" :cy="dot.y" r="2.5" fill="#D13BCD"
                 stroke="#FFFFFF" stroke-width="1" />
         </g>
