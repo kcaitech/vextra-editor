@@ -621,11 +621,11 @@ function search(e: MouseEvent) {
             const shape = target_shapes[target_shapes.length - 1] as ShapeView;
             const m = end_matrix.value as Matrix;
             if (m) {
-                hover_shape = finderShape(m, scout, [shape], xy);
+                hover_shape = finderShape(m, scout, [shape], xy, true);
             }
         }
     } else {
-        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
+        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);
     }
     const actions = hover_shape?.prototypeInterActions;
     reflush.value++;
