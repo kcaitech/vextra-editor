@@ -224,7 +224,7 @@ const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
             if (gap_equal) {
                 const algin = center_equal ? 'center' : start_equal ? 'start' : 'end'
                 return { tidyup: false, hor: 0, ver: space, shapes: [rows], dir: true, algin }
-            };
+            }
         }
     } else {
         const top_equal = shape_rows.every(row => row[0]._p_frame.y === shape_rows[0][0]._p_frame.y);

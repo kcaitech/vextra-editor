@@ -666,6 +666,7 @@ function search2(e: MouseEvent) {
         }
     } else {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
+      console.log(hover_shape,'hover_shape')
     }
     return hover_shape;
 }

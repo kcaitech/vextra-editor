@@ -763,7 +763,7 @@ const _whetherTidyUp = () => {
     s_tidy_up.value = true;
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
-    console.log(Info, 'info');
+    console.log(Info, 'inf111111111111o');
     
     if (!Info) {
         props.context.selection.whetherTidyUp(true, false, 'center');
