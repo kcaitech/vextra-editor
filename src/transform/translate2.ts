@@ -68,8 +68,8 @@ class EnvRadar {
         return this.__target!;
     }
 
-    set target(view) {
-        this.__target = view;
+    set target(t) {
+        this.__target = t;
     }
 
     private __except: Set<string> | undefined;
@@ -105,9 +105,8 @@ class EnvRadar {
 
         if ((target as ArtboradView).autoLayout) return;
 
-        const shapes = compare_layer_3(translate.selManager.shapes);
         const context = this.context;
-        if (translate.api!.migrate(target, shapes, context.workspace.t('compos.dlt'))) {
+        if (translate.api!.migrate(target, compare_layer_3(translate.selManager.shapes), context.workspace.t('compos.dlt'))) {
             this.target = target;
 
             if (target instanceof PageView) {
@@ -127,8 +126,6 @@ class EnvRadar {
     private __return() {
     }
 
-    count: number = 1;
-
     extract() {
         const translate = this.translate;
         const jumper = translate.jumper;
@@ -139,19 +136,19 @@ class EnvRadar {
         const frame = env.frame;
         if (x >= frame.x && x <= frame.x + frame.width && y >= frame.y && y <= frame.y + frame.height) return;
 
-        const placement = this.placement!;
+        const target = this.placement!;
 
-        if (translate.api!.migrate(placement, compare_layer_3(translate.selManager.shapes), translate.workspace.t('compos.dlt'))) {
-            this.target = placement;
+        if (translate.api!.migrate(target, compare_layer_3(translate.selManager.shapes), translate.workspace.t('compos.dlt'))) {
+            this.target = target;
 
             const context = this.context;
-            if (placement instanceof PageView) {
+            if (target instanceof PageView) {
                 context.selection.unHoverShape();
             } else {
-                context.selection.hoverShape(placement);
+                context.selection.hoverShape(target);
             }
 
-            translate.check((placement as ArtboradView).autoLayout ? TranslateMode.Flex : TranslateMode.Linear);
+            translate.checkout((target as ArtboradView).autoLayout ? TranslateMode.Flex : TranslateMode.Linear);
         }
     }
 
@@ -1276,14 +1273,14 @@ export class Translate2 extends TransformHandler {
         }
     }
 
-    check(mode?: TranslateMode) {
+    checkout(mode?: TranslateMode) {
         this.radar.sweep();
 
-        if (mode) return this.mode = mode;
+        if (mode) return this.mode = mode; // target发生改变之后切换指定模式
 
         const current = this.mode;
-        const radar = this.radar;
 
+        const radar = this.radar; // 根据环境在Linear、Prev之间自动切换
         if ((radar.placement as ArtboradView).autoLayout && current === TranslateMode.Linear) {
             this.mode = TranslateMode.Prev;
         }
@@ -1295,7 +1292,7 @@ export class Translate2 extends TransformHandler {
     execute(event: MouseEvent) {
         this.living = this.workspace.getRootXY(event);
 
-        this.check();
+        this.checkout();
 
         this.__execute();
     }
