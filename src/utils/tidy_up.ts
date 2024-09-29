@@ -163,22 +163,21 @@ export const whetherNeedTidyUp = (context: Context) => {
     }
     return;
 }
-
 const checkHorTidyUp = (selected: ShapeView[], dir: boolean) => {
     const shape_rows2 = checkTidyUpShapesOrder(selected, dir);
     if (shape_rows2.length === 1) {
         let rows = shape_rows2[0];
         const frame = rows[0]._p_frame;
-        const start_equal = rows.every(s => frame.y === s._p_frame.y);
-        const center_equal = rows.every(s => (frame.y + (frame.height / 2)) === (s._p_frame.y + (s._p_frame.height / 2)));
-        const end_equal = rows.every(s => (frame.y + frame.height) === (s._p_frame.y + s._p_frame.height));
+        const start_equal = rows.every(s => getDiff(frame.y, s._p_frame.y) < 1);
+        const center_equal = rows.every(s => getDiff((frame.y + (frame.height / 2)), (s._p_frame.y + (s._p_frame.height / 2))) < 1);
+        const end_equal = rows.every(s => getDiff((frame.y + frame.height), (s._p_frame.y + s._p_frame.height)) < 1);
         if (start_equal || center_equal || end_equal) {
             let gap_equal = true;
             const space = rows[1]._p_frame.x - (rows[0]._p_frame.x + rows[0]._p_frame.width);
             for (let i = 0; i < rows.length - 1; i++) {
                 const cur_f = rows[i]._p_frame;
                 const next_f = rows[i + 1]._p_frame;
-                if ((next_f.x - (cur_f.x + cur_f.width)) !== space) {
+                if (getDiff((next_f.x - (cur_f.x + cur_f.width)), space) > 1) {
                     gap_equal = false;
                     break;
                 }
@@ -207,16 +206,16 @@ const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
     if (shape_rows.length === 1) {
         let rows = shape_rows[0];
         const frame = rows[0]._p_frame;
-        const start_equal = rows.every(s => frame.x === s._p_frame.x);
-        const center_equal = rows.every(s => (frame.x + (frame.width / 2)) === (s._p_frame.x + (s._p_frame.width / 2)));
-        const end_equal = rows.every(s => (frame.x + frame.width) === (s._p_frame.x + s._p_frame.width));
+        const start_equal = rows.every(s => getDiff(frame.x, s._p_frame.x) < 1);
+        const center_equal = rows.every(s => getDiff((frame.x + (frame.width / 2)), (s._p_frame.x + (s._p_frame.width / 2))) < 1);
+        const end_equal = rows.every(s => getDiff((frame.x + frame.width), (s._p_frame.x + s._p_frame.width)) < 1);
         if (start_equal || center_equal || end_equal) {
             let gap_equal = true;
             const space = rows[1]._p_frame.y - (rows[0]._p_frame.y + rows[0]._p_frame.height);
             for (let i = 0; i < rows.length - 1; i++) {
                 const cur_f = rows[i]._p_frame;
                 const next_f = rows[i + 1]._p_frame;
-                if ((next_f.y - (cur_f.y + cur_f.height)) !== space) {
+                if (getDiff((next_f.y - (cur_f.y + cur_f.height)), space) > 1) {
                     gap_equal = false;
                     break;
                 }
@@ -630,4 +629,9 @@ export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
         shape_rows = [row];
     }
     return shape_rows;
+}
+
+
+const getDiff = (a: number, b: number) => {
+    return Math.abs(a - b);
 }
