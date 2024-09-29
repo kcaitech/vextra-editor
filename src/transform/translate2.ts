@@ -93,6 +93,7 @@ class EnvRadar {
         return this.target === view;
     }
 
+
     __migrate() {
         const translate = this.translate;
 
@@ -123,7 +124,31 @@ class EnvRadar {
 
     migrate = debounce(this.__migrate, 36);
 
-    private __return() {
+    private __background: Map<ShapeView, { view: ShapeView, index: number }[]> | undefined;
+
+    private __return(target: ShapeView) {
+        if (!this.__background) {
+            const background: Map<ShapeView, { view: ShapeView, index: number }[]> = new Map();
+            const shapes = this.translate.selManager.shapes;
+            for (const view of shapes) {
+                const parent = view.parent!;
+                let children = background.get(parent)!;
+                if (!children) {
+                    children = [];
+                    background.set(parent, children);
+                }
+                const index = parent.childs.indexOf(view);
+                children.push({ view, index });
+            }
+            return false;
+        }
+        if (this.__background.has(target)) {
+            this.__background.forEach((children, parent) => {
+
+            })
+            return true;
+        }
+        return false;
     }
 
     extract() {
