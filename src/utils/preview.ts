@@ -162,12 +162,15 @@ export const selectedShape = (ctx: Context, page: PageView, t: Function) => {
     ctx.selection.selectShape(list[0]);
 }
 
-export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], hot: PageXY): ShapeView | undefined {
+export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], hot: PageXY, isAction = false): ShapeView | undefined {
     let result: ShapeView | undefined = undefined;
     for (let i = scope.length - 1; i > -1; i--) {
         const item = scope[i];
 
-        if (!item.isVisible || !item.prototypeInterActions || !item.prototypeInterActions.length) {
+        if (!item.isVisible) {
+            continue;
+        }
+        if(isAction && (!item.prototypeInterActions || !item.prototypeInterActions.length)) {
             continue;
         }
         const path = item.getPath().clone();
