@@ -54,7 +54,7 @@ const tidyUp = () => {
 
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width);
+    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width, 'center');
 }
 
 
@@ -353,7 +353,8 @@ const mousemove = (e: MouseEvent) => {
         tidyUpVerSpace.value = ver;
         props.context.attr.notify(Attribute.TIDY_UP_SPACE_CHANGE, { hor, ver })
         selectedShapes.value = [...shapes_rows];
-        lockMouseHandler.executeTidyup([...shapes_rows], hor, ver, dir);
+        const algin = props.context.selection.tidyUpAlgin;
+        lockMouseHandler.executeTidyup([...shapes_rows], hor, ver, dir, algin);
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
@@ -387,7 +388,7 @@ function clear_status() {
 
 const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
     const shapes = selectedShapes.value.length ? selectedShapes.value : shapes_rows;
-    if(!shapes.length) return;
+    if (!shapes.length) return;
     const selected = props.context.selection.selectedShapes;
     const { box } = getSelectedWidthHeight(props.context, selected);
     const parent = shapes[0][0].parent;
