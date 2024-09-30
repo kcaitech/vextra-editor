@@ -355,7 +355,6 @@ export const getFrame = (shape: ShapeView) => {
     return f;
 }
 
-
 export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView[][], space: { hor: number, ver: number }, startXY: { x: number, y: number }): XY[][] {
     const shapes_rows_point_map = [];
     const minWidth = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.width)))) - 1;
@@ -540,10 +539,10 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
 }
 
 export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
-    if (shapes.length < 2) return [];
     let shape_rows: ShapeView[][] = [];
     let unassignedShapes: ShapeView[] = [...shapes].filter(shape => shape.isVisible);
-
+    const shapes_row_length = unassignedShapes.length;
+    if (shapes_row_length < 2) return [];
     while (unassignedShapes.length > 0) {
         // 找出 y + height 最小的图形作为基准图形
         const baseShape = unassignedShapes.reduce((minShape, shape) => {
@@ -563,12 +562,20 @@ export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
         });
         let currentRow: ShapeView[] = [];
         if (verBase) {
-            // 将与基准图形相交的图形放入当前列
             currentRow = unassignedShapes.filter(shape => {
                 const frame = shape._p_frame;
                 const base_frame = baseShape._p_frame;
-                return Math.abs((base_frame.x + (base_frame.width / 2)) - (frame.x + (frame.width / 2))) < 1;
+                return (base_frame.x + base_frame.width) > frame.x && base_frame.x < (frame.x + frame.width);
             });
+
+            if (currentRow.length !== shapes_row_length) {
+                // 将与基准图形相交的图形放入当前列
+                currentRow = unassignedShapes.filter(shape => {
+                    const frame = shape._p_frame;
+                    const base_frame = baseShape._p_frame;
+                    return Math.abs((base_frame.x + (base_frame.width / 2)) - (frame.x + (frame.width / 2))) < 1;
+                });
+            }
 
             // 将当前行按 x 坐标排序
             currentRow.sort((a, b) => {
@@ -581,12 +588,19 @@ export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
                 }
             })
         } else {
-            // 将与基准图形相交的图形放入当前行
             currentRow = unassignedShapes.filter(shape => {
                 const frame = shape._p_frame;
                 const base_frame = baseShape._p_frame;
-                return Math.abs((base_frame.y + (base_frame.height / 2)) - (frame.y + (frame.height / 2))) < 1;
+                return (base_frame.y + base_frame.height) > frame.y && base_frame.y < (frame.y + frame.height);
             });
+            if (currentRow.length !== shapes_row_length) {
+                // 将与基准图形相交的图形放入当前行
+                currentRow = unassignedShapes.filter(shape => {
+                    const frame = shape._p_frame;
+                    const base_frame = baseShape._p_frame;
+                    return Math.abs((base_frame.y + (base_frame.height / 2)) - (frame.y + (frame.height / 2))) < 1;
+                });
+            }
 
             // 将当前行按 x 坐标排序
             currentRow.sort((a, b) => {
