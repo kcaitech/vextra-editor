@@ -759,7 +759,8 @@ const _whetherTidyUp = () => {
     if (props.context.workspace.tidyUpIsTrans) return;
     const selected = props.context.selection.selectedShapes;
     s_tidy_up.value = false;
-    if (selected.length <= 1) return;
+    const length = selected.filter(shape => shape.isVisible).length;
+    if (length <= 1) return;
     s_tidy_up.value = true;
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
