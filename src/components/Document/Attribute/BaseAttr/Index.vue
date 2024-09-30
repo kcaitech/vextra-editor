@@ -34,6 +34,8 @@ import { rotate as __rotate } from "@/transform/rotate"
 import Oval from "@/components/Document/Attribute/BaseAttr/Oval.vue";
 import { checkTidyUpShapesOrder, getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder, whetherNeedTidyUp } from '@/utils/tidy_up';
 import { WorkSpace } from '@/context/workspace';
+import { LinearApi } from "@kcdesign/data"
+import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 
 interface Props {
     context: Context
@@ -105,6 +107,7 @@ const model_disable_state: ModelState = reactive({
     ovalOptions: false
 });
 let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_oval } = layout_options;
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
@@ -190,6 +193,18 @@ function changeX(value: string) {
     });
 }
 
+function keydownX(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const actions = get_actions_frame_x(shapes, value);
+        linearApi.modifyShapesX(actions)
+        event.preventDefault();
+    }
+}
+
 function changeY(value: string) {
     value = Number
         .parseFloat(computeString(value))
@@ -209,6 +224,18 @@ function changeY(value: string) {
     props.context.nextTick(props.context.selection.selectedPage!, () => {
         props.context.tool.notify(Tool.RULE_RENDER_SIM);
     });
+}
+
+function keydownY(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const actions = get_actions_frame_y(shapes, value);
+        linearApi.modifyShapesY(actions)
+        event.preventDefault();
+    }
 }
 
 function changeW(value: string) {
@@ -233,6 +260,17 @@ function changeW(value: string) {
     });
 }
 
+function keydownW(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifyShapesWidth(shapes, value)
+        event.preventDefault();
+    }
+}
+
 function changeH(value: string) {
     value = Number
         .parseFloat(computeString(value))
@@ -255,6 +293,17 @@ function changeH(value: string) {
     props.context.nextTick(props.context.selection.selectedPage!, () => {
         props.context.tool.notify(Tool.RULE_RENDER_SIM);
     });
+}
+
+function keydownH(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifyShapesHeight(shapes, value)
+        event.preventDefault();
+    }
 }
 
 function lockToggle() {
@@ -310,6 +359,18 @@ function changeR(value: string) {
     props.context.nextTick(props.context.selection.selectedPage!, () => {
         props.context.tool.notify(Tool.RULE_RENDER_SIM);
     });
+}
+
+function keydownR(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const transforms = __rotate(shapes, value)
+        linearApi.setShapesRotate(transforms)
+        event.preventDefault();
+    }
 }
 
 function changeCounts(value: string) {
@@ -689,7 +750,7 @@ function wheelX(event: WheelEvent) {
 }
 
 const tidyUp = () => {
-    if(!props.context.selection.isTidyUp) return;
+    if (!props.context.selection.isTidyUp) return;
     const selected = props.context.selection.selectedShapes;
     const { width, height } = getSelectedWidthHeight(props.context, selected);
 
@@ -873,9 +934,10 @@ onUnmounted(() => {
     <div class="table">
         <div class="tr">
             <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
-                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX" @keydown="keydownX">
+            </MdNumberInput>
             <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
-                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY"></MdNumberInput>
             <div v-if="s_adapt" class="adapt" @click="adapt">
                 <Tooltip :content="t('attr.adapt')">
                     <svg-icon icon-class="adapt" style="outline: none;" />
@@ -885,9 +947,10 @@ onUnmounted(() => {
         </div>
         <div class="tr">
             <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
-                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2" @keydown="keydownW"></MdNumberInput>
             <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
-                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2">
+                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"
+                @keydown="keydownH">
             </MdNumberInput>
             <Tooltip :content="t('attr.constrainProportions')">
                 <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
@@ -901,7 +964,7 @@ onUnmounted(() => {
         <div class="tr">
             <MdNumberInput icon="angle" draggable :value="formatRotate(rotate)" @change="changeR"
                 :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
-                @dragend="dragend"></MdNumberInput>
+                @dragend="dragend" @keydown="keydownR"></MdNumberInput>
             <div class="flip-wrapper">
                 <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
                     <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
@@ -928,8 +991,8 @@ onUnmounted(() => {
                 @dragend="dragend"></MdNumberInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
-        <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
-        <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
+        <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius"></Radius>
+        <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up" style="margin-bottom: 0">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
                 :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"

@@ -176,7 +176,7 @@ onUnmounted(() => {
     </div>
     <el-tooltip class="box-item" effect="dark" :content="t(`bool.${selectBool}`)" placement="bottom" :show-after="600"
         :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-        <ToolButton ref="button" @click="changeBool"
+        <ToolButton :class="{'active-f':popoverVisible}" ref="button" @click="changeBool"
             :style="{ opacity: disabled ? 0.4 : 1, pointerEvents: disabled ? 'none' : 'auto' }" :selected="false"
             @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
             <div class="svg-container" :class="{ active: state }">
@@ -209,6 +209,10 @@ onUnmounted(() => {
 
 .active {
     color: gray;
+}
+
+.active-f{
+    background-color: rgba(255, 255, 255, .1);
 }
 
 .menu {

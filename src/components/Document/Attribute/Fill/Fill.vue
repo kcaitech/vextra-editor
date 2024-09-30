@@ -36,6 +36,7 @@ import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, hidden_selection, is_editing } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 import { ImgFrame } from '@/context/atrribute';
+import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 
 interface FillItem {
     id: number,
@@ -228,6 +229,7 @@ const tableSelect = ref({
 
 function setColor(idx: number, clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
+
     if (!res) {
         message('danger', t('system.illegal_input'));
         return;
@@ -329,6 +331,38 @@ function onAlphaChange(e: Event, idx: number, fill: Fill) {
     } else {
         alpha_message(idx, fill);
     }
+}
+
+function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill,val:string) {
+    let value: any = sortValue(val);
+    if (!alphaFill.value) return;
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        if (value >= 0) {
+            if (value >= 100) {
+                value = 100
+            }
+            value = value / 100 + (event.code === 'ArrowUp' ? 0.01 : -0.01)
+            if (isNaN(value)) return;
+            const color = fills[idx].fill.color;
+            let clr = toHex(color.red, color.green, color.blue);
+            if (clr.slice(0, 1) !== '#') {
+                clr = "#" + clr
+            }
+            value = value <= 0 ? 0 : value <= 1 ? value : 1
+            if (fill.fillType === FillType.SolidColor || fill.fillType === FillType.Pattern) {
+                console.log('11111');
+
+                setColor(idx, clr, value);
+            } else if (fill.gradient && fill.fillType === FillType.Gradient) {
+                console.log('22222');
+                set_gradient_opacity(idx, value);
+            }
+        } else {
+            alpha_message(idx, fill);
+        }
+        event.preventDefault();
+    }
+
 }
 
 const alpha_message = (idx: number, fill: Fill) => {
@@ -693,14 +727,15 @@ onUnmounted(() => {
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <span class="colorFill" style="line-height: 14px;"
                         v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
-            t(`color.${f.fill.gradient.gradientType}`) }}</span>
+                            t(`color.${f.fill.gradient.gradientType}`) }}</span>
                     <span class="colorFill" style="line-height: 14px;"
                         v-else-if="f.fill.fillType === FillType.Pattern">{{
-            t(`pattern.image`) }}</span>
+                            t(`pattern.image`) }}</span>
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill) + '%'"
                         @change="(e) => onAlphaChange(e, idx, f.fill)" @focus="(e) => selectAlpha(e)"
                         @input="alphaInput" @click="alphaClick" @blur="is_alpha_select = false"
-                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
+                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"
+                        @keydown="(e)=>keydownAlpha(e, idx, f.fill,filterAlpha(f.fill))" />
                 </div>
                 <!--                <div class="temporary"></div>-->
                 <div class="delete" @click="deleteFill(idx)">

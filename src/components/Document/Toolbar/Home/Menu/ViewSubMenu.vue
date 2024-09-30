@@ -26,6 +26,7 @@ const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const isPixel = ref<boolean>(props.context.user.isPixelAlignMent);
 const isGrid = ref<boolean>(props.context.user.isPixelGrid);
 const isRule = ref<boolean>(props.context.user.isRuleVisible);
+const isScale = ref<string>((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0))
 
 const items = ref<string[]>(['half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'grid', 'pixel', 'rule']);
 
@@ -120,18 +121,31 @@ onMounted(() => {
 })
 </script>
 <template>
-    <div ref="subMenu" v-bind="$attrs" :style="{ position: fixed ? 'fixed' : 'absolute', top: props.y + 'px', left: props.x + 'px' }" class="subMenu"
+    <div ref="subMenu" v-bind="$attrs"
+        :style="{ position: fixed ? 'fixed' : 'absolute', top: props.y + 'px', left: props.x + 'px' }" class="subMenu"
         @mousemove.stop>
         <div class="item" v-if="items.includes('half')" @click="(e: MouseEvent) => half(e)">
+            <div class="choose" :style="{ visibility: isScale.includes('50') ? 'visible' : 'hidden' }">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
             <span>50%</span>
         </div>
         <div class="item" v-if="items.includes('hundred')" @click="(e: MouseEvent) => hundred(e)">
+            <div class="choose" :style="{ visibility: isScale.includes('100') ? 'visible' : 'hidden' }">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
             <span>100%</span>
         </div>
         <div class="item" v-if="items.includes('double')" @click="(e: MouseEvent) => double(e)">
+            <div class="choose" :style="{ visibility: isScale.includes('200') ? 'visible' : 'hidden' }">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
             <span>200%</span>
         </div>
         <div class="item" v-if="items.includes('canvas')" @click="canvas">
+            <div class="choose" :style="{ visibility: 'hidden' }">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
             <span>{{ t('system.fit_canvas') }}</span>
         </div>
         <div class="line" v-if="items.includes('cursor')"></div>
@@ -207,7 +221,7 @@ onMounted(() => {
         box-sizing: border-box;
 
         >span {
-            margin-left: 20px;
+            margin-left: 8px;
         }
 
         //.choose {
