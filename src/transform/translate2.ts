@@ -21,13 +21,13 @@ import {
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
-import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { Tool } from "@/context/tool";
 import { Assist } from "@/context/assist";
 import { isTarget } from "@/utils/scout";
 import { debounce, throttle } from "lodash";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { isShapeOut } from "@/utils/assist";
+import { StyleManager } from "@/transform/style";
 
 enum TranslateMode {
     Linear = 'linear',
@@ -678,60 +678,6 @@ class SelManager {
 /**
  * @description 图层样式管理器
  */
-class StyleManager {
-    static Slide = 'transition-200';
-    static Alpha = 'opacity-for-preview';
-
-    private transport: Translate2;
-
-    constructor(transport: Translate2) {
-        this.transport = transport;
-    }
-
-    private __elements_with_slide: Set<Element> = new Set();
-
-    slidifyEnv(env: SymbolView | ArtboradView) {
-        const children = env.childs;
-        for (const shape of children) {
-            const el = (shape as ShapeDom).el;
-            if (!el) return;
-            el.classList.add(StyleManager.Slide);
-            this.__elements_with_slide.add(el);
-        }
-    }
-
-    slidifySel() {
-        const shapes = this.transport.selManager.shapes;
-        for (const shape of shapes) {
-            const el = (shape as ShapeDom).el;
-            if (!el) return;
-            el.classList.add(StyleManager.Slide);
-            this.__elements_with_slide.add(el);
-        }
-    }
-
-    clearSlide() {
-        this.__elements_with_slide.forEach(element => element.classList.remove(StyleManager.Slide));
-        this.__elements_with_slide.clear();
-    }
-
-    private __elements_with_opacity: Set<Element> = new Set();
-
-    alphaSel() {
-        const views = this.transport.selManager.shapes;
-        for (const view of views) {
-            const el = (view as ShapeDom).el;
-            if (!el) return;
-            el.classList.add(StyleManager.Alpha);
-            this.__elements_with_opacity.add(el);
-        }
-    }
-
-    disAlphaSel() {
-        this.__elements_with_opacity.forEach(el => el.classList.remove(StyleManager.Alpha));
-        this.__elements_with_opacity.clear();
-    }
-}
 
 /**
  * @description 自动布局管理器
@@ -1088,9 +1034,10 @@ class Inserter {
     insert() {
         const translate = this.translate;
         const style = translate.style;
+        const shapes = translate.selManager.shapes;
 
         style.disAlphaSel()
-        style.slidifySel();
+        style.slidifySel(shapes);
 
         const env = this.layoutEnv!;
         style.slidifyEnv(env);
@@ -1099,7 +1046,6 @@ class Inserter {
         context.selection.notify(Selection.PRE_INSERT);
 
         const placement = this.placement!;
-        const shapes = translate.selManager.shapes;
         translate.api!.insert(env, placement.view, placement.position, shapes);
         let timer: any = setTimeout(() => {
             style.clearSlide();
@@ -1125,7 +1071,7 @@ export class Translate2 extends TransformHandler {
 
         this.selManager = new SelManager(this, context, shapes);
         this.selModel = new SelModel(this, context, event);
-        this.style = new StyleManager(this);
+        this.style = new StyleManager(context);
         this.inserter = new Inserter(this, context);
         this.radar = new EnvRadar(this, context);
         this.jumper = new Jumper(this, context);
@@ -1278,7 +1224,7 @@ export class Translate2 extends TransformHandler {
         }
         if (this.__mode === TranslateMode.Prev) {
             const radar = this.radar;
-            this.style.alphaSel();
+            this.style.alphaSel(this.selManager.shapes);
             this.context.selection.hoverShape(this.inserter.env = radar.placement as ArtboradView);
         }
 
@@ -1294,7 +1240,7 @@ export class Translate2 extends TransformHandler {
         }
         if (this.__mode === TranslateMode.Flex) {
             this.style.slidifyEnv(this.jumper.env!);
-            this.style.slidifySel();
+            this.style.slidifySel(this.selManager.shapes);
         }
     }
 

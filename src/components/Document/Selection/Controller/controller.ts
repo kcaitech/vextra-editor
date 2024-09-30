@@ -95,12 +95,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keydown_action(event: KeyboardEvent) {
-        const mode = context.workspace.is_path_edit_mode;
-        if (mode) {
-            keydown_action_for_path_edit(event);
-        } else {
-            keydown_action_for_trans(event);
-        }
+        // const mode = context.workspace.is_path_edit_mode;
+        // if (mode) {
+        //     keydown_action_for_path_edit(event);
+        // } else {
+        //     keydown_action_for_trans(event);
+        // }
     }
 
     function keydown_action_for_path_edit(event: KeyboardEvent) {
