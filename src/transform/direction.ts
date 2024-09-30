@@ -49,7 +49,6 @@ export class Direction {
     }
 
     private __clear_timer() {
-        console.log('清除定时器')
         this.timers.forEach(t => {
             clearTimeout(t);
             t = null;
@@ -282,7 +281,7 @@ export class Direction {
                         return (upCol.order + upColBefore.order) / 2;
                     } else {
                         if (!(row - 1)) {
-                            return (upCol.order - 1) / 2
+                            return (upCol.order - 1) / 2;
                         } else {
                             const upperRow = grids[row - 2];
                             return (upperRow[upperRow.length - 1].order + upCol.order) / 2;
