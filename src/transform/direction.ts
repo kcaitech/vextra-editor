@@ -116,7 +116,9 @@ export class Direction {
 
         switch (event.code) {
             case Direction.DOWN:
+                return this.__down();
             case Direction.UP:
+                return this.__up();
             case Direction.LEFT:
                 return this.__left();
             case Direction.RIGHT:
@@ -138,6 +140,30 @@ export class Direction {
                     order.set(rows[y][x].id, count++);
                 }
             return order;
+        })();
+    }
+
+    private __girds(env: ArtboradView) {
+        const map: Map<Shape, ShapeView> = new Map();
+        env.childs.forEach(view => map.set(adapt2Shape(view), view));
+
+        const rows = layoutShapesOrder(Array.from(map.keys()), !!env.autoLayout?.bordersTakeSpace);
+
+        return (() => {
+            const order: Map<string, number> = new Map();
+            const grids: { shape: string, order: number }[][] = [];
+            let count = 0;
+            for (let y = 0; y < rows.length; y++) {
+                const row: { shape: string, order: number }[] = [];
+                for (let x = 0; x < rows[y].length; x++) {
+                    const shape = rows[y][x];
+                    const o = count++;
+                    order.set(shape.id, o);
+                    row.push({ shape: shape.id, order: o });
+                }
+                grids.push(row);
+            }
+            return { order, grids };
         })();
     }
 
@@ -172,12 +198,6 @@ export class Direction {
                 reflex.set(o, before);
                 order.set(view.id, t);
                 reflex.set(t, view.id);
-
-                const test: string[] = [];
-                order.forEach((v, k) => {
-                    test.push(this.context.selection.selectedPage!.getView(k)!.name);
-                })
-                console.log('--order--', test.toString(), [...order.values()].toString());
             }
             if (!fire) continue;
             someFire = true;
@@ -234,7 +254,59 @@ export class Direction {
     }
 
     private __up() {
+        const envs = this.envs as ArtboradView[];
+        const selection = this.context.selection.selectedShapes;
+        let someFire = false;
+        for (const env of envs) {
+            const { order, grids } = this.__girds(env);
+            const sel = selection
+                .filter(i => order.get(i.id) !== undefined)
+                .sort((a, b) => order.get(a.id)! < order.get(b.id)! ? -1 : 1);
+            const selSet = new Set(sel.map(i => i.id));
+            let fire = false;
+            for (const view of sel) {
+                const { row, column } = __locate(view.id, grids)!;
+                if (!row) continue;
+                const upRowIndex = row - 1;
+                const upRow = grids[upRowIndex];
+                const upColIndex = Math.min(column, upRow.length - 1);
+                const upCol = upRow[upColIndex];
+                const currentRow = grids[row];
+                const upColBefore = upRow[upColIndex - 1];
+                if (upCol && selSet.has(upCol.shape)) continue;
+                fire = true;
+                const grid = currentRow.splice(column, 1)[0];
+                upRow.splice(upColIndex, 0, grid);
+                const targetOrder = (() => {
+                    if (upColBefore) {
+                        return (upCol.order + upColBefore.order) / 2;
+                    } else {
+                        if (!(row - 1)) {
+                            return (upCol.order - 1) / 2
+                        } else {
+                            const upperRow = grids[row - 2];
+                            return (upperRow[upperRow.length - 1].order + upCol.order) / 2;
+                        }
+                    }
+                })();
+                grid.order = targetOrder;
+                order.set(view.id, targetOrder);
+            }
+            if (!fire) continue;
+            someFire = true;
+            this.style.slidifyEnv(env);
+            this.__set_time_out(() => {
+                this.style.clearSlide();
+            }, 240);
+            this.api.reLayout(env, order);
+        }
+        if (someFire) hidden_selection(this.context);
 
+        function __locate(id: string, grids: { shape: string, order: number }[][]) {
+            for (let r = 0; r < grids.length; r++)
+                for (let c = 0; c < grids[r].length; c++)
+                    if (grids[r][c].shape === id) return { column: c, row: r };
+        }
     }
 
     private __down() {
