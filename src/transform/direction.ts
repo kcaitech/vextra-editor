@@ -330,4 +330,8 @@ export class Direction {
         document.removeEventListener('keydown', this.keydown);
         document.removeEventListener('keyup', this.keyup);
     }
+
+    clear() {
+        this.__envs = undefined;
+    }
 }
