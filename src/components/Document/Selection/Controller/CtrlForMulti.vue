@@ -101,14 +101,12 @@ function selection_watcher(t: number | string) {
 
 const tidyUpHidden = () => {
     const shapes = props.context.selection.selectedShapes;
-    if (shapes.length > 1) {
-        if (hiddenTidyUp(shapes)) {
-            isTidyUp.value = false;
-        } else {
-            isTidyUp.value = true;
-        }
-    } else {
+    const length = shapes.filter(shape => shape.isVisible).length;
+    if (length <= 1 || length > 100) return isTidyUp.value = false;
+    if (hiddenTidyUp(shapes)) {
         isTidyUp.value = false;
+    } else {
+        isTidyUp.value = true;
     }
 }
 
