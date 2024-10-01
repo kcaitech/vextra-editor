@@ -10,6 +10,8 @@ import {
 } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { hidden_selection } from "@/utils/content";
+import Grid from "@/components/Document/Grid.vue";
+import { MossError } from "@/basic/error";
 
 enum ActionMode {
     View = 'view',
@@ -150,19 +152,19 @@ export class Direction {
 
         return (() => {
             const order: Map<string, number> = new Map();
-            const grids: { shape: string, order: number }[][] = [];
+            const grids: { shape: string, order: number, leave?: boolean }[][] = [];
             let count = 0;
             for (let y = 0; y < rows.length; y++) {
-                const row: { shape: string, order: number }[] = [];
+                const row: { shape: string, order: number, leave?: boolean }[] = [];
                 for (let x = 0; x < rows[y].length; x++) {
                     const shape = rows[y][x];
                     const o = count++;
                     order.set(shape.id, o);
-                    row.push({ shape: shape.id, order: o });
+                    row.push({shape: shape.id, order: o});
                 }
                 grids.push(row);
             }
-            return { order, grids };
+            return {order, grids, shapes: rows.flat().map(i => i.id)};
         })();
     }
 
@@ -256,41 +258,34 @@ export class Direction {
         const envs = this.envs as ArtboradView[];
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
+        const locate = this.__locate;
         for (const env of envs) {
-            const { order, grids } = this.__girds(env);
+            const targetMap: Map<number, string> = new Map();
+            const {order, grids, shapes} = this.__girds(env);
             const sel = selection
                 .filter(i => order.get(i.id) !== undefined)
                 .sort((a, b) => order.get(a.id)! < order.get(b.id)! ? -1 : 1);
             const selSet = new Set(sel.map(i => i.id));
             let fire = false;
+            let fireTarget: Set<string> = new Set();
             for (const view of sel) {
-                const { row, column } = __locate(view.id, grids)!;
+                const {row, column} = locate(view.id, grids)!;
                 if (!row) continue;
                 const upRowIndex = row - 1;
                 const upRow = grids[upRowIndex];
-                const upColIndex = Math.min(column, upRow.length - 1);
+                let upColIndex = Math.min(column, upRow.length - 1);
                 const upCol = upRow[upColIndex];
                 const currentRow = grids[row];
-                const upColBefore = upRow[upColIndex - 1];
-                if (upCol && selSet.has(upCol.shape)) continue;
+                const currentCol = currentRow[column];
+                if (upCol && selSet.has(upCol.shape) && !upCol.leave) continue;
+                currentCol.leave = true;
                 fire = true;
-                const grid = currentRow.splice(column, 1)[0];
-                upRow.splice(upColIndex, 0, grid);
-                const targetOrder = (() => {
-                    if (upColBefore) {
-                        return (upCol.order + upColBefore.order) / 2;
-                    } else {
-                        if (!(row - 1)) {
-                            return (upCol.order - 1) / 2;
-                        } else {
-                            const upperRow = grids[row - 2];
-                            return (upperRow[upperRow.length - 1].order + upCol.order) / 2;
-                        }
-                    }
-                })();
-                grid.order = targetOrder;
-                order.set(view.id, targetOrder);
+                let key = upCol.order;
+                while (targetMap.has(key)) key++;
+                targetMap.set(key, currentCol.shape);
+                fireTarget.add(currentCol.shape);
             }
+            this.__sort(env, targetMap, order, fireTarget, shapes);
             if (!fire) continue;
             someFire = true;
             this.style.slidifyEnv(env);
@@ -301,15 +296,70 @@ export class Direction {
         }
         if (someFire) hidden_selection(this.context);
 
-        function __locate(id: string, grids: { shape: string, order: number }[][]) {
-            for (let r = 0; r < grids.length; r++)
-                for (let c = 0; c < grids[r].length; c++)
-                    if (grids[r][c].shape === id) return { column: c, row: r };
-        }
     }
 
     private __down() {
+        const envs = this.envs as ArtboradView[];
+        const selection = this.context.selection.selectedShapes;
+        let someFire = false;
+        const locate = this.__locate;
+        for (const env of envs) {
+            const targetMap: Map<number, string> = new Map();
+            const {order, grids, shapes} = this.__girds(env);
+            const sel = selection
+                .filter(i => order.get(i.id) !== undefined)
+                .sort((a, b) => order.get(a.id)! > order.get(b.id)! ? -1 : 1);
+            const selSet = new Set(sel.map(i => i.id));
+            let fire = false;
+            let fireTarget: Set<string> = new Set();
+            for (const view of sel) {
+                const {row, column} = locate(view.id, grids)!;
+                if (row === grids.length - 1) continue;
+                const downRowIndex = row + 1;
+                const downRow = grids[downRowIndex];
+                let downColIndex = Math.min(column, downRow.length - 1);
+                const downCol = downRow[downColIndex];
+                const currentRow = grids[row];
+                const currentCol = currentRow[column];
+                if (downCol && selSet.has(downCol.shape) && !downCol.leave) continue;
+                currentCol.leave = true;
+                fire = true;
+                let key = downCol.order;
+                while (targetMap.has(key)) key++;
+                targetMap.set(key, currentCol.shape);
+                fireTarget.add(currentCol.shape);
+            }
+            this.__sort(env, targetMap, order, fireTarget, shapes);
+            if (!fire) continue;
+            someFire = true;
+            this.style.slidifyEnv(env);
+            this.__set_time_out(() => {
+                this.style.clearSlide();
+            }, 240);
+            this.api.reLayout(env, order);
+        }
+        if (someFire) hidden_selection(this.context);
+    }
 
+    private __sort(env: ShapeView, target: Map<number, string>, order: Map<string, number>, fireTarget: Set<string>, shapes: string[]) {
+        const children = shapes.filter(i => !fireTarget.has(i));
+        if (children.length + target.size !== env.childs.length) throw new MossError('wrong match');
+        const orderAfterSort: string[] = [];
+        let flowIndex = 0;
+        for (let i = 0; i < shapes.length; i++) {
+            const fixed = target.get(i);
+            if (fixed === undefined) orderAfterSort.push(children[flowIndex++]);
+            else orderAfterSort.push(fixed);
+        }
+        for (let i = 0; i < orderAfterSort.length; i++) order.set(orderAfterSort[i], i);
+    }
+
+
+    __locate(id: string, grids: { shape: string, order: number }[][]) {
+        let index = 0;
+        for (let r = 0; r < grids.length; r++)
+            for (let c = 0; c < grids[r].length; c++)
+                if (grids[r][c].shape === id) return {column: c, row: r, index: index++};
     }
 
     private __edit(event: KeyboardEvent) {
