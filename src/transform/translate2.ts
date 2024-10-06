@@ -1,8 +1,25 @@
 import { TransformHandler } from "@/transform/handler";
 import {
-    adapt2Shape, ArtboradView, AutoLayout, BorderPosition, ColVector3D, layoutShapesOrder, makeShapeTransform1By2,
-    Matrix, PageView, Shape, ShapeFrame, ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw,
-    TranslateUnit, Transporter
+    adapt2Shape,
+    ArtboradView,
+    AutoLayout,
+    BorderPosition,
+    ColVector3D,
+    layoutShapesOrder,
+    makeShapeTransform1By2,
+    Matrix,
+    MigrateItem,
+    PageView,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    ShapeView,
+    StackMode,
+    SymbolView,
+    Transform,
+    TransformRaw,
+    TranslateUnit,
+    Transporter
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -38,10 +55,6 @@ class EnvRadar {
     private readonly translate: Translate2;
     private readonly context: Context;
 
-    private __root_envs: Map<ShapeView, Matrix> = new Map();
-    private __env_tree: EnvLeaf[] | undefined;
-    private __target: ShapeView | undefined;
-
     constructor(translate: Translate2, context: Context) {
         this.translate = translate;
         this.context = context;
@@ -66,17 +79,13 @@ class EnvRadar {
         this.original = __original;
     }
 
-    placement: ShapeView | undefined;
-
-    get target() {
-        return this.__target!;
-    }
-
-    set target(t) {
-        this.__target = t;
-    }
+    master: ShapeView | undefined;      // 初始图层环境
+    target: ShapeView | undefined;      // 当前图层环境
+    placement: ShapeView | undefined;   // 当前目标图层环境
 
     private __except: Set<string> | undefined;
+    private __root_envs: Map<ShapeView, Matrix> = new Map();
+    private __env_tree: EnvLeaf[] | undefined;
 
     private __create_migrate_env() {
         const set: Set<string> = new Set();
@@ -94,92 +103,7 @@ class EnvRadar {
     }
 
     private __can_not_land(view: ShapeView) {
-        return this.target === view;
-    }
-
-    __migrate() {
-        const translate = this.translate;
-
-        if (!this.__env_tree) return;
-        if (!this.__except) this.__create_migrate_env();
-
-        const target = this.placement!;
-
-        if (this.__can_not_land(target)) return;
-
-        if ((target as ArtboradView).autoLayout) return;
-
-        this.__init_original();
-
-        const context = this.context;
-        if (translate.api!.migrate(target, compare_layer_3(translate.selManager.shapes), context.workspace.t('compos.dlt'))) {
-            this.target = target;
-            if (target instanceof PageView) {
-                context.selection.unHoverShape();
-            } else {
-                context.selection.hoverShape(target);
-            }
-            context.nextTick(translate.page, () => {
-                translate.mode === TranslateMode.Linear && translate.selModel.check();
-            });
-        }
-    }
-
-    migrate = debounce(this.__migrate, 36);
-
-    private __background: Map<ShapeView, { view: ShapeView, index: number }[]> | undefined;
-
-    private __return(target: ShapeView) {
-        if (!this.__background) {
-            const background: Map<ShapeView, { view: ShapeView, index: number }[]> = new Map();
-            const shapes = this.translate.selManager.shapes;
-            for (const view of shapes) {
-                const parent = view.parent!;
-                let children = background.get(parent)!;
-                if (!children) {
-                    children = [];
-                    background.set(parent, children);
-                }
-                const index = parent.childs.indexOf(view);
-                children.push({view, index});
-            }
-            return false;
-        }
-        if (this.__background.has(target)) {
-            this.__background.forEach((children, parent) => {
-
-            })
-            return true;
-        }
-        return false;
-    }
-
-    extract() {
-        const translate = this.translate;
-        const jumper = translate.jumper;
-
-        const env = jumper.env!;
-        const {x, y} = this.__get_matrix(env)!.computeCoord3(translate.living);
-
-        const frame = env.frame;
-        if (x >= frame.x && x <= frame.x + frame.width && y >= frame.y && y <= frame.y + frame.height) return;
-
-        const target = this.placement!;
-
-        this.__init_original();
-
-        if (translate.api!.migrate(target, compare_layer_3(translate.selManager.shapes), translate.workspace.t('compos.dlt'))) {
-            this.target = target;
-
-            const context = this.context;
-            if (target instanceof PageView) {
-                context.selection.unHoverShape();
-            } else {
-                context.selection.hoverShape(target);
-            }
-
-            translate.checkout((target as ArtboradView).autoLayout ? TranslateMode.Flex : TranslateMode.Linear);
-        }
+        return !!(view as ArtboradView).autoLayout || this.target === view;
     }
 
     private __get_matrix(view: ShapeView) {
@@ -196,10 +120,6 @@ class EnvRadar {
         this.__env_tree = collect(this.translate.page.childs);
         this.__root_envs = root;
 
-        const set: Set<string> = new Set();
-        deep(this.translate.selManager.shapes);
-        this.__except = set;
-
         function collect(views: ShapeView[]) {
             const result: EnvLeaf[] = [];
             for (let i = views.length - 1; i > -1; i--) {
@@ -209,6 +129,10 @@ class EnvRadar {
             }
             return result;
         }
+
+        const set: Set<string> = new Set();
+        deep(this.translate.selManager.shapes);
+        this.__except = set;
 
         function deep(shapes: ShapeView[]) {
             for (const view of shapes) {
@@ -238,6 +162,9 @@ class EnvRadar {
         return val;
     }
 
+    /**
+     * sweep只会检查鼠标当前位置所在的有效容器[placement]，不会修改图层环境
+     */
     sweep() {
         !this.__env_tree && this.__build();
 
@@ -250,6 +177,7 @@ class EnvRadar {
         this.placement = __sweep(this.__env_tree!) || this.translate.page;
 
         if (!this.target) this.target = this.placement; // 初始化一个target
+        if (!this.master) this.master = this.placement; // 初始化一个master
 
         function __sweep(leafs: EnvLeaf[]): ShapeView | undefined {
             for (const {view, children} of leafs) {
@@ -258,6 +186,111 @@ class EnvRadar {
                 const result = __sweep(children);
                 return result ? result : view;
             }
+        }
+    }
+
+    migrateImme() {
+        if (!this.__env_tree) return;
+        if (!this.__except) this.__create_migrate_env();
+
+        const translate = this.translate;
+
+        const target = this.placement!;
+
+        if (this.__can_not_land(target)) return;
+
+        this.__init_original();
+
+        const sortedViews = compare_layer_3(translate.selManager.shapes);
+        const migrateItems: MigrateItem[] = [];
+        if (this.master === target && !this.translate.altStatus) { // 回到初始状态
+            const original = this.original!;
+            for (const view of sortedViews) {
+                const env = original.get(view)!;
+                migrateItems.push({view, toParent: env.parent, index: env.index});
+            }
+        } else {
+            for (const view of sortedViews) migrateItems.push({view, toParent: target});
+        }
+
+        const context = this.context;
+        if (translate.api!.migrate(migrateItems, context.workspace.t('compos.dlt'))) {
+            this.target = target;
+            if (target instanceof PageView) {
+                context.selection.unHoverShape();
+            } else {
+                context.selection.hoverShape(target);
+            }
+            context.nextTick(translate.page, () => {
+                translate.mode === TranslateMode.Linear && translate.selModel.check();
+            });
+        }
+    }
+
+    migrate = debounce(this.migrateImme, 36); // debounce避免划过时的不必要迁移
+
+    extract() {
+        const translate = this.translate;
+        const jumper = translate.jumper;
+
+        const env = jumper.env!;
+        const {x, y} = this.__get_matrix(env)!.computeCoord3(translate.living);
+
+        const frame = env.frame;
+        if (x >= frame.x && x <= frame.x + frame.width && y >= frame.y && y <= frame.y + frame.height) return;
+
+        const target = this.placement!;
+
+        this.__init_original();
+
+        const sortedViews = compare_layer_3(translate.selManager.shapes);
+        const migrateItems: MigrateItem[] = [];
+        for (const view of sortedViews) migrateItems.push({view, toParent: target});
+
+        if (translate.api!.migrate(migrateItems, translate.workspace.t('compos.dlt'))) {
+            this.target = target;
+
+            const context = this.context;
+            if (target instanceof PageView) {
+                context.selection.unHoverShape();
+            } else {
+                context.selection.hoverShape(target);
+            }
+
+            translate.checkout((target as ArtboradView).autoLayout ? TranslateMode.Flex : TranslateMode.Linear);
+        }
+    }
+
+    suspending: boolean = false;
+
+    /**
+     * 将所有选区图层悬浮到文档最上层
+     */
+    suspend() {
+        if (!this.__env_tree || this.suspending) return;
+        if (!this.__except) this.__create_migrate_env();
+        const translate = this.translate;
+        const target = translate.page;
+        this.__init_original();
+        const sortedViews = compare_layer_3(translate.selManager.shapes);
+        const migrateItems: MigrateItem[] = [];
+        for (const view of sortedViews) migrateItems.push({view, toParent: target, allowSameEnv: true});
+        const context = this.context;
+        if (translate.api!.migrate(migrateItems, context.workspace.t('compos.dlt'))) {
+            this.target = target;
+            this.suspending = true;
+        }
+    }
+
+    /**
+     * 切换当前处于活跃状态的容器[图层环境]
+     */
+    checkout() {
+        switch (this.translate.mode) {
+            case TranslateMode.Linear:
+                return this.migrate();
+            case TranslateMode.Flex:
+                return this.extract();
         }
     }
 }
@@ -279,19 +312,19 @@ class SelModel {
 
     readonly original: Map<string, TranslateBaseItem>;
 
-    constructor(transport: Translate2, context: Context, event: MouseEvent) {
+    constructor(transport: Translate2, context: Context) {
         this.translate = transport;
         this.context = context;
-        this.fixed = context.workspace.getRootXY(event);
+        this.fixed = {...transport.living};
         this.alignPixel = context.user.isPixelAlignMent;
 
         const {box, original} = this.__box(transport.selManager.shapes);
         this.original = original;
         this.originSelBox = box;
         this.livingSelBox = {...box};
-        const living = transport.living;
-        this.offsetX = living.x - box.x;
-        this.offsetY = living.y - box.y;
+
+        this.offsetX = transport.living.x - box.x;
+        this.offsetY = transport.living.y - box.y;
     }
 
     private __box(shapes: ShapeView[]) {
@@ -572,8 +605,8 @@ class SelModel {
  * @description 维护、提供选区对象
  */
 class SelManager {
-    private context: Context;
-    private translate: Translate2;
+    private readonly context: Context;
+    private readonly translate: Translate2;
 
     private __shapes: ShapeView[];
     private __shapes_set: Set<string>;
@@ -624,15 +657,16 @@ class SelManager {
 
     drawn() {
         if (this.fixed) return;
-
         this.fixed = true;
-        let results: Shape[] | undefined;
-        const transformOriginal = this.translate.selModel.original;
-        const envOriginal = this.translate.radar.original;
 
-        results = this.translate.api!.drawn(this.shapes, transformOriginal, envOriginal)!;
+        const translate = this.translate;
 
-        const page = this.translate.page;
+        const transformOriginal = translate.selModel.original;
+        const envOriginal = translate.radar.original;
+
+        const results = translate.api!.drawn(this.shapes, transformOriginal, envOriginal)!;
+
+        const page = translate.page;
         this.context.nextTick(page, () => {
             const selects: ShapeView[] = [];
             results.forEach((s) => {
@@ -642,7 +676,6 @@ class SelManager {
             this.shapes = selects;
             const selection = this.context.selection;
             selection.rangeSelectShape(this.shapes);
-
             selection.setLabelLivingGroup(this.shapes);
             selection.setLabelFixedGroup(this.master);
             selection.setShowInterval(true);
@@ -654,27 +687,24 @@ class SelManager {
 
     revert() {
         if (this.fixed) return;
-
         this.fixed = true;
 
-        const results = this.translate.api!.revert(this.shapes);
+        const results = this.translate.api!.revert(this.shapes)!;
 
         const page = this.translate.page;
-
         this.context.nextTick(page, () => {
             const selects: ShapeView[] = [];
-            results && results.forEach((s) => {
+            results.forEach((s) => {
                 const v = page.shapes.get(s.id);
                 if (v) selects.push(v);
             })
             this.shapes = selects;
             const selection = this.context.selection;
-            if (selects.length) {
-                selection.rangeSelectShape(this.shapes);
-                selection.setLabelLivingGroup([]);
-                selection.setLabelFixedGroup([]);
-                selection.setShowInterval(false);
-            }
+            selection.rangeSelectShape(this.shapes);
+            selection.setLabelLivingGroup([]);
+            selection.setLabelFixedGroup([]);
+            selection.setShowInterval(false);
+
             this.fixed = false;
         });
     }
@@ -1057,14 +1087,14 @@ export class Translate2 extends TransformHandler {
     readonly radar: EnvRadar;
     readonly jumper: Jumper;
 
-    living: XY;
+    living: XY; // root坐标系下的鼠标位置
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
         this.living = this.workspace.getRootXY(event);
 
         this.selManager = new SelManager(this, context, shapes);
-        this.selModel = new SelModel(this, context, event);
+        this.selModel = new SelModel(this, context);
         this.style = new StyleManager(context);
         this.inserter = new Inserter(this, context);
         this.radar = new EnvRadar(this, context);
@@ -1088,10 +1118,6 @@ export class Translate2 extends TransformHandler {
 
     get api() {
         return this.__api;
-    }
-
-    private passiveExecute() {
-        this.__execute();
     }
 
     private __trans(align = true) {
@@ -1179,30 +1205,22 @@ export class Translate2 extends TransformHandler {
         if (event.repeat) return;
         if (event.shiftKey) {
             this.shiftStatus = true;
-            this.passiveExecute();
+            this.__execute();
         }
         if (event.altKey) {
             this.altStatus = true;
-
             this.selManager.drawn();
-
-            this.passiveExecute();
         }
     }
 
     protected keyup(event: KeyboardEvent) {
         if (event.code === 'ShiftLeft') {
             this.shiftStatus = false;
-            this.passiveExecute();
+            this.__execute();
         }
         if (event.code === "AltLeft") {
             this.altStatus = false;
-
             this.selManager.revert();
-
-            this.context.selection.setLabelLivingGroup([]);
-            this.context.selection.setLabelFixedGroup([]);
-            this.context.selection.setShowInterval(false);
         }
     }
 
@@ -1245,26 +1263,29 @@ export class Translate2 extends TransformHandler {
     }
 
     checkout(mode?: TranslateMode) {
-        this.radar.sweep();
+        if (mode) {
+            this.mode = mode; // target发生改变之后切换指定模式
+            return;
+        }
 
-        if (mode) return this.mode = mode; // target发生改变之后切换指定模式
+        const radar = this.radar;
+        radar.sweep();
 
+        // 根据环境在Linear、Prev之间自动切换
         const current = this.mode;
-
-        const radar = this.radar; // 根据环境在Linear、Prev之间自动切换
         if ((radar.placement as ArtboradView).autoLayout && current === TranslateMode.Linear) {
             this.mode = TranslateMode.Prev;
+            radar.suspend();
         }
         if (!(radar.placement as ArtboradView).autoLayout && current === TranslateMode.Prev) {
             this.mode = TranslateMode.Linear;
+            radar.suspending = false;
         }
     }
 
     execute(event: MouseEvent) {
         this.living = this.workspace.getRootXY(event);
-
-        this.checkout();
-
+        this.checkout(); // 鼠标移动后，先判断当前选区的移动模式，根据移动模式修改图层数据
         this.__execute();
     }
 
