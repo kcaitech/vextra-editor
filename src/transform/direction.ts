@@ -98,7 +98,7 @@ export class Direction {
     }
 
     private __view(event: KeyboardEvent) {
-        console.log('---view---')
+        // console.log('---view---')
     }
 
     private __envs: ShapeView[] | undefined;
