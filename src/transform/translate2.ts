@@ -578,7 +578,7 @@ class SelManager {
     private __shapes: ShapeView[];
     private __shapes_set: Set<string>;
 
-    private master: ShapeView[];
+    private readonly master: ShapeView[];
 
     fixed: boolean;
 
