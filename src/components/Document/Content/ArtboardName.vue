@@ -4,7 +4,9 @@ import { ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
-import { TranslateHandler } from '@/transform/translate';
+// import { TranslateHandler } from '@/transform/translate';
+import { Translate2 } from "@/transform/translate2";
+
 import { TitleAttri } from "@/components/Document/Content/titleRenderer";
 
 const props = defineProps<{
@@ -25,7 +27,8 @@ const esc = ref<boolean>(false)
 const inputWidth = ref(5)
 const hover = ref(false)
 let isDragging: boolean = false;
-let transporter: TranslateHandler | undefined = undefined;
+// let transporter: TranslateHandler | undefined = undefined;
+let translate2: Translate2 | undefined = undefined;
 
 let startPosition: XY = { x: 0, y: 0 };
 
@@ -136,8 +139,8 @@ function down(e: MouseEvent) {
         }
 
         startPosition = { x: e.x, y: e.y };
-        transporter = new TranslateHandler(props.context, e, context.selection.selectedShapes,);
-
+        // transporter = new TranslateHandler(props.context, e, context.selection.selectedShapes,);
+        translate2 = new Translate2(context, e, context.selection.selectedShapes);
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
         window.addEventListener('blur', windowBlur);
@@ -151,9 +154,11 @@ function move(e: MouseEvent) {
     if (e.buttons !== 1) return;
 
     if (isDragging) {
-        transporter?.execute(e);
+        // transporter?.execute(e);
+        translate2?.execute(e);
     } else if (Math.hypot(e.x - startPosition.x, e.y - startPosition.y) > 3) {
-        transporter?.createApiCaller();
+        // transporter?.createApiCaller();
+        translate2?.connect();
         isDragging = true;
     }
 }
@@ -162,8 +167,11 @@ function up(e: MouseEvent) {
     if (e.button !== 0) return;
 
     isDragging = false;
-    transporter?.fulfil();
-    transporter = undefined;
+    // transporter?.fulfil();
+    // transporter = undefined;
+
+    translate2?.fulfil();
+    translate2 = undefined;
 
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
@@ -176,8 +184,10 @@ function move2(e: MouseEvent) {
 
 function windowBlur() {
     isDragging = false;
-    transporter?.fulfil();
-    transporter = undefined;
+    // transporter?.fulfil();
+    // transporter = undefined;
+    translate2?.fulfil();
+    translate2 = undefined;
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
     window.removeEventListener('blur', windowBlur)
