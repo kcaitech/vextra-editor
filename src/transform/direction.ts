@@ -295,7 +295,6 @@ export class Direction {
             this.api.reLayout(env, order);
         }
         if (someFire) hidden_selection(this.context);
-
     }
 
     private __down() {

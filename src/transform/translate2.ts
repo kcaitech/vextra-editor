@@ -1315,7 +1315,8 @@ export class Translate2 extends TransformHandler {
 
     fulfil() {
         if (this.mode === TranslateMode.Prev) this.inserter.insert();
-        if (this.mode === TranslateMode.Flex) this.style.clearSlide();
+        else if (this.mode === TranslateMode.Flex) this.style.clearSlide();
+        else if (this.mode === TranslateMode.Linear) this.radar.migrateImme();
 
         this.api?.commit();
 
