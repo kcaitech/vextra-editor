@@ -411,9 +411,11 @@ class SelModel {
     fix() {
         const transport = this.translate;
         const living = transport.living;
-
         const originSel = this.originSelBox;
         const livingSel = this.livingSelBox;
+
+        let fixedX = false;
+        let fixedY = false;
 
         if (transport.shiftStatus) {
             const fixed = this.fixed;
@@ -421,9 +423,11 @@ class SelModel {
             const dy = Math.abs(living.y - fixed.y);
 
             if (dx < dy) {
-                living.x = originSel.x;
+                livingSel.x = originSel.x;
+                fixedX = true;
             } else {
-                living.y = originSel.y;
+                livingSel.y = originSel.y;
+                fixedY = true;
             }
         }
 
@@ -458,14 +462,14 @@ class SelModel {
         let assistXWork = false;
         let assistYWork = false;
 
-        if (assistResult.sticked_by_x) {
+        if (assistResult.sticked_by_x && !fixedX) {
             livingSel.x += assistResult.dx;
             l += assistResult.dx;
             r = l + width;
             assistXWork = true;
         }
 
-        if (assistResult.sticked_by_y) {
+        if (assistResult.sticked_by_y && !fixedY) {
             livingSel.y += assistResult.dy;
             t += assistResult.dy;
             b = t + height;
