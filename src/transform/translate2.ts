@@ -313,7 +313,7 @@ class EnvRadar {
 class SelModel {
     private readonly translate: Translate2;
     private readonly context: Context;
-    private readonly fixed: XY;
+    readonly fixed: XY;
 
     private readonly offsetX: number;
     private readonly offsetY: number;
@@ -1311,6 +1311,7 @@ export class Translate2 extends TransformHandler {
         if (this.__api) throw new Error('already connected');
         this.__api = new Transporter(this.context.coopRepo, this.context.data, this.page, this.selManager.shapes);
         if (this.altStatus) this.selManager.drawn();
+        this.workspace.translating(true);
     }
 
     fulfil() {
