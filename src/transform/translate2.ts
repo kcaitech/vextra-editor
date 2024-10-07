@@ -87,6 +87,8 @@ class EnvRadar {
         this.original = __original;
     }
 
+    fixed: boolean = false; // 固定图层环境
+
     master: ShapeView | undefined;      // 初始图层环境
     target: ShapeView | undefined;      // 当前图层环境
     placement: ShapeView | undefined;   // 当前目标图层环境
@@ -174,6 +176,8 @@ class EnvRadar {
      * sweep只会检查鼠标当前位置所在的有效容器[placement]，不会修改图层环境
      */
     sweep() {
+        if (this.fixed) return;
+
         !this.__env_tree && this.__build();
 
         const isTarget = this.__is_target.bind(this);
@@ -745,7 +749,7 @@ class Jumper {
         this.inited = true;
     }
 
-    destory() {
+    destroy() {
         this.__env = undefined;
         this.translate.style.clearSlide();
         this.inited = false;
@@ -827,7 +831,7 @@ class Jumper {
         }
     }
 
-    swap = throttle(this.__swap, 60);
+    swap = throttle(this.__swap, 160);
 
     get env() {
         return this.__env;
@@ -1219,6 +1223,9 @@ export class Translate2 extends TransformHandler {
             this.altStatus = true;
             this.selManager.drawn();
         }
+        if (event.code === "Space") {
+            this.radar.fixed = true;
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -1229,6 +1236,9 @@ export class Translate2 extends TransformHandler {
         if (event.code === "AltLeft") {
             this.altStatus = false;
             this.selManager.revert();
+        }
+        if (event.code === "Space") {
+            this.radar.fixed = false;
         }
     }
 
@@ -1311,6 +1321,11 @@ export class Translate2 extends TransformHandler {
 
         this.workspace.translating(false);
         this.workspace.setSelectionViewUpdater(true);
+
+        const selection = this.context.selection;
+        selection.setLabelLivingGroup([]);
+        selection.setLabelFixedGroup([]);
+        selection.setShowInterval(false);
 
         super.fulfil();
     }
