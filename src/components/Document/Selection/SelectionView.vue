@@ -383,23 +383,23 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
 }
 
 function keyboard_down_watcher(e: KeyboardEvent) {
-    if (e.code === 'AltLeft') {
-        if (traceEle.value) {
-            traceEle.value.classList.add('cursor-copy');
-            altKey.value = true;
-        }
-        props.context.selection.setShowInterval(true);
-    }
+    // if (e.code === 'AltLeft') {
+    //     if (traceEle.value) {
+    //         traceEle.value.classList.add('cursor-copy');
+    //         altKey.value = true;
+    //     }
+    //     props.context.selection.setShowInterval(true);
+    // }
 }
 
 function keyboard_up_watcher(e: KeyboardEvent) {
-    if (e.code === 'AltLeft') {
-        if (traceEle.value) {
-            traceEle.value.classList.remove('cursor-copy');
-            altKey.value = false;
-        }
-        props.context.selection.setShowInterval(false);
-    }
+    // if (e.code === 'AltLeft') {
+    //     if (traceEle.value) {
+    //         traceEle.value.classList.remove('cursor-copy');
+    //         altKey.value = false;
+    //     }
+    //     props.context.selection.setShowInterval(false);
+    // }
 }
 
 function window_blur() {
