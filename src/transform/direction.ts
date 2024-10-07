@@ -13,7 +13,7 @@ import { hidden_selection } from "@/utils/content";
 import Grid from "@/components/Document/Grid.vue";
 import { MossError } from "@/basic/error";
 
-enum ActionMode {
+export enum ActionMode {
     View = 'view',
     Flex = 'flex',
     Edit = 'edit'

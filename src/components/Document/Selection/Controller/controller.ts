@@ -33,7 +33,7 @@ import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
 import { Translate2 } from "@/transform/translate2";
 import { Action } from "@/context/tool";
-import { Direction } from "@/transform/direction";
+import { ActionMode, Direction } from "@/transform/direction";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -42,8 +42,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let timer: any;
     const duration: number = DBL_CLICK;
     let isDragging = false;
-    let startPosition: ClientXY = { x: 0, y: 0 };
-    let startPositionOnPage: PageXY = { x: 0, y: 0 };
+    let startPosition: ClientXY = {x: 0, y: 0};
+    let startPositionOnPage: PageXY = {x: 0, y: 0};
     let shapes: ShapeView[] = [];
     let need_update_comment: boolean = false;
     const selection = context.selection;
@@ -95,12 +95,13 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keydown_action(event: KeyboardEvent) {
-        // const mode = context.workspace.is_path_edit_mode;
-        // if (mode) {
-        //     keydown_action_for_path_edit(event);
-        // } else {
-        //     keydown_action_for_trans(event);
-        // }
+        const mode = context.workspace.is_path_edit_mode;
+        if (direction.mode === ActionMode.Flex) return;
+        if (mode) {
+            keydown_action_for_path_edit(event);
+        } else {
+            keydown_action_for_trans(event);
+        }
     }
 
     function keydown_action_for_path_edit(event: KeyboardEvent) {
@@ -126,7 +127,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         //
         directionCalc.down(event);
         //
-        let { x, y } = directionCalc.calc();
+        let {x, y} = directionCalc.calc();
 
         const keys = Array.from(selected.keys());
         const values = Array.from(selected.values());
@@ -171,7 +172,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         directionCalc.down(event)
 
-        const { x, y } = directionCalc.calc();
+        const {x, y} = directionCalc.calc();
 
         asyncTransfer.stick(x, y);
     }
@@ -411,11 +412,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         abortTransact();
     }
 
-    return { isDblClick, isDrag, init, dispose };
+    return {isDblClick, isDrag, init, dispose};
 }
 
 export function useController(context: Context) {
-    const { t } = useI18n();
+    const {t} = useI18n();
 
     const ctrl = useControllerCustom(context, t);
     onMounted(ctrl.init);
