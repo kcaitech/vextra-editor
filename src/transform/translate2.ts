@@ -66,9 +66,17 @@ class EnvRadar {
         if (this.original) return;
         const __original: Map<ShapeView, { parent: ShapeView, index: number }> = new Map();
 
-        const views = this.translate.selManager.shapes;
+        const translate = this.translate;
 
-        for (const view of views) {
+        const views = translate.selManager.shapes;
+
+        const __view = (v: ShapeView) => {
+            const reflect = translate.api?.reflect;
+            return reflect ? translate.page.getView(reflect.get(v.id)!.id)! : v;
+        }
+
+        for (const v of views) {
+            const view = __view(v);
             const parent = view.parent!;
             const index = (() => {
                 for (let i = 0; i < parent.childs.length; i++) if (parent.childs[i].id === view.id) return i;
@@ -201,7 +209,7 @@ class EnvRadar {
 
         this.__init_original();
 
-        const sortedViews = compare_layer_3(translate.selManager.shapes);
+        const sortedViews = compare_layer_3(translate.selManager.shapes, -1);
         const migrateItems: MigrateItem[] = [];
         if (this.master === target && !this.translate.altStatus) { // 回到初始状态
             const original = this.original!;
@@ -243,7 +251,7 @@ class EnvRadar {
 
         this.__init_original();
 
-        const sortedViews = compare_layer_3(translate.selManager.shapes);
+        const sortedViews = compare_layer_3(translate.selManager.shapes, -1);
         const migrateItems: MigrateItem[] = [];
         for (const view of sortedViews) migrateItems.push({view, toParent: target});
 
@@ -272,7 +280,7 @@ class EnvRadar {
         const translate = this.translate;
         const target = translate.page;
         this.__init_original();
-        const sortedViews = compare_layer_3(translate.selManager.shapes);
+        const sortedViews = compare_layer_3(translate.selManager.shapes, -1);
         const migrateItems: MigrateItem[] = [];
         for (const view of sortedViews) migrateItems.push({view, toParent: target, allowSameEnv: true});
         const context = this.context;
@@ -664,7 +672,7 @@ class SelManager {
         const transformOriginal = translate.selModel.original;
         const envOriginal = translate.radar.original;
 
-        const results = translate.api!.drawn(this.shapes, transformOriginal, envOriginal)!;
+        const results = translate.api!.drawn(compare_layer_3(this.shapes, -1), transformOriginal, envOriginal)!;
 
         const page = translate.page;
         this.context.nextTick(page, () => {
@@ -689,7 +697,7 @@ class SelManager {
         if (this.fixed) return;
         this.fixed = true;
 
-        const results = this.translate.api!.revert(this.shapes)!;
+        const results = this.translate.api!.revert(compare_layer_3(this.shapes, -1))!;
 
         const page = this.translate.page;
         this.context.nextTick(page, () => {
@@ -1292,6 +1300,7 @@ export class Translate2 extends TransformHandler {
     connect() {
         if (this.__api) throw new Error('already connected');
         this.__api = new Transporter(this.context.coopRepo, this.context.data, this.page, this.selManager.shapes);
+        if (this.altStatus) this.selManager.drawn();
     }
 
     fulfil() {
