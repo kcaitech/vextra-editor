@@ -204,7 +204,6 @@ function createController() {
         controller.value = false;
         return;
     }
-
     modify_controller_frame(selection);
     modify_controller_type(selection);
     modify_rotate(selection);

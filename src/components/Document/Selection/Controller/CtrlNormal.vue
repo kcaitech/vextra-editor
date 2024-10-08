@@ -191,15 +191,15 @@ onUnmounted(() => {
         fill="transparent"/>
     <ShapesStrokeContainer :context="props.context"/>
     <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
-            :paddintIndex="paddintIndex"/>
+                       :paddintIndex="paddintIndex"/>
     <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
                    :theme="theme"/>
     <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
                      :c-frame="props.controllerFrame" :theme="theme"/>
     <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
-            :controllerFrame="controllerFrame"/>
+                     :controllerFrame="controllerFrame"/>
     <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
-            @hoverPaddint="hoverPaddintIndex"/>
+                           @hoverPaddint="hoverPaddintIndex"/>
     <component v-if="!(shape as PathShapeView).haveEdit" :pointVisible="is_enter && pointVisible"
                :is="point_map.get(shape.type)"
                :context="props.context" :shape="props.shape as PolygonShapeView" :theme="theme"/>

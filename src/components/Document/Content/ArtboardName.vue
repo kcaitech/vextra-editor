@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, toRaw } from 'vue'
 import { ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
-// import { TranslateHandler } from '@/transform/translate';
 import { Translate2 } from "@/transform/translate2";
 
 import { TitleAttri } from "@/components/Document/Content/titleRenderer";
@@ -27,7 +26,6 @@ const esc = ref<boolean>(false)
 const inputWidth = ref(5)
 const hover = ref(false)
 let isDragging: boolean = false;
-// let transporter: TranslateHandler | undefined = undefined;
 let translate2: Translate2 | undefined = undefined;
 
 let startPosition: XY = { x: 0, y: 0 };
@@ -112,34 +110,30 @@ const unHoverShape = (e: MouseEvent) => {
 
 function down(e: MouseEvent) {
     const context = props.context;
+    const shape = toRaw(props.data.shape);
 
     if (context.readonly) {
-        context.selection.selectShape(props.data.shape);
+        context.selection.selectShape(shape);
         e.stopPropagation();
         return;
     }
 
     if (e.button === 0) {
-        if (props.context.workspace.isPageDragging) {
-            return;
-        }
+        if (props.context.workspace.isPageDragging) return;
 
         e.stopPropagation();
 
         if (e.shiftKey) {
-            context.selection.rangeSelectShape([...context.selection.selectedShapes, props.data.shape]);
+            context.selection.rangeSelectShape([...context.selection.selectedShapes, shape]);
         } else {
-            if (!context.selection.isSelectedShape(props.data.shape)) {
-                context.selection.selectShape(props.data.shape);
+            if (!context.selection.isSelectedShape(shape)) {
+                context.selection.selectShape(shape);
             }
         }
 
-        if (context.tool.isLable) {
-            return;
-        }
+        if (context.tool.isLable) return;
 
         startPosition = { x: e.x, y: e.y };
-        // transporter = new TranslateHandler(props.context, e, context.selection.selectedShapes,);
         translate2 = new Translate2(context, e, context.selection.selectedShapes);
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
@@ -154,10 +148,8 @@ function move(e: MouseEvent) {
     if (e.buttons !== 1) return;
 
     if (isDragging) {
-        // transporter?.execute(e);
         translate2?.execute(e);
     } else if (Math.hypot(e.x - startPosition.x, e.y - startPosition.y) > 3) {
-        // transporter?.createApiCaller();
         translate2?.connect();
         isDragging = true;
     }
@@ -167,8 +159,6 @@ function up(e: MouseEvent) {
     if (e.button !== 0) return;
 
     isDragging = false;
-    // transporter?.fulfil();
-    // transporter = undefined;
 
     translate2?.fulfil();
     translate2 = undefined;
@@ -184,8 +174,6 @@ function move2(e: MouseEvent) {
 
 function windowBlur() {
     isDragging = false;
-    // transporter?.fulfil();
-    // transporter = undefined;
     translate2?.fulfil();
     translate2 = undefined;
     document.removeEventListener('mousemove', move);
@@ -210,8 +198,7 @@ function windowBlur() {
         :style="{ maxWidth: data.width + 'px' }"
         @dblclick="onRename"
     >
-        <svg v-if="(data.shape as SymbolView).isSymbolUnionShape" xmlns="http://www.w3.org/2000/svg"
-             xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
+        <svg v-if="(data.shape as SymbolView).isSymbolUnionShape" xmlns="http://www.w3.org/2000/svg" fill="none"
              width="16" height="16" viewBox="0 0 16 16">
             <defs>
                 <clipPath id="master_svg0_747_09671">
@@ -247,7 +234,7 @@ function windowBlur() {
             </g>
         </svg>
         <svg v-if="(data.shape.type === ShapeType.Symbol)" xmlns="http://www.w3.org/2000/svg"
-             xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
+             fill="none"
              width="16" height="16" viewBox="0 0 16 16">
             <defs>
                 <clipPath id="master_svg0_747_6025">
