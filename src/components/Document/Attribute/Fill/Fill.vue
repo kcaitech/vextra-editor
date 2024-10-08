@@ -25,6 +25,7 @@ import {
     get_actions_fill_color,
     get_actions_fill_delete,
     get_actions_fill_enabled,
+    get_actions_fill_opacity,
     get_actions_fill_unify,
     get_actions_filltype,
     get_actions_image_ref,
@@ -262,6 +263,18 @@ function setColor(idx: number, clr: string, alpha: number) {
 
     hidden_selection(props.context);
 }
+function setFillOpacity(idx: number, opacity: number) {
+    const selected = shapes.value || props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    const _idx = fills.length - idx - 1;
+    const s = getShapesForStyle(selected);
+    const actions = get_actions_fill_opacity(s, _idx, opacity);
+    if (page) {
+        const editor = props.context.editor4Page(page);
+        editor.setShapesFillOpacity(actions);
+    }
+    hidden_selection(props.context);
+}
 
 function onColorChange(e: Event, idx: number) {
     let value = colorValue.value;
@@ -299,8 +312,10 @@ function onAlphaChange(e: Event, idx: number, fill: Fill) {
             if (clr.slice(0, 1) !== '#') {
                 clr = "#" + clr
             }
-            if (fill.fillType === FillType.SolidColor || fill.fillType === FillType.Pattern) {
+            if (fill.fillType === FillType.SolidColor) {
                 setColor(idx, clr, value);
+            } else if (fill.fillType === FillType.Pattern) {
+                setFillOpacity(idx, value);
             } else if (fill.gradient && fill.fillType === FillType.Gradient) {
                 set_gradient_opacity(idx, value);
             }
@@ -318,8 +333,10 @@ function onAlphaChange(e: Event, idx: number, fill: Fill) {
             if (clr.slice(0, 1) !== '#') {
                 clr = "#" + clr
             }
-            if (fill.fillType === FillType.SolidColor || fill.fillType === FillType.Pattern) {
+            if (fill.fillType === FillType.SolidColor) {
                 setColor(idx, clr, value);
+            } else if (fill.fillType === FillType.Pattern) {
+                setFillOpacity(idx, value);
             } else if (fill.gradient && fill.fillType === FillType.Gradient) {
                 set_gradient_opacity(idx, value);
             }
@@ -337,6 +354,9 @@ const alpha_message = (idx: number, fill: Fill) => {
     let alpha = 1;
     if (fill.fillType === FillType.SolidColor) {
         alpha = fill.color.alpha * 100;
+    } else  if (fill.fillType === FillType.Pattern) {
+        const opacity = fill.contextSettings?.opacity || 1;
+        alpha = opacity * 100;
     } else if (fill.gradient && fill.fillType === FillType.Gradient) {
         const opacity = fill.gradient.gradientOpacity;
         alpha = (opacity === undefined ? 1 : opacity) * 100;
@@ -435,8 +455,11 @@ const alphaInput = (e: Event) => {
 }
 const filterAlpha = (fill: Fill) => {
     let a: number = 100;
-    if (fill.fillType !== FillType.Gradient) {
+    if (fill.fillType === FillType.SolidColor) {
         a = fill.color.alpha * 100;
+    } else if (fill.fillType === FillType.Pattern) {
+        const opacity = fill.contextSettings?.opacity || 1;
+        a = opacity * 100;
     } else if (fill.gradient) {
         const opacity = fill.gradient.gradientOpacity;
         a = (opacity === undefined ? 1 : opacity) * 100;

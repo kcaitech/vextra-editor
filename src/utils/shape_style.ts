@@ -171,6 +171,14 @@ export function get_actions_fill_color(shapes: ShapeView[], index: number, color
     }
     return actions;
 }
+export function get_actions_fill_opacity(shapes: ShapeView[], index: number, opacity: number) {
+    const actions: BatchAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push({ target: (shapes[i]), index, value: opacity });
+    }
+    return actions;
+}
 
 export function get_actions_fill_unify(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
