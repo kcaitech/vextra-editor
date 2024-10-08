@@ -283,7 +283,7 @@ const update = () => {
         return;
     };
     clear();
-    if (isTidyUp.value || props.context.workspace.isScaling || props.context.workspace.isRotating || props.context.workspace.isTranslating) return;
+    if (isTidyUp.value || isDrag.value || props.context.workspace.isScaling || props.context.workspace.isRotating || props.context.workspace.isTranslating) return;
     tidyUpDot();
     tidyUpLine();
 }
@@ -493,7 +493,7 @@ function mouseleave() {
     props.context.cursor.reset();
 }
 let transporter: TranslateHandler | undefined = undefined;
-let isDrag = false;
+const isDrag = ref(false);
 let saveShape: ShapeView;
 let isShift = false;
 const selectedDown = (e: MouseEvent, shape: ShapeView) => {
@@ -507,7 +507,7 @@ const selectedDown = (e: MouseEvent, shape: ShapeView) => {
 const selectedMove = (e: MouseEvent) => {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
-    if (isDrag) {
+    if (isDrag.value) {
         if (!transporter) {
             return
         }
@@ -518,7 +518,7 @@ const selectedMove = (e: MouseEvent) => {
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
-            isDrag = true;
+            isDrag.value = true;
             props.context.selection.selectTidyUpShape([saveShape]);
             // if (selectedShapes.value.length === 0) {
             //     props.context.selection.selectTidyUpShape([saveShape]);
@@ -546,7 +546,7 @@ const selectedUp = (e: MouseEvent) => {
     clear();
     transporter?.fulfil();
     transporter = undefined;
-    isDrag = false;
+    isDrag.value = false;
     props.context.selection.selectTidyUpShape();
     document.removeEventListener('mousemove', selectedMove);
     document.removeEventListener('mouseup', selectedUp);
