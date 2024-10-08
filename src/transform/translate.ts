@@ -22,7 +22,7 @@ import {
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
-import { paster_short } from "@/utils/clipboard";
+// import { paster_short } from "@/utils/clipboard";
 import { debounce, throttle } from "lodash";
 import { find_except_envs, record_origin_env, record_origin_xy_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
@@ -250,7 +250,7 @@ export class TranslateHandler extends TransformHandler {
         if (this.altStatus) {
             this.coping = true;
             this.shapesBackup = this.shapes.map(s => s);
-            this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
+            // this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
             this.coping = false;
 
             const assist = this.context.assist;
