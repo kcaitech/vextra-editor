@@ -1084,6 +1084,7 @@ class Inserter {
 
         const context = this.context;
         context.selection.notify(Selection.PRE_INSERT);
+        context.selection.unHoverShape();
 
         const placement = this.placement!;
         translate.api!.insert(env, placement.view, placement.position, shapes);
