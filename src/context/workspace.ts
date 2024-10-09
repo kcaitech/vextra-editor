@@ -341,6 +341,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     setFontNameListLocal(local: string) {
         this.m_font_name_list.local.add(local);
     }
+
     setFontNameListFailureLocal(local: string) {
         this.m_font_name_list.failure_local.add(local);
     }
@@ -353,6 +354,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         this.m_origin_fontList = list;
         this.notify(WorkSpace.LOCAL_FONT_LIST_UPDATE);
     }
+
     get userLocalFontList() {
         return this.m_origin_fontList;
     }
