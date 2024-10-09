@@ -18,7 +18,6 @@ import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
 import SearchPanel from "./Search/SearchPanel.vue";
-import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
 import ShapeTypes from "./Search/ShapeTypes.vue";
@@ -127,18 +126,13 @@ let listviewSource = new class implements IDataSource<ItemData> {
 const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
 
-function _notifySourceChange(t?: number | string, shape?: ShapeView) {
+function notifySourceChange(t?: number | string) {
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         locate();
         if (t === 'changed') props.context.navi.notify(Navi.COMP_LIST_CHANGED);
-    } else if (t === Selection.EXTEND) {
-        if (shape) toggleExpand(shape.id);
+        listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
-
-// const notifySourceChange = debounce(_notifySourceChange, 30);
-const notifySourceChange = _notifySourceChange;
 
 function locate() {
     const shape = props.context.selection.selectedShapes[props.context.selection.selectedShapes.length - 1];
