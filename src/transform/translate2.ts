@@ -361,7 +361,11 @@ class SelModel {
             const transform = shape.transform2.clone();
             transform.addTransform(p2r);
 
-            original.set(shape.id, { transformRaw: shape.transform.clone(), transform: transform.clone(), view: shape });
+            original.set(shape.id, {
+                transformRaw: shape.transform.clone(),
+                transform: transform.clone(),
+                view: shape
+            });
 
             const { x, y, width, height } = shape.frame;
 
@@ -697,8 +701,8 @@ class SelManager {
             selection.setLabelFixedGroup(this.master);
             selection.setShowInterval(true);
             selection.notify(Selection.PASSIVE_CONTOUR);
-
             this.fixed = false;
+            translate.selModel.collect();
         });
     }
 
@@ -721,8 +725,8 @@ class SelManager {
             selection.setLabelLivingGroup([]);
             selection.setLabelFixedGroup([]);
             selection.setShowInterval(false);
-
             this.fixed = false;
+            this.translate.selModel.collect();
         });
     }
 }
