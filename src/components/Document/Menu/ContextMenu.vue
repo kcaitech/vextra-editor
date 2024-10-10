@@ -505,7 +505,7 @@ onUnmounted(() => {
         <div v-if="items.has(MenuItemType.Layers)" class="menu-item"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <svg-icon icon-class="down" />
+            <svg-icon icon-class="down" style="transform: rotate(-90deg)"/>
             <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers"
                 :style="{ 'max-height': layersHeight + 'px' }">
                 <Layers @close="emits('close')" :layers="props.layers" :context="props.context"></Layers>
@@ -524,7 +524,7 @@ onUnmounted(() => {
         <div v-if="items.has(MenuItemType.CopyAs)" class="menu-item"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.CopyAs)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.copyAs') }}</span>
-            <svg-icon icon-class="down" />
+            <svg-icon icon-class="down" style="transform: rotate(-90deg)"/>
             <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.CopyAs">
                 <div class="sub-item" @click="copyAsPNG">
                     <span>{{ t('clipboard.copyAsPNG') }}</span>
@@ -680,14 +680,14 @@ onUnmounted(() => {
         </div>
         <div v-if="items.has(MenuItemType.Component) || items.has(MenuItemType.UnAutoLayout) || items.has(MenuItemType.AutoLayout)"
             style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
-        <!-- <div v-if="items.has(MenuItemType.UnAutoLayout)" @click="autoLayout" class="menu-item">
+        <div v-if="items.has(MenuItemType.UnAutoLayout)" @click="unAutoLayout" class="menu-item">
             <span>{{ t('autolayout.remove_auto_layout') }}</span>
             <Key code="Shift Alt A"></Key>
         </div>
-        <div v-if="items.has(MenuItemType.AutoLayout)" @click="unAutoLayout" class="menu-item">
+        <div v-if="items.has(MenuItemType.AutoLayout)" @click="autoLayout" class="menu-item">
             <span>{{ t('autolayout.add_auto_layout') }}</span>
             <Key code="Shift A"></Key>
-        </div> -->
+        </div>
         <div v-if="items.has(MenuItemType.Component)" @click="component" class="menu-item">
             <span>{{ t('system.create_component') }}</span>
             <Key code="Ctrl Alt K"></Key>
