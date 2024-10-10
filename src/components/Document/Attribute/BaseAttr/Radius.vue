@@ -35,7 +35,9 @@ const mixed = props.context.workspace.t('attr.mixed');
 function get_value_from_input(val: any) {
     let value = Number.parseFloat(val);
     value = (value > 0 && !isNaN(value)) ? value : 0;
-    return Number(value.toFixed(0));
+    if (!(value % 1)) return value;
+    if (!(value % 0.1)) return Number(value.toFixed(1));
+    else return Number(value.toFixed(2));
 }
 
 function noGroupShapesFrom(shapes: ShapeView[]) {
@@ -54,14 +56,12 @@ function noGroupShapesFrom(shapes: ShapeView[]) {
 function change(val: any, type: string) {
     const shapes = noGroupShapesFrom(props.context.selection.selectedShapes);
     val = get_value_from_input(val);
-
     if (rect.value) {
         setting_for_extend(val, type, shapes);
         return;
     }
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-
     editor.shapesModifyRadius(shapes, [val]);
 
     hidden_selection(props.context);
