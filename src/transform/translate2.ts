@@ -1327,10 +1327,11 @@ export class Translate2 extends TransformHandler {
             } else if (current === TranslateMode.Prev) { // 更新[预插入env]
                 this.inserter.env = radar.placement as ArtboradView;
             }
-        }
-        if (!(radar.placement as ArtboradView).autoLayout && current === TranslateMode.Prev) {
-            this.mode = TranslateMode.Linear;
-            radar.suspending = false;
+        } else {
+            if (current === TranslateMode.Prev) {
+                this.mode = TranslateMode.Linear;
+                radar.suspending = false;
+            }
         }
     }
 
