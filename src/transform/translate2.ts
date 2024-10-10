@@ -252,7 +252,7 @@ class EnvRadar {
         const frame = env.frame;
         if (x >= frame.x && x <= frame.x + frame.width && y >= frame.y && y <= frame.y + frame.height) return;
 
-        const target = this.placement!;
+        const target = this.placement! as (ArtboradView | PageView);
 
         this.__init_original();
 
@@ -262,15 +262,19 @@ class EnvRadar {
 
         if (translate.api!.migrate(migrateItems, translate.workspace.t('compos.dlt'))) {
             this.target = target;
-
             const context = this.context;
             if (target instanceof PageView) {
                 context.selection.unHoverShape();
+                translate.checkout(TranslateMode.Linear);
             } else {
+                if (target.autoLayout) {
+                    translate.checkout(TranslateMode.Prev);
+                    this.suspend();
+                } else {
+                    translate.checkout(TranslateMode.Linear);
+                }
                 context.selection.hoverShape(target);
             }
-
-            translate.checkout((target as ArtboradView).autoLayout ? TranslateMode.Flex : TranslateMode.Linear);
         }
     }
 
