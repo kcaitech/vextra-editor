@@ -473,7 +473,7 @@ const stopWatch = watch(() => props.page, () => {
     // for debug
     (window as any).__sd = shapeDirList;
     shapeDirList.watch(notifySourceChange)
-    notifySourceChange();
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }, { immediate: true });
 
 onMounted(() => {
@@ -560,7 +560,6 @@ onUnmounted(() => {
     width: 100%;
     flex-direction: column;
     background-color: #fff;
-    //padding-bottom: 8px;
     box-sizing: border-box;
 
     .header {
@@ -761,7 +760,6 @@ onUnmounted(() => {
         padding: 4px 0;
         transition: 0.3s;
         box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
-
     }
 }
 </style>

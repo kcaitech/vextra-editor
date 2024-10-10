@@ -116,9 +116,7 @@ export class User extends WatchableObject {
 
     updateUserConfig() {
         let conf = JSON.parse(localStorage.getItem('userConfig')!) as UserConfig;
-        if (!conf) {
-            conf = User.CONF;
-        }
+        if (!conf) conf = User.CONF;
 
         if ((Object.keys(conf).length !== Object.keys(User.CONF).length)) {
             const __temp = JSON.parse(JSON.stringify(conf));
