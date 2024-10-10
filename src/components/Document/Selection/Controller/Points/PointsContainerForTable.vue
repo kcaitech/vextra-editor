@@ -15,10 +15,11 @@ import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { permIsEdit } from '@/utils/content';
 import { forbidden_to_modify_frame } from '@/utils/common';
-import { TranslateHandler } from '@/transform/translate';
+// import { TranslateHandler } from '@/transform/translate';
 import { CursorType } from "@/utils/cursor2";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { ScaleHandler } from "@/transform/scale";
+import { Translate2 } from "@/transform/translate2";
 
 interface Props {
     context: Context
@@ -38,6 +39,9 @@ const RB = ref<XY>({x: -10, y: -10});
 
 let scaler: ScaleHandler | undefined = undefined;
 let downXY: XY = {x: 0, y: 0};
+
+let translate2: Translate2 | undefined = undefined;
+
 
 function update() {
     update_transform();
@@ -117,8 +121,10 @@ function clearStatus() {
     scaler?.fulfil();
     scaler = undefined;
 
-    transporter?.fulfil();
-    transporter = undefined;
+    // transporter?.fulfil();
+    // transporter = undefined;
+    translate2?.fulfil();
+    translate2 = undefined;
 
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
@@ -127,7 +133,7 @@ function clearStatus() {
     document.removeEventListener('mouseup', up);
 }
 
-let transporter: TranslateHandler | undefined = undefined;
+// let transporter: TranslateHandler | undefined = undefined;
 
 function down(e: MouseEvent) {
     const context = props.context;
@@ -151,7 +157,8 @@ function down(e: MouseEvent) {
 
     startPosition = {x: e.x, y: e.y};
 
-    transporter = new TranslateHandler(props.context, e, [props.shape]);
+    // transporter = new TranslateHandler(props.context, e, [props.shape]);
+    translate2 = new Translate2(context, e, context.selection.selectedShapes);
 
     document.addEventListener('mousemove', mousemove4trans);
     document.addEventListener('mouseup', mouseup4trans);
@@ -166,9 +173,11 @@ function mousemove4trans(e: MouseEvent) {
     }
 
     if (isDragging) {
-        transporter?.execute(e);
+        // transporter?.execute(e);
+        translate2?.execute(e);
     } else if (Math.hypot(e.x - startPosition.x, e.y - startPosition.y) > dragActiveDis) {
-        transporter?.createApiCaller();
+        // transporter?.createApiCaller();
+        translate2?.connect();
         isDragging = true;
     }
 }
@@ -176,8 +185,10 @@ function mousemove4trans(e: MouseEvent) {
 function mouseup4trans(e: MouseEvent) {
     if (e.button === 0) {
         isDragging = false;
-        transporter?.fulfil();
-        transporter = undefined;
+        // transporter?.fulfil();
+        // transporter = undefined;
+        translate2?.fulfil();
+        translate2 = undefined;
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
     }

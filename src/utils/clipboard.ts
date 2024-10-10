@@ -1371,62 +1371,62 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 }
 
 // 不经过剪切板，直接复制(Shape[])
-export async function paster_short(context: Context, shapes: ShapeView[], editor: Transporter | AsyncTransfer): Promise<ShapeView[]> {
-    const pre_shapes: Shape[] = [];
-    const actions: { parent: GroupShape, index: number }[] = [];
-
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        const s = shapes[i];
-        let p = s.parent!;
-
-        const childs = p.childs;
-        for (let j = 0, len2 = childs.length; j < len2; j++) {
-            if (s.id === childs[j].id) {
-                pre_shapes.push(adapt2Shape(s));
-                actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
-                break;
-            }
-        }
-    }
-
-    const page = context.selection.selectedPage;
-    if (!page) {
-        return [];
-    }
-    const new_source = transform_data(context.data, page.data, pre_shapes);
-
-    let result: Shape[] = [];
-
-    if (new_source.length !== actions.length) {
-        return [];
-    }
-
-    const _r = editor.shortPaste(new_source, actions);
-    if (_r && _r.length) {
-        result = _r;
-    }
-
-    if (!result.length) {
-        return [];
-    }
-
-    return new Promise<ShapeView[]>((resolve, reject) => {
-        if (!page) {
-            resolve([]);
-            return;
-        }
-        context.nextTick(page, () => {
-            const selects: ShapeView[] = [];
-            result.forEach((s) => {
-                const v = page.shapes.get(s.id);
-                if (v) selects.push(v);
-            })
-            context.selection.rangeSelectShape(selects);
-            context.assist.collect();
-            resolve(selects);
-        })
-    })
-}
+// export async function paster_short(context: Context, shapes: ShapeView[], editor: Transporter | AsyncTransfer): Promise<ShapeView[]> {
+//     const pre_shapes: Shape[] = [];
+//     const actions: { parent: GroupShape, index: number }[] = [];
+//
+//     for (let i = 0, len = shapes.length; i < len; i++) {
+//         const s = shapes[i];
+//         let p = s.parent!;
+//
+//         const childs = p.childs;
+//         for (let j = 0, len2 = childs.length; j < len2; j++) {
+//             if (s.id === childs[j].id) {
+//                 pre_shapes.push(adapt2Shape(s));
+//                 actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
+//                 break;
+//             }
+//         }
+//     }
+//
+//     const page = context.selection.selectedPage;
+//     if (!page) {
+//         return [];
+//     }
+//     const new_source = transform_data(context.data, page.data, pre_shapes);
+//
+//     let result: Shape[] = [];
+//
+//     if (new_source.length !== actions.length) {
+//         return [];
+//     }
+//
+//     const _r = editor.shortPaste(new_source, actions);
+//     if (_r && _r.length) {
+//         result = _r;
+//     }
+//
+//     if (!result.length) {
+//         return [];
+//     }
+//
+//     return new Promise<ShapeView[]>((resolve, reject) => {
+//         if (!page) {
+//             resolve([]);
+//             return;
+//         }
+//         context.nextTick(page, () => {
+//             const selects: ShapeView[] = [];
+//             result.forEach((s) => {
+//                 const v = page.shapes.get(s.id);
+//                 if (v) selects.push(v);
+//             })
+//             context.selection.rangeSelectShape(selects);
+//             context.assist.collect();
+//             resolve(selects);
+//         })
+//     })
+// }
 
 /***
  *

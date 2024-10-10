@@ -32,7 +32,14 @@ import { flip } from "@/transform/flip";
 import { Tool } from "@/context/tool";
 import { rotate as __rotate } from "@/transform/rotate"
 import Oval from "@/components/Document/Attribute/BaseAttr/Oval.vue";
-import { checkTidyUpShapesOrder, getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder, whetherNeedTidyUp } from '@/utils/tidy_up';
+import {
+    checkTidyUpShapesOrder,
+    getSelectedWidthHeight,
+    hiddenTidyUp,
+    layoutSpacing,
+    tidyUpShapesOrder,
+    whetherNeedTidyUp
+} from '@/utils/tidy_up';
 import { WorkSpace } from '@/context/workspace';
 
 interface Props {
@@ -746,7 +753,7 @@ function selection_change() {
     calc_attri();
     textBehaviour();
     const selected = props.context.selection.selectedShapes;
-    if (selected.length > 1) {
+    if (selected.length > 1 && !hiddenTidyUp(selected)) {
         s_tidy_up.value = true;
         whetherTidyUp();
     } else {

@@ -22,7 +22,7 @@ import {
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
-import { paster_short } from "@/utils/clipboard";
+// import { paster_short } from "@/utils/clipboard";
 import { debounce, throttle } from "lodash";
 import { find_except_envs, record_origin_env, record_origin_xy_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
@@ -250,7 +250,7 @@ export class TranslateHandler extends TransformHandler {
         if (this.altStatus) {
             this.coping = true;
             this.shapesBackup = this.shapes.map(s => s);
-            this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
+            // this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
             this.coping = false;
 
             const assist = this.context.assist;
@@ -268,12 +268,6 @@ export class TranslateHandler extends TransformHandler {
 
         this.context.selection.setShapesSet(this.shapes);
 
-        const t = this.asyncApiCaller as Transporter;
-        t.setEnv(record_origin_env(this.shapes));
-        t.setOriginXyEnv(record_origin_xy_env(this.shapes));
-        const except_envs = find_except_envs(this.context, this.shapes, this.fixedPoint);
-        t.setExceptEnvs(except_envs);
-        t.setCurrentEnv(except_envs[0] as any);
         this.setMode(mode);
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.downXY);
     }
@@ -735,9 +729,7 @@ export class TranslateHandler extends TransformHandler {
         for (let i = 0; i < shapes.length; i++) {
             const s = shapes[i];
             const index = shape_row.findIndex(item => s.id === item.id);
-            if (index !== -1) {
-                sort.set(s.id, index);
-            }
+            if (index !== -1) sort.set(s.id, index);
         }
         for (const shape of shapesUnderCommonEnv) {
             if (__set.has(shape.id)) continue;
@@ -757,63 +749,7 @@ export class TranslateHandler extends TransformHandler {
     swapLayoutShape = throttle(this._swapLayoutShape, 160);
 
     private __migrate(tailCollect = true) {
-        if (this.noMigrate) return;
 
-        const t = this.asyncApiCaller as Transporter;
-        if (!t) return;
-
-        const ctx = this.context;
-
-        const pe = this.livingPoint;
-        const target_parent = ctx.selection.getEnvForMigrate(pe);
-
-        if (this.mode === "insert" && !(target_parent as ArtboradView).autoLayout) {
-            this.fromMode = this.mode;
-            this.mode = "normal";
-            ctx.selection.notify(Selection.PRE_INSERT);
-        }
-        if (target_parent.id === t.current_env_id) return;
-
-        if (target_parent.id === t.current_env_id) return;
-
-        const except = t.getExceptEnvs();
-
-        const o_env = except.find(v => v.id === target_parent.id);
-        if (o_env) {
-            t.backToStartEnv(o_env.data, ctx.workspace.t('compos.dlt'));
-        } else {
-            if ((target_parent as ArtboradView).autoLayout) {
-                ctx.assist.notify(Assist.CLEAR);
-                this.fromMode = this.mode;
-                this.mode = "insert";
-                if (target_parent.id !== this.preInsertLayout?.id) {
-                    this.preInsertLayout = target_parent as ArtboradView;
-                    this.getLayoutGridForInsert();
-                }
-                return;
-            }
-            const tp = adapt2Shape(target_parent) as GroupShape;
-            const _shapes = compare_layer_3(this.shapes, -1).map((s) => adapt2Shape(s));
-            t.migrate(tp, _shapes, ctx.workspace.t('compos.dlt'));
-        }
-
-        ctx.nextTick(ctx.selection.selectedPage!, () => {
-            this.setMode();
-
-            const fromMode = this.fromMode;
-            if (fromMode === "layout" || fromMode === "insert") this.__linear_trans();
-
-            if (this.isNormalMode) ctx.selection.notify(Selection.LAYOUT_DOTTED_LINE);
-            if (this.isLayoutMode) {
-                ctx.assist.notify(Assist.CLEAR);
-                ctx.selection.notify(Selection.UPDATE_LAYOUT_DOTTED_LINE, this.downXY);
-                ctx.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.clientXY);
-            }
-
-            ctx.tool.notify(Tool.RULE_RENDER);
-
-            if (tailCollect) ctx.assist.set_collect_target(this.shapes, true);
-        })
     }
 
     private shapesModifyStackPositioning(p: StackPositioning) {

@@ -2,13 +2,12 @@ import { Context } from "@/context";
 import { map_from_shapes, permIsEdit } from "./content";
 import { Action } from "@/context/tool";
 import { AsyncTransfer, GroupShape, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
-import { ClientXY, PageXY } from "@/context/selection";
+import { PageXY } from "@/context/selection";
 import { debounce } from "lodash";
 import { WorkSpace } from "@/context/workspace";
-import { Menu } from "@/context/menu";
 import { compare_layer_3 } from "./group_ungroup";
 import { get_symbolref_by_layer } from "./symbol";
-import { UserConfig } from "../context/user"
+import { UserConfig } from "@/context/user"
 
 export function keyboardHandle(e: KeyboardEvent, context: Context) {
     if (!permIsEdit(context) || context.tool.isLable) {
@@ -273,7 +272,7 @@ export class DirectionCalc {
         let x = 0;
         let y = 0;
 
-        const UserConfig:UserConfig = JSON.parse(localStorage.getItem('userConfig') as string)
+        const UserConfig: UserConfig = JSON.parse(localStorage.getItem('userConfig') as string)
         const step = this.m_faster ? (UserConfig?.fast || DirectionCalc.STEP * 10) : (UserConfig?.slow || DirectionCalc.STEP);
 
         if (this.m_up) {
