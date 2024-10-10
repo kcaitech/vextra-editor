@@ -58,7 +58,6 @@ function noGroupShapesFrom(shapes: ShapeView[]) {
 function change(val: any, type: string) {
     const shapes = noGroupShapesFrom(props.context.selection.selectedShapes);
     val = get_value_from_input(val);
-
     if (rect.value) {
         setting_for_extend(val, type, shapes);
         return;
@@ -79,14 +78,14 @@ function keydownRadius(event: KeyboardEvent, type: string) {
         if (isNaN(value)) return;
         const shapes = noGroupShapesFrom(props.context.selection.selectedShapes);
         value = get_value_from_input(value);
-
         if (rect.value) {
             setting_for_extend(value, type, shapes);
-            return;
+        } else {
+            props.linearApi.shapesModifyRadius(shapes, [value])
         }
-        props.linearApi.shapesModifyRadius(shapes, [value])
         event.preventDefault();
     }
+  
 }
 
 function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {
@@ -99,9 +98,10 @@ function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {
     values[indexes[0]] = val;
     if (keyupdate.value) {
         props.linearApi.shapesModifyRadius(shapes, values)
-        return
+    }else{
+        editor.shapesModifyRadius(shapes, values);
     }
-    editor.shapesModifyRadius(shapes, values);
+  
 }
 
 function checkKeyup(event: KeyboardEvent) {

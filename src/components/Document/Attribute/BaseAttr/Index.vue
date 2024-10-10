@@ -780,6 +780,24 @@ const changeHorTidyup = (value: string) => {
     horSpace.value = Math.max(hor, -minHor);
     editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir);
 }
+
+function keydownHorTidyup(e: KeyboardEvent, val: string | number) {
+    let hor: any = sortValue(val.toString());
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        hor = hor + (e.code === 'ArrowUp' ? 1 : -1)
+        if (isNaN(hor)) return;
+        const selected = props.context.selection.selectedShapes;
+        const dir = props.context.selection.isTidyUpDir;
+        const shapes = checkTidyUpShapesOrder(selected, dir);
+        const ver = typeof verSpace.value === 'number' ? verSpace.value : 0
+        disalbeTidyup(shapes, dir);
+        const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+        horSpace.value = Math.max(hor, -minHor);
+        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir)
+    }
+    e.preventDefault();
+}
+
 const changeVerTidyup = (value: string) => {
     value = Number
         .parseFloat(computeString(value))
@@ -797,6 +815,23 @@ const changeVerTidyup = (value: string) => {
     const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
     verSpace.value = Math.max(ver, -minVer);
     editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir);
+}
+
+function keydownVerTidyup(e: KeyboardEvent, val: string | number) {
+    let ver: any = sortValue(val.toString());
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        ver = ver + (e.code === 'ArrowUp' ? 1 : -1)
+        if (isNaN(ver)) return;
+        const selected = props.context.selection.selectedShapes;
+        const dir = props.context.selection.isTidyUpDir;
+        const shapes = checkTidyUpShapesOrder(selected, dir);
+        const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
+        disalbeTidyup(shapes, dir);
+        const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+        verSpace.value = Math.max(ver, -minVer);
+        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir)
+    }
+    e.preventDefault();
 }
 
 function selection_change() {
@@ -991,16 +1026,17 @@ onUnmounted(() => {
                 @dragend="dragend"></MdNumberInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
-        <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius"></Radius>
+        <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius">
+        </Radius>
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up" style="margin-bottom: 0">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
                 :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
-                @dragend="dragend">
+                @dragend="dragend" @keydown="keydownHorTidyup">
             </MdNumberInput>
             <MdNumberInput icon="ver-space2" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyup"
                 :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
-                @dragend="dragend">
+                @dragend="dragend" @keydown="keydownVerTidyup">
             </MdNumberInput>
             <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? 1 : 0.4 }"
                 :class="{ 'tidy-up-disable': !verTidyUp && !horTidyUp }">

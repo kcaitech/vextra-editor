@@ -3,13 +3,14 @@ import { Context } from '@/context';
 import { nextTick, onMounted, onUpdated, ref, watch } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
-import { Blur, ShapeView } from '@kcdesign/data';
+import { Blur, LinearApi, ShapeView } from '@kcdesign/data';
 
 import { Menu } from "@/context/menu";
 import { hidden_selection } from '@/utils/content';
 import { get_actions_blur_modify } from '@/utils/shape_style';
 import { watchEffect } from 'vue';
 import { BlurHandler } from '@/transform/blur';
+import { sortValue } from '../BaseAttr/oval';
 
 const { t } = useI18n();
 
@@ -28,6 +29,7 @@ function showMenu() {
     props.context.menu.notify(Menu.SHUTDOWN_MENU);
     popover.value.show();
 }
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 const progressBar = ref<HTMLDivElement>()
 const progress = ref<HTMLDivElement>()
@@ -123,9 +125,22 @@ function changeBlurInput(e: Event) {
     hidden_selection(props.context);
 }
 
-const text_keyboard = (e: KeyboardEvent) => {
+const text_keyboard = (e: KeyboardEvent, val: string | number) => {
     if (e.code === "Enter" || e.code === "NumpadEnter") {
         blurInput.value?.blur();
+    }
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        let value: any = sortValue(val.toString());
+        value = value + (e.code === 'ArrowUp' ? 1 : -1)
+        if (isNaN(value)) return;
+        value = value <= 0 ? 0 : value <= 200 ? value : 200
+        blurValue.value = value
+        const actions = get_actions_blur_modify(props.shapes, value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            linearApi.modifyShapeBlurSaturation(actions)
+        }
+        e.preventDefault();
     }
 }
 
@@ -166,7 +181,7 @@ onUpdated(() => {
                             </div>
                         </div>
                         <input type="text" ref="blurInput" class="input-text" :value="blurValue" @click="clickBlurInput"
-                            @change="changeBlurInput" @keydown="text_keyboard" />
+                            @change="changeBlurInput" @keydown="e => text_keyboard(e, blurValue)" />
                     </div>
                 </div>
             </template>

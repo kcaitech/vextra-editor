@@ -5,6 +5,7 @@ import {
   AsyncBorderThickness,
   Border,
   BorderSideSetting,
+  LinearApi,
   ShapeType,
   ShapeView,
   SideType,
@@ -19,6 +20,7 @@ import { useI18n } from 'vue-i18n';
 import { can_custom, getSideInfo, get_actions_border_side_info, get_borders_side_thickness } from "./index"
 import { Menu } from '@/context/menu';
 import { format_value } from "@/utils/common";
+import { sortValue } from '../BaseAttr/oval';
 
 const { t } = useI18n();
 
@@ -36,6 +38,7 @@ const thickness_top = ref<number | string>(0);
 const thickness_right = ref<number | string>(0);
 const thickness_bottom = ref<number | string>(0);
 const thickness_left = ref<number | string>(0);
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 const update_side = () => {
   const selected = props.context.selection.selectedShapes;
@@ -49,6 +52,7 @@ const update_side = () => {
     select_side.value = undefined;
   }
 }
+
 
 const setSideType = (type: SideType) => {
   if (select_side.value === type || !shapes.value) return;
@@ -101,8 +105,39 @@ const setSideThickness = (thickness: number, type: SideType) => {
   getSideThickness();
 }
 
+function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType) {
+  if (!shapes.value) return;
+  if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+    let value: any = sortValue(val.toString());
+    value = value + (e.code === 'ArrowUp' ? 1 : -1)
+    if (isNaN(value)) return;
+    value = value <= 0 ? 0 : value <= 300 ? value : 300
+    const actions = get_actions_border(shapes.value, props.index, value);
+    if (actions && actions.length) {
+      switch (type) {
+        case SideType.Top:
+          linearApi.modifyBorderThicknessTop(actions)
+          break;
+        case SideType.Left:
+          linearApi.modifyBorderThicknessLeft(actions)
+          break;
+        case SideType.Right:
+          linearApi.modifyBorderThicknessRight(actions)
+          break;
+        case SideType.Bottom:
+          linearApi.modifyBorderThicknessBottom(actions)
+          break;
+      }
+    }
+    hidden_selection(props.context);
+    getSideThickness();
+    e.preventDefault();
+  }
+}
 
 function selection_wather(t?: any) {
+
+  
   if (t === Selection.CHANGE_SHAPE) {
     update_side();
   }
@@ -193,71 +228,64 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="container">
-  <div class="border-style">
-    <div class="border">{{ t('attr.unilateral') }}</div>
-    <div class="border-select">
-      <div class="all" :class="{ selected: select_side === SideType.Normal }"
-           @click="setSideType(SideType.Normal)">
-        <svg-icon icon-class="border-all"></svg-icon>
-      </div>
-      <div class="top" :class="{ selected: select_side === SideType.Top }" @click="setSideType(SideType.Top)">
-        <svg-icon icon-class="border-top"></svg-icon>
-      </div>
-      <div class="bottom" :class="{ selected: select_side === SideType.Bottom }"
-           @click="setSideType(SideType.Bottom)">
-        <svg-icon icon-class="border-bottom"></svg-icon>
-      </div>
-      <div class="left" :class="{ selected: select_side === SideType.Left }"
-           @click="setSideType(SideType.Left)">
-        <svg-icon icon-class="border-left"></svg-icon>
-      </div>
-      <div class="right" :class="{ selected: select_side === SideType.Right }"
-           @click="setSideType(SideType.Right)">
-        <svg-icon icon-class="border-right"></svg-icon>
-      </div>
-      <div class="custom" :class="{ selected: select_side === SideType.Custom }"
-           @click="setSideType(SideType.Custom)">
-        <svg-icon icon-class="border-custom"></svg-icon>
+  <div class="container">
+    <div class="border-style">
+      <div class="border">{{ t('attr.unilateral') }}</div>
+      <div class="border-select">
+        <div class="all" :class="{ selected: select_side === SideType.Normal }" @click="setSideType(SideType.Normal)">
+          <svg-icon icon-class="border-all"></svg-icon>
+        </div>
+        <div class="top" :class="{ selected: select_side === SideType.Top }" @click="setSideType(SideType.Top)">
+          <svg-icon icon-class="border-top"></svg-icon>
+        </div>
+        <div class="bottom" :class="{ selected: select_side === SideType.Bottom }"
+          @click="setSideType(SideType.Bottom)">
+          <svg-icon icon-class="border-bottom"></svg-icon>
+        </div>
+        <div class="left" :class="{ selected: select_side === SideType.Left }" @click="setSideType(SideType.Left)">
+          <svg-icon icon-class="border-left"></svg-icon>
+        </div>
+        <div class="right" :class="{ selected: select_side === SideType.Right }" @click="setSideType(SideType.Right)">
+          <svg-icon icon-class="border-right"></svg-icon>
+        </div>
+        <div class="custom" :class="{ selected: select_side === SideType.Custom }"
+          @click="setSideType(SideType.Custom)">
+          <svg-icon icon-class="border-custom"></svg-icon>
+        </div>
       </div>
     </div>
+    <div class="border-style" style="margin-top: 6px;" v-if="select_side === SideType.Custom">
+      <div class="border"></div>
+      <div class="border-custom">
+        <BorderCustomInput ticon="top" :shadowV="thickness_top" @onChange="(v) => setSideThickness(v, SideType.Top)"
+          @dragstart="(e) => dragStart(e, SideType.Top)" @dragging="(e) => dragging(e, thickness_top)"
+          @dragend="dragEnd" @keydown="(e, val) => keydownThickness(e, val, SideType.Top)"></BorderCustomInput>
+        <BorderCustomInput ticon="bottom" :shadowV="thickness_bottom"
+          @onChange="(v) => setSideThickness(v, SideType.Bottom)" @dragstart="(e) => dragStart(e, SideType.Bottom)"
+          @dragging="(e) => dragging(e, thickness_bottom)" @dragend="dragEnd"
+          @keydown="(e, val) => keydownThickness(e, val, SideType.Bottom)">
+        </BorderCustomInput>
+      </div>
+    </div>
+    <div class="border-style" style="margin-top: 6px;" v-if="select_side === SideType.Custom">
+      <div class="border"></div>
+      <div class="border-custom">
+        <BorderCustomInput ticon="left" :shadowV="thickness_left" @onChange="(v) => setSideThickness(v, SideType.Left)"
+          @dragstart="(e) => dragStart(e, SideType.Left)" @dragging="(e) => dragging(e, thickness_left)"
+          @dragend="dragEnd" @keydown="(e, val) => keydownThickness(e, val, SideType.Left)">
+        </BorderCustomInput>
+        <BorderCustomInput ticon="right" :shadowV="thickness_right"
+          @onChange="(v) => setSideThickness(v, SideType.Right)" @dragstart="(e) => dragStart(e, SideType.Right)"
+          @dragging="(e) => dragging(e, thickness_right)" @dragend="dragEnd"
+          @keydown="(e, val) => keydownThickness(e, val, SideType.Right)">
+        </BorderCustomInput>
+      </div>
+    </div>
+    <teleport to="body">
+      <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+      </div>
+    </teleport>
   </div>
-  <div class="border-style" style="margin-top: 6px;" v-if="select_side === SideType.Custom">
-    <div class="border"></div>
-    <div class="border-custom">
-      <BorderCustomInput ticon="top" :shadowV="thickness_top"
-                         @onChange="(v) => setSideThickness(v, SideType.Top)"
-                         @dragstart="(e) => dragStart(e, SideType.Top)"
-                         @dragging="(e) => dragging(e, thickness_top)" @dragend="dragEnd"></BorderCustomInput>
-      <BorderCustomInput ticon="bottom" :shadowV="thickness_bottom"
-                         @onChange="(v) => setSideThickness(v, SideType.Bottom)"
-                         @dragstart="(e) => dragStart(e, SideType.Bottom)"
-                         @dragging="(e) => dragging(e, thickness_bottom)"
-                         @dragend="dragEnd">
-      </BorderCustomInput>
-    </div>
-  </div>
-  <div class="border-style" style="margin-top: 6px;" v-if="select_side === SideType.Custom">
-    <div class="border"></div>
-    <div class="border-custom">
-      <BorderCustomInput ticon="left" :shadowV="thickness_left"
-                         @onChange="(v) => setSideThickness(v, SideType.Left)"
-                         @dragstart="(e) => dragStart(e, SideType.Left)" @dragging="(e) => dragging(e, thickness_left)"
-                         @dragend="dragEnd">
-      </BorderCustomInput>
-      <BorderCustomInput ticon="right" :shadowV="thickness_right"
-                         @onChange="(v) => setSideThickness(v, SideType.Right)"
-                         @dragstart="(e) => dragStart(e, SideType.Right)"
-                         @dragging="(e) => dragging(e, thickness_right)"
-                         @dragend="dragEnd">
-      </BorderCustomInput>
-    </div>
-  </div>
-  <teleport to="body">
-    <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
-    </div>
-  </teleport>
-</div>
 </template>
 
 <style lang="scss" scoped>
@@ -296,7 +324,7 @@ onUnmounted(() => {
     padding: 0 2px;
     box-sizing: border-box;
 
-    > div {
+    >div {
       flex: 1;
       display: flex;
       align-items: center;
@@ -304,7 +332,7 @@ onUnmounted(() => {
       border-radius: 4px;
       height: 28px;
 
-      > svg {
+      >svg {
         width: 16px;
         height: 16px;
       }
