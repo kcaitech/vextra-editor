@@ -18,12 +18,9 @@ import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
 import {
-    adapt2Shape,
-    Artboard,
     ArtboradView,
     ShapeType,
     ShapeView,
-    SymbolRefShape,
     SymbolRefView,
     TableCellType,
     TableCellView,
