@@ -87,51 +87,56 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div style="position: relative">
-    <ToolButton @click="click" :selected="props.params.active" style="display: flex;">
-        <el-tooltip class="box-item" effect="dark" :content="tips" placement="bottom"
-                    :show-after="600" :offset="10" :hide-after="0">
-            <div class="svg-container">
-                <svg-icon :icon-class="icon"/>
+    <div style="position: relative">
+        <ToolButton @click="click" :selected="props.params.active" :class="{ active: popover }" style="display: flex;">
+            <el-tooltip class="box-item" effect="dark" :content="tips" placement="bottom" :show-after="600" :offset="10"
+                :hide-after="0">
+                <div class="svg-container">
+                    <svg-icon :icon-class="icon" />
+                </div>
+            </el-tooltip>
+            <div class="tool-auto-menu-trigger" @click.stop="showMenu">
+                <svg-icon icon-class="white-down" />
             </div>
-        </el-tooltip>
-        <div class="tool-auto-menu-trigger" @click.stop="showMenu">
-            <svg-icon icon-class="white-down"/>
-        </div>
-    </ToolButton>
-    <div v-if="popover" class="popover-auto-tool-0958">
-        <div class="item" @click="__use_v">
-            <div style="display: flex; align-items: center;">
-                <div style="width: 18px">
-                    <svg-icon v-if="stashAction === Action.AutoV" icon-class="page-select"
-                              style="width: 12px; height: 12px;fill: var(--theme-color-anti)"/>
+        </ToolButton>
+        <div v-if="popover" class="popover-auto-tool-0958">
+            <div class="item" @click="__use_v">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 18px">
+                        <svg-icon v-if="stashAction === Action.AutoV" icon-class="page-select"
+                            style="width: 12px; height: 12px;fill: var(--theme-color-anti)" />
+                    </div>
+                    <div style="display: flex; align-items: center;gap: 8px">
+                        <svg-icon icon-class="drag" style="width: 14px; height: 14px" />
+                        <span>{{ t('home.object_selector') }}</span>
+                    </div>
                 </div>
-                <div style="display: flex; align-items: center;gap: 8px">
-                    <svg-icon icon-class="drag" style="width: 14px; height: 14px"/>
-                    <span>{{ t('home.object_selector') }}</span>
-                </div>
+                <div>V</div>
             </div>
-            <div>V</div>
-        </div>
-        <div class="item" @click="__use_k">
-            <div style="display: flex; align-items: center;">
-                <div style="width: 18px">
-                    <svg-icon v-if="stashAction === Action.AutoK" icon-class="page-select"
-                              style="width: 12px; height: 12px;fill: var(--theme-color-anti)"/>
+            <div class="item" @click="__use_k">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 18px">
+                        <svg-icon v-if="stashAction === Action.AutoK" icon-class="page-select"
+                            style="width: 12px; height: 12px;fill: var(--theme-color-anti)" />
+                    </div>
+                    <div style="display: flex; align-items: center;gap: 8px">
+                        <svg-icon icon-class="tool-scale"
+                            style="width: 14px; height: 14px; fill: var(--theme-color-anti)" />
+                        <span>{{ t('home.scale') }}</span>
+                    </div>
                 </div>
-                <div style="display: flex; align-items: center;gap: 8px">
-                    <svg-icon icon-class="tool-scale" style="width: 14px; height: 14px; fill: var(--theme-color-anti)"/>
-                    <span>{{ t('home.scale') }}</span>
-                </div>
+                <div>K</div>
             </div>
-            <div>K</div>
         </div>
     </div>
-</div>
 
 </template>
 
 <style scoped lang="scss">
+.active {
+    background-color: rgba(255, 255, 255, .1);
+}
+
 .svg-container {
     width: 32px;
     height: 32px;
@@ -139,7 +144,7 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
 
-    > svg {
+    >svg {
         width: 18px;
         height: 18px;
         fill: var(--theme-color-anti);
@@ -153,7 +158,7 @@ onUnmounted(() => {
     align-items: center;
     height: 100%;
 
-    > svg {
+    >svg {
         transform: translateX(-1px);
         width: 12px;
         height: 12px;
@@ -162,7 +167,7 @@ onUnmounted(() => {
 }
 
 .tool-auto-menu-trigger:hover {
-    > svg {
+    >svg {
         transform: translate(-1px, 2px);
     }
 }
@@ -178,7 +183,7 @@ onUnmounted(() => {
     color: var(--theme-color-anti);
     border-radius: var(--default-radius);
 
-    > .item {
+    >.item {
         width: 100%;
         height: 32px;
         padding: 0 12px;

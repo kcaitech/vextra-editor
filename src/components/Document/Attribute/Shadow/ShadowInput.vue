@@ -16,12 +16,18 @@ const emits = defineEmits<{
     (e: 'dragstart', event: MouseEvent): void;
     (e: 'dragging', event: MouseEvent): void;
     (e: 'dragend'): void;
+    (e: 'keyDown', event: KeyboardEvent, val: string | number): void;
 }>();
 const input = ref<HTMLInputElement>();
 const isActived = ref(false)
 const selectValue = () => {
     isActived.value = true
 }
+
+watch(()=>props.shadowV,()=>{
+    console.log('更新了');
+    
+})
 
 const onChange = () => {
     if (input.value) {
@@ -140,7 +146,8 @@ function click() {
                 :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
         <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click">
+            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click"
+            @keydown="e=>emits('keyDown',e,props.shadowV)">
         <div class="adjust" :class="{ active: isActived }">
             <svg-icon icon-class="down" style="transform: rotate(180deg);"
                 :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>

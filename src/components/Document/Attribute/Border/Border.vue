@@ -13,7 +13,8 @@ import {
     BorderSideSetting,
     SideType,
     PathShapeView,
-    TableView
+    TableView,
+    LinearApi
 } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
@@ -50,6 +51,7 @@ import {
     get_actions_border_position,
 } from '@/utils/shape_style'
 import { getSideThickness } from "./index"
+import { sortValue } from '../BaseAttr/oval';
 
 interface BorderItem {
     id: number
@@ -81,6 +83,8 @@ let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
 let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
 const reflush_side = ref(0);
 const reflush_apex = ref(0);
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const keydownval = ref<boolean>(false)
 
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
@@ -174,6 +178,7 @@ function updateData() {
             borders.push(..._bs.reverse());
         }
     }
+    reflush_side.value++
 }
 
 function addBorder() {
@@ -333,6 +338,34 @@ function onAlphaChange(b: Border, idx: number) {
     hidden_selection(props.context);
 }
 
+function keydownAlpha(event: KeyboardEvent, b: Border, idx: number, val: string) {
+    let value: any = sortValue(val);
+    if (!alphaBorder.value) return;
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        keydownval.value = true;
+        if (value >= 0) {
+            if (value >= 100) {
+                value = 100
+            }
+            value = value / 100 + (event.code === 'ArrowUp' ? 0.01 : -0.01)
+            if (isNaN(value)) return;
+            value = value <= 0 ? 0 : value <= 1 ? value : 1
+            const border = borders[idx].border;
+            const { red, green, blue } = border.color
+            const color = new Color(value, red, green, blue);
+            if (b.fillType === FillType.SolidColor) {
+                setColor(idx, color);
+            } else if (b.gradient && b.fillType === FillType.Gradient) {
+                set_gradient_opacity(idx, value);
+            }
+        } else {
+            alpha_message(idx, b);
+        }
+        event.preventDefault();
+    }
+
+}
+
 function setColor(idx: number, color: Color) {
     const selected = shapes.value || props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
@@ -342,19 +375,29 @@ function setColor(idx: number, color: Color) {
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        const tablecells = (s as TableView).getVisibleCells(table.tableRowStart,
-            table.tableRowEnd,
-            table.tableColStart,
-            table.tableColEnd);
+        const tablecells = (s as TableView).getVisibleCells(range.rowStart,
+            range.rowEnd,
+            range.colStart,
+            range.colEnd);
         if (tablecells.length > 0 && tablecells[0].cell) {
-            e.setBorderColor4Cell(_idx, color, range)
+            if (keydownval.value) {
+                linearApi.modifyBorderOpacity4Cell(_idx, color, range, s as TableView);
+                keydownval.value = false;
+            } else {
+                e.setBorderColor4Cell(_idx, color, range)
+            }
         }
     } else {
         const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_color(shapes, _idx, color);
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setShapesBorderColor(actions);
+            if (keydownval.value) {
+                linearApi.modifyBorderOpacity(actions)
+                keydownval.value = false
+            } else {
+                editor.setShapesBorderColor(actions);
+            }
         }
     }
 }
@@ -379,7 +422,12 @@ const set_gradient_opacity = (idx: number, opacity: number) => {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'borders');
-    editor.setGradientOpacity(actions);
+    if (keydownval.value) {
+        linearApi.modifyGradientOpacity(actions)
+        keydownval.value = false
+    } else {
+        editor.setGradientOpacity(actions);
+    }
 }
 
 function getColorFromPicker(color: Color, idx: number) {
@@ -861,19 +909,73 @@ function setThickness(e: Event, id: number) {
     reflush_side.value++;
 }
 
+function keydownThickness(event: KeyboardEvent, id: number, val: string | number) {
+    let value: any = sortValue(val.toString());
+    let old = value;
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shape = selecteds[0];
+    const table = props.context.tableSelection;
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        if (value >= 0) {
+            if (value >= 300) {
+                value = 300
+            }
+            value = value + (event.code === 'ArrowUp' ? 1 : -1)
+            if (isNaN(value)) return;
+            value = value <= 0 ? 0 : value <= 300 ? value : 300
+            if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+                const e = props.context.editor4Table(shape as TableView);
+                const range = get_table_range(table);
+                if (old !== value) linearApi.modifyBorderThickness4Cell(id, value, range, shape as TableView);
+            } else {
+                const shapes = getShapesForStyle(selecteds);
+                const actions = get_actions_border(shapes, id, value);
+                if (actions && actions.length) {
+                    if (old !== value) linearApi.modifyShapesBorderThickness(actions);
+                }
+            }
+        }
+        event.preventDefault();
+        reflush_side.value++;
+    }
+
+}
+
 const thickness_value = (index: number, idx: number) => {
     if (typeof getSideThickness(borders[idx].border.sideSetting) === 'boolean') {
         return t('attr.mixed')
     } else {
         let result = [];
-        const selected = props.context.selection.selectedShapes;
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-        for (let i = 0; i < shapes.length; i++) {
-            const shape = shapes[i];
-            const borders = shape.getBorders();
-            if (!borders.length) return 0;
-            result.push(getSideThickness(borders[index].sideSetting, shape));
-        }
+        const selecteds = props.context.selection.selectedShapes;
+        const shape = selecteds[0]
+        const table = props.context.tableSelection;
+        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+            if (table.tableRowStart > -1) {
+                const _cs = table.getSelectedCells(true);
+                const v = new Set()
+                for (let i = 0, len = _cs.length; i < len; i++) {
+                    v.add(_cs[i].cell?.style.borders[0].sideSetting.thicknessLeft)
+                }
+                if (v.size === 1) {
+                    v.forEach(i => result.push(i))
+                }
+            } else {
+                const is_edting = table.editingCell;
+                const v = is_edting?.style.borders[0].sideSetting.thicknessLeft;
+                if (v || v === 0) result.push(v)
+            }
+        } else {
+            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const borders = shape.getBorders();
+                if (!borders.length) return 0;
+                result.push(getSideThickness(borders[index].sideSetting, shape));
+            }
+        };
+
         const unique = new Set(result);
         if (unique.size === 1 && !unique.has(false)) {
             return format_value(Number(result[0]));
@@ -900,86 +1002,88 @@ const strokeClick = (e: Event) => {
 </script>
 
 <template>
-<div class="border-panel">
-    <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
-        <template #tool>
-            <div class="add" @click.stop="addBorder">
-                <svg-icon icon-class="add"></svg-icon>
-            </div>
-        </template>
-    </TypeHeader>
-    <div class="tips-wrap" v-if="mixed">
-        <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
-    </div>
-    <div class="tips-wrap" v-if="mixed_cell">
-        <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
-    </div>
-    <div class="borders-container" v-else-if="!mixed && !mixed_cell && borders.length">
-        <div class="border" v-for="(b, idx) in borders" :key="b.id">
-            <div class="top">
-                <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                    <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
+    <div class="border-panel">
+        <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
+            <template #tool>
+                <div class="add" @click.stop="addBorder">
+                    <svg-icon icon-class="add"></svg-icon>
                 </div>
-                <div class="color">
-                    <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                                 :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
-                                 @change="(c: Color) => getColorFromPicker(c, idx)"
-                                 @gradient-reverse="() => gradient_reverse(idx)"
-                                 :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
-                                 @gradient-rotate="() => gradient_rotate(idx)"
-                                 @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                                 @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
-                                 @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                                 @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"/>
-                    <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
-                           :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
-                           :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
-                           @click="colorClick" @blur="is_color_select = false" @focus="selectColor($event)"
-                           @input="colorInput($event)"/>
-                    <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
-                          v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
-                            t(`color.${b.border.gradient.gradientType}`)
-                        }}</span>
-                    <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
-                           style="text-align: center;" :value="filterAlpha(b.border) + '%'" @click="alphaClick"
-                           @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"
-                           @focus="selectAlpha" @input="alphaInput"/>
+            </template>
+        </TypeHeader>
+        <div class="tips-wrap" v-if="mixed">
+            <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
+        </div>
+        <div class="tips-wrap" v-if="mixed_cell">
+            <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
+        </div>
+        <div class="borders-container" v-else-if="!mixed && !mixed_cell && borders.length">
+            <div class="border" v-for="(b, idx) in borders" :key="b.id">
+                <div class="top">
+                    <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                        <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
+                    </div>
+                    <div class="color">
+                        <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
+                            :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
+                            @change="(c: Color) => getColorFromPicker(c, idx)"
+                            @gradient-reverse="() => gradient_reverse(idx)"
+                            :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
+                            @gradient-rotate="() => gradient_rotate(idx)"
+                            @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
+                            @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
+                            @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                            @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
+                        <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
+                            :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
+                            :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                            @click="colorClick" @blur="is_color_select = false" @focus="selectColor($event)"
+                            @input="colorInput($event)" />
+                        <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
+                            v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
+                                t(`color.${b.border.gradient.gradientType}`)
+                            }}</span>
+                        <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
+                            style="text-align: center;" :value="filterAlpha(b.border) + '%'" @click="alphaClick"
+                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"
+                            @focus="selectAlpha" @input="alphaInput"
+                            @keydown="(e) => keydownAlpha(e, b.border, idx, filterAlpha(b.border))" />
+                    </div>
+                    <div class="delete" @click="deleteBorder(idx)">
+                        <svg-icon icon-class="delete"></svg-icon>
+                    </div>
                 </div>
-                <div class="delete" @click="deleteBorder(idx)">
-                    <svg-icon icon-class="delete"></svg-icon>
-                </div>
-            </div>
-            <div class="bottom">
-                <div style=" flex: calc(50% - 20px);"
-                     :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
-                    <Select class="select" :context="props.context" :shapes="props.shapes"
+                <div class="bottom">
+                    <div style=" flex: calc(50% - 20px);"
+                        :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
+                        <Select class="select" :context="props.context" :shapes="props.shapes"
                             :source="positonOptionsSource"
                             :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
                             @select="positionSelect" :index="borders.length - idx - 1"></Select>
+                    </div>
+                    <div class="thickness-container" style=" flex: calc(50% - 20px);"
+                        :class="{ actived: isActived === idx }">
+                        <svg-icon icon-class="thickness"
+                            :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
+                            @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
+                        <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
+                            @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur"
+                            @click="strokeClick" @focus="selectBorderThicknes($event, idx)"
+                            @keydown="e => keydownThickness(e, borders.length - idx - 1, thickness_value(borders.length - idx - 1, idx))">
+                    </div>
+                    <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
+                        :index="borders.length - idx - 1" :reflush_side="reflush_side">
+                    </BorderDetail>
                 </div>
-                <div class="thickness-container" style=" flex: calc(50% - 20px);"
-                     :class="{ actived: isActived === idx }">
-                    <svg-icon icon-class="thickness"
-                              :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
-                              @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
-                    <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
-                           @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur"
-                           @click="strokeClick" @focus="selectBorderThicknes($event, idx)">
-                </div>
-                <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                              :index="borders.length - idx - 1" :reflush_side="reflush_side">
-                </BorderDetail>
             </div>
         </div>
+        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
+            :trigger="props.trigger" :reflush_apex="reflush_apex">
+        </Apex>
     </div>
-    <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
-          :trigger="props.trigger" :reflush_apex="reflush_apex">
-    </Apex>
-</div>
-<teleport to="body">
-    <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
-    </div>
-</teleport>
+    <teleport to="body">
+        <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
+        </div>
+    </teleport>
 </template>
 
 <style scoped lang="scss">
@@ -1043,7 +1147,7 @@ const strokeClick = (e: Event) => {
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -1096,7 +1200,7 @@ const strokeClick = (e: Event) => {
                     border-radius: 4px;
                     margin-right: 5px;
 
-                    > svg {
+                    >svg {
                         width: 60%;
                         height: 60%;
                     }
@@ -1148,7 +1252,7 @@ const strokeClick = (e: Event) => {
                         box-sizing: border-box;
                     }
 
-                    input + input {
+                    input+input {
                         width: 45px;
                     }
 
@@ -1171,14 +1275,15 @@ const strokeClick = (e: Event) => {
                     transition: 0.2s;
                     border-radius: var(--default-radius);
 
-                    > svg {
+                    >svg {
                         width: 16px;
                         height: 16px;
                     }
                 }
 
                 .delete:hover {
-                    background-color: #F5F5F5;;
+                    background-color: #F5F5F5;
+                    ;
                 }
 
                 //}
@@ -1192,7 +1297,7 @@ const strokeClick = (e: Event) => {
                 gap: 6px;
                 margin-left: 19px;
 
-                > .select {
+                >.select {
                     height: 100%;
                     width: 100px;
                 }
@@ -1209,7 +1314,7 @@ const strokeClick = (e: Event) => {
                     gap: 8px;
                     overflow: hidden;
 
-                    > svg {
+                    >svg {
                         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                         flex: 0 0 16px;
                         height: 16px;
@@ -1219,7 +1324,7 @@ const strokeClick = (e: Event) => {
                         cursor: default !important;
                     }
 
-                    > input {
+                    >input {
                         outline: none;
                         border: none;
                         padding: 0;
