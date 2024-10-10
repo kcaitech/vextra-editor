@@ -169,7 +169,6 @@ function input() {
 }
 
 function toggleExpand(shape: string | Shape) {
-    if (typeof shape !== 'string') console.log('---toggle---', shape.name);
     shapeDirList.toggleExpand(typeof shape === 'string' ? shape : shape.id);
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
