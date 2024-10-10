@@ -1320,8 +1320,10 @@ export class Translate2 extends TransformHandler {
         const current = this.mode;
         if ((radar.placement as ArtboradView).autoLayout) {
             if (current === TranslateMode.Linear) {
-                this.mode = TranslateMode.Prev;
-                radar.suspend();
+                if (radar.placement !== radar.target) {
+                    this.mode = TranslateMode.Prev;
+                    radar.suspend();
+                }
             } else if (current === TranslateMode.Prev) { // 更新[预插入env]
                 this.inserter.env = radar.placement as ArtboradView;
             }
