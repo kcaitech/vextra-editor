@@ -169,20 +169,14 @@ function input() {
 }
 
 function toggleExpand(shape: string | Shape) {
-    shapeDirList.toggleExpand(typeof shape === 'string' ? shape : shape.id)
+    if (typeof shape !== 'string') console.log('---toggle---', shape.name);
+    shapeDirList.toggleExpand(typeof shape === 'string' ? shape : shape.id);
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 function selectShape(shape: ShapeView, is_ctrl: boolean, shiftKey: boolean) {
-    if (shiftKey) {
-        range_select_shape(props.context, shapeDirList, listviewSource, shape);
-        return;
-    }
-
-    if (is_ctrl) {
-        multi_select_shape(props.context, shape);
-        return;
-    }
-
+    if (shiftKey) return range_select_shape(props.context, shapeDirList, listviewSource, shape);
+    if (is_ctrl) return multi_select_shape(props.context, shape);
     props.context.selection.selectShape(shape);
 }
 
@@ -194,7 +188,7 @@ function hoverShape(shape: ShapeView) {
     }
 }
 
-function unHovershape() {
+function unHoverShape() {
     props.context.selection.unHoverShape();
 }
 
@@ -217,7 +211,7 @@ function shapeScrollToContentView(shape: ShapeView) {
     locateShape(props.context, shape);
 }
 
-function selectshape_right(shape: ShapeView, shiftKey: boolean) {
+function select_shape_right(shape: ShapeView, shiftKey: boolean) {
     const selection = props.context.selection;
     if (is_shape_in_selection(selection.selectedShapes, shape)) {
         return;
@@ -242,7 +236,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
         e.stopPropagation();
         menu.menuMount();
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
-        selectshape_right(shape, e.shiftKey);
+        select_shape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
         contextMenuItems.value.clear();
         contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Replace, MenuItemType.Visible, MenuItemType.Lock, MenuItemType.Copy, MenuItemType.Groups, MenuItemType.Container, MenuItemType.Component, MenuItemType.Forward, MenuItemType.Back, MenuItemType.Top, MenuItemType.Bottom, MenuItemType.Mask, MenuItemType.Outline]);
@@ -481,7 +475,6 @@ onMounted(() => {
     props.context.menu.watch(menu_watcher);
     props.context.navi.watch(navi_watcher);
 });
-
 onUnmounted(() => {
     props.context.selection.unwatch(notifySourceChange)
     props.context.menu.unwatch(menu_watcher);
@@ -541,7 +534,7 @@ onUnmounted(() => {
         <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
                   :source="listviewSource" :item-view="ShapeItem" :item-height="itemHeight" :item-width="0"
                   :first-index="0" :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape"
-                  @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView"
+                  @hovershape="hoverShape" @unhovershape="unHoverShape" @scrolltoview="shapeScrollToContentView"
                   @rename="rename" @set-visible="modify_visible_status" @set-lock="modify_lock_status"
                   @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
                   @after-drag-2="after_drag">
