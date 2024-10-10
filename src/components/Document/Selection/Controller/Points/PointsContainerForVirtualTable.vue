@@ -7,7 +7,9 @@ import {
 import { onMounted, onUnmounted, watch, ref, reactive } from 'vue';
 import { Point } from "../../SelectionView.vue";
 import { WorkSpace } from '@/context/workspace';
-import { TranslateHandler } from '@/transform/translate';
+// import { TranslateHandler } from '@/transform/translate';
+import { Translate2 } from "@/transform/translate2";
+
 
 interface Props {
     matrix: number[]
@@ -20,6 +22,9 @@ const props = defineProps<Props>();
 const matrix = new Matrix();
 let offest = -0.5;
 const hidden = ref<boolean>(false);
+
+let translate2: Translate2 | undefined = undefined;
+
 function update() {
     matrix.reset(props.matrix);
     offest = matrix.m00 * -0.5;
@@ -57,13 +62,15 @@ function update_transform() {
     }
 }
 
-let transporter: TranslateHandler | undefined = undefined;
+// let transporter: TranslateHandler | undefined = undefined;
 
 // #endregion
 
 function window_blur() {
     const workspace = props.context.workspace;
-    transporter?.fulfil();
+    // transporter?.fulfil();
+    translate2?.fulfil();
+    translate2 = undefined;
     workspace.scaling(false);
     workspace.setCtrl('page');
     props.context.cursor.reset();

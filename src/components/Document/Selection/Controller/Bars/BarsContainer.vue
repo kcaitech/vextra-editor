@@ -183,7 +183,7 @@ function bar_mouseleave() {
 }
 
 function workspaceWatcher(t: number | string) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.SELECTION_VIEW_UPDATE) {
         update();
     }
 }

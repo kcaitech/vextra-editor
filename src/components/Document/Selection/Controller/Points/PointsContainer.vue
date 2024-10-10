@@ -313,7 +313,8 @@ function window_blur() {
 }
 
 function workspaceWatcher(t: number | string) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) update();
+    if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.SELECTION_VIEW_UPDATE) update();
+
 }
 
 watch(() => props.shape, (value, old) => {

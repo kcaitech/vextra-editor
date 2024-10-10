@@ -18,10 +18,8 @@ import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
 import SearchPanel from "./Search/SearchPanel.vue";
-import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
-// import { Perm } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 import {
     DragDetail,
@@ -73,7 +71,7 @@ class Iter implements IDataIter<ItemData> {
         }
         const _shape = adapt2Shape(shape);
         if (!_shape) throw new Error("shape data is null");
-        const item = {
+        return {
             id: shape.id,
             shape: () => {
                 return _shape;
@@ -85,18 +83,16 @@ class Iter implements IDataIter<ItemData> {
             expand: !data.fold,
             level,
             context: props.context
-        }
-        return item;
+        };
     }
 }
 
 const props = defineProps<{ context: Context, page: PageView, pageHeight: number }>();
 const { t } = useI18n();
-const itemHieght = 32;
+const itemHeight = 32;
 const MOUSE_RIGHT = 2;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 const chartMenu = ref<boolean>(false)
-const chartMenuItems = ref<string[]>([]);
 const contextMenuEl = ref<ContextMenuEl>();
 const shapeList = ref<HTMLDivElement>()
 const shapeH = ref(0);
@@ -129,70 +125,57 @@ let listviewSource = new class implements IDataSource<ItemData> {
 }
 const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
-const list_h = ref<number>(0)
 
-function _notifySourceChange(t?: number | string, shape?: ShapeView) {
+function notifySourceChange(t?: number | string) {
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
-        const shapes = props.context.selection.selectedShapes
-        shapes.forEach(item => {
-            let parent = item.parent
-            let parents = []
-            while (parent) {
-                parents.unshift(parent);
-                parent = parent.parent;
-            }
-            parents.forEach(p => {
-                p.type !== ShapeType.Page && !shapeDirList.isExpand(p.id) && toggleExpand(p.id);
-            })
-            const indexItem = shapeDirList.indexOf(item.id)
-            if (listBody.value) {
-                list_h.value = listBody.value.clientHeight //list可视高度
-            }
-            if (shapelist.value && indexItem >= 0) {
-                const itemScrollH = indexItem * 32
-                if (itemScrollH + 29 >= list_h.value - shapelist.value.scroll.y) {
-                    if ((itemScrollH) + shapelist.value.scroll.y < list_h.value - 32) return
-                    shapelist.value.clampScroll(0, -(itemScrollH + 32 - list_h.value))
-                } else if (itemScrollH < -(shapelist.value.scroll.y)) {
-                    shapelist.value.clampScroll(0, -itemScrollH)
-                }
-            }
-        })
+        locate();
         if (t === 'changed') props.context.navi.notify(Navi.COMP_LIST_CHANGED);
-    } else if (t === Selection.EXTEND) {
-        if (shape) {
-            toggleExpand(shape.id)
-        }
+        listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
-const notifySourceChange = debounce(_notifySourceChange, 30);
+function locate() {
+    const shape = props.context.selection.selectedShapes[props.context.selection.selectedShapes.length - 1];
+    if (!shape) return;
+    const parents: ShapeView[] = [];
+    let parent = shape.parent;
+    while (parent) {
+        parents.unshift(parent);
+        parent = parent.parent;
+    }
+    for (const parent of parents)
+        parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent.id) && toggleExpand(parent.id);
+
+    const index = shapeDirList.indexOf(shape.id);
+    const h = listBody.value!.clientHeight;
+    const itemScrollH = index * 32;
+    const list = shapelist.value!;
+
+    if (itemScrollH + 29 > h - list.scroll.y) {
+        if (itemScrollH + list.scroll.y < h - 32) return;
+        list.clampScroll(0, -(itemScrollH + 32 - h));
+    } else if (itemScrollH < -list.scroll.y) {
+        list.clampScroll(0, -itemScrollH);
+    }
+}
 
 function search() {
     props.context.navi.notify(Navi.SEARCHING);
     props.context.navi.set_keywords(keywords.value);
 }
 
-function inputing() {
+function input() {
     props.context.navi.notify(Navi.SEARCHING);
 }
 
 function toggleExpand(shape: string | Shape) {
-    shapeDirList.toggleExpand(typeof shape === 'string' ? shape : shape.id)
+    shapeDirList.toggleExpand(typeof shape === 'string' ? shape : shape.id);
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 function selectShape(shape: ShapeView, is_ctrl: boolean, shiftKey: boolean) {
-    if (shiftKey) {
-        range_select_shape(props.context, shapeDirList, listviewSource, shape);
-        return;
-    }
-
-    if (is_ctrl) {
-        multi_select_shape(props.context, shape);
-        return;
-    }
-
+    if (shiftKey) return range_select_shape(props.context, shapeDirList, listviewSource, shape);
+    if (is_ctrl) return multi_select_shape(props.context, shape);
     props.context.selection.selectShape(shape);
 }
 
@@ -204,7 +187,7 @@ function hoverShape(shape: ShapeView) {
     }
 }
 
-function unHovershape() {
+function unHoverShape() {
     props.context.selection.unHoverShape();
 }
 
@@ -227,7 +210,7 @@ function shapeScrollToContentView(shape: ShapeView) {
     locateShape(props.context, shape);
 }
 
-function selectshape_right(shape: ShapeView, shiftKey: boolean) {
+function select_shape_right(shape: ShapeView, shiftKey: boolean) {
     const selection = props.context.selection;
     if (is_shape_in_selection(selection.selectedShapes, shape)) {
         return;
@@ -252,7 +235,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
         e.stopPropagation();
         menu.menuMount();
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
-        selectshape_right(shape, e.shiftKey);
+        select_shape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
         contextMenuItems.value.clear();
         contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Replace, MenuItemType.Visible, MenuItemType.Lock, MenuItemType.Copy, MenuItemType.Groups, MenuItemType.Container, MenuItemType.Component, MenuItemType.Forward, MenuItemType.Back, MenuItemType.Top, MenuItemType.Bottom, MenuItemType.Mask, MenuItemType.Outline]);
@@ -337,7 +320,7 @@ function esc(e: KeyboardEvent) {
     }
 }
 
-function preto_search() {
+function pre_search() {
     popoverVisible.value = false;
     if (search_el.value) {
         search_el.value.select();
@@ -445,7 +428,7 @@ function to_search() {
     if (search_el.value) {
         search_el.value.focus();
         search_el.value.select();
-        preto_search();
+        pre_search();
     }
 }
 
@@ -477,15 +460,13 @@ const stopWatch = watch(() => props.page, () => {
         source = new ShapeDirList(props.page);
         shapeListMap.set(props.page.id, source);
     }
-    if (shapeDirList) {
-        shapeDirList.unwatch(notifySourceChange);
-    }
+    if (shapeDirList) shapeDirList.unwatch(notifySourceChange);
 
     shapeDirList = source;
     // for debug
     (window as any).__sd = shapeDirList;
     shapeDirList.watch(notifySourceChange)
-    notifySourceChange();
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }, { immediate: true });
 
 onMounted(() => {
@@ -493,79 +474,75 @@ onMounted(() => {
     props.context.menu.watch(menu_watcher);
     props.context.navi.watch(navi_watcher);
 });
-
 onUnmounted(() => {
     props.context.selection.unwatch(notifySourceChange)
     props.context.menu.unwatch(menu_watcher);
     props.context.navi.unwatch(navi_watcher);
     stopWatch();
-    if (shapeDirList) {
-        shapeDirList.unwatch(notifySourceChange)
-    }
+    if (shapeDirList) shapeDirList.unwatch(notifySourceChange);
 });
-
 </script>
 
 <template>
-    <div class="shapelist-wrap" ref="shapeList">
-        <div class="header" @click.stop="reset_selection">
-            <div class="search" ref="search_wrap">
-                <div class="tool-container" @click="preto_search">
-                    <svg-icon icon-class="search"></svg-icon>
-                </div>
-                <div class="menu-f" @click="show_types">
-                    <svg-icon icon-class="down"></svg-icon>
-                </div>
-                <input ref="search_el" type="text" id="xpxp" v-model="keywords"
-                    :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="preto_search"
-                    @change="search" @input="inputing" @focus="input_focus">
-                <div @click="clear_text" class="close"
-                    :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
-                    <svg-icon icon-class="close-x"></svg-icon>
-                </div>
-                <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
-                    :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
-                    Aa
-                </div>
+<div class="shapelist-wrap" ref="shapeList">
+    <div class="header" @click.stop="reset_selection">
+        <div class="search" ref="search_wrap">
+            <div class="tool-container" @click="pre_search">
+                <svg-icon icon-class="search"></svg-icon>
             </div>
-            <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-                <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types">
-                </ShapeTypes>
+            <div class="menu-f" @click="show_types">
+                <svg-icon icon-class="down"></svg-icon>
             </div>
-            <div class="blocks" v-if="includes_type.length">
-                <div class="block-wrap" v-for="(item, index) in includes_type" :key="index"
-                    @click="(e) => update_types(item, false, e.shiftKey)">
-                    <div class="block">
-                        <div class="content">{{ t(`shape.${item}`) }}</div>
-                        <div class="close" @click.stop="(e) => update_types(item, false, e.shiftKey)">
-                            <svg-icon icon-class="close-x"></svg-icon>
-                        </div>
-                    </div>
-                </div>
-                <div class="block-wrap" v-if="includes_type.length > 1" @click="reset_types">
-                    <div class="block reset">
-                        <svg-icon icon-class="delete-type"></svg-icon>
-                    </div>
-                </div>
+            <input ref="search_el" type="text" id="xpxp" v-model="keywords"
+                   :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="pre_search"
+                   @change="search" @input="input" @focus="input_focus">
+            <div @click="clear_text" class="close"
+                 :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
+                <svg-icon icon-class="close-x"></svg-icon>
+            </div>
+            <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
+                 :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
+                Aa
             </div>
         </div>
-        <div class="body" ref="listBody" @mousedown="reset_selection">
-            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
-                :shape-types="includes_type" :accurate="accurate" @item-mousedown="list_mousedown">
-            </SearchPanel>
-            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
-                :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0"
-                :first-index="0" :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape"
-                @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView"
-                @rename="rename" @set-visible="modify_visible_status" @set-lock="modify_lock_status"
-                @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
-                @after-drag-2="after_drag">
-            </ListView>
-            <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop
-                :items="contextMenuItems">
-            </ContextMenu>
+        <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+            <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types">
+            </ShapeTypes>
+        </div>
+        <div class="blocks" v-if="includes_type.length">
+            <div class="block-wrap" v-for="(item, index) in includes_type" :key="index"
+                 @click="(e) => update_types(item, false, e.shiftKey)">
+                <div class="block">
+                    <div class="content">{{ t(`shape.${item}`) }}</div>
+                    <div class="close" @click.stop="(e) => update_types(item, false, e.shiftKey)">
+                        <svg-icon icon-class="close-x"></svg-icon>
+                    </div>
+                </div>
+            </div>
+            <div class="block-wrap" v-if="includes_type.length > 1" @click="reset_types">
+                <div class="block reset">
+                    <svg-icon icon-class="delete-type"></svg-icon>
+                </div>
+            </div>
         </div>
     </div>
+    <div class="body" ref="listBody" @mousedown="reset_selection">
+        <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
+                     :shape-types="includes_type" :accurate="accurate" @item-mousedown="list_mousedown">
+        </SearchPanel>
+        <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
+                  :source="listviewSource" :item-view="ShapeItem" :item-height="itemHeight" :item-width="0"
+                  :first-index="0" :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape"
+                  @hovershape="hoverShape" @unhovershape="unHoverShape" @scrolltoview="shapeScrollToContentView"
+                  @rename="rename" @set-visible="modify_visible_status" @set-lock="modify_lock_status"
+                  @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
+                  @after-drag-2="after_drag">
+        </ListView>
+        <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop
+                     :items="contextMenuItems">
+        </ContextMenu>
+    </div>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -575,7 +552,6 @@ onUnmounted(() => {
     width: 100%;
     flex-direction: column;
     background-color: #fff;
-    //padding-bottom: 8px;
     box-sizing: border-box;
 
     .header {
@@ -583,11 +559,8 @@ onUnmounted(() => {
         font-size: var(--font-default-fontsize);
         box-sizing: border-box;
         position: relative;
-        padding: 8px 0;
-        padding-right: 6px;
-        box-sizing: border-box;
+        padding: 8px 6px;
         border-top: 1px solid #F0F0F0;
-        padding-left: 6px;
 
         .search {
             height: 32px;
@@ -600,13 +573,13 @@ onUnmounted(() => {
             overflow: hidden;
             transition: 0.32s;
 
-            >.tool-container {
+            > .tool-container {
                 margin-right: 2px;
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
 
-                >svg {
+                > svg {
                     width: 12px;
                     height: 12px;
                 }
@@ -623,7 +596,7 @@ onUnmounted(() => {
                 transition: 0.3s;
                 cursor: pointer;
 
-                >svg {
+                > svg {
                     width: 12px;
                     height: 12px;
                 }
@@ -633,7 +606,7 @@ onUnmounted(() => {
                 transform: translateY(2px);
             }
 
-            >input {
+            > input {
                 width: calc(100% - 64px);
                 border: none;
                 outline: none;
@@ -646,7 +619,7 @@ onUnmounted(() => {
                 transition: 0.3s;
             }
 
-            >.close {
+            > .close {
                 flex-shrink: 0;
                 width: 14px;
                 height: 14px;
@@ -657,17 +630,16 @@ onUnmounted(() => {
                 justify-content: center;
                 transition: 0.15s;
 
-                >svg {
+                > svg {
                     color: rgb(111, 111, 111);
                     width: 10px;
                     height: 10px;
                 }
             }
 
-            >.accurate {
+            > .accurate {
                 flex-shrink: 0;
                 user-select: none;
-                height: 100%;
                 background-color: var(--grey-dark);
                 border-radius: 4px;
                 width: 22px;
@@ -727,7 +699,7 @@ onUnmounted(() => {
                         justify-content: flex-end;
                         margin-left: auto;
 
-                        >svg {
+                        > svg {
                             width: 12px;
                             height: 14px;
                         }
@@ -744,7 +716,7 @@ onUnmounted(() => {
                     width: 14px;
                     color: #fff;
 
-                    >svg {
+                    > svg {
                         text-align: center;
                         height: 14px;
                     }
@@ -760,7 +732,7 @@ onUnmounted(() => {
         overflow: hidden;
         box-sizing: border-box;
 
-        >.container {
+        > .container {
             height: 100%;
         }
     }
@@ -779,8 +751,7 @@ onUnmounted(() => {
         outline: none;
         padding: 4px 0;
         transition: 0.3s;
-        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-
+        box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
     }
 }
 </style>

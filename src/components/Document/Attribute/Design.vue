@@ -352,9 +352,9 @@ onUnmounted(() => {
                     </Module>
                     <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                     </InstanceAttr>
-                    <!-- <AutoLayout v-if="autoLayout || shapes.length > 1" :trigger=reflush_trigger
+                    <AutoLayout v-if="autoLayout || shapes.length > 1" :trigger="reflush_trigger"
                         :selection-change="reflush_by_selection" :context="props.context" :shapes="shapes">
-                    </AutoLayout> -->
+                    </AutoLayout>
                     <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                     <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
                         :selection-change="reflush_by_selection">

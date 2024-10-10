@@ -70,9 +70,7 @@ const abbr_view = ref<number>(0);
 const maskView = ref<boolean>(!!props.data.shapeview().masked);
 
 function toggleExpand(e: Event) {
-    if (!showTriangle.value) {
-        return;
-    }
+    if (!showTriangle.value) return;
     e.stopPropagation();
     emits("toggleexpand", props.data.shapeview());
 }
@@ -209,9 +207,7 @@ const mousedown = (e: MouseEvent) => {
 }
 
 function mouseup(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button !== 0) return;
     if (props.data.context.selection.selectedShapes.length < 2) {
         return;
     }
@@ -402,7 +398,8 @@ onUnmounted(() => {
     <!-- 缩进 -->
     <div class="ph" :style="{ width: `${ph_width}px` }"/>
     <!-- 开合 -->
-    <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
+    <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }"
+         @mousedown.stop="toggleExpand" @mouseup.stop>
         <svg-icon
             v-if="showTriangle"
             icon-class="triangle-down"

@@ -31,15 +31,19 @@ import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
+import { Translate2 } from "@/transform/translate2";
 import { Action } from "@/context/tool";
+import { ActionMode, Direction } from "@/transform/direction";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
+    const direction = new Direction(context);
+
     let timer: any;
-    const duration: number = DBL_CLICK; // 双击判定时长 ms
+    const duration: number = DBL_CLICK;
     let isDragging = false;
-    let startPosition: ClientXY = { x: 0, y: 0 };
-    let startPositionOnPage: PageXY = { x: 0, y: 0 };
+    let startPosition: ClientXY = {x: 0, y: 0};
+    let startPositionOnPage: PageXY = {x: 0, y: 0};
     let shapes: ShapeView[] = [];
     let need_update_comment: boolean = false;
     const selection = context.selection;
@@ -50,6 +54,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let asyncPathEditor: AsyncPathEditor | undefined = undefined;
 
     let transporter: TranslateHandler | undefined = undefined;
+    let translate2: Translate2 | undefined = undefined;
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
@@ -59,9 +64,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         if (is_layers_tree_unit(shape)) {
             const target = selection_penetrate(selection.scout!, shape, startPositionOnPage);
-            if (target) {
-                selection.selectShape(target);
-            }
+            if (target) selection.selectShape(target);
             return;
         }
 
@@ -93,6 +96,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function keydown_action(event: KeyboardEvent) {
         const mode = context.workspace.is_path_edit_mode;
+        if (direction.mode === ActionMode.Flex) return;
         if (mode) {
             keydown_action_for_path_edit(event);
         } else {
@@ -123,7 +127,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         //
         directionCalc.down(event);
         //
-        let { x, y } = directionCalc.calc();
+        let {x, y} = directionCalc.calc();
 
         const keys = Array.from(selected.keys());
         const values = Array.from(selected.values());
@@ -168,7 +172,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         directionCalc.down(event)
 
-        const { x, y } = directionCalc.calc();
+        const {x, y} = directionCalc.calc();
 
         asyncTransfer.stick(x, y);
     }
@@ -235,27 +239,23 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     async function mousemove(e: MouseEvent) {
-        if (e.buttons !== 1) {
-            return;
-        }
+        if (e.buttons !== 1) return;
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
         if (isDragging) {
-            transporter?.execute(e);
+            // transporter?.execute(e);
+            translate2?.execute(e);
         } else if (check_drag_action(startPosition, mousePosition)) {
-            if (asyncTransfer || isDragging) {
-                return;
-            }
+            if (asyncTransfer || isDragging) return;
 
             shapes = modify_shapes(context, shapes);
 
             shapes = shapes_organize(shapes);
 
-            if (!shapes.length) {
-                return;
-            }
+            if (!shapes.length) return;
 
-            transporter?.createApiCaller();
+            // transporter?.createApiCaller();
+            translate2?.connect();
 
             isDragging = true;
         }
@@ -270,8 +270,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             shapes_picker(e, context, startPositionOnPage);
         }
 
-        transporter?.fulfil();
-        transporter = undefined;
+        // transporter?.fulfil();
+        // transporter = undefined;
+
+        translate2?.fulfil();
+        translate2 = undefined;
 
         remove_move_and_up_from_document(mousemove, mouseup);
         need_update_comment = update_comment(context, need_update_comment);
@@ -290,7 +293,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function pre_to_translate(e: MouseEvent) {
         document.addEventListener('mouseup', mouseup);
         if (!context.workspace.can_translate(e)) return;
-        transporter = new TranslateHandler(context, e, selection.selectedShapes);
+        // transporter = new TranslateHandler(context, e, selection.selectedShapes);
+        translate2 = new Translate2(context, e, selection.selectedShapes);
         document.addEventListener('mousemove', mousemove);
         shapes = selection.selectedShapes;
     }
@@ -351,6 +355,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function selection_watcher(t: number | string) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件            
             initController();
+            direction.clear();
             workspace.contentEdit(false);
         }
     }
@@ -398,6 +403,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function dispose() {
         workspace.unwatch(workspace_watcher);
         selection.unwatch(selection_watcher);
+        direction.destroy();
         remove_blur_from_window(windowBlur);
         document.removeEventListener('keydown', keydown);
         document.removeEventListener('keyup', keyup);
@@ -406,18 +412,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         abortTransact();
     }
 
-    return { isDblClick, isDrag, init, dispose };
+    return {isDblClick, isDrag, init, dispose};
 }
 
 export function useController(context: Context) {
-    const { t } = useI18n();
+    const {t} = useI18n();
 
     const ctrl = useControllerCustom(context, t);
-    onMounted(() => {
-        ctrl.init();
-    })
-    onUnmounted(() => {
-        ctrl.dispose();
-    })
+    onMounted(ctrl.init);
+    onUnmounted(ctrl.dispose);
     return ctrl;
 }

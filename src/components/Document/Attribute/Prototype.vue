@@ -101,6 +101,14 @@
                                             @change="setPrototypeActionURL(action.id)">
                                     </div>
                                 </div>
+                                <div class="link_select"
+                                    v-if="action.actions.connectionType === PrototypeConnectionType.URL">
+                                    <div :class="action.actions.openUrlInNewTab ? 'visibility_select' : 'hidden_select'"
+                                        @click="changeLinkSelect(action.id, !action.actions.openUrlInNewTab)">
+                                        <svg-icon v-if="action.actions.openUrlInNewTab" icon-class="select"></svg-icon>
+                                    </div>
+                                    <span>{{ t('prototype.open_in_new_tab') }}</span>
+                                </div>
                                 <Overlay
                                     v-if="action.actions.navigationType === PrototypeNavigationType.OVERLAY && action.actions.targetNodeID"
                                     :context="props.context" :targetNodeId="action.actions.targetNodeID"
@@ -108,17 +116,28 @@
                                     @interaction="setOverlayBackgroundInteraction($event, action.actions.targetNodeID)"
                                     @position="setOverlayPositionType($event, action.actions.targetNodeID)"
                                     @margin="setOverlayPositionMargin($event, action.actions.targetNodeID)"></Overlay>
-                                <div class="set-animation" v-if="action.actions.connectionType === 'INTERNAL_NODE'">
+                                <div class="set-animation"
+                                    v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE">
                                     <span>{{ t('prototype.animation_set') }}</span>
                                     <div class="wrapper">
                                         <div class="mask" @mouseenter.stop="addstyle" @mouseleave.stop="delstyle">
                                         </div>
                                         <div class="container"
+                                            v-if="action.actions.transitionType !== PrototypeTransitionType.SMARTANIMATE"
                                             :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!, action.actions.easingFunction)">
                                             <div ref="ela" class="containerA" :style="tara ?? qsa">
                                                 A</div>
                                             <div ref="elb" class="containerB" :style="tarb ?? qsb">
                                                 B</div>
+                                            <div class="containerC"></div>
+                                        </div>
+                                        <div class="container" v-else
+                                            :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!, action.actions.easingFunction)">
+                                            <div ref="ela" class="containerSmartA" :style="tara ?? qsa"></div>
+                                            <div ref="elb" class="containerSmartB" :style="tarb ?? qsb">
+                                                <div></div>
+                                                <div style="top: 18px;"></div>
+                                            </div>
                                             <div class="containerC"></div>
                                         </div>
                                     </div>
@@ -166,15 +185,19 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                     <div v-else class="default">{{ t('prototype.interaction_tips') }}</div>
                 </div>
-                <div v-if="isProtoType.get('shape').isContainer" class="overflow-roll">
+                <div v-if="isProtoType.get('shape').isContainer" class="overflow-roll" style="padding-bottom: 0">
                     <div class="text">{{ t('prototype.overflow') }}</div>
                     <Select class="select" :source="overflowRoll"
                         :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
                         @select=scrollDirection></Select>
+                </div>
+                <div v-if="is_scroll_behavior" class="overflow-roll">
+                    <div class="text">{{ t('prototype.scroll_behavior') }}</div>
+                    <Select class="select" :source="fixedBehavior" :selected="scroll_behavior_value"
+                        @select=scrollBehavior></Select>
                 </div>
             </div>
             <div v-else class="tips">
@@ -213,6 +236,7 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     ScrollDirection,
+    ScrollBehavior,
     PrototypeEasingBezier
 } from '@kcdesign/data';
 import { v4 } from 'uuid';
@@ -230,7 +254,8 @@ enum Animation {
     MOVE = 'MOVE',
     MOVEOUT = 'MOVE_OUT',
     PUSH = 'PUSH',
-    SCROLL = 'SCROLL_ANIMATE'
+    SCROLL = 'SCROLL_ANIMATE',
+    SMART = 'SMART_ANIMATE'
 }
 
 type Prototypestart = {
@@ -269,6 +294,11 @@ const overflowRoll: SelectSource[] = genOptions([
     [ScrollDirection.HORIZONTAL, t('prototype.flow_h')],
     [ScrollDirection.VERTICAL, t('prototype.flow_v')],
     [ScrollDirection.BOTH, t('prototype.flow_b')]
+])
+const fixedBehavior: SelectSource[] = genOptions([
+    [ScrollBehavior.SCROLLS, t('prototype.scroll_with_parent')],
+    [ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME, t('prototype.fixed')],
+    [ScrollBehavior.STICKYSCROLLS, t('prototype.sticky_fixed')],
 ])
 
 const trigger: SelectSource[] = genOptions([
@@ -329,7 +359,8 @@ const animation: SelectSource[] = genOptions([
     [Animation.MOVE, t('prototype.animation_movein')],
     [Animation.MOVEOUT, t('prototype.animation_moveout')],
     [Animation.PUSH, t('prototype.animation_push')],
-    [Animation.SCROLL, t('prototype.animation_animate')]
+    [Animation.SCROLL, t('prototype.animation_animate')],
+    [Animation.SMART, t('prototype.animation_smart')],
 ])
 
 const effect: SelectSource[] = genOptions([
@@ -379,7 +410,8 @@ const animations = new Map([
     [PrototypeTransitionType.PUSHFROMRIGHT, t('prototype.animation_push')],
     [PrototypeTransitionType.PUSHFROMTOP, t('prototype.animation_push')],
     [PrototypeTransitionType.PUSHFROMBOTTOM, t('prototype.animation_push')],
-    [PrototypeTransitionType.SCROLLANIMATE, t('prototype.animation_animate')]
+    [PrototypeTransitionType.SCROLLANIMATE, t('prototype.animation_animate')],
+    [PrototypeTransitionType.SMARTANIMATE, t('prototype.animation_smart')]
 ])
 
 const qsa = ref<StyleValue | null>()
@@ -760,7 +792,24 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number, esfn
             }
         }
     }
-
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_smart')) {
+        qsa.value = {
+            transition: '',
+        }
+        mba.value = {
+            transition: Bezier,
+            height: '22px',
+            background: '#507afc'
+        }
+        qsb.value = {
+            transition: '',
+            top: '0'
+        }
+        mbb.value = {
+            transition: Bezier,
+            top: '12px'
+        }
+    }
 }
 
 const checkConflict = (event: PrototypeEvents, id: string) => {
@@ -1042,6 +1091,14 @@ const setPrototypeActionURL = (id: string) => {
     updateData()
 }
 
+const changeLinkSelect = (id: string, value: boolean) => {
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    editor.setPrototypeIsOpenNewTab(shape as ShapeView, id, value);
+}
+
 //设置目标
 const selectTargetNode = (targetid: string, id: string) => {
     const page = props.context.selection.selectedPage!;
@@ -1170,6 +1227,15 @@ const scrollDirection = (data: SelectItem) => {
     updateData()
 }
 
+const scrollBehavior = (data: SelectItem) => {
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const editor = props.context.editor4Page(page);
+    const shapes = props.context.selection.selectedShapes;
+    editor.setScrollBehavior(shapes, data.value as ScrollBehavior);
+    scroll_behavior_value.value = data;
+}
+
 const test = new Set()
 for (let i of Object.values(PrototypeEvents)) {
     test.add(i)
@@ -1181,7 +1247,6 @@ const createAction = () => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
-
 
     if (!shape) return;
 
@@ -1212,7 +1277,7 @@ const createAction = () => {
 
     if (!event.value) return
     const Event = new PrototypeEvent(event.value)
-    const Action = new PrototypeActions(PrototypeConnectionType.NONE)
+    const Action = new PrototypeActions(PrototypeConnectionType.NONE, true);
     Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
     e.insertPrototypeAction(shape, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));
@@ -1293,14 +1358,17 @@ const showhandel = (id: string) => {
         showaction.value = !showaction.value
     }
 }
-
+const is_scroll_behavior = ref(false);
+const scroll_behavior_value = ref<SelectItem>({ value: ScrollBehavior.SCROLLS, content: t('prototype.scroll_with_parent') });
 const isProtoType = ref(new Map())
 //更新原型数据
 function updateData() {
     const shapes = props.context.selection.selectedShapes;
     isProtoType.value.clear()
+    is_scroll_behavior.value = false;
     hasStatus.value = false
     if (shapes.length !== 1) return
+    scroll_behavior();
     const shape = shapes[0]
     const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef]
     if (types.includes(shape.type)) {
@@ -1342,7 +1410,27 @@ function updateData() {
     showtargerlist.value = false
 }
 
-
+const scroll_behavior = () => {
+    const shapes = props.context.selection.selectedShapes;
+    const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+    const every = shapes.every(s => s.parent && types.includes(s.parent.type));
+    is_scroll_behavior.value = every;
+    if (every) {
+        const behavior = shapes[0].scrollBehavior || ScrollBehavior.SCROLLS;
+        const result = shapes.every(s => (s.scrollBehavior || ScrollBehavior.SCROLLS) === behavior);
+        if (result) {
+            const scrollBehaviorMap = new Map([
+                [ScrollBehavior.SCROLLS, t('prototype.scroll_with_parent')],
+                [ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME, t('prototype.fixed')],
+                [ScrollBehavior.STICKYSCROLLS, t('prototype.sticky_fixed')],
+            ]);
+            const content = scrollBehaviorMap.get(behavior) || t('prototype.scroll_with_parent');
+            scroll_behavior_value.value = { value: behavior, content };
+        } else {
+            scroll_behavior_value.value = { value: t('attr.mixed'), content: t('attr.mixed') };
+        }
+    }
+}
 
 // 图层选区变化
 function _selection_change() {
@@ -1762,6 +1850,14 @@ onUnmounted(() => {
                         }
                     }
                 }
+
+            }
+
+            .link_select {
+                display: flex;
+                align-items: center;
+                margin-top: -2px;
+                height: 20px;
             }
 
             .set-animation {
@@ -1836,6 +1932,32 @@ onUnmounted(() => {
                             background-color: transparent;
                             z-index: 3;
                         }
+
+                        .containerSmartA {
+                            position: absolute;
+                            top: 7px;
+                            width: 42px;
+                            height: 10px;
+                            border-radius: 2px;
+                            box-sizing: border-box;
+                            border: 1px solid rgba(0, 0, 0, 0.75);
+                        }
+
+                        .containerSmartB {
+                            position: relative;
+                            width: 42px;
+                            height: 30px;
+
+                            >div {
+                                position: absolute;
+                                top: 4px;
+                                width: 42px;
+                                height: 10px;
+                                border-radius: 2px;
+                                box-sizing: border-box;
+                                border: 1px solid rgba(0, 0, 0, 0.75);
+                            }
+                        }
                     }
                 }
 
@@ -1907,5 +2029,35 @@ onUnmounted(() => {
             }
         }
     }
+}
+
+.visibility_select {
+    flex: 0 0 14px;
+    height: 14px;
+    width: 14px;
+    background-color: var(--active-color);
+    box-sizing: border-box;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    margin-right: 5px;
+
+    >svg {
+        width: 60%;
+        height: 60%;
+    }
+}
+
+.hidden_select {
+    flex: 0 0 14px;
+    height: 14px;
+    width: 14px;
+    background: #FFFFFF;
+    border-radius: 4px;
+    border: 1px solid #EBEBEB;
+    box-sizing: border-box;
+    margin-right: 5px;
 }
 </style>

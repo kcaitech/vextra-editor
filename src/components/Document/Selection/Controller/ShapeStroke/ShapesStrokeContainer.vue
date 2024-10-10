@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, toRaw } from 'vue';
 import { Selection, SelectionTheme } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { reactive } from 'vue';
@@ -46,10 +46,9 @@ function selection_watcher(t?: number | string) {
 
 function update_paths() {
     const shapes = props.context.selection.selectedShapes;
+    // const shapes = props.context.selection.selectedShapes.map(i => toRaw(i));
     const workspace = props.context.workspace;
-    if (!workspace.shouldSelectionViewUpdate) {
-        return;
-    }
+    if (!workspace.shouldSelectionViewUpdate) return;
     const m = workspace.matrix;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
@@ -133,8 +132,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g>
-        <path v-for="(p, i) in paths" :key="i" :d="p.path" :stroke="p.theme" fill="none"/>
-    </g>
+<g>
+    <path v-for="(p, i) in paths" :key="i" :d="p.path" :stroke="p.theme" fill="none"/>
+</g>
 </template>
 <style lang='scss' scoped></style>

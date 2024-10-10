@@ -48,7 +48,6 @@ function changeSweepOnce(event: Event) {
 }
 
 function changeRatioOnce(event: Event) {
-    console.log('--change--');
     const target = event.target as HTMLInputElement;
     let value: number = sortValue(target.value);
     if (isNaN(value)) return;

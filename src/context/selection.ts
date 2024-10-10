@@ -56,18 +56,7 @@ export interface PageXY { // 页面坐标系的xy
     y: number
 }
 
-export interface ParentXY { // 父级元素坐标系的xy
-    x: number,
-    y: number
-}
-
-export interface ShapeXY { // 图形自身坐标系的xy
-    x: number,
-    y: number
-}
-
 type TextShapeLike = TextShapeView | TableCellView;
-export type ActionType = 'translate' | 'scale' | 'rotate';
 export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 
 export const enum SelectionTheme {

@@ -50,7 +50,7 @@ const getIntersectShapes = () => {
     }
     const b = XYsBounding(points); // 选中图形在视图上的位置
     const parent_id = shapes[0].parent?.id || '';
-    if ((shapes[0].parent as ArtboradView).autoLayout) return;
+    if ((shapes[0].parent as ArtboradView)?.autoLayout) return; // todo 为什么会存在没有parent的帧???
     const h_shapes = props.context.assist.horIntersect(b.top, b.bottom, parent_id); // 水平相交的图形
     const v_shapes = props.context.assist.verIntersect(b.left, b.right, parent_id); // 垂直相交的图形
     const hor = getHorGaps(b, h_shapes);

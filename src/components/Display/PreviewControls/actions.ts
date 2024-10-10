@@ -39,7 +39,7 @@ export class ProtoAction {
             this.actionSkipPage(action);
         } else if (action.connectionType === PrototypeConnectionType.URL) {
             if (action.connectionURL) {
-                this.openUrl(action.connectionURL);
+                this.openUrl(action.connectionURL, !!action.openUrlInNewTab);
             }
         } else if (action.connectionType === PrototypeConnectionType.BACK) {
             this.actionBackPage();
@@ -145,12 +145,12 @@ export class ProtoAction {
     }
 
     // 打开链接
-    openUrl(str: string) {
+    openUrl(str: string, newTab: boolean) {
         const url = getFullURL(str)
         let a = document.createElement("a");
         const id = "new_a";
         a.setAttribute("href", url);
-        a.setAttribute("target", "_blank");
+        a.setAttribute("target", newTab ? "_blank" : "_self");
         a.setAttribute("id", id);
         // 防止反复添加      
         if (!document.getElementById(id)) {
