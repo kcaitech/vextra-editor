@@ -64,14 +64,12 @@ const measureHeight = ref(0); // height of listView
 const prepareCount = 10; //  多准备的
 const listMouseOver = ref<boolean>(false);
 
-const ITEM_HEIGHT_CSS = `${props.itemHeight}px`;
-
 defineExpose({ container, clampScroll, scroll });
 
 const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {
     layoutResult.length = 0;
-    layoutIndex = Math.max(0, Math.floor(-scroll.y / props.itemHeight));
+    layoutIndex = Math.max(0, Math.floor(-scroll.y / props.itemHeight)); // 是传的scroll.y不对，铁铁
     const iter = props.source.iterAt(layoutIndex);
     let i = layoutIndex;
     while (iter.hasNext()) {
@@ -79,9 +77,7 @@ relayout[Orientation.V] = () => {
         const y = i * props.itemHeight;
         i++;
         layoutResult.push({ x: 0, y, id: data.id, data });
-        if (y + props.itemHeight + scroll.y > visibleHeight) {
-            break;
-        }
+        if (y + props.itemHeight + scroll.y > visibleHeight) break;
     }
     clampScroll(scroll.x, scroll.y);
     scrollBar.length = Math.ceil((visibleHeight * visibleHeight) / measureHeight.value);
@@ -108,9 +104,7 @@ relayout[Orientation.H] = () => {
 
 const layoutUp: { [key: string]: Function } = {};
 layoutUp[Orientation.V] = () => {
-    if (layoutIndex <= 0) {
-        return;
-    }
+    if (layoutIndex <= 0) return;
     const si = Math.floor(-scroll.y / props.itemHeight);
     if (si - layoutIndex < prepareCount / 2) {
         // 去尾
@@ -247,9 +241,8 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
         measureHeight.value = props.itemHeight;
         measureWidth.value = props.source.length() * props.itemWidth;
     }
-    // console.log("change measure", measureWidth.value, measureHeight.value)
 
-    let needRelayout = false;
+    let needReLayout = false;
     let needLayoutDown = false;
     let needLayoutUp = false;
 
@@ -271,14 +264,14 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
                     const transx = -layoutIndex * props.itemWidth;
                     clampScroll(transx, scroll.y);
                 }
-                needRelayout = true;
+                needReLayout = true;
             } else if (ds > ls && de < le || de >= le) {
                 layoutResult.length = ds - ls;
                 clampScroll(scroll.x, scroll.y);
                 needLayoutDown = true;
             } else {
                 layoutResult.length = 0;
-                needRelayout = true;
+                needReLayout = true;
                 layoutIndex = index;
 
                 if (props.orientation == Orientation.V) {
@@ -290,7 +283,7 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
         } else if (de < ls) {
             // 需要调整每个item的位置，这里简单直接重排 todo,增加offset,减少不必要的更新
             layoutResult.length = 0;
-            needRelayout = true;
+            needReLayout = true;
             layoutIndex = index;
 
             if (props.orientation == Orientation.V) {
@@ -310,7 +303,7 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
         if (!(is > ls)) {
             // 在前面插入，调整scroll
             layoutResult.length = 0;
-            needRelayout = true;
+            needReLayout = true;
             if (props.orientation == Orientation.V) {
                 clampScroll(scroll.x, scroll.y - insert * props.itemHeight)
             } else {
@@ -324,15 +317,15 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
             // 不需要处理
         }
     } else if (insert > 0) {
-        needRelayout = true;
+        needReLayout = true;
     }
 
     if (modify > 0) {
-        needRelayout = true;
+        needReLayout = true;
         clampScroll(scroll.x, scroll.y);
     }
 
-    if (needRelayout || needLayoutDown && needLayoutUp) {
+    if (needReLayout || needLayoutDown && needLayoutUp) {
         relayout[props.orientation](); // todo
     } else if (needLayoutDown) {
         layoutDown[props.orientation]();
@@ -640,36 +633,36 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container" @wheel.prevent="onMouseWheel" @mouseenter="mouseenter" @mouseleave="mouseleave"
-         ref="container">
-        <!-- items container -->
-        <div :class="orientation" :style="{
+<div class="container" @wheel.prevent="onMouseWheel" @mouseenter="mouseenter" @mouseleave="mouseleave"
+     ref="container">
+    <!-- items container -->
+    <div :class="orientation" :style="{
             transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
             width: orientation === 'horizontal' ? measureWidth + 'px' : 'auto',
             height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
         }" ref="contents">
-            <component class="list-item" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
-                       v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
-                       @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)"
-                       :style="{ left: c.x + 'px', top: c.y + 'px' }"/>
-            <div class="port" v-if="port_a_visible" :style="{
+        <component class="list-item" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
+                   v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
+                   @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)"
+                   :style="{ left: c.x + 'px', top: c.y + 'px' }"/>
+        <div class="port" v-if="port_a_visible" :style="{
                 top: destination.y + 'px', left: destination.x + 'px'
             }"></div>
-            <div class="port-2" v-if="port_i_visible" :style="{
+        <div class="port-2" v-if="port_i_visible" :style="{
                 top: destination.y + 'px'
             }"></div>
-        </div>
-        <!-- scroll -->
-        <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{
+    </div>
+    <!-- scroll -->
+    <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{
             opacity: scrollBar.mount && (listMouseOver || scrolling || dragging) ? 1 : 0,
         }">
-            <div ref="bar" @mousedown.stop="onScrollBarMouseDown" class="scroll-bar" :style="{
+        <div ref="bar" @mousedown.stop="onScrollBarMouseDown" class="scroll-bar" :style="{
                 top: scrollBar.y + 'px',
                 left: scrollBar.x + 'px',
                 height: scrollBar.length + 'px'
             }"></div>
-        </div>
     </div>
+</div>
 </template>
 
 <style scoped lang="scss">
