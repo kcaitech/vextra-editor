@@ -47,9 +47,7 @@ import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
-import StaticShape from "@/components/Document/Content/StaticShape.vue";
 import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
-
 interface Props {
     context: Context
     page: PageView

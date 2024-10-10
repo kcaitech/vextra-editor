@@ -9,7 +9,6 @@ import { fixedZero } from '@/utils/common';
 import { getTransformCol } from '@/utils/content';
 import { WorkSpace } from '@/context/workspace';
 
-
 interface Props {
     context: Context
     shape: PolygonShapeView
@@ -34,6 +33,7 @@ let changeR: number = -1;
 let pointModifyHandler: PointHandler | undefined = undefined;
 
 function update() {
+    if (props.context.workspace.transforming) return;
     update_dot_position();
 }
 
@@ -231,8 +231,11 @@ watch(() => props.shape, (value, old) => {
 })
 
 const workspaceWatcher = (t: number | string) => {
-    if(t === WorkSpace.MATRIX_TRANSFORMATION) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.SELECTION_VIEW_UPDATE) {
         update();
+    } else if (t === WorkSpace.SCALING) {
+        if (props.context.workspace.isScaling) radius_dot.value = [];
+        else update();
     }
 }
 onMounted(() => {
@@ -247,25 +250,25 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- 圓角 -->
-    <g v-if="radius_dot && radius_dot.length === 4">
-        <g v-for="(dot, index) in radius_dot" :key="index" v-show="pointVisible"
-            :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
-            @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
-            @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                stroke-width="1" />
-            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
-        </g>
-        <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15"
-            width="100px" height="28px">
-            <div class="percent_container">
-                <span>圆角 {{ fixedZero(max_radius[changeR]) }} </span>
-            </div>
-        </foreignObject>
+<!-- 圓角 -->
+<g v-if="radius_dot && radius_dot.length === 4">
+    <g v-for="(dot, index) in radius_dot" :key="index" v-show="pointVisible"
+       :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
+       @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
+       @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">
+        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
+        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                 stroke-width="1"/>
+        <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
     </g>
+    <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15"
+                   width="100px" height="28px">
+        <div class="percent_container">
+            <span>圆角 {{ fixedZero(max_radius[changeR]) }} </span>
+        </div>
+    </foreignObject>
+</g>
 </template>
 
 <style scoped lang="scss">
