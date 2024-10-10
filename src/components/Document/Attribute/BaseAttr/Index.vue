@@ -802,7 +802,8 @@ function keydownHorTidyup(e: KeyboardEvent, val: string | number) {
         disalbeTidyup(shapes, dir);
         const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
         horSpace.value = Math.max(hor, -minHor);
-        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir)
+        const algin = props.context.selection.tidyUpAlgin;
+        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir,algin)
     }
     e.preventDefault();
 }
@@ -839,7 +840,8 @@ function keydownVerTidyup(e: KeyboardEvent, val: string | number) {
         disalbeTidyup(shapes, dir);
         const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
         verSpace.value = Math.max(ver, -minVer);
-        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir)
+        const algin = props.context.selection.tidyUpAlgin;
+        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir,algin)
     }
     e.preventDefault();
 }
