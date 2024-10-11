@@ -39,7 +39,9 @@ const keyupdate = ref<boolean>(false)
 function get_value_from_input(val: any) {
     let value = Number.parseFloat(val);
     value = (value > 0 && !isNaN(value)) ? value : 0;
-    return Number(value.toFixed(0));
+    if (!(value % 1)) return value;
+    if (!(value % 0.1)) return Number(value.toFixed(1));
+    else return Number(value.toFixed(2));
 }
 
 function noGroupShapesFrom(shapes: ShapeView[]) {
@@ -64,7 +66,6 @@ function change(val: any, type: string) {
     }
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-
     editor.shapesModifyRadius(shapes, [val]);
 
     hidden_selection(props.context);

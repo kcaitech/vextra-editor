@@ -6,9 +6,9 @@ import {
     makeMatrixByTransform2,
     makeShapeTransform2By1,
     ShapeView,
-    Transform
+    Transform, XYsBounding
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { Point } from "../../SelectionView.vue";
@@ -20,6 +20,7 @@ import { startEdit } from "@/transform/pathEdit";
 import { CursorType } from "@/utils/cursor2";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { Action } from "@/context/tool";
+import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 interface Props {
     context: Context;
@@ -59,6 +60,8 @@ const { dots, subDots } = data;
 let isDragging = false;
 
 const dragActiveDis = 4;
+const assist = ref<boolean>(false);
+
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 
 let need_reset_cursor_after_transform = true;
@@ -67,6 +70,7 @@ let scaler: ScaleHandler | undefined = undefined;
 let rotator: RotateHandler | undefined = undefined;
 
 let downXY: XY = { x: 0, y: 0 };
+
 
 function update() {
     updateDotLayout();
@@ -168,6 +172,13 @@ function updateDotLayout() {
     ]);
 
     const { col0, col1, col2, col3 } = cols;
+
+
+    const box = XYsBounding([{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, {
+        x: col3.x,
+        y: col3.y
+    }]);
+    assist.value = !((box.right - box.left < 24) || (box.bottom - box.top < 24));
 
     const assistLT = new Transform()
         .setRotateZ(theta1)
@@ -335,18 +346,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<rect v-for="(p, i) in dots"
-      class="main-rect"
-      :key="i"
-      :stroke="theme"
-      :style="`transform: ${p.transform};`"
-      x="-3.5"
-      y="-3.5"
-      rx="2"
-      @mousedown.stop="(e) => point_mousedown(e, p.type)"
-      @mouseenter="() => point_mouseenter(p.type)"
-      @mouseleave="point_mouseleave"
-/>
 <g
     v-for="(p, i) in subDots"
     :key="i"
@@ -360,6 +359,7 @@ onUnmounted(() => {
         @mouseleave="point_mouseleave"
     />
     <circle
+        v-if="assist"
         class="assist-rect"
         cx="0"
         cy="0"
@@ -368,7 +368,27 @@ onUnmounted(() => {
         @mouseenter="() => point_mouseenter(p.type)"
         @mouseleave="point_mouseleave"
     />
+    <path
+        v-else
+        class="assist-rect"
+        d="M-3 0 l7.88 -7.88 a12.5 12.5 0 0 1 0 15.76 z"
+        @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+        @mouseenter="() => point_mouseenter(p.type2)"
+        @mouseleave="point_mouseleave"
+    />
 </g>
+<rect v-for="(p, i) in dots"
+      class="main-rect"
+      :key="i"
+      :stroke="theme"
+      :style="`transform: ${p.transform};`"
+      x="-3.5"
+      y="-3.5"
+      rx="2"
+      @mousedown.stop="(e) => point_mousedown(e, p.type)"
+      @mouseenter="() => point_mouseenter(p.type)"
+      @mouseleave="point_mouseleave"
+/>
 </template>
 <style lang='scss' scoped>
 .r-path {
