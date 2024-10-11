@@ -60,17 +60,17 @@ function update() {
     assistPaths.length = 0;
 
     const apex = getVectors();
+    apex.push(apex[0]);
+    for (let i = 0; i < apex.length - 1; i++) {
+        const path = get_bar_path(apex[i], apex[i + 1]);
+        paths.push({ path, type: types[i] });
+    }
+
     const height = Math.hypot(apex[0].x - apex[3].x, apex[0].y - apex[3].y);
     const width = Math.hypot(apex[0].x - apex[1].x, apex[0].y - apex[1].y);
 
     assist.value = !(width < 24 || height < 24);
-    if (assist.value) {
-        apex.push(apex[0]);
-        for (let i = 0; i < apex.length - 1; i++) {
-            const path = get_bar_path(apex[i], apex[i + 1]);
-            paths.push({ path, type: types[i] });
-        }
-    } else {
+    if (!assist.value) {
         const apexMini = getVectorsForMini();
         apexMini.push(apexMini[0]);
         for (let i = 0; i < apexMini.length - 1; i++) {

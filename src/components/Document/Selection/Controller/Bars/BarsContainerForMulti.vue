@@ -44,17 +44,15 @@ function render() {
     assistPaths.length = 0;
 
     const apex = props.frame.map(p => ({ x: p.x, y: p.y }));
-
+    apex.push(apex[0]);
+    for (let i = 0; i < apex.length - 1; i++) bars.push({
+        path: get_bar_path(apex[i], apex[i + 1]),
+        type: types[i]
+    });
     const height = Math.hypot(apex[0].x - apex[3].x, apex[0].y - apex[3].y);
     const width = Math.hypot(apex[0].x - apex[1].x, apex[0].y - apex[1].y);
     assist.value = !(width < 24 || height < 24);
-    if (assist.value) {
-        apex.push(apex[0]);
-        for (let i = 0; i < apex.length - 1; i++) bars.push({
-            path: get_bar_path(apex[i], apex[i + 1]),
-            type: types[i]
-        });
-    } else {
+    if (!assist.value) {
         const [lt, rt, rb, lb] = props.frame;
         const apexMini = [
             { x: lt.x - 2.5, y: lt.y - 2.5 },
