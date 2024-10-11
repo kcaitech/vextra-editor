@@ -13,17 +13,17 @@ import { CursorType } from "@/utils/cursor2";
 import { Action } from "@/context/tool";
 
 interface Props {
-    context: Context
-    frame: Point[]
-    axle: { x: number, y: number }
+    context: Context;
+    frame: Point[];
+    axle: { x: number, y: number };
 }
 
 interface Dot {
-    point: { x: number, y: number }
-    extra: { x: number, y: number }
-    r: { p: string, transform: string }
-    type: CtrlElementType
-    type2: CtrlElementType
+    point: { x: number, y: number };
+    extra: { x: number, y: number };
+    r: { p: string, transform: string };
+    type: CtrlElementType;
+    type2: CtrlElementType;
 }
 
 const props = defineProps<Props>();
@@ -154,9 +154,7 @@ function clear_status() {
     scaler = undefined;
     rotator = undefined;
 
-    if (need_reset_cursor_after_transform) {
-        props.context.cursor.reset();
-    }
+    if (need_reset_cursor_after_transform) props.context.cursor.reset();
 
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
