@@ -744,9 +744,7 @@ export class Assist extends WatchableObject {
     }
 
     alignPoints(livingXs: number[], livingYs: number[]) {
-        if (!this.m_except.size) {
-            return;
-        }
+        if (!this.m_except.size) return;
 
         this.multi_line_x = [];
         this.multi_line_y = [];
@@ -769,14 +767,10 @@ export class Assist extends WatchableObject {
 
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const shape = this.m_shape_inner[i];
-            if (this.m_except.get(shape.id)) {
-                continue;
-            }
+            if (this.m_except.get(shape.id)) continue;
 
             const pointsGroup = this.m_pg_inner.get(shape.id);
-            if (!pointsGroup) {
-                continue;
-            }
+            if (!pointsGroup) continue;
 
             const rx = alignXFromPointGroup(dx, pointsGroup.apexX, livingXs);
             dx = rx.dx;
