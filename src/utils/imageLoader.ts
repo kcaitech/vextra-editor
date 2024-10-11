@@ -98,7 +98,8 @@ export class ImageLoader {
     }
 
     async insertImageByPackages(files: FileList, targetXY?: XY) {
-        const packages = (await this.packAll(files) as (ImagePack | SVGParseResult)[]).filter(i => i);
+        const packages = (await this.packAll(files) as (ImagePack | SVGParseResult)[])
+            .filter(i => i);
         if (!packages?.length) return false;
         const transforms = (() => {
             const transforms: TransformRaw[] = [];
@@ -142,8 +143,7 @@ export class ImageLoader {
         const __packs = transforms.map((v, i) => ({ pack: packages[i], transform: v }));
         const editor = context.editor4Page(page);
         const result = editor.insertImages(__packs, env);
-        if (result) this.upload(result).then(() => {
-        });
+        if (result) this.upload(result);
         return true;
 
         function getSize(pack: ImagePack | SVGParseResult) {
