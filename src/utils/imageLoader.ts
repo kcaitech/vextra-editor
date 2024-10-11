@@ -1,18 +1,15 @@
 import { Context } from "@/context";
 import {
     ColVector3D, GroupShapeView, ImagePack,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1, Shape, ShapeView, SVGParseResult,
-    Transform,
-    TransformRaw,
-    UploadAssets
+    Shape, ShapeView, SVGParseResult,
+    Transform, TransformRaw, UploadAssets,
+    makeShapeTransform1By2, makeShapeTransform2By1,
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
 import * as parse_svg from "@/svg_parser";
 import { upload_image } from "@/utils/content";
 import { XY } from "@/context/selection";
-
 
 /**
  *  · ImageTool --ok
@@ -26,13 +23,13 @@ import { XY } from "@/context/selection";
  * @description 图片加载器
  */
 export class ImageLoader {
-    private context: Context;
+    private readonly context: Context;
 
     constructor(context: Context) {
         this.context = context;
     }
 
-    SVGReader(file: File) {
+    async SVGReader(file: File) {
         const reader = new FileReader();
         reader.readAsText(file);
         return new Promise((resolve, reject) => {
@@ -43,12 +40,10 @@ export class ImageLoader {
                 if (!parseResult.shape) reject('svg can not parse');
                 resolve(parseResult);
             }
-        }).catch((e) => {
-            console.error(file.name + 'failed: ', e);
-        })
+        });
     }
 
-    packFile(file: File, readSVG = true) {
+    async packFile(file: File, readSVG = true) {
         if (file.type === "image/svg+xml" && readSVG) return this.SVGReader(file);
         const img = new Image();
         img.src = URL.createObjectURL(file);
@@ -103,7 +98,8 @@ export class ImageLoader {
     }
 
     async insertImageByPackages(files: FileList, targetXY?: XY) {
-        const packages = (await this.packAll(files) as (ImagePack | SVGParseResult)[]).filter(i => i);
+        const packages = (await this.packAll(files) as (ImagePack | SVGParseResult)[])
+            .filter(i => i);
         if (!packages?.length) return false;
         const transforms = (() => {
             const transforms: TransformRaw[] = [];

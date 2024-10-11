@@ -1155,13 +1155,10 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
     if (navigator.clipboard && navigator.clipboard.read) {
         const type = data.types[0];
         const val = await data.getType(type);
-        // image_reader(context, val, type, t, _xy);
         const loader = new ImageLoader(context);
         loader.insertImageByPackages([val] as unknown as FileList, _xy);
     } else {
-        // const type = data[0].type;
         const val = data[0].getAsFile();
-        // image_reader(context, val, type, t, _xy);
         const loader = new ImageLoader(context);
         loader.insertImageByPackages([val] as unknown as FileList, _xy);
     }
