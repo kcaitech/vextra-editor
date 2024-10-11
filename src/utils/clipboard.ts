@@ -1156,11 +1156,11 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
         const type = data.types[0];
         const val = await data.getType(type);
         const loader = new ImageLoader(context);
-        loader.insertImageByPackages([val] as unknown as FileList, _xy);
+        loader.insertImageByPackages([val] as unknown as FileList, true, _xy);
     } else {
         const val = data[0].getAsFile();
         const loader = new ImageLoader(context);
-        loader.insertImageByPackages([val] as unknown as FileList, _xy);
+        loader.insertImageByPackages([val] as unknown as FileList, true, _xy);
     }
 }
 
