@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { CtrlElementType } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { ScaleHandler } from '@/transform/scale';
@@ -9,17 +9,18 @@ import { CursorType } from "@/utils/cursor2";
 import { Action } from "@/context/tool";
 
 interface Props {
-    context: Context
-    frame: Point[]
+    context: Context;
+    frame: Point[];
 }
 
 interface Bar {
-    path: string
-    type: CtrlElementType
+    path: string;
+    type: CtrlElementType;
 }
 
 const props = defineProps<Props>();
-const bars = reactive<{ bars: Bar[] }>({ bars: [] }).bars;
+const { bars, assistPaths } = reactive<{ bars: Bar[], assistPaths: Bar[] }>({ bars: [], assistPaths: [] });
+const assist = ref<boolean>(false);
 
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
@@ -32,41 +33,40 @@ const types = [
     CtrlElementType.RectLeft
 ];
 let need_reset_cursor_after_transform = true;
-
 let scaler: ScaleHandler | undefined = undefined;
 
 function update() {
-    update_dot_path();
+    props.context.workspace.shouldSelectionViewUpdate && render();
 }
 
-function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
-
+function render() {
     bars.length = 0;
+    assistPaths.length = 0;
 
-    const apex = props.frame.map(p => {
-        return { x: p.x, y: p.y }
-    });
-    apex.push(apex[0]);
+    const apex = props.frame.map(p => ({ x: p.x, y: p.y }));
 
-    for (let i = 0; i < apex.length - 1; i++) {
-        const p = get_bar_path(apex[i], apex[i + 1]);
-        bars.push({ path: p, type: types[i] });
-    }
-}
-
-function passive_update() {
-    bars.length = 0;
-
-    const apex = props.frame.map(p => ({ ...p }));
-
-    apex.push(apex[0]);
-
-    for (let i = 0; i < apex.length - 1; i++) {
-        const p = get_bar_path(apex[i], apex[i + 1]);
-        bars.push({ path: p, type: types[i] });
+    const height = Math.hypot(apex[0].x - apex[3].x, apex[0].y - apex[3].y);
+    const width = Math.hypot(apex[0].x - apex[1].x, apex[0].y - apex[1].y);
+    assist.value = !(width < 24 || height < 24);
+    if (assist.value) {
+        apex.push(apex[0]);
+        for (let i = 0; i < apex.length - 1; i++) bars.push({
+            path: get_bar_path(apex[i], apex[i + 1]),
+            type: types[i]
+        });
+    } else {
+        const [lt, rt, rb, lb] = props.frame;
+        const apexMini = [
+            { x: lt.x - 2.5, y: lt.y - 2.5 },
+            { x: rt.x + 2.5, y: rt.y - 2.5 },
+            { x: rb.x + 2.5, y: rb.y + 2.5 },
+            { x: lb.x - 2.5, y: lb.y + 2.5 }
+        ]
+        apexMini.push(apexMini[0]);
+        for (let i = 0; i < apexMini.length - 1; i++) assistPaths.push({
+            path: get_bar_path(apexMini[i], apexMini[i + 1]),
+            type: types[i]
+        });
     }
 }
 
@@ -155,7 +155,7 @@ function window_blur() {
     clear_status();
 }
 
-watch(() => props.frame, passive_update);
+watch(() => props.frame, render);
 
 onMounted(() => {
     update();
@@ -166,11 +166,19 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g v-for="(b, i) in bars" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
-       @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
-        <path :d="b.path" class="main-path"/>
-        <path :d="b.path" class="assist-path"/>
-    </g>
+<g v-for="(b, i) in bars" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+   @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
+    <path v-if="assist" :d="b.path" class="assist-path"/>
+    <path :d="b.path" class="main-path"/>
+</g>
+<g v-if="!assist">
+    <path v-for="(b, i) in assistPaths"
+          class="assist-path-2"
+          :key="i"
+          @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+          @mouseenter="() => bar_mouseenter(b.type)"
+          @mouseleave="bar_mouseleave" :d="b.path"/>
+</g>
 </template>
 <style lang='scss' scoped>
 .main-path {
@@ -181,6 +189,14 @@ onUnmounted(() => {
 .assist-path {
     fill: none;
     stroke: transparent;
+    //stroke: blue;
     stroke-width: 10px;
+}
+
+.assist-path-2 {
+    fill: none;
+    stroke-width: 5px;
+    stroke: transparent;
+    //stroke: rgba(255, 0, 0, 0.3);
 }
 </style>

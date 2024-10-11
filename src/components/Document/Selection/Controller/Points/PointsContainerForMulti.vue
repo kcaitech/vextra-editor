@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { CtrlElementType } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { update_dot2 } from './common';
@@ -28,37 +28,29 @@ interface Dot {
 
 const props = defineProps<Props>();
 const dots = reactive<{ dots: Dot[] }>({ dots: [] }).dots;
+const dragActiveDis = 3;
+const assist = ref<boolean>(false);
 
 let isDragging = false;
-const dragActiveDis = 3;
-
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
-
 let isRotateElement = false;
-
 let scaler: ScaleHandler | undefined = undefined;
 let rotator: RotateHandler | undefined = undefined;
-
 let startPosition: ClientXY = { x: 0, y: 0 };
-
 let need_reset_cursor_after_transform = true;
 
 function update() {
-    update_dot_path();
+    props.context.workspace.shouldSelectionViewUpdate && render();
 }
 
-function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
-
+function render() {
     dots.length = 0;
     dots.push(...update_dot2(props.frame));
-}
 
-function passive_update() {
-    dots.length = 0;
-    dots.push(...update_dot2(props.frame));
+    const [v1, v2, v3] = props.frame;
+    const width = Math.hypot(v2.x - v1.x, v2.y - v1.y);
+    const height = Math.hypot(v3.x - v1.x, v3.y - v1.y);
+    assist.value = !(width < 24 || height < 24);
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
@@ -67,9 +59,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     }
     event.stopPropagation();
 
-    if (rotator || scaler) {
-        return;
-    }
+    if (rotator || scaler) return;
 
     cur_ctrl_type = ele;
 
@@ -116,11 +106,7 @@ function point_mousemove(event: MouseEvent) {
 }
 
 function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
-
-    clear_status();
+    if (event.button === 0) clear_status();
 }
 
 function setCursor(t: CtrlElementType) {
@@ -180,7 +166,7 @@ function window_blur() {
     clear_status();
 }
 
-watch(() => props.frame, passive_update);
+watch(() => props.frame, render);
 
 onMounted(() => {
     window.addEventListener('blur', window_blur);
@@ -191,23 +177,23 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-        <path
-            class="r-path"
-            :d="p.r.p"
-            @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-            @mouseenter="() => point_mouseenter(p.type2)"
-            @mouseleave="point_mouseleave"
-        />
-        <g
-            @mousedown.stop="(e) => point_mousedown(e, p.type)"
-            @mouseenter="() => point_mouseenter(p.type)"
-            @mouseleave="point_mouseleave"
-        >
-            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"/>
-            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"/>
-        </g>
+<g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
+    <path
+        class="r-path"
+        :d="p.r.p"
+        @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+        @mouseenter="() => point_mouseenter(p.type2)"
+        @mouseleave="point_mouseleave"
+    />
+    <g
+        @mousedown.stop="(e) => point_mousedown(e, p.type)"
+        @mouseenter="() => point_mouseenter(p.type)"
+        @mouseleave="point_mouseleave"
+    >
+        <rect v-if="assist" class="assist-rect" :x="p.extra.x" :y="p.extra.y"/>
+        <rect class="main-rect" :x="p.point.x" :y="p.point.y" rx="2px"/>
     </g>
+</g>
 </template>
 <style lang="scss" scoped>
 .r-path {
@@ -215,17 +201,18 @@ onUnmounted(() => {
     fill: transparent;
 }
 
+.assist-rect {
+    width: 14px;
+    height: 14px;
+    fill: transparent;
+    //fill: blue;
+    stroke: none;
+}
+
 .main-rect {
     width: 8px;
     height: 8px;
     fill: #ffffff;
     stroke: var(--active-color);
-}
-
-.assist-rect {
-    width: 14px;
-    height: 14px;
-    fill: transparent;
-    stroke: transparent;
 }
 </style>
