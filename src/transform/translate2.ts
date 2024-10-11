@@ -1,12 +1,9 @@
 import { TransformHandler } from "@/transform/handler";
 import {
-    adapt2Shape,
     ArtboradView,
     AutoLayout,
     BorderPosition,
     ColVector3D,
-    layoutShapesOrder,
-    makeShapeTransform1By2,
     Matrix,
     MigrateItem,
     PageView,
@@ -19,7 +16,10 @@ import {
     Transform,
     TransformRaw,
     TranslateUnit,
-    Transporter
+    Transporter,
+    adapt2Shape,
+    layoutShapesOrder,
+    makeShapeTransform1By2,
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -445,8 +445,6 @@ class SelModel {
         livingSel.right = livingSel.x + width;
         livingSel.bottom = livingSel.y + height;
 
-        console.log('--livingSel--', livingSel)
-
         let l = livingSel.x;
         let t = livingSel.y;
         let r = livingSel.right;
@@ -473,7 +471,6 @@ class SelModel {
         let assistYWork = false;
 
         if (assistResult.sticked_by_x && !fixedX) {
-            console.log('--sticked_by_x--', livingXs);
             livingSel.x += assistResult.dx;
             l += assistResult.dx;
             r = l + width;
