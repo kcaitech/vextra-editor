@@ -4,7 +4,6 @@ import { WorkSpace } from '@/context/workspace';
 import { find4select, Matrix, ShapeFrame, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watchEffect } from 'vue';
 import { XY } from '@/context/selection';
-
 export interface SelectorFrame {
     top: number
     left: number
@@ -12,7 +11,6 @@ export interface SelectorFrame {
     height: number
     includes: boolean
 }
-
 interface Props {
     params: {
         visible: boolean
@@ -23,7 +21,6 @@ interface Props {
 
 const props = defineProps<Props>();
 const selectedShapes: Map<string, ShapeView> = new Map();
-
 function select() {
     if (props.context.workspace.transforming) return;
     const { top, left, width, height } = props.params.frame;
