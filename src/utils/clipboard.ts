@@ -19,7 +19,7 @@ import {
     Shape,
     ShapeFrame,
     ShapeType,
-    ShapeView, Style,
+    ShapeView,
     TableCellType,
     Text,
     TextShape,
@@ -43,7 +43,7 @@ import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/da
 import { flattenShapes } from "@/utils/cutout";
 import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
 import { ImageLoader } from "@/utils/imageLoader";
-import { SVGParseResult, UploadAssets } from "@kcdesign/data";
+import { UploadAssets } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 
 interface SystemClipboardItem {
