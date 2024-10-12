@@ -804,8 +804,9 @@ function keydownHorTidyup(e: KeyboardEvent, val: string | number) {
         horSpace.value = Math.max(hor, -minHor);
         const algin = props.context.selection.tidyUpAlgin;
         linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir,algin)
+       e.preventDefault();
     }
-    e.preventDefault();
+
 }
 
 const changeVerTidyup = (value: string) => {
@@ -842,8 +843,9 @@ function keydownVerTidyup(e: KeyboardEvent, val: string | number) {
         verSpace.value = Math.max(ver, -minVer);
         const algin = props.context.selection.tidyUpAlgin;
         linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir,algin)
+       e.preventDefault();
     }
-    e.preventDefault();
+
 }
 
 function selection_change() {
@@ -869,8 +871,6 @@ const _whetherTidyUp = () => {
     s_tidy_up.value = true;
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
-    console.log(Info, 'inf111111111111o');
-    
     if (!Info) {
         props.context.selection.whetherTidyUp(true, false, 'center');
         return;
