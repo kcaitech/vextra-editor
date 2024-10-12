@@ -87,7 +87,7 @@ function updateControllerView() {
 }
 
 function selection_watcher(t: number | string) {
-    if (t == Selection.CHANGE_SHAPE) {
+    if (t == Selection.CHANGE_SHAPE || t === Selection.HIDDEN_RESET) {
         reset_hidden();
     } else if (t === Selection.SELECTION_HIDDEN) {
         modify_selection_hidden();
