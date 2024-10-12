@@ -48,6 +48,7 @@ import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
 import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
+import { autoLayoutFn } from '@/utils/auto_layout';
 interface Props {
     context: Context
     page: PageView
@@ -451,6 +452,8 @@ function menu_watcher(type: number, mount?: string) {
     if (type === Menu.EXPORT_DIALOG) {
         isvisible.value = props.context.menu.isExportDialog;
         props.context.escstack.save(v4(), export_dialog_show);
+    } else if (type === Menu.AUTO_LAYOUT) {
+        autoLayoutFn(props.context, t);
     }
 }
 

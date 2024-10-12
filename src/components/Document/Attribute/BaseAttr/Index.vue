@@ -1053,7 +1053,7 @@ onUnmounted(() => {
                 :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
                 @dragend="dragend" @keydown="keydownVerTidyup">
             </MdNumberInput>
-            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? 0.4 : 1 }"
+            <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
                     <svg-icon icon-class="tidy-up" style="outline: none;" />

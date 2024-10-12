@@ -33,6 +33,7 @@ import Layers from './Layers.vue';
 import TableMenu from './TableMenu/TableMenu.vue';
 import { useMask } from "@/components/Document/Creator/execute";
 import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
+import { autoLayoutFn, unAutoLayoutFn } from '@/utils/auto_layout';
 
 interface Props {
     context: Context;
@@ -344,32 +345,12 @@ function component() {
 }
 
 const autoLayout = () => {
-    const selectShapes = props.context.selection.selectedShapes;
-    let shapes
-    const page = props.context.selection.selectedPage;
-    if (!page) return;
-    const bro = Array.from(page.shapes.values());
-    const editor = props.context.editor4Page(page);
-    const name = getName(ShapeType.Artboard, bro || [], t);
-    if (selectShapes.length > 1) {
-        shapes = filter_for_group1(selectShapes);
-        shapes = compare_layer_3(shapes);
-    } else {
-        shapes = selectShapes[0].childs;
-    }
-    if (selectShapes.length > 1) {
-        editor.create_autolayout_artboard(shapes, name);
-    } else {
-        const editor = props.context.editor4Shape(selectShapes[0]);
-        editor.addAutoLayout();
-    }
+    autoLayoutFn(props.context, t);
     emits('close');
 }
 
 const unAutoLayout = () => {
-    const selectShapes = props.context.selection.selectedShapes;
-    const editor = props.context.editor4Shape(selectShapes[0]);
-    editor.deleteAutoLayout();
+    unAutoLayoutFn(props.context);
     emits('close');
 }
 

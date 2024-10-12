@@ -29,6 +29,7 @@ export class Menu extends WatchableObject {
     static UPDATE_LOCATE = 16;
     static EXPORT_DIALOG = 17;
     static WRITE_MEDIA_LAZY = 18;
+    static AUTO_LAYOUT = 19;
     private m_menu_mounted: string = '';
     private m_popover: boolean = false;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨

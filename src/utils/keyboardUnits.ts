@@ -36,6 +36,7 @@ import {
     useRect,
     useText,
 } from "@/components/Document/Creator/execute";
+import { autoLayoutFn, unAutoLayoutFn } from "./auto_layout";
 
 // todo 键盘事件的权限处理
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
@@ -76,21 +77,35 @@ keydownHandler[''] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
-    if (event.altKey && permIsEdit(context)) {
-        event.preventDefault();
-        context.arrange.notify(Arrange.FLEX_START); // 图层左对齐
-        return;
-    }
-    const { metaKey, ctrlKey } = event;
+    const { metaKey, ctrlKey, altKey, shiftKey } = event;
     const isCtrl = ctrlKey || metaKey;
     if (isCtrl && event.shiftKey) {
         event.preventDefault();
         select_all(context, true);
         return;
     }
+    
+    if(shiftKey && altKey) {
+        event.preventDefault();
+        unAutoLayoutFn(context);
+        return;
+    }
+
     if (isCtrl) {
         event.preventDefault();
         select_all(context);
+        return;
+    }
+
+    if(shiftKey) {
+        event.preventDefault();
+        context.menu.notify(Menu.AUTO_LAYOUT);
+        return;
+    }
+
+    if (event.altKey && permIsEdit(context)) {
+        event.preventDefault();
+        context.arrange.notify(Arrange.FLEX_START); // 图层左对齐
         return;
     }
 
