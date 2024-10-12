@@ -771,8 +771,6 @@ const _whetherTidyUp = () => {
     s_tidy_up.value = true;
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
-    console.log(Info, 'inf111111111111o');
-    
     if (!Info) {
         props.context.selection.whetherTidyUp(true, false, 'center');
         return;
@@ -945,11 +943,11 @@ onUnmounted(() => {
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
         <div class="tr" v-if="s_tidy_up" style="margin-bottom: 0">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
-                :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
+                :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e: MouseEvent) => draggingTidyup(e, 'hor')"
                 @dragend="dragend">
             </MdNumberInput>
             <MdNumberInput icon="ver-space2" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyup"
-                :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
+                :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e: MouseEvent) => draggingTidyup(e, 'ver')"
                 @dragend="dragend">
             </MdNumberInput>
             <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? 0.4 : 1 }"
