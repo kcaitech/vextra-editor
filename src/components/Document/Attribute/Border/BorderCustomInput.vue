@@ -11,6 +11,7 @@ const emits = defineEmits<{
     (e: 'dragstart', event: MouseEvent): void;
     (e: 'dragging', event: MouseEvent): void;
     (e: 'dragend'): void;
+    (e: 'keydown', event: KeyboardEvent, value: string | number): void;
 }>();
 const input = ref<HTMLInputElement>();
 const isActived = ref(false)
@@ -115,7 +116,8 @@ const getinput_value = () => {
         <div class="icon" :class="{ cursor_pointer: getinput_value() }" ref="icon" @mousedown="onMouseDown">
             <svg-icon :icon-class="`border-${ticon}`"></svg-icon>
         </div>
-        <input ref="input" :value="props.shadowV" @focus="selectValue" @change="onChange" @blur="blur2" @click="click">
+        <input ref="input" :value="props.shadowV" @focus="selectValue" @change="onChange" @blur="blur2" @click="click"
+            @keydown="e => emits('keydown', e, props.shadowV)">
         <div class="adjust" :class="{ active: isActived }">
             <svg-icon icon-class="down" style="transform: rotate(180deg);" :style="{ cursor: 'pointer' }"
                 @click="augment"></svg-icon>

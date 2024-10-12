@@ -213,7 +213,7 @@ onUnmounted(() => {
 
 <template>
     <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
-        <div :class="{ 'path-button': true, 'path-button-selected': selected }" @mouseenter.stop="enter"
+        <div :class="{ 'path-button': true, 'path-button-selected': selected, active: popover }" @mouseenter.stop="enter"
             @mouseleave.stop="leave" @click="shot">
             <div class="svg-container">
                 <svg-icon :icon-class="pattern"></svg-icon>
@@ -318,6 +318,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
 .path-button {
     display: flex;
     align-items: center;

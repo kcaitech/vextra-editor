@@ -106,6 +106,12 @@ const ShowMenu = (e: MouseEvent) => {
     childMenuPosition.y = 48
     childMenuVisible.value = !childMenuVisible.value
     document.addEventListener('click', onMenuBlur)
+    props.context.escstack.save('scale-menu', () => {
+        const achieve = childMenuVisible.value;
+        childMenuVisible.value = false;
+        document.removeEventListener('click', onMenuBlur);
+        return achieve;
+    })
 }
 
 onMounted(() => {
@@ -137,7 +143,7 @@ onUnmounted(() => {
 </template>
 <style lang='scss' scoped>
 .arrow-active {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.1);
 
     svg {
         transform: translateY(2px)
@@ -155,7 +161,7 @@ onUnmounted(() => {
     cursor: pointer;
     background: rgba(255, 255, 255, 0.1);
     border-radius: var(--default-radius);
-    padding: 0 0 0 6px;
+    padding:0;
     box-sizing: border-box;
 
     .left {
@@ -172,6 +178,7 @@ onUnmounted(() => {
             border: none;
             color: var(--theme-color-anti);
             padding: 0;
+            text-align: center;
             font-feature-settings: "kern" on;
         }
     }
@@ -184,7 +191,7 @@ onUnmounted(() => {
         border-radius: 0 6px 6px 0;
 
         &:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.1);
 
             svg {
                 transform: translateY(2px)

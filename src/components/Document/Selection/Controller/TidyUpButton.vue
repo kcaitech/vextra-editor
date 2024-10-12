@@ -54,7 +54,7 @@ const tidyUp = () => {
 
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width);
+    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width, 'center');
 }
 
 
@@ -283,7 +283,7 @@ const update = () => {
         return;
     };
     clear();
-    if (isTidyUp.value || props.context.workspace.isScaling || props.context.workspace.isRotating || props.context.workspace.isTranslating) return;
+    if (isTidyUp.value || isDrag.value || props.context.workspace.isScaling || props.context.workspace.isRotating || props.context.workspace.isTranslating) return;
     tidyUpDot();
     tidyUpLine();
 }
@@ -353,7 +353,8 @@ const mousemove = (e: MouseEvent) => {
         tidyUpVerSpace.value = ver;
         props.context.attr.notify(Attribute.TIDY_UP_SPACE_CHANGE, { hor, ver })
         selectedShapes.value = [...shapes_rows];
-        lockMouseHandler.executeTidyup([...shapes_rows], hor, ver, dir);
+        const algin = props.context.selection.tidyUpAlgin;
+        lockMouseHandler.executeTidyup([...shapes_rows], hor, ver, dir, algin);
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
@@ -387,7 +388,7 @@ function clear_status() {
 
 const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
     const shapes = selectedShapes.value.length ? selectedShapes.value : shapes_rows;
-    if(!shapes.length) return;
+    if (!shapes.length) return;
     const selected = props.context.selection.selectedShapes;
     const { box } = getSelectedWidthHeight(props.context, selected);
     const parent = shapes[0][0].parent;
@@ -492,7 +493,7 @@ function mouseleave() {
     props.context.cursor.reset();
 }
 let transporter: TranslateHandler | undefined = undefined;
-let isDrag = false;
+const isDrag = ref(false);
 let saveShape: ShapeView;
 let isShift = false;
 const selectedDown = (e: MouseEvent, shape: ShapeView) => {
@@ -506,7 +507,7 @@ const selectedDown = (e: MouseEvent, shape: ShapeView) => {
 const selectedMove = (e: MouseEvent) => {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
-    if (isDrag) {
+    if (isDrag.value) {
         if (!transporter) {
             return
         }
@@ -517,7 +518,7 @@ const selectedMove = (e: MouseEvent) => {
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
-            isDrag = true;
+            isDrag.value = true;
             props.context.selection.selectTidyUpShape([saveShape]);
             // if (selectedShapes.value.length === 0) {
             //     props.context.selection.selectTidyUpShape([saveShape]);
@@ -537,14 +538,15 @@ const selectedMove = (e: MouseEvent) => {
 }
 
 const selectedUp = (e: MouseEvent) => {
-    isDrag = false;
     // if (isShift && e.shiftKey) {
     //     selectedShapes.value.push(saveShape);
     // } else {
     //     selectedShapes.value = [saveShape];
     // }
+    clear();
     transporter?.fulfil();
     transporter = undefined;
+    isDrag.value = false;
     props.context.selection.selectTidyUpShape();
     document.removeEventListener('mousemove', selectedMove);
     document.removeEventListener('mouseup', selectedUp);
@@ -553,6 +555,8 @@ const selectedUp = (e: MouseEvent) => {
 const selectedWatcher = (t: string | number) => {
     if (t === Selection.NEED_TIDY_UP) {
         tidyUpControl();
+    } else if (t === Selection.LAYOUT_DOTTED_LINE) {
+        update();
     }
 }
 
@@ -560,7 +564,7 @@ const workspaceWatcher = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         _update();
     } else if (t === WorkSpace.TRANSLATING) {
-        _update();
+        update();
     }
 }
 
@@ -622,7 +626,7 @@ onUnmounted(() => {
         <path
             :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
             fill="transparent" />
-        <g v-if="!isTidyUp && !isHover">
+        <g v-if="!isTidyUp && !isHover && !cursor_down">
             <circle v-for="(dot, index) in dots" :key="index" :cx="dot.x" :cy="dot.y" r="2.5" fill="#D13BCD"
                 stroke="#FFFFFF" stroke-width="1" />
         </g>
@@ -634,7 +638,7 @@ onUnmounted(() => {
                 :x="box.width >= 0 ? box.lt.x : box.lt.x + box.width" :y="box.lt.y" :width="Math.abs(box.width)"
                 :height="box.height" :class="{ spaceFill: downDir === 'hor' }" />
         </g>
-        <g v-if="!isTidyUp && isHover && !isDragging">
+        <g v-if="!isTidyUp && isHover && !isDragging && !isDrag">
             <g v-for="(dot, index) in dots" :key="index">
                 <circle v-if="dot.dot" :cx="dot.x" :cy="dot.y" r="2.5" fill="#D13BCD" stroke="#FFFFFF"
                     stroke-width="1" />

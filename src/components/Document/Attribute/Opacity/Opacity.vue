@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import { AsyncOpacityEditor, BlendMode, ContextSettings, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncOpacityEditor, BlendMode, ContextSettings, LinearApi, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
@@ -8,6 +8,7 @@ import { throttle } from 'lodash';
 import { modifyOpacity } from '@/utils/common';
 import { hidden_selection } from '@/utils/content';
 import { v4 } from 'uuid';
+import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 
 const mixModeList = [
     BlendMode.Normal,
@@ -57,6 +58,7 @@ const hovered = ref<BlendMode>();
 const modeList = ref<HTMLDivElement[]>();
 const panel = ref<HTMLDivElement>();
 let opacity_editor: AsyncOpacityEditor | undefined = undefined;
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function showMenu(e: MouseEvent) {
     if (popoverVisible.value) return popoverVisible.value = false;
@@ -127,6 +129,18 @@ function change(e: Event) {
         if (isNaN(value)) return;
     }
     modifyOpacity(props.context, value, shapes.value);
+}
+
+function keydownOpacity(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) * 0.01 + (event.code === 'ArrowUp' ? 0.01 : -0.01);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        value = value >= 1 ? 1 : value <= 0 ? 0 : value
+        linearApi.modifyShapesOpacity(shapes, value);
+        event.preventDefault();
+    }
 }
 
 function down(v: number) {
@@ -232,6 +246,7 @@ const text_keyboard = (e: KeyboardEvent) => {
     if (e.code === "Enter" || e.code === "NumpadEnter") {
         opacityInput.value?.blur();
     }
+    keydownOpacity(e)
 }
 
 function _update() {
@@ -313,7 +328,8 @@ const setMixMode = (mode: BlendMode) => {
     editor.modifyShapesContextSettingBlendMode((shapes as ShapeView[]).map(s => adapt2Shape(s)), mode);
 }
 
-const update = throttle(_update, 320, { leading: true });
+// const update = throttle(_update, 320, { leading: true });
+const update = _update;
 
 const stop = watch(() => props.trigger, (v) => {
     if (v.includes('layout')) {
@@ -427,7 +443,7 @@ onUnmounted(() => {
         height: auto;
         font-size: var(--font-default-fontsize);
         background-color: #fff;
-        box-shadow:  0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         border-radius: 4px;
         border: 1px solid #F5F5F5;
         outline: none;

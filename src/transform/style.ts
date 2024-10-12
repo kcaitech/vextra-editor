@@ -1,4 +1,4 @@
-import { ArtboradView, ShapeView, SymbolView } from "../../../kcdesign-data";
+import { ArtboradView, ShapeView, SymbolView } from "@kcdesign/data";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { Context } from "@/context";
 

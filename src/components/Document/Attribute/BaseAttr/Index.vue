@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ArtboradView, ShapeType, ShapeView, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { ArtboradView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlgin, adapt2Shape } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -41,6 +41,8 @@ import {
     whetherNeedTidyUp
 } from '@/utils/tidy_up';
 import { WorkSpace } from '@/context/workspace';
+import { LinearApi } from "@kcdesign/data"
+import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 
 interface Props {
     context: Context
@@ -112,6 +114,7 @@ const model_disable_state: ModelState = reactive({
     ovalOptions: false
 });
 let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_oval } = layout_options;
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
@@ -197,6 +200,18 @@ function changeX(value: string) {
     });
 }
 
+function keydownX(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const actions = get_actions_frame_x(shapes, value);
+        linearApi.modifyShapesX(actions)
+        event.preventDefault();
+    }
+}
+
 function changeY(value: string) {
     value = Number
         .parseFloat(computeString(value))
@@ -216,6 +231,18 @@ function changeY(value: string) {
     props.context.nextTick(props.context.selection.selectedPage!, () => {
         props.context.tool.notify(Tool.RULE_RENDER_SIM);
     });
+}
+
+function keydownY(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const actions = get_actions_frame_y(shapes, value);
+        linearApi.modifyShapesY(actions)
+        event.preventDefault();
+    }
 }
 
 function changeW(value: string) {
@@ -240,6 +267,17 @@ function changeW(value: string) {
     });
 }
 
+function keydownW(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifyShapesWidth(shapes, value)
+        event.preventDefault();
+    }
+}
+
 function changeH(value: string) {
     value = Number
         .parseFloat(computeString(value))
@@ -262,6 +300,17 @@ function changeH(value: string) {
     props.context.nextTick(props.context.selection.selectedPage!, () => {
         props.context.tool.notify(Tool.RULE_RENDER_SIM);
     });
+}
+
+function keydownH(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifyShapesHeight(shapes, value)
+        event.preventDefault();
+    }
 }
 
 function lockToggle() {
@@ -317,6 +366,18 @@ function changeR(value: string) {
     props.context.nextTick(props.context.selection.selectedPage!, () => {
         props.context.tool.notify(Tool.RULE_RENDER_SIM);
     });
+}
+
+function keydownR(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const transforms = __rotate(shapes, value)
+        linearApi.setShapesRotate(transforms)
+        event.preventDefault();
+    }
 }
 
 function changeCounts(value: string) {
@@ -638,7 +699,8 @@ function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
     }
 
     disalbeTidyup(orderShapes, d);
-    lockMouseHandler.executeTidyup(orderShapes, Math.max(hor, -minHor), Math.max(ver, -minVer), d);
+    const algin = props.context.selection.tidyUpAlgin;
+    lockMouseHandler.executeTidyup(orderShapes, Math.max(hor, -minHor), Math.max(ver, -minVer), d, algin);
 }
 
 function dragend() {
@@ -696,7 +758,7 @@ function wheelX(event: WheelEvent) {
 }
 
 const tidyUp = () => {
-    if(!props.context.selection.isTidyUp) return;
+    if (!props.context.selection.isTidyUp) return;
     const selected = props.context.selection.selectedShapes;
     const { width, height } = getSelectedWidthHeight(props.context, selected);
 
@@ -706,7 +768,7 @@ const tidyUp = () => {
     verSpace.value = frame.ver;
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width);
+    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width, 'center');
 }
 
 const changeHorTidyup = (value: string) => {
@@ -724,8 +786,29 @@ const changeHorTidyup = (value: string) => {
     disalbeTidyup(shapes, dir);
     const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
     horSpace.value = Math.max(hor, -minHor);
-    editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir);
+    const algin = props.context.selection.tidyUpAlgin;
+    editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir, algin);
 }
+
+function keydownHorTidyup(e: KeyboardEvent, val: string | number) {
+    let hor: any = sortValue(val.toString());
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        hor = hor + (e.code === 'ArrowUp' ? 1 : -1)
+        if (isNaN(hor)) return;
+        const selected = props.context.selection.selectedShapes;
+        const dir = props.context.selection.isTidyUpDir;
+        const shapes = checkTidyUpShapesOrder(selected, dir);
+        const ver = typeof verSpace.value === 'number' ? verSpace.value : 0
+        disalbeTidyup(shapes, dir);
+        const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+        horSpace.value = Math.max(hor, -minHor);
+        const algin = props.context.selection.tidyUpAlgin;
+        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir,algin)
+       e.preventDefault();
+    }
+
+}
+
 const changeVerTidyup = (value: string) => {
     value = Number
         .parseFloat(computeString(value))
@@ -742,7 +825,27 @@ const changeVerTidyup = (value: string) => {
     disalbeTidyup(shapes, dir);
     const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
     verSpace.value = Math.max(ver, -minVer);
-    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir);
+    const algin = props.context.selection.tidyUpAlgin;
+    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir, algin);
+}
+
+function keydownVerTidyup(e: KeyboardEvent, val: string | number) {
+    let ver: any = sortValue(val.toString());
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        ver = ver + (e.code === 'ArrowUp' ? 1 : -1)
+        if (isNaN(ver)) return;
+        const selected = props.context.selection.selectedShapes;
+        const dir = props.context.selection.isTidyUpDir;
+        const shapes = checkTidyUpShapesOrder(selected, dir);
+        const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
+        disalbeTidyup(shapes, dir);
+        const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+        verSpace.value = Math.max(ver, -minVer);
+        const algin = props.context.selection.tidyUpAlgin;
+        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir,algin)
+       e.preventDefault();
+    }
+
 }
 
 function selection_change() {
@@ -755,7 +858,7 @@ function selection_change() {
         whetherTidyUp();
     } else {
         s_tidy_up.value = false;
-        props.context.selection.whetherTidyUp(true, false);
+        props.context.selection.whetherTidyUp(true, false, 'center');
     }
 }
 
@@ -763,12 +866,13 @@ const _whetherTidyUp = () => {
     if (props.context.workspace.tidyUpIsTrans) return;
     const selected = props.context.selection.selectedShapes;
     s_tidy_up.value = false;
-    if (selected.length <= 1) return;
+    const length = selected.filter(shape => shape.isVisible).length;
+    if (length <= 1 || length > 100) return;
     s_tidy_up.value = true;
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
     if (!Info) {
-        props.context.selection.whetherTidyUp(true, false);
+        props.context.selection.whetherTidyUp(true, false, 'center');
         return;
     }
     const { tidyup, hor, ver, shapes, dir } = Info;
@@ -782,7 +886,7 @@ const _whetherTidyUp = () => {
     verTidyUp.value = tidyup;
     horTidyUp.value = tidyup;
     disalbeTidyup(shapes, dir);
-    props.context.selection.whetherTidyUp(tidyup, dir);
+    props.context.selection.whetherTidyUp(tidyup, dir, Info.algin as TidyUpAlgin);
 }
 
 const disalbeTidyup = (shapes: ShapeView[][], d: boolean) => {
@@ -880,9 +984,10 @@ onUnmounted(() => {
     <div class="table">
         <div class="tr">
             <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
-                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX" @keydown="keydownX">
+            </MdNumberInput>
             <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
-                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY"></MdNumberInput>
             <div v-if="s_adapt" class="adapt" @click="adapt">
                 <Tooltip :content="t('attr.adapt')">
                     <svg-icon icon-class="adapt" style="outline: none;" />
@@ -892,9 +997,10 @@ onUnmounted(() => {
         </div>
         <div class="tr">
             <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
-                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2" @keydown="keydownW"></MdNumberInput>
             <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
-                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2">
+                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"
+                @keydown="keydownH">
             </MdNumberInput>
             <Tooltip :content="t('attr.constrainProportions')">
                 <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
@@ -908,7 +1014,7 @@ onUnmounted(() => {
         <div class="tr">
             <MdNumberInput icon="angle" draggable :value="formatRotate(rotate)" @change="changeR"
                 :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
-                @dragend="dragend"></MdNumberInput>
+                @dragend="dragend" @keydown="keydownR"></MdNumberInput>
             <div class="flip-wrapper">
                 <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
                     <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
@@ -935,19 +1041,20 @@ onUnmounted(() => {
                 @dragend="dragend"></MdNumberInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
-        <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
-        <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
+        <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius">
+        </Radius>
+        <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up" style="margin-bottom: 0">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
                 :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
-                @dragend="dragend">
+                @dragend="dragend" @keydown="keydownHorTidyup">
             </MdNumberInput>
             <MdNumberInput icon="ver-space2" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyup"
                 :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
-                @dragend="dragend">
+                @dragend="dragend" @keydown="keydownVerTidyup">
             </MdNumberInput>
-            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? 1 : 0.4 }"
-                :class="{ 'tidy-up-disable': !verTidyUp && !horTidyUp }">
+            <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
+                :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
                     <svg-icon icon-class="tidy-up" style="outline: none;" />
                 </Tooltip>

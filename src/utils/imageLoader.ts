@@ -252,7 +252,8 @@ export class ImageLoader {
                     __view?.reloadImage(new Set(refs));
                 }
             });
-        } else if (count) message('success', this.context.workspace.t('home.image_uploaded').replace('xx', count), 3);
+        }
+        // else if (count) message('success', this.context.workspace.t('home.image_uploaded').replace('xx', count), 3);
 
         return !someError;
     }

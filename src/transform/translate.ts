@@ -284,18 +284,6 @@ export class TranslateHandler extends TransformHandler {
             const m = makeShapeTransform2By1(shape_root_m).clone();
             const clientTransform = makeShapeTransform2By1(matrix2);
             m.addTransform(clientTransform); //root到视图
-            const { width, height } = shape.size;
-            const { col0, col1, col2, col3 } = m.transform([
-                ColVector3D.FromXY(0, 0),
-                ColVector3D.FromXY(width, 0),
-                ColVector3D.FromXY(width, height),
-                ColVector3D.FromXY(0, height)
-            ]);
-            const lt = { x: col0.x, y: col0.y }
-            const rt = { x: col1.x, y: col1.y }
-            const rb = { x: col2.x, y: col2.y }
-            const lb = { x: col3.x, y: col3.y }
-            const point = [lt, rt, rb, lb];
             this.outline_frame = { ...shape._p_frame };
             this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, shape._p_frame);
         }
@@ -396,14 +384,18 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private updateBoxByAssist() {
+        let fixedY = false;
+        let fixedX = false;
         if (this.shiftStatus) {
             const dx = Math.abs(this.livingPoint.x - this.fixedPoint.x);
             const dy = Math.abs(this.livingPoint.y - this.fixedPoint.y);
 
             if (dx > dy) {
                 this.livingBox.y = this.originSelectionBox.y;
+                fixedY = true;
             } else {
                 this.livingBox.x = this.originSelectionBox.x;
+                fixedX = true;
             }
         }
 
@@ -440,14 +432,14 @@ export class TranslateHandler extends TransformHandler {
         let assistXWork = false;
         let assistYWork = false;
 
-        if (assistResult.sticked_by_x) {
+        if (assistResult.sticked_by_x && !fixedX) {
             this.livingBox.x += assistResult.dx;
             l += assistResult.dx;
             r = l + width;
             assistXWork = true;
         }
 
-        if (assistResult.sticked_by_y) {
+        if (assistResult.sticked_by_y && !fixedY) {
             this.livingBox.y += assistResult.dy;
             t += assistResult.dy;
             b = t + height;
@@ -912,7 +904,8 @@ export class TranslateHandler extends TransformHandler {
         } else {
             this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
         }
-        (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, this.tidy_up_start);
+        const algin = this.context.selection.tidyUpAlgin;
+        (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, algin, this.tidy_up_start);
         this.__trans();
         this.m_adjusted_shape_rows = shape_rows;
     }
@@ -958,7 +951,8 @@ export class TranslateHandler extends TransformHandler {
     // 拖动结束后进行一次整理
     _tidyUp() {
         if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
-            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, this.tidy_up_start);
+            const algin = this.context.selection.tidyUpAlgin;
+            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, algin, this.tidy_up_start);
         }
     }
 

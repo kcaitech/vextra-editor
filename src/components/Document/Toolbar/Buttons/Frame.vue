@@ -114,16 +114,16 @@ function toolWatcher(t: number) {
 }
 
 function blur(e: MouseEvent) {
-    if (
-        !(e.target as Element).closest('.popover-frame-tool')
-        || !(e.target as Element).closest('.tool-frame-menu-trigger')
-    ) {
-        popover.value = false;
-    }
+  if (
+    !(e.target as Element).closest('.popover-frame-tool')
+    || !(e.target as Element).closest('.tool-frame-menu-trigger')
+  ) {
+    popover.value = false;
+  }
 }
 
 const stop = watch(() => popover.value, (v) => {
-    !v && document.removeEventListener('click', blur);
+  !v && document.removeEventListener('click', blur);
 })
 
 
@@ -146,7 +146,7 @@ onUnmounted(() => {
     </Tooltip>
   </ToolButton> -->
   <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
-    <div :class="{ 'frame-button': true, 'frame-button-selected': selected }" @mouseenter.stop="enter"
+    <div :class="{ 'frame-button': true, 'frame-button-selected': selected, active: popover }" @mouseenter.stop="enter"
       @mouseleave.stop="leave" @click="shot">
       <div class="svg-container">
         <svg-icon :icon-class="pattern"></svg-icon>
@@ -184,6 +184,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+.active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .svg-container {
   width: 32px;
   height: 32px;
@@ -200,116 +204,116 @@ onUnmounted(() => {
 }
 
 .frame-button {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  color: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 48px;
+  height: 32px;
+
+  .svg-container {
     display: flex;
     align-items: center;
-    box-sizing: border-box;
-    color: #ffffff;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 48px;
-    height: 32px;
+    flex: 10;
+    flex-direction: row-reverse;
+    height: 100%;
 
-    .svg-container {
-        display: flex;
-        align-items: center;
-        flex: 10;
-        flex-direction: row-reverse;
-        height: 100%;
-
-        > svg {
-            width: 18px;
-            height: 18px;
-        }
+    >svg {
+      width: 18px;
+      height: 18px;
     }
+  }
 
-    .tool-frame-menu-trigger {
-        flex: 9;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
+  .tool-frame-menu-trigger {
+    flex: 9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 
-        > svg {
-            width: 12px;
-            height: 12px;
-            transition: 0.2s;
-        }
+    >svg {
+      width: 12px;
+      height: 12px;
+      transition: 0.2s;
     }
+  }
 
-    .tool-frame-menu-trigger:hover {
-        > svg {
-            transform: translateY(2px);
-        }
+  .tool-frame-menu-trigger:hover {
+    >svg {
+      transform: translateY(2px);
     }
+  }
 }
 
 .frame-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .frame-button-selected {
-    background-color: var(--active-color) !important;
+  background-color: var(--active-color) !important;
 }
 
 
 .popover-frame-tool {
-    width: 158px;
+  width: 158px;
 
-    position: absolute;
-    padding: 6px 0;
+  position: absolute;
+  padding: 6px 0;
+  box-sizing: border-box;
+
+  background-color: #262626;
+  color: var(--theme-color-anti);
+
+  border-radius: 4px;
+
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
+
+  .item {
+    width: 100%;
+    height: 32px;
+
+    position: relative;
     box-sizing: border-box;
+    padding: 8px 12px 8px 32px;
 
-    background-color: #262626;
-    color: var(--theme-color-anti);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-default-fontsize);
 
-    border-radius: 4px;
+    .check {
+      position: absolute;
+      left: 8px;
 
-    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
 
-    .item {
-        width: 100%;
-        height: 32px;
-
-        position: relative;
-        box-sizing: border-box;
-        padding: 8px 12px 8px 32px;
-
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: var(--font-default-fontsize);
-
-        .check {
-            position: absolute;
-            left: 8px;
-
-            display: flex;
-            align-items: center;
-
-            > svg {
-                width: 12px;
-                height: 12px;
-            }
-        }
-
-        .desc {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            > svg {
-                width: 14px;
-                height: 14px;
-            }
-
-            > span {
-                margin-left: 8px;
-            }
-        }
+      >svg {
+        width: 12px;
+        height: 12px;
+      }
     }
 
-    .item:hover {
-        background-color: var(--active-color);
+    .desc {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      >svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      >span {
+        margin-left: 8px;
+      }
     }
+  }
+
+  .item:hover {
+    background-color: var(--active-color);
+  }
 }
 </style>

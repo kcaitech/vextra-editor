@@ -14,7 +14,8 @@ import {
     ArrayOpSelection,
     isDiffStringArr,
     SNumber,
-    TableCellType
+    TableCellType,
+    TidyUpAlgin
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -111,6 +112,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     private userSelectionList: DocSelectionData[] = [];
     private tidy_up: boolean = true;
     private tidy_up_dir: boolean = false; //false 水平， true垂直
+    private tidy_up_algin: TidyUpAlgin = 'center';
     private m_tidyup_selectShapes: ShapeView[] = [];
 
     private m_hover_stroke: number = 14;
@@ -728,11 +730,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.notify(Selection.PREVIEW_HOVER_CHANGE);
     }
 
-    whetherTidyUp(v: boolean, dir: boolean) {
-        if(v !== this.tidy_up) {
-            this.tidy_up = v;
-            this.tidy_up_dir = dir;
-        }
+    whetherTidyUp(v: boolean, dir: boolean, algin: TidyUpAlgin) {
+        this.tidy_up = v;
+        this.tidy_up_dir = dir;
+        this.tidy_up_algin = algin;
         this.notify(Selection.NEED_TIDY_UP);
     }
 
@@ -741,6 +742,9 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     }
     get isTidyUpDir() {
         return this.tidy_up_dir;
+    }
+    get tidyUpAlgin() {
+        return this.tidy_up_algin;
     }
 
     selectTidyUpShape(shapes?: ShapeView[]) {

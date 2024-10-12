@@ -163,33 +163,80 @@ export const whetherNeedTidyUp = (context: Context) => {
     }
     return;
 }
-
 const checkHorTidyUp = (selected: ShapeView[], dir: boolean) => {
     const shape_rows2 = checkTidyUpShapesOrder(selected, dir);
-    const top_equal = shape_rows2.every(row => row[0]._p_frame.y === shape_rows2[0][0]._p_frame.y);
-    const left_equal = shape_rows2.every(row => row[0]._p_frame.x === shape_rows2[0][0]._p_frame.x);
-    const space2 = layoutSpacing(shape_rows2, dir);
-    if (left_equal) {
-        const horInfo2 = horFindTidyUp(shape_rows2, space2.hor, space2.ver);
-        if (!horInfo2.tidyup) return horInfo2;
-    }
-    if (top_equal) {
-        const verInfo2 = verFindTidyUp(shape_rows2, space2.hor, space2.ver);
-        if (!verInfo2.tidyup) return verInfo2;
+    if (shape_rows2.length === 1) {
+        let rows = shape_rows2[0];
+        const frame = rows[0]._p_frame;
+        const start_equal = rows.every(s => getDiff(frame.y, s._p_frame.y) < 1);
+        const center_equal = rows.every(s => getDiff((frame.y + (frame.height / 2)), (s._p_frame.y + (s._p_frame.height / 2))) < 1);
+        const end_equal = rows.every(s => getDiff((frame.y + frame.height), (s._p_frame.y + s._p_frame.height)) < 1);
+        if (start_equal || center_equal || end_equal) {
+            let gap_equal = true;
+            const space = rows[1]._p_frame.x - (rows[0]._p_frame.x + rows[0]._p_frame.width);
+            for (let i = 0; i < rows.length - 1; i++) {
+                const cur_f = rows[i]._p_frame;
+                const next_f = rows[i + 1]._p_frame;
+                if (getDiff((next_f.x - (cur_f.x + cur_f.width)), space) > 1) {
+                    gap_equal = false;
+                    break;
+                }
+            }
+            if (gap_equal) {
+                const algin = center_equal ? 'center' : start_equal ? 'start' : 'end';
+                return { tidyup: false, hor: space, ver: 0, shapes: [rows], dir: false, algin };
+            }
+        }
+    } else {
+        const top_equal = shape_rows2.every(row => row[0]._p_frame.y === shape_rows2[0][0]._p_frame.y);
+        const left_equal = shape_rows2.every(row => row[0]._p_frame.x === shape_rows2[0][0]._p_frame.x);
+        const space2 = layoutSpacing(shape_rows2, dir);
+        if (left_equal) {
+            const horInfo2 = horFindTidyUp(shape_rows2, space2.hor, space2.ver);
+            if (!horInfo2.tidyup) return horInfo2;
+        }
+        if (top_equal) {
+            const verInfo2 = verFindTidyUp(shape_rows2, space2.hor, space2.ver);
+            if (!verInfo2.tidyup) return verInfo2;
+        }
     }
 }
 const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
     const shape_rows = checkTidyUpShapesOrder(selected, dir);
-    const top_equal = shape_rows.every(row => row[0]._p_frame.y === shape_rows[0][0]._p_frame.y);
-    const left_equal = shape_rows.every(row => row[0]._p_frame.x === shape_rows[0][0]._p_frame.x);
-    const space = layoutSpacing(shape_rows, dir);
-    if (top_equal) {
-        const verInfo = verFindTidyUp(shape_rows, space.hor, space.ver);
-        if (!verInfo.tidyup) return verInfo;
-    }
-    if (left_equal) {
-        const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
-        if (!horInfo.tidyup) return horInfo;
+    if (shape_rows.length === 1) {
+        let rows = shape_rows[0];
+        const frame = rows[0]._p_frame;
+        const start_equal = rows.every(s => getDiff(frame.x, s._p_frame.x) < 1);
+        const center_equal = rows.every(s => getDiff((frame.x + (frame.width / 2)), (s._p_frame.x + (s._p_frame.width / 2))) < 1);
+        const end_equal = rows.every(s => getDiff((frame.x + frame.width), (s._p_frame.x + s._p_frame.width)) < 1);
+        if (start_equal || center_equal || end_equal) {
+            let gap_equal = true;
+            const space = rows[1]._p_frame.y - (rows[0]._p_frame.y + rows[0]._p_frame.height);
+            for (let i = 0; i < rows.length - 1; i++) {
+                const cur_f = rows[i]._p_frame;
+                const next_f = rows[i + 1]._p_frame;
+                if (getDiff((next_f.y - (cur_f.y + cur_f.height)), space) > 1) {
+                    gap_equal = false;
+                    break;
+                }
+            }
+            if (gap_equal) {
+                const algin = center_equal ? 'center' : start_equal ? 'start' : 'end'
+                return { tidyup: false, hor: 0, ver: space, shapes: [rows], dir: true, algin }
+            }
+        }
+    } else {
+        const top_equal = shape_rows.every(row => row[0]._p_frame.y === shape_rows[0][0]._p_frame.y);
+        const left_equal = shape_rows.every(row => row[0]._p_frame.x === shape_rows[0][0]._p_frame.x);
+        const space = layoutSpacing(shape_rows, dir);
+        if (top_equal) {
+            const verInfo = verFindTidyUp(shape_rows, space.hor, space.ver);
+            if (!verInfo.tidyup) return verInfo;
+        }
+        if (left_equal) {
+            const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
+            if (!horInfo.tidyup) return horInfo;
+        }
     }
 }
 
@@ -245,7 +292,7 @@ function verFindTidyUp(shape_rows: ShapeView[][], hor: number, ver: number) {
         topTrans = minY; // 重置为上边距
         leftTrans += maxWidthInRow + hor; // 换列，增加 x 坐标
     }
-    return { tidyup: istidyup, hor, ver, shapes: shape_rows, dir: true };
+    return { tidyup: istidyup, hor, ver, shapes: shape_rows, dir: true, algin: 'center' };
 }
 function horFindTidyUp(shape_rows: ShapeView[][], hor: number, ver: number) {
     const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
@@ -284,7 +331,7 @@ function horFindTidyUp(shape_rows: ShapeView[][], hor: number, ver: number) {
         leftTrans = minX; // 重置为左边距
         topTrans += maxHeightInRow + ver; // 换行，增加 y 坐标
     }
-    return { tidyup: istidyup, hor, ver, shapes: shape_rows, dir: false };
+    return { tidyup: istidyup, hor, ver, shapes: shape_rows, dir: false, algin: 'center' };
 }
 
 export const getFrame = (shape: ShapeView) => {
@@ -307,7 +354,6 @@ export const getFrame = (shape: ShapeView) => {
     }
     return f;
 }
-
 
 export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView[][], space: { hor: number, ver: number }, startXY: { x: number, y: number }): XY[][] {
     const shapes_rows_point_map = [];
@@ -426,23 +472,21 @@ export function getVerShapeOutlineFrame(context: Context, shape_rows: ShapeView[
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
+    const algin = context.selection.tidyUpAlgin;
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         const maxWidth = Math.max(...shape_row.map(s => s._p_frame.width));
         for (let j = 0; j < shape_row.length; j++) {
             const shape = shape_row[j];
             const { width, height } = shape._p_frame;
-            const horizontalOffset = (maxWidth - width) / 2;
+            let horizontalOffset = 0;
+            if (algin === 'center') {
+                horizontalOffset = (maxWidth - width) / 2;
+            } else if (algin === 'end') {
+                horizontalOffset = maxWidth - width;
+            }
             const transx = startX + horizontalOffset;
             if (shape.id === target) {
-                const { col0, col1, col2, col3 } = m.transform([
-                    ColVector3D.FromXY(transx, startY),
-                    ColVector3D.FromXY(transx + width, startY),
-                    ColVector3D.FromXY(transx + width, startY + height),
-                    ColVector3D.FromXY(transx, startY + height)
-                ]);
-
-                const point = [{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, { x: col3.x, y: col3.y }];
                 context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, { x: transx, y: startY, width, height });
                 return;
             }
@@ -469,22 +513,21 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
+    const algin = context.selection.tidyUpAlgin;
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         const maxHeight = Math.max(...shape_row.map(s => s._p_frame.height));
         for (let j = 0; j < shape_row.length; j++) {
             const shape = shape_row[j];
             const { width, height } = shape._p_frame;
-            const verticalOffset = (maxHeight - height) / 2;
+            let verticalOffset = 0;
+            if (algin === 'center') {
+                verticalOffset = (maxHeight - height) / 2;
+            } else if (algin === 'end') {
+                verticalOffset = maxHeight - height;
+            }
             const transy = startY + verticalOffset;
             if (shape.id === target) {
-                const { col0, col1, col2, col3 } = m.transform([
-                    ColVector3D.FromXY(startX, transy),
-                    ColVector3D.FromXY(startX + width, transy),
-                    ColVector3D.FromXY(startX + width, transy + height),
-                    ColVector3D.FromXY(startX, transy + height)
-                ]);
-                const point = [{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, { x: col3.x, y: col3.y }];
                 context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, { x: startX, y: transy, width, height });
                 return;
             }
@@ -496,10 +539,10 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
 }
 
 export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
-    if (shapes.length < 2) return [];
     let shape_rows: ShapeView[][] = [];
     let unassignedShapes: ShapeView[] = [...shapes].filter(shape => shape.isVisible);
-
+    const shapes_row_length = unassignedShapes.length;
+    if (shapes_row_length < 2) return [];
     while (unassignedShapes.length > 0) {
         // 找出 y + height 最小的图形作为基准图形
         const baseShape = unassignedShapes.reduce((minShape, shape) => {
@@ -519,12 +562,20 @@ export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
         });
         let currentRow: ShapeView[] = [];
         if (verBase) {
-            // 将与基准图形相交的图形放入当前列
             currentRow = unassignedShapes.filter(shape => {
                 const frame = shape._p_frame;
                 const base_frame = baseShape._p_frame;
-                return Math.abs((base_frame.x + (base_frame.width / 2)) - (frame.x + (frame.width / 2))) < 1;
+                return (base_frame.x + base_frame.width) > frame.x && base_frame.x < (frame.x + frame.width);
             });
+
+            if (currentRow.length !== shapes_row_length) {
+                // 将与基准图形相交的图形放入当前列
+                currentRow = unassignedShapes.filter(shape => {
+                    const frame = shape._p_frame;
+                    const base_frame = baseShape._p_frame;
+                    return Math.abs((base_frame.x + (base_frame.width / 2)) - (frame.x + (frame.width / 2))) < 1;
+                });
+            }
 
             // 将当前行按 x 坐标排序
             currentRow.sort((a, b) => {
@@ -537,12 +588,19 @@ export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
                 }
             })
         } else {
-            // 将与基准图形相交的图形放入当前行
             currentRow = unassignedShapes.filter(shape => {
                 const frame = shape._p_frame;
                 const base_frame = baseShape._p_frame;
-                return Math.abs((base_frame.y + (base_frame.height / 2)) - (frame.y + (frame.height / 2))) < 1;
+                return (base_frame.y + base_frame.height) > frame.y && base_frame.y < (frame.y + frame.height);
             });
+            if (currentRow.length !== shapes_row_length) {
+                // 将与基准图形相交的图形放入当前行
+                currentRow = unassignedShapes.filter(shape => {
+                    const frame = shape._p_frame;
+                    const base_frame = baseShape._p_frame;
+                    return Math.abs((base_frame.y + (base_frame.height / 2)) - (frame.y + (frame.height / 2))) < 1;
+                });
+            }
 
             // 将当前行按 x 坐标排序
             currentRow.sort((a, b) => {
@@ -561,5 +619,33 @@ export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
         // 从未分配图形中移除当前行的图形
         unassignedShapes = unassignedShapes.filter(shape => !currentRow.includes(shape));
     }
+    const row_single = shape_rows.every(row => row.length === 1);
+    if (row_single) {
+        const row = shape_rows.map(s => s[0])
+        row.sort((a, b) => {
+            const a_frame = a._p_frame;
+            const b_frame = b._p_frame;
+            if (verBase) {
+                if (a_frame.y > b_frame.y) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            } else {
+                if (a_frame.x > b_frame.x) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            }
+
+        })
+        shape_rows = [row];
+    }
     return shape_rows;
+}
+
+
+const getDiff = (a: number, b: number) => {
+    return Math.abs(a - b);
 }

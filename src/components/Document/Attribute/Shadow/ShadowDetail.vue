@@ -6,7 +6,7 @@ import ShadowInput from './ShadowInput.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { toHex } from "@/utils/color";
-import { Color, Shadow, ShapeView, ShapeType, Fill } from '@kcdesign/data';
+import { Color, Shadow, ShapeView, ShapeType, Fill, LinearApi } from '@kcdesign/data';
 import { message } from "@/utils/message";
 import { Reg_HEX } from "@/utils/RegExp";
 import {
@@ -20,6 +20,7 @@ import { hidden_selection } from '@/utils/content';
 import { Menu } from "@/context/menu";
 import { LockMouse } from "@/transform/lockMouse";
 import { format_value } from "@/utils/common";
+import { sortValue } from '../BaseAttr/oval';
 
 const { t } = useI18n();
 
@@ -38,6 +39,8 @@ const alphaShadow = ref<HTMLInputElement>();
 const colorShadow = ref<HTMLInputElement>();
 const disabled = ref(false);
 const spare_tip = ref('');
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const keydownval = ref<boolean>(false);
 
 const setOffsetX = (value: number) => {
     const _idx = props.length - props.idx - 1;
@@ -57,6 +60,31 @@ const setOffsetX = (value: number) => {
     }
     hidden_selection(props.context);
 }
+
+function keydownOffsetX(e: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        if (len === 1) {
+            linearApi.modifyShadowOffSetX(_idx, value, props.context.selection.selectedShapes[0]);
+        } else if (len > 1) {
+            const actions = get_actions_shadow_offsetx(props.shapes, _idx, value);
+            if (actions && actions.length) {
+                const page = props.context.selection.selectedPage;
+                if (page) {
+                    linearApi.modifyShapesShadowOffsetX(actions)
+                }
+            }
+        }
+        e.preventDefault();
+        hidden_selection(props.context);
+    }
+}
+
 const setOffsetY = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
@@ -75,6 +103,31 @@ const setOffsetY = (value: number) => {
     }
     hidden_selection(props.context);
 }
+
+function keydownOffsetY(e: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        if (len === 1) {
+            linearApi.modifyShadowOffSetY(_idx, value, props.context.selection.selectedShapes[0]);
+        } else if (len > 1) {
+            const actions = get_actions_shadow_offsety(props.shapes, _idx, value);
+            if (actions && actions.length) {
+                const page = props.context.selection.selectedPage;
+                if (page) {
+                    linearApi.modifyShapesShadowOffsetY(actions)
+                }
+            }
+        }
+        e.preventDefault();
+        hidden_selection(props.context);
+    }
+}
+
 const setBlurRadius = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
@@ -93,6 +146,31 @@ const setBlurRadius = (value: number) => {
     }
     hidden_selection(props.context);
 }
+
+function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = value <= 0 ? 0 : value <= 200 ? value : 200;
+        if (len === 1) {
+            linearApi.modifyShadowBlur(_idx, value, props.context.selection.selectedShapes[0]);
+        } else if (len > 1) {
+            const actions = get_actions_shadow_blur(props.shapes, _idx, value);
+            if (actions && actions.length) {
+                const page = props.context.selection.selectedPage;
+                if (page) {
+                    linearApi.modifyShapesShadowBlur(actions)
+                }
+            }
+        }
+        e.preventDefault();
+        hidden_selection(props.context);
+    }
+}
+
 const setSpread = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
@@ -112,6 +190,30 @@ const setSpread = (value: number) => {
     hidden_selection(props.context);
 }
 
+function keydownSpread(e: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        if (len === 1) {
+            linearApi.modifyShadowSpread(_idx, value, props.context.selection.selectedShapes[0]);
+        } else if (len > 1) {
+            const actions = get_actions_shadow_spread(props.shapes, _idx, value);
+            if (actions && actions.length) {
+                const page = props.context.selection.selectedPage;
+                if (page) {
+                    linearApi.modifyShapesShadowSpread(actions)
+                }
+            }
+        }
+        e.preventDefault();
+        hidden_selection(props.context);
+    }
+}
+
 function setColor(clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
     if (!res) {
@@ -125,15 +227,25 @@ function setColor(clr: string, alpha: number) {
     const len = props.shapes.length;
     if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.setShadowColor(_idx, new Color(alpha, r, g, b));
+        if (keydownval.value) {
+            linearApi.modifyShadowColor(_idx, new Color(alpha, r, g, b), props.context.selection.selectedShapes[0])
+        } else {
+            e.setShadowColor(_idx, new Color(alpha, r, g, b));
+        }
+
     } else if (len > 1) {
         const actions = get_actions_shadow_color(props.shapes, _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
         if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesShadowColor(actions);
+            if (keydownval.value) {
+                linearApi.modifyShapesShadowColor(actions)
+            } else {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesShadowColor(actions);
+            }
         }
     }
+    keydownval.value = false
     hidden_selection(props.context);
 }
 
@@ -185,6 +297,34 @@ function onAlphaChange(e: Event) {
             return (e.target as HTMLInputElement).value = (props.shadow.color.alpha * 100) + '%'
         }
     }
+}
+
+function keydownAlpha(event: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    let old = value / 100;
+    if (!alphaShadow.value) return;
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        keydownval.value = true;
+        if (value >= 0) {
+            if (value >= 100) {
+                value = 100
+            }
+            value = value / 100 + (event.code === 'ArrowUp' ? 0.01 : -0.01)
+            if (isNaN(value)) return;
+            const color = props.shadow.color;
+            let clr = toHex(color);
+            if (clr.slice(0, 1) !== '#') {
+                clr = "#" + clr
+            }
+            value = value <= 0 ? 0 : value <= 1 ? value : 1
+            if (old !== value) setColor(clr, value);
+        } else {
+            message('danger', t('system.illegal_input'));
+            (event.target as HTMLInputElement).value = (props.shadow.color.alpha * 100) + '%'
+        }
+        event.preventDefault();
+    }
+
 }
 
 function getColorFromPicker(color: Color) {
@@ -450,65 +590,64 @@ function extend(base: number) {
 </script>
 
 <template>
-<div class="border-detail-container" @mousedown.stop>
-    <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
-             :title="`${t('shadow.shadow_setting')}`">
-        <template #trigger>
-            <div class="trigger" @click="showMenu">
-                <svg-icon icon-class="gear"></svg-icon>
-            </div>
-        </template>
-        <template #body>
-            <div class="options-container">
-                <div class="setting">
-                    <div class="name-title">{{ t('shadow.position') }}</div>
-                    <ShadowInput ticon="X" :shadow-v="extend(shadow.offsetX)" :reflush="reflush"
-                                 @on-change="setOffsetX"
-                                 @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd">
-                    </ShadowInput>
-                    <ShadowInput ticon="Y" :shadow-v="extend(shadow.offsetY)" @on-change="setOffsetY"
-                                 :reflush="reflush"
-                                 @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd">
-                    </ShadowInput>
+    <div class="border-detail-container" @mousedown.stop>
+        <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
+            :title="`${t('shadow.shadow_setting')}`">
+            <template #trigger>
+                <div class="trigger" @click="showMenu">
+                    <svg-icon icon-class="gear"></svg-icon>
                 </div>
-                <div class="setting">
-                    <div class="name-title">{{ t('shadow.effect') }}</div>
-                    <ShadowInput ticon="B" :shadow-v="extend(shadow.blurRadius)"
-                                 @on-change="setBlurRadius"
-                                 :tootip="`${t('shadow.blur')}`" :reflush="reflush" @dragstart="dragStart"
-                                 @dragging="draggingB" @dragend="dragEnd">
-                    </ShadowInput>
-                    <ShadowInput ticon="S" :shadow-v="extend(shadow.spread)" @on-change="setSpread"
-                                 :disabled="disabled"
-                                 :tootip="spare_tip" :reflush="reflush" @dragstart="dragStart" @dragging="draggingS"
-                                 @dragend="dragEnd">
-                    </ShadowInput>
-                </div>
-                <div class="setting">
-                    <div class="name-title">{{ t('shadow.color') }}</div>
-                    <div class="color">
-                        <ColorPicker :color="(shadow.color as Color)" :context="props.context" :late="24"
-                                     @change="(c: Color) => getColorFromPicker(c)"/>
-                        <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
-                               @change="e => onColorChange(e)" @click="colorClick" @blur="is_color_select = false"/>
-                        <input ref="alphaShadow" style="text-align: right;"
-                               :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
-                               @click="alphaClick" @blur="is_alpha_select = false"/>
+            </template>
+            <template #body>
+                <div class="options-container">
+                    <div class="setting">
+                        <div class="name-title">{{ t('shadow.position') }}</div>
+                        <ShadowInput ticon="X" :shadow-v="extend(shadow.offsetX)" :reflush="reflush"
+                            @on-change="setOffsetX" @key-down="keydownOffsetX" @dragstart="dragStart"
+                            @dragging="draggingX" @dragend="dragEnd">
+                        </ShadowInput>
+                        <ShadowInput ticon="Y" :shadow-v="extend(shadow.offsetY)" @on-change="setOffsetY"
+                            :reflush="reflush" @key-down="keydownOffsetY" @dragstart="dragStart" @dragging="draggingY"
+                            @dragend="dragEnd">
+                        </ShadowInput>
+                    </div>
+                    <div class="setting">
+                        <div class="name-title">{{ t('shadow.effect') }}</div>
+                        <ShadowInput ticon="B" :shadow-v="extend(shadow.blurRadius)" @on-change="setBlurRadius"
+                            :tootip="`${t('shadow.blur')}`" @key-down="keydownBlurRadius" :reflush="reflush"
+                            @dragstart="dragStart" @dragging="draggingB" @dragend="dragEnd">
+                        </ShadowInput>
+                        <ShadowInput ticon="S" :shadow-v="extend(shadow.spread)" @on-change="setSpread"
+                            :disabled="disabled" :tootip="spare_tip" :reflush="reflush" @dragstart="dragStart"
+                            @dragging="draggingS" @dragend="dragEnd" @key-down="keydownSpread">
+                        </ShadowInput>
+                    </div>
+                    <div class="setting">
+                        <div class="name-title">{{ t('shadow.color') }}</div>
+                        <div class="color">
+                            <ColorPicker :color="(shadow.color as Color)" :context="props.context" :late="24"
+                                @change="(c: Color) => getColorFromPicker(c)" />
+                            <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
+                                @change="e => onColorChange(e)" @click="colorClick" @blur="is_color_select = false" />
+                            <input ref="alphaShadow" style="text-align: right;"
+                                :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
+                                @click="alphaClick" @blur="is_alpha_select = false"
+                                @keydown="e => keydownAlpha(e, filterAlpha(shadow.color.alpha * 100))" />
+                        </div>
                     </div>
                 </div>
+            </template>
+        </Popover>
+        <teleport to="body">
+            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
             </div>
-        </template>
-    </Popover>
-    <teleport to="body">
-        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
-        </div>
-    </teleport>
-</div>
+        </teleport>
+    </div>
 </template>
 
 <style scoped lang="scss">
 .border-detail-container {
-    > .popover {
+    >.popover {
         width: 28px;
         height: 28px;
 
@@ -520,7 +659,7 @@ function extend(base: number) {
             align-items: center;
             border-radius: var(--default-radius);
 
-            > svg {
+            >svg {
                 width: 16px;
                 height: 16px;
             }
@@ -538,19 +677,19 @@ function extend(base: number) {
             box-sizing: border-box;
             height: 100%;
 
-            > div {
+            >div {
                 display: flex;
                 align-items: center;
                 margin-bottom: 12px;
 
-                > label {
+                >label {
                     flex: 0 0 72px;
                     text-align: left;
                     box-sizing: border-box;
                     font-weight: var(--font-default-bold);
                 }
 
-                > .thickness-container {
+                >.thickness-container {
                     box-sizing: border-box;
                     padding: 0 14px;
                     background-color: var(--input-background);
@@ -560,13 +699,13 @@ function extend(base: number) {
                     display: flex;
                     align-items: center;
 
-                    > svg {
+                    >svg {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
                     }
 
-                    > input {
+                    >input {
                         outline: none;
                         border: none;
                         width: calc(100% - 37px);
@@ -578,7 +717,7 @@ function extend(base: number) {
                         width: 10px;
                         height: 100%;
 
-                        > svg {
+                        >svg {
                             width: 10px;
                             height: 10px;
                         }
@@ -609,7 +748,7 @@ function extend(base: number) {
         margin-left: 8px;
     }
 
-    input + input {
+    input+input {
         width: 50px;
     }
 
@@ -656,7 +795,7 @@ function extend(base: number) {
         justify-content: center;
         align-items: center;
 
-        > svg {
+        >svg {
             width: 60%;
             height: 60%;
         }
