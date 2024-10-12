@@ -35,6 +35,7 @@ import Oval from "@/components/Document/Attribute/BaseAttr/Oval.vue";
 import {
     checkTidyUpShapesOrder,
     getSelectedWidthHeight,
+    getVisibleShapes,
     hiddenTidyUp,
     layoutSpacing,
     tidyUpShapesOrder,
@@ -698,7 +699,7 @@ function wheelX(event: WheelEvent) {
 
 const tidyUp = () => {
     if(!props.context.selection.isTidyUp) return;
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     const { width, height } = getSelectedWidthHeight(props.context, selected);
 
     const shapes = tidyUpShapesOrder(selected, height > width);
@@ -717,7 +718,7 @@ const changeHorTidyup = (value: string) => {
 
     const hor: number = Number.parseFloat(value);
     if (isNaN(hor)) return;
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     const dir = props.context.selection.isTidyUpDir;
     const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
@@ -735,7 +736,7 @@ const changeVerTidyup = (value: string) => {
 
     const ver: number = Number.parseFloat(value);
     if (isNaN(ver)) return;
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     const dir = props.context.selection.isTidyUpDir;
     const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
@@ -752,7 +753,7 @@ function selection_change() {
     update_view();
     calc_attri();
     textBehaviour();
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     if (selected.length > 1 && !hiddenTidyUp(selected)) {
         s_tidy_up.value = true;
         whetherTidyUp();
@@ -764,7 +765,7 @@ function selection_change() {
 
 const _whetherTidyUp = () => {
     if (props.context.workspace.tidyUpIsTrans) return;
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     s_tidy_up.value = false;
     const length = selected.filter(shape => shape.isVisible).length;
     if (length <= 1 || length > 100) return;
