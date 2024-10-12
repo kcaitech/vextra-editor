@@ -384,14 +384,18 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private updateBoxByAssist() {
+        let fixedY = false;
+        let fixedX = false;
         if (this.shiftStatus) {
             const dx = Math.abs(this.livingPoint.x - this.fixedPoint.x);
             const dy = Math.abs(this.livingPoint.y - this.fixedPoint.y);
 
             if (dx > dy) {
                 this.livingBox.y = this.originSelectionBox.y;
+                fixedY = true;
             } else {
                 this.livingBox.x = this.originSelectionBox.x;
+                fixedX = true;
             }
         }
 
@@ -428,14 +432,14 @@ export class TranslateHandler extends TransformHandler {
         let assistXWork = false;
         let assistYWork = false;
 
-        if (assistResult.sticked_by_x) {
+        if (assistResult.sticked_by_x && !fixedX) {
             this.livingBox.x += assistResult.dx;
             l += assistResult.dx;
             r = l + width;
             assistXWork = true;
         }
 
-        if (assistResult.sticked_by_y) {
+        if (assistResult.sticked_by_y && !fixedY) {
             this.livingBox.y += assistResult.dy;
             t += assistResult.dy;
             b = t + height;

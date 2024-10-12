@@ -37,6 +37,8 @@ import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, hidden_selection, is_editing } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 import { ImgFrame } from '@/context/atrribute';
+import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
+import { LinearApi } from "@kcdesign/data"
 
 interface FillItem {
     id: number,
@@ -52,6 +54,7 @@ interface Props {
     cellsTrigger: any[];
 }
 
+
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const len = computed<number>(() => props.shapes.length);
@@ -62,6 +65,8 @@ const colorFill = ref<HTMLInputElement[]>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
 const shapes = ref<ShapeView[]>();
+const keydownval = ref<boolean>(false)
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -229,6 +234,7 @@ const tableSelect = ref({
 
 function setColor(idx: number, clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
+
     if (!res) {
         message('danger', t('system.illegal_input'));
         return;
@@ -245,19 +251,30 @@ function setColor(idx: number, clr: string, alpha: number) {
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(tableSelection)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(tableSelection);
-        const tablecells = (s as TableView).getVisibleCells(tableSelection.tableRowStart,
-            tableSelection.tableRowEnd,
-            tableSelection.tableColStart,
-            tableSelection.tableColEnd);
+        const tablecells = (s as TableView).getVisibleCells(range.rowStart,
+        range.rowEnd,
+        range.colStart,
+        range.colEnd);
         if (tablecells.length > 0 && tablecells[0].cell) {
-            e.setFillColor4Cell(_idx, new Color(alpha, r, g, b), range)
+            if (keydownval.value) {
+                linearApi.modifyFillOpacity4Cell(_idx, new Color(alpha, r, g, b), range, s as TableView)
+                keydownval.value = false
+            } else {
+                e.setFillColor4Cell(_idx, new Color(alpha, r, g, b), range)
+            }
+
         }
     } else {
         const s = getShapesForStyle(selected);
         const actions = get_actions_fill_color(s, _idx, new Color(alpha, r, g, b));
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setShapesFillColor(actions);
+            if (keydownval.value) {
+                linearApi.modifyFillOpacity(actions)
+                keydownval.value = false
+            } else {
+                editor.setShapesFillColor(actions);
+            }
         }
     }
 
@@ -348,6 +365,36 @@ function onAlphaChange(e: Event, idx: number, fill: Fill) {
     }
 }
 
+function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string) {
+    let value: any = sortValue(val);
+    if (!alphaFill.value) return;
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        keydownval.value = true;
+        if (value >= 0) {
+            if (value >= 100) {
+                value = 100
+            }
+            value = value / 100 + (event.code === 'ArrowUp' ? 0.01 : -0.01)
+            if (isNaN(value)) return;
+            const color = fills[idx].fill.color;
+            let clr = toHex(color.red, color.green, color.blue);
+            if (clr.slice(0, 1) !== '#') {
+                clr = "#" + clr
+            }
+            value = value <= 0 ? 0 : value <= 1 ? value : 1
+            if (fill.fillType === FillType.SolidColor || fill.fillType === FillType.Pattern) {
+                setColor(idx, clr, value);
+            } else if (fill.gradient && fill.fillType === FillType.Gradient) {
+                set_gradient_opacity(idx, value);
+            }
+        } else {
+            alpha_message(idx, fill);
+        }
+        event.preventDefault();
+    }
+
+}
+
 const alpha_message = (idx: number, fill: Fill) => {
     if (!alphaFill.value) return;
     message('danger', t('system.illegal_input'));
@@ -371,7 +418,13 @@ const set_gradient_opacity = (idx: number, opacity: number) => {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'fills');
-    editor.setGradientOpacity(actions);
+    if (keydownval.value) {
+        linearApi.modifyGradientOpacity(actions)
+        keydownval.value=false
+    } else {
+        editor.setGradientOpacity(actions);
+    }
+
 }
 
 function getColorFromPicker(idx: number, color: Color) {
@@ -716,14 +769,15 @@ onUnmounted(() => {
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <span class="colorFill" style="line-height: 14px;"
                         v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
-            t(`color.${f.fill.gradient.gradientType}`) }}</span>
+                            t(`color.${f.fill.gradient.gradientType}`) }}</span>
                     <span class="colorFill" style="line-height: 14px;"
                         v-else-if="f.fill.fillType === FillType.Pattern">{{
-            t(`pattern.image`) }}</span>
+                            t(`pattern.image`) }}</span>
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill) + '%'"
                         @change="(e) => onAlphaChange(e, idx, f.fill)" @focus="(e) => selectAlpha(e)"
                         @input="alphaInput" @click="alphaClick" @blur="is_alpha_select = false"
-                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
+                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"
+                        @keydown="(e) => keydownAlpha(e, idx, f.fill, filterAlpha(f.fill))" />
                 </div>
                 <!--                <div class="temporary"></div>-->
                 <div class="delete" @click="deleteFill(idx)">

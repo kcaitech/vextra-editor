@@ -1,7 +1,6 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { LockMouseHandler, ShapeView, TidyUpAlgin } from "@kcdesign/data";
-import { UniformScaleUnit } from "../../../kcdesign-data/src";
+import { LockMouseHandler, ShapeView, TidyUpAlgin, UniformScaleUnit } from "@kcdesign/data";
 
 export class LockMouse extends TransformHandler {
     private transType: 'scaling' | 'translating' | 'rotating' = 'translating';

@@ -1,12 +1,8 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import {
-    ColVector3D,
-    CtrlElementType, makeShapeTransform2By1,
-    ShapeView,
-} from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, watch } from 'vue';
-import { ClientXY, SelectionTheme, XY } from '@/context/selection';
+import { ColVector3D, CtrlElementType, ShapeView, makeShapeTransform2By1 } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { SelectionTheme, XY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
 import { ScaleHandler } from "@/transform/scale";
@@ -37,9 +33,12 @@ const emits = defineEmits<Emits>();
 
 const data: {
     paths: Bar[],
-} = reactive({ paths: [] });
-const { paths } = data;
-let startPosition: ClientXY = { x: 0, y: 0 };
+    assistPaths: Bar[]
+} = reactive({ paths: [], assistPaths: [] });
+const { paths, assistPaths } = data;
+
+const assist = ref<boolean>(false);
+
 let isDragging = false;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 
@@ -57,18 +56,27 @@ let scaler: ScaleHandler | undefined = undefined;
 let downXY: XY = { x: 0, y: 0 };
 
 function update() {
-    update_dot_path();
-}
-
-function update_dot_path() {
     paths.length = 0;
+    assistPaths.length = 0;
 
     const apex = getVectors();
     apex.push(apex[0]);
-
     for (let i = 0; i < apex.length - 1; i++) {
         const path = get_bar_path(apex[i], apex[i + 1]);
         paths.push({ path, type: types[i] });
+    }
+
+    const height = Math.hypot(apex[0].x - apex[3].x, apex[0].y - apex[3].y);
+    const width = Math.hypot(apex[0].x - apex[1].x, apex[0].y - apex[1].y);
+
+    assist.value = !(width < 24 || height < 24);
+    if (!assist.value) {
+        const apexMini = getVectorsForMini();
+        apexMini.push(apexMini[0]);
+        for (let i = 0; i < apexMini.length - 1; i++) {
+            const path = get_bar_path(apexMini[i], apexMini[i + 1]);
+            assistPaths.push({ path, type: types[i] });
+        }
     }
 }
 
@@ -98,6 +106,34 @@ function getVectors() {
     return [vecLT, vecRT, vecRB, vecLB];
 }
 
+function getVectorsForMini() {
+    const shape = props.shape;
+
+    const { x, y, width, height } = shape.frame;
+
+    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
+    const fromRoot = shape.transform2FromRoot;
+
+    const fromClient = fromRoot.addTransform(clientMatrix);
+
+    const { col0: v1, col1: v2 } = fromClient.transform([ColVector3D.FromXY(0, 1), ColVector3D.FromXY(0, 2)]);
+    const diff = 2.5 / Math.hypot(v2.x - v1.x, v2.y - v1.y); // 2.5: Assist2 / 2;
+
+    const {
+        col0: vecLT,
+        col1: vecRT,
+        col2: vecRB,
+        col3: vecLB
+    } = fromClient.transform([
+        ColVector3D.FromXY(x - diff, y - diff),
+        ColVector3D.FromXY(x + width + diff, y - diff),
+        ColVector3D.FromXY(x + width + diff, y + height + diff),
+        ColVector3D.FromXY(x - diff, y + height + diff),
+    ]);
+
+    return [vecLT, vecRT, vecRB, vecLB];
+}
+
 function get_bar_path(s: {
     x: number,
     y: number
@@ -110,9 +146,7 @@ function get_bar_path(s: {
 
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0 || scaler) {
-        return;
-    }
+    if (event.button !== 0 || scaler) return;
 
     event.stopPropagation();
 
@@ -233,8 +267,16 @@ onUnmounted(() => {
     @mouseenter="() => bar_mouseenter(b.type)"
     @mouseleave="bar_mouseleave"
 >
+    <path v-if="assist" :d="b.path" class="assist-path"/>
     <path :d="b.path" class="main-path" :stroke="theme"/>
-    <path :d="b.path" class="assist-path"/>
+</g>
+<g v-if="!assist">
+    <path v-for="(b, i) in assistPaths"
+          class="assist-path-2"
+          :key="i"
+          @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+          @mouseenter="() => bar_mouseenter(b.type)"
+          @mouseleave="bar_mouseleave" :d="b.path"/>
 </g>
 </template>
 <style lang='scss' scoped>
@@ -246,9 +288,13 @@ onUnmounted(() => {
     fill: none;
     stroke: transparent;
     stroke-width: 10px;
+    //stroke: rgba(0, 0, 255, 0.6);
 }
 
-.dash {
-    stroke-dasharray: 2 2;
+.assist-path-2 {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 5px;
+    //stroke: rgba(255, 0, 0, 0.3);
 }
 </style>

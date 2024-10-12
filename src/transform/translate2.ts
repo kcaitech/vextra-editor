@@ -1,12 +1,9 @@
 import { TransformHandler } from "@/transform/handler";
 import {
-    adapt2Shape,
     ArtboradView,
     AutoLayout,
     BorderPosition,
     ColVector3D,
-    layoutShapesOrder,
-    makeShapeTransform1By2,
     Matrix,
     MigrateItem,
     PageView,
@@ -19,7 +16,10 @@ import {
     Transform,
     TransformRaw,
     TranslateUnit,
-    Transporter
+    Transporter,
+    adapt2Shape,
+    layoutShapesOrder,
+    makeShapeTransform1By2,
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -383,8 +383,7 @@ class SelModel {
 
             for (const point of points) {
                 if (point.x < left) left = point.x;
-                else if (point.y > right) right = point.x;
-
+                else if (point.x > right) right = point.x;
                 if (point.y < top) top = point.y;
                 else if (point.y > bottom) bottom = point.y;
             }
@@ -418,15 +417,15 @@ class SelModel {
     }
 
     fix() {
-        const transport = this.translate;
-        const living = transport.living;
+        const translate = this.translate;
+        const living = translate.living;
         const originSel = this.originSelBox;
         const livingSel = this.livingSelBox;
 
         let fixedX = false;
         let fixedY = false;
 
-        if (transport.shiftStatus) {
+        if (translate.shiftStatus) {
             const fixed = this.fixed;
             const dx = Math.abs(living.x - fixed.x);
             const dy = Math.abs(living.y - fixed.y);
@@ -492,26 +491,9 @@ class SelModel {
 
         if (assistXWork) {
             assist.multi_line_x = [
-                {
-                    x: l,
-                    pre: [
-                        { x: l, y: t },
-                        { x: l, y: b }
-                    ]
-                },
-                {
-                    x: r,
-                    pre: [
-                        { x: r, y: t },
-                        { x: r, y: b }
-                    ]
-                },
-                {
-                    x: cx,
-                    pre: [
-                        { x: cx, y: cy }
-                    ]
-                }
+                { x: l, pre: [{ x: l, y: t }, { x: l, y: b }] },
+                { x: r, pre: [{ x: r, y: t }, { x: r, y: b }] },
+                { x: cx, pre: [{ x: cx, y: cy }] }
             ]
             if (assistResult.sparkX && fixedTarget) {
                 // 高亮参考线
@@ -548,27 +530,9 @@ class SelModel {
 
         if (assistYWork) {
             assist.multi_line_y = [
-                {
-                    y: t,
-                    pre: [
-                        { x: l, y: t },
-                        { x: r, y: t }
-                    ]
-                },
-                {
-                    y: b,
-                    pre: [
-                        { x: l, y: b },
-                        { x: r, y: b }
-
-                    ]
-                },
-                {
-                    y: cy,
-                    pre: [
-                        { x: cx, y: cy }
-                    ]
-                }
+                { y: t, pre: [{ x: l, y: t }, { x: r, y: t }] },
+                { y: b, pre: [{ x: l, y: b }, { x: r, y: b }] },
+                { y: cy, pre: [{ x: cx, y: cy }] }
             ]
             if (assistResult.sparkY && fixedTarget) {
                 // 高亮参考线
@@ -576,11 +540,9 @@ class SelModel {
                 const lines = assist.m_guides_y.filter(i => boxYs.has(i.offsetRoot));
                 const paths = assist.highlight_guide_y;
                 paths.length = 0;
-
                 if (fixedTarget.type === ShapeType.Page) {
                     const matrix = this.context.workspace.matrix;
                     const width = this.context.workspace.root.width;
-
                     for (let i = 0; i < lines.length; i++) {
                         const y = matrix.computeCoord2(0, lines[i].offsetFix).y;
                         paths.push(`M0 ${y} L${width} ${y}`);
@@ -589,7 +551,6 @@ class SelModel {
                     const matrix = fixedTarget.matrix2Root();
                     matrix.multiAtLeft(this.context.workspace.matrix);
                     const width = fixedTarget.frame.width;
-
                     for (let i = 0; i < lines.length; i++) {
                         const offset = lines[i].offsetFix;
                         const start = matrix.computeCoord2(0, offset);

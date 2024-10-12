@@ -20,6 +20,8 @@ interface Emits {
     (e: "dragend"): void;
 
     (e: "wheel", event: WheelEvent): void;
+
+    (e: "keydown", event: KeyboardEvent, value: string | number): void;
 }
 
 const props = defineProps<Props>();
@@ -111,7 +113,8 @@ function wheel(event: WheelEvent) {
 <template>
     <div :class="{ 'md-number-input': true, disabled, active }" @wheel="wheel">
         <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown="down" />
-        <input :disabled="tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur" @focus="foucs" />
+        <input :disabled="tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur"
+            @focus="foucs" @keydown="e => emits('keydown', e, value)" />
     </div>
 </template>
 
@@ -128,7 +131,7 @@ function wheel(event: WheelEvent) {
     background-color: var(--input-background);
     border-radius: var(--default-radius);
 
-    > svg {
+    >svg {
         flex: 0 0 12px;
         height: 12px;
         display: block;
@@ -140,7 +143,7 @@ function wheel(event: WheelEvent) {
         cursor: auto;
     }
 
-    > input {
+    >input {
         flex: 1;
         width: 100%;
         border: none;

@@ -1,7 +1,7 @@
 import {
     adapt2Shape,
     AsyncCreator,
-    AsyncTransfer, Blur,
+    Blur,
     ColVector3D,
     ContactShape,
     CurvePoint,
@@ -13,7 +13,7 @@ import {
     import_shape_from_clipboard,
     import_text,
     makeShapeTransform1By2,
-    makeShapeTransform2By1, Matrix,
+    makeShapeTransform2By1, Matrix, MossError,
     Page,
     PathShape,
     Shape,
@@ -25,9 +25,7 @@ import {
     TextShape,
     TextShapeEditor,
     Transform,
-    transform_data,
-    TransformRaw,
-    Transporter,
+    TransformRaw
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
@@ -61,7 +59,7 @@ class ExfContext {
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
 export const identity = 'design.moss';
 export const paras = 'design.moss/paras'; // 文字段落
-export const properties = 'design.moss/properties'; // 文字段落
+export const properties = 'design.moss/properties'; // 图层属性
 
 export class Clipboard {
     context: Context;
@@ -799,21 +797,13 @@ export class Clipboard {
     async replace() {
         try {
             const src = this.context.selection.selectedShapes;
-            if (!src.length) {
-                throw new Error('null data');
-            }
 
-            if (!navigator.clipboard.read) {
-                return this.replace_sync(src);
-            }
+            if (!navigator.clipboard.read) return this.replace_sync(src);
+
             const data = await navigator.clipboard.read();
-            if (!(data && data.length)) {
-                throw new Error('invalid data');
-            }
+            if (!(data && data.length)) throw new Error('invalid data');
             const is_inner_shape = data[0].types.length === 1 && data[0].types[0] === 'text/html';
-            if (!is_inner_shape) {
-                throw new Error('external data');
-            }
+            if (!is_inner_shape) throw new MossError('external data');
             clipboard_text_html_replace(this.context, data[0], src);
             return true;
         } catch (error) {
@@ -1100,16 +1090,13 @@ async function get_html_from_datatransferitem(data: any) {
 function replace_action(context: Context, text_html: any, src: ShapeView[]) {
     text_html = decode_html(text_html);
 
-    if (!(text_html && typeof text_html === 'string')) {
-        throw new Error('read failure');
-    }
+    if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
 
     const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
     if (!is_shape) throw new Error('no shapes');
 
-    const page = context.selection.selectedPage;
+    const page = context.selection.selectedPage!;
 
-    if (!page) return;
     const source = JSON.parse(text_html.split(identity)[1]);
 
     const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
@@ -1168,13 +1155,10 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
     if (navigator.clipboard && navigator.clipboard.read) {
         const type = data.types[0];
         const val = await data.getType(type);
-        // image_reader(context, val, type, t, _xy);
         const loader = new ImageLoader(context);
         loader.insertImageByPackages([val] as unknown as FileList, _xy);
     } else {
-        // const type = data[0].type;
         const val = data[0].getAsFile();
-        // image_reader(context, val, type, t, _xy);
         const loader = new ImageLoader(context);
         loader.insertImageByPackages([val] as unknown as FileList, _xy);
     }
@@ -1369,64 +1353,6 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
     context.tool.setAction(Action.AutoV);
     workspace.creating(false);
 }
-
-// 不经过剪切板，直接复制(Shape[])
-// export async function paster_short(context: Context, shapes: ShapeView[], editor: Transporter | AsyncTransfer): Promise<ShapeView[]> {
-//     const pre_shapes: Shape[] = [];
-//     const actions: { parent: GroupShape, index: number }[] = [];
-//
-//     for (let i = 0, len = shapes.length; i < len; i++) {
-//         const s = shapes[i];
-//         let p = s.parent!;
-//
-//         const childs = p.childs;
-//         for (let j = 0, len2 = childs.length; j < len2; j++) {
-//             if (s.id === childs[j].id) {
-//                 pre_shapes.push(adapt2Shape(s));
-//                 actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
-//                 break;
-//             }
-//         }
-//     }
-//
-//     const page = context.selection.selectedPage;
-//     if (!page) {
-//         return [];
-//     }
-//     const new_source = transform_data(context.data, page.data, pre_shapes);
-//
-//     let result: Shape[] = [];
-//
-//     if (new_source.length !== actions.length) {
-//         return [];
-//     }
-//
-//     const _r = editor.shortPaste(new_source, actions);
-//     if (_r && _r.length) {
-//         result = _r;
-//     }
-//
-//     if (!result.length) {
-//         return [];
-//     }
-//
-//     return new Promise<ShapeView[]>((resolve, reject) => {
-//         if (!page) {
-//             resolve([]);
-//             return;
-//         }
-//         context.nextTick(page, () => {
-//             const selects: ShapeView[] = [];
-//             result.forEach((s) => {
-//                 const v = page.shapes.get(s.id);
-//                 if (v) selects.push(v);
-//             })
-//             context.selection.rangeSelectShape(selects);
-//             context.assist.collect();
-//             resolve(selects);
-//         })
-//     })
-// }
 
 /***
  *

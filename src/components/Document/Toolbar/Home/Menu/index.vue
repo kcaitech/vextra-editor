@@ -30,6 +30,12 @@ function showMenu(e: MouseEvent) {
         popover.value.style.top = el.offsetHeight + 6 + 'px';
     })
     document.addEventListener('click', onMenuBlur);
+    props.context.escstack.save('menu-items',()=>{
+        const achieve = popoverVisible.value;
+        popoverVisible.value = false;
+        document.removeEventListener('click', onMenuBlur);
+        return achieve;
+    })
 }
 
 
@@ -59,7 +65,7 @@ function close() {
 
 </script>
 <template>
-    <div class="icon" @click="showMenu" ref="trigger">
+    <div class="icon" :class="{ active: popoverVisible }" @click="showMenu" ref="trigger">
         <svg-icon icon-class="menu"></svg-icon>
     </div>
     <div ref="popover" class="popover-f" v-if="popoverVisible">
@@ -67,6 +73,10 @@ function close() {
     </div>
 </template>
 <style scoped lang="scss">
+.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
 .icon {
     width: 32px;
     height: 32px;

@@ -18,12 +18,9 @@ import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
 import {
-    adapt2Shape,
-    Artboard,
     ArtboradView,
     ShapeType,
     ShapeView,
-    SymbolRefShape,
     SymbolRefView,
     TableCellType,
     TableCellView,
@@ -36,6 +33,7 @@ import Layers from './Layers.vue';
 import TableMenu from './TableMenu/TableMenu.vue';
 import { useMask } from "@/components/Document/Creator/execute";
 import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
+import { autoLayoutFn, unAutoLayoutFn } from '@/utils/auto_layout';
 
 interface Props {
     context: Context;
@@ -347,32 +345,12 @@ function component() {
 }
 
 const autoLayout = () => {
-    const selectShapes = props.context.selection.selectedShapes;
-    let shapes
-    const page = props.context.selection.selectedPage;
-    if (!page) return;
-    const bro = Array.from(page.shapes.values());
-    const editor = props.context.editor4Page(page);
-    const name = getName(ShapeType.Artboard, bro || [], t);
-    if (selectShapes.length > 1) {
-        shapes = filter_for_group1(selectShapes);
-        shapes = compare_layer_3(shapes);
-    } else {
-        shapes = selectShapes[0].childs;
-    }
-    if (selectShapes.length > 1) {
-        editor.create_autolayout_artboard(shapes, name);
-    } else {
-        const editor = props.context.editor4Shape(selectShapes[0]);
-        editor.addAutoLayout();
-    }
+    autoLayoutFn(props.context, t);
     emits('close');
 }
 
 const unAutoLayout = () => {
-    const selectShapes = props.context.selection.selectedShapes;
-    const editor = props.context.editor4Shape(selectShapes[0]);
-    editor.deleteAutoLayout();
+    unAutoLayoutFn(props.context);
     emits('close');
 }
 
@@ -505,7 +483,7 @@ onUnmounted(() => {
         <div v-if="items.has(MenuItemType.Layers)" class="menu-item"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <svg-icon icon-class="down" />
+            <svg-icon icon-class="down" style="transform: rotate(-90deg)"/>
             <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers"
                 :style="{ 'max-height': layersHeight + 'px' }">
                 <Layers @close="emits('close')" :layers="props.layers" :context="props.context"></Layers>
@@ -524,7 +502,7 @@ onUnmounted(() => {
         <div v-if="items.has(MenuItemType.CopyAs)" class="menu-item"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.CopyAs)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.copyAs') }}</span>
-            <svg-icon icon-class="down" />
+            <svg-icon icon-class="down" style="transform: rotate(-90deg)"/>
             <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.CopyAs">
                 <div class="sub-item" @click="copyAsPNG">
                     <span>{{ t('clipboard.copyAsPNG') }}</span>
@@ -680,14 +658,14 @@ onUnmounted(() => {
         </div>
         <div v-if="items.has(MenuItemType.Component) || items.has(MenuItemType.UnAutoLayout) || items.has(MenuItemType.AutoLayout)"
             style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
-        <!-- <div v-if="items.has(MenuItemType.UnAutoLayout)" @click="autoLayout" class="menu-item">
+        <div v-if="items.has(MenuItemType.UnAutoLayout)" @click="unAutoLayout" class="menu-item">
             <span>{{ t('autolayout.remove_auto_layout') }}</span>
             <Key code="Shift Alt A"></Key>
         </div>
-        <div v-if="items.has(MenuItemType.AutoLayout)" @click="unAutoLayout" class="menu-item">
+        <div v-if="items.has(MenuItemType.AutoLayout)" @click="autoLayout" class="menu-item">
             <span>{{ t('autolayout.add_auto_layout') }}</span>
             <Key code="Shift A"></Key>
-        </div> -->
+        </div>
         <div v-if="items.has(MenuItemType.Component)" @click="component" class="menu-item">
             <span>{{ t('system.create_component') }}</span>
             <Key code="Ctrl Alt K"></Key>
