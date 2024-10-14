@@ -892,7 +892,7 @@ function boundingBox(shape: Shape, includedBorder: boolean): ShapeFrame {
 }
 
 interface Grid {
-    view: ShapeView;
+    view: ShapeView | undefined;
     position: -1 | 1; // -1 在前 1在后
     start: number;
     end: number;
@@ -989,35 +989,44 @@ class Inserter {
 
             rows.push({ grids, start, end });
         }
-        rows[rows.length - 1].end = Infinity;
+        if (rows.length) rows[rows.length - 1].end = Infinity;
         this.rows = rows;
     }
 
     private __render(grid: Grid) {
         this.placement = grid;
-
         const layout = this.layout!;
-        const { view, position } = grid;
         const isHor = (layout.stackMode || StackMode.Horizontal) === StackMode.Horizontal;
         const gap = (isHor ? layout.stackSpacing : layout.stackCounterSpacing) / 2;
-        const frame = view.frame;
-        let len = isHor ? frame.height : frame.width;
-        const cx = (frame.x + frame.width) / 2;
-        const cy = (frame.y + frame.height) / 2;
         let start;
-        if (position > 0) {
-            if (isHor) start = { x: frame.x + frame.width + gap, y: cy - len / 2 };
-            else start = { x: cx - len / 2, y: frame.y + frame.height + gap };
+        let end;
+        if (grid.view === undefined) {
+            const x = layout.stackHorizontalPadding;
+            const y = layout.stackVerticalPadding;
+            const matrix = this.layoutEnv!.matrix2Root();
+            matrix.multiAtLeft(this.context.workspace.matrix);
+            start = matrix.computeCoord3({x, y});
+            end = matrix.computeCoord3(isHor ? {x, y: y + 100} : {x: x + 100, y});
         } else {
-            if (isHor) start = { x: frame.x - gap, y: cy - len / 2 };
-            else start = { x: cx - len / 2, y: frame.y - gap };
+            const {view, position} = grid;
+            const frame = view.frame;
+            let len = isHor ? frame.height : frame.width;
+            const cx = (frame.x + frame.width) / 2;
+            const cy = (frame.y + frame.height) / 2;
+            if (position > 0) {
+                if (isHor) start = {x: frame.x + frame.width + gap, y: cy - len / 2};
+                else start = {x: cx - len / 2, y: frame.y + frame.height + gap};
+            } else {
+                if (isHor) start = {x: frame.x - gap, y: cy - len / 2};
+                else start = {x: cx - len / 2, y: frame.y - gap};
+            }
+            end = isHor ? {x: start.x, y: start.y + len} : {x: start.x + len, y: start.y}
+            const matrix = view.matrix2Root();
+            matrix.multiAtLeft(this.context.workspace.matrix);
+            start = matrix.computeCoord3(start);
+            end = matrix.computeCoord3(end);
         }
-        let end = isHor ? { x: start.x, y: start.y + len } : { x: start.x + len, y: start.y };
-        const matrix = view.matrix2Root();
-        matrix.multiAtLeft(this.context.workspace.matrix);
-        start = matrix.computeCoord3(start);
-        end = matrix.computeCoord3(end);
-        const path = `M ${start.x} ${start.y} L${end.x} ${end.y}`;
+        const path = `M ${start!.x} ${start!.y} L${end!.x} ${end!.y}`;
         this.context.selection.notify(Selection.PRE_INSERT, path);
     }
 
@@ -1029,6 +1038,9 @@ class Inserter {
         const mode = this.layout!.stackMode || StackMode.Horizontal;
 
         const rows = this.rows;
+        if (!rows.length) {
+            return this.__render({view: undefined, end: 0, start: 0, position: 1});
+        }
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
             if (y > row.end) continue;
