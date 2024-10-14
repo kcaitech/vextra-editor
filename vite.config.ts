@@ -58,5 +58,12 @@ export default defineConfig({
             '@': fileURLToPath(new URL('./src', import.meta.url)),
             '@pal': fileURLToPath(new URL('./src/PAL/browser', import.meta.url))
         }
+    },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                api: 'modern-compiler' // or "modern"
+            }
+        }
     }
 })
