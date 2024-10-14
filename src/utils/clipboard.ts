@@ -1486,7 +1486,7 @@ function sourceBounding(source: Shape[]) {
         const shape = source[i];
         const __transform = makeShapeTransform2By1(shape.transform);
         let width, height;
-        if (shape.type === ShapeType.Group) {
+        if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
             const children = (shape as GroupShape).childs;
             const __box = sourceBounding(children);
             width = __box.right - __box.left;
