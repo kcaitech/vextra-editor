@@ -803,7 +803,7 @@ function keydownHorTidyup(e: KeyboardEvent, val: string | number) {
         const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
         horSpace.value = Math.max(hor, -minHor);
         const algin = props.context.selection.tidyUpAlgin;
-        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir,algin)
+        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir, algin)
     }
     e.preventDefault();
 }
@@ -841,7 +841,7 @@ function keydownVerTidyup(e: KeyboardEvent, val: string | number) {
         const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
         verSpace.value = Math.max(ver, -minVer);
         const algin = props.context.selection.tidyUpAlgin;
-        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir,algin)
+        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, algin)
     }
     e.preventDefault();
 }
@@ -870,7 +870,7 @@ const _whetherTidyUp = () => {
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
     console.log(Info, 'inf111111111111o');
-    
+
     if (!Info) {
         props.context.selection.whetherTidyUp(true, false, 'center');
         return;
@@ -1053,7 +1053,7 @@ onUnmounted(() => {
                 :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
                 @dragend="dragend" @keydown="keydownVerTidyup">
             </MdNumberInput>
-            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? 0.4 : 1 }"
+            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? 1 : 0.4 }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
                     <svg-icon icon-class="tidy-up" style="outline: none;" />
