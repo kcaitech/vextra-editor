@@ -184,6 +184,7 @@ function windowBlur() {
 
 <template>
 <div
+    v-if="!data.hidden"
     class="container-name"
     data-area="controller"
     @mouseenter="hoverShape"
