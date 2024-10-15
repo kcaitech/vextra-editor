@@ -242,7 +242,6 @@ export class TitleRenderer {
     }
 
     fullUpdate() {
-        console.log('--fullUpdate--');
         this.m_title_list.length = 0;
 
         this.underRootContainerMap.forEach((shape) => {
