@@ -58,7 +58,7 @@ function init_matrix() {
 }
 
 function down_background_path(segment: number, index: number) {
-    console.log('即将进行裁剪', `${segment},${index}`);
+    // console.log('即将进行裁剪', `${segment},${index}`);
     new PathEditor(props.context).clip(segment, index);
 }
 
