@@ -31,6 +31,7 @@ import { compare_layer_3 } from "@/utils/group_ungroup";
 import { isShapeOut } from "@/utils/assist";
 import { StyleManager } from "@/transform/style";
 import { WorkSpace } from "@/context/workspace";
+import { Navi } from "@/context/navigate";
 
 enum TranslateMode {
     Linear = 'linear',
@@ -1339,6 +1340,10 @@ export class Translate2 extends TransformHandler {
         selection.setLabelLivingGroup([]);
         selection.setLabelFixedGroup([]);
         selection.setShowInterval(false);
+
+        if (this.altStatus) this.context.nextTick(this.page, () => {
+            this.context.navi.notify(Navi.SHAPELIST_UPDATE);
+        })
 
         super.fulfil();
     }

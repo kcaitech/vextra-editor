@@ -844,6 +844,7 @@ keydownHandler['Quote'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['AltLeft'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
+    if (event.repeat) return;
     context.selection.setShowInterval(true);
 }
 keydownHandler['AltRight'] = function (event: KeyboardEvent, context: Context) {
