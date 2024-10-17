@@ -437,7 +437,7 @@ export function drop(e: DragEvent, context: Context) {
     const data = e?.dataTransfer?.files as any;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) return;
     const loader = new ImageLoader(context);
-    loader.insertImageByPackages(data);
+    loader.insertImageByPackages(data, true);
 }
 
 export function SVGReader(context: Context, file: File, xy?: XY) {

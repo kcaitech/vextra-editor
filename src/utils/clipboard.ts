@@ -43,7 +43,8 @@ import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/da
 import { flattenShapes } from "@/utils/cutout";
 import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
 import { ImageLoader } from "@/utils/imageLoader";
-import { SVGParseResult, UploadAssets } from "@kcdesign/data";
+import { UploadAssets } from "@kcdesign/data";
+import { StyleManager } from "@/transform/style";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -426,13 +427,9 @@ export class Clipboard {
 
     async paste_async(t: Function, xy?: PageXY) {
         try {
-            if (!navigator.clipboard?.read) {
-                throw new Error('Not support.');
-            }
+            if (!navigator.clipboard?.read) throw new Error('Not support.');
             const data = await navigator.clipboard.read();
-            if (!data) {
-                throw new Error('No valid data on clipboard.');
-            }
+            if (!data) throw new Error('No valid data on clipboard.');
             this.paste_clipboard_items(data, t, xy);
             return true;
         } catch (error) {
@@ -927,16 +924,12 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
         // 解析data
         const val = await data.getType('text/html');
 
-        if (!val) {
-            throw new Error('invalid value');
-        }
+        if (!val) throw new Error('invalid value');
 
         let text_html = await val.text();
         text_html = decode_html(text_html);
 
-        if (!(text_html && typeof text_html === 'string')) {
-            throw new Error('read failure');
-        }
+        if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
 
         handle_text_html_string(context, text_html, xy);
     } catch (error) {
@@ -1026,9 +1019,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
             const __res = editor.pasteShapes3(actions);
 
-            if (__res) {
-                insert_result = { shapes: __res };
-            }
+            if (__res) insert_result = { shapes: __res };
         } else {
             const bounding = sourceBounding(source);
             const insert_env = get_env_by_xy(context, { x: bounding.left, y: bounding.top });
@@ -1037,30 +1028,14 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
             const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
 
-            if (!shapes.length) {
-                throw new Error('invalid source: !shapes.length');
-            }
+            if (!shapes.length) throw new Error('invalid source: !shapes.length');
 
             insert_result = editor.pasteShapes1(adapt2Shape(insert_env) as GroupShape, shapes);
 
             if (!insert_result) return false;
         }
 
-        // 5. 根据插入结果构建新的选区
-        context.nextTick(page, () => {
-            if (insert_result) {
-                const selects: ShapeView[] = [];
-
-                insert_result.shapes.forEach((s) => {
-                    const v = page.shapes.get(s.id);
-                    if (v) selects.push(v);
-                })
-
-                selects.length && context.selection.rangeSelectShape(selects);
-            }
-        });
-
-        // 6. 上传图层内嵌的静态资源到服务端
+        // 5. 上传图层内嵌的静态资源到服务端
         if (insert_result && insert_result.shapes) {
             const keys = Object.keys(medias);
             const assets: UploadAssets[] = [];
@@ -1072,6 +1047,19 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             const loader = new ImageLoader(context);
             loader.upload(uploadPackages);
         }
+
+        // 6. 根据插入结果构建新的选区
+        context.nextTick(page, () => {
+            if (insert_result) {
+                const selects: ShapeView[] = [];
+                insert_result.shapes.forEach((s) => {
+                    const v = page.shapes.get(s.id);
+                    if (v) selects.push(v);
+                })
+                selects.length && context.selection.rangeSelectShape(selects);
+                is_exist_selection_envs && scrollTo(context, selects);
+            }
+        });
     } else {
         console.log('handle_text_html_string:', context.workspace.t('clipboard.invalid_data'));
         return false;
@@ -1156,11 +1144,11 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
         const type = data.types[0];
         const val = await data.getType(type);
         const loader = new ImageLoader(context);
-        loader.insertImageByPackages([val] as unknown as FileList, _xy);
+        loader.insertImageByPackages([val] as unknown as FileList, true, _xy);
     } else {
         const val = data[0].getAsFile();
         const loader = new ImageLoader(context);
-        loader.insertImageByPackages([val] as unknown as FileList, _xy);
+        loader.insertImageByPackages([val] as unknown as FileList, true, _xy);
     }
 }
 
@@ -1300,7 +1288,10 @@ export function adjust_content_xy(context: Context, m: { width: number, height: 
 /**
  * 将图片插入文档
  */
-export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media, origin: { width: number, height: number }) {
+export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media, origin: {
+    width: number,
+    height: number
+}) {
     const selection = context.selection;
     const workspace = context.workspace;
     const page = selection.selectedPage;
@@ -1495,7 +1486,7 @@ function sourceBounding(source: Shape[]) {
         const shape = source[i];
         const __transform = makeShapeTransform2By1(shape.transform);
         let width, height;
-        if (shape.type === ShapeType.Group) {
+        if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
             const children = (shape as GroupShape).childs;
             const __box = sourceBounding(children);
             width = __box.right - __box.left;
@@ -1702,4 +1693,49 @@ function fixToXY(context: Context, source: Shape[], xy: XY) {
     }
 
     return env;
+}
+
+function scrollTo(context: Context, views: ShapeView[], options?: { center?: boolean, smooth?: boolean }) {
+    const center = options?.center === undefined ? true : options.center;
+    const smooth = options?.smooth === undefined ? true : options.smooth;
+
+    const matrix = context.workspace.matrix;
+
+    let left = Infinity;
+    let right = -Infinity;
+    let top = Infinity;
+    let bottom = -Infinity;
+    for (const view of views) {
+        const matrix2Client = view.matrix2Root();
+        matrix2Client.multiAtLeft(matrix);
+        const { x, y, width, height } = view.frame;
+        const points = [{ x, y }, { x: x + width, y }, { x: x + width, y: height }, { x, y: height + y }]
+            .map(p => matrix2Client.computeCoord3(p));
+        const box = XYsBounding(points);
+        if (box.left < left) left = box.left;
+        if (box.right > right) right = box.right;
+        if (box.top < top) top = box.top;
+        if (box.bottom > bottom) bottom = box.bottom;
+    }
+
+    const height = bottom - top;
+    const width = right - left;
+
+    const root = context.workspace.root;
+
+    const needTrans = left > root.right || top > root.bottom || right < root.x || bottom < root.y;
+    const needScale = width > root.width || height > root.height;
+
+    if (needTrans) {
+        if (center) {
+            const boxCenter = { x: (left + right) / 2, y: (top + bottom) / 2 };
+            const rootCenter = root.center;
+            const dx = boxCenter.x - rootCenter.x;
+            const dy = boxCenter.y - rootCenter.y;
+            new StyleManager(context).smoothScroll(() => {
+                matrix.trans(-dx, -dy);
+                context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+            });
+        }
+    }
 }

@@ -16,7 +16,8 @@ import { MossError } from "@/basic/error";
 export enum ActionMode {
     View = 'view',
     Flex = 'flex',
-    Edit = 'edit'
+    Edit = 'edit',
+    Text = 'text'
 }
 
 export class Direction {
@@ -77,9 +78,10 @@ export class Direction {
         this.mode = ActionMode.Flex;
 
         if (context.workspace.is_path_edit_mode) return this.mode = ActionMode.Edit;
+        else if (context.workspace.isEditing) return this.mode = ActionMode.Text;
         else for (const view of context.selection.selectedShapes) {
-            if (!(view.parent as ArtboradView).autoLayout) return this.mode = ActionMode.View;
-        }
+                if (!(view.parent as ArtboradView).autoLayout) return this.mode = ActionMode.View;
+            }
     }
 
     private __keydown(event: KeyboardEvent) {
@@ -160,11 +162,11 @@ export class Direction {
                     const shape = rows[y][x];
                     const o = count++;
                     order.set(shape.id, o);
-                    row.push({shape: shape.id, order: o});
+                    row.push({ shape: shape.id, order: o });
                 }
                 grids.push(row);
             }
-            return {order, grids, shapes: rows.flat().map(i => i.id)};
+            return { order, grids, shapes: rows.flat().map(i => i.id) };
         })();
     }
 
@@ -261,7 +263,7 @@ export class Direction {
         const locate = this.__locate;
         for (const env of envs) {
             const targetMap: Map<number, string> = new Map();
-            const {order, grids, shapes} = this.__girds(env);
+            const { order, grids, shapes } = this.__girds(env);
             const sel = selection
                 .filter(i => order.get(i.id) !== undefined)
                 .sort((a, b) => order.get(a.id)! < order.get(b.id)! ? -1 : 1);
@@ -269,7 +271,7 @@ export class Direction {
             let fire = false;
             let fireTarget: Set<string> = new Set();
             for (const view of sel) {
-                const {row, column} = locate(view.id, grids)!;
+                const { row, column } = locate(view.id, grids)!;
                 if (!row) continue;
                 const upRowIndex = row - 1;
                 const upRow = grids[upRowIndex];
@@ -304,7 +306,7 @@ export class Direction {
         const locate = this.__locate;
         for (const env of envs) {
             const targetMap: Map<number, string> = new Map();
-            const {order, grids, shapes} = this.__girds(env);
+            const { order, grids, shapes } = this.__girds(env);
             const sel = selection
                 .filter(i => order.get(i.id) !== undefined)
                 .sort((a, b) => order.get(a.id)! > order.get(b.id)! ? -1 : 1);
@@ -312,7 +314,7 @@ export class Direction {
             let fire = false;
             let fireTarget: Set<string> = new Set();
             for (const view of sel) {
-                const {row, column} = locate(view.id, grids)!;
+                const { row, column } = locate(view.id, grids)!;
                 if (row === grids.length - 1) continue;
                 const downRowIndex = row + 1;
                 const downRow = grids[downRowIndex];
@@ -358,7 +360,7 @@ export class Direction {
         let index = 0;
         for (let r = 0; r < grids.length; r++)
             for (let c = 0; c < grids[r].length; c++)
-                if (grids[r][c].shape === id) return {column: c, row: r, index: index++};
+                if (grids[r][c].shape === id) return { column: c, row: r, index: index++ };
     }
 
     private __edit(event: KeyboardEvent) {

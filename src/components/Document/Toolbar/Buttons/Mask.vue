@@ -2,7 +2,6 @@
 import ToolButton from './ToolButton.vue';
 import { useI18n } from 'vue-i18n'
 import { Context } from '@/context';
-import { debounce } from "lodash";
 import { onMounted, onUnmounted, ref } from "vue";
 import { Selection } from "@/context/selection";
 import { useMask } from "@/components/Document/Creator/execute";
@@ -18,11 +17,9 @@ function mask() {
     useMask(props.context);
 }
 
-const statusUpdater = debounce((t: any) => {
-    if (t === Selection.CHANGE_SHAPE) {
-        disabled.value = !props.context.selection.selectedShapes.length;
-    }
-}, 50);
+function statusUpdater(t: any) {
+    if (t === Selection.CHANGE_SHAPE) disabled.value = !props.context.selection.selectedShapes.length;
+}
 onMounted(() => {
     props.context.selection.watch(statusUpdater);
 });
