@@ -43,7 +43,7 @@ async function _open(props: DocumentProps) {
     } else if (props.source === 'file') {
         if (props.fmt === 'sketch') {
             const lzdata = new LzDataLocal(new Zip(props.file));
-            data = await importSketch(props.file.name, lzdata, repo)
+            data = await importSketch(props.file.name.replace(/.sketch$/, ''), lzdata, repo);
             cooprepo = new CoopRepository(data, repo)
         } else if (props.fmt === 'fig') {
             data = await importFigma(props.file, repo)

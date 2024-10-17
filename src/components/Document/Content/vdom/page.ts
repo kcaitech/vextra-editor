@@ -21,7 +21,6 @@ function intersect_rect(lhs: Rect, rhs: Rect): boolean {
 const frame_time = 20;
 
 export class PageDom extends (PageView) {
-
     el?: HTMLElement | SVGElement; // 不要改名，patch用到
     m_save_version: number = -1;
     m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");

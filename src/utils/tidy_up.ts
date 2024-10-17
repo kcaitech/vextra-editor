@@ -147,7 +147,7 @@ export const getSelectedWidthHeight = (context: Context, shapes: ShapeView[]) =>
 }
 
 export const whetherNeedTidyUp = (context: Context) => {
-    const selected = context.selection.selectedShapes;
+    const selected = getVisibleShapes(context.selection.selectedShapes);
     if (hiddenTidyUp(selected) || selected.length < 2) return;
     const { width, height } = getSelectedWidthHeight(context, selected);
     if (height > width) {
@@ -203,12 +203,17 @@ const checkHorTidyUp = (selected: ShapeView[], dir: boolean) => {
 }
 const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
     const shape_rows = checkTidyUpShapesOrder(selected, dir);
+    
     if (shape_rows.length === 1) {
         let rows = shape_rows[0];
         const frame = rows[0]._p_frame;
         const start_equal = rows.every(s => getDiff(frame.x, s._p_frame.x) < 1);
         const center_equal = rows.every(s => getDiff((frame.x + (frame.width / 2)), (s._p_frame.x + (s._p_frame.width / 2))) < 1);
         const end_equal = rows.every(s => getDiff((frame.x + frame.width), (s._p_frame.x + s._p_frame.width)) < 1);
+        rows.forEach(s => {
+            console.log(getDiff(frame.x, s._p_frame.x));
+            
+        })
         if (start_equal || center_equal || end_equal) {
             let gap_equal = true;
             const space = rows[1]._p_frame.y - (rows[0]._p_frame.y + rows[0]._p_frame.height);
@@ -648,4 +653,9 @@ export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
 
 const getDiff = (a: number, b: number) => {
     return Math.abs(a - b);
+}
+
+
+export const getVisibleShapes = (shapes: ShapeView[])=> {
+    return shapes.filter(s => s.isVisible);
 }
