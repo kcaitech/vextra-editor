@@ -17,14 +17,7 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-    adapt_page,
-    color2string,
-    drop,
-    init_insert_table,
-    is_drag,
-    root_scale,
-    root_trans,
-    selectShapes,
+    adapt_page, color2string, drop, init_insert_table, is_drag, root_scale, root_trans, selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import TextSelection from './Selection/TextSelection.vue';
@@ -49,20 +42,20 @@ import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
 import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
 import { autoLayoutFn } from '@/utils/auto_layout';
-interface Props {
-    context: Context
-    page: PageView
-}
+import { Search } from "@/picker/search";
 
-const emit = defineEmits<{
+const emits = defineEmits<{
     (e: 'closeLoading'): void;
     (e: 'contentVisible'): void;
 }>();
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const t = useI18n().t;
-const props = defineProps<Props>();
-const workspace = computed(() => props.context.workspace);
+const props = defineProps<{
+    context: Context
+    page: PageView
+}>();
+const workspace = props.context.workspace;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
@@ -92,7 +85,8 @@ const color_edit_mode = ref<boolean>(false);
 const image_tile_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
 let firstTime = false;
-const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 })
+const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 });
+const searcher = new Search(props.context);
 
 function _updateRoot(context: Context, element: HTMLElement) {
     const { x, y, right, bottom, width, height } = element.getBoundingClientRect();
@@ -123,12 +117,12 @@ function rootRegister(mount: boolean) {
         const temp = v4().split('-');
         rootId.value = temp[temp.length - 1] || 'content';
     }
-    workspace.value.setRootId(rootId.value);
+    workspace.setRootId(rootId.value);
 }
 
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
     const { clientX, clientY } = e;
-    const { x, y } = workspace.value.root;
+    const { x, y } = workspace.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x;
     mousedownOnPageXY.y = xy.y; //页面坐标系上的点
@@ -148,13 +142,13 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
         root_trans(props.context, e);
     }
 
-    workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 function onKeyDown(e: KeyboardEvent) {
     if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
     if (e.code === 'Space') {
-        if (workspace.value.select || spacePressed.value) return;
+        if (workspace.select || spacePressed.value) return;
         spacePressed.value = true;
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true);
@@ -175,7 +169,7 @@ function insertFrame() {
 }
 
 function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
-    const { x, y } = workspace.value.root;
+    const { x, y } = workspace.root;
     const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix_inverse.computeCoord2(mx - x, my - y);
     const shapes = props.context.selection.getShapesByXY(xy, auto);
@@ -306,7 +300,7 @@ function select(e: MouseEvent) {
 
 function createSelector(e: MouseEvent) {
     const { clientX, clientY, altKey } = e;
-    const { x: rx, y: ry } = workspace.value.root;
+    const { x: rx, y: ry } = workspace.root;
     const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
     const { x: mx, y: my } = { x: xy.x, y: xy.y };
     const { x: sx, y: sy } = mousedownOnPageXY;
@@ -337,7 +331,7 @@ function onMouseDown(e: MouseEvent) {
         }
         firstTime = false;
     }
-    if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
+    if (workspace.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button === 0) {
         const action = props.context.tool.action;
         if (action === Action.AddTable) return;
@@ -358,7 +352,7 @@ function onMouseDown(e: MouseEvent) {
 let timer: any = null;
 
 function onMouseMove(e: MouseEvent) {
-    if (workspace.value.controller !== 'page') return;
+    if (workspace.controller !== 'page') return;
     if (isDragging && wheel) {
         wheel.moving(e);
         clearInterval(timer);
@@ -376,7 +370,7 @@ let isDragging: boolean = false;
 let wheel: Wheel | undefined = undefined;
 
 function onMouseMove_CV(e: MouseEvent) {
-    const w = workspace.value;
+    const w = workspace;
     if (!spacePressed.value && w.controller === 'page' && !w.transforming) {
         const action = props.context.tool.action;
         if (e.buttons === 1) {
@@ -480,7 +474,7 @@ function tool_watcher(type: number) {
 
 function workspace_watcher(type?: number | string, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) {
-        matrix.reset(workspace.value.matrix);
+        matrix.reset(workspace.matrix);
     } else if (type === WorkSpace.PASTE_RIGHT) {
         props.context.workspace.clipboard.paste(t, undefined, mousedownOnPageXY);
     } else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) {
@@ -554,83 +548,15 @@ function initMatrix(cur: PageView) {
         matrixMap.set(cur.id, info);
     }
     matrix.reset(info.m.toArray());
-    workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
-
-const stopWatch = watch(() => props.page, (cur, old) => {
-    old.unwatch(page_watcher)
-    cur.watch(page_watcher)
-    let info = matrixMap.get(old.id);
-    info!.m.reset(matrix.toArray())
-    initMatrix(cur);
-    updateBackground(cur);
-})
 
 const onRenderDone = () => {
-    emit('closeLoading');
+    emits('closeLoading');
 }
 const onContentVisible = () => {
-    emit('contentVisible');
+    emits('contentVisible');
 }
-watch(() => matrix, matrix_watcher, { deep: true });
-onBeforeMount(() => {
-    props.context.user.updateUserConfig();
-});
-
-onMounted(() => {
-    props.context.selection.scoutMount(props.context);
-    props.context.workspace.watch(workspace_watcher);
-    props.context.workspace.init(t.bind(getCurrentInstance()));
-    props.context.menu.watch(menu_watcher);
-    props.context.cursor.watch(cursor_watcher);
-    props.context.cursor.init();
-    props.context.tool.watch(tool_watcher);
-    props.page.watch(page_watcher);
-    props.context.color.watch(color_watcher);
-    props.context.user.updateUserConfig();
-    rootRegister(true);
-    updateBackground();
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
-    document.addEventListener('copy', copy_watcher);
-    document.addEventListener('cut', cut_watcher);
-    document.addEventListener('paste', paster_watcher);
-    window.addEventListener('blur', windowBlur);
-    window.addEventListener('focus', windowFocus);
-
-    nextTick(() => {
-        if (!root.value) return;
-        resizeObserver.observe(root.value);
-        _updateRoot(props.context, root.value);
-        initMatrix(props.page);
-    });
-
-    const f = props.page.data.backgroundColor;
-    if (f) background_color.value = color2string(f);
-    timeSlicingTask(props.context, fontNameListZh, 'zh');
-    timeSlicingTask(props.context, fontNameListEn, 'en');
-})
-onUnmounted(() => {
-    props.context.selection.scout?.remove();
-    props.context.workspace.unwatch(workspace_watcher);
-    props.context.menu.unwatch(menu_watcher);
-    props.context.cursor.remove();
-    props.context.cursor.unwatch(cursor_watcher);
-    props.context.tool.unwatch(tool_watcher);
-
-    props.page.unwatch(page_watcher);
-    props.context.color.unwatch(color_watcher);
-    resizeObserver.disconnect();
-    document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('keyup', onKeyUp);
-    document.removeEventListener('copy', copy_watcher);
-    document.removeEventListener('cut', cut_watcher);
-    document.removeEventListener('paste', paster_watcher);
-    window.removeEventListener('blur', windowBlur);
-    window.removeEventListener('focus', windowFocus);
-    stopWatch();
-    clearInterval(timer);
-})
 
 const comps: { component: any, params?: any }[] = [];
 
@@ -775,6 +701,75 @@ comps.push(
 
 comps.push(...plugins.end);
 
+const stop1 = watch(() => props.page, (cur, old) => {
+    old.unwatch(page_watcher)
+    cur.watch(page_watcher)
+    let info = matrixMap.get(old.id);
+    info!.m.reset(matrix.toArray())
+    initMatrix(cur);
+    updateBackground(cur);
+})
+
+const stop2 = watch(() => matrix, matrix_watcher, { deep: true });
+onBeforeMount(() => {
+    props.context.user.updateUserConfig();
+});
+
+onMounted(() => {
+    props.context.selection.scoutMount(props.context);
+    props.context.workspace.watch(workspace_watcher);
+    props.context.workspace.init(t.bind(getCurrentInstance()));
+    props.context.menu.watch(menu_watcher);
+    props.context.cursor.watch(cursor_watcher);
+    props.context.cursor.init();
+    props.context.tool.watch(tool_watcher);
+    props.page.watch(page_watcher);
+    props.context.color.watch(color_watcher);
+    props.context.user.updateUserConfig();
+    rootRegister(true);
+    updateBackground();
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    document.addEventListener('copy', copy_watcher);
+    document.addEventListener('cut', cut_watcher);
+    document.addEventListener('paste', paster_watcher);
+    window.addEventListener('blur', windowBlur);
+    window.addEventListener('focus', windowFocus);
+
+    nextTick(() => {
+        if (!root.value) return;
+        resizeObserver.observe(root.value);
+        _updateRoot(props.context, root.value);
+        initMatrix(props.page);
+    });
+
+    const f = props.page.data.backgroundColor;
+    if (f) background_color.value = color2string(f);
+    timeSlicingTask(props.context, fontNameListZh, 'zh');
+    timeSlicingTask(props.context, fontNameListEn, 'en');
+})
+onUnmounted(() => {
+    props.context.selection.scout?.remove();
+    props.context.workspace.unwatch(workspace_watcher);
+    props.context.menu.unwatch(menu_watcher);
+    props.context.cursor.remove();
+    props.context.cursor.unwatch(cursor_watcher);
+    props.context.tool.unwatch(tool_watcher);
+    props.page.unwatch(page_watcher);
+    props.context.color.unwatch(color_watcher);
+    resizeObserver.disconnect();
+    document.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('keyup', onKeyUp);
+    document.removeEventListener('copy', copy_watcher);
+    document.removeEventListener('cut', cut_watcher);
+    document.removeEventListener('paste', paster_watcher);
+    window.removeEventListener('blur', windowBlur);
+    window.removeEventListener('focus', windowFocus);
+    stop1();
+    stop2();
+    clearInterval(timer);
+    searcher.destroy();
+})
 </script>
 <template>
     <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
