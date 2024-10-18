@@ -1,8 +1,14 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import {
-    ColVector3D, CtrlElementType, Matrix,
-    Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit
+    ColVector3D,
+    CtrlElementType,
+    Matrix,
+    Scaler,
+    ShapeSize,
+    ShapeView,
+    Transform,
+    UniformScaleUnit
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
@@ -37,7 +43,7 @@ export class ScaleHandler extends TransformHandler {
     private verFixedStatus: boolean = false;
     private verFixedValue: number = 0;
 
-    private uniformScaleMode: boolean;
+    private readonly uniformScaleMode: boolean;
 
     selectionTransform: Transform = new Transform();  // 选区的Transform
     selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
@@ -422,97 +428,252 @@ export class ScaleHandler extends TransformHandler {
         const ALT = this.altStatus;
         const SHIFT = this.shiftStatus || this.uniformScaleMode;
 
-        // 左
-        if (CET === CtrlElementType.RectLT         // 左上
-            || CET === CtrlElementType.RectLB      // 左下
-            || CET === CtrlElementType.RectLeft    // 左
-        ) {
-            const delta = cursorPointFromSelection.x - ltPointForSelection.x;
-            ltPointForSelection.x = cursorPointFromSelection.x;
+        // // 左
+        // if (CET === CtrlElementType.RectLT         // 左上
+        //     || CET === CtrlElementType.RectLB      // 左下
+        //     || CET === CtrlElementType.RectLeft    // 左
+        // ) {
+        //     const delta = cursorPointFromSelection.x - ltPointForSelection.x;
+        //     ltPointForSelection.x = cursorPointFromSelection.x;
+        //
+        //     if (ALT) {
+        //         rbPointForSelection.x -= delta;
+        //     }
+        //     if (SHIFT) {
+        //         if (CET === CtrlElementType.RectLeft) {
+        //             const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+        //             const dy = (selectionHeight - afterHeight) / 2;
+        //
+        //             ltPointForSelection.y += dy;
+        //             rbPointForSelection.y -= dy;
+        //         }
+        //     }
+        // }
+        //
+        // // 上
+        // if (CET === CtrlElementType.RectLT         // 左上
+        //     || CET === CtrlElementType.RectRT      // 右上
+        //     || CET === CtrlElementType.RectTop     // 上
+        // ) {
+        //     const delta = cursorPointFromSelection.y - ltPointForSelection.y;
+        //     ltPointForSelection.y = cursorPointFromSelection.y;
+        //
+        //     if (ALT) rbPointForSelection.y -= delta;
+        //
+        //     if (SHIFT) {
+        //         if (CET === CtrlElementType.RectTop) {
+        //             const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+        //             const dx = (selectionWidth - afterWidth) / 2;
+        //
+        //             ltPointForSelection.x += dx;
+        //             rbPointForSelection.x -= dx;
+        //         } else if (CET === CtrlElementType.RectLT) {
+        //             const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+        //             ltPointForSelection.y = selectionHeight - afterHeight;
+        //         }
+        //     }
+        // }
+        //
+        // // 右
+        // if (CET === CtrlElementType.RectRT         // 右上
+        //     || CET === CtrlElementType.RectRB      // 右下
+        //     || CET === CtrlElementType.RectRight   // 右
+        // ) {
+        //     const delta = cursorPointFromSelection.x - rbPointForSelection.x;
+        //     rbPointForSelection.x = cursorPointFromSelection.x;
+        //
+        //     if (ALT) ltPointForSelection.x -= delta;
+        //
+        //     if (SHIFT) {
+        //         if (CET === CtrlElementType.RectRight) {
+        //             const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+        //             const dy = (selectionHeight - afterHeight) / 2;
+        //             ltPointForSelection.y += dy;
+        //             rbPointForSelection.y -= dy;
+        //         } else if (CET === CtrlElementType.RectRT) {
+        //             const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+        //             ltPointForSelection.y = selectionHeight - afterHeight;
+        //         }
+        //     }
+        // }
+        //
+        // // 下
+        // if (CET === CtrlElementType.RectLB         // 左下
+        //     || CET === CtrlElementType.RectRB      // 右下
+        //     || CET === CtrlElementType.RectBottom  // 下
+        // ) {
+        //     const delta = cursorPointFromSelection.y - rbPointForSelection.y;
+        //     rbPointForSelection.y = cursorPointFromSelection.y;
+        //
+        //     if (ALT) ltPointForSelection.y -= delta;
+        //
+        //     if (SHIFT) {
+        //         if (CET === CtrlElementType.RectBottom) {
+        //             const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+        //             const dx = (selectionWidth - afterWidth) / 2;
+        //             ltPointForSelection.x += dx;
+        //             rbPointForSelection.x -= dx;
+        //         } else {
+        //             const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+        //             const dy = selectionHeight - afterHeight;
+        //             rbPointForSelection.y = selectionHeight - dy;
+        //         }
+        //     }
+        // }
 
-            if (ALT) {
-                rbPointForSelection.x -= delta;
-            }
-            if (SHIFT) {
-                if (CET === CtrlElementType.RectLeft) {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    const dy = (selectionHeight - afterHeight) / 2;
-
-                    ltPointForSelection.y += dy;
-                    rbPointForSelection.y -= dy;
+        switch (CET) {
+            case CtrlElementType.RectLT: {
+                const ox = ltPointForSelection.x;
+                const oy = ltPointForSelection.y;
+                const dx = Math.abs(cursorPointFromSelection.x - ltPointForSelection.x);
+                const dy = Math.abs(cursorPointFromSelection.y - ltPointForSelection.y);
+                ltPointForSelection.x = cursorPointFromSelection.x;
+                ltPointForSelection.y = cursorPointFromSelection.y;
+                if (SHIFT) {
+                    if (dx > dy) {
+                        const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                        const diffY = targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y);
+                        ltPointForSelection.y -= diffY;
+                    } else {
+                        const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                        const diffX = targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                        ltPointForSelection.x -= diffX;
+                    }
+                }
+                if (ALT) {
+                    const diffX = ltPointForSelection.x - ox;
+                    const diffY = ltPointForSelection.y - oy;
+                    rbPointForSelection.x -= diffX;
+                    rbPointForSelection.y -= diffY;
                 }
             }
-        }
-
-        // 上
-        if (CET === CtrlElementType.RectLT         // 左上
-            || CET === CtrlElementType.RectRT      // 右上
-            || CET === CtrlElementType.RectTop     // 上
-        ) {
-            const delta = cursorPointFromSelection.y - ltPointForSelection.y;
-            ltPointForSelection.y = cursorPointFromSelection.y;
-
-            if (ALT) rbPointForSelection.y -= delta;
-
-            if (SHIFT) {
-                if (CET === CtrlElementType.RectTop) {
-                    const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
-                    const dx = (selectionWidth - afterWidth) / 2;
-
-                    ltPointForSelection.x += dx;
-                    rbPointForSelection.x -= dx;
-                } else if (CET === CtrlElementType.RectLT) {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    ltPointForSelection.y = selectionHeight - afterHeight;
+                break;
+            case CtrlElementType.RectTop: {
+                const oy = ltPointForSelection.y;
+                ltPointForSelection.y = cursorPointFromSelection.y;
+                if (ALT) rbPointForSelection.y -= ltPointForSelection.y - oy;
+                if (SHIFT) {
+                    const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                    const diffX = (targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x)) / 2;
+                    ltPointForSelection.x -= diffX;
+                    rbPointForSelection.x += diffX;
                 }
             }
-        }
-
-        // 右
-        if (CET === CtrlElementType.RectRT         // 右上
-            || CET === CtrlElementType.RectRB      // 右下
-            || CET === CtrlElementType.RectRight   // 右
-        ) {
-            const delta = cursorPointFromSelection.x - rbPointForSelection.x;
-            rbPointForSelection.x = cursorPointFromSelection.x;
-
-            if (ALT) ltPointForSelection.x -= delta;
-
-            if (SHIFT) {
-                if (CET === CtrlElementType.RectRight) {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    const dy = (selectionHeight - afterHeight) / 2;
-                    ltPointForSelection.y += dy;
-                    rbPointForSelection.y -= dy;
-                } else if (CET === CtrlElementType.RectRT) {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    ltPointForSelection.y = selectionHeight - afterHeight;
+                break;
+            case CtrlElementType.RectRT: {
+                const dx = Math.abs(cursorPointFromSelection.x - rbPointForSelection.x);
+                const dy = Math.abs(cursorPointFromSelection.y - ltPointForSelection.y);
+                const oy = ltPointForSelection.y;
+                const ox = rbPointForSelection.x;
+                ltPointForSelection.y = cursorPointFromSelection.y;
+                rbPointForSelection.x = cursorPointFromSelection.x;
+                if (SHIFT) {
+                    if (dx > dy) {
+                        const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                        const diffY = targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y);
+                        ltPointForSelection.y -= diffY;
+                    } else {
+                        const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                        const diffX = targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                        rbPointForSelection.x += diffX;
+                    }
+                }
+                if (ALT) {
+                    const diffX = rbPointForSelection.x - ox;
+                    const diffY = ltPointForSelection.y - oy;
+                    ltPointForSelection.x -= diffX;
+                    rbPointForSelection.y -= diffY;
                 }
             }
-        }
-
-        // 下
-        if (CET === CtrlElementType.RectLB         // 左下
-            || CET === CtrlElementType.RectRB      // 右下
-            || CET === CtrlElementType.RectBottom  // 下
-        ) {
-            const delta = cursorPointFromSelection.y - rbPointForSelection.y;
-            rbPointForSelection.y = cursorPointFromSelection.y;
-
-            if (ALT) ltPointForSelection.y -= delta;
-
-            if (SHIFT) {
-                if (CET === CtrlElementType.RectBottom) {
-                    const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
-                    const dx = (selectionWidth - afterWidth) / 2;
-                    ltPointForSelection.x += dx;
-                    rbPointForSelection.x -= dx;
-                } else {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    const dy = selectionHeight - afterHeight;
-                    rbPointForSelection.y = selectionHeight - dy;
+                break;
+            case CtrlElementType.RectRight: {
+                const ox = rbPointForSelection.x;
+                rbPointForSelection.x = cursorPointFromSelection.x;
+                if (ALT) ltPointForSelection.x -= rbPointForSelection.x - ox;
+                if (SHIFT) {
+                    const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    const diffY = (targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y)) / 2;
+                    ltPointForSelection.y -= diffY;
+                    rbPointForSelection.y += diffY;
                 }
             }
+                break;
+            case CtrlElementType.RectRB: {
+                const ox = rbPointForSelection.x;
+                const oy = rbPointForSelection.y;
+                const dx = Math.abs(cursorPointFromSelection.x - rbPointForSelection.x);
+                const dy = Math.abs(cursorPointFromSelection.y - rbPointForSelection.y);
+                rbPointForSelection.x = cursorPointFromSelection.x;
+                rbPointForSelection.y = cursorPointFromSelection.y;
+                if (SHIFT) {
+                    if (dx > dy) {
+                        const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                        const diffY = targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y);
+                        rbPointForSelection.y += diffY;
+                    } else {
+                        const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                        const diffX = targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                        rbPointForSelection.x += diffX;
+                    }
+                }
+                if (ALT) {
+                    const diffX = rbPointForSelection.x - ox;
+                    const diffY = rbPointForSelection.y - oy;
+                    ltPointForSelection.x -= diffX;
+                    ltPointForSelection.y -= diffY;
+                }
+
+            }
+                break;
+            case CtrlElementType.RectBottom: {
+                const oy = rbPointForSelection.y;
+                rbPointForSelection.y = cursorPointFromSelection.y;
+                if (ALT) ltPointForSelection.y -= rbPointForSelection.y - oy;
+                if (SHIFT) {
+                    const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                    const diffX = (targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x)) / 2;
+                    ltPointForSelection.x -= diffX;
+                    rbPointForSelection.x += diffX;
+                }
+            }
+                break;
+            case CtrlElementType.RectLB:
+                const dx = Math.abs(cursorPointFromSelection.x - ltPointForSelection.x);
+                const dy = Math.abs(cursorPointFromSelection.y - rbPointForSelection.y);
+                const ox = ltPointForSelection.x;
+                const oy = rbPointForSelection.y;
+                ltPointForSelection.x = cursorPointFromSelection.x;
+                rbPointForSelection.y = cursorPointFromSelection.y;
+                if (SHIFT) {
+                    if (dx > dy) {
+                        const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                        const diffY = targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y);
+                        rbPointForSelection.y += diffY;
+                    } else {
+                        const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                        const diffX = targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                        ltPointForSelection.x -= diffX;
+                    }
+                }
+                if (ALT) {
+                    const diffX = ltPointForSelection.x - ox;
+                    const diffY = rbPointForSelection.y - oy;
+                    rbPointForSelection.x -= diffX;
+                    ltPointForSelection.y -= diffY;
+                }
+                break;
+            case CtrlElementType.RectLeft: {
+                const ox = ltPointForSelection.x;
+                ltPointForSelection.x = cursorPointFromSelection.x;
+                if (ALT) rbPointForSelection.x -= ltPointForSelection.x - ox;
+                if (SHIFT) {
+                    const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    const diffY = (targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y)) / 2;
+                    ltPointForSelection.y -= diffY;
+                    rbPointForSelection.y += diffY;
+                }
+            }
+                break;
         }
 
         // 选区变换后的大小
