@@ -28,10 +28,10 @@ import {
     update_comment
 } from "@/utils/mouse";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
-import { TranslateHandler } from '@/transform/translate';
+import { TranslateHandler } from '@/transform/translate/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
-import { Translate2 } from "@/transform/translate2";
+import { Translate2 } from "@/transform/translate/translate2";
 import { Action } from "@/context/tool";
 import { ActionMode, Direction } from "@/transform/direction";
 

@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { FrameLike, TransformHandler } from "./handler";
+import { FrameLike, TransformHandler } from "../handler";
 import {
     adapt2Shape,
     layoutShapesOrder,
@@ -8,7 +8,6 @@ import {
     Shape,
     ArtboradView,
     ColVector3D,
-    GroupShape,
     GroupShapeView,
     ShapeType,
     ShapeView,
@@ -22,16 +21,13 @@ import {
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
-// import { paster_short } from "@/utils/clipboard";
 import { debounce, throttle } from "lodash";
-import { find_except_envs, record_origin_env, record_origin_xy_env } from "@/utils/migrate";
-import { compare_layer_3 } from "@/utils/group_ungroup";
+
 import { Tool } from "@/context/tool";
 import { message } from "@/utils/message";
 import { isTarget } from "@/utils/scout";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
-import { checkTidyUpShapesOrder, getHorShapeOutlineFrame, getShapesColsMapPosition, getShapesRowsMapPosition, getVerShapeOutlineFrame, layoutSpacing, tidyUpShapesOrder } from "@/utils/tidy_up";
-import { Point } from "@/components/Document/Selection/SelectionView.vue";
+import { checkTidyUpShapesOrder, getHorShapeOutlineFrame, getShapesColsMapPosition, getShapesRowsMapPosition, getVerShapeOutlineFrame, layoutSpacing } from "@/utils/tidy_up";
 
 type BaseFrame4Trans = {
     originTransform: Transform

@@ -10,7 +10,7 @@ import { WorkSpace } from '@/context/workspace';
 import { CursorType } from '@/utils/cursor2';
 import { LockMouse } from '@/transform/lockMouse';
 import { throttle } from 'lodash';
-import { TranslateHandler } from '@/transform/translate';
+import { TranslateHandler } from '@/transform/translate/translate';
 import { Attribute } from '@/context/atrribute';
 interface Props {
     context: Context
