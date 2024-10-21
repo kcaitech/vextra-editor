@@ -1165,15 +1165,15 @@ export class Translate2 extends TransformHandler {
 
     protected keydown(event: KeyboardEvent) {
         if (event.repeat) return;
-        if (event.shiftKey) {
+        if (event.shiftKey && !this.shiftStatus) {
             this.shiftStatus = true;
             this.__execute();
         }
-        if (event.altKey) {
+        if (event.altKey && !this.altStatus) {
             this.altStatus = true;
             this.selManager.drawn();
         }
-        if (event.code === "Space") {
+        if (event.code === "Space" && !this.radar.fixed) {
             this.radar.fixed = true;
         }
     }
@@ -1182,6 +1182,7 @@ export class Translate2 extends TransformHandler {
         if (event.code === 'ShiftLeft') {
             this.shiftStatus = false;
             this.__execute();
+            return;
         }
         if (event.code === "AltLeft") {
             this.altStatus = false;
