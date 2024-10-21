@@ -40,6 +40,7 @@ const contentVisible = ref<boolean>(false);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
+const barStyle = ref<{ opacity: number, top: number, transition: string }>({ opacity: 0, top: 0, transition: '0.3s' });
 let uninstall_keyboard_units: () => void = () => {
 };
 
@@ -202,6 +203,15 @@ const closeLoading = () => {
 }
 const onContentVisible = () => {
     contentVisible.value = true;
+    nextTick(() => {
+        barStyle.value.opacity = 1;
+        barStyle.value.top = 0;
+        let timer: any = setTimeout(() => {
+            barStyle.value.transition = "none";
+            clearTimeout(timer);
+            timer = null;
+        }, 300);
+    })
 }
 
 const changeLeftWidth = (width: number) => {
@@ -272,8 +282,9 @@ onUnmounted(() => {
 
 <template>
 <div class="editor" style="height: 100vh; display: flex; flex-direction: column;">
-    <div id="top">
-        <Toolbar v-if="showTop && contentVisible" :context="context as Context"/>
+    <div v-if="showTop" id="top">
+        <Toolbar v-if="contentVisible" :context="context as Context"
+                 :style="{top: barStyle.top+'px', opacity: barStyle.opacity,transition:barStyle.transition }"/>
     </div>
     <ColSplitView v-if="inited" id="center"
                   :left="{ width: left.leftWidth, minWidth: left.leftMinWidth, maxWidth: 0.4 }"
