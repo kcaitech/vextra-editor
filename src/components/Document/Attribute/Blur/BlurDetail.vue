@@ -180,8 +180,9 @@ onUpdated(() => {
                                 <div ref="progressBtn" class="progress-button" @mousedown.stop="onMouseDown"></div>
                             </div>
                         </div>
-                        <input type="text" ref="blurInput" class="input-text" :value="blurValue" @click="clickBlurInput"
-                            @change="changeBlurInput" @keydown="e => text_keyboard(e, blurValue)" />
+                        <input v-focus type="text" ref="blurInput" class="input-text" :value="blurValue"
+                            @click="clickBlurInput" @change="changeBlurInput"
+                            @keydown="e => text_keyboard(e, blurValue)" />
                     </div>
                 </div>
             </template>
@@ -246,6 +247,11 @@ onUpdated(() => {
         margin-right: 20px;
     }
 
+    .input-text {
+        border: none;
+        outline: none;
+    }
+
     input[type="text"] {
         width: 45px;
         height: 30px;
@@ -253,13 +259,15 @@ onUpdated(() => {
         margin-left: 10px;
         border: none;
         background-color: #F4F5F5;
+        border: 1px solid transparent;
         border-radius: var(--default-radius);
+        box-sizing: border-box;
+
+        &:focus {
+            border-color: #1878F5;
+        }
     }
 
-    .input-text {
-        border: none;
-        outline: none;
-    }
 }
 
 .slider {

@@ -1044,7 +1044,7 @@ onUnmounted(() => {
         <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius">
         </Radius>
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
-        <div class="tr" v-if="s_tidy_up" style="margin-bottom: 0">
+        <div class="tr" v-if="s_tidy_up">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
                 :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
                 @dragend="dragend" @keydown="keydownHorTidyup">
@@ -1053,7 +1053,7 @@ onUnmounted(() => {
                 :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
                 @dragend="dragend" @keydown="keydownVerTidyup">
             </MdNumberInput>
-            <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 1 : 0.4 }"
+            <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
                     <svg-icon icon-class="tidy-up" style="outline: none;" />
@@ -1077,6 +1077,7 @@ onUnmounted(() => {
     height: auto;
     display: flex;
     flex-direction: column;
+    gap: 8px;
     padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     visibility: visible;
@@ -1090,7 +1091,8 @@ onUnmounted(() => {
         justify-content: space-between;
         display: flex;
         flex-direction: row;
-        margin-bottom: 8px;
+        gap: 8px;
+
 
 
         >.icontext {
@@ -1177,7 +1179,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-left: 7px;
+            gap: 8px;
 
             .flip {
                 background-color: var(--input-background);
