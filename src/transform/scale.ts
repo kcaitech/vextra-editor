@@ -646,7 +646,7 @@ export class ScaleHandler extends TransformHandler {
             const bases = this.baseFrames;
 
             for (const unit of units) {
-                const { shape, size, transform2 } = unit;
+                const { shape, size, transform2, scale } = unit;
 
                 const box = bases.get(shape.id);
                 if (!box) continue;
@@ -663,17 +663,20 @@ export class ScaleHandler extends TransformHandler {
                     transform2.translate(ColVector3D.FromXY(offsetX, offsetY));
                 }
 
-                // todo 取整之后scale发生轻微的变化没有更新到位
                 if (size.width > 0 && size.width < 1) {
                     size.width = 1;
                 } else {
+                    const ow = size.width / scale.x;
                     size.width = Math.round(size.width);
+                    scale.x = size.width / ow;
                 }
 
                 if (size.height > 0 && size.height < 1) {
                     size.height = 1;
                 } else {
+                    const oh = size.height / scale.y;
                     size.height = Math.round(size.height);
+                    scale.y = size.height / oh;
                 }
             }
         }
