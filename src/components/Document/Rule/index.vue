@@ -551,6 +551,36 @@ onUnmounted(() => {
 </div>
 </template>
 <style scoped lang="scss">
+@keyframes horGen {
+    from {
+        opacity: 0;
+        width: 0;
+    }
+    to {
+        opacity: 1;
+        width: calc(100% - 20px);
+    }
+}
+
+@keyframes verGen {
+    from {
+        opacity: 0;
+        height: 0;
+    }
+    to {
+        opacity: 1;
+        height: calc(100% - 20px);
+    }
+}
+
+@keyframes blockGen {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
 .rule-container {
     --color: #CCC;
     --block-back: rgba(24, 120, 245, 0.25);
@@ -599,11 +629,11 @@ onUnmounted(() => {
         border-right: 1px solid var(--grey);
         border-bottom: 1px solid var(--grey);
         position: absolute;
+        animation: blockGen 0.5s ease-in-out forwards;
     }
 
     .d-hor {
         position: absolute;
-        width: calc(100% - 20px);
         top: 0;
         left: 20px;
         height: 20px;
@@ -614,6 +644,7 @@ onUnmounted(() => {
         pointer-events: auto;
         cursor: row-resize;
         z-index: 1;
+        animation: horGen 0.5s ease-in-out forwards;
 
         > .scale {
             pointer-events: none;
@@ -677,6 +708,7 @@ onUnmounted(() => {
         pointer-events: auto;
         cursor: col-resize;
         z-index: 1;
+        animation: verGen 0.5s ease-in-out forwards;
 
         > .scale {
             pointer-events: none;

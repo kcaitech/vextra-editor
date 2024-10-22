@@ -40,7 +40,6 @@ const contentVisible = ref<boolean>(false);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
-const UIStyle = ref<{ opacity: number, top: number, transition: string }>({ opacity: 0, top: 0, transition: '0.3s' });
 let uninstall_keyboard_units: () => void = () => {
 };
 
@@ -200,15 +199,6 @@ let netErr: any = null
 const closeLoading = () => {
     loading.value = false;
     contentVisible.value = true;
-    nextTick(() => {
-        UIStyle.value.opacity = 1;
-        UIStyle.value.top = 0;
-        let timer: any = setTimeout(() => {
-            UIStyle.value.transition = "none";
-            clearTimeout(timer);
-            timer = null;
-        }, 300);
-    })
 }
 const onContentVisible = () => {
     contentVisible.value = true;
@@ -283,15 +273,14 @@ onUnmounted(() => {
 <template>
 <div class="editor" style="height: 100vh; display: flex; flex-direction: column;">
     <div v-if="showTop" id="top">
-        <Toolbar v-if="contentVisible" :context="context as Context"
-                 :style="{top: UIStyle.top+'px', opacity: UIStyle.opacity, transition:UIStyle.transition }"/>
+        <Toolbar v-if="contentVisible" :context="context as Context" class="fade-in"/>
     </div>
     <ColSplitView v-if="inited" id="center"
                   :left="{ width: left.leftWidth, minWidth: left.leftMinWidth, maxWidth: 0.4 }"
                   :right="rightWidth" :context="context as Context" @changeLeftWidth="changeLeftWidth">
         <template #slot1>
             <Navigation v-if="curPage&&contentVisible" id="navigation" :context="context as Context"
-                        :style="{ opacity: UIStyle.opacity, transition:UIStyle.transition }"
+                        class="fade-in"
                         @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
                         @showNavigation="showHiddenLeft"
                         :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggerVisible="leftTriggerVisible">
@@ -305,7 +294,6 @@ onUnmounted(() => {
         </template>
         <template #slot3>
             <Attribute id="attributes" v-if="contentVisible" :context="context as Context"
-                       :style="{ opacity: UIStyle.opacity, transition:UIStyle.transition }"
                        @mouseenter="() => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                        :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
                        @showAttrbute="showHiddenRight">
@@ -318,6 +306,18 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out forwards;
+}
 .editor {
     background-color: #efefef;
     min-width: 460px;
@@ -389,6 +389,7 @@ onUnmounted(() => {
         #navigation {
             height: 100%;
             background-color: var(--left-navi-bg-color);
+            animation: fadeIn 0.5s ease-in-out forwards;
         }
 
         #content {
@@ -402,6 +403,7 @@ onUnmounted(() => {
             height: 100%;
             background-color: var(--right-attr-bg-color);
             z-index: 9;
+            animation: fadeIn 0.5s ease-in-out forwards;
         }
     }
 
