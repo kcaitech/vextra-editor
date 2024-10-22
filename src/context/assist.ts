@@ -234,7 +234,6 @@ export class Assist extends WatchableObject {
     }
 
     collect() {
-        debugger
         // const s = Date.now();
         this.clear();
         const target: ShapeView = this.m_collect_target || this.m_context.selection.selectedPage!;
