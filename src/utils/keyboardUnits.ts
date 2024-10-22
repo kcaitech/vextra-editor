@@ -1,10 +1,12 @@
 import { Context } from "@/context";
 import {
     adapt_page,
-    component, flattenSelection,
+    component,
+    flattenSelection,
     lessen,
     lower_layer,
-    magnify, outlineSelection,
+    magnify,
+    outlineSelection,
     redo,
     scale_0,
     select_all,
@@ -25,18 +27,24 @@ import { message } from "./message";
 import { permIsEdit } from "./permission";
 import { Menu } from "@/context/menu";
 import { hexToX } from "@/components/common/ColorPicker/utils";
-import { Color } from "@kcdesign/data";
+import { ArtboradView, Color, ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
 import { Attribute } from "@/context/atrribute";
 import {
-    useArrow, useAuto, useAutoK, useContact, useCutout,
+    useArrow,
+    useAuto,
+    useAutoK,
+    useContact,
+    useCutout,
     useEllipse,
     useFrame,
     useImage,
-    useLine, useMask, usePen,
+    useLine,
+    useMask,
+    usePen,
     useRect,
     useText,
 } from "@/components/Document/Creator/execute";
-import { autoLayoutFn, unAutoLayoutFn } from "./auto_layout";
+import { unAutoLayoutFn } from "./auto_layout";
 
 // todo 键盘事件的权限处理
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
@@ -842,10 +850,31 @@ keydownHandler['Quote'] = function (event: KeyboardEvent, context: Context) {
     }
 }
 
+function modifyLivingGroupForLabel(context: Context) {
+    if (!context.selection.selectedShapes.length) return;
+
+    if (context.selection.hoveredShape) {
+        context.selection.setLabelLivingGroup([]);
+        context.selection.setShowInterval(true);
+    } else {
+        const parents: Set<ShapeView> = new Set();
+        for (const view of context.selection.selectedShapes) {
+            const parent = view.parent!;
+            if ((parent instanceof ArtboradView || parent instanceof SymbolView) && parent.parent?.type === ShapeType.Page) {
+                parents.add(parent);
+            }
+        }
+        if (parents.size === 1) parents.forEach(v => {
+            context.selection.setLabelLivingGroup([v]);
+            context.selection.setShowInterval(true);
+        });
+    }
+
+}
 keydownHandler['AltLeft'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (event.repeat) return;
-    context.selection.setShowInterval(true);
+    modifyLivingGroupForLabel(context);
 }
 keydownHandler['AltRight'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();

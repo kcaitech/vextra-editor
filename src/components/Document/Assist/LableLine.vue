@@ -133,27 +133,16 @@ const dotted_line_point = (s: { x: number, y: number }[], h: { x: number, y: num
 
 // 获取实线的长度和位置
 const solid_line_center_point = (point: LintPoint[]) => {
-    const c_point = get_solid_line_center_point(point, props.context);
-    size_posi.value = c_point;
+  size_posi.value = get_solid_line_center_point(point, props.context);
 }
 
 
 const workspaceUpdate = (t: number | string) => {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        contour();
-    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
-        contour();
-    }
+  if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.SELECTION_VIEW_UPDATE) contour();
 }
 
 const selectionWatcher = (t: string | number) => {
-    if (t === Selection.CHANGE_SHAPE) {
-        contour();
-    } else if (t === Selection.CHANGE_SHAPE_HOVER) {
-        contour();
-    } else if (t === Selection.PASSIVE_CONTOUR) {
-        contour();
-    }
+  if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_SHAPE_HOVER || t === Selection.PASSIVE_CONTOUR) contour();
 }
 
 const filterAlpha = (a: number) => {
