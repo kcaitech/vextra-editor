@@ -40,7 +40,7 @@ const contentVisible = ref<boolean>(false);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
-const barStyle = ref<{ opacity: number, top: number, transition: string }>({ opacity: 0, top: 0, transition: '0.3s' });
+const UIStyle = ref<{ opacity: number, top: number, transition: string }>({ opacity: 0, top: 0, transition: '0.3s' });
 let uninstall_keyboard_units: () => void = () => {
 };
 
@@ -200,18 +200,18 @@ let netErr: any = null
 const closeLoading = () => {
     loading.value = false;
     contentVisible.value = true;
-}
-const onContentVisible = () => {
-    contentVisible.value = true;
     nextTick(() => {
-        barStyle.value.opacity = 1;
-        barStyle.value.top = 0;
+        UIStyle.value.opacity = 1;
+        UIStyle.value.top = 0;
         let timer: any = setTimeout(() => {
-            barStyle.value.transition = "none";
+            UIStyle.value.transition = "none";
             clearTimeout(timer);
             timer = null;
         }, 300);
     })
+}
+const onContentVisible = () => {
+    contentVisible.value = true;
 }
 
 const changeLeftWidth = (width: number) => {
@@ -284,27 +284,29 @@ onUnmounted(() => {
 <div class="editor" style="height: 100vh; display: flex; flex-direction: column;">
     <div v-if="showTop" id="top">
         <Toolbar v-if="contentVisible" :context="context as Context"
-                 :style="{top: barStyle.top+'px', opacity: barStyle.opacity,transition:barStyle.transition }"/>
+                 :style="{top: UIStyle.top+'px', opacity: UIStyle.opacity, transition:UIStyle.transition }"/>
     </div>
     <ColSplitView v-if="inited" id="center"
                   :left="{ width: left.leftWidth, minWidth: left.leftMinWidth, maxWidth: 0.4 }"
                   :right="rightWidth" :context="context as Context" @changeLeftWidth="changeLeftWidth">
         <template #slot1>
-            <Navigation v-if="curPage !== undefined" id="navigation" :context="context as Context"
+            <Navigation v-if="curPage&&contentVisible" id="navigation" :context="context as Context"
+                        :style="{ opacity: UIStyle.opacity, transition:UIStyle.transition }"
                         @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
                         @showNavigation="showHiddenLeft"
                         :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggerVisible="leftTriggerVisible">
             </Navigation>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined" id="content" :context="context as Context"
+            <ContentView v-if="curPage" id="content" :context="context as Context"
                          @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
                          @closeLoading="closeLoading" @contentVisible="onContentVisible">
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" v-if="!loading" :context="context as Context"
-                       @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+            <Attribute id="attributes" v-if="contentVisible" :context="context as Context"
+                       :style="{ opacity: UIStyle.opacity, transition:UIStyle.transition }"
+                       @mouseenter="() => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                        :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
                        @showAttrbute="showHiddenRight">
             </Attribute>
