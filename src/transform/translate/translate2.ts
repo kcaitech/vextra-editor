@@ -15,19 +15,16 @@ import { isShapeOut } from "@/utils/assist";
 import { StyleManager } from "@/transform/style";
 import { WorkSpace } from "@/context/workspace";
 import { Navi } from "@/context/navigate";
-
 enum TranslateMode {
     Linear = 'linear',
     Prev = 'prev',
     Flex = 'flex'
 }
-
 interface TranslateBaseItem {
     transformRaw: TransformRaw,
     transform: Transform;
     view: ShapeView;
 }
-
 interface EnvLeaf {
     view: ShapeView;
     children: EnvLeaf[];
@@ -636,11 +633,10 @@ class SelManager {
 
         const results = translate.api!.drawn(compare_layer_3(this.shapes, -1), transformOriginal, envOriginal)!;
 
-        const page = translate.page;
-        this.context.nextTick(page, () => {
+        this.context.nextTick(translate.page, () => {
             const selects: ShapeView[] = [];
             results.forEach((s) => {
-                const v = page.shapes.get(s.id);
+                const v = translate.page.shapes.get(s.id);
                 if (v) selects.push(v);
             })
             this.shapes = selects;
@@ -1196,6 +1192,11 @@ export class Translate2 extends TransformHandler {
     private __mode: TranslateMode;
     private __last_mode: TranslateMode | undefined;
 
+    private __blur() {
+
+    }
+
+    private blur = this.__blur.bind(this);
     get mode() {
         return this.__mode;
     }

@@ -378,6 +378,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             transporter?.fulfil();
             transporter = undefined;
 
+            translate2?.fulfil();
+            translate2 = undefined;
+
             remove_move_and_up_from_document(mousemove, mouseup);
         }
         timerClear();
