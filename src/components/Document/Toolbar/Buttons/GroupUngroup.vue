@@ -15,7 +15,7 @@ import {
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
-import { getName } from '@/utils/content';
+import { flattenSelection, getName } from '@/utils/content';
 import { debounce } from 'lodash';
 import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 import BooleanObject from "./BooleanObject.vue"
@@ -32,9 +32,8 @@ const state = ref(0);
 const isUngroup = ref(false);
 const isGroup = ref(false);
 
-function _updater(t?: number | string) {
-    if (t === Selection.CHANGE_SHAPE) {
-        state.value = 0;
+const _updater = () => {
+    state.value = 0;
         const selection = props.context.selection;
         const shapes = selection.selectedShapes;
         isBoolGroup.value = false;
@@ -68,10 +67,15 @@ function _updater(t?: number | string) {
                 isBoolGroup.value = false;
             }
         }
-    }
 }
 
 const updater = debounce(_updater, 50);
+
+function selectedWatcher(t?: number | string) {
+    if (t === Selection.CHANGE_SHAPE) {
+        updater();
+    }
+}
 
 function tool_watcher(t?: number, alt?: boolean) {
     if (t === Tool.GROUP) {
@@ -80,16 +84,6 @@ function tool_watcher(t?: number, alt?: boolean) {
         ungroupClick();
     }
 }
-
-onMounted(() => {
-    props.context.tool.watch(tool_watcher)
-    props.context.selection.watch(updater);
-    updater();
-})
-onUnmounted(() => {
-    props.context.selection.unwatch(updater);
-    props.context.tool.unwatch(tool_watcher)
-})
 
 const groupClick = (alt?: boolean) => {
     if (!(state.value & GROUP)) return;
@@ -189,48 +183,23 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
  * @description 路径拼合
  */
 const flattenShape = () => {
-    const page = props.context.selection.selectedPage!;
-    const selection = props.context.selection;
-    const shapes = compare_layer_3(selection.selectedShapes);
-    if (shapes.length) {
-        const editor = props.context.editor4Page(page)
-        if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
-            if (shapes[0].type === ShapeType.Group) {
-                const editor = props.context.editor4Page(page);
-                const pathshape = editor.flattenGroup((shapes[0]), shapes[0].name);
-                if (pathshape) {
-                    props.context.nextTick(page, () => {
-                        const s = page.getShape(pathshape.id);
-                        props.context.selection.selectShape(s);
-                    });
-                }
-            } else {
-                const flatten = editor.flattenBoolShape((shapes[0]) as BoolShapeView)
-                if (flatten) {
-                    props.context.nextTick(page, () => {
-                        const s = page.getShape(flatten.id);
-                        props.context.selection.selectShape(s)
-                    })
-                }
-            }
-        } else if (shapes.length > 1) {
-            const shapessorted = compare_layer_3(shapes);
-            const flatten = editor.flattenShapes(shapessorted)
-            if (flatten) {
-                props.context.nextTick(page, () => {
-                    const s = page.getShape(flatten.id);
-                    props.context.selection.selectShape(s)
-                })
-            }
-        }
-    }
+    flattenSelection(props.context);
 }
 
+onMounted(() => {
+    _updater();
+    props.context.tool.watch(tool_watcher)
+    props.context.selection.watch(selectedWatcher);
+})
+onUnmounted(() => {
+    props.context.selection.unwatch(selectedWatcher);
+    props.context.tool.unwatch(tool_watcher)
+})
 </script>
 
 <template>
 
-<BooleanObject :context="context" :selection="props.context.selection" @changeBool="changeBoolgroup"
+<BooleanObject :context="context" @changeBool="changeBoolgroup"
                @flatten-shape="flattenShape" :disabled="!isBoolGroup"></BooleanObject>
 
 </template>

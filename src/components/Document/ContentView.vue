@@ -257,6 +257,7 @@ function contextMenuMount(e: MouseEvent) {
             if (area !== MountedAreaType.Root) {
                 if (_shapes.length > 1) {
                     contextMenuItems.value.add(MenuItemType.AutoLayout);
+                    contextMenuItems.value.add(MenuItemType.Flatten);
                 } else {
                     const shape = _shapes[0] as ArtboradView;
                     if (shape.autoLayout) {

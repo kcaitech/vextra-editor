@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { message } from '@/utils/message';
 
 const { t } = useI18n()
-const props = defineProps<{ context: Context, selection: Selection, disabled: boolean }>();
+const props = defineProps<{ context: Context, disabled: boolean }>();
 type Button = InstanceType<typeof ToolButton>
 
 const popoverVisible = ref<boolean>(false);
@@ -39,7 +39,7 @@ const patterns = ((items: [string, any, BoolOp][]) => (items.map(item => ({
 
 function showMenu(e: MouseEvent) {
     e.stopPropagation()
-    const selected = props.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes;
     if (selected.length > 0 && selected.some(s => s.type === ShapeType.Cutout)) {
         message('feature', t('cutoutExport.cutoutNotBool'));
         return;
@@ -98,7 +98,7 @@ const onMouseleave = () => {
 }
 
 const changeBool = () => {
-    const selected = props.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes;
     if (selected.length > 0 && selected.some(s => s.type === ShapeType.Cutout)) {
         message('info', t('cutoutExport.cutoutNotBool'));
         return;
@@ -108,7 +108,7 @@ const changeBool = () => {
 
 const selectionWatch = (t?: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
-        const shapes = props.selection.selectedShapes
+        const shapes = props.context.selection.selectedShapes
         getBoolGroupType(shapes)
     }
 }
@@ -146,6 +146,7 @@ const getBoolGroupType = (shapes: ShapeView[]) => {
         boolName.value = 'union'
         boolType.value = BoolOp.Union
     }
+    
 }
 
 const stop = watch(() => props.disabled, (d) => {
@@ -155,7 +156,7 @@ const stop = watch(() => props.disabled, (d) => {
 })
 
 onMounted(() => {
-    const shapes = props.selection.selectedShapes
+    const shapes = props.context.selection.selectedShapes
     getBoolGroupType(shapes)
     props.context.selection.watch(selectionWatch)
 })
