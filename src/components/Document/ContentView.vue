@@ -59,7 +59,6 @@ const matrix = reactive(props.context.workspace.matrix);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const root = ref<HTMLDivElement>();
-const mousedownOnClientXY: ClientXY = { x: 0, y: 0 };
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 };
 const mouseOnClient: ClientXYRaw = { x: 0, y: 0 };
 const contextMenuEl = ref<ContextMenuEl>();
@@ -120,8 +119,6 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x;
     mousedownOnPageXY.y = xy.y; //页面坐标系上的点
-    mousedownOnClientXY.x = clientX - x;
-    mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
     mouseOnClient.x = clientX;
     mouseOnClient.y = clientY;
 }
@@ -328,8 +325,6 @@ function onMouseDown(e: MouseEvent) {
     }
     if (workspace.linearEditorExist) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button === 0) {
-        const action = props.context.tool.action;
-        if (action === Action.AddTable) return;
         setMousedownXY(e);
         wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
         props.context.tool.referSelection.resetSelected();
@@ -543,6 +538,7 @@ function initMatrix(cur: PageView) {
 
 const onRenderDone = () => {
     emits('closeLoading');
+    initMatrix(props.page);
 }
 const onContentVisible = () => {
     emits('contentVisible');
@@ -696,7 +692,6 @@ const stop1 = watch(() => props.page, (cur, old) => {
     cur.watch(page_watcher)
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
-    initMatrix(cur);
     updateBackground(cur);
 })
 
@@ -725,17 +720,15 @@ onMounted(() => {
     window.addEventListener('blur', windowBlur);
     window.addEventListener('focus', windowFocus);
 
-    nextTick(() => {
-        if (!root.value) return;
-        resizeObserver.observe(root.value);
-        _updateRoot(props.context, root.value);
-        initMatrix(props.page);
-    });
-
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
     timeSlicingTask(props.context, fontNameListZh, 'zh');
     timeSlicingTask(props.context, fontNameListEn, 'en');
+
+    nextTick(() => {
+        resizeObserver.observe(root.value!);
+        _updateRoot(props.context, root.value!);
+    });
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
