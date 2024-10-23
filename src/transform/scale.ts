@@ -426,10 +426,10 @@ export class ScaleHandler extends TransformHandler {
 
         const ratio = selectionWidth / selectionHeight;
 
+        // 附加动作：等比、变换原点
         const CET = this.ctrlElementType;
         const ALT = this.altStatus;
         const SHIFT = this.shiftStatus || this.uniformScaleMode;
-
         switch (CET) {
             case CtrlElementType.RectLT: {
                 const ox = ltPointForSelection.x;
@@ -590,6 +590,20 @@ export class ScaleHandler extends TransformHandler {
             width: rbPointForSelection.x - ltPointForSelection.x,
             height: rbPointForSelection.y - ltPointForSelection.y
         }
+        if (this.alignPixel) {
+            let rootXY = ColVector3D.FromMatrix(this.selectionTransform.transform(ltPointForSelection));
+            rootXY.x = Math.round(rootXY.x);
+            rootXY.y = Math.round(rootXY.y);
+
+            rootXY = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(rootXY));
+            ltPointForSelection.x = rootXY.x;
+            ltPointForSelection.y = rootXY.y;
+
+            sizeForSelection.width = rbPointForSelection.x - ltPointForSelection.x;
+            sizeForSelection.height = rbPointForSelection.y - ltPointForSelection.y;
+            sizeForSelection.width = Math.round(sizeForSelection.width);
+            sizeForSelection.height = Math.round(sizeForSelection.height);
+        }
         // 选区变换后的Transform
         // Transform = T·R·K·S
         // 不修改旋转和斜切，只修改平移和缩放
@@ -607,10 +621,7 @@ export class ScaleHandler extends TransformHandler {
             shape: ShapeView,
             size: ShapeSize,
             transform2: Transform,
-            scale: {
-                x: number,
-                y: number
-            }
+            scale: { x: number, y: number }
         }[] = [];
 
         const shapes = this.shapes;
@@ -643,25 +654,17 @@ export class ScaleHandler extends TransformHandler {
         });
 
         if (this.alignPixel) {
-            const bases = this.baseFrames;
-
             for (const unit of units) {
-                const { shape, size, transform2, scale } = unit;
+                const { size, transform2, scale } = unit;
 
-                const box = bases.get(shape.id);
-                if (!box) continue;
-
-                const decompose = transform2.clone()
-                    .decomposeTranslate();
+                const decompose = transform2.clone().decomposeTranslate();
 
                 const intX = Math.round(decompose.x);
                 const intY = Math.round(decompose.y);
                 const offsetX = intX - decompose.x;
                 const offsetY = intY - decompose.y;
 
-                if (offsetX || offsetY) {
-                    transform2.translate(ColVector3D.FromXY(offsetX, offsetY));
-                }
+                if (offsetX || offsetY) transform2.translate(ColVector3D.FromXY(offsetX, offsetY));
 
                 if (size.width > 0 && size.width < 1) {
                     size.width = 1;
