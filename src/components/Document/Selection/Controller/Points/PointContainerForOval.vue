@@ -10,7 +10,6 @@ import { format_value } from "@/utils/common";
 interface Props {
     context: Context
     shape: PolygonShapeView
-    pointVisible: boolean
 }
 
 const props = defineProps<Props>();
@@ -295,35 +294,33 @@ onUnmounted(() => {
 </script>
 
 <template>
-<g v-if="pointVisible">
-    <g v-if="start.visible" :style="`transform: translate(${start.x - 4}px, ${start.y - 4}px);`"
-       @mousedown="startDown" @mouseenter="startEnter" @mouseleave="__leave">
-        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                 stroke-width="1"/>
-        <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
-    </g>
-    <g v-if="end.visible" :style="`transform: translate(${end.x - 4}px, ${end.y - 4}px);`"
-       @mousedown="endDown" @mouseenter="sweepEnter" @mouseleave="__leave">
-        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                 stroke-width="1"/>
-    </g>
-    <g v-if="radius.visible" :style="`transform: translate(${radius.x - 4}px, ${radius.y - 4}px);`"
-       @mousedown="radiusDown" @mouseenter="ratioEnter" @mouseleave="__leave">
-        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                 stroke-width="1"/>
-    </g>
-    <foreignObject v-if="tips" :x="tipsPosition.x + 15" :y="tipsPosition.y- 15" width="120px" height="28px">
-        <div class="percent_container">
-            <span>{{ `${active.key} ${active.value}` }}</span>
-        </div>
-    </foreignObject>
+<g v-if="start.visible" :style="`transform: translate(${start.x - 4}px, ${start.y - 4}px);`"
+   @mousedown="startDown" @mouseenter="startEnter" @mouseleave="__leave">
+    <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+    <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
+    <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+             stroke-width="1"/>
+    <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
 </g>
+<g v-if="end.visible" :style="`transform: translate(${end.x - 4}px, ${end.y - 4}px);`"
+   @mousedown="endDown" @mouseenter="sweepEnter" @mouseleave="__leave">
+    <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+    <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
+    <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+             stroke-width="1"/>
+</g>
+<g v-if="radius.visible" :style="`transform: translate(${radius.x - 4}px, ${radius.y - 4}px);`"
+   @mousedown="radiusDown" @mouseenter="ratioEnter" @mouseleave="__leave">
+    <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+    <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
+    <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+             stroke-width="1"/>
+</g>
+<foreignObject v-if="tips" :x="tipsPosition.x + 15" :y="tipsPosition.y- 15" width="120px" height="28px">
+    <div class="percent_container">
+        <span>{{ `${active.key} ${active.value}` }}</span>
+    </div>
+</foreignObject>
 </template>
 
 <style scoped lang="scss">

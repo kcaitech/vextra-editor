@@ -12,7 +12,6 @@ import { WorkSpace } from '@/context/workspace';
 interface Props {
     context: Context
     shape: PolygonShapeView
-    pointVisible: boolean
 }
 
 interface Point {
@@ -143,10 +142,10 @@ const getMovePoint = (e: MouseEvent) => {
     const { col0: xy } = _m.transform([ColVector3D.FromXY(clientXY.x, clientXY.y)]);
     xy.x /= frame.width;
     xy.y /= frame.height;
-    const d0 = Math.hypot(xy.x - 0, xy.y - 0);
-    const d1 = Math.hypot(xy.x - 1, xy.y - 0);
+    const d0 = Math.hypot(xy.x, xy.y);
+    const d1 = Math.hypot(xy.x - 1, xy.y);
     const d2 = Math.hypot(xy.x - 1, xy.y - 1);
-    const d3 = Math.hypot(xy.x - 0, xy.y - 1);
+    const d3 = Math.hypot(xy.x, xy.y - 1);
     const d = [d0, d1, d2, d3];
     const distances = [];
     for (let i = 0; i < radius_dot.value.length; i++) {
@@ -251,7 +250,7 @@ onUnmounted(() => {
 <template>
 <!-- 圓角 -->
 <g v-if="radius_dot && radius_dot.length === 4">
-    <g v-for="(dot, index) in radius_dot" :key="index" v-show="pointVisible"
+    <g v-for="(dot, index) in radius_dot" :key="index"
        :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
        @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
        @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">

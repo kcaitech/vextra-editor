@@ -123,7 +123,7 @@ const mouseleave = () => {
 }
 
 const pointVisible = computed(() => {
-    return pointActivated.value && (bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90);
+    return !(props.shape as PathShapeView).haveEdit && pointActivated.value && (bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90);
 })
 
 const paddingIndex = ref(-1);
@@ -192,8 +192,8 @@ onUnmounted(() => {
                      :controllerFrame="controllerFrame"/>
     <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
                            @hoverPaddint="hoverPaddingIndex"/>
-    <component v-if="!(shape as PathShapeView).haveEdit" :pointVisible="pointVisible"
-               :is="point_map.get(shape.type)" :context="props.context" :shape="props.shape as PolygonShapeView"/>
+    <component v-if="pointVisible" :is="point_map.get(shape.type)" :context="props.context"
+               :shape="props.shape as PolygonShapeView"/>
 </svg>
 </template>
 <style lang='scss' scoped>
