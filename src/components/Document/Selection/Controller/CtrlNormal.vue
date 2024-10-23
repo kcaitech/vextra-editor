@@ -135,7 +135,7 @@ function color_watcher(t: number, hidden: boolean) {
 
 function selection_watcher(t: number | string) {
     if (t == Selection.CHANGE_SHAPE || t === Selection.HIDDEN_RESET) {
-        reset_hidden();
+        if (!props.context.workspace.isTranslating) reset_hidden();
     } else if (t === Selection.SELECTION_HIDDEN) {
         modify_selection_hidden();
     }

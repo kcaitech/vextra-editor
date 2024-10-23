@@ -1071,6 +1071,8 @@ export class Translate2 extends TransformHandler {
         }
 
         if (this.__mode === TranslateMode.Linear) this.selModel.collect();
+
+        context.workspace.linearEditorExist = true;
     }
 
     private __api: Transporter | undefined;
@@ -1281,6 +1283,7 @@ export class Translate2 extends TransformHandler {
     fulfil() {
         this.workspace.translating(false);
         this.workspace.setSelectionViewUpdater(true);
+        this.workspace.linearEditorExist = false;
 
         if (this.mode === TranslateMode.Prev) this.inserter.insert();
         else if (this.mode === TranslateMode.Flex) {

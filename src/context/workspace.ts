@@ -132,8 +132,9 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     }
 
     setPathEditMode(v: boolean) {
+        const o = this.m_path_edit_mode;
         this.m_path_edit_mode = v;
-        this.notify(WorkSpace.PATH_EDIT_MODE);
+        if (v !== o) this.notify(WorkSpace.PATH_EDIT_MODE);
     }
 
     get matrix() {

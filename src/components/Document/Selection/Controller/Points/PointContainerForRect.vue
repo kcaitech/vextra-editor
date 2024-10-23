@@ -31,7 +31,6 @@ let changeR: number = -1;
 let pointModifyHandler: PointHandler | undefined = undefined;
 
 function update() {
-    if (props.context.workspace.transforming) return;
     update_dot_position();
 }
 
@@ -198,7 +197,7 @@ function dot_mousemove(e: MouseEvent) {
     cursor_point.value = props.context.workspace.getContentXY(e);
 }
 
-function point_mouseup(e: MouseEvent) {
+function point_mouseup() {
     cursor_down.value = false;
     pointModifyHandler?.fulfil();
     pointModifyHandler = undefined;

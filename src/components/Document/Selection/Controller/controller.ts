@@ -74,7 +74,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (forbidden_to_modify_frame(shape) || !permIsEdit(context) || shape instanceof ContactLineView) return;
             context.tool.setAction(Action.AutoV);
             workspace.setPathEditMode(true); // --开启对象编辑
-            context.escstack.save('path-edit', exist_edit_mode);
+            context.escstack.save('path-edit', exit_edit_mode);
         }
     }
 
@@ -212,7 +212,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     }
 
-    function exist_edit_mode() {
+    function exit_edit_mode() {
         const al = context.workspace.is_path_edit_mode;
         workspace.setPathEditMode(false);
         return al;
