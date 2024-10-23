@@ -22,7 +22,6 @@ interface Props {
 const props = defineProps<Props>();
 const selectedShapes: Map<string, ShapeView> = new Map();
 function select() {
-    if (props.context.workspace.transforming) return;
     const { top, left, width, height } = props.params.frame;
     if (width === height && height === 0) return;
 
