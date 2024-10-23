@@ -44,26 +44,24 @@ const emits = defineEmits<{
     (e: 'closeLoading'): void;
     (e: 'contentVisible'): void;
 }>();
-
+const props = defineProps<{
+    context: Context;
+    page: PageView;
+}>();
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const t = useI18n().t;
-const props = defineProps<{
-    context: Context
-    page: PageView
-}>();
 const workspace = props.context.workspace;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
 const dragActiveDis = 4;
-const matrix: Matrix = reactive(props.context.workspace.matrix as any);
+const matrix = reactive(props.context.workspace.matrix);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const root = ref<HTMLDivElement>();
 const mousedownOnClientXY: ClientXY = { x: 0, y: 0 };
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 };
 const mouseOnClient: ClientXYRaw = { x: 0, y: 0 };
-let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const selector_mount = ref<boolean>(false);
 const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
@@ -78,10 +76,11 @@ const creatorMode = ref<boolean>(false);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 const image_tile_mode = ref<boolean>(false);
-let matrix_inverse: Matrix = new Matrix();
-let firstTime = false;
 const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 });
 const searcher = new Search(props.context);
+let shapesContainsMousedownOnPageXY: ShapeView[] = [];
+let matrix_inverse: Matrix = new Matrix();
+let firstTime = false;
 
 function _updateRoot(context: Context, element: HTMLElement) {
     const { x, y, right, bottom, width, height } = element.getBoundingClientRect();
@@ -470,6 +469,8 @@ function tool_watcher(type: number) {
 function workspace_watcher(type?: number | string, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.matrix);
+        matrix_inverse = new Matrix(matrix.inverse);
+        collect_once(props.context, matrix as Matrix);
     } else if (type === WorkSpace.PASTE_RIGHT) {
         props.context.workspace.clipboard.paste(t, undefined, mousedownOnPageXY);
     } else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) {
@@ -488,16 +489,10 @@ function frame_watcher() {
     if (!root.value) return;
     _updateRoot(props.context, root.value);
 }
-
 function cursor_watcher(t: number, type: string) {
     if (t === Cursor.CHANGE_CURSOR && type) {
         cursor.value = type;
     }
-}
-
-function matrix_watcher(nm: Matrix) {
-    matrix_inverse = new Matrix(nm.inverse);
-    collect_once(props.context, nm);
 }
 
 function copy_watcher(event: ClipboardEvent) {
@@ -705,7 +700,6 @@ const stop1 = watch(() => props.page, (cur, old) => {
     updateBackground(cur);
 })
 
-const stop2 = watch(() => matrix, matrix_watcher, { deep: true });
 onBeforeMount(() => {
     props.context.user.updateUserConfig();
 });
@@ -761,7 +755,6 @@ onUnmounted(() => {
     window.removeEventListener('blur', windowBlur);
     window.removeEventListener('focus', windowFocus);
     stop1();
-    stop2();
     clearInterval(timer);
     searcher.destroy();
 })
@@ -772,7 +765,7 @@ onUnmounted(() => {
         @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
-        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"/>
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix as Matrix"/>
         <Rule :context="props.context" :page="(props.page as PageView)" />
         <!-- 页面调整控件，确保在ContentView顶层 -->
         <Space :context="props.context" :visible="spacePressed" />
