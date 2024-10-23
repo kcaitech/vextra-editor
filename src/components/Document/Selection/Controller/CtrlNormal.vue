@@ -2,7 +2,6 @@
 /**
  * @description 单选通用型控件
  */
-
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
 import { ArtboradView, PolygonShapeView, ShapeView, PathShapeView } from '@kcdesign/data';
@@ -24,9 +23,7 @@ import AutoLayoutSpace from "./AutoLayoutController/AutoLayoutSpace.vue";
 interface Props {
     context: Context;
     shape: ShapeView;
-
     controllerFrame: Point[];
-
     theme: SelectionTheme;
 }
 
@@ -40,9 +37,7 @@ const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
 
 function modify_selection_hidden() {
-    if (hidden_holder) {
-        clearTimeout(hidden_holder);
-    }
+    if (hidden_holder) clearTimeout(hidden_holder);
 
     hidden_holder = setTimeout(() => {
         selection_hidden.value = false;
@@ -66,7 +61,7 @@ const axle = computed<ClientXY>(() => {
 
 const partVisible = computed(() => {
     return bounds.bottom - bounds.top > 8 || bounds.right - bounds.left > 8;
-})
+});
 
 function updateControllerView() {
     const framePoint = props.controllerFrame;
@@ -86,37 +81,20 @@ function updateControllerView() {
     }, bounds);
 }
 
-function selection_watcher(t: number | string) {
-    if (t == Selection.CHANGE_SHAPE || t === Selection.HIDDEN_RESET) {
-        reset_hidden();
-    } else if (t === Selection.SELECTION_HIDDEN) {
-        modify_selection_hidden();
-    }
-}
-
-function workspace_watcher(t: number, some: any) {
-    if (t === WorkSpace.TRANSLATING) {
-        selection_hidden.value = props.context.workspace.isTranslating;
-        autoLayoutShow.value = false;
-    } else if (t === WorkSpace.PATH_EDIT_MODE) {
-        selection_hidden.value = props.context.workspace.is_path_edit_mode;
-    }
-}
-
 function check_status() {
     selection_hidden.value = props.context.workspace.is_path_edit_mode;
 }
 
-function mousedown(e: MouseEvent) {
+function mousedown() {
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
 
-function mousemove(e: MouseEvent) {
+function mousemove() {
     if (isDrag()) selection_hidden.value = true;
 }
 
-function mouseup(e: MouseEvent) {
+function mouseup() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
@@ -126,43 +104,57 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 
-const is_enter = ref(false);
+let needActivateAfterEditorDestroy: boolean = false;
+const pointActivated = ref(false);
 const autoLayoutShow = ref(false);
 const mouseenter = () => {
-    if (props.context.workspace.transforming) {
-        return;
-    }
-    is_enter.value = true;
+    if (props.context.workspace.linearEditorExist) return needActivateAfterEditorDestroy = true;
+    needActivateAfterEditorDestroy = true;
+    pointActivated.value = true;
 }
-
-const mouseleave = () => {
-    is_enter.value = false;
-    if (props.context.workspace.transforming) {
-        return;
-    }
-    autoLayoutShow.value = false;
-}
-
 const move = () => {
     autoLayoutShow.value = true;
 }
-
-const stop = watchEffect(updateControllerView);
+const mouseleave = () => {
+    if (props.context.workspace.linearEditorExist) return needActivateAfterEditorDestroy = false;
+    needActivateAfterEditorDestroy = false;
+    pointActivated.value = false;
+    autoLayoutShow.value = false;
+}
 
 const pointVisible = computed(() => {
-    return bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90;
+    return pointActivated.value && (bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90);
 })
 
-const paddintIndex = ref(-1);
-const hoverPaddintIndex = (index: number) => {
-    paddintIndex.value = index;
+const paddingIndex = ref(-1);
+const hoverPaddingIndex = (index: number) => paddingIndex.value = index;
+
+function color_watcher(t: number, hidden: boolean) {
+    if (t === ColorCtx.HIDDEN_SELECTED) selection_hidden.value = hidden;
 }
-const color_watcher = (t: number, hidden: boolean) => {
-    if (t === ColorCtx.HIDDEN_SELECTED) {
-        selection_hidden.value = hidden;
+
+function selection_watcher(t: number | string) {
+    if (t == Selection.CHANGE_SHAPE || t === Selection.HIDDEN_RESET) {
+        reset_hidden();
+    } else if (t === Selection.SELECTION_HIDDEN) {
+        modify_selection_hidden();
     }
 }
 
+function workspace_watcher(t: number) {
+    if (t === WorkSpace.TRANSLATING) {
+        selection_hidden.value = props.context.workspace.isTranslating;
+        autoLayoutShow.value = false;
+    } else if (t === WorkSpace.PATH_EDIT_MODE) {
+        selection_hidden.value = props.context.workspace.is_path_edit_mode;
+    } else if (t === WorkSpace.LINER_EDITOR_CONSTRUCTED) {
+        pointActivated.value = false;
+    } else if (t === WorkSpace.LINER_EDITOR_DESTROYED) {
+        if (needActivateAfterEditorDestroy) pointActivated.value = true;
+    }
+}
+
+const stop = watchEffect(updateControllerView);
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
@@ -191,7 +183,7 @@ onUnmounted(() => {
         fill="transparent"/>
     <ShapesStrokeContainer :context="props.context"/>
     <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
-                       :paddintIndex="paddintIndex"/>
+                       :paddingIndex="paddingIndex"/>
     <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
                    :theme="theme"/>
     <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
@@ -199,10 +191,9 @@ onUnmounted(() => {
     <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
                      :controllerFrame="controllerFrame"/>
     <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
-                           @hoverPaddint="hoverPaddintIndex"/>
-    <component v-if="!(shape as PathShapeView).haveEdit" :pointVisible="is_enter && pointVisible"
-               :is="point_map.get(shape.type)"
-               :context="props.context" :shape="props.shape as PolygonShapeView" :theme="theme"/>
+                           @hoverPaddint="hoverPaddingIndex"/>
+    <component v-if="!(shape as PathShapeView).haveEdit" :pointVisible="pointVisible"
+               :is="point_map.get(shape.type)" :context="props.context" :shape="props.shape as PolygonShapeView"/>
 </svg>
 </template>
 <style lang='scss' scoped>

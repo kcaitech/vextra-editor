@@ -44,10 +44,12 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     static NEW_ENV_MATRIX_CHANGE = 22;
     static TABLE_TEXT_GRADIENT_UPDATE = 23;
     static ROOT_UPDATE = 24;
-    static FONTLISR_ALL = WorkspaceEvents.add_local_font;
+    static FONT_LIST_ALL = WorkspaceEvents.add_local_font;
     static LOCAL_FONT_LIST_UPDATE = 25;
     static SCALING = 26;
     static ROTATING = 27;
+    static LINER_EDITOR_CONSTRUCTED = 28;
+    static LINER_EDITOR_DESTROYED = 29;
 
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -80,13 +82,12 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         element: undefined,
         center: { x: 0, y: 0 }
     };
-    private m_client_sys: 'mac' | 'windows';
+    private m_linear_editor_exist: boolean = false;
 
     constructor(context: Context) {
         super();
         this.context = context;
         this.m_clipboard = new Clipboard(context);
-        this.m_client_sys = is_mac() ? 'mac' : 'windows';
     }
 
     get curScale(): number {
@@ -365,5 +366,14 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
 
     get tidyUpIsTrans() {
         return this.m_is_trans_tidy_up;
+    }
+
+    set linearEditorExist(val: boolean) {
+        this.m_linear_editor_exist = val;
+        this.notify(val ? WorkSpace.LINER_EDITOR_CONSTRUCTED : WorkSpace.LINER_EDITOR_DESTROYED);
+    }
+
+    get linearEditorExist() {
+        return this.m_linear_editor_exist;
     }
 }

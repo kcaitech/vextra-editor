@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { SelectionTheme } from '@/context/selection';
 import { Matrix, PolygonShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
@@ -11,7 +10,6 @@ import { format_value } from "@/utils/common";
 interface Props {
     context: Context
     shape: PolygonShapeView
-    theme: SelectionTheme
     pointVisible: boolean
 }
 

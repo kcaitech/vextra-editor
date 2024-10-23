@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
 import { ArtboradView, ColVector3D, Matrix, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { WorkSpace } from '@/context/workspace';
 
 type Box = {
     lt: Point,
@@ -14,7 +14,7 @@ type Box = {
 
 interface Props {
     context: Context
-    paddintIndex: number
+    paddingIndex: number
 }
 
 interface Point {
@@ -94,17 +94,17 @@ const mouseenter = (e: MouseEvent, index: number) => {
 
 const mouseleave = (e: MouseEvent, index: number) => {
     const el = paddingRect.value[index];
-    if (el && index !== props.paddintIndex) {
+    if (el && index !== props.paddingIndex) {
         el.style.fill = 'transparent';
     }
 }
 
-watch(() => props.paddintIndex, (v) => {
+watch(() => props.paddingIndex, (v) => {
     if (props.context.workspace.transforming) {
         return;
     }
-    if (props.paddintIndex > -1) {
-        const el = paddingRect.value[props.paddintIndex];
+    if (props.paddingIndex > -1) {
+        const el = paddingRect.value[props.paddingIndex];
         if (el) {
             el.style.fill = 'pink';
         }

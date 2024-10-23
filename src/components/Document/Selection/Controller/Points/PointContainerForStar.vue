@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { SelectionTheme, XY } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { PointActionType, PointHandler } from '@/transform/point';
 import { CurvePoint, ShapeFrame, StarShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
@@ -10,11 +10,9 @@ import { fixedZero } from '@/utils/common';
 import { getTransformCol } from '@/utils/content';
 import { WorkSpace } from '@/context/workspace';
 
-
 interface Props {
     context: Context
     shape: StarShapeView
-    theme: SelectionTheme
     pointVisible: boolean
 }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { SelectionTheme, XY } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
 import { ColVector3D, CurvePoint, Matrix, PolygonShapeView, ShapeFrame, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
@@ -12,7 +12,6 @@ import { WorkSpace } from '@/context/workspace';
 interface Props {
     context: Context
     shape: PolygonShapeView
-    theme: SelectionTheme
     pointVisible: boolean
 }
 
@@ -134,14 +133,14 @@ const getMovePoint = (e: MouseEvent) => {
     const shape = props.shape;
     const curDot = radius_dot.value[changeR];
     const frame = shape.frame;
-    const clinetXY = props.context.workspace.getContentXY(e);
+    const clientXY = props.context.workspace.getContentXY(e);
     const matrix = new Matrix(props.context.workspace.matrix);
     const shape_root_m = shape.matrix2Root();
     let m = makeShapeTransform2By1(shape_root_m).clone();
     const clientTransform = makeShapeTransform2By1(matrix);
     m.addTransform(clientTransform); //root到视图
     const _m = m.getInverse(); // 视图转图形
-    const { col0: xy } = _m.transform([ColVector3D.FromXY(clinetXY.x, clinetXY.y)]);
+    const { col0: xy } = _m.transform([ColVector3D.FromXY(clientXY.x, clientXY.y)]);
     xy.x /= frame.width;
     xy.y /= frame.height;
     const d0 = Math.hypot(xy.x - 0, xy.y - 0);

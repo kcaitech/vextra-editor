@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { SelectionTheme, XY } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { PointActionType, PointHandler } from '@/transform/point';
-import { ColVector3D, CurvePoint, Matrix, PolygonShapeView, ShapeFrame, makeShapeTransform2By1 } from '@kcdesign/data';
+import { CurvePoint, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint } from './common';
 import { bezierCurvePoint } from '@/utils/pathedit';
@@ -14,7 +14,6 @@ import { WorkSpace } from '@/context/workspace';
 interface Props {
     context: Context
     shape: PolygonShapeView
-    theme: SelectionTheme
     pointVisible: boolean
 }
 

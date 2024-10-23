@@ -70,6 +70,8 @@ export class ScaleHandler extends TransformHandler {
             && (selected[0] instanceof ArtboradView || selected[0] instanceof SymbolView)
             && !!selected[0].childs.length
         ) this.collectSpark(selected[0]);
+
+        context.workspace.linearEditorExist = true;
     }
 
     createApiCaller() {
@@ -82,6 +84,7 @@ export class ScaleHandler extends TransformHandler {
     fulfil() {
         this.workspace.scaling(false);
         this.workspace.setSelectionViewUpdater(true);
+        this.workspace.linearEditorExist = false;
 
         super.fulfil();
     }
