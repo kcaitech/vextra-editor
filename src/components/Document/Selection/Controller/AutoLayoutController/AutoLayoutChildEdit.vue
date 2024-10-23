@@ -68,9 +68,7 @@ function selectionWatcher(t: any, params?: any) {
             moveTrans.value = { x: transx, y: transy }
         }
     } else if (t === Selection.UPDATE_LAYOUT_DOTTED_LINE) {
-        if (params) {
-            updateDottedPath(params);
-        }
+        if (params) updateDottedPath(params);
     }
 }
 
@@ -82,13 +80,9 @@ const updateDottedPath = (downXY: XY) => {
 
 function hoverDottedPaths() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
-    if (!hoveredShape) {
-        return;
-    }
+    if (!hoveredShape) return;
     if (!(hoveredShape as ArtboradView).autoLayout) return;
-    if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) {
-        return;
-    }
+    if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) return;
     const bordersTakeSpace = (hoveredShape as ArtboradView).autoLayout?.bordersTakeSpace;
     const childs = hoveredShape.childs;
     for (let i = 0; i < childs.length; i++) {
@@ -242,6 +236,7 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
 }
 
 const getDottedPaths = () => {
+    if (props.context.workspace.isTranslating) return;
     dottedPaths.value = [];
     movePath.value = [];
     multiplePath.value = undefined;
@@ -264,9 +259,7 @@ function watch_shapes() {
     });
 }
 const update = (...args: any[]) => {
-    if (dottedPaths.value.length && args.includes('layout')) {
-        getDottedPaths();
-    }
+    if (dottedPaths.value.length && args.includes('layout')) getDottedPaths();
 }
 
 onMounted(() => {

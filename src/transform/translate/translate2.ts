@@ -1142,6 +1142,7 @@ export class Translate2 extends TransformHandler {
     }
 
     private __flex() {
+        console.log('--this.client--', this.client);
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.client);
         if (!this.jumper.inited) this.jumper.init();
         this.jumper.swap();
@@ -1194,11 +1195,6 @@ export class Translate2 extends TransformHandler {
     private __mode: TranslateMode;
     private __last_mode: TranslateMode | undefined;
 
-    private __blur() {
-
-    }
-
-    private blur = this.__blur.bind(this);
     get mode() {
         return this.__mode;
     }
