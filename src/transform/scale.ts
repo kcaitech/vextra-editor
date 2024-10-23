@@ -604,8 +604,17 @@ export class ScaleHandler extends TransformHandler {
 
             sizeForSelection.width = rbPointForSelection.x - ltPointForSelection.x;
             sizeForSelection.height = rbPointForSelection.y - ltPointForSelection.y;
+            const dw = sizeForSelection.width > 0 ? 1 : -1;
+            const dh = sizeForSelection.height > 0 ? 1 : -1;
             sizeForSelection.width = Math.round(sizeForSelection.width);
             sizeForSelection.height = Math.round(sizeForSelection.height);
+            if (sizeForSelection.width === 0) sizeForSelection.width = 1 * dw;
+            if (sizeForSelection.height === 0) sizeForSelection.height = 1 * dh;
+        } else {
+            const dw = sizeForSelection.width > 0 ? 1 : -1;
+            const dh = sizeForSelection.height > 0 ? 1 : -1;
+            if (sizeForSelection.width === 0) sizeForSelection.width = 0.01 * dw;
+            if (sizeForSelection.height === 0) sizeForSelection.height = 0.01 * dh;
         }
         // 选区变换后的Transform
         // Transform = T·R·K·S
