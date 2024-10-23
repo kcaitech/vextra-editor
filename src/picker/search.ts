@@ -27,6 +27,12 @@ export class Search {
         window.addEventListener('blur', this.blur);
     }
 
+    private __event: MouseEvent | undefined;
+
+    set event(e: MouseEvent) {
+        this.__event = e;
+    }
+
     private __last_cursor: string | undefined;
 
     private modifyCursor() {

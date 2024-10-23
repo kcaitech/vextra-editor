@@ -374,6 +374,9 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         this.notify(val ? WorkSpace.LINER_EDITOR_CONSTRUCTED : WorkSpace.LINER_EDITOR_DESTROYED);
     }
 
+    /**
+     * @description 存在 Scale || Translate 编辑器
+     */
     get linearEditorExist() {
         return this.m_linear_editor_exist;
     }

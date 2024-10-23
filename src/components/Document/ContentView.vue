@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-    computed, getCurrentInstance, h, nextTick,
-    onBeforeMount, onMounted, onUnmounted, reactive,
-    ref, watch
-} from 'vue';
+import { getCurrentInstance, h, nextTick, onBeforeMount, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
@@ -73,7 +69,6 @@ const selector_mount = ref<boolean>(false);
 const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursor = ref<string>('');
 const rootId = ref<string>('content');
-let isMouseLeftPress: boolean = false;
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>(color2string(Page.defaultBGColor));
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
@@ -146,7 +141,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+    if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || workspace.linearEditorExist) return;
     if (e.code === 'Space') {
         if (workspace.select || spacePressed.value) return;
         spacePressed.value = true;
@@ -318,6 +313,7 @@ function createSelector(e: MouseEvent) {
 }
 
 function updateMouse(e: MouseEvent) {
+    searcher.event = e;
     mouseOnClient.x = e.clientX;
     mouseOnClient.y = e.clientY;
 }
@@ -331,12 +327,11 @@ function onMouseDown(e: MouseEvent) {
         }
         firstTime = false;
     }
-    if (workspace.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
+    if (workspace.linearEditorExist) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button === 0) {
         const action = props.context.tool.action;
         if (action === Action.AddTable) return;
         setMousedownXY(e);
-        isMouseLeftPress = true;
         wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
         props.context.tool.referSelection.resetSelected();
 
@@ -348,19 +343,24 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 
-// mousemove(target：document)
 let timer: any = null;
 
-function onMouseMove(e: MouseEvent) {
-    if (workspace.controller !== 'page') return;
+function onMouseMove(e: MouseEvent) { // target is document
+    if (workspace.controller === 'controller') return;
     if (isDragging && wheel) {
-        wheel.moving(e);
-        clearInterval(timer);
-        timer = null;
-        timer = setInterval(() => {
-            createSelector(e);
-        }, 6);
-        createSelector(e);
+        if (wheel.is_inner(e)) {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+                wheel.moving(e);
+            }
+        } else {
+            wheel.moving(e);
+            clearInterval(timer);
+            timer = setInterval(() => {
+                createSelector(e);
+            }, 30);
+        }
     } else {
         isDragging = true;
     }
@@ -370,30 +370,18 @@ let isDragging: boolean = false;
 let wheel: Wheel | undefined = undefined;
 
 function onMouseMove_CV(e: MouseEvent) {
-    const w = workspace;
-    if (!spacePressed.value && w.controller === 'page' && !w.transforming) {
-        const action = props.context.tool.action;
-        if (e.buttons === 1) {
-            if ((action === Action.AutoV || action === Action.AutoK) && isMouseLeftPress) {
-                select(e);
-            }
-        } else if (e.buttons === 0) {
-            if (action === Action.AutoV || action === Action.AutoK) {
-                search(e); // 图形检索(hover)
-            }
-        }
-    }
     updateMouse(e);
+    if (spacePressed.value || workspace.controller === 'controller' || workspace.linearEditorExist) return;
+    const action = props.context.tool.action;
+    if (action === Action.AutoV || action === Action.AutoK) {
+        const buttons = e.buttons;
+        if (buttons === 1) select(e); else if (buttons === 0) search(e);
+    }
 }
 
 function onMouseUp(e: MouseEvent) {
     if (e.button !== 0) return;
-    isMouseLeftPress = false;
     if (selector_mount.value) selectEnd();
-    if (wheel) wheel = wheel.remove();
-    isDragging = false;
-    clearInterval(timer);
-    timer = null;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
 }
@@ -406,6 +394,14 @@ function selectEnd() {
     if (!props.context.workspace.select) return;
     props.context.workspace.selecting(false);
     props.context.cursor.cursor_freeze(false);
+
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+    }
+    if (wheel) wheel = wheel.remove();
+    isDragging = false;
+
     selectorFrame.top = 0;
     selectorFrame.left = 0;
     selectorFrame.width = 0;
@@ -416,7 +412,6 @@ function selectEnd() {
 // 窗口失焦
 function windowBlur() {
     selectEnd();
-    isMouseLeftPress = false;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
 }
@@ -777,7 +772,7 @@ onUnmounted(() => {
         @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
-        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"/>
         <Rule :context="props.context" :page="(props.page as PageView)" />
         <!-- 页面调整控件，确保在ContentView顶层 -->
         <Space :context="props.context" :visible="spacePressed" />
