@@ -817,6 +817,11 @@ export class ScaleHandler extends TransformHandler {
             height: rbPointForSelection.y - ltPointForSelection.y
         }
 
+        const dw = sizeForSelection.width > 0 ? 1 : -1;
+        const dh = sizeForSelection.height > 0 ? 1 : -1;
+        if (sizeForSelection.width === 0) sizeForSelection.width = 0.01 * dw;
+        if (sizeForSelection.height === 0) sizeForSelection.height = 0.01 * dh;
+
         const transformForSelection = this.selectionTransform.clone();
         const __scale = transformForSelection.decomposeScale();
 
