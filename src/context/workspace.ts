@@ -4,7 +4,6 @@ import { Clipboard } from "@/utils/clipboard";
 import { PageXY, XY } from "./selection";
 import { Action } from "@/context/tool";
 import { IWorkspace, WorkspaceEvents } from "@/openapi/workspace";
-import { is_mac } from "@/utils/common";
 
 export interface Root {
     init: boolean
