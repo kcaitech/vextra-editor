@@ -1,5 +1,4 @@
 import { Context } from "@/context";
-import { v4 } from "uuid";
 import { ShapeView } from "@kcdesign/data";
 
 export class Search {
@@ -17,7 +16,6 @@ export class Search {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute('width', '10');
         svg.setAttribute('height', '10');
-        svg.setAttribute('id', v4().split('-').pop()!);
         svg.appendChild(this.path);
         this.SVG = svg;
 
