@@ -1142,7 +1142,6 @@ export class Translate2 extends TransformHandler {
     }
 
     private __flex() {
-        console.log('--this.client--', this.client);
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.client);
         if (!this.jumper.inited) this.jumper.init();
         this.jumper.swap();
