@@ -143,7 +143,7 @@ function window_blur() {
 }
 
 function selection_watcher(type: number | string) {
-    if (type === Selection.CHANGE_SHAPE) {
+    if (type === Selection.CHANGE_SHAPE || type === Selection.CHANGE_PAGE) {
         props.context.workspace.setPathEditMode(false);
     }
 }
