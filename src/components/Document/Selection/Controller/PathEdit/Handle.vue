@@ -225,6 +225,7 @@ function modify_action_curve_point(side: ActionHandle) {
 function down(e: MouseEvent, side: ActionHandle) {
     e.stopPropagation();
     e.preventDefault();
+    console.log('我已经stop了')
     modify_action_curve_point(side);
     modify_side(side);
     modify_down_site(e);
@@ -375,7 +376,7 @@ function path_selection_watcher(t: number) {
     }
 }
 
-function shape_watcher(t: any) {
+function shape_watcher() {
     update();
 }
 
