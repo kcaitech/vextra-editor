@@ -70,7 +70,7 @@ const selectLocalFont = (font: string) => {
     if (!f) {
         const saveList = [...props.context.workspace.userLocalFontList, font];
         props.context.workspace.setUserLocalFontList(saveList);
-        props.context.workspace.notify(WorkSpace.FONTLISR_ALL, JSON.stringify(saveList));
+        props.context.workspace.notify(WorkSpace.FONT_LIST_ALL, JSON.stringify(saveList));
         fontList.local.push(font);
         props.context.workspace.setFontNameListLocal(font);
     }

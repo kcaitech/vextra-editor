@@ -4,7 +4,7 @@ import { ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
-import { Translate2 } from "@/transform/translate2";
+import { Translate2 } from "@/transform/translate/translate2";
 
 import { TitleAttri } from "@/components/Document/Content/titleRenderer";
 

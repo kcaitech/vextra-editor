@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { ArtboradView, ColVector3D, makeShapeTransform2By1, Matrix, PageView, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboradView, ColVector3D, makeShapeTransform2By1, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "./common";
 import { getShapeFrame } from "./content";
 import { Selection, XY } from "@/context/selection";
@@ -210,10 +210,6 @@ const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
         const start_equal = rows.every(s => getDiff(frame.x, s._p_frame.x) < 1);
         const center_equal = rows.every(s => getDiff((frame.x + (frame.width / 2)), (s._p_frame.x + (s._p_frame.width / 2))) < 1);
         const end_equal = rows.every(s => getDiff((frame.x + frame.width), (s._p_frame.x + s._p_frame.width)) < 1);
-        rows.forEach(s => {
-            console.log(getDiff(frame.x, s._p_frame.x));
-            
-        })
         if (start_equal || center_equal || end_equal) {
             let gap_equal = true;
             const space = rows[1]._p_frame.y - (rows[0]._p_frame.y + rows[0]._p_frame.height);

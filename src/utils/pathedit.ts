@@ -11,20 +11,13 @@ import {
     ShapeType,
     ShapeView
 } from "@kcdesign/data";
-import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 
 export function get_parent_points(context: Context, range?: Map<number, number[]>) {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
+    if (!path_shape)  return;
 
-    const parent = path_shape.parent;
-
-    if (!parent) {
-        return;
-    }
+    const parent = path_shape.parent!;
 
     let m: Matrix;
 

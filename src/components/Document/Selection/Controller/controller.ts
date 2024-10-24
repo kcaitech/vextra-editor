@@ -28,10 +28,10 @@ import {
     update_comment
 } from "@/utils/mouse";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
-import { TranslateHandler } from '@/transform/translate';
+import { TranslateHandler } from '@/transform/translate/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
-import { Translate2 } from "@/transform/translate2";
+import { Translate2 } from "@/transform/translate/translate2";
 import { Action } from "@/context/tool";
 import { ActionMode, Direction } from "@/transform/direction";
 
@@ -74,7 +74,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (forbidden_to_modify_frame(shape) || !permIsEdit(context) || shape instanceof ContactLineView) return;
             context.tool.setAction(Action.AutoV);
             workspace.setPathEditMode(true); // --开启对象编辑
-            context.escstack.save('path-edit', exist_edit_mode);
+            context.escstack.save('path-edit', exit_edit_mode);
         }
     }
 
@@ -212,7 +212,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     }
 
-    function exist_edit_mode() {
+    function exit_edit_mode() {
         const al = context.workspace.is_path_edit_mode;
         workspace.setPathEditMode(false);
         return al;
@@ -377,6 +377,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             isDragging = false;
             transporter?.fulfil();
             transporter = undefined;
+
+            translate2?.fulfil();
+            translate2 = undefined;
 
             remove_move_and_up_from_document(mousemove, mouseup);
         }

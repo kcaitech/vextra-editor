@@ -1,25 +1,8 @@
 import { TransformHandler } from "@/transform/handler";
 import {
-    ArtboradView,
-    AutoLayout,
-    BorderPosition,
-    ColVector3D,
-    Matrix,
-    MigrateItem,
-    PageView,
-    Shape,
-    ShapeFrame,
-    ShapeType,
-    ShapeView,
-    StackMode,
-    SymbolView,
-    Transform,
-    TransformRaw,
-    TranslateUnit,
-    Transporter,
-    adapt2Shape,
-    layoutShapesOrder,
-    makeShapeTransform1By2,
+    ArtboradView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
+    ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
+    adapt2Shape, layoutShapesOrder, makeShapeTransform1By2
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -32,19 +15,16 @@ import { isShapeOut } from "@/utils/assist";
 import { StyleManager } from "@/transform/style";
 import { WorkSpace } from "@/context/workspace";
 import { Navi } from "@/context/navigate";
-
 enum TranslateMode {
     Linear = 'linear',
     Prev = 'prev',
     Flex = 'flex'
 }
-
 interface TranslateBaseItem {
     transformRaw: TransformRaw,
     transform: Transform;
     view: ShapeView;
 }
-
 interface EnvLeaf {
     view: ShapeView;
     children: EnvLeaf[];
@@ -653,11 +633,10 @@ class SelManager {
 
         const results = translate.api!.drawn(compare_layer_3(this.shapes, -1), transformOriginal, envOriginal)!;
 
-        const page = translate.page;
-        this.context.nextTick(page, () => {
+        this.context.nextTick(translate.page, () => {
             const selects: ShapeView[] = [];
             results.forEach((s) => {
-                const v = page.shapes.get(s.id);
+                const v = translate.page.shapes.get(s.id);
                 if (v) selects.push(v);
             })
             this.shapes = selects;
@@ -705,7 +684,7 @@ class SelManager {
  * @description 自动布局管理器
  */
 class Jumper {
-    private translate: Translate2;
+    private readonly translate: Translate2;
     private context: Context;
 
     private __env: ArtboradView | SymbolView | undefined;
@@ -819,64 +798,33 @@ class Jumper {
     }
 }
 
-function tips4keyboard(context: Context) {
-    const view = context.selection.selectedShapes[0];
-    const parent = view.parent!;
-    const box = parent.boundingBox();
-    const matrix = parent.parent!.matrix2Root();
-    matrix.multiAtLeft(context.workspace.matrix);
-    const width = 320;
-    const height = 240;
-
-    const xy = matrix.computeCoord3(box);
-
-    const container = document.createElement('div');
-    container.classList.add('help-tips-windows');
-
-    container.style.left = Math.max(20, xy.x - width - 20) + 'px';
-    container.style.top = Math.max(20, xy.y) + 'px';
-
-    const span = document.createElement('span');
-    span.innerText = '除了使用鼠标拖拽之外，使用键盘中的方向键，也可以很方便的调整图层布局哦！';
-    container.append(span);
-
-    const board = document.createElement('div');
-    const button = document.createElement('div');
-    button.style.width = '40px';
-    button.style.height = '40px';
-    button.style.border = '1px solid #595959';
-    button.style.borderRadius = '4px';
-    button.style.backgroundColor = '#8C8C8C';
-
-}
-
 function boundingBox(shape: Shape, includedBorder: boolean): ShapeFrame {
     let frame = { ...shape.frame };
     if (includedBorder) {
         const borders = shape.getBorders();
-        let maxtopborder = 0;
-        let maxleftborder = 0;
-        let maxrightborder = 0;
-        let maxbottomborder = 0;
+        let max_top_border = 0;
+        let max_left_border = 0;
+        let max_right_border = 0;
+        let max_bottom_border = 0;
         borders.forEach(b => {
             if (b.isEnabled) {
                 if (b.position === BorderPosition.Outer) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
+                    max_top_border = Math.max(b.sideSetting.thicknessTop, max_top_border);
+                    max_left_border = Math.max(b.sideSetting.thicknessLeft, max_left_border);
+                    max_right_border = Math.max(b.sideSetting.thicknessRight, max_right_border);
+                    max_bottom_border = Math.max(b.sideSetting.thicknessBottom, max_bottom_border);
                 } else if (b.position === BorderPosition.Center) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
+                    max_top_border = Math.max(b.sideSetting.thicknessTop / 2, max_top_border);
+                    max_left_border = Math.max(b.sideSetting.thicknessLeft / 2, max_left_border);
+                    max_right_border = Math.max(b.sideSetting.thicknessRight / 2, max_right_border);
+                    max_bottom_border = Math.max(b.sideSetting.thicknessBottom / 2, max_bottom_border);
                 }
             }
         })
-        frame.x -= maxleftborder;
-        frame.y -= maxtopborder;
-        frame.width += maxleftborder + maxrightborder;
-        frame.height += maxtopborder + maxbottomborder;
+        frame.x -= max_left_border;
+        frame.y -= max_top_border;
+        frame.width += max_left_border + max_right_border;
+        frame.height += max_top_border + max_bottom_border;
     }
     const m = shape.transform;
     const corners = [
@@ -1123,6 +1071,8 @@ export class Translate2 extends TransformHandler {
         }
 
         if (this.__mode === TranslateMode.Linear) this.selModel.collect();
+
+        context.workspace.linearEditorExist = true;
     }
 
     private __api: Transporter | undefined;
@@ -1213,15 +1163,15 @@ export class Translate2 extends TransformHandler {
 
     protected keydown(event: KeyboardEvent) {
         if (event.repeat) return;
-        if (event.shiftKey) {
+        if (event.shiftKey && !this.shiftStatus) {
             this.shiftStatus = true;
             this.__execute();
         }
-        if (event.altKey) {
+        if (event.altKey && !this.altStatus) {
             this.altStatus = true;
             this.selManager.drawn();
         }
-        if (event.code === "Space") {
+        if (event.code === "Space" && !this.radar.fixed) {
             this.radar.fixed = true;
         }
     }
@@ -1230,6 +1180,7 @@ export class Translate2 extends TransformHandler {
         if (event.code === 'ShiftLeft') {
             this.shiftStatus = false;
             this.__execute();
+            return;
         }
         if (event.code === "AltLeft") {
             this.altStatus = false;
@@ -1327,6 +1278,7 @@ export class Translate2 extends TransformHandler {
     fulfil() {
         this.workspace.translating(false);
         this.workspace.setSelectionViewUpdater(true);
+        this.workspace.linearEditorExist = false;
 
         if (this.mode === TranslateMode.Prev) this.inserter.insert();
         else if (this.mode === TranslateMode.Flex) {

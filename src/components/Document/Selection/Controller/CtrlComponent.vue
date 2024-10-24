@@ -131,9 +131,9 @@ const move = () => {
     autoLayoutShow.value = true;
 }
 
-const paddintIndex = ref(-1);
-const hoverPaddintIndex = (index: number) => {
-    paddintIndex.value = index;
+const paddingIndex = ref(-1);
+const hoverPaddingIndex = (index: number) => {
+    paddingIndex.value = index;
 }
 
 function modify_symbol_type() {
@@ -194,7 +194,7 @@ onUnmounted(() => {
         :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
         fill="transparent"/>
     <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
-                       :paddintIndex="paddintIndex"/>
+                       :paddingIndex="paddingIndex"/>
     <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
                    :theme="theme"/>
     <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
@@ -202,7 +202,7 @@ onUnmounted(() => {
     <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
                      :controllerFrame="controllerFrame"/>
     <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
-                           @hoverPaddint="hoverPaddintIndex"/>
+                           @hoverPaddint="hoverPaddingIndex"/>
     <AddState v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union" :context="props.context"
               :shape="props.shape" :c-frame="props.controllerFrame" :symbol-type="symbol_type"/>
 </svg>
