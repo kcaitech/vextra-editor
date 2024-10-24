@@ -142,7 +142,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
 
     get rootMatrix() {
         const m = new Matrix(this.m_matrix.inverse);
-        m.trans(this.root.x, this.root.y);
+        m.trans(-this.root.x, -this.root.y);
         return m;
     }
 
