@@ -38,13 +38,7 @@ const contour = () => {
     const selection = props.context.selection;
     const living = (selection.hoveredShape ? [selection.hoveredShape] : selection.labelLivingGroup || []);
     const fixed = selection.labelFixedGroup || selection.selectedShapes;
-    if (!living.length || !fixed.length) {
-        return;
-    }
-
-    if (fixed.length === 1 && living.length === 1 && fixed[0].id === living[0].id) {
-        return;
-    }
+    if (!living.length || !fixed.length || (fixed.length === 1 && living.length === 1 && fixed[0].id === living[0].id)) return;
 
     matrix.reset(props.matrix);
     fixedContour(fixed);
