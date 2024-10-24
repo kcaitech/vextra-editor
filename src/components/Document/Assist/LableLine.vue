@@ -36,7 +36,7 @@ const size_posi = ref<CenterPoint[]>([]);
 const contour = () => {
     clearPoint();
     const selection = props.context.selection;
-    const living = selection.labelLivingGroup || (selection.hoveredShape ? [selection.hoveredShape] : []);
+    const living = (selection.hoveredShape ? [selection.hoveredShape] : selection.labelLivingGroup || []);
     const fixed = selection.labelFixedGroup || selection.selectedShapes;
     if (!living.length || !fixed.length) {
         return;
