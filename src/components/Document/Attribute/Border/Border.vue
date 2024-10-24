@@ -1325,6 +1325,7 @@ const strokeClick = (e: Event) => {
                     }
 
                     >input {
+                        width: 100%;
                         outline: none;
                         border: none;
                         padding: 0;
