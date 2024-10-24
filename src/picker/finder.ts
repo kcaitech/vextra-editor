@@ -43,9 +43,17 @@ export class Finder {
         this.transform = new Matrix(m.inverse);
     }
 
+    get env() {
+        return this.m_env;
+    }
+
     set transform(transform: Matrix) {
         this.m_transform = transform;
         this.m_point = undefined;
+    }
+
+    get transform() {
+        return this.m_transform;
     }
 
     isPointInView(view: ShapeView, point: XY) {
