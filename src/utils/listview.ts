@@ -318,9 +318,7 @@ export function range_select_shape(context: Context, shapeDirList: ShapeDirList,
 export function multi_select_shape(context: Context, shape: ShapeView) {
     const selected_map: Map<string, ShapeView> = new Map();
     const selected = context.selection.selectedShapes;
-    for (let i = 0; i < selected.length; i++) {
-        selected_map.set(selected[i].id, selected[i]);
-    }
+    for (let i = 0; i < selected.length; i++) selected_map.set(selected[i].id, selected[i]);
 
     if (selected_map.has(shape.id)) {
         selected_map.delete(shape.id);
@@ -330,9 +328,7 @@ export function multi_select_shape(context: Context, shape: ShapeView) {
 
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) { // 元素有父级被选中就不需要在选中了
-        if (selected_map.get(p.id)) {
-            return;
-        }
+        if (selected_map.get(p.id)) return;
         p = p.parent;
     }
 
@@ -350,9 +346,7 @@ export function multi_select_shape(context: Context, shape: ShapeView) {
             }
             p = p.parent;
         }
-        if (need_remove) {
-            selected_map.delete(s.id);
-        }
+        if (need_remove) selected_map.delete(s.id);
     }
 
     context.selection.rangeSelectShape(Array.from(selected_map.values()));
@@ -361,16 +355,12 @@ export function multi_select_shape(context: Context, shape: ShapeView) {
 export function is_component_class(shape: ShapeView) {
     let s: any = shape;
     while (s) {
-        if (s.type === ShapeType.Page) {
-            return false;
-        }
+        if (s.type === ShapeType.Page) return false;
         if (s.isVirtualShape ||
             s.type === ShapeType.SymbolRef ||
             s.type === ShapeType.Symbol ||
             s.type === ShapeType.SymbolUnion
-        ) {
-            return true;
-        }
+        ) return true;
         s = s.parent;
     }
     return false;
