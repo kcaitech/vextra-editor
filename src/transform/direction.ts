@@ -10,7 +10,6 @@ import {
 } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { hidden_selection } from "@/utils/content";
-import Grid from "@/components/Document/Grid.vue";
 import { MossError } from "@/basic/error";
 
 export enum ActionMode {
@@ -364,7 +363,7 @@ export class Direction {
     }
 
     private __edit(event: KeyboardEvent) {
-        console.log('---edit---')
+        // console.log('---edit---')
     }
 
     private __keyup(event: KeyboardEvent) {
