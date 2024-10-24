@@ -80,6 +80,9 @@ const searcher = new Search(props.context);
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 let matrix_inverse: Matrix = new Matrix();
 let firstTime = false;
+let down = false;
+let isDragging: boolean = false;
+let wheel: Wheel | undefined = undefined;
 
 function _updateRoot(context: Context, element: HTMLElement) {
     const { x, y, right, bottom, width, height } = element.getBoundingClientRect();
@@ -324,11 +327,12 @@ function onMouseDown(e: MouseEvent) {
         firstTime = false;
     }
     if (workspace.linearEditorExist) return; // 当图形变换过程中不再接收新的鼠标点击事件
+
     if (e.button === 0) {
         setMousedownXY(e);
         wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
         props.context.tool.referSelection.resetSelected();
-
+        down = true;
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
     } else if (e.button === 2) { // 右键按下，右键菜单处理
@@ -341,7 +345,7 @@ let timer: any = null;
 
 function onMouseMove(e: MouseEvent) { // target is document
     if (workspace.controller === 'controller') return;
-    if (isDragging && wheel) {
+    if (isDragging && wheel && down) {
         if (wheel.is_inner(e)) {
             if (timer) {
                 clearInterval(timer);
@@ -360,16 +364,13 @@ function onMouseMove(e: MouseEvent) { // target is document
     }
 }
 
-let isDragging: boolean = false;
-let wheel: Wheel | undefined = undefined;
-
 function onMouseMove_CV(e: MouseEvent) {
     updateMouse(e);
     if (spacePressed.value || workspace.controller === 'controller' || workspace.linearEditorExist) return;
     const action = props.context.tool.action;
     if (action === Action.AutoV || action === Action.AutoK) {
         const buttons = e.buttons;
-        if (buttons === 1) select(e); else if (buttons === 0) search(e);
+        if (buttons === 1 && down) select(e); else if (buttons === 0) search(e);
     }
 }
 
@@ -395,6 +396,7 @@ function selectEnd() {
     }
     if (wheel) wheel = wheel.remove();
     isDragging = false;
+    down = false;
 
     selectorFrame.top = 0;
     selectorFrame.left = 0;
