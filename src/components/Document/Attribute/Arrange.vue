@@ -5,10 +5,10 @@ import {PositonAdjust} from "@kcdesign/data";
 import {onMounted, onUnmounted, watch} from 'vue';
 import {
   align_left,
-  align_cneter_x,
+  align_center_x,
   align_right,
   align_top,
-  align_cneter_y,
+  align_center_y,
   align_bottom,
   distribute_horizontally,
   vertical_uniform_distribution,
@@ -18,8 +18,7 @@ import {useI18n} from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
 import {Arrange} from '@/context/arrange';
 import {reactive} from 'vue';
-import {debounce, throttle} from 'lodash';
-import {Selection} from '@/context/selection';
+import {throttle} from 'lodash';
 import {string_by_sys} from "@/utils/common";
 
 interface Props {
@@ -49,11 +48,9 @@ function flex_start() {
 }
 
 // 水平线对齐
-function justify_midle_h() {
-  if (!model_enable.o) {
-    return;
-  }
-  const actions: PositonAdjust[] = align_cneter_x(props.shapes);
+function justify_middle_h() {
+  if (!model_enable.o) return;
+  const actions: PositonAdjust[] = align_center_x(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
@@ -65,9 +62,7 @@ function justify_midle_h() {
 
 // 靠右对齐
 function flex_end() {
-  if (!model_enable.o) {
-    return;
-  }
+  if (!model_enable.o) return;
   const actions: PositonAdjust[] = align_right(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
@@ -94,11 +89,11 @@ function flex_start_col() {
 }
 
 // 中线对齐
-function justify_midle_v() {
+function justify_middle_v() {
   if (!model_enable.o) {
     return;
   }
-  const actions: PositonAdjust[] = align_cneter_y(props.shapes);
+  const actions: PositonAdjust[] = align_center_y(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
@@ -160,7 +155,7 @@ function arrange_watcher(t: Number) {
       space_around_h();
       break;
     case Arrange.ITEMS_ALIGN:
-      justify_midle_h();
+      justify_middle_h();
       break;
     case Arrange.FLEX_END:
       flex_end();
@@ -172,7 +167,7 @@ function arrange_watcher(t: Number) {
       space_around_v();
       break;
     case Arrange.ITEMS_ALIGN_VER:
-      justify_midle_v();
+      justify_middle_v();
       break;
     case Arrange.FLEX_END_COL:
       flex_end_col();
@@ -227,27 +222,19 @@ function reset_model() {
   model_enable.o = false;
 }
 
-// function selection_watcher(t: number) {
-//     if (t === Selection.CHANGE_SHAPE) {
-//         modify_model_disable();
-//     }
-// }
 const update = throttle(_modify_model_disable, 160, {leading: true});
 
-// 这里在下代协作算法出来后可以优化
 const stop = watch(() => props.trigger, update); // 监听图层变化
 const stop2 = watch(() => props.selectionChange, update); // 监听选区变化
 
 onMounted(() => {
   _modify_model_disable();
   props.context.arrange.watch(arrange_watcher);
-  // props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
-  stop
-  stop2
+  stop();
+  stop2();
   props.context.arrange.unwatch(arrange_watcher);
-  // props.context.selection.unwatch(selection_watcher);
 })
 </script>
 <template>
@@ -258,7 +245,7 @@ onUnmounted(() => {
       </div>
     </Tooltip>
     <Tooltip :content="`${t('home.align_h_c')} ${string_by_sys('Alt H')}`" :offset="15">
-      <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_midle_h">
+      <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_middle_h">
         <svg-icon icon-class="justify-midle-h"></svg-icon>
       </div>
     </Tooltip>
@@ -273,7 +260,7 @@ onUnmounted(() => {
       </div>
     </Tooltip>
     <Tooltip :content="`${t('home.align_v_c')} ${string_by_sys('Alt V')}`" :offset="15">
-      <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_midle_v">
+      <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_middle_v">
         <svg-icon icon-class="justify-midle-v"></svg-icon>
       </div>
     </Tooltip>

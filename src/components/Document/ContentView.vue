@@ -548,6 +548,8 @@ function initMatrix(cur: PageView) {
 
 const onRenderDone = () => {
     emits('closeLoading');
+    resizeObserver.observe(root.value!);
+    _updateRoot(props.context, root.value!);
     initMatrix(props.page);
 }
 const onContentVisible = () => {
@@ -736,8 +738,8 @@ onMounted(() => {
     timeSlicingTask(props.context, fontNameListEn, 'en');
 
     nextTick(() => {
-        resizeObserver.observe(root.value!);
-        _updateRoot(props.context, root.value!);
+        // resizeObserver.observe(root.value!);
+        // _updateRoot(props.context, root.value!);
     });
 })
 onUnmounted(() => {
