@@ -1,14 +1,11 @@
 import { WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { v4 } from "uuid";
-import { set } from "lodash";
-
 export enum CellMenu {
     MultiSelect = 'multiCells', //多选单元格时
     SelectRow = 'row', //选中整行单元格
     selectCol = 'col' //选中整列单元格
 }
-
 export class Menu extends WatchableObject {
     static SHUTDOWN_MENU = 1;
     static SHUTDOWN_POPOVER = 2;
@@ -18,13 +15,12 @@ export class Menu extends WatchableObject {
     static CHANGE_USER_CURSOR = 6;
     static OPEN_SPLIT_CELL = 7;
     static CLOSE_COMP_MENU = 8;
-    static LABLE_PLATFROM_CHANGE = 11;
+    static LABLE_PLATFORM_CHANGE = 11;
     static LABLE_MULRIPLE = 9;
     static SHUTDOWN_LABLE_MENU = 10;
     static SHADOW_POSITION_MENU = 11;
     static SHADOW_CUTOUT_ARGS_MENU = 12;
     static CLOSE_INSTANCE_ATTR_MENU = 13;
-    // static OPEN_SHORTCUTS = 14;
     static WRITE_MEDIA = 15;
     static UPDATE_LOCATE = 16;
     static EXPORT_DIALOG = 17;
@@ -35,7 +31,7 @@ export class Menu extends WatchableObject {
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_user_cursor_visible: boolean = true;
     private m_context: Context;
-    private m_platfrom: number = 1;
+    private m_platform: number = 1;
     private m_mulriple: number = 1;
     private m_mulriple_i: number = 1
     private m_lable_menu_mounted: string = '';
@@ -51,16 +47,16 @@ export class Menu extends WatchableObject {
         return this.m_menu_mounted;
     }
 
-    get ispopover() {
+    get isPopoverExisted() {
         return this.m_popover;
+    }
+
+    set isPopoverExisted(v: boolean) {
+        this.m_popover = v;
     }
 
     get isUserCursorVisible() {
         return this.m_user_cursor_visible;
-    }
-
-    setPopoverVisible(v: boolean) {
-        this.m_popover = v;
     }
 
     menuMount(mount?: string) {
@@ -94,19 +90,16 @@ export class Menu extends WatchableObject {
     }
 
     setSplitCell(mount?: string) {
-        // this.m_split_cell = mount || '';
-        if (mount) {
-            this.notify(Menu.OPEN_SPLIT_CELL, mount);
-        }
+        if (mount) this.notify(Menu.OPEN_SPLIT_CELL, mount);
     }
 
-    get isPlatfrom() {
-        return this.m_platfrom;
+    get isPlatform() {
+        return this.m_platform;
     }
 
-    setPlatfrom(v: number) {
-        this.m_platfrom = v;
-        this.notify(Menu.LABLE_PLATFROM_CHANGE);
+    setPlatform(v: number) {
+        this.m_platform = v;
+        this.notify(Menu.LABLE_PLATFORM_CHANGE);
     }
 
     get isMulriple() {

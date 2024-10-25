@@ -146,9 +146,7 @@ function shot() {
 function showMenu(e: MouseEvent) {
     props.context.menu.menuMount()
     const el = (e.target as Element)!.closest('.path-button') as HTMLDivElement;
-    if (!el) {
-        return;
-    }
+    if (!el) return;
     if (popover.value) {
         popover.value = false;
         return;
@@ -159,30 +157,15 @@ function showMenu(e: MouseEvent) {
 
     popoverXY.value.x = el.offsetLeft;
     popoverXY.value.y = 45;
-
-    props.context.escstack.save('pathshape-menu', () => {
-        const achieve = popover.value;
-        popover.value = false;
-        return achieve;
-    });
-
-    document.addEventListener('click', blur);
 }
 
 function blur(e: MouseEvent) {
-    if (
-        !(e.target as Element).closest('.popover-shape-tool')
-        || !(e.target as Element).closest('.tool-pathshape-menu-trigger')
-    ) {
-        popover.value = false;
-    }
+    if (!(e.target as Element).closest('.popover-shape-tool, .tool-pathshape-menu-trigger')) popover.value = false;
 }
 
 async function select() {
     const filepicker = document.getElementById('filepicker');
-    if (filepicker) {
-        filepicker.click();
-    }
+    if (filepicker) filepicker.click();
 }
 
 function change(e: Event) {
@@ -195,12 +178,17 @@ function change(e: Event) {
 }
 
 const stop = watch(() => popover.value, (v) => {
-    !v && document.removeEventListener('click', blur);
+    if (v) {
+        props.context.escstack.save('pathshape-menu', () => {
+            const achieve = popover.value;
+            popover.value = false;
+            return achieve;
+        });
+        document.addEventListener('click', blur);
+    } else {
+        document.removeEventListener('click', blur);
+    }
 })
-
-function setAction(type: string) {
-    props.context.tool.setAction(type);
-}
 
 onMounted(() => {
     props.context.tool.watch(toolWatcher);
@@ -208,18 +196,19 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);
     stop();
+    document.removeEventListener('click', blur);
 })
 </script>
 
 <template>
     <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
         <div :class="{ 'path-button': true, 'path-button-selected': selected, active: popover }" @mouseenter.stop="enter"
-            @mouseleave.stop="leave" @click="shot">
-            <div class="svg-container">
-                <svg-icon :icon-class="pattern"></svg-icon>
+             @mouseleave.stop="leave">
+            <div class="svg-container" @click="shot">
+                <svg-icon :icon-class="pattern"/>
             </div>
-            <div class="tool-pathshape-menu-trigger" @click.stop="showMenu">
-                <svg-icon icon-class="white-down"></svg-icon>
+            <div class="tool-pathshape-menu-trigger" @click="showMenu">
+                <svg-icon icon-class="white-down"/>
             </div>
         </div>
     </el-tooltip>
@@ -382,7 +371,7 @@ onUnmounted(() => {
     padding: 6px 0;
     box-sizing: border-box;
 
-    background-color: #262626;
+    background-color: var(--theme-color);
     color: var(--theme-color-anti);
 
     border-radius: 4px;

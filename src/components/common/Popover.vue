@@ -2,6 +2,7 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
+import { v4 } from "uuid";
 interface Props {
     context: Context;
 
@@ -14,11 +15,7 @@ interface Props {
     height?: number,
 }
 const props = defineProps<Props>();
-defineExpose({
-    show,
-    focus,
-    popoverClose
-})
+defineExpose({ show, focus, popoverClose });
 
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
@@ -29,32 +26,27 @@ function focus() {
 }
 
 function show() {
-    if (props.context.menu.ispopover) {
+    console.log('--show--');
+    if (props.context.menu.isPopoverExisted) {
         props.context.menu.notify(Menu.SHUTDOWN_POPOVER);
+        props.context.menu.isPopoverExisted = false;
         popoverClose();
-        props.context.menu.setPopoverVisible(false);
-        return
     }
 
-    if (!container.value) {
-        return;
-    }
+    if (!container.value) return;
 
     popoverVisible.value = true;
-    props.context.menu.setPopoverVisible(true);
+    props.context.menu.isPopoverExisted = true;
     container.value.focus();
     document.addEventListener('mousedown', handleClickOutside);
+    props.context.escstack.save(v4(), popoverClose);
 
-    nextTick(locate);  // popver 挂载之后计算其布局位置
+    nextTick(locate);
 }
 
 function locate() {
-    if (!popover.value) {
-        return;
-    }
-    if (!container.value) {
-        return;
-    }
+    if (!popover.value) return;
+    if (!container.value) return;
     const body_h = document.body.clientHeight;
 
     const { height, width } = popover.value.getBoundingClientRect();
@@ -85,8 +77,6 @@ function locate() {
 
     popover.value.style.left = _left + 'px';
     popover.value.style.top = _top + 'px';
-
-    props.context.escstack.save(Math.random().toString(), popoverClose);
 }
 
 function handleClickOutside(event: MouseEvent) {
@@ -94,15 +84,10 @@ function handleClickOutside(event: MouseEvent) {
 }
 
 function popoverClose() {
-    let exe_result: boolean = false;
-
-    if (popoverVisible.value) {
-        exe_result = true;
-    }
-
+    const exe_result: boolean = popoverVisible.value;
     popoverVisible.value = false;
     props.context.workspace.focusText();
-    props.context.menu.setPopoverVisible(false);
+    props.context.menu.isPopoverExisted = false;
     document.removeEventListener('click', handleClickOutside);
     return exe_result;
 }
@@ -125,7 +110,7 @@ onUnmounted(() => {
 
 <template>
     <div class="__popover-container" ref="container" tabindex="-1">
-        <slot name="trigger"></slot>
+        <slot name="trigger"/>
         <div ref="popover" v-if="popoverVisible" class="popover" :style="{
             width: props.width ? props.width + 'px' : 'auto',
             height: props.height ? props.height + 'px' : 'auto',
@@ -151,7 +136,7 @@ onUnmounted(() => {
     >.popover {
         position: fixed;
         outline: none;
-        box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.18);
+        box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
         background-color: #FFFFFF;
         border-radius: 8px;
         border: 1px solid #F0F0F0;

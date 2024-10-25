@@ -14,7 +14,7 @@ const props = defineProps<{
 const selectoption = ref(false);
 const selsectedShow = ref(false);
 const multiple = ref(props.context.menu.isMulripleI || 1);
-const platform = ref(props.context.menu.isPlatfrom || 1);
+const platform = ref(props.context.menu.isPlatform || 1);
 const platformMenuItems = ref<string[]>([
     'iOS', 'Web', 'Android', `${t('lable.applet_of_WeChat')}`
 ])
@@ -32,7 +32,7 @@ const onSelected = () => {
 }
 const listMenuStatus = (i: number) => {
     platform.value = i;
-    props.context.menu.setPlatfrom(i);
+    props.context.menu.setPlatform(i);
 }
 const multiples = [0.5, 1, 2];
 const pxMenuStatus = (i: number) => {
@@ -44,7 +44,7 @@ const close = () => {
 }
 onMounted(() => {
     multiple.value = props.context.menu.isMulripleI;
-    platform.value = props.context.menu.isPlatfrom;
+    platform.value = props.context.menu.isPlatform;
 })
 </script>
 

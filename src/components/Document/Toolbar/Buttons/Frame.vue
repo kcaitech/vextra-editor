@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import ToolButton from './ToolButton.vue';
 import { useI18n } from 'vue-i18n';
-import Tooltip from '@/components/common/Tooltip.vue';
 import { Context } from '@/context';
 import { useFrame, useCutout } from "@/components/Document/Creator/execute";
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
@@ -37,14 +35,14 @@ const pattern = computed<string>(() => {
 
 // 当前工具Tips
 const tips = computed<string>(() => {
-  const defaultframe = `${t('shape.artboard')}\u00a0\u00a0\u00a0\u00a0F`;
+  const defaultFrame = `${t('shape.artboard')}\u00a0\u00a0\u00a0\u00a0F`;
   switch (currentTool.value) {
     case Action.AddFrame:
-      return defaultframe;
+      return defaultFrame;
     case Action.AddCutout:
       return `${t('cutoutExport.cutout')}\u00a0\u00a0\u00a0\u00a0S`;
     default:
-      return defaultframe;
+      return defaultFrame;
   }
 });
 
@@ -79,9 +77,7 @@ function shot() {
 function showMenu(e: MouseEvent) {
   props.context.menu.menuMount()
   const el = (e.target as Element)!.closest('.frame-button') as HTMLDivElement;
-  if (!el) {
-    return;
-  }
+  if (!el) return;
   if (popover.value) {
     popover.value = false;
     return;
@@ -92,14 +88,6 @@ function showMenu(e: MouseEvent) {
 
   popoverXY.value.x = el.offsetLeft;
   popoverXY.value.y = 45;
-
-  props.context.escstack.save('frame-menu', () => {
-    const achieve = popover.value;
-    popover.value = false;
-    return achieve;
-  });
-
-  document.addEventListener('click', blur);
 }
 
 function toolWatcher(t: number) {
@@ -114,16 +102,20 @@ function toolWatcher(t: number) {
 }
 
 function blur(e: MouseEvent) {
-  if (
-    !(e.target as Element).closest('.popover-frame-tool')
-    || !(e.target as Element).closest('.tool-frame-menu-trigger')
-  ) {
-    popover.value = false;
-  }
+  if (!(e.target as Element).closest('.popover-frame-tool, .tool-frame-menu-trigger')) popover.value = false;
 }
 
 const stop = watch(() => popover.value, (v) => {
-  !v && document.removeEventListener('click', blur);
+    if (v) {
+        props.context.escstack.save('frame-menu', () => {
+            const achieve = popover.value;
+            popover.value = false;
+            return achieve;
+        });
+        document.addEventListener('click', blur);
+    } else {
+        document.removeEventListener('click', blur);
+    }
 })
 
 
@@ -133,26 +125,20 @@ onMounted(() => {
 onUnmounted(() => {
   props.context.tool.unwatch(toolWatcher);
   stop();
+  document.removeEventListener('click', blur);
 })
 
 </script>
 
 <template>
-  <!-- <ToolButton ref="button" :selected="params.active" style="width: 32px">
-    <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" :offset="10">
-      <div class="svg-container" @click="() => { useFrame(context) }">
-        <svg-icon icon-class="frame" />
-      </div>
-    </Tooltip>
-  </ToolButton> -->
   <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
     <div :class="{ 'frame-button': true, 'frame-button-selected': selected, active: popover }" @mouseenter.stop="enter"
-      @mouseleave.stop="leave" @click="shot">
-      <div class="svg-container">
-        <svg-icon :icon-class="pattern"></svg-icon>
+      @mouseleave.stop="leave">
+      <div class="svg-container" @click="shot">
+        <svg-icon :icon-class="pattern"/>
       </div>
-      <div class="tool-frame-menu-trigger" @click.stop="showMenu">
-        <svg-icon icon-class="white-down"></svg-icon>
+        <div class="tool-frame-menu-trigger" @click="showMenu">
+            <svg-icon icon-class="white-down"/>
       </div>
     </div>
   </el-tooltip>
@@ -262,8 +248,7 @@ onUnmounted(() => {
   position: absolute;
   padding: 6px 0;
   box-sizing: border-box;
-
-  background-color: #262626;
+    background-color: var(--theme-color);
   color: var(--theme-color-anti);
 
   border-radius: 4px;

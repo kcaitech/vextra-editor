@@ -787,9 +787,7 @@ function colorPickerMount() {
 function blockUnmount() {
     const menu = props.context.menu;
     const e = menu.isColorPickerMount;
-    if (e === blockId) {
-        menu.clearColorPickerId();
-    }
+    if (e === blockId) menu.clearColorPickerId();
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 }

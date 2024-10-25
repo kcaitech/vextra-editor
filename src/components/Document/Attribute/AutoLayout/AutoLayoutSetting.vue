@@ -81,7 +81,7 @@ onUnmounted(() => {
             :title="t('autolayout.auto_layout_settings')">
             <template #trigger>
                 <div class="trigger">
-                    <div class="bg" :class="{ actived: props.context.menu.ispopover }" @click="showMenu">
+                    <div class="bg" :class="{ actived: props.context.menu.isPopoverExisted }" @click="showMenu">
                         <svg-icon icon-class="select-more"></svg-icon>
                     </div>
                 </div>
