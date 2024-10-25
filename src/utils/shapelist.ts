@@ -28,7 +28,7 @@ export function is_shape_in_selection(shapes: ShapeView[], shape: ShapeView): bo
 export function selection_types(shapes: ShapeView[]): number {
     let types = 0;
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Group) {
+        if (shapes[i].type === ShapeType.Group || shapes[i].type === ShapeType.BoolShape) {
             types = types | 1;
         } else if (shapes[i].type === ShapeType.Artboard) {
             types = types | 2;
