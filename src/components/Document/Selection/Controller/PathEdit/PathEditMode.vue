@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onUnmounted, ref, watch } from "vue";
 import { Selection, XY } from "@/context/selection";
 import { dbl_action } from "@/utils/mouse_interactive";
 import Selector4PEM, { SelectorFrame } from "@/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue";
@@ -31,8 +31,7 @@ let mousedownOnClientXY: XY = { x: 0, y: 0 };
 let drag: boolean = false;
 
 function down(e: MouseEvent) {
-    console.log('--down--');
-    if (e.button !== 0) return;
+    if (e.button) return;
     setMousedownXY(e);
     props.context.path.reset();
     if (dbl_action()) {
