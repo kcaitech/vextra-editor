@@ -268,9 +268,8 @@ export function init_insert_table(context: Context, t: Function, land?: ShapeVie
     const tool = context.tool;
     const action = tool.action;
     const table = context.tool.tableSize;
-    const matrix = context.workspace.matrix;
     const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
-    const { x, y } = landFinderOnPage(matrix, context, frame)
+    const { x, y } = landFinderOnPage(context, frame)
     frame.x = x;
     frame.y = y;
     const PageXY = { x: x, y: y };

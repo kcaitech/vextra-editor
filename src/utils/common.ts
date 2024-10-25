@@ -327,7 +327,7 @@ export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
 
 export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
     const points = get_points_from_shape(shape);
-
+    console.log('--points--', points);
     if (isIncluded2(selectorPoints, points)) return true; // 选择器是否完全覆盖目标
 
     if (includes) return false; // 需要完全覆盖而未完全覆盖，判为false
