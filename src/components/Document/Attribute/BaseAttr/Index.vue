@@ -1030,7 +1030,6 @@ onUnmounted(() => {
     box-sizing: border-box;
     visibility: visible;
     border-bottom: 1px solid #F0F0F0;
-    gap: 8px;
 
     .tr {
         position: relative;

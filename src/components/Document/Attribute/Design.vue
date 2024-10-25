@@ -9,7 +9,7 @@ import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
 import Shadow from './Shadow/Shadows.vue';
-import PageBackgorund from './PageBackgorund.vue';
+import PageBackground from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { debounce, throttle } from 'lodash';
 import Module from './Module/Module.vue'
@@ -47,7 +47,6 @@ const WITH_FILL = [
     ShapeType.BoolShape,
     ShapeType.Image,
 ];
-const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
     ShapeType.Image,
     ShapeType.Rectangle,
@@ -68,7 +67,6 @@ const WITH_BORDER = [
     ShapeType.SymbolRef,
     ShapeType.BoolShape
 ];
-const WITH_TABLE = [ShapeType.Table];
 const WITH_SHADOW = [
     ShapeType.Rectangle,
     ShapeType.Oval,
@@ -98,7 +96,6 @@ const tableShapes = ref<ShapeView[]>([]);
 const { t } = useI18n();
 const shapeType = ref();
 const symbol_attribute = ref<boolean>(true);
-// const opacity = ref<boolean>(false);
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
 const constraintShow = ref<boolean>(true);
@@ -135,7 +132,6 @@ function _selection_change() {
     shapes.value = [];
     textShapes.value = [];
     tableShapes.value = [];
-    // opacity.value = false;
     constraintShow.value = true;
 
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
@@ -147,9 +143,7 @@ function _selection_change() {
         if (shape.type === ShapeType.Table && !shape.isVirtualShape /* 实例暂不支持调整整表的文本属性 */) {
             tableShapes.value.push(shape);
         }
-        // if (!shape.isVirtualShape) {
-        //     opacity.value = true;
-        // }
+
         if (!is_constrainted(shape)) {
             constraintShow.value = false;
         }
@@ -336,7 +330,7 @@ onUnmounted(() => {
     <section id="Design">
         <el-scrollbar height="100%">
             <div v-if="!shapes.length && props.context.selection.selectedPage">
-                <PageBackgorund :context="props.context" :page="props.context.selection.selectedPage"></PageBackgorund>
+                <PageBackground :context="props.context" :page="props.context.selection.selectedPage"></PageBackground>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
             <div v-if="shapes.length" class="attr-wrapper">

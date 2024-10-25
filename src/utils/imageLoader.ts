@@ -38,7 +38,7 @@ export class ImageLoader {
                 if (!svg) reject('no result');
                 const parseResult = parse_svg.parse(svg as string);
                 if (!parseResult.shape) reject('svg can not parse');
-                else parseResult.shape.name = file.name || this.context.workspace.t('shape.artboard');
+                else parseResult.shape.name = file.name.replace(/.svg$/i, '') || this.context.workspace.t('shape.artboard');
                 resolve(parseResult);
             }
         });
