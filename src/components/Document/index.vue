@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watch, nextTick } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watch } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -16,7 +16,7 @@ import { Component } from '@/context/component';
 import { initpal } from '@/components/common/initpal';
 import { setup as keyboardUnits } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
-import { IContext } from '@/openapi';
+import { ContextEvents, IContext } from '@/openapi';
 
 const props = defineProps<{ context: IContext }>()
 
@@ -153,13 +153,22 @@ function keyToggleTB() {
     ctx.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
-const tool_watcher = (t: number) => {
-    const ctx: Context = props.context as Context;
-    if (t === Tool.LABLE_CHANGE) {
-        isLable.value = ctx.tool.isLable;
-        not_perm_hidden_right();
-    }
+function initUI() {
+    let timer: any = setTimeout(() => {
+        left.value.leftMin = 250;
+        left.value.leftWidth = 250;
+        left.value.leftMinWidth = 250;
+        rightWidth.value = 240;
+        clearTimeout(timer);
+        timer = null;
+    }, 60);
 }
+
+function init_keyboard_units() {
+    const ctx: Context = props.context as Context;
+    uninstall_keyboard_units = keyboardUnits(ctx)
+}
+
 const not_perm_hidden_right = () => {
     const readonly = (props.context as Context).readonly;
     if (readonly && !isLable.value) {
@@ -168,6 +177,14 @@ const not_perm_hidden_right = () => {
         rightWidth.value = 240
     } else if (!isLable.value && !readonly && !showRight.value) {
         rightWidth.value = 240
+    }
+}
+
+const tool_watcher = (t: number) => {
+    const ctx: Context = props.context as Context;
+    if (t === Tool.LABLE_CHANGE) {
+        isLable.value = ctx.tool.isLable;
+        not_perm_hidden_right();
     }
 }
 
@@ -181,11 +198,7 @@ function init_watcher() {
     ctx.workspace.watch(workspaceWatcher);
     ctx.component.watch(component_watcher);
     ctx.tool.watch(tool_watcher);
-}
-
-function init_keyboard_units() {
-    const ctx: Context = props.context as Context;
-    uninstall_keyboard_units = keyboardUnits(ctx)
+    ctx.data.watch(documentWatcher);
 }
 
 function workspaceWatcher(t: number, o?: any) {
@@ -215,17 +228,6 @@ function component_watcher(t: number) {
     }
 }
 
-function initUI() {
-    let timer: any = setTimeout(() => {
-        left.value.leftMin = 250;
-        left.value.leftWidth = 250;
-        left.value.leftMinWidth = 250;
-        rightWidth.value = 240;
-        clearTimeout(timer);
-        timer = null;
-    }, 60);
-}
-
 watch(fileName, (NewName) => {
     if (NewName) {
         (window as any).wx.miniProgram.postMessage({
@@ -236,6 +238,10 @@ watch(fileName, (NewName) => {
         });
     }
 })
+
+function documentWatcher(...args: any[]) {
+    if (args.includes['name']) (props.context as Context).notify(ContextEvents.document_name_change);
+}
 
 onMounted(() => {
     initUI();
@@ -257,6 +263,7 @@ onUnmounted(() => {
     ctx.selection.unwatch(selectionWatcher);
     ctx.workspace.unwatch(workspaceWatcher);
     ctx.tool.unwatch(tool_watcher);
+    ctx.data.unwatch(documentWatcher);
     clearInterval(timer);
     localStorage.removeItem('docId')
     showHint.value = false;
