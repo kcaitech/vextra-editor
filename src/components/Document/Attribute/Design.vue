@@ -159,7 +159,9 @@ function _selection_change() {
     reflush.value++;
 }
 
-const selection_change = debounce(_selection_change, 160, { leading: true });
+// const selection_change = debounce(_selection_change, 160, { leading: true });
+const selection_change = _selection_change;
+
 
 function is_constrainted(shape: ShapeView) {
     return shape.isVirtualShape || ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.parent?.type || ShapeType.Rectangle))
