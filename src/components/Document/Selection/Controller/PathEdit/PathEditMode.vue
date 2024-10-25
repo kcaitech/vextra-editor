@@ -31,6 +31,7 @@ let mousedownOnClientXY: XY = { x: 0, y: 0 };
 let drag: boolean = false;
 
 function down(e: MouseEvent) {
+    console.log('--down--');
     if (e.button !== 0) return;
     setMousedownXY(e);
     props.context.path.reset();
@@ -43,12 +44,8 @@ function down(e: MouseEvent) {
 }
 
 function move(e: MouseEvent) {
-    if (penMode.value) {
-        return;
-    }
-    if (e.buttons !== 1) {
-        e.stopPropagation();
-    }
+    if (penMode.value) return;
+    if (e.buttons !== 1) e.stopPropagation();
 }
 
 function move2(e: MouseEvent) {
@@ -61,9 +58,7 @@ function move2(e: MouseEvent) {
         return;
     }
 
-    if (_allow_to_select()) {
-        select(e);
-    }
+    if (_allow_to_select()) select(e);
 }
 
 function _allow_to_select() {
@@ -71,7 +66,7 @@ function _allow_to_select() {
     return [Action.AutoV, Action.Curve].includes(action);
 }
 
-function up(e: MouseEvent) {
+function up() {
     clear_state();
 }
 
@@ -143,9 +138,7 @@ function window_blur() {
 }
 
 function selection_watcher(type: number | string) {
-    if (type === Selection.CHANGE_SHAPE || type === Selection.CHANGE_PAGE) {
-        props.context.workspace.setPathEditMode(false);
-    }
+    if (type === Selection.CHANGE_SHAPE || type === Selection.CHANGE_PAGE) props.context.workspace.setPathEditMode(false);
 }
 
 function tool_watcher(type: number) {
@@ -180,11 +173,6 @@ const stopWatchVisible = watch(() => props.params.visible, (v) => {
     }
 }, { immediate: true });
 
-// onMounted(() => {
-//     props.context.selection.watch(selection_watcher);
-//     props.context.tool.watch(tool_watcher);
-//     window.addEventListener('blur', window_blur);
-// })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tool.unwatch(tool_watcher);

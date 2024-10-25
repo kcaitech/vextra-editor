@@ -6,14 +6,14 @@ import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import { ArtboradView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
-import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
+import { ClientXY, ClientXYRaw, PageXY, XY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-    adapt_page, color2string, drop, init_insert_table, is_drag, root_scale, root_trans, selectShapes
+    adapt_page, color2string, drop, init_insert_table, root_scale, root_trans, selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import TextSelection from './Selection/TextSelection.vue';
@@ -54,12 +54,12 @@ const workspace = props.context.workspace;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
-const dragActiveDis = 4;
 const matrix = reactive(props.context.workspace.matrix);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const root = ref<HTMLDivElement>();
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 };
+const downXY: XY = { x: 0, y: 0 };
 const mouseOnClient: ClientXYRaw = { x: 0, y: 0 };
 const contextMenuEl = ref<ContextMenuEl>();
 const selector_mount = ref<boolean>(false);
@@ -75,14 +75,16 @@ const creatorMode = ref<boolean>(false);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 const image_tile_mode = ref<boolean>(false);
+const isvisible = ref(false);
 const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 });
 const searcher = new Search(props.context);
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 let matrix_inverse: Matrix = new Matrix();
 let firstTime = false;
-let down = false;
 let isDragging: boolean = false;
 let wheel: Wheel | undefined = undefined;
+let down: boolean = false;
+let timer: any = null;
 
 function _updateRoot(context: Context, element: HTMLElement) {
     const { x, y, right, bottom, width, height } = element.getBoundingClientRect();
@@ -121,9 +123,9 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
     const { x, y } = workspace.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x;
-    mousedownOnPageXY.y = xy.y; //页面坐标系上的点
-    mouseOnClient.x = clientX;
-    mouseOnClient.y = clientY;
+    mousedownOnPageXY.y = xy.y;
+    downXY.x = clientX;
+    downXY.y = clientY;
 }
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
@@ -284,16 +286,6 @@ function contextMenuUnmount() {
     return exe_result;
 }
 
-function select(e: MouseEvent) {
-    if (props.context.workspace.select) {
-        createSelector(e);
-    } else if (is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis)) {
-        selector_mount.value = true;
-        props.context.workspace.selecting(true);
-        props.context.cursor.cursor_freeze(true);
-    }
-}
-
 function createSelector(e: MouseEvent) {
     const { clientX, clientY, altKey } = e;
     const { x: rx, y: ry } = workspace.root;
@@ -320,6 +312,8 @@ function updateMouse(e: MouseEvent) {
 }
 
 function onMouseDown(e: MouseEvent) {
+    if (down) return;
+
     if (firstTime) {
         search(e);
         if (props.context.selection.hoveredShape) {
@@ -328,32 +322,31 @@ function onMouseDown(e: MouseEvent) {
         }
         firstTime = false;
     }
+
     if (workspace.linearEditorExist) return; // 当图形变换过程中不再接收新的鼠标点击事件
 
     if (e.button === 0) {
-        setMousedownXY(e);
-        wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
-        props.context.tool.referSelection.resetSelected();
         down = true;
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
+        setMousedownXY(e);
+        props.context.tool.referSelection.resetSelected();
+        document.addEventListener("mousemove", select);
+        document.addEventListener("mouseup", up);
     } else if (e.button === 2) { // 右键按下，右键菜单处理
         e.stopPropagation();
         contextMenuMount(e);
     }
 }
 
-let timer: any = null;
-
-function onMouseMove(e: MouseEvent) { // target is document
+function select(e: MouseEvent) {
     if (workspace.controller === 'controller') return;
-    if (isDragging && wheel && down) {
+    if (isDragging && wheel) {
         if (wheel.is_inner(e)) {
             if (timer) {
                 clearInterval(timer);
                 timer = null;
                 wheel.moving(e);
             }
+            createSelector(e);
         } else {
             wheel.moving(e);
             clearInterval(timer);
@@ -361,30 +354,26 @@ function onMouseMove(e: MouseEvent) { // target is document
                 createSelector(e);
             }, 30);
         }
-    } else {
+    } else if (Math.hypot(downXY.x - e.clientX, downXY.y - e.clientY) > 4) {
         isDragging = true;
+        selector_mount.value = true;
+        props.context.workspace.selecting(true);
+        props.context.cursor.cursor_freeze(true);
+        wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
     }
 }
 
-function onMouseMove_CV(e: MouseEvent) {
+function move(e: MouseEvent) {
     updateMouse(e);
-    if (spacePressed.value || workspace.controller === 'controller' || workspace.linearEditorExist) return;
-    const action = props.context.tool.action;
-    if (action === Action.AutoV || action === Action.AutoK) {
-        const buttons = e.buttons;
-        if (buttons === 1 && down) select(e); else if (buttons === 0) search(e);
-    }
+    if (!e.buttons) search(e);
 }
 
-function onMouseUp(e: MouseEvent) {
-    if (e.button !== 0) return;
+function up(e: MouseEvent) {
+    if (e.button) return;
+    down = false;
     if (selector_mount.value) selectEnd();
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
-}
-
-function onMouseLeave() {
-    props.context.selection.unHoverShape();
+    document.removeEventListener("mousemove", select);
+    document.removeEventListener("mouseup", up);
 }
 
 function selectEnd() {
@@ -397,8 +386,8 @@ function selectEnd() {
         timer = null;
     }
     if (wheel) wheel = wheel.remove();
+
     isDragging = false;
-    down = false;
 
     selectorFrame.top = 0;
     selectorFrame.left = 0;
@@ -407,14 +396,23 @@ function selectEnd() {
     selector_mount.value = false;
 }
 
-// 窗口失焦
-function windowBlur() {
-    selectEnd();
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
+function initMatrix(cur: PageView) {
+    let info = matrixMap.get(cur.id);
+    if (!info) {
+        const m = new Matrix(adapt_page(props.context, true));
+        info = { m, x: cur.frame.x, y: cur.frame.y };
+        matrixMap.set(cur.id, info);
+    }
+    matrix.reset(info.m.toArray());
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
-//表格
+function windowBlur() {
+    selectEnd();
+    document.removeEventListener('mousemove', select);
+    document.removeEventListener('mouseup', up);
+}
+
 const closeModal = () => {
     cellSetting.value = false
 }
@@ -425,8 +423,6 @@ function updateBackground(page?: PageView) {
         background_color.value = color2string(pageBackground);
     }
 }
-
-const isvisible = ref(false);
 
 function menu_watcher(type: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
@@ -526,18 +522,6 @@ function color_watcher(t: number) {
 
 function windowFocus() {
     firstTime = true;
-}
-
-// hooks
-function initMatrix(cur: PageView) {
-    let info = matrixMap.get(cur.id);
-    if (!info) {
-        const m = new Matrix(adapt_page(props.context, true));
-        info = { m, x: cur.frame.x, y: cur.frame.y };
-        matrixMap.set(cur.id, info);
-    }
-    matrix.reset(info.m.toArray());
-    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 const onRenderDone = () => {
@@ -701,9 +685,7 @@ const stop1 = watch(() => props.page, (cur, old) => {
     updateBackground(cur);
 })
 
-onBeforeMount(() => {
-    props.context.user.updateUserConfig();
-});
+onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
 
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
@@ -760,9 +742,9 @@ onUnmounted(() => {
 </script>
 <template>
     <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
-        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
+         :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+         @mousemove="move" @mouseleave="props.context.selection.unHoverShape"
+         @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
         <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix as Matrix"/>
         <Rule :context="props.context" :page="(props.page as PageView)" />
