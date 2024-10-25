@@ -301,8 +301,8 @@ function end(e: TouchEvent) {
 // })
 
 const iconPosition = ref({
-    left: window.innerWidth - 68,
-    top: window.innerHeight - 68
+    left: window.innerWidth - 88,
+    top: window.innerHeight - 112
 })
 
 function moveIcon(e: TouchEvent) {

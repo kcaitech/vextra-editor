@@ -15,7 +15,7 @@
                         </div>
                     </div>
                     <div class="actions" v-if="prototypeinteraction?.length">
-                        <div class="actions-item" v-for="action in  prototypeinteraction " :key="action.id">
+                        <div class="actions-item" v-for="action in prototypeinteraction " :key="action.id">
                             <div class="item" @click.stop="showhandel(action.id)">
                                 <div class="arrow" :class="{ activation: showaction && acitonindex === action.id }">
                                     <svg-icon icon-class="arrows-dr"></svg-icon>
@@ -24,7 +24,7 @@
                                     <span class="event">{{ event.get(action.event.interactionType) }}</span>
                                     <div v-if="action.actions.connectionType !== 'NONE'" class="icon-img">
                                         <svg-icon :icon-class="actions.find(item => item.data.value === action.actions.connectionType &&
-                item.data.type === action.actions.navigationType)?.data.icon"></svg-icon>
+                                            item.data.type === action.actions.navigationType)?.data.icon"></svg-icon>
                                     </div>
                                     <span class="name">{{ getText(action.actions) }}</span>
                                     <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
@@ -58,7 +58,7 @@
                                     <div class="container">
                                         <Select class="select" id="select" :visibility="true" :status="hasStatus"
                                             :source="actions" :selected="actions.find(item => item.data.value === action.actions.connectionType &&
-                item.data.type === action.actions.navigationType)?.data"
+                                                item.data.type === action.actions.navigationType)?.data"
                                             @select="setPrototypeActionConnNav($event, action.id)"></Select>
                                     </div>
                                 </div>
@@ -157,7 +157,7 @@
                                             <div class="content">
                                                 <div class="icon"
                                                     :class="{ 'select-item': action.actions.transitionType?.split('_').findLast(i => i) === i[0] }"
-                                                    v-for="  i  of  Direction " :key="i[0]"
+                                                    v-for="  i of Direction " :key="i[0]"
                                                     @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i[0])">
                                                     <svg-icon :style="{ rotate: (`${i[1]}` + 'deg') }"
                                                         icon-class="right-arrows"></svg-icon>
@@ -180,7 +180,8 @@
                                     </div>
                                     <CustomBezier
                                         v-if="action.actions.easingType === PrototypeEasingType.CUSTOMCUBIC && action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
-                                        :bezier="action.actions.easingFunction" :byshapes="reflush_by_shapes" :trigger="reflush_trigger" 
+                                        :bezier="action.actions.easingFunction" :byshapes="reflush_by_shapes"
+                                        :trigger="reflush_trigger"
                                         @setBezier="setProtoTypeEasingFunction($event, action.id)"></CustomBezier>
                                 </div>
                             </div>
@@ -1151,7 +1152,8 @@ const setPrototypeActionTransitionDirection = (type: PrototypeTransitionType, id
 }
 
 //换算动画时长
-const getDuration = (value: string, oldval?: number) => {
+const getDuration = (value: string, oldval: number | undefined) => {
+    if (oldval) oldval = oldval * 1000;
     const regex = /^(\d+)/
     const maxvalue = (v: number) => {
         return v <= 20000 ? v : 20000
@@ -1468,7 +1470,7 @@ function selection_watcher(t: number | string) {
 }
 
 // 选区图层变化
-function update_by_shapes(...args: any[]) { 
+function update_by_shapes(...args: any[]) {
     updateData()
     reflush_trigger.value = [...(args?.length ? args : [])];
     reflush_by_shapes.value++;
@@ -1734,6 +1736,7 @@ onUnmounted(() => {
                         width: 100%;
                         height: 100%;
                         color: #333333;
+                        outline: none;
                     }
                 }
 

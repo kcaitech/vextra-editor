@@ -137,6 +137,7 @@ const getinput_value = () => {
     align-items: center;
     //padding-left: 12px;
     //padding-right: 3px;
+    border: 1px solid transparent;
     box-sizing: border-box;
     background-color: var(--input-background);
     border-radius: var(--default-radius);
@@ -164,7 +165,7 @@ const getinput_value = () => {
         width: 100%;
         flex: 1 1 auto;
         align-content: center;
-        margin-left: 6px;
+        margin-left: 8px;
         color: #000000;
         font-family: HarmonyOS Sans;
         text-overflow: ellipsis;

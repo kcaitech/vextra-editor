@@ -188,6 +188,7 @@ onUnmounted(() => {
     width: 88px;
     height: 32px;
     padding: 0 0 0 8px;
+    border: 1px solid transparent;
     box-sizing: border-box;
     background-color: var(--input-background);
     border-radius: var(--default-radius);
