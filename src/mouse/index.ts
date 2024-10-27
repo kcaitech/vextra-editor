@@ -2,14 +2,19 @@ import { Context } from "@/context";
 import { Hover } from "@/mouse/hover";
 import { Marker } from "@/mouse/marker";
 
+interface MouseEventLike {
+    clientX: number;
+    clientY: number;
+}
 export class Mouse {
     private readonly context: Context;
     private readonly hover: Hover;
     private readonly marker: Marker;
 
-    private __event: MouseEvent | undefined;
+    private __event: MouseEventLike | undefined;
     private altStatus: boolean;
     private ctrlStatus: boolean;
+    private shiftStatus: boolean;
 
     constructor(context: Context) {
         this.context = context;
@@ -18,12 +23,8 @@ export class Mouse {
 
         this.altStatus = false;
         this.ctrlStatus = false;
+        this.shiftStatus = false;
     }
-
-    set event(e: MouseEvent) {
-        this.__event = e;
-    }
-
 
     private __keydown(event: KeyboardEvent) {
         if ((event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement)) return;
@@ -45,10 +46,9 @@ export class Mouse {
         if (event.code === "AltLeft") {
             this.altStatus = false;
         }
-        if (event.code === "ControlLeft") {
+        if (event.code === "ControlLeft" || event.code === "MetaLeft") {
             this.ctrlStatus = false;
         }
-
     }
 
     private keyup = this.__keyup.bind(this);
@@ -62,8 +62,24 @@ export class Mouse {
     private reset() {
         this.altStatus = false;
         this.ctrlStatus = false;
+        this.shiftStatus = false;
     }
 
+    set event(e: MouseEventLike) {
+        this.__event = e;
+    }
+
+    move() {
+
+    }
+
+    down() {
+
+    }
+
+    up() {
+
+    }
     destroy() {
         document.removeEventListener('keydown', this.keydown);
         document.removeEventListener('keyup', this.keyup);
