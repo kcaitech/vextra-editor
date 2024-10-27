@@ -38,7 +38,7 @@ import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
 import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
 import { autoLayoutFn } from '@/utils/auto_layout';
-import { Search } from "@/picker/search";
+import { Mouse } from "@/mouse";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -77,7 +77,7 @@ const color_edit_mode = ref<boolean>(false);
 const image_tile_mode = ref<boolean>(false);
 const isvisible = ref(false);
 const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 });
-const searcher = new Search(props.context);
+const mouse = new Mouse(props.context);
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 let matrix_inverse: Matrix = new Matrix();
 let firstTime = false;
@@ -306,7 +306,7 @@ function createSelector(e: MouseEvent) {
 }
 
 function updateMouse(e: MouseEvent) {
-    searcher.event = e;
+    mouse.event = e;
     mouseOnClient.x = e.clientX;
     mouseOnClient.y = e.clientY;
 }
@@ -737,7 +737,7 @@ onUnmounted(() => {
     window.removeEventListener('focus', windowFocus);
     stop1();
     clearInterval(timer);
-    searcher.destroy();
+    mouse.destroy();
 })
 </script>
 <template>

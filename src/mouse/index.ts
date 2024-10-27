@@ -1,46 +1,29 @@
 import { Context } from "@/context";
-import { ShapeView } from "@kcdesign/data";
+import { Hover } from "@/mouse/hover";
+import { Marker } from "@/mouse/marker";
 
-export class Search {
+export class Mouse {
     private readonly context: Context;
-    private readonly SVG: SVGElement;
-    private readonly path: SVGPathElement;
+    private readonly hover: Hover;
+    private readonly marker: Marker;
+
+    private __event: MouseEvent | undefined;
+    private altStatus: boolean;
+    private ctrlStatus: boolean;
 
     constructor(context: Context) {
         this.context = context;
-        this.fire = true;
+        this.hover = new Hover(context);
+        this.marker = new Marker(context);
+
         this.altStatus = false;
         this.ctrlStatus = false;
-
-        this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute('width', '10');
-        svg.setAttribute('height', '10');
-        svg.appendChild(this.path);
-        this.SVG = svg;
-
-        document.body.appendChild(svg);
-        document.addEventListener('keydown', this.keydown);
-        document.addEventListener('keyup', this.keyup);
-        window.addEventListener('blur', this.blur);
     }
-
-    private __event: MouseEvent | undefined;
 
     set event(e: MouseEvent) {
         this.__event = e;
     }
 
-    private __last_cursor: string | undefined;
-
-    private modifyCursor() {
-    }
-
-    private rollbackCursor() {
-    }
-
-    private altStatus: boolean;
-    private ctrlStatus: boolean;
 
     private __keydown(event: KeyboardEvent) {
         if ((event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement)) return;
@@ -48,7 +31,6 @@ export class Search {
 
         if (event.altKey) {
             this.altStatus = true;
-            this.modifyCursor();
         }
         if (event.ctrlKey || event.metaKey) {
             this.ctrlStatus = true;
@@ -62,7 +44,6 @@ export class Search {
         if ((event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement)) return;
         if (event.code === "AltLeft") {
             this.altStatus = false;
-            this.rollbackCursor();
         }
         if (event.code === "ControlLeft") {
             this.ctrlStatus = false;
@@ -72,33 +53,18 @@ export class Search {
 
     private keyup = this.__keyup.bind(this);
 
-    private reset() {
-        this.altStatus = false;
-        this.ctrlStatus = false;
-        this.rollbackCursor();
-    }
-
     private __blur() {
         this.reset();
     }
 
     private blur = this.__blur.bind(this);
 
-    fire: boolean;
-
-    get views(): ShapeView[] {
-        return [];
-    }
-
-    private __last_view: ShapeView | undefined;
-
-    get view(): ShapeView | undefined {
-        if (!this.fire) return;
-
+    private reset() {
+        this.altStatus = false;
+        this.ctrlStatus = false;
     }
 
     destroy() {
-        document.body.removeChild(this.SVG);
         document.removeEventListener('keydown', this.keydown);
         document.removeEventListener('keyup', this.keyup);
         window.removeEventListener('blur', this.blur);
