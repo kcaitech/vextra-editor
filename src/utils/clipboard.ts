@@ -800,11 +800,18 @@ export class Clipboard {
             const data = await navigator.clipboard.read();
             if (!(data && data.length)) throw new Error('invalid data');
             const is_inner_shape = data[0].types.length === 1 && data[0].types[0] === 'text/html';
-            if (!is_inner_shape) throw new MossError('external data');
+            if (!is_inner_shape) {
+                // todo
+                // const loader = new ImageLoader(this.context);
+                // const type = data[0].types[0];
+                // const val = await data[0].getType(type);
+                // const filePack = await loader.packFile(val as any, true);
+                throw new MossError('external data');
+            }
             clipboard_text_html_replace(this.context, data[0], src);
             return true;
         } catch (error) {
-            console.log('replace error:', error);
+            console.error(error);
             message('info', "替换失败");
             return false;
         }
