@@ -623,15 +623,16 @@ class SelManager {
     }
 
     drawn() {
-        if (this.fixed) return;
+        const translate = this.translate;
+
+        if (this.fixed || !translate.api) return;
         this.fixed = true;
 
-        const translate = this.translate;
 
         const transformOriginal = translate.selModel.original;
         const envOriginal = translate.radar.original;
 
-        const results = translate.api!.drawn(compare_layer_3(this.shapes, -1), transformOriginal, envOriginal)!;
+        const results = translate.api.drawn(compare_layer_3(this.shapes, -1), transformOriginal, envOriginal)!;
 
         this.context.nextTick(translate.page, () => {
             const selects: ShapeView[] = [];
@@ -652,10 +653,10 @@ class SelManager {
     }
 
     revert() {
-        if (this.fixed) return;
+        if (this.fixed || !this.translate.api) return;
         this.fixed = true;
 
-        const results = this.translate.api!.revert(compare_layer_3(this.shapes, -1))!;
+        const results = this.translate.api.revert(compare_layer_3(this.shapes, -1))!;
 
         const page = this.translate.page;
         this.context.nextTick(page, () => {
