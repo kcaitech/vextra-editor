@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { FrameLike, TransformHandler } from "./handler";
+import { BoundHandler, FrameLike } from "./handler";
 import {
     ColVector3D, CtrlElementType, Matrix, Scaler, ShapeSize, ShapeView, SymbolView, Transform, UniformScaleUnit,
     ArtboradView, GroupShapeView, SymbolRefView
@@ -21,7 +21,7 @@ type Box = {
 
 type BaseFrames = Map<string, Box>;
 
-export class ScaleHandler extends TransformHandler {
+export class ScaleHandler extends BoundHandler {
     readonly shapes: ShapeView[];
     readonly ctrlElementType: CtrlElementType;
 
@@ -639,9 +639,12 @@ export class ScaleHandler extends TransformHandler {
         const shapes = this.shapes;
         const inverseCache = this.transformInverseCache;
         const sizes = this.shapeSizeList;
+        const __is_locked = this.isLocked.bind(this);
 
         this.shapeTransformListInSelection.forEach((transform, i) => {
             const shape = shapes[i];
+
+            if (__is_locked(shape)) return;
 
             const t = transform.clone()
                 .addTransform(transformForSelection)
@@ -664,6 +667,7 @@ export class ScaleHandler extends TransformHandler {
 
             units.push({ shape, size, transform2: t, scale: __scale });
         });
+
 
         if (this.alignPixel) {
             for (const unit of units) {
@@ -840,8 +844,12 @@ export class ScaleHandler extends TransformHandler {
         const inverseCache = this.transformInverseCache;
         const sizes = this.shapeSizeList;
 
+        const __is_locked = this.isLocked.bind(this);
+
         this.shapeTransformListInSelection.forEach((transform, i) => {
             const shape = shapes[i];
+
+            if (__is_locked(shape)) return;
 
             const t = transform.clone()
                 .addTransform(transformForSelection)

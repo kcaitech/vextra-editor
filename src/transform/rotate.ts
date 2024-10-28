@@ -10,7 +10,7 @@ import {
     TransformMode,
     TransformRaw,
 } from "@kcdesign/data";
-import { FrameLike, TransformHandler } from "./handler";
+import { BoundHandler, FrameLike, TransformHandler } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
 
@@ -56,7 +56,7 @@ export function rotate(shapes: ShapeView[], deg: number) {
     return transformList;
 }
 
-export class RotateHandler extends TransformHandler {
+export class RotateHandler extends BoundHandler {
     readonly shapes: ShapeView[];
     readonly referencePoint: XY;
     readonly centerXY: XY;
@@ -308,17 +308,19 @@ export class RotateHandler extends TransformHandler {
             mode: TransformMode.Local,
         });
 
-        // shape最终的Transform
-        const transformList = this.shapeTransformListInSelection.map((transform, i) => transform.clone() // 在选区坐标系下
-            .addTransform(transformForSelection) // 在Root坐标系下
-            .addTransform(this.transformCache.get(this.shapes[i].parent!)!.getInverse()) // 在Parent坐标系下
-        );
+        const units: { shape: ShapeView, transform2: Transform }[] = [];
+        const __is_locked = this.isLocked.bind(this);
+        for (let i = 0; i < this.shapes.length; i++) {
+            const shape = this.shapes[i];
+            if (__is_locked(shape)) continue;
+            const transform = this.shapeTransformListInSelection[i].clone();
+            transform.addTransform(transformForSelection)
+                .addTransform(this.transformCache.get(shape.parent!)!.getInverse());
+            units.push({ shape, transform2: transform });
+        }
 
         // 更新shape
-        (this.asyncApiCaller as Rotator).execute(transformList.map((transform, i) => ({
-            shape: this.shapes[i],
-            transform2: transform
-        })));
+        (this.asyncApiCaller as Rotator).execute(units);
 
         this.updateCtrlView(1);
     }

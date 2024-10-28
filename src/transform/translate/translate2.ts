@@ -1,4 +1,4 @@
-import { TransformHandler } from "@/transform/handler";
+import { BoundHandler } from "@/transform/handler";
 import {
     ArtboradView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
     ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
@@ -1036,7 +1036,7 @@ class Inserter {
     }
 }
 
-export class Translate2 extends TransformHandler {
+export class Translate2 extends BoundHandler {
     readonly selManager: SelManager;
     readonly selModel: SelModel;
     readonly style: StyleManager;
@@ -1093,7 +1093,10 @@ export class Translate2 extends TransformHandler {
         const transformUnits: TranslateUnit[] = [];
         const cache = new Map<ShapeView, Transform>();
         const shapes = manager.shapes;
+        const __is_locked = this.isLocked.bind(this);
         for (const shape of shapes) {
+            if (__is_locked(shape)) continue;
+            
             const parent = shape.parent!;
             let PI = cache.get(parent)!;
             if (!PI) {
