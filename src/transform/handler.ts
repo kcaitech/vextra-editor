@@ -87,7 +87,7 @@ export class BoundHandler extends TransformHandler {
     }
 
     isLocked(view: ShapeView) {
-        let status = this.lockedMap.get(view);
+        const status = this.lockedMap.get(view);
         if (status === undefined) {
             let v: ShapeView | undefined = view;
             while (v) {
