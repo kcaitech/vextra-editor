@@ -1835,7 +1835,7 @@ onUnmounted(() => {
 
         .input-container {
             width: 100%;
-            height: 80px;
+            height: fit-content;
             display: flex;
             flex-direction: row;
             align-items: flex-start;
