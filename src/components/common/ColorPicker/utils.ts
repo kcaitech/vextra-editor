@@ -42,7 +42,8 @@ export function toHex(options: {
   }
   return "#" + toHex(options.red) + toHex(options.green) + toHex(options.blue);
 }
-export type Model = 'RGB' | 'HSL' | 'HSB';
+
+export type Model = 'RGB' | 'HSL' | 'HSB' | 'Hex';
 
 /**
  * 加载base64图片
@@ -405,7 +406,25 @@ export function RGB2SB(color: Color): { s: number, b: number } {
   b = max / 255;
   return { s, b };
 }
-export function validate(model: Model, field: number, value: number): boolean {
+
+export function validate(model: Model, field: number, value: number | string): boolean {
+  if (typeof value === "string") {
+    if (model === "Hex" && field === 0) {
+      const _v = /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value.toString());
+      let _v2: boolean;
+      if (_v) {
+        let color = value.replace(/^#/, '');
+        if (color.length === 3) {
+          color = [color.charAt(0), color.charAt(0), color.charAt(1), color.charAt(1), color.charAt(2), color.charAt(2)].join('');
+        }
+        let r = parseInt(color.substring(0, 2), 16);
+        let g = parseInt(color.substring(2, 4), 16);
+        let b = parseInt(color.substring(4, 6), 16);
+        _v2 = (r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255);
+      } else _v2 = false;
+      return _v2 && _v;
+    } else return false;
+  }
   if (isNaN(value)) return false;
   let result = true;
   if (model === "RGB") {
