@@ -338,7 +338,7 @@ function flipv() {
 }
 
 function changeR(value: string) {
-    value = value.split('°').join(''); // 去掉单位
+    value = value.replace('°', '');
 
     value = Number
         .parseFloat(computeString(value))

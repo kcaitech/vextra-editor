@@ -3,7 +3,7 @@ import {
     Line,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
-    Matrix,
+    Matrix, PathShapeView,
     Rotator,
     ShapeView,
     Transform,
@@ -13,6 +13,8 @@ import {
 import { BoundHandler, FrameLike, TransformHandler } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
+import { is_straight } from "@/utils/attri_setting";
+import { getHorizontalAngle } from "@/utils/common";
 
 type Base4Rotation = {
     XYtoRoot: XY;
@@ -37,13 +39,25 @@ export function rotate(shapes: ShapeView[], deg: number) {
     for (const shape of shapes) {
         const t = makeShapeTransform2By1(shape.transform);
         const { x, y, width, height } = shape.frame;
-
-        const angle = deg % 360 * Math.PI / 180;
+        const oa = deg % 360 * Math.PI / 180;
         const os = t.decomposeEuler().z;
-
+        let angle = oa - os;
+        if (is_straight(shape)) {
+            const points = (shape as PathShapeView).segments[0].points;
+            const p1 = points[0];
+            const p2 = points[1];
+            const m = new Matrix();
+            m.preScale(shape.frame.width, shape.frame.height);
+            const lt = m.computeCoord2(p1.x, p1.y);
+            const rb = m.computeCoord2(p2.x, p2.y);
+            let os = Math.atan2(rb.x - lt.x, rb.y - lt.y);
+            if (os < 0) os = Math.PI * 2 + os;
+            console.log('--os--', os, rb, lt);
+            angle -= os;
+        }
         t.rotateAt({
             axis: Line.FromParallelZ(ColVector3D.FromXYZ(x + width / 2, y + height / 2, 0)),
-            angle: angle - os,
+            angle,
             mode: TransformMode.Local,
         });
 
