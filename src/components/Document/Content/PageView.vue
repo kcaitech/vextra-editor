@@ -97,13 +97,13 @@ const prepareDom = (page: Page | PageView) => {
     const childs = Array.from(svg.childNodes);
     childs.forEach(c => svg.removeChild(c))
 
-    removeRenderidle = dom.dom.once("renderidle", () => {
+    removeRenderIdle = dom.dom.once("renderidle", () => {
         if (pagesvg.value) { // 离屏更新，绘制好后再bind
             dom.dom.bind(pagesvg.value);
             dom.dom.asyncRender();
             pageReady.value = true;
         }
-        removeRenderidle = undefined;
+        removeRenderIdle = undefined;
         if (props.params.onRenderDone) props.params.onRenderDone();
     })
     props.context.nextTick(props.params.data, () => {
@@ -117,9 +117,9 @@ const stopWatchPage = watch(() => props.params.data, (value, old) => {
     pageViewRegister(true);
     page_watcher();
 
-    if (removeRenderidle) {
-        removeRenderidle.remove();
-        removeRenderidle = undefined;
+    if (removeRenderIdle) {
+        removeRenderIdle.remove();
+        removeRenderIdle = undefined;
     }
     if (old) {
         const dom = props.context.getPageDom(old.data);
@@ -168,7 +168,7 @@ function selection_watcher(...args: any[]) {
     }
 }
 
-let removeRenderidle: {
+let removeRenderIdle: {
     remove: () => void;
 } | undefined;
 onMounted(() => {
@@ -182,23 +182,19 @@ onUnmounted(() => {
         dom.ctx.updateFocusShape(undefined);
         dom.dom.unbind();
     }
-    if (removeRenderidle) {
-        removeRenderidle.remove();
-        removeRenderidle = undefined;
+    if (removeRenderIdle) {
+        removeRenderIdle.remove();
+        removeRenderIdle = undefined;
     }
 })
-
 </script>
-
 <template>
-    <svg ref="pagesvg" :style="{ transform }" :data-area="rootId" :width="width" :height="height"
-        :viewBox="viewbox"></svg>
-    <ShapeCutout v-if="show_c && pageReady" :context="props.context" :data="params.data" :matrix="props.params.matrix"
-        :transform="transformArr" />
-    <ShapeTitles v-if="show_t && pageReady" :context="props.context" :data="params.data" />
-
+<svg ref="pagesvg" :style="{ transform }" :data-area="rootId"
+     :width="width" :height="height" :viewBox="viewbox"/>
+<ShapeCutout v-if="show_c && pageReady" :context="props.context" :data="params.data" :matrix="props.params.matrix"
+             :transform="transformArr"/>
+<ShapeTitles v-if="show_t && pageReady" :context="props.context" :data="params.data"/>
 </template>
-
 <style scoped>
 svg {
     position: absolute;

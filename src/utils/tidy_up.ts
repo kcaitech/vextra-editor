@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { ArtboradView, ColVector3D, makeShapeTransform2By1, Matrix, PageView, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboradView, ColVector3D, makeShapeTransform2By1, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "./common";
 import { getShapeFrame } from "./content";
 import { Selection, XY } from "@/context/selection";
@@ -147,7 +147,7 @@ export const getSelectedWidthHeight = (context: Context, shapes: ShapeView[]) =>
 }
 
 export const whetherNeedTidyUp = (context: Context) => {
-    const selected = context.selection.selectedShapes;
+    const selected = getVisibleShapes(context.selection.selectedShapes);
     if (hiddenTidyUp(selected) || selected.length < 2) return;
     const { width, height } = getSelectedWidthHeight(context, selected);
     if (height > width) {
@@ -203,6 +203,7 @@ const checkHorTidyUp = (selected: ShapeView[], dir: boolean) => {
 }
 const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
     const shape_rows = checkTidyUpShapesOrder(selected, dir);
+    
     if (shape_rows.length === 1) {
         let rows = shape_rows[0];
         const frame = rows[0]._p_frame;
@@ -648,4 +649,9 @@ export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
 
 const getDiff = (a: number, b: number) => {
     return Math.abs(a - b);
+}
+
+
+export const getVisibleShapes = (shapes: ShapeView[])=> {
+    return shapes.filter(s => s.isVisible);
 }

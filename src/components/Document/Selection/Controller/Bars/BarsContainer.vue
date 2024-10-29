@@ -179,11 +179,7 @@ function bar_mousemove(event: MouseEvent) {
 }
 
 function bar_mouseup(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
-
-    clear_status();
+    if (event.button === 0) clear_status();
 }
 
 function setCursor(t: CtrlElementType) {
@@ -217,9 +213,7 @@ function bar_mouseleave() {
 }
 
 function workspaceWatcher(t: number | string) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.SELECTION_VIEW_UPDATE) {
-        update();
-    }
+    if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.SELECTION_VIEW_UPDATE) update();
 }
 
 function window_blur() {

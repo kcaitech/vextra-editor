@@ -7,8 +7,7 @@ import {
 import { onMounted, onUnmounted, watch, ref, reactive } from 'vue';
 import { Point } from "../../SelectionView.vue";
 import { WorkSpace } from '@/context/workspace';
-// import { TranslateHandler } from '@/transform/translate';
-import { Translate2 } from "@/transform/translate2";
+import { Translate2 } from "@/transform/translate/translate2";
 
 
 interface Props {

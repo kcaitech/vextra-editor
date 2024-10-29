@@ -375,7 +375,7 @@ function path_selection_watcher(t: number) {
     }
 }
 
-function shape_watcher(t: any) {
+function shape_watcher() {
     update();
 }
 

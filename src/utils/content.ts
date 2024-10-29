@@ -438,7 +438,7 @@ export function drop(e: DragEvent, context: Context) {
     const data = e?.dataTransfer?.files as any;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) return;
     const loader = new ImageLoader(context);
-    loader.insertImageByPackages(data);
+    loader.insertImageByPackages(data, true);
 }
 
 export function SVGReader(context: Context, file: File, xy?: XY) {
@@ -1405,6 +1405,9 @@ export function outlineSelection(context: Context) {
 }
 
 export function flattenSelection(context: Context) {
+    // const page = context.selection.selectedPage!;
+    // const editor = context.editor4Page(page);
+    // editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
     const page = context.selection.selectedPage!;
     const editor = context.editor4Page(page);
     // editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));

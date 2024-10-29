@@ -1,13 +1,7 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
 import {
-    GroupShapeView,
-    Matrix, PageView,
-    PathShapeView,
-    Shape,
-    ShapeType,
-    ShapeView,
-    SymbolRefView
+    GroupShapeView, Matrix, PageView, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView
 } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
@@ -314,13 +308,10 @@ export function finder(context: Context, scout: Scout, g: ShapeView[], position:
     let result: ShapeView | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         const item = g[i];
-        if (!canBeTarget(item)) {
-            continue; // 隐藏图层或已锁定
-        }
+        if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
 
-        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
-            continue; // 屏幕外图形，判断图形(除连接线以外)是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
-        }
+        // 屏幕外图形，判断图形(除连接线以外)是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) continue;
 
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
             result = finder_symbol_union(context, scout, item, position, selected, isCtrl);
@@ -332,9 +323,7 @@ export function finder(context: Context, scout: Scout, g: ShapeView[], position:
             result = finder_symbol(context, scout, item, position, selected, isCtrl);
         }
 
-        if (result) {
-            break;
-        }
+        if (result) break;
 
         const isItemIsTarget = isTarget(scout, item, position);
         if (!isItemIsTarget) {
@@ -349,9 +338,7 @@ export function finder(context: Context, scout: Scout, g: ShapeView[], position:
             result = item;
         }
 
-        if (result) {
-            break;
-        }
+        if (result) break;
     }
     return result;
 }
@@ -617,17 +604,13 @@ function get_max_thickness_border(shape: ShapeView) {
  * @returns { ShapeView | undefined } 返回符合检索条件的层级最优先的图形
  */
 export function finder2(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY, selected: ShapeView[], pen: boolean, m: boolean): ShapeView | undefined {
-    if (pen) {
-        return for_pen(context, scout, scope, hot);
-    }
+    if (pen) return for_pen(context, scout, scope, hot);
 
     set_env(context, selected, m);
 
-    let result: ShapeView | undefined = undefined;
+    let result: ShapeView | undefined;
     result = for_env(context, scout, hot);
-    if (result) {
-        return result;
-    }
+    if (result) return result;
 
     return for_standard(context, scout, scope, hot);
 }
@@ -695,39 +678,25 @@ function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: P
     for (let i = scope.length - 1; i > -1; i--) {
         const item = scope[i];
 
-        if (!canBeTarget(item)) {
-            continue; // 隐藏图层或已锁定
-        }
+        if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
 
         if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
             continue; // 屏幕外图形，判断图形(除连接线以外)是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
         }
 
-        if (!isTarget(scout, item, hot)) {
-            continue;
-        }
+        if (!isTarget(scout, item, hot)) continue;
 
         if (is_fixed(item)) {
             result = for_fixed(context, scout, item, hot);
-
-            if (result) {
-                return result;
-            }
-
-            if (!item.childs.length) {
-                return item;
-            }
-
+            if (result) return result;
+            if (!item.childs.length) return item;
             break;
         } else if (is_hollow(item)) {
             result = for_hollow(context, scout, item, hot);
         } else {
             result = item;
         }
-
-        if (result) {
-            return result;
-        }
+        if (result) return result;
     }
     return result;
 }

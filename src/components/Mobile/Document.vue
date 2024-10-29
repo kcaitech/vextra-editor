@@ -129,16 +129,8 @@ watch(fileName, (NewNanme) => {
         }
     }
 })
-
-
-onMounted(() => {
-
-    initpal().then(() => {
-        initialized.value = true;
-    }).catch((e) => {
-        console.log(e)
-    })
-
+function updatePageList() {
+    pagelists.value.length = 0;
     const ctx: Context = props.context as Context;
     for (let index = 0; index < ctx.data.pagesList.length; index++) {
         let a: SelectSource = {
@@ -147,13 +139,25 @@ onMounted(() => {
         }
         pagelists.value.push(a)
     }
+}
 
+onMounted(() => {
+    initpal().then(() => {
+        initialized.value = true;
+    }).catch((e) => {
+        console.log(e)
+    })
+    updatePageList();
+    const ctx: Context = props.context as Context;
+
+    ctx.data.pagesMgr.watch(updatePageList)
     ctx.selection.watch(selectionWatcher);
     ctx.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     const ctx: Context = props.context as Context;
     closeNetMsg();
+    ctx.data.pagesMgr.unwatch(updatePageList)
     ctx.selection.unwatch(selectionWatcher);
     ctx.workspace.unwatch(workspace_watcher);
     clearInterval(timer);
@@ -297,8 +301,8 @@ function end(e: TouchEvent) {
 // })
 
 const iconPosition = ref({
-    left: window.innerWidth - 68,
-    top: window.innerHeight - 68
+    left: window.innerWidth - 88,
+    top: window.innerHeight - 112
 })
 
 function moveIcon(e: TouchEvent) {
@@ -323,10 +327,10 @@ onUnmounted(() => {
 
 function scrollIntoView() {
     const item = document.querySelectorAll('.list-item');
-    const el = document.querySelector('.pagelist');
+    const el = document.querySelector('.pagelist .list');
     const idx = pagelists.value.findIndex(item => item.data.value === curPage.value?.id)
     if (item) {
-        el?.scrollTo({ top: idx * 44 })
+        el?.scrollTo({ top: idx * 48 })
     }
 }
 
@@ -346,11 +350,21 @@ const pageParams = {
     noCutout: true,
 }
 
+const add = (index: number) => {
+    const el = document.querySelectorAll('.list-item')
+    el[index].classList.add('active')
+}
+
+const del = (index: number) => {
+    const el = document.querySelectorAll('.list-item')
+    el[index].classList.remove('active')
+}
+
 </script>
 
 <template>
     <div class="container">
-        <div class="status-bar" @touchmove.stop="moveIcon"
+        <div v-if="!showpagelist" class="status-bar" @touchmove.stop="moveIcon"
             :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showEl">
                 <svg-icon icon-class="menu-black"></svg-icon>
@@ -358,18 +372,31 @@ const pageParams = {
         </div>
         <transition name="fade">
             <div v-if="showpagelist" class="pagelist" @touchstart.stop @touchmove.stop @touchend.stop>
-                <div class="list-item" v-for="page in pagelists" :key="page.id"
-                    @click.stop="switchPage(page.data.value as string)">
-                    <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
+                <div class="header">
+                    <div class="title">页面</div>
+                    <div class="close" @click.stop="showpagelist = false">
+                        <svg-icon icon-class="close"></svg-icon>
                     </div>
-                    <div class="pagename">{{ page.data.content }}</div>
+                </div>
+                <div class="list">
+                    <div class="list-item" v-for="(page, index) in pagelists" :key="page.id"
+                        @click.stop="switchPage(page.data.value as string)" @touchstart="e => add(index)"
+                        @touchend="e => del(index)">
+                        <div class="pagename"
+                            :style="{ color: curPage?.id === page.data.value ? '#1878F5' : '#434343' }">{{
+                                page.data.content }}</div>
+                        <div class="choose"
+                            :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
+                            <svg-icon icon-class="m-select"></svg-icon>
+                        </div>
+                    </div>
                 </div>
             </div>
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end" @click="showpagelist = false">
             <PageViewVue v-if="initialized && curPage" :context="context as Context" :params="pageParams" />
         </div>
-        <Loading v-if="loading" :size="20"/>
+        <Loading v-if="loading" :size="20" />
     </div>
 </template>
 
@@ -390,17 +417,23 @@ const pageParams = {
     height: 100%;
 }
 
+.active {
+    background-color: #FAFAFA;
+}
+
 .status-bar {
     position: fixed;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    border-radius: 100%;
+    border: 1px solid #EBEBEB;
     background-color: #fff;
+    box-shadow: 0px 2px 20px 0px rgba(0, 0, 0, 0.03);
     box-sizing: border-box;
-    box-shadow: 0 0 5px silver;
+
     z-index: 999;
 
     .back {
@@ -434,37 +467,79 @@ const pageParams = {
     bottom: 0;
     width: 100%;
     height: 50%;
+    max-height: 458px;
+    min-height: 458px;
     background-color: #fff;
-    border-radius: 12px;
-    overflow-y: scroll;
+    border-radius: 16px 16px 0 0;
+    padding: 4px 0 0 0;
     box-sizing: border-box;
     z-index: 1;
 
-    .list-item {
+    .header {
+        position: relative;
         display: flex;
         align-items: center;
-        height: 44px;
-        font-size: 14px;
         justify-content: center;
+        height: 40px;
 
-        .choose {
-            box-sizing: border-box;
-            width: 10px;
-            height: 6px;
-            margin-right: 10px;
-            margin-left: 2px;
-            border-width: 0 0 2px 2px;
-            border-style: solid;
-            border-color: rgb(0, 0, 0, .75);
-            transform: rotate(-45deg) translateY(-30%);
+        .title {
+            font-weight: 500;
+            font-size: 15px;
+            color: #595959;
         }
 
-        .pagename {
-            flex: 0.8;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .close {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            right: 24px;
+            padding: 2px;
+            box-sizing: border-box;
+
+            svg {
+                width: 100%;
+                height: 100%;
+                color: #595959;
+            }
         }
     }
+
+    .list {
+        height: 418px;
+        overflow-y: scroll;
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 48px;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 0 24px;
+            box-sizing: border-box;
+
+
+            .choose {
+                display: flex;
+                width: 20px;
+                height: 20px;
+
+                svg {
+                    margin: auto;
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            .pagename {
+                flex: 0.8;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+    }
+
 }
 
 .pageview {

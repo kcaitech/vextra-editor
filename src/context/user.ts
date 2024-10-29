@@ -12,6 +12,10 @@ export interface UserConfig {
     rule: boolean;
     slow: number;
     fast: number;
+    pageListSpace: {
+        height: number;
+        fold: boolean;
+    }
 }
 
 export type DocSelectionData = {
@@ -39,6 +43,7 @@ export class User extends WatchableObject {
     private m_rule: boolean = true;
     private m_slow: number = 1;
     private m_fast: number = 10;
+    private m_page_list_space = { height: 120, fold: false };
 
     constructor() {
         super();
@@ -62,6 +67,25 @@ export class User extends WatchableObject {
 
     get step() {
         return { slow: this.m_slow, fast: this.m_fast }
+    }
+
+    get pageListSpace() {
+        return this.m_page_list_space;
+    }
+
+    modifyPageListSpaceHeight(v: number) {
+        this.m_page_list_space.height = v;
+
+        const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        conf.pageListSpace.height = v;
+        localStorage.setItem('userConfig', JSON.stringify(conf));
+    }
+    modifyPageListSpaceFold(v: boolean) {
+        this.m_page_list_space.fold = v;
+
+        const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        conf.pageListSpace.fold = v;
+        localStorage.setItem('userConfig', JSON.stringify(conf));
     }
 
     modifysetStepSlow(v: number) {
@@ -107,6 +131,10 @@ export class User extends WatchableObject {
         rule: true,
         slow: 1,
         fast: 10,
+        pageListSpace: {
+            height: 120,
+            fold: false
+        }
     };
 
     get initConfig(): string {
@@ -122,17 +150,20 @@ export class User extends WatchableObject {
             const __temp = JSON.parse(JSON.stringify(conf));
             conf = User.CONF;
 
-            conf.pixelAlignment = __temp.pixelAlignment || true;
-            conf.pixelGrid = __temp.pixelGrid || true;
-            conf.rule = __temp.rule || true;
-            conf.slow = __temp.slow || 1;
-            conf.fast = __temp.fast || 10;
+            conf.pixelAlignment = __temp.pixelAlignment ?? true;
+            conf.pixelGrid = __temp.pixelGrid ?? true;
+            conf.rule = __temp.rule ?? true;
+            conf.slow = __temp.slow ?? 1;
+            conf.fast = __temp.fast ?? 10;
+            conf.pageListSpace.height = __temp?.pageListSpace?.height ?? 120;
+            conf.pageListSpace.fold = __temp?.pageListSpace?.fold ?? false;
         }
         this.m_pixel_alignment = conf.pixelAlignment;
         this.m_pixel_grid = conf.pixelGrid;
         this.m_rule = conf.rule;
         this.m_slow = conf.slow;
         this.m_fast = conf.fast;
+        this.m_page_list_space = conf.pageListSpace;
 
         localStorage.setItem('userConfig', JSON.stringify(conf));
     }

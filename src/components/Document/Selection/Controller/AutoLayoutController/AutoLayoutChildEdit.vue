@@ -15,6 +15,7 @@ import {
 import { WorkSpace } from "@/context/workspace";
 import { genRectPath } from "../../common";
 import { is_shape_in_selected } from "@/utils/scout";
+import { flattenShapes } from "@/utils/content";
 
 export interface Point {
     x: number
@@ -49,6 +50,7 @@ function selectionWatcher(t: any, params?: any) {
         getDottedPaths();
     } else if (t === Selection.CHANGE_SHAPE) {
         getDottedPaths();
+        watch_shapes();
     } else if (t === Selection.LAYOUT_DOTTED_LINE) {
         if (params) {
             movePathStroke.value = true;
@@ -66,9 +68,7 @@ function selectionWatcher(t: any, params?: any) {
             moveTrans.value = { x: transx, y: transy }
         }
     } else if (t === Selection.UPDATE_LAYOUT_DOTTED_LINE) {
-        if (params) {
-            updateDottedPath(params);
-        }
+        if (params) updateDottedPath(params);
     }
 }
 
@@ -80,13 +80,9 @@ const updateDottedPath = (downXY: XY) => {
 
 function hoverDottedPaths() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
-    if (!hoveredShape) {
-        return;
-    }
+    if (!hoveredShape) return;
     if (!(hoveredShape as ArtboradView).autoLayout) return;
-    if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) {
-        return;
-    }
+    if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) return;
     const bordersTakeSpace = (hoveredShape as ArtboradView).autoLayout?.bordersTakeSpace;
     const childs = hoveredShape.childs;
     for (let i = 0; i < childs.length; i++) {
@@ -240,11 +236,30 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
 }
 
 const getDottedPaths = () => {
+    if (props.context.workspace.isTranslating) return;
     dottedPaths.value = [];
     movePath.value = [];
     multiplePath.value = undefined;
     selectDottedPaths();
     hoverDottedPaths();
+}
+
+const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+function watch_shapes() {
+    watchedShapes.forEach((v, k) => {
+        v.unwatch(update);
+        watchedShapes.delete(k);
+    })
+
+    const selectedShapes = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selectedShapes);
+    shapes.forEach((v) => {
+        v.watch(update);
+        watchedShapes.set(v.id, v)
+    });
+}
+const update = (...args: any[]) => {
+    if (dottedPaths.value.length && args.includes('layout')) getDottedPaths();
 }
 
 onMounted(() => {
@@ -258,17 +273,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-<svg v-if="dottedPaths.length" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet"
-     overflow="visible" width="100" height="100" viewBox="0 0 100 100"
-     style="transform: translate(0px, 0px); position: absolute;">
-    <path v-for="(path, index) in dottedPaths" :key="index" class="dotted-rect" :d="path.path"/>
-    <path v-if="multiplePath && movePath.length > 1" class="dotted-move" :d="multiplePath"
-          :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }"/>
-    <path v-if="movePath.length" v-for="(path, index) in movePath" :key="index" class="dotted-move" :d="path"
-          :class="{ 'move-path-fill': movePathStroke }"
-          :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" ref="movePathEl"/>
-    <path v-if="insertPath" stroke="black" stroke-width="4" :d="insertPath"/>
-</svg>
+    <svg v-if="dottedPaths.length" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet"
+        overflow="visible" width="100" height="100" viewBox="0 0 100 100"
+        style="transform: translate(0px, 0px); position: absolute;">
+        <path v-for="(path, index) in dottedPaths" :key="index" class="dotted-rect" :d="path.path" />
+        <path v-if="multiplePath && movePath.length > 1" class="dotted-move" :d="multiplePath"
+            :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" />
+        <path v-if="movePath.length" v-for="(path, index) in movePath" :key="index" class="dotted-move" :d="path"
+            :class="{ 'move-path-fill': movePathStroke }"
+            :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" ref="movePathEl" />
+        <path v-if="insertPath" stroke="black" stroke-width="4" :d="insertPath" />
+    </svg>
 </template>
 
 <style scoped lang="scss">

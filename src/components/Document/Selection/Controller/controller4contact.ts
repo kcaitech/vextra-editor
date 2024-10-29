@@ -8,7 +8,7 @@ import {
     shapes_picker,
     shutdown_menu
 } from "@/utils/mouse";
-import { TranslateHandler } from "@/transform/translate";
+import { TranslateHandler } from "@/transform/translate/translate";
 import { ContactLineView } from "@kcdesign/data";
 import { DBL_CLICK } from "@/const";
 

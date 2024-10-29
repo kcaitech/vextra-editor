@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { onUpdated, ref } from 'vue';
+import { onUpdated, ref, watch } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import ShadowInput from './ShadowInput.vue';
 import { useI18n } from 'vue-i18n';
@@ -60,6 +60,11 @@ const setOffsetX = (value: number) => {
     }
     hidden_selection(props.context);
 }
+
+watch(()=>props.shapes,()=>{
+    console.log('切换了图形');
+    
+})
 
 function keydownOffsetX(e: KeyboardEvent, val: string | number) {
     let value: any = sortValue(val.toString());

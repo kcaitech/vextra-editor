@@ -38,6 +38,7 @@ export class ImageLoader {
                 if (!svg) reject('no result');
                 const parseResult = parse_svg.parse(svg as string);
                 if (!parseResult.shape) reject('svg can not parse');
+                else parseResult.shape.name = file.name || this.context.workspace.t('shape.artboard');
                 resolve(parseResult);
             }
         });
@@ -97,7 +98,7 @@ export class ImageLoader {
         return Promise.all(task);
     }
 
-    async insertImageByPackages(files: FileList, targetXY?: XY) {
+    async insertImageByPackages(files: FileList, fixed: boolean, targetXY?: XY) {
         const packages = (await this.packAll(files) as (ImagePack | SVGParseResult)[])
             .filter(i => i);
         if (!packages?.length) return false;
@@ -142,7 +143,7 @@ export class ImageLoader {
         }
         const __packs = transforms.map((v, i) => ({ pack: packages[i], transform: v }));
         const editor = context.editor4Page(page);
-        const result = editor.insertImages(__packs, env);
+        const result = editor.insertImages(__packs, fixed, env);
         if (result) this.upload(result);
         return true;
 
