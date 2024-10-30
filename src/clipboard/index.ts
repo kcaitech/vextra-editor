@@ -31,10 +31,10 @@ interface ImageBundle {
     height: number;
 }
 interface Bundle {
-    HTML?: string;          // 包含图层、图层属性、文本格式
-    plain?: string;         // 纯文本
-    image?: ImageBundle;    // 图片资源
-    SVG?: {                 // 矢量图形
+    HTML?: string;                  // 包含图层、图层属性、文本格式
+    plain?: string;                 // 纯文本
+    images?: ImageBundle[];         // 图片资源
+    SVG?: {                         // 矢量图形
         shape: Shape | undefined;
         mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
     };
@@ -237,9 +237,13 @@ export class MossClipboard {
 
         if (event) {
             const items = event.clipboardData?.items;
-            if (items) for (const item of items) {
-                if (item.kind === "file") {
-                    const file = item.getAsFile()!;
+            if (items) {
+                // 拷贝一份DataTransferItemList，原因是event.clipboardData上的DataTransferItemList在异步读取一次后会清空自己(items.length = 0)，导致只能读取到一份数据
+                const data: DataTransferItem[] = [];
+                for (const d of items) data.push(d);
+                const fileList = data.filter(i => i.kind === "file").map(i => i.getAsFile()!);
+                const stringList = data.filter(i => i.kind === "string");
+                for (const file of fileList) {
                     const type = file.type;
                     if (!type.includes("image")) continue;
                     if (file.type === "image/svg+xml") {
@@ -268,13 +272,20 @@ export class MossClipboard {
                             });
                         }
                     });
-                    size && base64 && (bundle["image"] = Object.assign(size, base64));
-                } else if (item.kind === "string") {
-                    const result = await new Promise<string>(resolve => item.getAsString((result) => resolve(result)));
-                    if (item.type === "text/html") bundle["HTML"] = result;
-                    else if (this.maySvgText(result)) {
-                        bundle["SVG"] = SVGParse(result);
-                    } else bundle["plain"] = result;
+                    if (size && base64) {
+                        const images = bundle["images"];
+                        images ? images.push(Object.assign(size, base64)) : bundle["images"] = [Object.assign(size, base64)];
+                    }
+                }
+                for (const item of stringList) {
+                    if (item.type === "text/html") {
+                        bundle["HTML"] = await new Promise<string>(resolve => item.getAsString((result) => resolve(result)));
+                    } else if (item.type === "text/plain") {
+                        const result = await new Promise<string>(resolve => item.getAsString((result) => resolve(result)));
+                        if (this.maySvgText(result)) {
+                            bundle["SVG"] = SVGParse(result);
+                        } else bundle["plain"] = result;
+                    }
                 }
             }
         }
@@ -306,16 +317,47 @@ export class MossClipboard {
                     img.src = URL.createObjectURL(blob);
                     img.onload = () => resolve({ width: img.width, height: img.height });
                 });
-                base64 && size && (bundle["image"] = Object.assign(size, base64));
+                if (size && base64) {
+                    const images = bundle["images"];
+                    images ? images.push(Object.assign(size, base64)) : bundle["images"] = [Object.assign(size, base64)];
+                }
             }
         }
-
         // 两种方案都没有获取到有效内容，使用缓存
         if (!Object.keys(bundle).length) return this.cache;
 
         this.cache = bundle;
 
         return bundle;
+    }
+
+    /**
+     * @description 通过监听浏览器粘贴事件触发(类似“粘贴在这里”，“粘贴图层属性”这类非通过Ctrl + V触发的不属于浏览器粘贴事件，属于自定义粘贴事件)
+     */
+    async paste(event: ClipboardEvent) {
+        const bundle = await this.read(event);
+        if (!bundle || !Object.keys(bundle).length) return false; // 剪切板内没有可用的替换内容
+        let { HTML, SVG, plain, images } = bundle;
+
+        const source = this.getSource(HTML);
+        const paras = this.getParas(HTML);
+
+        if (images) {
+            const context = this.context;
+            const selected = this.context.selection.selectedShapes;
+
+        } else if (SVG) {
+
+        } else if (source) {
+
+        } else if (paras) {
+
+        } else if (plain) {
+
+        }
+    }
+
+    async pasteHere() {
     }
 
     async replace() {
@@ -325,29 +367,33 @@ export class MossClipboard {
         const bundle = await this.read();
         if (!bundle || !Object.keys(bundle).length) return false; // 剪切板内没有可用的替换内容
 
-        let { HTML, plain, image, SVG } = bundle;
+        let { HTML, plain, images, SVG } = bundle;
 
         const source = this.getSource(HTML);
         const paras = this.getParas(HTML);
 
-        if (image) {
+        if (images) {
             // 用图片生成图层
-            let { base64, name, width, height } = image;
-            const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
-            const format = getFormatFromBase64(base64);
-            const ref = `${v4()}.${format}`;
             const context = this.context;
-            const manager = context.data.mediasMgr;
-            manager.add(ref, { buff, base64 });
-            name = name.replace(new RegExp(`.${format}|.jpg$`, 'img'), '') || 'image';
-            const frame = new ShapeFrame(0, 0, width, height);
-            const source = [creator.newImageFillShape(name, frame, manager, { width, height }, ref)];
-            // 进行替换
+            const source: Shape[] = [];
+            const assets: UploadAssets[] = [];
+            for (const image of images) {
+                let { base64, name, width, height } = image;
+                const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
+                const format = getFormatFromBase64(base64);
+                const ref = `${v4()}.${format}`;
+                const manager = context.data.mediasMgr;
+                manager.add(ref, { buff, base64 });
+                name = name.replace(new RegExp(`.${format}|.jpg$`, 'img'), '') || 'image';
+                const frame = new ShapeFrame(0, 0, width, height);
+                const asset: UploadAssets = { buff, ref };
+                assets.push(asset);
+                source.push(creator.newImageFillShape(name, frame, manager, { width, height }, ref));
+            }
             const editor = context.editor4Page(context.selection.selectedPage!);
             const result = editor.replace(context.data, source, shapes.map((s) => adapt2Shape(s)));
             if (!result || !result.length) return;
-            const asset: UploadAssets = { buff, ref };
-            new ImageLoader(context).upload(result.map(shape => ({ shape, upload: [asset] }))).then(result => {
+            new ImageLoader(context).upload(result.map(shape => ({ shape, upload: assets }))).then(result => {
                 if (!result) message("danger", context.workspace.t('system.uploadMediaFail'));
             });
         } else if (source) {
