@@ -15,7 +15,7 @@ import {
     Shape,
     TableCellType,
     Text,
-    TransformRaw, UploadAssets, import_shape_from_clipboard, ResourceMgr
+    TransformRaw, UploadAssets, import_shape_from_clipboard, ResourceMgr, TextShape
 } from "@kcdesign/data";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
@@ -46,9 +46,9 @@ class ExfContext {
 }
 
 export class MossClipboard {
-    static identity = 'design.moss';
-    static paras = 'design.moss/paras';
-    static properties = 'design.moss/properties';
+    static source = 'moss/source';
+    static paras = 'moss/paras';
+    static properties = 'moss/properties';
     static MIME = ['image/png', 'text/html', 'text/plain'];
 
     private readonly context: Context;
@@ -134,7 +134,13 @@ export class MossClipboard {
     private getSource(HTML: string | undefined) {
         if (!HTML) return undefined;
         HTML = this.decode(HTML);
-        return HTML && HTML.slice(0, 60).indexOf(MossClipboard.identity) > -1 ? JSON.parse(HTML.split(MossClipboard.identity)[1]) : undefined;
+        return HTML && HTML.slice(0, 60).indexOf(MossClipboard.source) > -1 ? JSON.parse(HTML.split(MossClipboard.source)[1]) : undefined;
+    }
+
+    private getParas(HTML: string | undefined) {
+        if (!HTML) return undefined;
+        HTML = this.decode(HTML);
+        return HTML && HTML.slice(0, 60).indexOf(MossClipboard.paras) > -1 ? JSON.parse(HTML.split(MossClipboard.paras)[1]) : undefined;
     }
 
     private __sort_media(document: Document, exportCtx: ExfContext) {
@@ -204,7 +210,7 @@ export class MossClipboard {
                 media,
             }
 
-            const html = this.encode(MossClipboard.identity, data);
+            const html = this.encode(MossClipboard.source, data);
 
             let is_async_plan_enable;
 
@@ -322,6 +328,7 @@ export class MossClipboard {
         let { HTML, plain, image, SVG } = bundle;
 
         const source = this.getSource(HTML);
+        const paras = this.getParas(HTML);
 
         if (image) {
             // 用图片生成图层
@@ -363,8 +370,18 @@ export class MossClipboard {
             new ImageLoader(context).upload(uploadPackages).then(result => {
                 if (!result) message("danger", context.workspace.t('system.uploadMediaFail'));
             });
+        } else if (paras) {
+            // 用文本段落生成图层
+            const text = import_text(this.context.data, paras, true);
+            const context = this.context;
+            const shape: TextShape = (text as TextShape);
+            const layout = shape.getLayout();
+            shape.size.width = layout.contentWidth;
+            shape.size.height = layout.contentHeight;
+            context.editor4Page(context.selection.selectedPage!)
+                .replace(context.data, [shape], context.selection.selectedShapes.map((s) => adapt2Shape(s)));
         } else if (plain) {
-            // 用文本生成图层
+            // 用纯文本生成图层
             const name = plain.length >= 20 ? plain.slice(0, 19) + '...' : plain;
             const shape = creator.newTextShape(name);
             shape.text.insertText(plain, 0);
