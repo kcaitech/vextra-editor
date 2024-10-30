@@ -214,7 +214,7 @@ onUnmounted(() => {
     </el-tooltip>
     <div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
         <!--矩形-->
-        <div class="item" @click="() => { useRect(context) }">
+      <div class="item" @click="() => { useRect(context);popover = false }">
             <div v-if="currentTool === Action.AddRect" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -225,7 +225,7 @@ onUnmounted(() => {
             <div class="shortKey">R</div>
         </div>
         <!--圆形-->
-        <div class="item" @click="() => { useEllipse(context) }">
+      <div class="item" @click="() => { useEllipse(context);popover = false  }">
             <div v-if="currentTool === Action.AddEllipse" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -236,7 +236,7 @@ onUnmounted(() => {
             <div class="shortKey">O</div>
         </div>
         <!--线条-->
-        <div class="item" @click="() => { useLine(context) }">
+      <div class="item" @click="() => { useLine(context);popover = false  }">
             <div v-if="currentTool === Action.AddLine" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -247,7 +247,7 @@ onUnmounted(() => {
             <div class="shortKey">L</div>
         </div>
         <!--箭头-->
-        <div class="item" @click="() => { useArrow(context) }">
+      <div class="item" @click="() => { useArrow(context);popover = false  }">
             <div v-if="currentTool === Action.AddArrow" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -257,7 +257,7 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
         </div>
-        <div class="item" @click="() => { usePolygon(context) }">
+      <div class="item" @click="() => { usePolygon(context);popover = false  }">
             <div v-if="currentTool === Action.Polygon" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -268,7 +268,7 @@ onUnmounted(() => {
             <div class="shortKey"></div>
         </div>
         <!--星形-->
-        <div class="item" @click="() => { useStar(context) }">
+      <div class="item" @click="() => { useStar(context);popover = false  }">
             <div v-if="currentTool === Action.Star" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -279,7 +279,7 @@ onUnmounted(() => {
             <div class="shortKey"></div>
         </div>
         <!-- 图片 -->
-        <div class="item" @click="() => select()">
+      <div class="item" @click="() => {select();popover = false }">
             <div v-if="currentTool === Action.AddImage" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -293,7 +293,7 @@ onUnmounted(() => {
         </div>
         <div class="line" />
         <!--钢笔-->
-        <div class="item" @click="() => { usePen(context) }">
+      <div class="item" @click="() => { usePen(context);popover = false  }">
             <div v-if="currentTool === Action.Pen" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>

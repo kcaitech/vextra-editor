@@ -145,7 +145,7 @@ onUnmounted(() => {
 
   <div v-if="popover" class="popover-frame-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
     <!--容器-->
-    <div class="item" @click="() => { useFrame(context) }">
+    <div class="item" @click="() => { useFrame(context);popover = false; }">
       <div v-if="currentTool === Action.AddFrame" class="check">
         <svg-icon icon-class="white-select"></svg-icon>
       </div>
@@ -156,7 +156,7 @@ onUnmounted(() => {
       <div class="shortKey">F</div>
     </div>
     <!--切图-->
-    <div class="item" @click="() => { useCutout(context) }">
+    <div class="item" @click="() => { useCutout(context);popover = false;  }">
       <div v-if="currentTool === Action.AddCutout" class="check">
         <svg-icon icon-class="white-select"></svg-icon>
       </div>
