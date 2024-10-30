@@ -45,6 +45,7 @@ import {
     useText,
 } from "@/components/Document/Creator/execute";
 import { unAutoLayoutFn } from "./auto_layout";
+import { MossClipboard } from "@/clipboard";
 
 // todo 键盘事件的权限处理
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
@@ -338,7 +339,11 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        context.workspace.clipboard.replace() // 替换图形 // 替换图形
+        // context.workspace.clipboard.replace() // 替换图形 // 替换图形
+        {
+            const clip = new MossClipboard(context);
+            clip.replace();
+        }
         return;
     }
     if (is_ctrl) {

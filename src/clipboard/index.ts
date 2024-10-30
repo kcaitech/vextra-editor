@@ -1,36 +1,45 @@
 import { Context } from "@/context";
 import {
     adapt2Shape,
-    ContactLineView,
-    ContactShape,
-    CurvePoint, Document, export_shape,
+    export_shape,
     export_text,
+    makeShapeTransform1By2,
     import_text,
-    makeShapeTransform1By2, PathShape, ShapeType,
+    getFormatFromBase64,
+    creator,
+    ShapeFrame,
+    ContactLineView,
+    CurvePoint,
+    Document,
+    PathShape,
+    Shape,
     TableCellType,
     Text,
-    TransformRaw
+    TransformRaw, UploadAssets
 } from "@kcdesign/data";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
-import { identity } from "@/utils/clipboard";
+import { ImageLoader } from "@/utils/imageLoader";
 
+interface ImageBundle {
+    base64: string;
+    name: string;
+    width: number;
+    height: number;
+}
 interface Bundle {
-    HTML?: string;
-    plain?: string;
-    base64?: string;
-    fileInfo?: {
-        name?: string;
-        height?: number;
-        width?: number;
-    }
+    HTML?: string;          // 包含图层、图层属性、文本格式
+    plain?: string;         // 纯文本
+    image?: ImageBundle;    // 图片资源
+    SVG?: Shape;            // 矢量图形
 }
 
 class ExfContext {
     symbols = new Set<string>()
     medias = new Set<string>()
 }
-export class Clipboard {
+
+export class MossClipboard {
     static identity = 'design.moss';
     static paras = 'design.moss/paras';
     static properties = 'design.moss/properties';
@@ -101,60 +110,14 @@ export class Clipboard {
         });
         return media;
     }
-    /**
-     * @description 先读同步，再读异步
-     */
-    async read(event?: ClipboardEvent) {
-        const bundle: Bundle = {};
-        if (event) {
-            const items = event.clipboardData?.items;
-            if (items) for (const item of items) {
-                if (item.kind === "file") {
-                    const file = item.getAsFile()!;
-                    const result = await new Promise<string>((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (event) => resolve(event.target!.result as string);
-                        reader.readAsDataURL(file);
-                    });
-                    result && (bundle["base64"] = result);
-                } else if (item.kind === "string") {
-                    const result = await new Promise<string>(resolve => {
-                        item.getAsString((result) => resolve(result));
-                    });
-                    if (item.type === "text/html") bundle["HTML"] = result;
-                    else bundle["plain"] = result;
-                }
-            }
-        }
-        if (navigator.clipboard.read) for (const item of await navigator.clipboard.read()) for (const type of item.types) {
-            if (type === "text/html") {
-                const blob = await item.getType("text/html");
-                bundle["HTML"] = await blob.text();
-            } else if (type === "text/plain") {
-                const blob = await item.getType("text/plain");
-                bundle["plain"] = await blob.text();
-            } else if (type.includes("image")) {
-                const blob = await item.getType(type);
-                bundle["base64"] = await new Promise<string>(resolve => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target!.result as string);
-                    reader.readAsDataURL(blob);
-                })
-            }
-        }
 
-        this.cache = bundle;
-
-        return bundle;
-    }
-
-    async write(event?: ClipboardEvent) {
+    async write(event?: ClipboardEvent): Promise<boolean> {
         const text = this.__text;
         const cache: Bundle = {};
         if (text) {
             const _text = export_text(text);
             const plain_text = text.getText(0, text.length);
-            const html = this.encode(Clipboard.paras, _text, plain_text);
+            const html = this.encode(MossClipboard.paras, _text, plain_text);
             let is_async_plan_enable;
             const text_html = new Blob([html || ''], { type: 'text/html' });
             const text_plain = new Blob([plain_text], { type: 'text/plain' });
@@ -205,7 +168,7 @@ export class Clipboard {
                 media,
             }
 
-            const html = this.encode(identity, data);
+            const html = this.encode(MossClipboard.identity, data);
 
             let is_async_plan_enable;
 
@@ -224,6 +187,121 @@ export class Clipboard {
             cache["HTML"] = html;
         }
         return true;
+    }
+
+    async read(event?: ClipboardEvent): Promise<Bundle | undefined> {
+        // 剪切板执行两种方案：ClipboardEvent方案兼容性好、navigator.clipboard方案实用性强，将两种方案融合，各取所长应对不同场景
+        const bundle: Bundle = {};
+
+        if (event) {
+            const items = event.clipboardData?.items;
+            if (items) for (const item of items) {
+                if (item.kind === "file") {
+                    const file = item.getAsFile()!;
+                    const size = await new Promise<{
+                        width: number,
+                        height: number
+                    }>(resolve => {
+                        const img = new Image();
+                        img.src = URL.createObjectURL(file);
+                        img.onload = () => resolve({ width: img.width, height: img.height });
+                    });
+                    const base64 = await new Promise<{
+                        name: string,
+                        base64: string
+                    }>(resolve => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = (event) => {
+                            const base64 = event?.target?.result as string;
+                            if (base64) resolve({
+                                base64,
+                                name: file.name || this.context.workspace.t('shape.image')
+                            });
+                        }
+                    });
+                    size && base64 && (bundle["image"] = Object.assign(size, base64));
+                } else if (item.kind === "string") {
+                    const result = await new Promise<string>(resolve => {
+                        item.getAsString((result) => resolve(result));
+                    });
+                    if (item.type === "text/html") bundle["HTML"] = result;
+                    else bundle["plain"] = result;
+                }
+            }
+        }
+        if (navigator.clipboard.read) for (const item of await navigator.clipboard.read()) for (const type of item.types) {
+            if (type === "text/html") {
+                const blob = await item.getType("text/html");
+                bundle["HTML"] = await blob.text();
+            } else if (type === "text/plain") {
+                const blob = await item.getType("text/plain");
+                bundle["plain"] = await blob.text();
+            } else if (type.includes("image")) {
+                const blob = await item.getType(type);
+                const base64 = await new Promise<{
+                    name: string,
+                    base64: string
+                }>(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve({ name: this.context.workspace.t('shape.image'), base64: e.target!.result as string });
+                    reader.readAsDataURL(blob);
+                });
+                const size = await new Promise<{
+                    width: number,
+                    height: number
+                }>(resolve => {
+                    const img = new Image();
+                    img.src = URL.createObjectURL(blob);
+                    img.onload = () => resolve({ width: img.width, height: img.height });
+                });
+                base64 && size && (bundle["image"] = Object.assign(size, base64));
+            }
+        }
+
+        // 两种方案都没有获取到有效内容，使用缓存
+        if (!Object.keys(bundle).length) return this.cache;
+
+        this.cache = bundle;
+
+        return bundle;
+    }
+
+    async replace() {
+        const shapes = this.context.selection.selectedShapes;
+        if (!shapes.length) return;
+
+        const bundle = await this.read();
+        if (!bundle || !Object.keys(bundle).length) return false; // 剪切板内没有可用的替换内容
+        const { HTML, plain, image, SVG } = bundle;
+
+        if (image) {
+            // 先用图片生成图层
+            let { base64, name, width, height } = image;
+            const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
+            const format = getFormatFromBase64(base64);
+            const ref = `${v4()}.${format}`;
+            const context = this.context;
+            const manager = context.data.mediasMgr;
+            manager.add(ref, { buff, base64 });
+            name = name.replace(new RegExp(`.${format}|.jpg$`, 'img'), '') || 'image';
+            const frame = new ShapeFrame(0, 0, width, height);
+            const source = [creator.newImageFillShape(name, frame, manager, { width, height }, ref)];
+            const editor = context.editor4Page(context.selection.selectedPage!);
+            const result = editor.replace(context.data, source, shapes.map((s) => adapt2Shape(s)));
+            if (!result || !result.length) return;
+            const asset: UploadAssets = { buff, ref };
+            new ImageLoader(context).upload(result.map(shape => ({ shape, upload: [asset] }))).then(result => {
+                if (!result) {
+                    // 图片上传失败
+                }
+            });
+        } else if (HTML) {
+            // 检查有没有图层内容
+        } else if (plain) {
+            // 先用文本生成图层
+        } else if (SVG) {
+        }
     }
 
     init() {
