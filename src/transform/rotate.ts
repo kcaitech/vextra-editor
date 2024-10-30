@@ -10,11 +10,10 @@ import {
     TransformMode,
     TransformRaw,
 } from "@kcdesign/data";
-import { BoundHandler, FrameLike, TransformHandler } from "./handler";
+import { BoundHandler, FrameLike } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { is_straight } from "@/utils/attri_setting";
-import { getHorizontalAngle } from "@/utils/common";
 
 type Base4Rotation = {
     XYtoRoot: XY;
