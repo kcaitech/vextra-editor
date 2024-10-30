@@ -3,6 +3,7 @@ import { ClientXY, PageXY, Selection, XY } from "@/context/selection";
 import {
     adapt2Shape, ArtboradView,
     AsyncCreator,
+    BoolShapeView,
     Color,
     ColVector3D,
     ContactForm,
@@ -437,7 +438,7 @@ export function drop(e: DragEvent, context: Context) {
     const data = e?.dataTransfer?.files as any;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) return;
     const loader = new ImageLoader(context);
-    loader.insertImageByPackages(data);
+    loader.insertImageByPackages(data, true);
 }
 
 export function SVGReader(context: Context, file: File, xy?: XY) {
@@ -1404,9 +1405,44 @@ export function outlineSelection(context: Context) {
 }
 
 export function flattenSelection(context: Context) {
+    // const page = context.selection.selectedPage!;
+    // const editor = context.editor4Page(page);
+    // editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
     const page = context.selection.selectedPage!;
-    const editor = context.editor4Page(page);
-    editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
+    const selection = context.selection;
+    const shapes = compare_layer_3(selection.selectedShapes);
+    if (shapes.length) {
+        const editor = context.editor4Page(page)
+        if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
+            if (shapes[0].type === ShapeType.Group) {
+                const editor = context.editor4Page(page);
+                const pathshape = editor.flattenGroup((shapes[0]), shapes[0].name);
+                if (pathshape) {
+                    context.nextTick(page, () => {
+                        const s = page.getShape(pathshape.id);
+                        context.selection.selectShape(s);
+                    });
+                }
+            } else {
+                const flatten = editor.flattenBoolShape((shapes[0]) as BoolShapeView)
+                if (flatten) {
+                    context.nextTick(page, () => {
+                        const s = page.getShape(flatten.id);
+                        context.selection.selectShape(s)
+                    })
+                }
+            }
+        } else if (shapes.length > 1) {
+            const shapessorted = compare_layer_3(shapes);
+            const flatten = editor.flattenShapes(shapessorted)
+            if (flatten) {
+                context.nextTick(page, () => {
+                    const s = page.getShape(flatten.id);
+                    context.selection.selectShape(s)
+                })
+            }
+        }
+    }
 }
 
 export const getShapeFrame = (shape: Shape) => {

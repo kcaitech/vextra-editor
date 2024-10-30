@@ -168,6 +168,7 @@ function click() {
     align-items: center;
     //padding-left: 12px;
     //padding-right: 3px;
+    border: 1px solid transparent;
     box-sizing: border-box;
     background-color: var(--input-background);
     border-radius: var(--default-radius);
@@ -188,7 +189,7 @@ function click() {
         width: 100%;
         flex: 1 1 auto;
         align-content: center;
-        margin-left: 6px;
+        margin-left: 8px;
         color: #000000;
         font-family: HarmonyOS Sans;
         text-overflow: ellipsis;

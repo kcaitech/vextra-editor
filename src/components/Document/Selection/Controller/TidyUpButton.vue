@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { fixedZero, permIsEdit } from '@/utils/common';
-import { checkTidyUpShapesOrder, getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder } from '@/utils/tidy_up';
+import { checkTidyUpShapesOrder, getSelectedWidthHeight, getVisibleShapes, layoutSpacing, tidyUpShapesOrder } from '@/utils/tidy_up';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Point } from '../SelectionView.vue';
 import { Selection, XY } from '@/context/selection';
@@ -10,7 +10,7 @@ import { WorkSpace } from '@/context/workspace';
 import { CursorType } from '@/utils/cursor2';
 import { LockMouse } from '@/transform/lockMouse';
 import { throttle } from 'lodash';
-import { TranslateHandler } from '@/transform/translate';
+import { TranslateHandler } from '@/transform/translate/translate';
 import { Attribute } from '@/context/atrribute';
 interface Props {
     context: Context
@@ -46,7 +46,7 @@ const tidyUpVerSpace = ref(0);
 const selectedShapes = ref<ShapeView[][]>([]);
 const need_reset_cursor_after_transform = ref(true);
 const tidyUp = () => {
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     const { width, height } = getSelectedWidthHeight(props.context, selected);
 
     const shapes = tidyUpShapesOrder(selected, height > width);
@@ -67,7 +67,7 @@ const hover_mousemove = (e: MouseEvent) => {
 }
 
 const tidyUpDot = () => {
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = getVisibleShapes(props.context.selection.selectedShapes);
     if (shapes.length <= 1) return;
     const parent = shapes[0].parent;
     if (!parent) return;
@@ -91,7 +91,7 @@ const tidyUpDot = () => {
 }
 
 const tidyUpLine = () => {
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     if (selected.length <= 1) return;
     const dir = props.context.selection.isTidyUpDir;
     const shape_rows = checkTidyUpShapesOrder(selected, dir);
@@ -184,7 +184,7 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
     }
 }
 const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     const dir = props.context.selection.isTidyUpDir;
     const { height: s_height, box } = getSelectedWidthHeight(props.context, selected);
     const parent = shapes[0][0].parent;

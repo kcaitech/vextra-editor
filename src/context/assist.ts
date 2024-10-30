@@ -1,4 +1,4 @@
-import { ArtboradView, GuideAxis, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { ArtboradView, GroupShapeView, GuideAxis, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
@@ -6,8 +6,10 @@ import {
     alignXFromSpacePoint,
     alignYFromPointGroup,
     alignYFromSpacePoint,
+    collect_point_group,
     finder,
     get_tree,
+    isShapeOut,
     modify_pt_x4p,
     modify_pt_y4p
 } from "@/utils/assist";
@@ -237,9 +239,7 @@ export class Assist extends WatchableObject {
         const target: ShapeView = this.m_collect_target || this.m_context.selection.selectedPage!;
         this.m_shape_inner = [];
         this.m_shape_inner.push(...finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
-        if (this.m_context.user.isRuleVisible) {
-            this.collectGuides();
-        }
+        if (this.m_context.user.isRuleVisible) this.collectGuides();
         // console.log('__COLLECT_TARGET__', target.name, (target as ArtboradView).guides?.length);
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
@@ -297,6 +297,41 @@ export class Assist extends WatchableObject {
         // console.log('__GUIY__', this.m_guides_y);
     }
 
+    collectSpark(views: ShapeView[]) {
+        this.m_shape_inner.push(...__finder(this.m_context, views, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
+
+        function __finder(
+            context: Context,
+            views: ShapeView[],
+            all_pg: Map<string, PointGroup1>,
+            x_axis: Map<number, PageXY2[]>,
+            y_axis: Map<number, PageXY2[]>
+        ) {
+            const align = context.user.isPixelAlignMent;
+            let result: ShapeView[] = [];
+            for (let i = 0; i < views.length; i++) {
+                const c = views[i];
+                if (isShapeOut(context, c) || c.type === ShapeType.Contact) continue;
+                result.push(c);
+                const pg = collect_point_group(c, align);
+                all_pg.set(c.id, pg);
+                const pvs = Object.values(pg);
+                for (let i = 0, len = pvs.length; i < len; i++) {
+                    const p2 = { id: c.id, p: pvs[i] };
+                    const x = x_axis.get(p2.p.x);
+                    const y = y_axis.get(p2.p.y);
+                    if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
+                    if (y) y.push(p2); else y_axis.set(p2.p.y, [p2]);
+                }
+
+                if (c.type === ShapeType.Group) {
+                    result = result.concat(__finder(context, (c as GroupShapeView).childs, all_pg, x_axis, y_axis));
+                }
+            }
+            return result;
+        }
+    }
+
     getFixedContainer() {
         const page = this.m_context.selection.selectedPage!;
         let target = this.m_collect_target || page;
@@ -321,13 +356,15 @@ export class Assist extends WatchableObject {
 
     set_trans_target(shapes: ShapeView[]) {
         this.collect();
+
         this.m_except.clear();
         if (shapes.length === 1) {
-            get_tree(shapes[0], this.m_except);
+            const sin = shapes[0];
+            if (sin.type === ShapeType.Artboard || sin.type === ShapeType.Symbol || sin.type === ShapeType.SymbolRef) {
+                this.m_except.set(sin.id, sin);
+            } else get_tree(shapes[0], this.m_except);
         } else if (shapes.length > 1) {
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                get_tree(shapes[i], this.m_except);
-            }
+            for (let i = 0, len = shapes.length; i < len; i++) get_tree(shapes[i], this.m_except);
         }
     }
 
@@ -370,10 +407,6 @@ export class Assist extends WatchableObject {
     }
 
     alignX(point: XY, self: XY[], toGuide = true) {
-        // if (!this.m_except.size) {
-        //     return;
-        // }
-
         const hgx = this.highlight_guide_x;
         hgx.length = 0;
 
@@ -383,14 +416,10 @@ export class Assist extends WatchableObject {
 
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const shape = this.m_shape_inner[i];
-            if (this.m_except.get(shape.id)) {
-                continue;
-            }
+            if (this.m_except.get(shape.id)) continue;
 
             const c_pg = this.m_pg_inner.get(shape.id);
-            if (!c_pg) {
-                continue;
-            }
+            if (!c_pg) continue;
 
             modify_pt_x4p(pre_target, point, c_pg.apexX, this.m_stickness);
         }
@@ -463,10 +492,6 @@ export class Assist extends WatchableObject {
     }
 
     alignY(point: XY, self: XY[], toGuide = true) {
-        // if (!this.m_except.size) {
-        //     return;
-        // }
-
         const hgy = this.highlight_guide_y;
         hgy.length = 0;
 
@@ -476,14 +501,10 @@ export class Assist extends WatchableObject {
 
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const shape = this.m_shape_inner[i];
-            if (this.m_except.get(shape.id)) {
-                continue;
-            }
+            if (this.m_except.get(shape.id)) continue;
 
             const c_pg = this.m_pg_inner.get(shape.id);
-            if (!c_pg) {
-                continue;
-            }
+            if (!c_pg) continue;
 
             modify_pt_y4p(pre_target, point, c_pg.apexY, this.m_stickness);
         }
@@ -554,9 +575,7 @@ export class Assist extends WatchableObject {
     }
 
     alignXY(point: XY) {
-        if (!this.m_except.size) {
-            return;
-        }
+        if (!this.m_except.size) return;
 
         this.m_nodes_x = [];
         this.m_nodes_y = [];
@@ -573,14 +592,10 @@ export class Assist extends WatchableObject {
 
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const shape = this.m_shape_inner[i];
-            if (this.m_except.get(shape.id)) {
-                continue;
-            }
+            if (this.m_except.get(shape.id)) continue;
 
             const c_pg = this.m_pg_inner.get(shape.id);
-            if (!c_pg) {
-                continue;
-            }
+            if (!c_pg) continue;
 
             modify_pt_x4p(pre_target1, point, c_pg.apexX, this.m_stickness);
             modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
@@ -642,9 +657,7 @@ export class Assist extends WatchableObject {
                     const g = guides_x[i];
                     let offset = g.offsetRoot;
 
-                    if (offset !== _self.p.x) {
-                        continue;
-                    }
+                    if (offset !== _self.p.x) continue;
 
                     offset = g.offsetFix;
 
@@ -693,6 +706,45 @@ export class Assist extends WatchableObject {
             }
         }
 
+        this.notify(Assist.UPDATE_ASSIST);
+        return target;
+    }
+
+    alignXY2Inner(view: ShapeView, point: XY) {
+        const innerShape = (view as ArtboradView).childs;
+        if (!innerShape.length) return;
+
+        const pointGroup: Map<string, PointGroup1> = new Map();
+        const xAxis: Map<number, PageXY2[]> = new Map();
+        const yAxis: Map<number, PageXY2[]> = new Map();
+
+        finder(this.m_context, view, pointGroup, xAxis, yAxis);
+
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
+
+        for (const shape of innerShape) {
+            const c_pg = pointGroup.get(shape.id);
+            if (!c_pg) continue;
+
+            modify_pt_x4p(pre_target1, point, c_pg.apexX, this.m_stickness);
+            modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
+        }
+
+        const _self = { id: 'self', p: { x: point.x, y: point.y } };
+        if (pre_target1.delta !== undefined) {
+            target.x = pre_target1.x;
+            target.sticked_by_x = true;
+            _self.p.x = target.x;
+        }
+
+        if (pre_target2.delta !== undefined) {
+            target.y = pre_target2.y;
+            target.sticked_by_y = true;
+            _self.p.y = target.y;
+        }
         this.notify(Assist.UPDATE_ASSIST);
         return target;
     }

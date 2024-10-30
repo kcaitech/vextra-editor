@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watchEffect } from "vue";
+import { ref, onMounted, onUnmounted, watchEffect, onBeforeMount, nextTick } from "vue";
 import Sash from "@/components/common/Sash.vue";
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
@@ -38,7 +38,6 @@ const leftSize = ref<SizeBoundEx>(
         userWidth: 0
     }
 );
-const rightSize = ref(0);
 
 function leftAdjust(saveWidth: number, offset: number) {
     let leftWidth = saveWidth + offset;
@@ -101,20 +100,14 @@ function onSizeChange() {
     const leftMaxWidth = props.left.maxWidth * rootWidth;
     leftSize.value.minWidth = props.left.minWidth;
     leftSize.value.maxWidth = leftMaxWidth;
-
-    rightSize.value = props.right;
-
     leftSize.value.width = props.left.width;
 }
 
 function initSizeBounds() {
     const rootWidth = getRootWidth();
     savedRootWidth = rootWidth;
-    const leftMaxWidth = props.left.maxWidth * rootWidth;
-    leftSize.value.maxWidth = leftMaxWidth;
+    leftSize.value.maxWidth = props.left.maxWidth * rootWidth;
     leftSize.value.minWidth = props.left.minWidth;
-
-    rightSize.value = props.right;
     leftSize.value.width = props.left.width;
 }
 
@@ -132,9 +125,22 @@ const handle_left = (t: number | string) => {
     }
 }
 
+const transition = ref<string>('0.3s');
+
+function init() {
+    const root = refRoot.value as HTMLElement;
+    if (!root) return;
+    let timer: any = setTimeout(() => {
+        transition.value = "none";
+        clearTimeout(timer);
+        timer = null;
+    }, 500)
+}
+
 onMounted(() => {
     if (refRoot.value) observer.observe(refRoot.value);
     props.context.workspace.watch(handle_left);
+    init();
 })
 onUnmounted(() => {
     observer.disconnect();
@@ -145,22 +151,23 @@ watchEffect(initSizeBounds);
 </script>
 
 <template>
-    <div class="columnsplit" ref="refRoot">
-        <div class="column1" :style="`width:${leftSize.width}px; min-width:${leftSize.minWidth}px; max-width:${leftSize.maxWidth}px`">
-            <slot name="slot1" />
-            <Sash side="right" @dragStart="leftCtx.onDragStart" @offset="leftCtx.onDragOffset" />
-        </div>
-        <div class="column2">
-            <slot name="slot2" />
-        </div>
-        <div class="column3" :style="`width:${rightSize}px; minWidth:${rightSize}px`">
-            <slot name="slot3" />
-        </div>
+<div class="column-split" ref="refRoot">
+    <div class="column1"
+         :style="{width: leftSize.width+'px', 'min-width': leftSize.minWidth+'px','max-width':leftSize.maxWidth+'px',transition}">
+        <slot name="slot1"/>
+        <Sash side="right" @dragStart="leftCtx.onDragStart" @offset="leftCtx.onDragOffset"/>
     </div>
+    <div class="column2" :style="{transition}">
+        <slot name="slot2"/>
+    </div>
+    <div class="column3" :style="{transition, width:right+'px' }">
+        <slot name="slot3"/>
+    </div>
+</div>
 </template>
 
 <style scoped lang="scss">
-.columnsplit {
+.column-split {
     display: flex;
     flex-direction: row;
     width: 100%;
@@ -169,7 +176,7 @@ watchEffect(initSizeBounds);
 
     .column1 {
         position: relative;
-        background-color: #fff;
+        background-color: var(--theme-color-anti);
     }
 
     .column2 {
@@ -179,8 +186,9 @@ watchEffect(initSizeBounds);
     }
 
     .column3 {
+        flex-shrink: 0;
         position: relative;
-        background-color: #fff;
+        background-color: var(--theme-color-anti);
     }
 }
 </style>

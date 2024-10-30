@@ -4,7 +4,6 @@ import { Clipboard } from "@/utils/clipboard";
 import { PageXY, XY } from "./selection";
 import { Action } from "@/context/tool";
 import { IWorkspace, WorkspaceEvents } from "@/openapi/workspace";
-import { is_mac } from "@/utils/common";
 
 export interface Root {
     init: boolean
@@ -44,10 +43,12 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     static NEW_ENV_MATRIX_CHANGE = 22;
     static TABLE_TEXT_GRADIENT_UPDATE = 23;
     static ROOT_UPDATE = 24;
-    static FONTLISR_ALL = WorkspaceEvents.add_local_font;
+    static FONT_LIST_ALL = WorkspaceEvents.add_local_font;
     static LOCAL_FONT_LIST_UPDATE = 25;
     static SCALING = 26;
     static ROTATING = 27;
+    static LINER_EDITOR_CONSTRUCTED = 28;
+    static LINER_EDITOR_DESTROYED = 29;
 
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -80,13 +81,12 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         element: undefined,
         center: { x: 0, y: 0 }
     };
-    private m_client_sys: 'mac' | 'windows';
+    private m_linear_editor_exist: boolean = false;
 
     constructor(context: Context) {
         super();
         this.context = context;
         this.m_clipboard = new Clipboard(context);
-        this.m_client_sys = is_mac() ? 'mac' : 'windows';
     }
 
     get curScale(): number {
@@ -131,12 +131,19 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     }
 
     setPathEditMode(v: boolean) {
+        const o = this.m_path_edit_mode;
         this.m_path_edit_mode = v;
-        this.notify(WorkSpace.PATH_EDIT_MODE);
+        if (v !== o) this.notify(WorkSpace.PATH_EDIT_MODE);
     }
 
     get matrix() {
         return this.m_matrix;
+    }
+
+    get rootMatrix() {
+        const m = new Matrix(this.m_matrix.inverse);
+        m.trans(-this.root.x, -this.root.y);
+        return m;
     }
 
     get root(): Root {
@@ -365,5 +372,17 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
 
     get tidyUpIsTrans() {
         return this.m_is_trans_tidy_up;
+    }
+
+    set linearEditorExist(val: boolean) {
+        this.m_linear_editor_exist = val;
+        this.notify(val ? WorkSpace.LINER_EDITOR_CONSTRUCTED : WorkSpace.LINER_EDITOR_DESTROYED);
+    }
+
+    /**
+     * @description 存在 Scale || Translate 编辑器
+     */
+    get linearEditorExist() {
+        return this.m_linear_editor_exist;
     }
 }

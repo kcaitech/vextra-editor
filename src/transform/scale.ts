@@ -1,8 +1,8 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import {
-    ColVector3D, CtrlElementType, Matrix,
-    Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit
+    ColVector3D, CtrlElementType, Matrix, Scaler, ShapeSize, ShapeView, SymbolView, Transform, UniformScaleUnit,
+    ArtboradView, GroupShapeView, SymbolRefView
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
@@ -37,7 +37,7 @@ export class ScaleHandler extends TransformHandler {
     private verFixedStatus: boolean = false;
     private verFixedValue: number = 0;
 
-    private uniformScaleMode: boolean;
+    private readonly uniformScaleMode: boolean;
 
     selectionTransform: Transform = new Transform();  // 选区的Transform
     selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
@@ -66,6 +66,12 @@ export class ScaleHandler extends TransformHandler {
         context.assist.set_trans_target(selected);
 
         this.uniformScaleMode = context.tool.action === Action.AutoK;
+        if (selected.length === 1
+            && (selected[0] instanceof ArtboradView || selected[0] instanceof SymbolView || selected[0] instanceof SymbolRefView)
+            && !!selected[0].childs.length
+        ) this.collectSpark(selected[0]);
+
+        context.workspace.linearEditorExist = true;
     }
 
     createApiCaller() {
@@ -78,6 +84,7 @@ export class ScaleHandler extends TransformHandler {
     fulfil() {
         this.workspace.scaling(false);
         this.workspace.setSelectionViewUpdater(true);
+        this.workspace.linearEditorExist = false;
 
         super.fulfil();
     }
@@ -243,7 +250,7 @@ export class ScaleHandler extends TransformHandler {
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;
 
-        this.shapeTransformListInSelection = shapes.map((shape, i) => shape.transform2.clone()  // 在Parent坐标系下
+        this.shapeTransformListInSelection = shapes.map((shape) => shape.transform2.clone()  // 在Parent坐标系下
             .addTransform(cache.get(shape.parent!)!)  // 在Root坐标系下
             .addTransform(selectionInverse))  // 在选区坐标系下
 
@@ -398,6 +405,10 @@ export class ScaleHandler extends TransformHandler {
         this.updateVerFixedStatus(assist.y, assistResult);
     }
 
+    private collectSpark(env: GroupShapeView | SymbolRefView) {
+        this.context.assist.collectSpark(env.childs);
+    }
+
     private __execute() {
         if (this.context.tool.action === Action.AutoV) this.__execute_normal();
         else if (this.context.tool.action === Action.AutoK) this.__execute_uniform();
@@ -418,107 +429,192 @@ export class ScaleHandler extends TransformHandler {
 
         const ratio = selectionWidth / selectionHeight;
 
+        // 附加动作：等比、变换原点
         const CET = this.ctrlElementType;
         const ALT = this.altStatus;
         const SHIFT = this.shiftStatus || this.uniformScaleMode;
-
-        // 左
-        if (CET === CtrlElementType.RectLT         // 左上
-            || CET === CtrlElementType.RectLB      // 左下
-            || CET === CtrlElementType.RectLeft    // 左
-        ) {
-            const delta = cursorPointFromSelection.x - ltPointForSelection.x;
-            ltPointForSelection.x = cursorPointFromSelection.x;
-
-            if (ALT) {
-                rbPointForSelection.x -= delta;
-            }
-            if (SHIFT) {
-                if (CET === CtrlElementType.RectLeft) {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    const dy = (selectionHeight - afterHeight) / 2;
-
-                    ltPointForSelection.y += dy;
-                    rbPointForSelection.y -= dy;
+        switch (CET) {
+            case CtrlElementType.RectLT: {
+                const ox = ltPointForSelection.x;
+                const oy = ltPointForSelection.y;
+                const dx = Math.abs(cursorPointFromSelection.x - ltPointForSelection.x);
+                const dy = Math.abs(cursorPointFromSelection.y - ltPointForSelection.y);
+                ltPointForSelection.x = cursorPointFromSelection.x;
+                ltPointForSelection.y = cursorPointFromSelection.y;
+                if (SHIFT) {
+                    if (dx > dy) {
+                        const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                        const diffY = targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y);
+                        ltPointForSelection.y -= diffY;
+                    } else {
+                        const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                        const diffX = targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                        ltPointForSelection.x -= diffX;
+                    }
+                }
+                if (ALT) {
+                    const diffX = ltPointForSelection.x - ox;
+                    const diffY = ltPointForSelection.y - oy;
+                    rbPointForSelection.x -= diffX;
+                    rbPointForSelection.y -= diffY;
                 }
             }
-        }
-
-        // 上
-        if (CET === CtrlElementType.RectLT         // 左上
-            || CET === CtrlElementType.RectRT      // 右上
-            || CET === CtrlElementType.RectTop     // 上
-        ) {
-            const delta = cursorPointFromSelection.y - ltPointForSelection.y;
-            ltPointForSelection.y = cursorPointFromSelection.y;
-
-            if (ALT) rbPointForSelection.y -= delta;
-
-            if (SHIFT) {
-                if (CET === CtrlElementType.RectTop) {
-                    const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
-                    const dx = (selectionWidth - afterWidth) / 2;
-
-                    ltPointForSelection.x += dx;
-                    rbPointForSelection.x -= dx;
-                } else if (CET === CtrlElementType.RectLT) {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    ltPointForSelection.y = selectionHeight - afterHeight;
+                break;
+            case CtrlElementType.RectTop: {
+                const oy = ltPointForSelection.y;
+                ltPointForSelection.y = cursorPointFromSelection.y;
+                if (ALT) rbPointForSelection.y -= ltPointForSelection.y - oy;
+                if (SHIFT) {
+                    const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                    const diffX = (targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x)) / 2;
+                    ltPointForSelection.x -= diffX;
+                    rbPointForSelection.x += diffX;
                 }
             }
-        }
-
-        // 右
-        if (CET === CtrlElementType.RectRT         // 右上
-            || CET === CtrlElementType.RectRB      // 右下
-            || CET === CtrlElementType.RectRight   // 右
-        ) {
-            const delta = cursorPointFromSelection.x - rbPointForSelection.x;
-            rbPointForSelection.x = cursorPointFromSelection.x;
-
-            if (ALT) ltPointForSelection.x -= delta;
-
-            if (SHIFT) {
-                if (CET === CtrlElementType.RectRight) {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    const dy = (selectionHeight - afterHeight) / 2;
-                    ltPointForSelection.y += dy;
-                    rbPointForSelection.y -= dy;
-                } else if (CET === CtrlElementType.RectRT) {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    ltPointForSelection.y = selectionHeight - afterHeight;
+                break;
+            case CtrlElementType.RectRT: {
+                const dx = Math.abs(cursorPointFromSelection.x - rbPointForSelection.x);
+                const dy = Math.abs(cursorPointFromSelection.y - ltPointForSelection.y);
+                const oy = ltPointForSelection.y;
+                const ox = rbPointForSelection.x;
+                ltPointForSelection.y = cursorPointFromSelection.y;
+                rbPointForSelection.x = cursorPointFromSelection.x;
+                if (SHIFT) {
+                    if (dx > dy) {
+                        const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                        const diffY = targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y);
+                        ltPointForSelection.y -= diffY;
+                    } else {
+                        const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                        const diffX = targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                        rbPointForSelection.x += diffX;
+                    }
+                }
+                if (ALT) {
+                    const diffX = rbPointForSelection.x - ox;
+                    const diffY = ltPointForSelection.y - oy;
+                    ltPointForSelection.x -= diffX;
+                    rbPointForSelection.y -= diffY;
                 }
             }
-        }
-
-        // 下
-        if (CET === CtrlElementType.RectLB         // 左下
-            || CET === CtrlElementType.RectRB      // 右下
-            || CET === CtrlElementType.RectBottom  // 下
-        ) {
-            const delta = cursorPointFromSelection.y - rbPointForSelection.y;
-            rbPointForSelection.y = cursorPointFromSelection.y;
-
-            if (ALT) ltPointForSelection.y -= delta;
-
-            if (SHIFT) {
-                if (CET === CtrlElementType.RectBottom) {
-                    const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
-                    const dx = (selectionWidth - afterWidth) / 2;
-                    ltPointForSelection.x += dx;
-                    rbPointForSelection.x -= dx;
-                } else {
-                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                    const dy = selectionHeight - afterHeight;
-                    rbPointForSelection.y = selectionHeight - dy;
+                break;
+            case CtrlElementType.RectRight: {
+                const ox = rbPointForSelection.x;
+                rbPointForSelection.x = cursorPointFromSelection.x;
+                if (ALT) ltPointForSelection.x -= rbPointForSelection.x - ox;
+                if (SHIFT) {
+                    const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    const diffY = (targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y)) / 2;
+                    ltPointForSelection.y -= diffY;
+                    rbPointForSelection.y += diffY;
                 }
             }
+                break;
+            case CtrlElementType.RectRB: {
+                const ox = rbPointForSelection.x;
+                const oy = rbPointForSelection.y;
+                const dx = Math.abs(cursorPointFromSelection.x - rbPointForSelection.x);
+                const dy = Math.abs(cursorPointFromSelection.y - rbPointForSelection.y);
+                rbPointForSelection.x = cursorPointFromSelection.x;
+                rbPointForSelection.y = cursorPointFromSelection.y;
+                if (SHIFT) {
+                    if (dx > dy) {
+                        const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                        const diffY = targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y);
+                        rbPointForSelection.y += diffY;
+                    } else {
+                        const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                        const diffX = targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                        rbPointForSelection.x += diffX;
+                    }
+                }
+                if (ALT) {
+                    const diffX = rbPointForSelection.x - ox;
+                    const diffY = rbPointForSelection.y - oy;
+                    ltPointForSelection.x -= diffX;
+                    ltPointForSelection.y -= diffY;
+                }
+
+            }
+                break;
+            case CtrlElementType.RectBottom: {
+                const oy = rbPointForSelection.y;
+                rbPointForSelection.y = cursorPointFromSelection.y;
+                if (ALT) ltPointForSelection.y -= rbPointForSelection.y - oy;
+                if (SHIFT) {
+                    const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                    const diffX = (targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x)) / 2;
+                    ltPointForSelection.x -= diffX;
+                    rbPointForSelection.x += diffX;
+                }
+            }
+                break;
+            case CtrlElementType.RectLB:
+                const dx = Math.abs(cursorPointFromSelection.x - ltPointForSelection.x);
+                const dy = Math.abs(cursorPointFromSelection.y - rbPointForSelection.y);
+                const ox = ltPointForSelection.x;
+                const oy = rbPointForSelection.y;
+                ltPointForSelection.x = cursorPointFromSelection.x;
+                rbPointForSelection.y = cursorPointFromSelection.y;
+                if (SHIFT) {
+                    if (dx > dy) {
+                        const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                        const diffY = targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y);
+                        rbPointForSelection.y += diffY;
+                    } else {
+                        const targetWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                        const diffX = targetWidth - Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                        ltPointForSelection.x -= diffX;
+                    }
+                }
+                if (ALT) {
+                    const diffX = ltPointForSelection.x - ox;
+                    const diffY = rbPointForSelection.y - oy;
+                    rbPointForSelection.x -= diffX;
+                    ltPointForSelection.y -= diffY;
+                }
+                break;
+            case CtrlElementType.RectLeft: {
+                const ox = ltPointForSelection.x;
+                ltPointForSelection.x = cursorPointFromSelection.x;
+                if (ALT) rbPointForSelection.x -= ltPointForSelection.x - ox;
+                if (SHIFT) {
+                    const targetHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    const diffY = (targetHeight - Math.abs(ltPointForSelection.y - rbPointForSelection.y)) / 2;
+                    ltPointForSelection.y -= diffY;
+                    rbPointForSelection.y += diffY;
+                }
+            }
+                break;
         }
 
         // 选区变换后的大小
         const sizeForSelection = {
             width: rbPointForSelection.x - ltPointForSelection.x,
             height: rbPointForSelection.y - ltPointForSelection.y
+        }
+        if (this.alignPixel) {
+            let rootXY = ColVector3D.FromMatrix(this.selectionTransform.transform(ltPointForSelection));
+            rootXY.x = Math.round(rootXY.x);
+            rootXY.y = Math.round(rootXY.y);
+
+            rootXY = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(rootXY));
+            ltPointForSelection.x = rootXY.x;
+            ltPointForSelection.y = rootXY.y;
+
+            sizeForSelection.width = rbPointForSelection.x - ltPointForSelection.x;
+            sizeForSelection.height = rbPointForSelection.y - ltPointForSelection.y;
+            const dw = sizeForSelection.width > 0 ? 1 : -1;
+            const dh = sizeForSelection.height > 0 ? 1 : -1;
+            sizeForSelection.width = Math.round(sizeForSelection.width);
+            sizeForSelection.height = Math.round(sizeForSelection.height);
+            if (sizeForSelection.width === 0) sizeForSelection.width = 1 * dw;
+            if (sizeForSelection.height === 0) sizeForSelection.height = 1 * dh;
+        } else {
+            const dw = sizeForSelection.width > 0 ? 1 : -1;
+            const dh = sizeForSelection.height > 0 ? 1 : -1;
+            if (sizeForSelection.width === 0) sizeForSelection.width = 0.01 * dw;
+            if (sizeForSelection.height === 0) sizeForSelection.height = 0.01 * dh;
         }
         // 选区变换后的Transform
         // Transform = T·R·K·S
@@ -537,10 +633,7 @@ export class ScaleHandler extends TransformHandler {
             shape: ShapeView,
             size: ShapeSize,
             transform2: Transform,
-            scale: {
-                x: number,
-                y: number
-            }
+            scale: { x: number, y: number }
         }[] = [];
 
         const shapes = this.shapes;
@@ -573,37 +666,32 @@ export class ScaleHandler extends TransformHandler {
         });
 
         if (this.alignPixel) {
-            const bases = this.baseFrames;
-
             for (const unit of units) {
-                const { shape, size, transform2 } = unit;
+                const { size, transform2, scale } = unit;
 
-                const box = bases.get(shape.id);
-                if (!box) continue;
-
-                const decompose = transform2.clone()
-                    .decomposeTranslate();
+                const decompose = transform2.clone().decomposeTranslate();
 
                 const intX = Math.round(decompose.x);
                 const intY = Math.round(decompose.y);
                 const offsetX = intX - decompose.x;
                 const offsetY = intY - decompose.y;
 
-                if (offsetX || offsetY) {
-                    transform2.translate(ColVector3D.FromXY(offsetX, offsetY));
-                }
+                if (offsetX || offsetY) transform2.translate(ColVector3D.FromXY(offsetX, offsetY));
 
-                // todo 取整之后scale发生轻微的变化没有更新到位
                 if (size.width > 0 && size.width < 1) {
                     size.width = 1;
                 } else {
+                    const ow = size.width / scale.x;
                     size.width = Math.round(size.width);
+                    scale.x = size.width / ow;
                 }
 
                 if (size.height > 0 && size.height < 1) {
                     size.height = 1;
                 } else {
+                    const oh = size.height / scale.y;
                     size.height = Math.round(size.height);
+                    scale.y = size.height / oh;
                 }
             }
         }
@@ -728,6 +816,11 @@ export class ScaleHandler extends TransformHandler {
             width: rbPointForSelection.x - ltPointForSelection.x,
             height: rbPointForSelection.y - ltPointForSelection.y
         }
+
+        const dw = sizeForSelection.width > 0 ? 1 : -1;
+        const dh = sizeForSelection.height > 0 ? 1 : -1;
+        if (sizeForSelection.width === 0) sizeForSelection.width = 0.01 * dw;
+        if (sizeForSelection.height === 0) sizeForSelection.height = 0.01 * dh;
 
         const transformForSelection = this.selectionTransform.clone();
         const __scale = transformForSelection.decomposeScale();

@@ -806,9 +806,7 @@ export class CreatorExecute extends TransformHandler {
     private createImmediate() {
         const action = this.action;
 
-        if (!this.asyncApiCaller) {
-            this.createApiCaller();
-        }
+        if (!this.asyncApiCaller) this.createApiCaller();
 
         const env = this.downEnv as GroupShapeView;
         const frame = this.frame;
@@ -817,9 +815,7 @@ export class CreatorExecute extends TransformHandler {
 
         const type = ResultByAction(action);
 
-        if (!type) {
-            return;
-        }
+        if (!type) return;
 
         frame.x = xy.x - 50;
         frame.y = xy.y - 50;
@@ -827,6 +823,11 @@ export class CreatorExecute extends TransformHandler {
         if (type === ShapeType.Text) {
             frame.x = xy.x;
             frame.y = xy.y - 10;
+        }
+
+        if (this.alignPixel) {
+            frame.x = Math.round(frame.x);
+            frame.y = Math.round(frame.y);
         }
 
         const targetTransform = this.getTargetTransform(env, frame);

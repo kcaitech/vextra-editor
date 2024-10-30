@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { SelectionTheme, XY } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
 import { ColVector3D, CurvePoint, Matrix, PolygonShapeView, ShapeFrame, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
@@ -12,8 +12,6 @@ import { WorkSpace } from '@/context/workspace';
 interface Props {
     context: Context
     shape: PolygonShapeView
-    theme: SelectionTheme
-    pointVisible: boolean
 }
 
 interface Point {
@@ -33,7 +31,6 @@ let changeR: number = -1;
 let pointModifyHandler: PointHandler | undefined = undefined;
 
 function update() {
-    if (props.context.workspace.transforming) return;
     update_dot_position();
 }
 
@@ -134,20 +131,20 @@ const getMovePoint = (e: MouseEvent) => {
     const shape = props.shape;
     const curDot = radius_dot.value[changeR];
     const frame = shape.frame;
-    const clinetXY = props.context.workspace.getContentXY(e);
+    const clientXY = props.context.workspace.getContentXY(e);
     const matrix = new Matrix(props.context.workspace.matrix);
     const shape_root_m = shape.matrix2Root();
     let m = makeShapeTransform2By1(shape_root_m).clone();
     const clientTransform = makeShapeTransform2By1(matrix);
     m.addTransform(clientTransform); //root到视图
     const _m = m.getInverse(); // 视图转图形
-    const { col0: xy } = _m.transform([ColVector3D.FromXY(clinetXY.x, clinetXY.y)]);
+    const { col0: xy } = _m.transform([ColVector3D.FromXY(clientXY.x, clientXY.y)]);
     xy.x /= frame.width;
     xy.y /= frame.height;
-    const d0 = Math.hypot(xy.x - 0, xy.y - 0);
-    const d1 = Math.hypot(xy.x - 1, xy.y - 0);
+    const d0 = Math.hypot(xy.x, xy.y);
+    const d1 = Math.hypot(xy.x - 1, xy.y);
     const d2 = Math.hypot(xy.x - 1, xy.y - 1);
-    const d3 = Math.hypot(xy.x - 0, xy.y - 1);
+    const d3 = Math.hypot(xy.x, xy.y - 1);
     const d = [d0, d1, d2, d3];
     const distances = [];
     for (let i = 0; i < radius_dot.value.length; i++) {
@@ -200,7 +197,7 @@ function dot_mousemove(e: MouseEvent) {
     cursor_point.value = props.context.workspace.getContentXY(e);
 }
 
-function point_mouseup(e: MouseEvent) {
+function point_mouseup() {
     cursor_down.value = false;
     pointModifyHandler?.fulfil();
     pointModifyHandler = undefined;
@@ -252,7 +249,7 @@ onUnmounted(() => {
 <template>
 <!-- 圓角 -->
 <g v-if="radius_dot && radius_dot.length === 4">
-    <g v-for="(dot, index) in radius_dot" :key="index" v-show="pointVisible"
+    <g v-for="(dot, index) in radius_dot" :key="index"
        :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
        @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
        @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">

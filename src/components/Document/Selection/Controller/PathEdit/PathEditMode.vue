@@ -143,7 +143,7 @@ function window_blur() {
 }
 
 function selection_watcher(type: number | string) {
-    if (type === Selection.CHANGE_SHAPE) {
+    if (type === Selection.CHANGE_SHAPE || type === Selection.CHANGE_PAGE) {
         props.context.workspace.setPathEditMode(false);
     }
 }
@@ -157,7 +157,12 @@ function tool_watcher(type: number) {
 }
 
 const stopWatchVisible = watch(() => props.params.visible, (v) => {
-    if (!v) {
+    if (v) {
+        props.context.selection.watch(selection_watcher);
+        props.context.tool.watch(tool_watcher);
+        window.addEventListener('blur', window_blur);
+        props.context.tool.notify(Tool.RULE_CLEAR);
+    } else {
         props.context.selection.unwatch(selection_watcher);
         props.context.tool.unwatch(tool_watcher);
         props.context.tool.setAction(Action.AutoV);
@@ -172,18 +177,14 @@ const stopWatchVisible = watch(() => props.params.visible, (v) => {
         props.context.tool.notify(Tool.RULE_RENDER);
         clip_mode.value = false;
         penMode.value = false;
-    } else {
-        props.context.selection.watch(selection_watcher);
-        props.context.tool.watch(tool_watcher);
-        window.addEventListener('blur', window_blur);
-        props.context.tool.notify(Tool.RULE_CLEAR);
     }
-})
-onMounted(() => {
-    props.context.selection.watch(selection_watcher);
-    props.context.tool.watch(tool_watcher);
-    window.addEventListener('blur', window_blur);
-})
+}, { immediate: true });
+
+// onMounted(() => {
+//     props.context.selection.watch(selection_watcher);
+//     props.context.tool.watch(tool_watcher);
+//     window.addEventListener('blur', window_blur);
+// })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tool.unwatch(tool_watcher);

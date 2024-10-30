@@ -1,7 +1,6 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -16,9 +15,7 @@ import { hiddenTidyUp } from "@/utils/tidy_up";
 
 interface Props {
     context: Context;
-
     controllerFrame: Point[];
-
     rotate: number;
     theme: SelectionTheme;
 }
@@ -26,7 +23,6 @@ interface Props {
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
-const matrix = new Matrix();
 const isTidyUp = ref(false);
 
 const axle = computed<ClientXY>(() => {
@@ -46,9 +42,7 @@ const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
 
 function modify_selection_hidden() {
-    if (hidden_holder) {
-        clearTimeout(hidden_holder);
-    }
+    if (hidden_holder) clearTimeout(hidden_holder);
 
     hidden_holder = setTimeout(() => {
         selection_hidden.value = false;
@@ -91,9 +85,11 @@ function workspace_watcher(t: number) {
 }
 
 function selection_watcher(t: number | string) {
-    if (t == Selection.CHANGE_SHAPE) {
-        reset_hidden();
-        tidyUpHidden();
+    if (t == Selection.CHANGE_SHAPE || t === Selection.HIDDEN_RESET) {
+        if (!props.context.workspace.isTranslating) {
+            reset_hidden();
+            tidyUpHidden();
+        }
     } else if (t === Selection.SELECTION_HIDDEN) {
         modify_selection_hidden();
     }
@@ -150,20 +146,19 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" data-area="controller" preserveAspectRatio="xMinYMin meet"
-        viewBox="0 0 100 100" width="100" height="100" :class="{ hidden: selection_hidden }" overflow="visible"
-        @mousedown="mousedown">
-        <path
-            :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
-            fill="transparent"></path>
-        <ShapesStrokeContainer :context="props.context" />
-        <!-- 整理 -->
-        <TidyUpButton v-if="tidyVisible && isTidyUp" :context="props.context" :controller-frame="controllerFrame">
-        </TidyUpButton>
-        <BarsContainer v-if="partVisible" :context="props.context" :frame="props.controllerFrame" />
-        <PointsContainer v-if="partVisible" :context="props.context" :axle="axle" :frame="props.controllerFrame" />
-    </svg>
+<svg xmlns="http://www.w3.org/2000/svg" data-area="controller" preserveAspectRatio="xMinYMin meet"
+     viewBox="0 0 100 100" width="100" height="100" :class="{ hidden: selection_hidden }" overflow="visible"
+     @mousedown="mousedown">
+    <path
+        :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
+        fill="transparent"></path>
+    <ShapesStrokeContainer :context="props.context"/>
+    <!-- 整理 -->
+    <TidyUpButton v-if="tidyVisible && isTidyUp" :context="props.context" :controller-frame="controllerFrame">
+    </TidyUpButton>
+    <BarsContainer v-if="partVisible" :context="props.context" :frame="props.controllerFrame"/>
+    <PointsContainer v-if="partVisible" :context="props.context" :axle="axle" :frame="props.controllerFrame"/>
+</svg>
 </template>
 <style lang='scss' scoped>
 .hidden {

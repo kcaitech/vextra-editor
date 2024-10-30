@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ArtboradView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlgin, adapt2Shape } from '@kcdesign/data';
+import { ArtboradView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlgin } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -35,6 +35,7 @@ import Oval from "@/components/Document/Attribute/BaseAttr/Oval.vue";
 import {
     checkTidyUpShapesOrder,
     getSelectedWidthHeight,
+    getVisibleShapes,
     hiddenTidyUp,
     layoutSpacing,
     tidyUpShapesOrder,
@@ -43,21 +44,12 @@ import {
 import { WorkSpace } from '@/context/workspace';
 import { LinearApi } from "@kcdesign/data"
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
+import ContentClip from "@/components/Document/Attribute/BaseAttr/ContentClip.vue";
 
 interface Props {
     context: Context
     selectionChange: number
     trigger: any[]
-}
-
-interface LayoutOptions {
-    s_adapt: boolean
-    s_flip: boolean
-    s_radius: boolean
-    s_length: boolean
-    s_counts: boolean
-    s_inner_angle: boolean
-    s_oval: boolean
 }
 
 interface ModelState {
@@ -72,6 +64,7 @@ interface ModelState {
     counts: boolean
     innerAngle: boolean
     ovalOptions: boolean
+    clip: boolean
 }
 
 const props = defineProps<Props>();
@@ -91,14 +84,15 @@ const verTidyUp = ref(true);
 const horSpace = ref<number | string>('');
 const verSpace = ref<number | string>('');
 const s_tidy_up = ref(false);
-const layout_options: LayoutOptions = reactive({
+let {s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_oval, s_clip} = reactive({
     s_flip: true,
     s_radius: false,
     s_adapt: false,
     s_length: false,
     s_counts: false,
     s_inner_angle: false,
-    s_oval: false
+    s_oval: false,
+    s_clip: false
 });
 const model_disable_state: ModelState = reactive({
     x: false,
@@ -111,9 +105,9 @@ const model_disable_state: ModelState = reactive({
     radius: false,
     counts: false,
     innerAngle: false,
-    ovalOptions: false
+    ovalOptions: false,
+    clip: false
 });
-let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_oval } = layout_options;
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function _calc_attri() {
@@ -436,18 +430,16 @@ function layout() {
         const shape = selected[0];
         s_radius = !!shape.radiusType;
         s_adapt = shape.type === ShapeType.Artboard;
-        if (shape.type === ShapeType.Cutout) {
-            s_flip = false;
-        }
-        if (is_straight(shape) || shape.type === ShapeType.Contact) {
-            s_length = true;
-        }
+        if (shape.type === ShapeType.Cutout) s_flip = false;
+        if (is_straight(shape) || shape.type === ShapeType.Contact) s_length = true;
     } else if (selected.length > 1) {
         s_radius = selected.some(item => !!item.radiusType);
     }
+
     s_counts = showCounts(selected);
     s_inner_angle = showInnerAngle(selected);
     s_oval = showOvalOptions(selected);
+    s_clip = selected.some(i => !i.isVirtualShape && (i.type === ShapeType.Artboard || i.type === ShapeType.Symbol || i.type === ShapeType.SymbolRef));
 }
 
 function reset_layout() {
@@ -675,7 +667,6 @@ function draggingInnerAngle(e: MouseEvent) {
     lockMouseHandler.executeInnerAngle(e.movementX / 1000);
 }
 
-
 function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
     updatePosition(e.movementX, e.movementY);
 
@@ -716,50 +707,9 @@ function formatRotate(rotate: number | string) {
     return rotate + `${rotate === mixed ? '' : '°'}`;
 }
 
-let handlerHolder: any = null;
-const holderTime = 520;
-
-function initHdl(event: MouseEvent, type: 'rotating' | 'translating' | 'scaling') {
-    if (lockMouseHandler || handlerHolder) {
-        return;
-    }
-
-    lockMouseHandler = new LockMouse(props.context, event);
-    lockMouseHandler.createApiCaller(type);
-}
-
-function updateHdl() {
-    if (!lockMouseHandler) {
-        return;
-    }
-
-    if (handlerHolder) {
-        clearTimeout(handlerHolder);
-    }
-
-    handlerHolder = setTimeout(() => {
-        lockMouseHandler?.fulfil();
-        lockMouseHandler = undefined;
-        handlerHolder = null;
-    }, holderTime);
-}
-
-function wheelX(event: WheelEvent) {
-    // 暂缓
-    // initHdl(event as MouseEvent, 'translating');
-    //
-    // let step = event.deltaY > 0 ? 1 : -1;
-    // if (event.shiftKey) {
-    //     step *= 10;
-    // }
-    // lockMouseHandler?.executeX(step);
-    //
-    // updateHdl();
-}
-
 const tidyUp = () => {
-    if (!props.context.selection.isTidyUp) return;
-    const selected = props.context.selection.selectedShapes;
+    if(!props.context.selection.isTidyUp) return;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     const { width, height } = getSelectedWidthHeight(props.context, selected);
 
     const shapes = tidyUpShapesOrder(selected, height > width);
@@ -778,7 +728,7 @@ const changeHorTidyup = (value: string) => {
 
     const hor: number = Number.parseFloat(value);
     if (isNaN(hor)) return;
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     const dir = props.context.selection.isTidyUpDir;
     const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
@@ -803,8 +753,8 @@ function keydownHorTidyup(e: KeyboardEvent, val: string | number) {
         const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
         horSpace.value = Math.max(hor, -minHor);
         const algin = props.context.selection.tidyUpAlgin;
-        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir,algin)
-       e.preventDefault();
+        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir, algin)
+        e.preventDefault();
     }
 
 }
@@ -816,7 +766,7 @@ const changeVerTidyup = (value: string) => {
 
     const ver: number = Number.parseFloat(value);
     if (isNaN(ver)) return;
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     const dir = props.context.selection.isTidyUpDir;
     const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
@@ -842,8 +792,8 @@ function keydownVerTidyup(e: KeyboardEvent, val: string | number) {
         const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
         verSpace.value = Math.max(ver, -minVer);
         const algin = props.context.selection.tidyUpAlgin;
-        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir,algin)
-       e.preventDefault();
+        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, algin)
+        e.preventDefault();
     }
 
 }
@@ -852,7 +802,7 @@ function selection_change() {
     update_view();
     calc_attri();
     textBehaviour();
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     if (selected.length > 1 && !hiddenTidyUp(selected)) {
         s_tidy_up.value = true;
         whetherTidyUp();
@@ -864,7 +814,7 @@ function selection_change() {
 
 const _whetherTidyUp = () => {
     if (props.context.workspace.tidyUpIsTrans) return;
-    const selected = props.context.selection.selectedShapes;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
     s_tidy_up.value = false;
     const length = selected.filter(shape => shape.isVisible).length;
     if (length <= 1 || length > 100) return;
@@ -979,12 +929,11 @@ onUnmounted(() => {
     stop3();
 })
 </script>
-
 <template>
     <div class="table">
         <div class="tr">
             <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
-                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX" @keydown="keydownX">
+                           @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @keydown="keydownX">
             </MdNumberInput>
             <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
                 @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY"></MdNumberInput>
@@ -993,7 +942,7 @@ onUnmounted(() => {
                     <svg-icon icon-class="adapt" style="outline: none;" />
                 </Tooltip>
             </div>
-            <div v-else style="width: 32px;height: 32px;"></div>
+            <div v-else style="width: 32px;height: 32px;"/>
         </div>
         <div class="tr">
             <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
@@ -1029,7 +978,7 @@ onUnmounted(() => {
                     </div>
                 </Tooltip>
             </div>
-            <div style="width: 32px;height: 32px;margin-left: 7px"></div>
+            <div style="width: 32px;height: 32px;margin-left: 7px"/>
         </div>
         <div class="tr" v-if="s_counts">
             <MdNumberInput icon="angle-count" draggable :value="format(counts)" @change="changeCounts"
@@ -1039,12 +988,12 @@ onUnmounted(() => {
                 :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
                 :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
                 @dragend="dragend"></MdNumberInput>
-            <div style="width: 32px;height: 32px;"></div>
+            <div style="width: 32px;height: 32px;"/>
         </div>
-        <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius">
-        </Radius>
+        <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius"/>
+        <ContentClip v-if="s_clip" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
-        <div class="tr" v-if="s_tidy_up" style="margin-bottom: 0">
+        <div class="tr" v-if="s_tidy_up">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
                 :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
                 @dragend="dragend" @keydown="keydownHorTidyup">
@@ -1066,7 +1015,6 @@ onUnmounted(() => {
         </div>
     </teleport>
 </template>
-
 <style scoped lang="scss">
 .ml-24 {
     margin-left: 18px;
@@ -1077,10 +1025,12 @@ onUnmounted(() => {
     height: auto;
     display: flex;
     flex-direction: column;
+    gap: 8px;
     padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     visibility: visible;
     border-bottom: 1px solid #F0F0F0;
+    gap: 8px;
 
     .tr {
         position: relative;
@@ -1090,8 +1040,7 @@ onUnmounted(() => {
         justify-content: space-between;
         display: flex;
         flex-direction: row;
-        margin-bottom: 8px;
-
+        gap: 8px;
 
         >.icontext {
             background-color: var(--input-background);
@@ -1177,7 +1126,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-left: 7px;
+            gap: 8px;
 
             .flip {
                 background-color: var(--input-background);

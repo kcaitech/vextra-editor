@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watch } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watch, nextTick } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -22,8 +22,8 @@ const props = defineProps<{ context: IContext }>()
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
-const rightWidth = ref(240);
-const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
+const rightWidth = ref(0);
+const left = ref({ leftMin: 0, leftWidth: 0, leftMinWidth: 0 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -36,8 +36,7 @@ const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
 const loading = ref<boolean>(true);
-const contentvisible = ref<boolean>(false);
-// const sub_loading = ref<boolean>(false);
+const contentVisible = ref<boolean>(false);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
@@ -88,7 +87,6 @@ function switchPage(id?: string, frame_id?: string) {
     loading.value = true;
 }
 
-
 function selectionWatcher(t: number | string) {
     const ctx: Context = props.context as Context;
     if (t === Selection.CHANGE_PAGE) {
@@ -110,14 +108,14 @@ const showHiddenLeft = () => {
     const ctx: Context = props.context as Context;
     const w = ctx.workspace;
     if (showLeft.value) {
-        Left.value.leftMin = 0
-        Left.value.leftWidth = 0
-        Left.value.leftMinWidth = 0
+        left.value.leftMin = 0
+        left.value.leftWidth = 0
+        left.value.leftMinWidth = 0
         showLeft.value = false
     } else {
-        Left.value.leftMin = 250
-        Left.value.leftWidth = 250
-        Left.value.leftMinWidth = 250
+        left.value.leftMin = 250
+        left.value.leftWidth = 250
+        left.value.leftMinWidth = 250
         showLeft.value = true
     }
     w.notify(WorkSpace.CHANGE_NAVI);
@@ -186,20 +184,12 @@ function init_watcher() {
 }
 
 function init_keyboard_units() {
-
     const ctx: Context = props.context as Context;
     uninstall_keyboard_units = keyboardUnits(ctx)
 }
 
 function workspaceWatcher(t: number, o?: any) {
-    // if (t === WorkSpace.FREEZE) {
-    //     sub_loading.value = true;
-    // } else if (t === WorkSpace.THAW) {
-    //     sub_loading.value = false;
-    // } else 
-    if (t === WorkSpace.HIDDEN_UI) {
-        o ? keyToggleLR() : keyToggleTB();
-    }
+    if (t === WorkSpace.HIDDEN_UI) o ? keyToggleLR() : keyToggleTB();
 }
 
 let loopNet: any = null
@@ -208,14 +198,14 @@ let netErr: any = null
 
 const closeLoading = () => {
     loading.value = false;
-    contentvisible.value = true;
+    contentVisible.value = true;
 }
 const onContentVisible = () => {
-    contentvisible.value = true;
+    contentVisible.value = true;
 }
 
 const changeLeftWidth = (width: number) => {
-    Left.value.leftWidth = width;
+    left.value.leftWidth = width;
 }
 
 function component_watcher(t: number) {
@@ -223,6 +213,17 @@ function component_watcher(t: number) {
     if (t === Component.BRIDGE_CHANGE) {
         bridge.value = ctx.component.bridge;
     }
+}
+
+function initUI() {
+    let timer: any = setTimeout(() => {
+        left.value.leftMin = 250;
+        left.value.leftWidth = 250;
+        left.value.leftMinWidth = 250;
+        rightWidth.value = 240;
+        clearTimeout(timer);
+        timer = null;
+    }, 60);
 }
 
 watch(fileName, (NewName) => {
@@ -237,6 +238,7 @@ watch(fileName, (NewName) => {
 })
 
 onMounted(() => {
+    initUI();
     init_watcher();
     init_keyboard_units();
     localStorage.setItem('project_id', '');
@@ -269,44 +271,55 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="editor" style="height: 100vh;">
-    <div id="top" v-if="showTop && contentvisible">
-        <Toolbar :context="context as Context"/>
+<div class="editor" style="height: 100vh; display: flex; flex-direction: column;">
+    <div v-if="showTop" id="top">
+        <Toolbar v-if="contentVisible" :context="context as Context" class="fade-in"/>
     </div>
-    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-                  v-if="inited" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+    <ColSplitView v-if="inited" id="center"
+                  :left="{ width: left.leftWidth, minWidth: left.leftMinWidth, maxWidth: 0.4 }"
                   :right="rightWidth" :context="context as Context" @changeLeftWidth="changeLeftWidth">
         <template #slot1>
-            <Navigation v-if="curPage !== undefined" id="navigation" :context="context as Context"
+            <Navigation v-if="curPage&&contentVisible" id="navigation" :context="context as Context"
+                        class="fade-in"
                         @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
                         @showNavigation="showHiddenLeft"
                         :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggerVisible="leftTriggerVisible">
             </Navigation>
         </template>
-
         <template #slot2>
-            <ContentView v-if="curPage !== undefined" id="content" :context="context as Context"
+            <ContentView v-if="curPage" id="content" :context="context as Context"
                          @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
                          @closeLoading="closeLoading" @contentVisible="onContentVisible">
             </ContentView>
         </template>
-
         <template #slot3>
-            <Attribute id="attributes" v-if="!loading" :context="context as Context"
-                       @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+            <Attribute id="attributes" v-if="contentVisible" :context="context as Context"
+                       @mouseenter="() => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                        :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
                        @showAttrbute="showHiddenRight">
             </Attribute>
         </template>
     </ColSplitView>
-
     <Bridge v-if="bridge" :context="context as Context"/>
     <Loading v-if="loading" :size="20"/>
 </div>
 </template>
 
 <style scoped lang="scss">
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out forwards;
+}
 .editor {
+    background-color: #efefef;
     min-width: 460px;
     width: 100%;
     overflow-x: auto;
@@ -366,6 +379,7 @@ onUnmounted(() => {
     }
 
     #center {
+        flex: 1;
         display: flex;
         flex-flow: row nowrap;
         width: 100%;
@@ -375,6 +389,7 @@ onUnmounted(() => {
         #navigation {
             height: 100%;
             background-color: var(--left-navi-bg-color);
+            animation: fadeIn 0.5s ease-in-out forwards;
         }
 
         #content {
@@ -388,6 +403,7 @@ onUnmounted(() => {
             height: 100%;
             background-color: var(--right-attr-bg-color);
             z-index: 9;
+            animation: fadeIn 0.5s ease-in-out forwards;
         }
     }
 

@@ -63,7 +63,7 @@ const optionsContainerVisible = ref<boolean>(false);
 const source = ref<SelectSource[]>([]);
 
 function toggle() {
-    console.log(props.source, arr.value);
+    // console.log(props.source, arr.value);
     
     optionsContainerVisible.value = !optionsContainerVisible.value;
     if (!optionsContainerVisible.value) {
@@ -151,7 +151,7 @@ function select(data: SelectItem) {
 
 function render() {
     curHoverValueIndex.value = -1
-    console.log(props.source, props.action, props.selected);
+    // console.log(props.source, props.action, props.selected);
     
     if (props.source.length) {
         source.value = cloneDeep(props.source);

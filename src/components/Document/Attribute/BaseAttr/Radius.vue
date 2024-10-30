@@ -86,7 +86,7 @@ function keydownRadius(event: KeyboardEvent, type: string) {
         }
         event.preventDefault();
     }
-  
+
 }
 
 function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {
@@ -99,10 +99,10 @@ function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {
     values[indexes[0]] = val;
     if (keyupdate.value) {
         props.linearApi.shapesModifyRadius(shapes, values)
-    }else{
+    } else {
         editor.shapesModifyRadius(shapes, values);
     }
-  
+
 }
 
 function checkKeyup(event: KeyboardEvent) {
@@ -511,7 +511,7 @@ onUnmounted(() => {
     justify-content: space-between;
     display: flex;
     flex-direction: row;
-    margin-bottom: 8px;
+    gap: 8px;
 
     .space {
         width: 88px;

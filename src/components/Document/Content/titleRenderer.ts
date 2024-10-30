@@ -22,6 +22,8 @@ export interface TitleAttri {
     active: boolean;
     transform: string;
     isSymbol: boolean;
+
+    hidden?: boolean;
 }
 
 export class TitleRenderer {
@@ -40,9 +42,7 @@ export class TitleRenderer {
     private watcherUninstallerMap = new Map<string, () => void>();
 
     private generate(shape: ShapeView) {
-        if (isShapeOut(this.m_context, shape)) {
-            return;
-        }
+        if (isShapeOut(this.m_context, shape)) return;
         if (!shape.isVisible) return;
         const titleCtx: TitleAttri = {
             id: shape.id,
@@ -70,8 +70,9 @@ export class TitleRenderer {
         {
             // reset
             titleCtx.name = shape.name;
-            titleCtx.width = 10;
+            titleCtx.width = 32;
             titleCtx.transform = '';
+            delete titleCtx.hidden;
         }
 
         const { x, y, width, height } = shape.frame;
@@ -216,10 +217,14 @@ export class TitleRenderer {
 
 
         titleCtx.width = Math.hypot(xAxis[1].x - xAxis[0].x, xAxis[1].y - xAxis[0].y);
-        if (titleCtx.width < 10) {
-            titleCtx.width = 10;
-            titleCtx.name = '...'
+
+        if (titleCtx.width < 24) {
+            titleCtx.hidden = true;
+        } else if (titleCtx.width < 32) {
+            titleCtx.width = 32;
+            titleCtx.name = '...';
         }
+
         titleCtx.transform = makeMatrixByTransform2(OT).toString();
     }
 
@@ -258,9 +263,7 @@ export class TitleRenderer {
         for (let i = children.length - 1; i > -1; i--) {
             const c = markRaw(children[i]);
 
-            if (!c.isContainer) {
-                continue;
-            }
+            if (!c.isContainer) continue;
 
             URCM.set(c.id, c);
 
