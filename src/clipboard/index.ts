@@ -15,11 +15,14 @@ import {
     Shape,
     TableCellType,
     Text,
-    TransformRaw, UploadAssets
+    TransformRaw, UploadAssets, import_shape_from_clipboard, ResourceMgr
 } from "@kcdesign/data";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/utils/imageLoader";
+import { parse as SVGParse } from "@/svg_parser";
+import * as parse_svg from "@/svg_parser";
+import { message } from "@/utils/message";
 
 interface ImageBundle {
     base64: string;
@@ -31,7 +34,10 @@ interface Bundle {
     HTML?: string;          // 包含图层、图层属性、文本格式
     plain?: string;         // 纯文本
     image?: ImageBundle;    // 图片资源
-    SVG?: Shape;            // 矢量图形
+    SVG?: {                 // 矢量图形
+        shape: Shape | undefined;
+        mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
+    };
 }
 
 class ExfContext {
@@ -44,7 +50,8 @@ export class MossClipboard {
     static paras = 'design.moss/paras';
     static properties = 'design.moss/properties';
     static MIME = ['image/png', 'text/html', 'text/plain'];
-    private context: Context;
+
+    private readonly context: Context;
     private cache: Bundle | undefined;
     constructor(context: Context) {
         this.context = context;
@@ -55,7 +62,30 @@ export class MossClipboard {
         return `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
     }
 
-    private decode() {
+    private decode(html: string) {
+        let result: any;
+        const d = document.createElement('div');
+        document.body.appendChild(d);
+        d.innerHTML = html;
+        const carrier = d.querySelector('#carrier');
+        result = decodeURIComponent(atob((carrier as HTMLDivElement)?.dataset?.buffer || ''));
+        document.body.removeChild(d);
+        return result;
+    }
+
+    private maySvgText(content: string) {
+        return content.length > 10 && (content.search(/<svg|<?xml/img) > -1) && (new RegExp('</svg>', "img").test(content.slice(content.length - 10).toLowerCase()));
+    }
+
+    private async SVGFileReader(file: File): Promise<{
+        shape: Shape | undefined,
+        mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
+    }> {
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(parse_svg.parse(event.target!.result as string));
+            reader.readAsText(file);
+        });
     }
 
     private get __text() {
@@ -99,6 +129,12 @@ export class MossClipboard {
 
             return t;
         }
+    }
+
+    private getSource(HTML: string | undefined) {
+        if (!HTML) return undefined;
+        HTML = this.decode(HTML);
+        return HTML && HTML.slice(0, 60).indexOf(MossClipboard.identity) > -1 ? JSON.parse(HTML.split(MossClipboard.identity)[1]) : undefined;
     }
 
     private __sort_media(document: Document, exportCtx: ExfContext) {
@@ -198,6 +234,12 @@ export class MossClipboard {
             if (items) for (const item of items) {
                 if (item.kind === "file") {
                     const file = item.getAsFile()!;
+                    const type = file.type;
+                    if (!type.includes("image")) continue;
+                    if (file.type === "image/svg+xml") {
+                        bundle["SVG"] = await this.SVGFileReader(file);
+                        continue;
+                    }
                     const size = await new Promise<{
                         width: number,
                         height: number
@@ -222,11 +264,11 @@ export class MossClipboard {
                     });
                     size && base64 && (bundle["image"] = Object.assign(size, base64));
                 } else if (item.kind === "string") {
-                    const result = await new Promise<string>(resolve => {
-                        item.getAsString((result) => resolve(result));
-                    });
+                    const result = await new Promise<string>(resolve => item.getAsString((result) => resolve(result)));
                     if (item.type === "text/html") bundle["HTML"] = result;
-                    else bundle["plain"] = result;
+                    else if (this.maySvgText(result)) {
+                        bundle["SVG"] = SVGParse(result);
+                    } else bundle["plain"] = result;
                 }
             }
         }
@@ -236,7 +278,10 @@ export class MossClipboard {
                 bundle["HTML"] = await blob.text();
             } else if (type === "text/plain") {
                 const blob = await item.getType("text/plain");
-                bundle["plain"] = await blob.text();
+                const text = await blob.text();
+                if (this.maySvgText(text)) {
+                    bundle["SVG"] = SVGParse(text);
+                } else bundle["plain"] = text;
             } else if (type.includes("image")) {
                 const blob = await item.getType(type);
                 const base64 = await new Promise<{
@@ -273,10 +318,13 @@ export class MossClipboard {
 
         const bundle = await this.read();
         if (!bundle || !Object.keys(bundle).length) return false; // 剪切板内没有可用的替换内容
-        const { HTML, plain, image, SVG } = bundle;
+
+        let { HTML, plain, image, SVG } = bundle;
+
+        const source = this.getSource(HTML);
 
         if (image) {
-            // 先用图片生成图层
+            // 用图片生成图层
             let { base64, name, width, height } = image;
             const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
             const format = getFormatFromBase64(base64);
@@ -287,21 +335,66 @@ export class MossClipboard {
             name = name.replace(new RegExp(`.${format}|.jpg$`, 'img'), '') || 'image';
             const frame = new ShapeFrame(0, 0, width, height);
             const source = [creator.newImageFillShape(name, frame, manager, { width, height }, ref)];
+            // 进行替换
             const editor = context.editor4Page(context.selection.selectedPage!);
             const result = editor.replace(context.data, source, shapes.map((s) => adapt2Shape(s)));
             if (!result || !result.length) return;
             const asset: UploadAssets = { buff, ref };
             new ImageLoader(context).upload(result.map(shape => ({ shape, upload: [asset] }))).then(result => {
-                if (!result) {
-                    // 图片上传失败
-                }
+                if (!result) message("danger", context.workspace.t('system.uploadMediaFail'));
             });
-        } else if (HTML) {
+        } else if (source) {
             // 检查有没有图层内容
+            const context = this.context;
+            const page = context.selection.selectedPage!;
+            const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
+            if (!shapes.length) throw new Error('invalid source');
+            // 进行替换
+            const editor = context.editor4Page(page);
+            const result = editor.replace(context.data, shapes, context.selection.selectedShapes.map((s) => adapt2Shape(s)));
+            if (!result || !result.length) return;
+            const keys = Object.keys(source.media);
+            const assets: UploadAssets[] = [];
+            for (const ref of keys) {
+                const buff = source.media[ref]?.buff;
+                buff && assets.push({ ref, buff });
+            }
+            const uploadPackages = result.map(shape => ({ shape, upload: assets }));
+            new ImageLoader(context).upload(uploadPackages).then(result => {
+                if (!result) message("danger", context.workspace.t('system.uploadMediaFail'));
+            });
         } else if (plain) {
-            // 先用文本生成图层
+            // 用文本生成图层
+            const name = plain.length >= 20 ? plain.slice(0, 19) + '...' : plain;
+            const shape = creator.newTextShape(name);
+            shape.text.insertText(plain, 0);
+            const layout = shape.getLayout();
+            shape.size.width = layout.contentWidth;
+            shape.size.height = layout.contentHeight;
+            const context = this.context;
+            // 进行替换
+            context.editor4Page(context.selection.selectedPage!)
+                .replace(context.data, [shape], context.selection.selectedShapes.map((s) => adapt2Shape(s)));
         } else if (SVG) {
+            const { shape, mediaResourceMgr } = SVG;
+            const context = this.context;
+            const result = shape && context.editor4Page(context.selection.selectedPage!)
+                .replace(context.data, [shape], context.selection.selectedShapes.map((s) => adapt2Shape(s)));
+            if (!result || !result.length) return;
+            const assets: { shape: Shape, upload: UploadAssets[] }[] = [];
+            for (const shape of result) {
+                const upload: UploadAssets[] = [];
+                mediaResourceMgr.forEach((v, k) => upload.push({ ref: k, buff: v.buff }));
+                assets.push({ shape, upload });
+            }
+            new ImageLoader(context).upload(assets).then(result => {
+                if (!result) message("danger", context.workspace.t('system.uploadMediaFail'));
+            });
         }
+    }
+
+    async cut() {
+
     }
 
     init() {
