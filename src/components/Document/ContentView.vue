@@ -510,12 +510,11 @@ function cut_watcher(event: ClipboardEvent) {
 
 function paster_watcher(event: ClipboardEvent) {
     if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    // {
-    //     const clip = new MossClipboard(props.context);
-    //   clip.read(event);
-    //   clip.paste(event);
-    // }
-  return props.context.workspace.clipboard.paste(t, event);
+    {
+        const clip = new MossClipboard(props.context);
+        clip.paste(event);
+    }
+    // return props.context.workspace.clipboard.paste(t, event);
 }
 
 function color_watcher(t: number) {
