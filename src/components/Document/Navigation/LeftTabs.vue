@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, watchEffect } from "vue";
 import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
@@ -102,6 +102,15 @@ const navi_watch = (t: number) => {
         updateUnderlinePosition();
     }
 }
+
+const Rule = ref<boolean>(false)
+
+watchEffect(() => {
+    if (props.leftTriggerVisible) {
+        Rule.value = props.context.user.isRuleVisible || false
+    }
+})
+
 onMounted(() => {
     props.context.navi.set_current_navi_module(currentTab.value);
     // props.context.comment.watch(update);
@@ -140,7 +149,8 @@ const plugins = props.context.pluginsMgr.search2('navigation');
                 :leftTriggleVisible="leftTriggerVisible" @showNavigation="showHiddenLeft"></CompsTab>
             <!-- end plugin -->
             <component v-for="p in plugins.end" :is=p.component :context="props.context" :params="p.params" />
-            <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggerVisible" @showNavigation="showHiddenLeft">
+            <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggerVisible"
+                @showNavigation="showHiddenLeft" :rule="Rule">
             </ShowHiddenLeft>
         </div>
     </div>
