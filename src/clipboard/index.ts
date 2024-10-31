@@ -391,6 +391,7 @@ export class MossClipboard {
                     if (container.length) {
 
                     } else if (pathviews.length) {
+                        // todo 检查一下黑白格的问题
                         const { base64, width, height } = images[0];
                         const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
                         const format = getFormatFromBase64(base64);
