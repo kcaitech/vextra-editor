@@ -640,11 +640,20 @@ export class PathEditor extends TransformHandler {
         let dy = __living.y - __fixed.y;
 
         if (this.shiftStatus) {
-            if (Math.abs(dx) > Math.abs(dy)) {
-                dy = 0;
-            } else {
-                dx = 0;
-            }
+            const round = Math.PI * 2;
+            const split = round / 8;
+            let rad = Math.atan2(dy, dx);
+            if (rad < 0) rad = round + rad;
+
+            rad = Math.round(rad / split) * split - rad;
+
+            const matrix = new Matrix();
+            matrix.rotate(rad, __fixed.x, __fixed.y);
+
+            const l = matrix.computeCoord3(__living);
+
+            dx = l.x - __fixed.x;
+            dy = l.y - __fixed.y;
         }
 
         const modified = this.modifyDelta(dx, dy);
