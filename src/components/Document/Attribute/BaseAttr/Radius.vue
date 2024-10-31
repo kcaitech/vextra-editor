@@ -362,7 +362,7 @@ function draggingLT(e: MouseEvent) {
     let values = [Number(radius.lt), -1, -1, -1];
     values[0] += e.movementX;
 
-    if (values[0] < 0) return;
+    values[0] = values[0] < 0 ? 0 : values[0]
 
     if (!rect.value) {
         values = [values[0]]
@@ -390,9 +390,7 @@ function draggingRT(e: MouseEvent) {
 
     values[1] += e.movementX;
 
-    if (values[1] < 0) {
-        return;
-    }
+    values[1] = values[1] < 0 ? 0 : values[1]
 
     lockMouseHandler.executeRadius(values);
 }
@@ -415,9 +413,7 @@ function draggingRB(e: MouseEvent) {
     const values = [-1, -1, Number(radius.rb), -1];
     values[2] += e.movementX;
 
-    if (values[2] < 0) {
-        return;
-    }
+    values[2] = values[2] < 0 ? 0 : values[2]
 
     lockMouseHandler.executeRadius(values);
 }
@@ -440,9 +436,7 @@ function draggingLB(e: MouseEvent) {
     const values = [-1, -1, -1, Number(radius.lb)];
     values[3] += e.movementX;
 
-    if (values[3] < 0) {
-        return;
-    }
+    values[3] = values[3] < 0 ? 0 : values[3]
 
     lockMouseHandler.executeRadius(values);
 }
