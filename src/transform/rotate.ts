@@ -41,19 +41,20 @@ export function rotate(shapes: ShapeView[], deg: number) {
         const oa = deg % 360 * Math.PI / 180;
         const os = t.decomposeEuler().z;
         let angle = oa - os;
+
         if (is_straight(shape)) {
             const points = (shape as PathShapeView).segments[0].points;
             const p1 = points[0];
             const p2 = points[1];
             const m = new Matrix();
-            m.preScale(shape.frame.width, shape.frame.height);
-            const lt = m.computeCoord2(p1.x, p1.y);
-            const rb = m.computeCoord2(p2.x, p2.y);
-            let os = Math.atan2(rb.x - lt.x, rb.y - lt.y);
-            if (os < 0) os = Math.PI * 2 + os;
-            console.log('--os--', os, rb, lt);
-            angle -= os;
+            m.preScale(shape.size.width, shape.size.height);
+            const lt = m.computeCoord3(p1);
+            const rb = m.computeCoord3(p2);
+            let os2 = Math.atan2(rb.y - lt.y, rb.x - lt.x);
+            if (os2 < 0) os2 = Math.PI * 2 + os2;
+            angle -= os2;
         }
+
         t.rotateAt({
             axis: Line.FromParallelZ(ColVector3D.FromXYZ(x + width / 2, y + height / 2, 0)),
             angle,
