@@ -18,10 +18,18 @@ const reflush = ref(0);
 const _getCutoutShape = () => {
     const page = props.context.selection.selectedPage;
     if (page) {
-        cutoutShapes.value = Array.from(page.cutoutList);
+        cutoutShapes.value = Array.from(page.cutoutList).filter(i => isVisible(i));
         nextTick(() => {
             reflush.value++;
         })
+    }
+    function isVisible(cut: CutoutShapeView) {
+        let cs: ShapeView | undefined = cut;
+        while (cs) {
+            if (!cs.isVisible) return false;
+            cs = cs.parent;
+        }
+        return true;
     }
 }
 const getCutoutShape = throttle(_getCutoutShape, 200);
@@ -41,28 +49,50 @@ const selected_watcher = (t: number | string) => {
             _getCutoutShape();
         })
         getCutoutShape();
-    }else if (t === Selection.CHANGE_PAGE) {
+    } else if (t === Selection.CHANGE_PAGE) {
         _getCutoutShape();
     }
 }
 
-const update_by_shapes = () => {
+const update_by_shapes = (...args: any[]) => {
+    if (args.length === 1 && args[0] === 'isVisible') {
+        getCutoutShape();
+    }
     reflush.value++;
 }
 
 const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+
 function watch_shapes() {
+    const map = new Map<string, ShapeView>();
+
+    const cutoutList = props.context.selection.selectedPage!.cutoutList;
+
+    for (const cut of cutoutList) {
+        map.set(cut.id, cut);
+
+        let p: ShapeView | undefined = cut;
+
+        while(p) {
+            map.set(p.id, p);
+            p = p.parent;
+        }
+    }
+
+    map.delete(props.context.selection.selectedPage!.id);
+
     watchedShapes.forEach((v, k) => {
+        if (map.delete(k)) return;
         v.unwatch(update_by_shapes);
         watchedShapes.delete(k);
     })
 
-    const selectedShapes = props.context.selection.selectedShapes;
-    selectedShapes.forEach((v) => {
+    map.forEach((v) => {
         v.watch(update_by_shapes);
         watchedShapes.set(v.id, v)
     });
 }
+
 
 onMounted(() => {
     watcher();

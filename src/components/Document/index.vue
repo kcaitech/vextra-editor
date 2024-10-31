@@ -271,38 +271,35 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="editor" style="height: 100vh; display: flex; flex-direction: column;">
-    <div v-if="showTop" id="top">
-        <Toolbar v-if="contentVisible" :context="context as Context" class="fade-in"/>
+    <div class="editor" style="height: 100vh; display: flex; flex-direction: column;">
+        <div v-if="showTop" id="top">
+            <Toolbar v-if="contentVisible" :context="context as Context" class="fade-in" />
+        </div>
+        <ColSplitView v-if="inited" id="center"
+            :left="{ width: left.leftWidth, minWidth: left.leftMinWidth, maxWidth: 0.4 }" :right="rightWidth"
+            :context="context as Context" @changeLeftWidth="changeLeftWidth">
+            <template #slot1>
+                <Navigation v-if="curPage && contentVisible" id="navigation" :context="context as Context"
+                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+                    :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggerVisible="leftTriggerVisible">
+                </Navigation>
+            </template>
+            <template #slot2>
+                <ContentView v-if="curPage" id="content" :context="context as Context"
+                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
+                    @closeLoading="closeLoading" @contentVisible="onContentVisible">
+                </ContentView>
+            </template>
+            <template #slot3>
+                <Attribute id="attributes" v-if="contentVisible" :context="context as Context"
+                    @mouseenter="() => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+                </Attribute>
+            </template>
+        </ColSplitView>
+        <Bridge v-if="bridge" :context="context as Context" />
+        <Loading v-if="loading" :size="20" />
     </div>
-    <ColSplitView v-if="inited" id="center"
-                  :left="{ width: left.leftWidth, minWidth: left.leftMinWidth, maxWidth: 0.4 }"
-                  :right="rightWidth" :context="context as Context" @changeLeftWidth="changeLeftWidth">
-        <template #slot1>
-            <Navigation v-if="curPage&&contentVisible" id="navigation" :context="context as Context"
-                        class="fade-in"
-                        @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
-                        @showNavigation="showHiddenLeft"
-                        :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggerVisible="leftTriggerVisible">
-            </Navigation>
-        </template>
-        <template #slot2>
-            <ContentView v-if="curPage" id="content" :context="context as Context"
-                         @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
-                         @closeLoading="closeLoading" @contentVisible="onContentVisible">
-            </ContentView>
-        </template>
-        <template #slot3>
-            <Attribute id="attributes" v-if="contentVisible" :context="context as Context"
-                       @mouseenter="() => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-                       :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
-                       @showAttrbute="showHiddenRight">
-            </Attribute>
-        </template>
-    </ColSplitView>
-    <Bridge v-if="bridge" :context="context as Context"/>
-    <Loading v-if="loading" :size="20"/>
-</div>
 </template>
 
 <style scoped lang="scss">
@@ -310,14 +307,12 @@ onUnmounted(() => {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
 }
 
-.fade-in {
-    animation: fadeIn 0.5s ease-in-out forwards;
-}
 .editor {
     background-color: #efefef;
     min-width: 460px;
@@ -389,7 +384,8 @@ onUnmounted(() => {
         #navigation {
             height: 100%;
             background-color: var(--left-navi-bg-color);
-            animation: fadeIn 0.5s ease-in-out forwards;
+            z-index: 9;
+            animation: fadeIn 0.25s ease-in-out forwards;
         }
 
         #content {
@@ -403,7 +399,7 @@ onUnmounted(() => {
             height: 100%;
             background-color: var(--right-attr-bg-color);
             z-index: 9;
-            animation: fadeIn 0.5s ease-in-out forwards;
+            animation: fadeIn 0.25s ease-in-out forwards;
         }
     }
 
@@ -441,7 +437,7 @@ onUnmounted(() => {
         border-radius: 4px;
 
         .loading-spinner {
-            > svg {
+            >svg {
                 width: 15px;
                 height: 15px;
                 color: #000;

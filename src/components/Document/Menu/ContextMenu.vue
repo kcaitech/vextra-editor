@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
-import { nextTick, onMounted, onUnmounted, ref, h } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, h, watch, watchEffect } from 'vue';
 import Key from "@/components/common/Key.vue";
 import { MenuItemType } from "@/components/Document/Menu/index";
 import { useI18n } from "vue-i18n";
@@ -455,18 +455,23 @@ function outline() {
 }
 
 const plugins = props.context.pluginsMgr.search2("content.menu");
-const comps: { component: any, params?: any }[] = [];
-if (props.items.has(MenuItemType.Comment)) {
-    comps.push({
-        component: () => {
-            return h(plugins.end[0].component, {
-                params: plugins.end[0].params,
-                context: props.context,
-                onClose: () => emits('close')
-            })
-        }
-    });
-}
+let comps: { component: any, params?: any }[] = [];
+
+watchEffect(() => {
+    comps=[]
+    if (props.items.has(MenuItemType.Comment)) {
+        comps.push({
+            component: () => {
+                return h(plugins.end[0].component, {
+                    params: plugins.end[0].params,
+                    context: props.context,
+                    onClose: () => emits('close')
+                })
+            }
+        });
+    }
+})
+
 onMounted(() => {
     props.context.menu.watch(menu_watcher)
     document.addEventListener('mousedown', handleClickOutside);
@@ -483,7 +488,7 @@ onUnmounted(() => {
         <div v-if="items.has(MenuItemType.Layers)" class="menu-item"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <svg-icon icon-class="down" style="transform: rotate(-90deg)"/>
+            <svg-icon icon-class="down" style="transform: rotate(-90deg)" />
             <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers"
                 :style="{ 'max-height': layersHeight + 'px' }">
                 <Layers @close="emits('close')" :layers="props.layers" :context="props.context"></Layers>
@@ -502,7 +507,7 @@ onUnmounted(() => {
         <div v-if="items.has(MenuItemType.CopyAs)" class="menu-item"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.CopyAs)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.copyAs') }}</span>
-            <svg-icon icon-class="down" style="transform: rotate(-90deg)"/>
+            <svg-icon icon-class="down" style="transform: rotate(-90deg)" />
             <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.CopyAs">
                 <div class="sub-item" @click="copyAsPNG">
                     <span>{{ t('clipboard.copyAsPNG') }}</span>
@@ -599,7 +604,7 @@ onUnmounted(() => {
                     fill-rule="evenodd" fill="inherit" fill-opacity="1" />
             </svg>
         </div>
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <component v-if="comps.length" v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
         <div v-if="items.has(MenuItemType.Operation)" @click="operation" class="menu-item">
             <span>{{ t('system.hide_operation_interface') }}</span>
             <Key code="Ctrl(Shift) \"></Key>
