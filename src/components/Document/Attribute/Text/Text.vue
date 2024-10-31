@@ -80,10 +80,11 @@ const selectText = ref('autowidth');
 const wordSpace = ref();
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
-const rowHeight = ref()
+const rowHeight = ref();
 const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
+const isAutoLineHeight = ref<boolean>(true);
 
 function toHex(r: number, g: number, b: number, prefix = true) {
     const hex = (n: number) => n.toString(16)
@@ -328,55 +329,53 @@ const autoLineHeight = [
     '自动'
 ]
 
-function parstLineHeight(value: string) {
-    if (autoLineHeight.indexOf(value) >= 0) return 'auto';
-    return Number(value)
-}
-
 const setRowHeight = (val?: number) => {
     const editor = props.context.editor4TextShape(props.shape)
+    let isAuto = isAutoLineHeight.value;
     if (rowHeight.value.length < 1) {
-        rowHeight.value = 1
+        isAuto = true;
+    } else if (rowHeight.value[rowHeight.value.length - 1] === '%') {
+        isAuto = true;
+    } else {
+        isAuto = false;
     }
-    const lh = parstLineHeight(rowHeight.value);
+    const value = rowHeight.value[rowHeight.value.length - 1] === '%' ? rowHeight.value.slice(0, -1) : rowHeight.value;
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        if (lh === 'auto' || !isNaN(lh)) {
+        if (!isNaN(Number(value))) {
             if (isSelectText()) {
                 keydownval.value
                     ?
-                    linearApi.modifyTextLineHeight(val!, 0, Infinity, props.shape)
+                    linearApi.modifyTextLineHeight(val!, isAuto, 0, Infinity, props.shape)
                     :
-                    editor.setLineHeight(lh, 0, Infinity)
+                    editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, 0, Infinity)
             } else {
                 keydownval.value
                     ?
-                    linearApi.modifyTextLineHeight(val!, textIndex, selectLength, props.shape)
+                    linearApi.modifyTextLineHeight(val!, isAuto, textIndex, selectLength, props.shape)
                     :
-                    editor.setLineHeight(lh, textIndex, selectLength)
+                    editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, textIndex, selectLength)
             }
         } else {
-            textFormat()
+            textFormat();
+            return;
         }
     } else {
-        if (lh === 'auto' || !isNaN(lh)) {
+        if (!isNaN(Number(value))) {
             keydownval.value
                 ?
-                linearApi.modifyTextLineHeightMulit(props.textShapes, val!)
+                linearApi.modifyTextLineHeightMulit(props.textShapes, val!, isAuto)
                 :
-                editor.setLineHeightMulit(props.textShapes, lh);
+                editor.setLineHeightMulit(props.textShapes, value.length === 0 ? undefined : Number(value), isAuto);
         } else {
-            textFormat()
+            textFormat();
+            return;
         }
     }
     const textAttr = props.context.textSelection.getTextAttr;
-    if (lh === 'auto') {
-        textAttr.autoLineHeight = true;
-    } else {
-        textAttr.autoLineHeight = undefined;
-        textAttr.maximumLineHeight = lh;
-        textAttr.minimumLineHeight = lh;
-    }
+    textAttr.autoLineHeight = isAuto;
+    textAttr.maximumLineHeight = value.length === 0 ? undefined : Number(value);
+    textAttr.minimumLineHeight = value.length === 0 ? undefined : Number(value);
     props.context.textSelection.setTextAttr(textAttr);
     keydownval.value = false;
 }
@@ -477,7 +476,8 @@ const _textFormat = () => {
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
         }
         colorIsMulti.value = format.colorIsMulti
-        rowHeight.value = format.autoLineHeight ? 'auto' : format_value(format.minimumLineHeight || 0)
+        isAutoLineHeight.value = format.autoLineHeight ?? true;
+        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0)
         wordSpace.value = format_value(format.kerning || 0)
         highlightIsMulti.value = format.highlightIsMulti
         selectLevel.value = format.alignment || 'left'
@@ -552,7 +552,8 @@ const _textFormat = () => {
                 format[key] = `unlikeness`;
             }
         }
-        rowHeight.value = format.autoLineHeight ? 'auto' : format_value(format.minimumLineHeight || 0) as number;
+        isAutoLineHeight.value = format.autoLineHeight ?? true;
+        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0) as number;
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
@@ -863,8 +864,8 @@ const addHighlight = () => {
         }
         textFormat()
     } else {
-        const color=props.textShapes[0].text.paras[0].spans[0].highlight;
-        editor.setTextHighlightColorMulti(props.textShapes,color)
+        const color = props.textShapes[0].text.paras[0].spans[0].highlight;
+        editor.setTextHighlightColorMulti(props.textShapes, color)
     }
 }
 const higAlphaInput = () => {
@@ -1190,8 +1191,7 @@ function updatePosition(movementX: number, movementY: number) {
 function onMouseMove(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
     if (type === 'row-height') {
-        if (isNaN(rowHeight.value) || rowHeight.value < 0) return;
-        rowHeight.value = Number(rowHeight.value) + e.movementX;
+        rowHeight.value = (rowHeight.value === 'Auto' ? 121 : parseFloat(rowHeight.value)) + e.movementX;
         if (textAttrEditor) {
             rowHeight.value = rowHeight.value < 0 ? 0 : Number(rowHeight.value)
             textAttrEditor.execute_line_height(rowHeight.value);
@@ -1431,8 +1431,8 @@ onUnmounted(() => {
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
-                    t('attr.font_color')
-                    }}
+            t('attr.font_color')
+        }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
@@ -1450,7 +1450,7 @@ onUnmounted(() => {
                         @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput"
                         @click="(e) => click(e, is_font_color_select)" @blur="is_font_color_select = false" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
+            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
                         @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false"
@@ -1461,8 +1461,8 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
-                        t('attr.font_color')
-                        }}
+            t('attr.font_color')
+        }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
                         <svg-icon icon-class="add"></svg-icon>

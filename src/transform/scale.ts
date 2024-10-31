@@ -415,6 +415,7 @@ export class ScaleHandler extends TransformHandler {
     }
 
     private __execute_normal() {
+
         if (!this.shapes.length) return;
 
         // 光标在选区坐标系下的坐标
@@ -628,12 +629,15 @@ export class ScaleHandler extends TransformHandler {
             sizeForSelection.height / this.selectionSize.height * (__scale.y > 0 ? 1 : -1),
             1,
         ]));
-
+        const w_change = sizeForSelection.width / this.selectionSize.width !== 1;
+        const h_change = sizeForSelection.height / this.selectionSize.height !== 1;
         const units: {
             shape: ShapeView,
             size: ShapeSize,
             transform2: Transform,
-            scale: { x: number, y: number }
+            scale: { x: number, y: number },
+            w_change: boolean,
+            h_change: boolean
         }[] = [];
 
         const shapes = this.shapes;
@@ -661,8 +665,7 @@ export class ScaleHandler extends TransformHandler {
                 x: Math.abs(scale.x),
                 y: Math.abs(scale.y)
             };
-
-            units.push({ shape, size, transform2: t, scale: __scale });
+            units.push({ shape, size, transform2: t, scale: __scale, w_change, h_change });
         });
 
         if (this.alignPixel) {

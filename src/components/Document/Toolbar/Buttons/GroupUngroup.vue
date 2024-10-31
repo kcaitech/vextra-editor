@@ -40,8 +40,7 @@ const _updater = () => {
             isUngroup.value = true;
         }
         isGroup.value = true;
-
-    } else {
+    } else if (shapes.length > 1) {
         isBoolGroup.value = true;
         isGroup.value = true;
         if (shapes.some(s => s.type === ShapeType.Artboard || s.type === ShapeType.Symbol || s.type === ShapeType.SymbolRef || s.type === ShapeType.SymbolUnion)) {
@@ -71,7 +70,6 @@ const groupClick = (alt?: boolean) => {
     const selection = props.context.selection;
     let shapes = filter_for_group1(selection.selectedShapes);
     const page = selection.selectedPage;
-    console.log('!page || !shapes.length', !page || !shapes.length);
     if (!page || !shapes.length) return;
     const bro = Array.from(page.shapes.values());
     const editor = props.context.editor4Page(page);
