@@ -393,7 +393,6 @@ export class MossClipboard {
                         const format = getFormatFromBase64(base64);
                         const ref = `${v4()}.${format}`;
                         const media = { buff, base64 };
-
                         const actions: {
                             shape: ShapeView,
                             ref: string,
@@ -401,10 +400,7 @@ export class MossClipboard {
                             height: number,
                             media: { buff: Uint8Array, base64: string }
                         }[] = [];
-                        for (const view of pathviews) {
-                            actions.push({ shape: view as any, ref, width, height, media });
-                        }
-
+                        for (const view of pathviews) actions.push({ shape: view as any, ref, width, height, media });
                         const page = context.selection.selectedPage!;
                         const editor = context.editor4Page(page);
                         editor.setShapesFillAsImage(actions);
