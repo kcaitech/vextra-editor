@@ -2,10 +2,7 @@ import { Context } from "@/context";
 import { Matrix, ShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 
-/**
- * @description 判定一个点是否在指定图层内
- */
-export class Finder {
+export class Shot {
     private readonly context: Context;
     private readonly SVG: SVGElement;
     private readonly path: SVGPathElement;

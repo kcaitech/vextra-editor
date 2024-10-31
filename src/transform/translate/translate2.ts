@@ -1,4 +1,4 @@
-import { TransformHandler } from "@/transform/handler";
+import { BoundHandler } from "@/transform/handler";
 import {
     ArtboradView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
     ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
@@ -623,15 +623,16 @@ class SelManager {
     }
 
     drawn() {
-        if (this.fixed) return;
+        const translate = this.translate;
+
+        if (this.fixed || !translate.api) return;
         this.fixed = true;
 
-        const translate = this.translate;
 
         const transformOriginal = translate.selModel.original;
         const envOriginal = translate.radar.original;
 
-        const results = translate.api!.drawn(compare_layer_3(this.shapes, -1), transformOriginal, envOriginal)!;
+        const results = translate.api.drawn(compare_layer_3(this.shapes, -1), transformOriginal, envOriginal)!;
 
         this.context.nextTick(translate.page, () => {
             const selects: ShapeView[] = [];
@@ -652,10 +653,10 @@ class SelManager {
     }
 
     revert() {
-        if (this.fixed) return;
+        if (this.fixed || !this.translate.api) return;
         this.fixed = true;
 
-        const results = this.translate.api!.revert(compare_layer_3(this.shapes, -1))!;
+        const results = this.translate.api.revert(compare_layer_3(this.shapes, -1))!;
 
         const page = this.translate.page;
         this.context.nextTick(page, () => {
@@ -1036,7 +1037,7 @@ class Inserter {
     }
 }
 
-export class Translate2 extends TransformHandler {
+export class Translate2 extends BoundHandler {
     readonly selManager: SelManager;
     readonly selModel: SelModel;
     readonly style: StyleManager;
@@ -1093,7 +1094,10 @@ export class Translate2 extends TransformHandler {
         const transformUnits: TranslateUnit[] = [];
         const cache = new Map<ShapeView, Transform>();
         const shapes = manager.shapes;
+        const __is_locked = this.isLocked.bind(this);
         for (const shape of shapes) {
+            if (__is_locked(shape)) continue;
+            
             const parent = shape.parent!;
             let PI = cache.get(parent)!;
             if (!PI) {

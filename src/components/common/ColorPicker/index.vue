@@ -152,7 +152,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const { t } = useI18n();
-const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
+const modelOptions: SelectSource[] = genOptions([['Hex', 'Hex'], ['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const saturationEL = ref<HTMLElement>();
 const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
 const typicalColor = ref<Color[]>(typical);
@@ -165,7 +165,7 @@ let inputTarget: HTMLInputElement;
 let handleIndex = 0;
 const downXY: ClientXY = { x: 0, y: 0 };
 let isDrag: boolean = false;
-const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
+const model = ref<SelectItem>({ value: 'Hex', content: 'Hex' });
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
 const popoverEl = ref<HTMLDivElement>();
@@ -236,13 +236,15 @@ const labels = computed(() => {
     return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
 
-const values = computed<number[]>(() => {
+const values = computed<(number | string)[]>(() => {
     if (model.value.value === 'RGB') {
         return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
     } else if (model.value.value === 'HSB') {
         return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
     } else if (model.value.value === 'HSL') {
         return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
+    } else if (model.value.value === 'Hex') {
+        return [((1 << 24) + (rgba.R << 16) + (rgba.G << 8) + rgba.B).toString(16).slice(1).toUpperCase(), Math.round(rgba.alpha * 100)]
     } else {
         return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
     }
@@ -625,10 +627,10 @@ function switchModel(item: SelectItem) {
     model.value = item;
 }
 
-function inputClick(e: MouseEvent, hidx: number) {
+function inputClick(e: MouseEvent, idx: number) {
     const target = e.target as HTMLInputElement;
     inputTarget = target;
-    handleIndex = hidx;
+    handleIndex = idx;
     target.select();
     target.addEventListener('keydown', keyboardWatcher);
 }
@@ -640,45 +642,87 @@ function keyboardWatcher(e: KeyboardEvent) {
         passive();
     } else if (e.code === 'ArrowUp') {
         let v: string | number = inputTarget.value;
-        v = Number(v);
-        let _v = v + 1;
-        const valid = validate(model.value.value as any, handleIndex, _v);
-        if (valid) {
+        if (model.value.value === "Hex") {
             if (handleIndex === 0) {
-                rgba.R = Number(v) + 1;
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v) + 1;
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v) + 1;
+                v = v.toString();
+                const valid = validate(model.value.value as any, handleIndex, v);
+                if (valid) {
+                    let color = v.replace(/^#/, '');
+                    if (color.length === 3) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(1), color.charAt(1), color.charAt(2), color.charAt(2)].join('');
+                    } else if (color.length === 1) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0)].join('');
+                    }
+                    let r = parseInt(color.substring(0, 2), 16);
+                    let g = parseInt(color.substring(2, 4), 16);
+                    let b = parseInt(color.substring(4, 6), 16);
+                    rgba.R = Math.min(255, r++);
+                    rgba.G = Math.min(255, g++);
+                    rgba.B = Math.min(255, b++);
+                }
             }
-            const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-            changeColor(color);
-            update_hue_indicator_position(color);
-            update_dot_indicator_position(color);
-            need_update_recent.value = true;
+        } else {
+            v = Number(v);
+            let _v = v + 1;
+            const valid = validate(model.value.value as any, handleIndex, _v);
+            if (valid) {
+                if (handleIndex === 0) {
+                    rgba.R = Number(v) + 1;
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v) + 1;
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v) + 1;
+                }
+                const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
+                changeColor(color);
+                update_hue_indicator_position(color);
+                update_dot_indicator_position(color);
+                need_update_recent.value = true;
 
-            passive();
+                passive();
+            }
         }
     } else if (e.code === 'ArrowDown') {
         let v: string | number = inputTarget.value;
-        v = Number(v);
-        let _v = v - 1;
-        const valid = validate(model.value.value as any, handleIndex, _v);
-        if (valid) {
+        if (model.value.value === "Hex") {
             if (handleIndex === 0) {
-                rgba.R = Number(v) - 1;
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v) - 1;
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v) - 1;
+                v = v.toString();
+                const valid = validate(model.value.value as any, handleIndex, v);
+                if (valid) {
+                    let color = v.replace(/^#/, '');
+                    if (color.length === 3) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(1), color.charAt(1), color.charAt(2), color.charAt(2)].join('');
+                    } else if (color.length === 1) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0)].join('');
+                    }
+                    let r = parseInt(color.substring(0, 2), 16);
+                    let g = parseInt(color.substring(2, 4), 16);
+                    let b = parseInt(color.substring(4, 6), 16);
+                    rgba.R = Math.max(0, r--);
+                    rgba.G = Math.max(0, g--);
+                    rgba.B = Math.max(0, b--);
+                }
             }
-            const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-            changeColor(color);
-            update_dot_indicator_position(color);
-            update_hue_indicator_position(color);
-            need_update_recent.value = true;
+        } else {
+            v = Number(v);
+            let _v = v - 1;
+            const valid = validate(model.value.value as any, handleIndex, _v);
+            if (valid) {
+                if (handleIndex === 0) {
+                    rgba.R = Number(v) - 1;
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v) - 1;
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v) - 1;
+                }
+                const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
+                changeColor(color);
+                update_dot_indicator_position(color);
+                update_hue_indicator_position(color);
+                need_update_recent.value = true;
 
-            passive();
+                passive();
+            }
         }
     }
 }
@@ -686,60 +730,94 @@ function keyboardWatcher(e: KeyboardEvent) {
 // 输入框输入
 function enter() {
     let v: string | number = inputTarget.value;
-    const valid = validate(model.value.value as any, handleIndex, Number(v));
-    if (valid) {
-        if (model.value.value === 'RGB') {
-            v = Math.floor(Number(v));
-            if (handleIndex === 0) {
-                rgba.R = Number(v);
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v);
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v);
-            } else if (handleIndex === 3) {
-                rgba.alpha = Number(v) / 100;
+    if (model.value.value === 'Hex') {
+        if (handleIndex === 0) {
+            const valid = validate(model.value.value as any, handleIndex, v.toString());
+            if (valid) {
+                let c = v.toString().replace(/^#/, '');
+                if (c.length === 3) {
+                    c = [c.charAt(0), c.charAt(0), c.charAt(1), c.charAt(1), c.charAt(2), c.charAt(2)].join('');
+                } else if (c.length === 1) {
+                    c = [c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0)].join('');
+                }
+                let r = parseInt(c.substring(0, 2), 16);
+                let g = parseInt(c.substring(2, 4), 16);
+                let b = parseInt(c.substring(4, 6), 16);
+                rgba.R = r;
+                rgba.G = g;
+                rgba.B = b;
+                const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+                changeColor(color);
+                update_dot_indicator_position(color);
+                update_hue_indicator_position(color);
+                update_alpha_indicator(color);
+                need_update_recent.value = true;
             }
-        } else if (model.value.value === 'HSB') {
-            const { H, S, V, alpha } = hsba.value;
-            const n = { H: H * 360, S, V, alpha };
-            if (handleIndex === 0) {
-                n.H = Number(v);
-            } else if (handleIndex === 1) {
-                n.S = Number(v) / 100;
-            } else if (handleIndex === 2) {
-                n.V = Number(v) / 100;
-            } else if (handleIndex === 3) {
-                n.alpha = Number(v) / 100;
-            }
-            const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
-            rgba.R = rgb_form_n.R;
-            rgba.G = rgb_form_n.G;
-            rgba.B = rgb_form_n.B;
-            rgba.alpha = n.alpha;
-        } else if (model.value.value === 'HSL') {
-            const { H, S, L, alpha } = hsla.value;
-            const n = { h: H, s: S, l: L, alpha };
-            if (handleIndex === 0) {
-                n.h = Number(v);
-            } else if (handleIndex === 1) {
-                n.s = Number(v) / 100;
-            } else if (handleIndex === 2) {
-                n.l = Number(v) / 100;
-            } else if (handleIndex === 3) {
-                n.alpha = Number(v) / 100;
-            }
-            const rgb_form_n = HSL2RGB(n);
-            rgba.R = rgb_form_n.R;
-            rgba.G = rgb_form_n.G;
-            rgba.B = rgb_form_n.B;
-            rgba.alpha = n.alpha;
+        } else {
+            rgba.alpha = Math.max(0, Math.min(100, Number(v))) / 100;
+            const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+            changeColor(color);
+            update_dot_indicator_position(color);
+            update_hue_indicator_position(color);
+            update_alpha_indicator(color);
+            need_update_recent.value = true;
         }
-        const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
-        changeColor(color);
-        update_dot_indicator_position(color);
-        update_hue_indicator_position(color);
-        update_alpha_indicator(color);
-        need_update_recent.value = true;
+    } else {
+        const valid = validate(model.value.value as any, handleIndex, Number(v));
+        if (valid) {
+            if (model.value.value === 'RGB') {
+                v = Math.floor(Number(v));
+                if (handleIndex === 0) {
+                    rgba.R = Number(v);
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v);
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v);
+                } else if (handleIndex === 3) {
+                    rgba.alpha = Number(v) / 100;
+                }
+            } else if (model.value.value === 'HSB') {
+                const { H, S, V, alpha } = hsba.value;
+                const n = { H: H * 360, S, V, alpha };
+                if (handleIndex === 0) {
+                    n.H = Number(v);
+                } else if (handleIndex === 1) {
+                    n.S = Number(v) / 100;
+                } else if (handleIndex === 2) {
+                    n.V = Number(v) / 100;
+                } else if (handleIndex === 3) {
+                    n.alpha = Number(v) / 100;
+                }
+                const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
+                rgba.R = rgb_form_n.R;
+                rgba.G = rgb_form_n.G;
+                rgba.B = rgb_form_n.B;
+                rgba.alpha = n.alpha;
+            } else if (model.value.value === 'HSL') {
+                const { H, S, L, alpha } = hsla.value;
+                const n = { h: H, s: S, l: L, alpha };
+                if (handleIndex === 0) {
+                    n.h = Number(v);
+                } else if (handleIndex === 1) {
+                    n.s = Number(v) / 100;
+                } else if (handleIndex === 2) {
+                    n.l = Number(v) / 100;
+                } else if (handleIndex === 3) {
+                    n.alpha = Number(v) / 100;
+                }
+                const rgb_form_n = HSL2RGB(n);
+                rgba.R = rgb_form_n.R;
+                rgba.G = rgb_form_n.G;
+                rgba.B = rgb_form_n.B;
+                rgba.alpha = n.alpha;
+            }
+            const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+            changeColor(color);
+            update_dot_indicator_position(color);
+            update_hue_indicator_position(color);
+            update_alpha_indicator(color);
+            need_update_recent.value = true;
+        }
     }
     inputTarget.removeEventListener('keydown', keyboardWatcher);
     inputTarget.blur();
@@ -747,10 +825,10 @@ function enter() {
 
 function triggle() {
     const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit) {
+    const exist = menu.isColorPickerMount;
+    if (exist) {
         menu.removeColorPicker();
-        if (exsit !== blockId) {
+        if (exist !== blockId) {
             colorPickerMount();
         }
     } else {
@@ -787,9 +865,7 @@ function colorPickerMount() {
 function blockUnmount() {
     const menu = props.context.menu;
     const e = menu.isColorPickerMount;
-    if (e === blockId) {
-        menu.clearColorPickerId();
-    }
+    if (e === blockId) menu.clearColorPickerId();
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 }
@@ -1204,7 +1280,7 @@ const is_gradient_selected = () => {
                 return false;
             }
         }
-        return shapes[0].type === ShapeType.Contact ? false : true;
+        return shapes[0].type !== ShapeType.Contact;
     } else {
         let ret = false;
         shapes.forEach((s) => {
@@ -1238,7 +1314,6 @@ let elpx: any
 let elpy: any
 let mx: any
 let my: any
-
 
 function startDrag(e: MouseEvent) {
     if (!props.cell) return
@@ -1318,7 +1393,6 @@ onUnmounted(() => {
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
                 <div class="color-type-desc">
                     <div class="color-type">{{ t(`attr.fill`) }}</div>
-                    <!-- <svg-icon icon-class="down"></svg-icon> -->
                 </div>
                 <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
                     <svg-icon icon-class="close"></svg-icon>
@@ -1388,12 +1462,21 @@ onUnmounted(() => {
                 </div>
                 <!-- &lt;!&ndash; model & values &ndash;&gt; -->
                 <div class="input-container">
-                    <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>
+                    <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"/>
                     <div class="values">
                         <div class="wrap">
-                            <div class="value">
-                                <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                        @click="(e) => inputClick(e, idx)" />
+                            <div v-if="values.length === 4" class="value">
+                                <div v-for="(i, idx) in values" :key="idx" class="item">
+                                    <input :value="i" @click="(e) => inputClick(e, idx)"/>
+                                </div>
+                            </div>
+                            <div v-else class="value">
+                                <div class="item" style="height: 100%;width: 112.5px;">
+                                    <input spellcheck="false" :value="values[0]" @click="(e) => inputClick(e, 0)"
+                                           style="text-align: left;padding-left: 8px;"/>
+                                </div>
+                                <div class="item">
+                                    <input :value="values[1]" @click="(e) => inputClick(e, 1)"/>
                                 </div>
                             </div>
                             <div class="label">
@@ -1435,10 +1518,6 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.showop {
-    opacity: 0.3;
-}
-
 .color-block {
     position: relative;
     width: 16px;
@@ -1756,7 +1835,7 @@ onUnmounted(() => {
 
         .input-container {
             width: 100%;
-            height: 80px;
+            height: fit-content;
             display: flex;
             flex-direction: row;
             align-items: flex-start;
@@ -1813,6 +1892,7 @@ onUnmounted(() => {
                         height: 24px;
                         display: flex;
                         align-items: center;
+                        justify-content: space-between;
                         padding: 5px;
                         box-sizing: border-box;
 
@@ -1918,7 +1998,7 @@ onUnmounted(() => {
                     }
 
                     &::-webkit-scrollbar-track {
-                        background-color: none;
+                        background-color: transparent;
                     }
 
                     &::-webkit-scrollbar-thumb {
@@ -1927,11 +2007,11 @@ onUnmounted(() => {
                     }
 
                     &::-webkit-scrollbar-thumb:hover {
-                        background-color: none;
+                        background-color: transparent;
                     }
 
                     &::-webkit-scrollbar-thumb:active {
-                        background-color: none;
+                        background-color: transparent;
                     }
 
                     >.block {

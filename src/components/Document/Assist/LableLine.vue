@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix, ShapeView } from "@kcdesign/data";
+import { Matrix, PathShapeView, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { WorkSpace } from '@/context/workspace'
 import { Selection } from '@/context/selection';
@@ -14,6 +14,7 @@ import {
     get_solid_line_center_point,
     get_solid_line_point
 } from "@/utils/label";
+import { is_straight } from "@/utils/attri_setting";
 
 interface Props {
     context: Context
@@ -32,7 +33,6 @@ const solid_point = ref<LintPoint[]>([]);
 const dotted_point = ref<LintPoint[]>([]);
 const size_posi = ref<CenterPoint[]>([]);
 
-// hover后给选中和hover的图形描边
 const contour = () => {
     clearPoint();
     const selection = props.context.selection;
@@ -61,12 +61,21 @@ const fixedContour = (shapes: ShapeView[]) => {
         const m = s.matrix2Root();
         m.multiAtLeft(matrix);
         const f = s.frame;
+        if (is_straight(s)) {
+            const [p1, p2] = (s as PathShapeView).segments[0].points
+            const __ps = [{ x: p1.x * f.width, y: p1.y * f.height }, { x: p2.x * f.width, y: p2.y * f.height }].map(p => m.computeCoord3(p));
+            points.push(...__ps, ...__ps);
+        } else {
         const x = f.x;
-        const y = f.y;
-        const r = x + f.width;
-        const b = y + f.height;
-        const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord3(p));
-        points.push(...ps);
+            const y = f.y;
+            const r = x + f.width;
+            const b = y + f.height;
+            const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, {
+                x,
+                y: b
+            }].map(p => m.computeCoord3(p));
+            points.push(...ps);
+        }
     }
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
@@ -86,12 +95,21 @@ const livingContour = (shapes: ShapeView[]) => {
         const m = s.matrix2Root();
         m.multiAtLeft(matrix);
         const f = s.frame;
-        const x = f.x;
-        const y = f.y;
-        const r = x + f.width;
-        const b = y + f.height;
-        const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord3(p));
-        points.push(...ps);
+        if (is_straight(s)) {
+            const [p1, p2] = (s as PathShapeView).segments[0].points
+            const __ps = [{ x: p1.x * f.width, y: p1.y * f.height }, { x: p2.x * f.width, y: p2.y * f.height }].map(p => m.computeCoord3(p));
+            points.push(...__ps, ...__ps);
+        } else {
+            const x = f.x;
+            const y = f.y;
+            const r = x + f.width;
+            const b = y + f.height;
+            const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, {
+                x,
+                y: b
+            }].map(p => m.computeCoord3(p));
+            points.push(...ps);
+        }
     }
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
@@ -166,8 +184,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
+<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
      :height="100" viewBox="0 0 100 100" style="position: absolute;  pointer-events: none;">
     <path v-for="(p, i) in tracingPath" :key="i" :d="p" fill="transparent" stroke="#ff2200"></path>
     <line v-for="(p, i) in solid_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2"

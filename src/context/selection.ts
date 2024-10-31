@@ -320,6 +320,8 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
         if (this.m_selectShapes.length > 0) {
             this.m_selectShapes.length = 0;
+            this.m_hoverShape = undefined;
+            this.notify(Selection.CHANGE_SHAPE_HOVER);
             this.notify(Selection.CHANGE_SHAPE);
         }
     }

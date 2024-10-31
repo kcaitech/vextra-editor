@@ -30,9 +30,7 @@ function is_curve_active() {
 let o: string;
 
 function keyboard_up_watcher(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement) {
-        return;
-    }
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || !props.context.workspace.is_path_edit_mode) return;
     if (['MetaLeft', 'ControlLeft'].includes(e.code)) {
         props.context.tool.setAction(o);
         document.removeEventListener('keyup', keyboard_up_watcher);
@@ -40,7 +38,7 @@ function keyboard_up_watcher(e: KeyboardEvent) {
 }
 
 function keyboard_down_watcher(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
     }
     if (e.repeat) {

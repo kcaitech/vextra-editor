@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
-import { AsyncApiCaller, PageView } from "@kcdesign/data";
+import { AsyncApiCaller, PageView, ShapeView } from "@kcdesign/data";
 import { Tool } from "@/context/tool";
 
 export type FrameLike = {
@@ -73,5 +73,32 @@ export class TransformHandler {
             this.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
             if (rule) this.context.tool.notify(Tool.RULE_RENDER);
         })
+    }
+}
+
+/**
+ * @description 额外考虑一些限制场景
+ */
+export class BoundHandler extends TransformHandler {
+    private lockedMap: Map<ShapeView, boolean> = new Map();
+
+    constructor(context: Context, event?: MouseEvent) {
+        super(context, event);
+    }
+
+    isLocked(view: ShapeView) {
+        const status = this.lockedMap.get(view);
+        if (status === undefined) {
+            let v: ShapeView | undefined = view;
+            while (v) {
+                if (v.isLocked) {
+                    this.lockedMap.set(view, true);
+                    return true;
+                }
+                v = v.parent;
+            }
+            this.lockedMap.set(view, false);
+            return false
+        } else return status;
     }
 }

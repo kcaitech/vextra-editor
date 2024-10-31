@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, nextTick, watch, computed, watchEffect } from 'vue';
+import { ref, nextTick, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted } from 'vue';
-import { PrototypeConnectionType, PrototypeEvent, PrototypeEvents, PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
+import { PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,
@@ -344,7 +344,7 @@ onMounted(() => {
         position: absolute;
         outline: none;
         background-color: #FFFFFF;
-        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         overflow: hidden;
         z-index: 9999;

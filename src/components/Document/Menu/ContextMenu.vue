@@ -34,6 +34,7 @@ import TableMenu from './TableMenu/TableMenu.vue';
 import { useMask } from "@/components/Document/Creator/execute";
 import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 import { autoLayoutFn, unAutoLayoutFn } from '@/utils/auto_layout';
+import { MossClipboard } from "@/clipboard";
 
 interface Props {
     context: Context;
@@ -182,7 +183,8 @@ function pasteHere() {
 }
 
 function _replace() {
-    props.context.workspace.clipboard.replace();
+    // props.context.workspace.clipboard.replace();
+    new MossClipboard(props.context).replace();
     emits('close');
 }
 

@@ -58,9 +58,9 @@ class ExfContext {
 }
 
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
-export const identity = 'design.moss';
-export const paras = 'design.moss/paras'; // 文字段落
-export const properties = 'design.moss/properties'; // 图层属性
+const identity = 'design.moss';
+const paras = 'design.moss/paras'; // 文字段落
+const properties = 'design.moss/properties'; // 图层属性
 
 export class Clipboard {
     context: Context;
@@ -800,11 +800,18 @@ export class Clipboard {
             const data = await navigator.clipboard.read();
             if (!(data && data.length)) throw new Error('invalid data');
             const is_inner_shape = data[0].types.length === 1 && data[0].types[0] === 'text/html';
-            if (!is_inner_shape) throw new MossError('external data');
+            if (!is_inner_shape) {
+                // todo
+                // const loader = new ImageLoader(this.context);
+                // const type = data[0].types[0];
+                // const val = await data[0].getType(type);
+                // const filePack = await loader.packFile(val as any, true);
+                throw new MossError('external data');
+            }
             clipboard_text_html_replace(this.context, data[0], src);
             return true;
         } catch (error) {
-            console.log('replace error:', error);
+            console.error(error);
             message('info', "替换失败");
             return false;
         }

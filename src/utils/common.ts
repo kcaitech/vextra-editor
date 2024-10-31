@@ -327,7 +327,6 @@ export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
 
 export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
     const points = get_points_from_shape(shape);
-
     if (isIncluded2(selectorPoints, points)) return true; // 选择器是否完全覆盖目标
 
     if (includes) return false; // 需要完全覆盖而未完全覆盖，判为false
@@ -372,24 +371,6 @@ export function string_by_sys(str: string): string {
 
 export function forbidden_to_modify_frame(shape: ShapeView) {
     return shape.isLocked || shape.isVirtualShape;
-}
-
-export function shapes_organize(shapes: ShapeView[]) {
-    const result: ShapeView[] = [];
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
-
-        if (forbidden_to_modify_frame(shape)) {
-            continue;
-        }
-
-        result.push(shape);
-    }
-    return result;
-}
-
-export function get_input_value(value: string, origin?: number | string, min?: number | string, max?: number | string) {
-
 }
 
 export function scout_once(context: Context, e: MouseEvent) {

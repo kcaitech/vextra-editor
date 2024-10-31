@@ -23,7 +23,7 @@ const unit = ['pt', 'px', 'dp', 'rpx'];
 const copy_text = ref(false);
 
 const _visible = ref();
-const platfrom = ref(props.context.menu.isPlatfrom);
+const platfrom = ref(props.context.menu.isPlatform);
 const multiple = ref(props.context.menu.isMulriple);
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
@@ -114,8 +114,8 @@ const copyLable = async (e: MouseEvent, v: string) => {
 }
 
 const menu_watcher = (t: number) => {
-    if (t === Menu.LABLE_PLATFROM_CHANGE) {
-        platfrom.value = props.context.menu.isPlatfrom;
+    if (t === Menu.LABLE_PLATFORM_CHANGE) {
+        platfrom.value = props.context.menu.isPlatform;
         getShapeInfo();
     }
     if (t === Menu.LABLE_MULRIPLE) {

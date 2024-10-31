@@ -398,4 +398,9 @@ export class Context extends WatchableObject implements IContext {
     get documentInfo(): { name: string } {
         return this.m_doc_info || { name: '' };
     }
+
+    rename(name: string) {
+        const editor = this.editor4Doc();
+        editor.rename(name);
+    }
 }

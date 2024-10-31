@@ -38,7 +38,7 @@ function register_container() {
 
 function handleClickOutside(event: MouseEvent) {
     event.stopPropagation();
-    event.target instanceof Element && !event.target.closest('.select_layerbox') && !event.target.closest('.input_lay') && close(event);
+    event.target instanceof Element && !event.target.closest('.select_layer_box, .input_lay') && close(event);
 }
 
 const top = ref(32);
@@ -113,7 +113,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="select_layerbox" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher" :style="{ top: top + 'px' }">
+<div class="select_layer_box" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher" :style="{ top: top + 'px' }">
     <div class="heard">
             <span class="title">{{
                     props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
@@ -167,7 +167,7 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.select_layerbox {
+.select_layer_box {
     position: absolute;
     display: flex;
     flex-direction: column;
@@ -178,7 +178,7 @@ onUnmounted(() => {
     background-color: #fff;
     border-radius: 8px;
     border: 1px solid #F0F0F0;
-    box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.08);
     z-index: 99;
     outline: none;
 
@@ -224,7 +224,6 @@ onUnmounted(() => {
     }
 
     .container {
-        // padding-left: 10px;
         flex: 1;
         height: calc(100% - 40px);
 

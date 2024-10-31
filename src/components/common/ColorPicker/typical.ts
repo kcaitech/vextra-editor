@@ -26,9 +26,11 @@ export const typical = [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, 
 export const LABEL_RGB = ['R', 'G', 'B', 'A'];
 export const LABEL_HSL = ['H', 'S', 'L', 'A'];
 export const LABEL_HSB = ['H', 'S', 'B', 'A'];
+export const LABEL_HEX = ['Hex', 'A']
 
 export const model2label = new Map([
     ['RGB', LABEL_RGB],
     ['HSL', LABEL_HSL],
-    ['HSB', LABEL_HSB]
+    ['HSB', LABEL_HSB],
+    ['Hex', LABEL_HEX],
 ]);
