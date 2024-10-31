@@ -15,7 +15,14 @@ import {
     Shape,
     TableCellType,
     Text,
-    TransformRaw, UploadAssets, import_shape_from_clipboard, ResourceMgr, TextShape
+    TransformRaw,
+    UploadAssets,
+    import_shape_from_clipboard,
+    ResourceMgr,
+    TextShape,
+    ArtboradView,
+    GroupShapeView,
+    SymbolView, PathShapeView, ShapeView
 } from "@kcdesign/data";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
@@ -23,7 +30,6 @@ import { ImageLoader } from "@/utils/imageLoader";
 import { parse as SVGParse } from "@/svg_parser";
 import * as parse_svg from "@/svg_parser";
 import { message } from "@/utils/message";
-import { result } from "lodash";
 
 export type ImageBundle = {
     base64: string;
@@ -360,27 +366,56 @@ export class MossClipboard {
      * @description 通过监听浏览器粘贴事件触发(类似“粘贴在这里”，“粘贴图层属性”这类非通过Ctrl + V触发的不属于浏览器粘贴事件，属于自定义粘贴事件)
      */
     async paste(event: ClipboardEvent) {
+        // 读取剪切板
         const bundle = await this.read(event);
-        if (!bundle || !Object.keys(bundle).length) return false; // 剪切板内没有可用的替换内容
+        if (!bundle || !Object.keys(bundle).length) return false; // 剪切板没有可用于粘贴的内容
+
         let { images, SVG, HTML, plain } = bundle;
-        const source = this.getSource(HTML);
-        const paras = this.getParas(HTML);
+        const source = this.getSource(HTML);    // 图层
+        const paras = this.getParas(HTML);      // 文本段落
 
         if (images) {
             const allMedia: (SVGBundle | ImageBundle)[] = [...images, ...(SVG ? SVG : [])];
             if (allMedia.length > 1) {
                 // 图片资源数量大于1，视作插入多张图片(与从文件夹中直接选择多个文件的场景类似)
-                new ImageLoader(this.context).insertImageFromClip(allMedia).then(result => {
-                    if (!result) message("danger", this.context.workspace.t('system.failed'));
-                });
+                new ImageLoader(this.context).insertImageFromClip(allMedia);
             } else {
                 const context = this.context;
-                const selected = this.context.selection.selectedShapes;
+                const selected = context.selection.selectedShapes;
+                if (selected) {
+                    const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView) as ArtboradView[];
+                    const pathviews: PathShapeView[] = selected.filter(view => view instanceof PathShapeView) as PathShapeView[];
+                    if (container.length) {
 
+                    } else if (pathviews.length) {
+                        const { base64, width, height } = images[0];
+                        const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
+                        const format = getFormatFromBase64(base64);
+                        const ref = `${v4()}.${format}`;
+                        const media = { buff, base64 };
+
+                        const actions: {
+                            shape: ShapeView,
+                            ref: string,
+                            width: number,
+                            height: number,
+                            media: { buff: Uint8Array, base64: string }
+                        }[] = [];
+                        for (const view of pathviews) {
+                            actions.push({ shape: view as any, ref, width, height, media });
+                        }
+
+                        const page = context.selection.selectedPage!;
+                        const editor = context.editor4Page(page);
+                        editor.setShapesFillAsImage(actions);
+
+                        const upload = selected.map(shape => ({ shape, upload: [{ buff, ref }] }));
+                        new ImageLoader(context).upload(upload)
+                    } else new ImageLoader(context).insertImageFromClip(allMedia)
+                } else new ImageLoader(context).insertImageFromClip(allMedia);
             }
-        } else if (SVG) {
-
-        } else if (source) {
+        } else if (SVG) new ImageLoader(this.context).insertImageFromClip(SVG);
+        else if (source) {
 
         } else if (paras) {
 
