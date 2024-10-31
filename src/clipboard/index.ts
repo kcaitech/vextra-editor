@@ -310,7 +310,7 @@ export class MossClipboard {
                     }
                 }
             }
-            if (navigator.clipboard.read) for (const item of await navigator.clipboard.read()) for (const type of item.types) {
+            if (!bundle["images"] && navigator.clipboard.read) for (const item of await navigator.clipboard.read()) for (const type of item.types) {
                 if (type === "text/html") {
                     const blob = await item.getType("text/html");
                     bundle["HTML"] = await blob.text();
@@ -383,8 +383,11 @@ export class MossClipboard {
                 const context = this.context;
                 const selected = context.selection.selectedShapes;
                 if (selected) {
-                    const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView) as ArtboradView[];
+                    const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
+                        return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
+                    }) as ArtboradView[];
                     const pathviews: PathShapeView[] = selected.filter(view => view instanceof PathShapeView) as PathShapeView[];
+
                     if (container.length) {
 
                     } else if (pathviews.length) {
@@ -404,14 +407,13 @@ export class MossClipboard {
                         const page = context.selection.selectedPage!;
                         const editor = context.editor4Page(page);
                         editor.setShapesFillAsImage(actions);
-
-                        const upload = selected.map(shape => ({ shape, upload: [{ buff, ref }] }));
-                        new ImageLoader(context).upload(upload)
-                    } else new ImageLoader(context).insertImageFromClip(allMedia)
+                        new ImageLoader(context).upload(selected.map(shape => ({ shape, upload: [{ buff, ref }] })));
+                    } else new ImageLoader(context).insertImageFromClip(allMedia);
                 } else new ImageLoader(context).insertImageFromClip(allMedia);
             }
-        } else if (SVG) new ImageLoader(this.context).insertImageFromClip(SVG);
-        else if (source) {
+        } else if (SVG) {
+            new ImageLoader(this.context).insertImageFromClip(SVG);
+        } else if (source) {
 
         } else if (paras) {
 
