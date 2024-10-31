@@ -626,7 +626,7 @@ function search(e: MouseEvent) {
             }
         }
     } else {
-        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);
+        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);  
     }
     const actions = hover_shape?.prototypeInterActions;
     reflush.value++;
