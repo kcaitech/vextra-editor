@@ -60,7 +60,7 @@ function mouseenter(t: 'left' | 'right') {
 }
 
 function mouseleave(t: 'left' | 'right') {
-    const delay = 80;
+    const delay = 500;
     if (t === 'left') {
         timerForLeft = setTimeout(() => {
             if (!timerForLeft) return;
@@ -273,31 +273,34 @@ onUnmounted(() => {
 <template>
     <div class="editor" style="height: 100vh; display: flex; flex-direction: column;">
         <div v-if="showTop" id="top">
-            <Toolbar v-if="contentVisible" :context="context as Context" class="fade-in" />
+            <Toolbar v-if="contentVisible" :context="(context as Context)" class="fade-in" />
         </div>
         <ColSplitView v-if="inited" id="center"
             :left="{ width: left.leftWidth, minWidth: left.leftMinWidth, maxWidth: 0.4 }" :right="rightWidth"
-            :context="context as Context" @changeLeftWidth="changeLeftWidth">
+            :context="(context as Context)" @changeLeftWidth="changeLeftWidth">
+
             <template #slot1>
-                <Navigation v-if="curPage && contentVisible" id="navigation" :context="context as Context"
+                <Navigation v-if="curPage && contentVisible" id="navigation" :context="(context as Context)"
                     @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
                     :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggerVisible="leftTriggerVisible">
                 </Navigation>
             </template>
+
             <template #slot2>
-                <ContentView v-if="curPage" id="content" :context="context as Context"
+                <ContentView v-if="curPage" id="content" :context="(context as Context)"
                     @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
                     @closeLoading="closeLoading" @contentVisible="onContentVisible">
                 </ContentView>
             </template>
+
             <template #slot3>
-                <Attribute id="attributes" v-if="contentVisible" :context="context as Context"
+                <Attribute id="attributes" v-if="contentVisible" :context="(context as Context)"
                     @mouseenter="() => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                     :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
                 </Attribute>
             </template>
         </ColSplitView>
-        <Bridge v-if="bridge" :context="context as Context" />
+        <Bridge v-if="bridge" :context="(context as Context)" />
         <Loading v-if="loading" :size="20" />
     </div>
 </template>
