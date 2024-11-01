@@ -22,18 +22,18 @@ import {
     modify_down_position,
     remove_blur_from_window,
     remove_move_and_up_from_document,
-    shapes_picker,
     update_comment
 } from "@/utils/mouse";
-import { forbidden_to_modify_frame } from '@/utils/common';
+import { forbidden_to_modify_frame, scout_once } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
 import { Translate2 } from "@/transform/translate/translate2";
 import { Action } from "@/context/tool";
 import { ActionMode, Direction, DirectionCalc } from "@/transform/direction";
+import { multi_select_shape } from "@/utils/listview";
 
-export function useControllerCustom(context: Context, i18nT: Function) {
+export function useControllerCustom(context: Context) {
     const matrix = new Matrix();
     const direction = new Direction(context);
 
@@ -222,7 +222,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             if (!shapes.length) return;
 
-            // transporter?.createApiCaller();
             translate2?.connect();
 
             isDragging = true;
@@ -238,9 +237,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             shapes_picker(e, context, startPositionOnPage);
         }
 
-        // transporter?.fulfil();
-        // transporter = undefined;
-
         translate2?.fulfil();
         translate2 = undefined;
 
@@ -248,20 +244,58 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         need_update_comment = update_comment(context, need_update_comment);
     }
 
+    let drop: ShapeView | undefined;
+
     function on_content(e: MouseEvent) {
         const h = selection.hoveredShape;
         if (h) {
-            selection.selectShape(h);
+            if (e.shiftKey) {
+                drop = h;
+                multi_select_shape(context, h);
+            } else {
+                selection.selectShape(h);
+            }
             pre_to_translate(e);
         } else {
             selection.resetSelectShapes();
         }
     }
 
+    function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y: number }) {
+        const selection = context.selection;
+        const selected = selection.selectedShapes;
+        const hoveredShape = selection.hoveredShape;
+
+        if (hoveredShape) {
+            if (e.shiftKey) {
+                multi_select_shape(context, hoveredShape);
+            } else {
+                selection.selectShape(hoveredShape);
+            }
+            return;
+        }
+
+        if (selected.length > 1) {
+            const shape = selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected);
+            if (shape) {
+                if (e.shiftKey) {
+                    const exist = selected.find(s => s.id === shape.id);
+                    if (exist && exist.id !== drop?.id) {
+                        selection.unSelectShape(exist);
+                        scout_once(context, e);
+                    }
+                } else {
+                    selection.selectShape(shape);
+                }
+            } else {
+                selection.resetSelectShapes();
+            }
+        }
+    }
+
     function pre_to_translate(e: MouseEvent) {
         document.addEventListener('mouseup', mouseup);
         if (!context.workspace.can_translate(e)) return;
-        // transporter = new TranslateHandler(context, e, selection.selectedShapes);
         translate2 = new Translate2(context, e, selection.selectedShapes);
         document.addEventListener('mousemove', mousemove);
         shapes = selection.selectedShapes;
@@ -389,7 +423,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 export function useController(context: Context) {
     const {t} = useI18n();
 
-    const ctrl = useControllerCustom(context, t);
+    const ctrl = useControllerCustom(context);
     onMounted(ctrl.init);
     onUnmounted(ctrl.dispose);
     return ctrl;

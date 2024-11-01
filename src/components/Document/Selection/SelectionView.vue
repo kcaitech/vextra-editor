@@ -381,26 +381,6 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     }
 }
 
-function keyboard_down_watcher(e: KeyboardEvent) {
-    // if (e.code === 'AltLeft') {
-    //     if (traceEle.value) {
-    //         traceEle.value.classList.add('cursor-copy');
-    //         altKey.value = true;
-    //     }
-    //     props.context.selection.setShowInterval(true);
-    // }
-}
-
-function keyboard_up_watcher(e: KeyboardEvent) {
-    // if (e.code === 'AltLeft') {
-    //     if (traceEle.value) {
-    //         traceEle.value.classList.remove('cursor-copy');
-    //         altKey.value = false;
-    //     }
-    //     props.context.selection.setShowInterval(false);
-    // }
-}
-
 function window_blur() {
     if (traceEle.value) {
         traceEle.value.classList.remove('cursor-copy');
@@ -438,8 +418,6 @@ onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspace_watcher);
     props.context.tool.watch(tool_watcher);
-    document.addEventListener('keydown', keyboard_down_watcher);
-    document.addEventListener('keyup', keyboard_up_watcher);
     window.addEventListener('blur', window_blur)
     page_watcher();
 })
@@ -447,8 +425,6 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
     props.context.tool.unwatch(tool_watcher);
-    document.removeEventListener('keydown', keyboard_down_watcher);
-    document.removeEventListener('keyup', keyboard_up_watcher);
     window.removeEventListener('blur', window_blur);
     remove_page_watcher();
 })
