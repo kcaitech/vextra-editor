@@ -7,9 +7,11 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
-import { CurveMode, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
+import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
 import { PathEditor } from "@/transform/pathEdit";
+import MdNumberInput from "@/components/common/MdNumberInput.vue";
+import { format_value as format } from '@/utils/common';
 
 interface Props {
     context: Context
@@ -32,6 +34,11 @@ const t = useI18n().t;
 let path_shape: ShapeView | undefined = undefined;
 const path_close_status = ref<boolean>(true);
 const btn_string_for_status = ref<string>(t('attr.de_close_path'));
+
+const tel = ref<boolean>(false);
+const telX = ref<number>(0);
+const telY = ref<number>(0);
+let asyncPathEditor: AsyncPathEditor | undefined = undefined;
 
 function execute_change_xy(key: 'x' | 'y', val: any) {
     val = Number(val);
@@ -69,6 +76,122 @@ function onChangeCurveMode(cm: CurveMode) {
     const selected_points = props.context.path.selectedPoints;
     const editor = props.context.editor4Shape(path_shape);
     editor.modifyPointsCurveMode(selected_points, cm);
+}
+
+
+function updatePosition(movementX: number, movementY: number) {
+    const clientHeight = document.documentElement.clientHeight;
+    const clientWidth = document.documentElement.clientWidth;
+    telX.value += movementX;
+    telY.value += movementY;
+    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
+    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
+}
+const dragstart = async (e: MouseEvent) => {
+    tel.value = true;
+    telX.value = e.clientX;
+    telY.value = e.clientY;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    const pathshape = props.context.selection.pathshape;
+    if (!pathshape) {
+        return;
+    }
+    asyncPathEditor = props.context.editor
+        .controller()
+        .asyncPathEditor(pathshape as PathShapeView, props.context.selection.selectedPage!)
+    document.addEventListener("pointerlockchange", pointerLockChange, false);
+}
+
+function draggingX(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    const selected = props.context.path.syntheticPoints;
+    const pathshape = props.context.selection.pathshape;
+    if (!pathshape) {
+        return;
+    }
+    if (!selected?.size) {
+        return;
+    }
+    if (!asyncPathEditor) return;
+    const keys = Array.from(selected.keys());
+    const values = Array.from(selected.values());
+    let firstPoint: CurvePoint | undefined = undefined;
+    if (pathshape.pathType === PathType.Editable) {
+        const __points = (pathshape as PathShapeView)?.segments[keys[0]]?.points;
+        if (!__points) return;
+        firstPoint = __points[values[0][0]] as CurvePoint;
+    }
+    if (!firstPoint) return;
+    const m = pathshape.matrix2Root();
+    m.preScale(pathshape.frame.width, pathshape.frame.height);
+
+    const _firstPoint = m.computeCoord3(firstPoint);
+    _firstPoint.x += e.movementX;
+    const __firstPointTarget = m.inverseCoord(_firstPoint);
+    asyncPathEditor.execute2(selected, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y);
+}
+
+function draggingY(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    const selected = props.context.path.syntheticPoints;
+    const pathshape = props.context.selection.pathshape;
+    if (!pathshape) {
+        return;
+    }
+    if (!selected?.size) {
+        return;
+    }
+    if (!asyncPathEditor) return;
+    const keys = Array.from(selected.keys());
+    const values = Array.from(selected.values());
+    let firstPoint: CurvePoint | undefined = undefined;
+    if (pathshape.pathType === PathType.Editable) {
+        const __points = (pathshape as PathShapeView)?.segments[keys[0]]?.points;
+        if (!__points) return;
+        firstPoint = __points[values[0][0]] as CurvePoint;
+    }
+    if (!firstPoint) return;
+    const m = pathshape.matrix2Root();
+    m.preScale(pathshape.frame.width, pathshape.frame.height);
+
+    const _firstPoint = m.computeCoord3(firstPoint);
+    _firstPoint.y += e.movementX;
+    const __firstPointTarget = m.inverseCoord(_firstPoint);
+    asyncPathEditor.execute2(selected, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y);
+}
+
+function draggingR(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    const selected = props.context.path.syntheticPoints;
+
+    if (!selected?.size) {
+        return;
+    }
+    if (!asyncPathEditor) return;
+    asyncPathEditor.executeRadius(selected, e.movementX);
+}
+
+function modifyTelUp() {
+    tel.value = false;
+    document.exitPointerLock();
+    asyncPathEditor?.close();
+    asyncPathEditor = undefined;
+    document.removeEventListener("pointerlockchange", pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        modifyTelUp();
+    }
+}
+
+function dragend() {
+    modifyTelUp();
 }
 
 function exit() {
@@ -230,42 +353,42 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr">
-            <IconText class="td position" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(2) : x"
-                      @onchange="onChangeX"
-                      :disabled="model_state.x" :context="context"/>
-            <IconText class="td position" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(2) : y"
-                      @onchange="onChangeY"
-                      :disabled="model_state.y" :context="context"/>
+            <MdNumberInput icon="X" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend">
+            </MdNumberInput>
+            <MdNumberInput icon="Y" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend">
+            </MdNumberInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <div class="tr">
-            <IconText class="td position" svgicon="radius" :frame="{ width: 12, height: 12 }"
-                      :text="typeof (r) === 'number' ? r.toFixed(2) : r" @onchange="onChangeR" :disabled="model_state.r"
-                      :context="context"/>
+            <MdNumberInput icon="radius" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
+                @dragstart="dragstart" @dragging="draggingR" @dragend="dragend">
+            </MdNumberInput>
         </div>
         <div class="tr">
             <div :class="{ tool: true, tool_disabled: model_state.tool }">
                 <Tooltip :content="t('attr.right_angle')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Straight)"
-                         :class="{ item: true, active: curve_mode === CurveMode.Straight }">
+                        :class="{ item: true, active: curve_mode === CurveMode.Straight }">
                         <svg-icon icon-class="straight"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.completely_symmetrical')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Mirrored)"
-                         :class="{ item: true, active: curve_mode === CurveMode.Mirrored }">
+                        :class="{ item: true, active: curve_mode === CurveMode.Mirrored }">
                         <svg-icon icon-class="mirrored"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.asymmetric')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Asymmetric)"
-                         :class="{ item: true, active: curve_mode === CurveMode.Asymmetric }">
+                        :class="{ item: true, active: curve_mode === CurveMode.Asymmetric }">
                         <svg-icon icon-class="asymmetric"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.angular_symmetry')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Disconnected)"
-                         :class="{ item: true, active: curve_mode === CurveMode.Disconnected }">
+                        :class="{ item: true, active: curve_mode === CurveMode.Disconnected }">
                         <svg-icon icon-class="disconnected"></svg-icon>
                     </div>
                 </Tooltip>
@@ -280,6 +403,10 @@ onUnmounted(() => {
             </div>
         </div>
     </div>
+    <teleport to="body">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+        </div>
+    </teleport>
 </template>
 <style scoped lang="scss">
 .table {
@@ -311,7 +438,7 @@ onUnmounted(() => {
             width: 18px;
         }
 
-        > .icontext {
+        >.icontext {
             background-color: rgba(#D8D8D8, 0.4);
         }
 
@@ -343,7 +470,7 @@ onUnmounted(() => {
                 justify-content: center;
                 align-items: center;
 
-                > svg {
+                >svg {
                     height: 16px;
                     width: 16px;
                 }
@@ -401,5 +528,16 @@ onUnmounted(() => {
 
         }
     }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>
