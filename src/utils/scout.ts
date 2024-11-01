@@ -1,8 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import {
-    GroupShapeView, Matrix, PageView, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView
-} from "@kcdesign/data";
+import { GroupShapeView, Matrix, PageView, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { throttle } from "lodash";
@@ -36,6 +34,11 @@ export function scout(context: Context): Scout {
         const scale = context.workspace.curScale;
 
         let stroke = 14 / scale;
+
+        if (shape.type === ShapeType.Contact) {
+            path.setAttributeNS(null, 'stroke-width', `${stroke}`);
+            return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        }
 
         let isClosed = true;
 
