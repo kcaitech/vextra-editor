@@ -135,7 +135,7 @@ function range_select_shape(context: Context, shape: ShapeView) {
         const from = selectShapesIndex.reduce((pre, cur) => {
             return Math.abs(to - cur) > Math.abs(to - pre) ? cur : pre;
         }, selectShapesIndex[0]);
-        const shapes = result_by_shape.filter((_, i) => i >= from && i <= to);
+        const shapes = result_by_shape.filter((_, i) => from < to ? i >= from && i <= to : i >= to && i <= from);
         context.selection.rangeSelectShape(shapes);
     } else {
         context.selection.selectShape(shape);

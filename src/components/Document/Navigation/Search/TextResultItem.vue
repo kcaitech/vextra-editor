@@ -42,7 +42,7 @@ const is_tool_visible = ref<boolean>()
 const isEdit = !props.data.context.readonly;
 const emit = defineEmits<{
     (e: "toggleexpand", shape: ShapeView): void;
-    (e: "selectshape", shape: ShapeView, ctrl: boolean, meta: boolean, shift: boolean): void;
+    (e: "selectshape", shape: ShapeView, ctrl: boolean, shift: boolean): void;
     (e: "hovershape", shape: ShapeView): void;
     (e: "unhovershape"): void;
     (e: "isLock", isLock: boolean, shape: ShapeView): void;
@@ -102,7 +102,7 @@ function selectShape(e: MouseEvent) {
     e.stopPropagation();
     if (!is_valid_data(props.data.context, props.data.shape)) return;
     const { ctrlKey, metaKey, shiftKey } = e;
-    emit("selectshape", props.data.shape, ctrlKey, metaKey, shiftKey);
+    emit("selectshape", props.data.shape, (ctrlKey || metaKey), shiftKey);
 }
 
 function hoverShape(e: MouseEvent) {

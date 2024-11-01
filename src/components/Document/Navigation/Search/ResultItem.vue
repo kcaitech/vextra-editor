@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted, watch, onUpdated, computed } from "vue";
-import { Shape, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
+import { ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
-import { is_parent_locked, is_parent_unvisible, is_valid_data } from "@/utils/shapelist";
+import { is_valid_data } from "@/utils/shapelist";
 import { is_state } from "@/utils/symbol";
 import { Selection } from "@/context/selection";
 import Abbr from "@/components/common/Abbr.vue";
 import { is_component_class } from "@/utils/listview";
-// import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 import { debounce } from "lodash";
 
@@ -40,7 +39,7 @@ const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显�
 const is_tool_visible = ref<boolean>()
 const emit = defineEmits<{
     (e: "toggleexpand", shape: ShapeView): void;
-    (e: "selectshape", shape: ShapeView, ctrl: boolean, meta: boolean, shift: boolean): void;
+    (e: "selectshape", shape: ShapeView, ctrl: boolean, shift: boolean): void;
     (e: "hovershape", shape: ShapeView): void;
     (e: "unhovershape"): void;
     (e: "isLock", isLock: boolean, shape: ShapeView): void;
@@ -102,7 +101,7 @@ function selectShape(e: MouseEvent) {
     e.stopPropagation();
     const { ctrlKey, metaKey, shiftKey } = e;
     if (!is_valid_data(props.data.context, props.data.shape)) return;
-    emit("selectshape", props.data.shape, ctrlKey, metaKey, shiftKey);
+    emit("selectshape", props.data.shape, (ctrlKey || metaKey), shiftKey);
 }
 
 function hoverShape(e: MouseEvent) {
