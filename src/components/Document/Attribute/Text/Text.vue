@@ -332,6 +332,9 @@ const autoLineHeight = [
 const setRowHeight = (val?: number) => {
     const editor = props.context.editor4TextShape(props.shape)
     let isAuto = isAutoLineHeight.value;
+    if ((rowHeight.value as string).toLowerCase() === 'auto' || rowHeight.value === '自动') {
+        rowHeight.value = '';
+    }
     if (rowHeight.value.length < 1) {
         isAuto = true;
     } else if (rowHeight.value[rowHeight.value.length - 1] === '%') {
