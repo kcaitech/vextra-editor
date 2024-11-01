@@ -38,9 +38,6 @@ const reflush = ref<number>(0);
 const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
 const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
 const is_tool_visible = ref<boolean>()
-// const isEdit = ref(false)
-// const isread = ref(false)
-// const canComment = ref(false)
 const emit = defineEmits<{
     (e: "toggleexpand", shape: ShapeView): void;
     (e: "selectshape", shape: ShapeView, ctrl: boolean, meta: boolean, shift: boolean): void;
@@ -93,12 +90,6 @@ function updater(...args: any[]) {
     }
     lock_status.value = props.data.shape.isLocked ? 1 : 0;
     visible_status.value = props.data.shape.isVisible ? 0 : 1;
-    // if (is_parent_locked(props.data.shape) && !lock_status.value) {
-    //     lock_status.value = 2;
-    // }
-    // if (is_parent_unvisible(props.data.shape) && !visible_status.value) {
-    //     visible_status.value = 2;
-    // }
 }
 
 const toggleContainer = (e: MouseEvent) => {
@@ -190,20 +181,6 @@ const selectedChild = () => {
     }
     return child
 }
-//获取文档权限
-// const handlePerm = () => {
-//     const perm = props.data.context.workspace.documentPerm
-//     if (perm === Perm.isRead) {
-//         isread.value = true
-//     } else if (perm === Perm.isComment) {
-//         isread.value = false
-//         canComment.value = true
-//     } else {
-//         isread.value = false
-//         canComment.value = false
-//         isEdit.value = true
-//     }
-// }
 const isLable = ref(props.data.context.tool.isLable);
 const tool_watcher = (t?: number) => {
     if (t === Tool.LABLE_CHANGE) {
@@ -326,7 +303,6 @@ onUpdated(() => {
 onMounted(() => {
     updater();
     update_slice();
-    // handlePerm();
     props.data.context.navi.watch(navi_watcher);
     props.data.context.tool.watch(tool_watcher);
     props.data.context.selection.watch(selectedWatcher);
@@ -350,9 +326,7 @@ onUnmounted(() => {
             :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">
                 <span v-for="(item, index) in name_display" :key="index" :class="{ active: item.isKeywords }"
-                    :reflush="reflush">{{
-            item.content
-        }}</span>
+                    :reflush="reflush">{{item.content }}</span>
             </div>
             <div class="tool_icon"
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
