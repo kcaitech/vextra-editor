@@ -310,7 +310,7 @@ export class MossClipboard {
                     }
                 }
             }
-            if (navigator.clipboard.read) for (const item of await navigator.clipboard.read()) for (const type of item.types) {
+            if (!bundle["images"] && navigator.clipboard.read) for (const item of await navigator.clipboard.read()) for (const type of item.types) {
                 if (type === "text/html") {
                     const blob = await item.getType("text/html");
                     bundle["HTML"] = await blob.text();
@@ -383,11 +383,15 @@ export class MossClipboard {
                 const context = this.context;
                 const selected = context.selection.selectedShapes;
                 if (selected) {
-                    const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView) as ArtboradView[];
+                    const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
+                        return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
+                    }) as ArtboradView[];
                     const pathviews: PathShapeView[] = selected.filter(view => view instanceof PathShapeView) as PathShapeView[];
+
                     if (container.length) {
 
                     } else if (pathviews.length) {
+                        // todo 检查一下黑白格的问题
                         const { base64, width, height } = images[0];
                         const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
                         const format = getFormatFromBase64(base64);
@@ -404,14 +408,13 @@ export class MossClipboard {
                         const page = context.selection.selectedPage!;
                         const editor = context.editor4Page(page);
                         editor.setShapesFillAsImage(actions);
-
-                        const upload = selected.map(shape => ({ shape, upload: [{ buff, ref }] }));
-                        new ImageLoader(context).upload(upload)
-                    } else new ImageLoader(context).insertImageFromClip(allMedia)
+                        new ImageLoader(context).upload(selected.map(shape => ({ shape, upload: [{ buff, ref }] })));
+                    } else new ImageLoader(context).insertImageFromClip(allMedia);
                 } else new ImageLoader(context).insertImageFromClip(allMedia);
             }
-        } else if (SVG) new ImageLoader(this.context).insertImageFromClip(SVG);
-        else if (source) {
+        } else if (SVG) {
+            new ImageLoader(this.context).insertImageFromClip(SVG);
+        } else if (source) {
 
         } else if (paras) {
 
