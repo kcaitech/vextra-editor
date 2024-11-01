@@ -262,7 +262,7 @@ function modify_controller_frame(shapes: ShapeView[]) {
     const points: { x: number, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
-        if (s.type === ShapeType.Contact) continue;
+        // if (s.type === ShapeType.Contact) continue;
         const m = s.matrix2Root(), f = s.frame;
         m.multiAtLeft(props.params.matrix);
         const ps: { x: number, y: number }[] = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, {
