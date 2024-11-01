@@ -1,28 +1,8 @@
 import { Context } from "@/context";
 import {
-    adapt2Shape,
-    export_shape,
-    export_text,
-    makeShapeTransform1By2,
-    import_text,
-    getFormatFromBase64,
-    creator,
-    ShapeFrame,
-    ContactLineView,
-    CurvePoint,
-    Document,
-    PathShape,
-    Shape,
-    TableCellType,
-    Text,
-    TransformRaw,
-    UploadAssets,
-    import_shape_from_clipboard,
-    ResourceMgr,
-    TextShape,
-    ArtboradView,
-    GroupShapeView,
-    SymbolView, PathShapeView, ShapeView
+    adapt2Shape, export_shape, export_text, makeShapeTransform1By2, import_text, getFormatFromBase64,
+    creator, ShapeFrame, ContactLineView, CurvePoint, Document, PathShape, Shape, TableCellType, Text, TransformRaw, UploadAssets,
+    import_shape_from_clipboard, ResourceMgr, TextShape, ArtboradView, GroupShapeView, SymbolView, PathShapeView, ShapeView
 } from "@kcdesign/data";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
