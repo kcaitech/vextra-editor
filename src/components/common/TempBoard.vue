@@ -200,7 +200,7 @@ function getBase64(): Promise<string | null> {
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
         img.onload = () => {
             context.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/jpeg', 0.5))
+            resolve(canvas.toDataURL('image/jpeg', 1))
         }
         img.onerror = (err) => {
             console.error(err);
