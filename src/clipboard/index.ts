@@ -4,6 +4,7 @@ import { ClipboardEventReader } from "@/clipboard/read/clipboardEventReader";
 import { NavigatorClipboardReader } from "@/clipboard/read/navigatorClipboardReader";
 import { BundleHandler } from "@/clipboard/bundleHandler";
 import { MossWriter } from "@/clipboard/write";
+import { XY } from "@/context/selection";
 
 export type ImageBundle = {
     base64: string;
@@ -45,6 +46,12 @@ export class MossClipboard {
             return true;
         } else return false;
     }
+
+    writeAsPNG() {
+    }
+
+    writeProperties() {
+    }
     async read(event?: ClipboardEvent): Promise<Bundle | undefined> {
         const bundle: Bundle = {};
         try {
@@ -78,7 +85,10 @@ export class MossClipboard {
         return new BundleHandler(this.context).paste(bundle);
     }
 
-    async pasteHere() {
+    async pasteHere(xy: XY) {
+    }
+
+    async pasteProperties() {
     }
 
     async replace() {
@@ -91,13 +101,8 @@ export class MossClipboard {
         new BundleHandler(this.context).replace(bundle, shapes);
     }
 
-    async cut() {
-
-    }
-
-    init() {
-    }
-
-    destroy() {
+    async cut(event?: ClipboardEvent) {
+        const writeSuccess = await this.write(event);
+        if (!writeSuccess) return;
     }
 }
