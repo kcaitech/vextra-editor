@@ -692,11 +692,6 @@ const stop1 = watch(() => props.page, (cur, old) => {
 })
 
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
-
-(window as any).__test = function (width: number, height: number) {
-    const sh = new SpaceHandler((window as any).__context);
-    return sh.byArea({ width, height }).name;
-}
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);

@@ -1,6 +1,7 @@
 import { Context } from "@/context";
-import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView } from "@kcdesign/data";
+import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView, XYsBounding } from "@kcdesign/data";
 import { XY } from "@/context/selection";
+import { WorkSpace } from "@/context/workspace";
 
 export class SpaceHandler {
     private context: Context;
@@ -40,6 +41,9 @@ export class SpaceHandler {
         return result;
     }
 
+    /**
+     * @description 寻找可以容纳目标选区区域大小的Container
+     */
     getEnvByArea(area: { width: number, height: number }, suspend = false): GroupShapeView {
         const page = this.context.selection.selectedPage!
 
@@ -58,7 +62,39 @@ export class SpaceHandler {
         return this.__get_env_by_area(page.childs, lt, rb) || page;
     }
 
-    fit() {
+    /**
+     * @description 调整视图，使选区完全可见（过程中不改变任何图层数据）
+     */
+    fit(target = 1.12) {
+        const selected = this.context.selection.selectedShapes;
+        if (!selected.length) return;
 
+        const points: XY[] = [];
+        for (const view of selected) {
+            const matrix = view.matrix2Root();
+            const frame = view.frame;
+            points.push(...[
+                { x: frame.x, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height },
+            ].map(i => matrix.computeCoord3(i)));
+        }
+        const box = XYsBounding(points);
+        const width = box.right - box.left;
+        const height = box.bottom - box.top;
+        const workspace = this.context.workspace;
+        const root = workspace.root;
+        const matrix = workspace.matrix;
+        const scale = matrix.m00;
+        const ratio = Math.min(root.width / scale / width, root.height / scale / height);
+        if (ratio < target) {
+            let __scale = ratio / target;
+            if (__scale * scale < 0.02) __scale = 0.02 / scale; // 最小值的视图比例为0.02(2%);
+            matrix.trans(-root.center.x, -root.center.y);
+            matrix.scale(__scale);
+            matrix.trans(root.center.x, root.center.y);
+            workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+        }
     }
 }

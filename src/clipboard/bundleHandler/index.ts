@@ -72,7 +72,7 @@ export class BundleHandler {
                 width += size.width;
                 size.height > height && (height = size.height);
             }
-            
+
             width += (medias.length - 1) * 20;
 
             return { width, height };
@@ -85,7 +85,8 @@ export class BundleHandler {
         start.x -= area.width / 2;
         start.y -= area.height / 2;
         const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
-        const env = new SpaceHandler(context).getEnvByArea(area);
+        const SH = new SpaceHandler(context);
+        const env = SH.getEnvByArea(area);
         const matrix = env.matrix2Root();
         const inverse = makeShapeTransform2By1(new Matrix(matrix.inverse));
 
@@ -113,7 +114,10 @@ export class BundleHandler {
         const page = context.selection.selectedPage!;
         const editor = context.editor4Page(page);
         const result = editor.insertImages(packs, true, env);
-        if (result) return new ImageLoader(this.context).upload(result);
+        if (result) {
+            context.nextTick(page, SH.fit.bind(SH));
+            return new ImageLoader(this.context).upload(result);
+        }
     }
 
     paste(bundle: Bundle) {
