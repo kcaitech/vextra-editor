@@ -90,11 +90,15 @@ export class SpaceHandler {
         const ratio = Math.min(root.width / scale / width, root.height / scale / height);
         if (ratio < target) {
             let __scale = ratio / target;
-            if (__scale * scale < 0.02) __scale = 0.02 / scale; // 最小值的视图比例为0.02(2%);
+            if (__scale * scale < 0.02) __scale = 0.02 / scale; // 视图比例的最小值为0.02(2%);
             matrix.trans(-root.center.x, -root.center.y);
             matrix.scale(__scale);
             matrix.trans(root.center.x, root.center.y);
             workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
+    }
+
+    scrollToView() {
+
     }
 }

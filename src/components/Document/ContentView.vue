@@ -40,7 +40,6 @@ import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from 
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import { MossClipboard } from "@/clipboard";
-import { SpaceHandler } from "@/clipboard/transform";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;

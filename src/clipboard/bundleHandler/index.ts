@@ -8,7 +8,7 @@ import {
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
-import { SpaceHandler } from "@/clipboard/transform";
+import { SpaceHandler } from "@/space";
 
 export class BundleHandler {
     private readonly context: Context;
