@@ -75,7 +75,7 @@ export class MossClipboard {
         const bundle = await this.read(event);
         if (!bundle || !Object.keys(bundle).length) return false; // 剪切板没有可用于粘贴的内容
 
-        new BundleHandler(this.context).paste(bundle);
+        return new BundleHandler(this.context).paste(bundle);
     }
 
     async pasteHere() {
