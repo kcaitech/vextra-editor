@@ -8,7 +8,7 @@ import { ColorPicker, ImagePack, ImageScaleMode, PaintFilter, PaintFilterType, S
 import { ImgFrame } from "@/context/atrribute";
 import { flattenShapes } from "@/utils/cutout";
 import { useI18n } from "vue-i18n";
-import { ImageLoader } from "@/utils/imageLoader";
+import { ImageLoader } from "@/imageLoader";
 
 const accept = 'image/png, image/jpeg, image/gif, image/svg+xml';
 const picker = ref<HTMLInputElement>();

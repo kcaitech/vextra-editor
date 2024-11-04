@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { MossClipboard, Bundle, SVGBundle, ImageBundle } from "@/clipboard";
-import { ImageLoader } from "@/utils/imageLoader";
+import { ImageLoader } from "@/imageLoader";
 import {
     ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, ShapeView, Shape, UploadAssets, ShapeFrame, creator,
     adapt2Shape, import_shape_from_clipboard, import_text, TextShape
@@ -45,44 +45,40 @@ export class BundleHandler {
 
         if (images) {
             const allMedia: (SVGBundle | ImageBundle)[] = [...images, ...(SVG ? SVG : [])];
-            if (allMedia.length > 1) {
-                // 图片资源数量大于1，视作插入多张图片(与从文件夹中直接选择多个文件的场景类似)
-                new ImageLoader(this.context).insertImageFromClip(allMedia);
-            } else {
-                const context = this.context;
-                const selected = context.selection.selectedShapes;
-                if (selected) {
-                    const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
-                        return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
-                    }) as ArtboradView[];
-                    const pathviews: PathShapeView[] = selected.filter(view => view instanceof PathShapeView) as PathShapeView[];
+            const context = this.context;
+            const selected = context.selection.selectedShapes;
+            // 图片资源数量大于1或不存在图层，视作插入图片(与从文件夹中直接选择文件的场景类似)
+            if (allMedia.length > 1 || !selected.length) return new ImageLoader(this.context).insertImageFromClip(allMedia);
 
-                    if (container.length) {
+            const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
+                return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
+            }) as ArtboradView[];
+            const pathviews: PathShapeView[] = selected.filter(view => view instanceof PathShapeView) as PathShapeView[];
 
-                    } else if (pathviews.length) {
-                        // todo 检查一下黑白格的问题
-                        const { base64, width, height } = images[0];
-                        const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
-                        const format = getFormatFromBase64(base64);
-                        const ref = `${v4()}.${format}`;
-                        const media = { buff, base64 };
-                        const actions: {
-                            shape: ShapeView,
-                            ref: string,
-                            width: number,
-                            height: number,
-                            media: { buff: Uint8Array, base64: string }
-                        }[] = [];
-                        for (const view of pathviews) actions.push({ shape: view as any, ref, width, height, media });
-                        const page = context.selection.selectedPage!;
-                        const editor = context.editor4Page(page);
-                        editor.setShapesFillAsImage(actions);
-                        new ImageLoader(context).upload(selected.map(shape => ({ shape, upload: [{ buff, ref }] })));
-                    } else new ImageLoader(context).insertImageFromClip(allMedia);
-                } else new ImageLoader(context).insertImageFromClip(allMedia);
-            }
+            if (container.length) {
+
+            } else if (pathviews.length) { // 将图片设为pathshape的填充
+                // todo 检查一下黑白格的问题
+                const { base64, width, height } = images[0];
+                const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
+                const format = getFormatFromBase64(base64);
+                const ref = `${v4()}.${format}`;
+                const media = { buff, base64 };
+                const actions: {
+                    shape: ShapeView,
+                    ref: string,
+                    width: number,
+                    height: number,
+                    media: { buff: Uint8Array, base64: string }
+                }[] = [];
+                for (const view of pathviews) actions.push({ shape: view as any, ref, width, height, media });
+                const page = context.selection.selectedPage!;
+                const editor = context.editor4Page(page);
+                editor.setShapesFillAsImage(actions);
+                new ImageLoader(context).upload(selected.map(shape => ({ shape, upload: [{ buff, ref }] })));
+            } else new ImageLoader(context).insertImageFromClip(allMedia);
         } else if (SVG) {
-            new ImageLoader(this.context).insertImageFromClip(SVG);
+            return new ImageLoader(this.context).insertImageFromClip(SVG);
         } else if (source) {
 
         } else if (paras) {

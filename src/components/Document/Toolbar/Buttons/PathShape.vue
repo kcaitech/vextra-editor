@@ -15,7 +15,7 @@ import {
     useRect,
     useStar
 } from "@/components/Document/Creator/execute";
-import { ImageLoader } from "@/utils/imageLoader";
+import { ImageLoader } from "@/imageLoader";
 
 const { t } = useI18n();
 

@@ -33,7 +33,7 @@ import { Action } from "@/context/tool";
 import { ActionMode, Direction, DirectionCalc } from "@/transform/direction";
 import { multi_select_shape } from "@/utils/listview";
 
-export function useControllerCustom(context: Context) {
+export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
     const direction = new Direction(context);
 
@@ -423,7 +423,7 @@ export function useControllerCustom(context: Context) {
 export function useController(context: Context) {
     const {t} = useI18n();
 
-    const ctrl = useControllerCustom(context);
+    const ctrl = useControllerCustom(context, t);
     onMounted(ctrl.init);
     onUnmounted(ctrl.dispose);
     return ctrl;

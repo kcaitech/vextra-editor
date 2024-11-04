@@ -6,7 +6,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Tool } from '@/context/tool';
-import { ImageLoader } from "@/utils/imageLoader";
+import { ImageLoader } from "@/imageLoader";
 
 const { t } = useI18n();
 const props = defineProps<{
