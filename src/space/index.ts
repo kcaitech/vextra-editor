@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView, XYsBounding } from "@kcdesign/data";
+import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView, XYsBounding, Transform, TransformRaw } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 
@@ -98,7 +98,16 @@ export class SpaceHandler {
         }
     }
 
+    /**
+     * @description 调整图层位置，使图层在容器中可见（过程中会改变图层的位置数据）
+     */
+    fitToEnv(transforms: TransformRaw[], env: GroupShapeView) {
+
+    }
+
     scrollToView() {
 
     }
+
+
 }
