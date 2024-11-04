@@ -1,6 +1,5 @@
 import { Context } from "@/context";
-import { Transform, Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView } from "@kcdesign/data";
-import { WorkSpace } from "@/context/workspace";
+import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 
 export class SpaceHandler {
@@ -41,37 +40,22 @@ export class SpaceHandler {
         return result;
     }
 
-    byArea(area: { width: number, height: number }, suspend = false): GroupShapeView {
-        const workspace = this.context.workspace;
-        const root = workspace.root;
-        const matrix = workspace.matrix;
-        const scale = matrix.m00;
-
-        const ratio = Math.min(root.width / scale / area.width, root.height / scale / area.height);
-
-        if (ratio < 1.12) {
-            const __scale = ratio / 1.12;
-            matrix.trans(-root.center.x, -root.center.y);
-            matrix.scale(__scale);
-            matrix.trans(root.center.x, root.center.y);
-
-            workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
-        }
-
+    getEnvByArea(area: { width: number, height: number }, suspend = false): GroupShapeView {
         const page = this.context.selection.selectedPage!
 
         if (suspend) return page;
 
-        const inverse = new Matrix(matrix.inverse);
+        const workspace = this.context.workspace;
+        const root = workspace.root;
+
+        const inverse = new Matrix(workspace.matrix.inverse);
+
+        const center = inverse.computeCoord3(root.center);
         // 区域在页面上的位置
-        const lt = inverse.computeCoord2(root.center.x - area.width / 2, root.center.y - area.height / 2);
-        const rb = inverse.computeCoord2(root.center.x + area.width / 2, root.center.y + area.height / 2);
+        const lt = { x: center.x - area.width / 2, y: center.y - area.height / 2 };
+        const rb = { x: lt.x + area.width, y: lt.y + area.height };
 
         return this.__get_env_by_area(page.childs, lt, rb) || page;
-    }
-
-    byTransform(transforms: Transform[], suspend = false) {
-
     }
 
     fit() {

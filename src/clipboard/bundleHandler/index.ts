@@ -72,22 +72,20 @@ export class BundleHandler {
                 width += size.width;
                 size.height > height && (height = size.height);
             }
-            const len = medias.length;
-            width += len * 20;
+            
+            width += (medias.length - 1) * 20;
 
             return { width, height };
         })();
 
-
         const context = this.context;
 
-        // offset
         const root = context.workspace.root;
-        const start = context.workspace.matrix.inverseCoord(root.center.x - area.width / 2, root.center.y - area.height / 2);
+        const start = context.workspace.matrix.inverseCoord(root.center.x, root.center.y);
+        start.x -= area.width / 2;
+        start.y -= area.height / 2;
         const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
-
-        // scale
-        const env = new SpaceHandler(context).byArea(area);
+        const env = new SpaceHandler(context).getEnvByArea(area);
         const matrix = env.matrix2Root();
         const inverse = makeShapeTransform2By1(new Matrix(matrix.inverse));
 

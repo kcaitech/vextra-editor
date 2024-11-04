@@ -190,8 +190,8 @@ export class ImageLoader {
                 width += size.width;
                 size.height > height && (height = size.height);
             }
-            const len = packages.length;
-            width += len * 20;
+
+            width += (packages.length - 1) * 20;
 
             return { width, height };
         })();
