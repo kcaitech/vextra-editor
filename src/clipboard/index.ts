@@ -7,9 +7,9 @@ import {
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/utils/imageLoader";
-import { parse as SVGParse } from "@/svg_parser";
-import * as parse_svg from "@/svg_parser";
 import { message } from "@/utils/message";
+import { ClipboardEventReader } from "@/clipboard/read/clipboardEventReader";
+import { NavigatorClipboardReader } from "@/clipboard/read/navigatorClipboardReader";
 
 export type ImageBundle = {
     base64: string;
@@ -60,21 +60,6 @@ export class MossClipboard {
         result = decodeURIComponent(atob((carrier as HTMLDivElement)?.dataset?.buffer || ''));
         document.body.removeChild(d);
         return result;
-    }
-
-    private maySvgText(content: string) {
-        return content.length > 10 && (content.search(/<svg|<?xml/img) > -1) && (new RegExp('</svg>', "img").test(content.slice(content.length - 10).toLowerCase()));
-    }
-
-    private async SVGFileReader(file: File): Promise<{
-        shape: Shape | undefined,
-        mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
-    }> {
-        return new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = (event) => resolve(parse_svg.parse(event.target!.result as string));
-            reader.readAsText(file);
-        });
     }
 
     private get __text() {
@@ -219,113 +204,12 @@ export class MossClipboard {
         }
         return true;
     }
-
     async read(event?: ClipboardEvent): Promise<Bundle | undefined> {
         const bundle: Bundle = {};
         try {
-            // 剪切板执行两种方案：ClipboardEvent方案兼容性好、navigator.clipboard方案实用性强，将两种方案融合，各取所长应对不同场景
-            if (event) {
-                const items = event.clipboardData?.items;
-                if (items) {
-                    // 拷贝一份DataTransferItemList，原因是event.clipboardData上的DataTransferItemList在异步读取一次后会清空自己(items.length = 0)，导致只能读取到一份数据
-                    const data: DataTransferItem[] = [];
-                    for (const d of items) data.push(d);
-                    const fileList = data.filter(i => i.kind === "file").map(i => i.getAsFile()!).slice(0, 20); // 限定最多张数20
-                    const stringList = data.filter(i => i.kind === "string");
-                    for (const file of fileList) {
-                        const type = file.type;
-                        if (!type.includes("image")) continue;
-                        if (file.type === "image/svg+xml") {
-                            const svg = await this.SVGFileReader(file);
-                            const svgs = bundle["SVG"];
-                            svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
-                            continue;
-                        }
-                        const size = await new Promise<{
-                            width: number,
-                            height: number
-                        }>(resolve => {
-                            const img = new Image();
-                            img.src = URL.createObjectURL(file);
-                            img.onload = () => resolve({ width: img.width, height: img.height });
-                        });
-                        const base64 = await new Promise<{
-                            name: string,
-                            base64: string
-                        }>(resolve => {
-                            const reader = new FileReader();
-                            reader.readAsDataURL(file);
-                            reader.onload = (event) => {
-                                const base64 = event?.target?.result as string;
-                                if (base64) resolve({
-                                    base64,
-                                    name: file.name || this.context.workspace.t('shape.image')
-                                });
-                            }
-                        });
-                        if (size && base64) {
-                            const images = bundle["images"];
-                            images ? images.push(Object.assign(size, base64)) : bundle["images"] = [Object.assign(size, base64)];
-                        }
-                    }
-
-                    // 同样的经过一个await之后，类型为string的DataTransferItem里面的内容会被清空，所以需要把所有DataTransferItem的读取进程收集起来放到一个await后面
-                    const all: Promise<{ type: string, result: string }>[] = [];
-                    for (const item of stringList) {
-                        const type = item.type; // type不能放到getAsString的callback里面读取，执行callback的时候已经清空了
-                        all.push(new Promise<{ type: string, result: string }>(resolve => item.getAsString((result) => resolve({ type, result }))));
-                    }
-                    const allResult = await Promise.all(all);
-                    for (const item of allResult) {
-                        if (item.type === "text/html") {
-                            bundle["HTML"] = item.result;
-                        } else if (item.type === "text/plain") {
-                            const result = item.result;
-                            if (this.maySvgText(result)) {
-                                const svg = SVGParse(result);
-                                const svgs = bundle["SVG"];
-                                svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
-                            } else bundle["plain"] = result;
-                        }
-                    }
-                }
-            }
-            if (!bundle["images"] && navigator.clipboard.read) for (const item of await navigator.clipboard.read()) for (const type of item.types) {
-                if (type === "text/html") {
-                    const blob = await item.getType("text/html");
-                    bundle["HTML"] = await blob.text();
-                } else if (type === "text/plain") {
-                    const blob = await item.getType("text/plain");
-                    const text = await blob.text();
-                    if (this.maySvgText(text)) {
-                        const svg = SVGParse(text);
-                        const svgs = bundle["SVG"];
-                        svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
-                    } else bundle["plain"] = text;
-                } else if (type.includes("image")) {
-                    const blob = await item.getType(type);
-                    const base64 = await new Promise<{
-                        name: string,
-                        base64: string
-                    }>(resolve => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve({ name: this.context.workspace.t('shape.image'), base64: e.target!.result as string });
-                        reader.readAsDataURL(blob);
-                    });
-                    const size = await new Promise<{
-                        width: number,
-                        height: number
-                    }>(resolve => {
-                        const img = new Image();
-                        img.src = URL.createObjectURL(blob);
-                        img.onload = () => resolve({ width: img.width, height: img.height });
-                    });
-                    if (size && base64) {
-                        const images = bundle["images"];
-                        images ? images.push(Object.assign(size, base64)) : bundle["images"] = [Object.assign(size, base64)];
-                    }
-                }
-            }
+            // 剪切板执行两种方案：ClipboardEventReader方案兼容性好、NavigatorClipboardReader方案实用性强，将两种方案融合，各取所长应对不同场景
+            await new ClipboardEventReader(this.context).read(bundle, event);
+            await new NavigatorClipboardReader(this.context).read(bundle);
 
             // 两种方案都没有获取到有效内容，使用缓存
             if (!Object.keys(bundle).length) return this.cache;
