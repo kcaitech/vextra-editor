@@ -189,11 +189,6 @@ function getBoxPath(transformMatrix: Matrix) {
 
 // 判定点是否在图形内
 export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
-    const masked = shape.masked;
-    if (masked) {
-        const view = (shape.getPage() as PageView).getView(masked.id);
-        if (!view || !scout.isPointInShape(view, p)) return false;
-    }
     return scout.isPointInShape(shape, p);
 }
 
