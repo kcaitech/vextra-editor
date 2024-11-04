@@ -1003,7 +1003,7 @@ export function root_scale(context: Context, e: WheelEvent) {
     let scale_delta = 1.2;
 
     if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
-        scale_delta = 1.02;
+        scale_delta = 1.08;
     }
 
     let scale_delta_ = 1 / scale_delta;
