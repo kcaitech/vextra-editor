@@ -254,8 +254,12 @@ function updater(...args: any[]) {
         })
         return;
     }
-    if (args.includes('mask') || args.includes('fills') || args.includes('autoLayout')) return _updateAbbrView();
-    if (args.includes('frame') || args.includes('points')) return update_abbr_view();
+    if (args.includes('mask') || args.includes('fills') || args.includes('autoLayout')){
+        return update_abbr_view();
+    }
+    if (args.includes('size') || args.includes('points')){
+        return update_abbr_view();
+    } 
 
     const shape = props.data.shapeview();
 
