@@ -3,10 +3,12 @@ import { MossClipboard, Bundle, SVGBundle, ImageBundle } from "@/clipboard";
 import { ImageLoader } from "@/imageLoader";
 import {
     ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, ShapeView, Shape, UploadAssets, ShapeFrame, creator,
-    adapt2Shape, import_shape_from_clipboard, import_text, TextShape
+    adapt2Shape, import_shape_from_clipboard, import_text, TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2,
+    ImagePack, SVGParseResult, Matrix, Transform, ColVector3D
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
+import { SpaceHandler } from "@/clipboard/transform";
 
 export class BundleHandler {
     private readonly context: Context;
@@ -38,6 +40,84 @@ export class BundleHandler {
         return HTML && HTML.slice(0, 60).indexOf(MossClipboard.paras) > -1 ? JSON.parse(HTML.split(MossClipboard.paras)[1]) : undefined;
     }
 
+    private insertImage(medias: (SVGBundle | ImageBundle)[]) {
+        const getSize = (media: SVGBundle | ImageBundle) => {
+            if ((media as SVGBundle).shape) return (media as SVGBundle).shape!.size;
+            else return {
+                width: (media as ImageBundle).width,
+                height: (media as ImageBundle).height
+            }
+        }
+        const transforms = (() => {
+            const transforms: TransformRaw[] = [];
+            let offset = 0;
+            for (let i = 0; i < medias.length; i++) {
+                if (i > 0) {
+                    const pre = medias[i - 1];
+                    const size = getSize(pre);
+                    offset += 20;
+                    offset += size.width;
+                }
+                const __trans = new TransformRaw();
+                __trans.translateX = offset;
+                transforms.push(__trans);
+            }
+            return transforms;
+        })();
+        const area = (() => {
+            let width = 0;
+            let height = 0;
+            for (const media of medias) {
+                const size = getSize(media);
+                width += size.width;
+                size.height > height && (height = size.height);
+            }
+            const len = medias.length;
+            width += len * 20;
+
+            return { width, height };
+        })();
+
+
+        const context = this.context;
+
+        // offset
+        const root = context.workspace.root;
+        const start = context.workspace.matrix.inverseCoord(root.center.x - area.width / 2, root.center.y - area.height / 2);
+        const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
+
+        // scale
+        const env = new SpaceHandler(context).byArea(area);
+        const matrix = env.matrix2Root();
+        const inverse = makeShapeTransform2By1(new Matrix(matrix.inverse));
+
+        for (let i = 0; i < transforms.length; i++) {
+            const t = makeShapeTransform2By1(transforms[i]);
+            t.addTransform(offset);
+            t.addTransform(inverse);
+            transforms[i] = makeShapeTransform1By2(t);
+        }
+        const packs: {
+            pack: ImagePack | SVGParseResult,
+            transform: TransformRaw
+        }[] = [];
+        for (let i = 0; i < medias.length; i++) {
+            const media = medias[i];
+            if ((media as SVGBundle).shape) {
+                packs.push({ pack: media as SVGParseResult, transform: transforms[i] });
+            } else {
+                const __m = media as ImageBundle;
+                const size = { width: __m.width, height: __m.height };
+                const buff = Uint8Array.from(atob(__m.base64.split(",")[1]), c => c.charCodeAt(0));
+                packs.push({ pack: { size, buff, name: __m.name, base64: __m.base64 }, transform: transforms[i] });
+            }
+        }
+        const page = context.selection.selectedPage!;
+        const editor = context.editor4Page(page);
+        const result = editor.insertImages(packs, true, env);
+        if (result) return new ImageLoader(this.context).upload(result);
+    }
+
     paste(bundle: Bundle) {
         let { images, SVG, HTML, plain } = bundle;
         const source = this.getSource(HTML);    // 图层
@@ -48,7 +128,7 @@ export class BundleHandler {
             const context = this.context;
             const selected = context.selection.selectedShapes;
             // 图片资源数量大于1或不存在图层，视作插入图片(与从文件夹中直接选择文件的场景类似)
-            if (allMedia.length > 1 || !selected.length) return new ImageLoader(this.context).insertImageFromClip(allMedia);
+            if (allMedia.length > 1 || !selected.length) return this.insertImage(allMedia);
 
             const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
                 return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
@@ -76,9 +156,9 @@ export class BundleHandler {
                 const editor = context.editor4Page(page);
                 editor.setShapesFillAsImage(actions);
                 new ImageLoader(context).upload(selected.map(shape => ({ shape, upload: [{ buff, ref }] })));
-            } else new ImageLoader(context).insertImageFromClip(allMedia);
+            } else this.insertImage(allMedia);
         } else if (SVG) {
-            return new ImageLoader(this.context).insertImageFromClip(SVG);
+            return this.insertImage(SVG);
         } else if (source) {
 
         } else if (paras) {

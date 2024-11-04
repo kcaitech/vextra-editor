@@ -10,7 +10,6 @@ import { message } from "@/utils/message";
 import * as parse_svg from "@/svg_parser";
 import { upload_image } from "@/utils/content";
 import { XY } from "@/context/selection";
-import { ImageBundle, SVGBundle } from "@/clipboard";
 
 /**
  *  · ImageTool --ok
@@ -217,77 +216,6 @@ export class ImageLoader {
                 ? (pack as ImagePack).size
                 : (pack as SVGParseResult).shape?.size;
         }
-    }
-
-    /**
-     * @description 从剪切板中读取图片资源
-     */
-    async insertImageFromClip(medias: (SVGBundle | ImageBundle)[]) {
-        const getSize = (media: SVGBundle | ImageBundle) => {
-            if ((media as SVGBundle).shape) return (media as SVGBundle).shape!.size;
-            else return {
-                width: (media as ImageBundle).width,
-                height: (media as ImageBundle).height
-            }
-        }
-        const transforms = (() => {
-            const transforms: TransformRaw[] = [];
-            let offset = 0;
-            for (let i = 0; i < medias.length; i++) {
-                if (i > 0) {
-                    const pre = medias[i - 1];
-                    const size = getSize(pre);
-                    offset += 20;
-                    offset += size.width;
-                }
-                const __trans = new TransformRaw();
-                __trans.translateX = offset;
-                transforms.push(__trans)
-            }
-            return transforms;
-        })();
-        const area = (() => {
-            let width = 0;
-            let height = 0;
-            for (const media of medias) {
-                const size = getSize(media);
-                width += size.width;
-                size.height > height && (height = size.height);
-            }
-            const len = medias.length;
-            width += len * 20;
-
-            return { width, height };
-        })();
-        const context = this.context;
-        const selection = context.selection;
-        const env = this.__fixTransform(transforms, area);
-        const page = selection.selectedPage!;
-        const getInPage = page.transform2FromRoot.getInverse();
-        for (let i = 0; i < transforms.length; i++) {
-            const t = makeShapeTransform2By1(transforms[i]);
-            t.addTransform(getInPage);
-            transforms[i] = makeShapeTransform1By2(t);
-        }
-        const packs: {
-            pack: ImagePack | SVGParseResult,
-            transform: TransformRaw
-        }[] = []
-        for (let i = 0; i < medias.length; i++) {
-            const media = medias[i];
-            if ((media as SVGBundle).shape) {
-                packs.push({ pack: media as SVGParseResult, transform: transforms[i] })
-            } else {
-                const __m = media as ImageBundle;
-                const size = { width: __m.width, height: __m.height };
-                const buff = Uint8Array.from(atob(__m.base64.split(",")[1]), c => c.charCodeAt(0));
-                packs.push({ pack: { size, buff, name: __m.name, base64: __m.base64 }, transform: transforms[i] })
-            }
-        }
-        const editor = context.editor4Page(page);
-        const result = editor.insertImages(packs, true, env);
-        if (result) this.upload(result);
-        return true;
     }
 
     async upload(buffs: { shape: Shape | ShapeView, upload: UploadAssets[] }[]) {

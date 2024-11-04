@@ -40,6 +40,7 @@ import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from 
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import { MossClipboard } from "@/clipboard";
+import { SpaceHandler } from "@/clipboard/transform";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -692,6 +693,10 @@ const stop1 = watch(() => props.page, (cur, old) => {
 
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
 
+(window as any).__test = function (width: number, height: number) {
+    const sh = new SpaceHandler((window as any).__context);
+    return sh.byArea({ width, height }).name;
+}
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
