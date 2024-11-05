@@ -1,13 +1,71 @@
 import { Context } from "@/context";
-import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView, XYsBounding, Transform, TransformRaw } from "@kcdesign/data";
+import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView, XYsBounding, Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
+
+type BoundingLike = {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+}
 
 export class SpaceHandler {
     private context: Context;
 
     constructor(context: Context) {
         this.context = context;
+    }
+
+    private __shapes_bounding(source: Shape[]): BoundingLike {
+        let left = Infinity;
+        let top = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
+
+        for (let i = 0; i < source.length; i++) {
+            const shape = source[i];
+            const __transform = makeShapeTransform2By1(shape.transform);
+            let width, height;
+            if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
+                const children = (shape as GroupShape).childs;
+                const __box = this.__shapes_bounding(children);
+                width = __box.right - __box.left;
+                height = __box.bottom - __box.top;
+            } else {
+                width = shape.size.width;
+                height = shape.size.height;
+            }
+            const { col0, col1, col2, col3 } = __transform.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(width, height),
+                ColVector3D.FromXY(width, 0),
+                ColVector3D.FromXY(0, height),
+            ]);
+            const box = XYsBounding([col0, col1, col2, col3]);
+
+            if (box.top < top) top = box.top;
+            if (box.left < left) left = box.left;
+            if (box.right > right) right = box.right;
+            if (box.bottom > bottom) bottom = box.bottom;
+        }
+
+        return { left, top, right, bottom };
+    }
+
+    private __views_bounding(source: ShapeView[]): BoundingLike {
+        const points: XY[] = [];
+        for (const view of source) {
+            const matrix = view.matrix2Root();
+            const frame = view.frame;
+            points.push(...[
+                { x: frame.x, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height },
+            ].map(i => matrix.computeCoord3(i)));
+        }
+        return XYsBounding(points);
     }
 
     private __include(view: ShapeView, lt: XY, rb: XY) {
@@ -69,18 +127,7 @@ export class SpaceHandler {
         const selected = this.context.selection.selectedShapes;
         if (!selected.length) return;
 
-        const points: XY[] = [];
-        for (const view of selected) {
-            const matrix = view.matrix2Root();
-            const frame = view.frame;
-            points.push(...[
-                { x: frame.x, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y + frame.height },
-                { x: frame.x, y: frame.y + frame.height },
-            ].map(i => matrix.computeCoord3(i)));
-        }
-        const box = XYsBounding(points);
+        const box = this.__views_bounding(selected);
         const width = box.right - box.left;
         const height = box.bottom - box.top;
         const workspace = this.context.workspace;
@@ -94,20 +141,27 @@ export class SpaceHandler {
             matrix.trans(-root.center.x, -root.center.y);
             matrix.scale(__scale);
             matrix.trans(root.center.x, root.center.y);
-            workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
-    }
+        const rootLT = matrix.inverseCoord(0, 0);
+        const rootRB = matrix.inverseCoord(root.width, root.height);
+        let dx: number = 0;
+        let dy: number = 0;
+        if (box.left - rootLT.x < 36) {
+            dx = rootLT.x + 36 - box.left;
+        } else if (box.right + 36 > rootRB.x) {
+            dx = rootRB.x - 36 - box.right;
+        }
+        if (box.top - rootLT.y < 36) {
+            dy = rootLT.y + 36 - box.top;
+        } else if (box.bottom + 36 > rootRB.y) {
+            dy = rootRB.y - 36 - box.bottom;
+        }
+        if (dx || dy) matrix.trans(dx * matrix.m00, dy * matrix.m00);
 
-    /**
-     * @description 调整图层位置，使图层在容器中可见（过程中会改变图层的位置数据）
-     */
-    fitToEnv(transforms: TransformRaw[], env: GroupShapeView) {
-
+        if (ratio < target || dx || dy) workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 
     scrollToView() {
 
     }
-
-
 }

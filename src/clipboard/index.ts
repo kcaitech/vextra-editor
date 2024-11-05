@@ -24,6 +24,12 @@ export type Bundle = {
     SVG?: SVGBundle[];              // 矢量图层
 }
 
+export type SourceBundle = {
+    shapes: Shape[];
+    originTransform: any;
+    media: any;
+}
+
 export class MossClipboard {
     static source = 'moss/source';
     static paras = 'moss/paras';
@@ -38,20 +44,15 @@ export class MossClipboard {
     async write(event?: ClipboardEvent): Promise<boolean> {
         const cache: Bundle = {};
         await new MossWriter(this.context).write(cache, event);
-
-        console.log('--write-bundle--', cache);
-
         if (Object.keys(cache).length) {
             this.cache = cache;
             return true;
         } else return false;
     }
 
-    writeAsPNG() {
-    }
+    writeAsPNG() {}
 
-    writeProperties() {
-    }
+    writeProperties() {}
     async read(event?: ClipboardEvent): Promise<Bundle | undefined> {
         const bundle: Bundle = {};
         try {

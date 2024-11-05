@@ -4,7 +4,7 @@ import { ImageLoader } from "@/imageLoader";
 import {
     ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, ShapeView, Shape, UploadAssets, ShapeFrame, creator,
     adapt2Shape, import_shape_from_clipboard, import_text, TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2,
-    ImagePack, SVGParseResult, Matrix, Transform, ColVector3D
+    ImagePack, SVGParseResult, Matrix, Transform, ColVector3D, GroupShape, Page
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
@@ -98,25 +98,117 @@ export class BundleHandler {
         }
         const packs: {
             pack: ImagePack | SVGParseResult,
-            transform: TransformRaw
+            transform: TransformRaw,
+            targetEnv: GroupShapeView
         }[] = [];
         for (let i = 0; i < medias.length; i++) {
             const media = medias[i];
             if ((media as SVGBundle).shape) {
-                packs.push({ pack: media as SVGParseResult, transform: transforms[i] });
+                packs.push({ pack: media as SVGParseResult, transform: transforms[i], targetEnv: env });
             } else {
                 const __m = media as ImageBundle;
                 const size = { width: __m.width, height: __m.height };
                 const buff = Uint8Array.from(atob(__m.base64.split(",")[1]), c => c.charCodeAt(0));
-                packs.push({ pack: { size, buff, name: __m.name, base64: __m.base64 }, transform: transforms[i] });
+                packs.push({ pack: { size, buff, name: __m.name, base64: __m.base64 }, transform: transforms[i], targetEnv: env });
             }
         }
         const page = context.selection.selectedPage!;
         const editor = context.editor4Page(page);
-        const result = editor.insertImages(packs, true, env);
+        const result = editor.insertImages(packs, true);
         if (result) {
             context.nextTick(page, SH.fit.bind(SH));
             return new ImageLoader(this.context).upload(result);
+        }
+    }
+
+    private insertImageToEnvs(medias: (SVGBundle | ImageBundle)[], envs: GroupShapeView[]) {
+        const getSize = (media: SVGBundle | ImageBundle) => {
+            if ((media as SVGBundle).shape) return (media as SVGBundle).shape!.size;
+            else return {
+                width: (media as ImageBundle).width,
+                height: (media as ImageBundle).height
+            }
+        }
+        const area = (() => {
+            let width = 0;
+            let height = 0;
+            for (const media of medias) {
+                const size = getSize(media);
+                width += size.width;
+                size.height > height && (height = size.height);
+            }
+
+            width += (medias.length - 1) * 20;
+
+            return { width, height };
+        })();
+        const transformId = (shape: Shape) => {
+            shape.id = v4();
+            (shape as GroupShape).childs?.length && (shape as GroupShape).childs.forEach(i => transformId(i));
+        }
+
+        const context = this.context;
+        const page = context.selection.selectedPage!;
+
+        const packs: {
+            pack: ImagePack | SVGParseResult,
+            transform: TransformRaw,
+            targetEnv: GroupShapeView
+        }[] = [];
+
+        for (let i = 0; i < envs.length; i++) {
+            const transforms = (() => {
+                const transforms: TransformRaw[] = [];
+                let offset = 0;
+                for (let i = 0; i < medias.length; i++) {
+                    if (i > 0) {
+                        const pre = medias[i - 1];
+                        const size = getSize(pre);
+                        offset += 20;
+                        offset += size.width;
+                    }
+                    const __trans = new TransformRaw();
+                    __trans.translateX = offset;
+                    transforms.push(__trans);
+                }
+                return transforms;
+            })();
+
+            const env = envs[i];
+            const start = { x: (env.frame.width - area.width) / 2, y: (env.frame.height - area.height) / 2 };
+            const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
+            for (let i = 0; i < transforms.length; i++) {
+                const t = makeShapeTransform2By1(transforms[i]);
+                t.addTransform(offset);
+                transforms[i] = makeShapeTransform1By2(t);
+            }
+            for (let i = 0; i < medias.length; i++) {
+                const media = medias[i];
+                if ((media as SVGBundle).shape) {
+                    const bundle = { ...media } as SVGBundle;
+                    const shape = import_shape_from_clipboard(
+                        context.data,
+                        adapt2Shape(page) as Page,
+                        [bundle.shape!]
+                    ).pop()!;
+                    transformId(shape);
+                    bundle.shape = shape;
+                    packs.push({ pack: bundle as SVGParseResult, transform: transforms[i], targetEnv: env });
+                } else {
+                    const __m = media as ImageBundle;
+                    const size = { width: __m.width, height: __m.height };
+                    const buff = Uint8Array.from(atob(__m.base64.split(",")[1]), c => c.charCodeAt(0));
+                    packs.push({ pack: { size, buff, name: __m.name, base64: __m.base64 }, transform: transforms[i], targetEnv: env });
+                }
+            }
+        }
+
+        const editor = context.editor4Page(page);
+        const result = editor.insertImages(packs, true);
+
+        if (result) {
+            context.nextTick(page, () => {new SpaceHandler(context).fit();});
+            new ImageLoader(this.context).upload(result);
         }
     }
 
@@ -129,8 +221,6 @@ export class BundleHandler {
             const allMedia: (SVGBundle | ImageBundle)[] = [...images, ...(SVG ? SVG : [])];
             const context = this.context;
             const selected = context.selection.selectedShapes;
-            // 图片资源数量大于1或不存在图层，视作插入图片(与从文件夹中直接选择文件的场景类似)
-            if (allMedia.length > 1 || !selected.length) return this.insertImage(allMedia);
 
             const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
                 return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
@@ -138,9 +228,9 @@ export class BundleHandler {
             const pathviews: PathShapeView[] = selected.filter(view => view instanceof PathShapeView) as PathShapeView[];
 
             if (container.length) {
-
+                this.insertImageToEnvs(allMedia, container);
             } else if (pathviews.length) { // 将图片设为pathshape的填充
-                // todo 检查一下黑白格的问题
+                if (allMedia.length > 1) return this.insertImage(allMedia);
                 const { base64, width, height } = images[0];
                 const buff = Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0));
                 const format = getFormatFromBase64(base64);
@@ -158,9 +248,11 @@ export class BundleHandler {
                 const editor = context.editor4Page(page);
                 editor.setShapesFillAsImage(actions);
                 new ImageLoader(context).upload(selected.map(shape => ({ shape, upload: [{ buff, ref }] })));
-            } else this.insertImage(allMedia);
+            } else {
+                this.insertImage(allMedia);
+            }
         } else if (SVG) {
-            return this.insertImage(SVG);
+            this.insertImage(SVG);
         } else if (source) {
 
         } else if (paras) {
