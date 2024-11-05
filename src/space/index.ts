@@ -3,7 +3,7 @@ import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView, XYsBoundin
 import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 
-type BoundingLike = {
+export type BoundingLike = {
     left: number;
     top: number;
     right: number;

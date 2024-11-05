@@ -6,6 +6,7 @@ import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
 import { InsertAction } from "@/clipboard/bundleHandler/index";
+import { BoundingLike } from "@/space";
 
 export class ClipboardTransformHandler {
     private __source_origin_transform_bounding(source: Shape[], originTransform: any) {
@@ -90,7 +91,7 @@ export class ClipboardTransformHandler {
         }
     }
 
-    sourceBounding(source: Shape[]) {
+    sourceBounding(source: Shape[]): BoundingLike {
         let left = Infinity;
         let top = Infinity;
         let right = -Infinity;
@@ -184,5 +185,15 @@ export class ClipboardTransformHandler {
         }
         const parent = adapt2Shape(context.selection.selectedPage!) as GroupShape;
         return shapes.map(shape => ({ parent, shape }));
+    }
+
+    isOuterView(context: Context, source: Shape[]) {
+        const box = this.sourceBounding(source);
+        const workspace = context.workspace;
+        const root = workspace.root;
+        const matrix = workspace.matrix;
+        const rootLT = matrix.inverseCoord(0, 0);
+        const rootRB = matrix.inverseCoord(root.width, root.height);
+        return box.left < rootLT.x || box.right > rootRB.x || box.top < rootLT.y || box.bottom > rootRB.y;
     }
 }

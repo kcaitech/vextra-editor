@@ -271,20 +271,43 @@ export class BundleHandler {
             const page = context.selection.selectedPage!;
             const selected = context.selection.selectedShapes;
             const { shapes, media, originIds } = source;
-            const containerSet = new Set<ShapeView>();
+            const containerSet = new Set<GroupShapeView | ArtboradView | SymbolView>();
             for (const view of selected) {
                 if (view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView) {
                     containerSet.add(view);
                     continue;
                 }
                 const parent = view.parent!;
-                if (parent instanceof GroupShapeView || parent instanceof ArtboradView || parent instanceof SymbolView) containerSet.add(view);
+                if (parent instanceof GroupShapeView || parent instanceof ArtboradView || parent instanceof SymbolView) containerSet.add(parent);
             }
             const container = Array.from(containerSet.values());
             if (container.length) {
-
+                const params = new ClipboardTransformHandler().fitEnvs(context, container, source);
+                if (!context.editor4Page(page).insertShapes(params)) return;
+                const keys = Object.keys(source.media);
+                const assets: UploadAssets[] = [];
+                for (const ref of keys) {
+                    const buff = source.media[ref]?.buff;
+                    buff && assets.push({ ref, buff });
+                }
+                const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
+                new ImageLoader(context).upload(uploadPackages);
             } else {
+                const handler = new ClipboardTransformHandler();
+                if (handler.isOuterView(context, shapes)) {
+                    const params = handler.center(context, source);
+                    if (!context.editor4Page(page).insertShapes(params)) return;
+                    const keys = Object.keys(source.media);
+                    const assets: UploadAssets[] = [];
+                    for (const ref of keys) {
+                        const buff = source.media[ref]?.buff;
+                        buff && assets.push({ ref, buff });
+                    }
+                    const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
+                    new ImageLoader(context).upload(uploadPackages);
+                } else {
 
+                }
             }
         } else if (paras) {
 
