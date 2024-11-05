@@ -205,7 +205,7 @@ export class ImageLoader {
             t.addTransform(getInPage);
             transforms[i] = makeShapeTransform1By2(t);
         }
-        const __packs = transforms.map((v, i) => ({ pack: packages[i], transform: v, env }));
+        const __packs = transforms.map((v, i) => ({ pack: packages[i], transform: v, targetEnv: env }));
         const editor = context.editor4Page(page);
         const result = editor.insertImages(__packs, fixed);
         if (result) this.upload(result);

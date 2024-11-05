@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { MossClipboard, Bundle, SVGBundle, ImageBundle } from "@/clipboard";
+import { MossClipboard, Bundle, SVGBundle, ImageBundle, SourceBundle } from "@/clipboard";
 import { ImageLoader } from "@/imageLoader";
 import {
     ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, ShapeView, Shape, UploadAssets, ShapeFrame, creator,
@@ -9,6 +9,7 @@ import {
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
 import { SpaceHandler } from "@/space";
+import { ClipboardTransformHandler } from "@/clipboard/bundleHandler/transform";
 
 export class BundleHandler {
     private readonly context: Context;
@@ -214,10 +215,9 @@ export class BundleHandler {
 
     paste(bundle: Bundle) {
         let { images, SVG, HTML, plain } = bundle;
-        const source = this.getSource(HTML);    // 图层
-        const paras = this.getParas(HTML);      // 文本段落
-
-        if (images) {
+        const source = this.getSource(HTML) as SourceBundle;    // 图层
+        const paras = this.getParas(HTML);                      // 文本段落
+        if (images) {                                           // 图片资源(可能包含了SVG资源)
             const allMedia: (SVGBundle | ImageBundle)[] = [...images, ...(SVG ? SVG : [])];
             const context = this.context;
             const selected = context.selection.selectedShapes;
@@ -251,10 +251,29 @@ export class BundleHandler {
             } else {
                 this.insertImage(allMedia);
             }
-        } else if (SVG) {
+        } else if (SVG) { // 一定是单个SVG资源，多个的场景当作图片资源处理
             this.insertImage(SVG);
         } else if (source) {
-
+            const context = this.context;
+            const page = context.selection.selectedPage!;
+            const selected = context.selection.selectedShapes;
+            const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
+                return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
+            }) as ArtboradView[];
+            if (container.length) { // 存在容器(组件)选区，则将这些图层粘贴在容器(组件)内，粘贴过程中尽量保持在原有容器的位置，次而居中
+                const params = new ClipboardTransformHandler().getInsertParamsForFitOrigin(context, container, source);
+                if (!context.editor4Page(page).insertShapes(params)) return;
+                const keys = Object.keys(source.media);
+                const assets: UploadAssets[] = [];
+                for (const ref of keys) {
+                    const buff = source.media[ref]?.buff;
+                    buff && assets.push({ ref, buff });
+                }
+                const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
+                new ImageLoader(context).upload(uploadPackages);
+            } else {
+               // todo
+            }
         } else if (paras) {
 
         } else if (plain) {

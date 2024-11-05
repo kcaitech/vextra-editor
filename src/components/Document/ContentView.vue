@@ -493,7 +493,11 @@ function cursor_watcher(t: number, type: string) {
 
 function copy_watcher(event: ClipboardEvent) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    props.context.workspace.clipboard.write(event);
+    // props.context.workspace.clipboard.write(event);
+    {
+        const clip = new MossClipboard(props.context);
+        clip.write(event);
+    }
 }
 
 function cut_watcher(event: ClipboardEvent) {

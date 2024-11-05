@@ -7,42 +7,6 @@ import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
 
 export class ClipboardTransformHandler {
-    private __source_bounding(source: Shape[]) {
-        let left = Infinity;
-        let top = Infinity;
-        let right = -Infinity;
-        let bottom = -Infinity;
-
-        for (let i = 0; i < source.length; i++) {
-            const shape = source[i];
-            const __transform = makeShapeTransform2By1(shape.transform);
-            let width, height;
-            if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
-                const children = (shape as GroupShape).childs;
-                const __box = this.__source_bounding(children);
-                width = __box.right - __box.left;
-                height = __box.bottom - __box.top;
-            } else {
-                width = shape.size.width;
-                height = shape.size.height;
-            }
-            const { col0, col1, col2, col3 } = __transform.transform([
-                ColVector3D.FromXY(0, 0),
-                ColVector3D.FromXY(width, height),
-                ColVector3D.FromXY(width, 0),
-                ColVector3D.FromXY(0, height),
-            ]);
-            const box = XYsBounding([col0, col1, col2, col3]);
-
-            if (box.top < top) top = box.top;
-            if (box.left < left) left = box.left;
-            if (box.right > right) right = box.right;
-            if (box.bottom > bottom) bottom = box.bottom;
-        }
-
-        return { left, top, right, bottom };
-    }
-
     private __source_origin_transform_bounding(source: Shape[], originTransform: any) {
         let left = Infinity;
         let top = Infinity;
@@ -57,7 +21,7 @@ export class ClipboardTransformHandler {
             let width, height;
             if (shape.type === ShapeType.Group) {
                 const children = (shape as GroupShape).childs;
-                const __box = this.__source_bounding(children);
+                const __box = this.sourceBounding(children);
                 width = __box.right - __box.left;
                 height = __box.bottom - __box.top;
             } else {
@@ -123,6 +87,42 @@ export class ClipboardTransformHandler {
 
             shape.transform = makeShapeTransform1By2(__transform) as TransformRaw;
         }
+    }
+
+    sourceBounding(source: Shape[]) {
+        let left = Infinity;
+        let top = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
+
+        for (let i = 0; i < source.length; i++) {
+            const shape = source[i];
+            const __transform = makeShapeTransform2By1(shape.transform);
+            let width, height;
+            if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
+                const children = (shape as GroupShape).childs;
+                const __box = this.sourceBounding(children);
+                width = __box.right - __box.left;
+                height = __box.bottom - __box.top;
+            } else {
+                width = shape.size.width;
+                height = shape.size.height;
+            }
+            const { col0, col1, col2, col3 } = __transform.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(width, height),
+                ColVector3D.FromXY(width, 0),
+                ColVector3D.FromXY(0, height),
+            ]);
+            const box = XYsBounding([col0, col1, col2, col3]);
+
+            if (box.top < top) top = box.top;
+            if (box.left < left) left = box.left;
+            if (box.right > right) right = box.right;
+            if (box.bottom > bottom) bottom = box.bottom;
+        }
+
+        return { left, top, right, bottom };
     }
 
     getInsertParamsForFitOrigin(context: Context, envs: (ArtboradView | SymbolView | GroupShapeView)[], data: SourceBundle) {
