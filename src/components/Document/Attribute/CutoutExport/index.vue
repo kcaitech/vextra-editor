@@ -476,27 +476,29 @@ function update_by_shapes() {
     showCheckbox();
 }
 
+let page = props.context.selection.selectedPage!;
+page.watch(updateData);
 function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
-    if (t === Selection.CHANGE_PAGE) update_by_shapes();
+    if (t === Selection.CHANGE_PAGE) {
+        update_by_shapes();
+        page.unwatch(updateData);
+        page = props.context.selection.selectedPage!;
+        page.watch(updateData);
+    }
 }
 
 const stop = watch(() => props.trigger, (v) => {
     update(v);
 })
-const page_watcher = () => {
-    const page = props.context.selection.selectedPage;
-    page && page.watch(updateData);
-}
+
 const page_unwatcher = () => {
-    const page = props.context.selection.selectedPage;
-    page && page.unwatch(updateData);
+    page.unwatch(updateData);
 }
 // hooks
 onMounted(() => {
     update_by_shapes();
     props.context.selection.watch(selection_watcher);
-    page_watcher();
 });
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
