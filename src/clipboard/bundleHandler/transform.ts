@@ -1,6 +1,6 @@
 import {
     Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2,
-    TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard
+    TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView
 } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
@@ -185,6 +185,26 @@ export class ClipboardTransformHandler {
         }
         const parent = adapt2Shape(context.selection.selectedPage!) as GroupShape;
         return shapes.map(shape => ({ parent, shape }));
+    }
+
+    /**
+     * @description 提供原适应于原本位置的图层插入参数
+     */
+    fitOrigin(context: Context, source: SourceBundle): InsertAction[] {
+        const page = adapt2Shape(context.selection.selectedPage!) as Page;
+        const shapes = import_shape_from_clipboard(context.data, page, source.shapes);
+        const getParent = ((layers: ShapeView[]) => {
+            for (const l of layers) {
+                if (l instanceof GroupShapeView && !l.isVirtualShape) return l;
+            }
+            return context.selection.selectedPage!;
+        })
+        return shapes.map(shape => {
+            const box = this.sourceBounding([shape]);
+            const parent = getParent(context.selection.getLayers({ x: box.left, y: box.top })) as GroupShapeView;
+            shape.transform = makeShapeTransform1By2(makeShapeTransform2By1(shape.transform).addTransform(parent.transform2FromRoot.getInverse()));
+            return { shape, parent: adapt2Shape(parent) as GroupShape }
+        });
     }
 
     isOuterView(context: Context, source: Shape[]) {

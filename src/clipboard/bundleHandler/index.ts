@@ -306,7 +306,16 @@ export class BundleHandler {
                     const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
                     new ImageLoader(context).upload(uploadPackages);
                 } else {
-
+                    const params = handler.fitOrigin(context, source);
+                    if (!context.editor4Page(page).insertShapes(params)) return;
+                    const keys = Object.keys(source.media);
+                    const assets: UploadAssets[] = [];
+                    for (const ref of keys) {
+                        const buff = source.media[ref]?.buff;
+                        buff && assets.push({ ref, buff });
+                    }
+                    const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
+                    new ImageLoader(context).upload(uploadPackages);
                 }
             }
         } else if (paras) {
