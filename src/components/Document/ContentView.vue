@@ -502,7 +502,11 @@ function copy_watcher(event: ClipboardEvent) {
 
 function cut_watcher(event: ClipboardEvent) {
     if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    props.context.workspace.clipboard.cut(event);
+    // props.context.workspace.clipboard.cut(event);
+    {
+        const clip = new MossClipboard(props.context);
+        clip.cut(event);
+    }
 }
 
 function paster_watcher(event: ClipboardEvent) {

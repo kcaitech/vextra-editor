@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Bundle, MossClipboard } from "@/clipboard";
+import { Bundle, MossClipboard, SourceBundle } from "@/clipboard";
 import {
     Text, TableCellType, import_text, export_text, TransformRaw, CurvePoint, makeShapeTransform1By2, ContactLineView, export_shape, adapt2Shape,
     PathShape, Document
@@ -33,7 +33,7 @@ export class MossWriter {
         return `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
     }
 
-    private get __text() {
+    get text() {
         const textshape = this.context.selection.textshape;
         if (textshape) {
             const selection = this.context.textSelection;
@@ -77,7 +77,7 @@ export class MossWriter {
     }
 
     async write(cache: Bundle, event?: ClipboardEvent) {
-        const text = this.__text;
+        const text = this.text;
 
         if (text) {
             const _text = export_text(text);
@@ -123,7 +123,8 @@ export class MossWriter {
             }
 
             const media = this.__sort_media(this.context.data, ctx);
-            const data = {
+            const data: SourceBundle = {
+                originIds: _shapes.map(i => i.id),
                 originTransform: origin_transform_map,
                 shapes: _shapes,
                 media,

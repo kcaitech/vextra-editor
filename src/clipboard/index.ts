@@ -27,6 +27,7 @@ export type Bundle = {
 export type SourceBundle = {
     shapes: Shape[];
     originTransform: any;
+    originIds: string[];
     media: any;
 }
 
@@ -105,5 +106,34 @@ export class MossClipboard {
     async cut(event?: ClipboardEvent) {
         const writeSuccess = await this.write(event);
         if (!writeSuccess) return;
+        const textshape = this.context.selection.textshape;
+        const text = new MossWriter(this.context).text;
+
+        if (text && textshape) {
+            const selection = this.context.textSelection;
+            const start = selection.cursorStart;
+            const end = selection.cursorEnd;
+            if (start === end) return;
+
+            const editor = this.context.editor4TextShape(textshape);
+
+            if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+                selection.setCursor(Math.min(start, end), false);
+            }
+            return;
+        }
+
+        const table = this.context.selection.tableshape;
+        if (text && table) {
+            const editor = this.context.editor4Table(table);
+            const ts = this.context.tableSelection;
+            editor.resetTextCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
+            ts.resetSelection();
+            return;
+        }
+        const page = this.context.selection.selectedPage!;
+        const editor = this.context.editor4Page(page);
+        const delete_res = editor.delete_batch(this.context.selection.selectedShapes);
+        if (delete_res) this.context.selection.resetSelectShapes();
     }
 }

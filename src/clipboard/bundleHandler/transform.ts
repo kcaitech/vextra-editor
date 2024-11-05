@@ -5,6 +5,7 @@ import {
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
+import { InsertAction } from "@/clipboard/bundleHandler/index";
 
 export class ClipboardTransformHandler {
     private __source_origin_transform_bounding(source: Shape[], originTransform: any) {
@@ -125,7 +126,10 @@ export class ClipboardTransformHandler {
         return { left, top, right, bottom };
     }
 
-    getInsertParamsForFitOrigin(context: Context, envs: (ArtboradView | SymbolView | GroupShapeView)[], data: SourceBundle) {
+    /**
+     * @description 提供适应指定容器的图层插入参数
+     */
+    fitEnvs(context: Context, envs: (ArtboradView | SymbolView | GroupShapeView)[], data: SourceBundle): InsertAction[] {
         const actions: { parent: GroupShape; shape: Shape; index?: number }[] = [];
         const page = adapt2Shape(context.selection.selectedPage!) as Page;
         for (let i = 0; i < envs.length; i++) {
@@ -143,5 +147,42 @@ export class ClipboardTransformHandler {
             for (const shape of shapes) actions.push({ parent, shape });
         }
         return actions;
+    }
+
+    /**
+     * @description 提供相对某个图层向右偏移的图层插入参数
+     */
+    rightBy(context: Context, source: SourceBundle, view: GroupShapeView): InsertAction[] {
+        const box = view.boundingBox();
+        const transform = view.transform.clone();
+        transform.translateX += box.width + 12;
+        const shapes = import_shape_from_clipboard(context.data, adapt2Shape(context.selection.selectedPage!) as Page, source.shapes)
+        shapes[0].transform = transform;
+        return [{ parent: adapt2Shape(view.parent!) as GroupShape, shape: shapes[0] }];
+    }
+
+    /**
+     * @description 提供相对于屏幕居中的图层插入参数
+     */
+    center(context: Context, source: SourceBundle): InsertAction[] {
+        const shapes = import_shape_from_clipboard(context.data, adapt2Shape(context.selection.selectedPage!) as Page, source.shapes)
+        const box = this.sourceBounding(shapes);
+        const width = box.right - box.left;
+        const height = box.bottom - box.top;
+        const workspace = context.workspace;
+        const root = workspace.root;
+        const matrix = workspace.matrix;
+        const center = matrix.inverseCoord(root.center);
+        const start = { x: center.x - width / 2, y: center.y - height / 2 };
+        const inverse1 = new Transform().setTranslate(ColVector3D.FromXY(start.x - box.left, start.y - box.top));
+        const inverse2 = context.selection.selectedPage!.transform2FromRoot.getInverse();
+        for (const shape of shapes) {
+            const transform = makeShapeTransform2By1(shape.transform);
+            transform.addTransform(inverse1);
+            transform.addTransform(inverse2);
+            shape.transform = makeShapeTransform1By2(transform);
+        }
+        const parent = adapt2Shape(context.selection.selectedPage!) as GroupShape;
+        return shapes.map(shape => ({ parent, shape }));
     }
 }

@@ -1,15 +1,17 @@
 import { Context } from "@/context";
 import { MossClipboard, Bundle, SVGBundle, ImageBundle, SourceBundle } from "@/clipboard";
 import { ImageLoader } from "@/imageLoader";
-import {
-    ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, ShapeView, Shape, UploadAssets, ShapeFrame, creator,
-    adapt2Shape, import_shape_from_clipboard, import_text, TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2,
-    ImagePack, SVGParseResult, Matrix, Transform, ColVector3D, GroupShape, Page
-} from "@kcdesign/data";
+import { ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, ShapeView, Shape, UploadAssets, ShapeFrame, creator, adapt2Shape, import_shape_from_clipboard, import_text, TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2, ImagePack, SVGParseResult, Matrix, Transform, ColVector3D, GroupShape, Page, ShapeType } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
 import { SpaceHandler } from "@/space";
 import { ClipboardTransformHandler } from "@/clipboard/bundleHandler/transform";
+
+export type InsertAction = {
+    parent: GroupShape;
+    shape: Shape;
+    index?: number;
+}
 
 export class BundleHandler {
     private readonly context: Context;
@@ -254,25 +256,35 @@ export class BundleHandler {
         } else if (SVG) { // 一定是单个SVG资源，多个的场景当作图片资源处理
             this.insertImage(SVG);
         } else if (source) {
+            // 当剪切板内只有一个容器，并且该容器存在于文档，并且此时没有选区或者选区正是该容器时，粘贴在容器右边的空白区域上
+            // 有可进入选区
+            // 无可进入选区
+            //      目标区域在屏幕中
+            //          可以原位粘贴
+            //              原位粘贴
+            //          不可以原位粘贴
+            //              向右偏移
+            //              居中
+            //      目标区域不在屏幕中
+            //          居中
             const context = this.context;
             const page = context.selection.selectedPage!;
             const selected = context.selection.selectedShapes;
-            const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
-                return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
-            }) as ArtboradView[];
-            if (container.length) { // 存在容器(组件)选区，则将这些图层粘贴在容器(组件)内，粘贴过程中尽量保持在原有容器的位置，次而居中
-                const params = new ClipboardTransformHandler().getInsertParamsForFitOrigin(context, container, source);
-                if (!context.editor4Page(page).insertShapes(params)) return;
-                const keys = Object.keys(source.media);
-                const assets: UploadAssets[] = [];
-                for (const ref of keys) {
-                    const buff = source.media[ref]?.buff;
-                    buff && assets.push({ ref, buff });
+            const { shapes, media, originIds } = source;
+            const containerSet = new Set<ShapeView>();
+            for (const view of selected) {
+                if (view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView) {
+                    containerSet.add(view);
+                    continue;
                 }
-                const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
-                new ImageLoader(context).upload(uploadPackages);
+                const parent = view.parent!;
+                if (parent instanceof GroupShapeView || parent instanceof ArtboradView || parent instanceof SymbolView) containerSet.add(view);
+            }
+            const container = Array.from(containerSet.values());
+            if (container.length) {
+
             } else {
-               // todo
+
             }
         } else if (paras) {
 
