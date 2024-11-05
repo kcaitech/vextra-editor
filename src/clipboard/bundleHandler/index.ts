@@ -215,9 +215,9 @@ export class BundleHandler {
 
     paste(bundle: Bundle) {
         let { images, SVG, HTML, plain } = bundle;
-        const source = this.getSource(HTML) as SourceBundle;    // 图层
-        const paras = this.getParas(HTML);                      // 文本段落
-        if (images) {                                           // 图片资源(可能包含了SVG资源)
+        const source = this.getSource(HTML) as SourceBundle;        // 图层
+        const paras = this.getParas(HTML);                                       // 文本段落
+        if (images) {                                                            // 图片资源(多个的情况下可能包含了SVG资源)
             const allMedia: (SVGBundle | ImageBundle)[] = [...images, ...(SVG ? SVG : [])];
             const context = this.context;
             const selected = context.selection.selectedShapes;
