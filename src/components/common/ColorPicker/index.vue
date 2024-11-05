@@ -54,6 +54,7 @@ import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
 import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
 import { ImgFrame } from '@/context/atrribute';
+import ColorStyle from '@/components/Document/Attribute/StyleLibrary/ColorStyle.vue';
 
 interface Props {
     context: Context
@@ -1288,6 +1289,8 @@ watch(() => props.imageUrl, (v) => {
     image_url.value = v;
 }, { immediate: true })
 
+const custom=ref<string>('custom')
+
 onMounted(() => {
     if (document.body) observer.observe(document.body);
     props.context.menu.watch(menu_watcher);
@@ -1316,120 +1319,129 @@ onUnmounted(() => {
         <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
-                <div class="color-type-desc">
-                    <div class="color-type">{{ t(`attr.fill`) }}</div>
+                <div class="color-type-desc" >
+                    <div class="color-type" @click="custom='custom'">{{ t(`attr.fill`) }}</div>
                     <!-- <svg-icon icon-class="down"></svg-icon> -->
+                     <div class="style" @click="custom='style'" >颜色样式</div>
                 </div>
                 <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
-            <div class="color_type_container" v-if="fillType && is_gradient_selected()">
-                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"
-                    :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">
-                </ColorType>
-            </div>
-            <!-- 渐变工具 -->
-            <div v-if="fill_type === FillType.Gradient && fillType === FillType.Gradient && is_gradient_selected()"
-                class="gradient-container">
-                <div class="line-container">
-                    <div class="line" ref="gradient_line" :style="gradient_channel_style"
-                        @mouseup.stop="_gradient_channel_down"></div>
-                    <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
-                        @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
-                        <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
-                    </div>
+            <div v-if="custom==='custom'" class="custom" >
+                <div class="color_type_container" v-if="fillType && is_gradient_selected()">
+                    <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"
+                        :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">
+                    </ColorType>
                 </div>
-                <div class="reverse" @click="reverse">
-                    <Tooltip :content="t('color.reverse')">
-                        <svg-icon icon-class="exchange"></svg-icon>
-                    </Tooltip>
-                </div>
-                <div class="rotate" @click="rotate">
-                    <Tooltip :content="t('color.rotate')">
-                        <svg-icon icon-class="rotate90"></svg-icon>
-                    </Tooltip>
-                </div>
-            </div>
-            <!-- 饱和度 -->
-            <template v-if="fillType !== FillType.Pattern">
-                <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-                    :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
-                    <div class="white"></div>
-                    <div class="black"></div>
-                    <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
-                </div>
-                <!-- &lt;!&ndash; 常用色 &ndash;&gt; -->
-                <div class="typical-container">
-                    <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-                        :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
-                    </div>
-                </div>
-                <div class="controller">
-                    <div class="eyedropper">
-                        <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
-                    </div>
-                    <div class="sliders-container" ref="sliders">
-                        <!-- &lt;!&ndash; 色相 &ndash;&gt; -->
-                        <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
-                            <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }">
-                            </div>
+                <!-- 渐变工具 -->
+                <div v-if="fill_type === FillType.Gradient && fillType === FillType.Gradient && is_gradient_selected()"
+                    class="gradient-container">
+                    <div class="line-container">
+                        <div class="line" ref="gradient_line" :style="gradient_channel_style"
+                            @mouseup.stop="_gradient_channel_down"></div>
+                        <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
+                            @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
+                            <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
                         </div>
-                        <!-- &lt;!&ndash; 透明度 &ndash;&gt; -->
-                        <div class="alpha-bacground">
-                            <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-                                :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
-                                <div class="alphaIndicator" ref="alphaIndicator"
-                                    :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                    </div>
+                    <div class="reverse" @click="reverse">
+                        <Tooltip :content="t('color.reverse')">
+                            <svg-icon icon-class="exchange"></svg-icon>
+                        </Tooltip>
+                    </div>
+                    <div class="rotate" @click="rotate">
+                        <Tooltip :content="t('color.rotate')">
+                            <svg-icon icon-class="rotate90"></svg-icon>
+                        </Tooltip>
+                    </div>
+                </div>
+                <!-- 饱和度 -->
+                <template v-if="fillType !== FillType.Pattern">
+                    <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
+                        :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                        <div class="white"></div>
+                        <div class="black"></div>
+                        <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
+                    </div>
+                    <!-- &lt;!&ndash; 常用色 &ndash;&gt; -->
+                    <div class="typical-container">
+                        <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
+                            :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                        </div>
+                    </div>
+                    <div class="controller">
+                        <div class="eyedropper">
+                            <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
+                        </div>
+                        <div class="sliders-container" ref="sliders">
+                            <!-- &lt;!&ndash; 色相 &ndash;&gt; -->
+                            <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
+                                <div class="hueIndicator" ref="hueIndicator"
+                                    :style="{ left: hueIndicatorAttr.x + 'px' }">
+                                </div>
+                            </div>
+                            <!-- &lt;!&ndash; 透明度 &ndash;&gt; -->
+                            <div class="alpha-bacground">
+                                <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
+                                    :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                                    <div class="alphaIndicator" ref="alphaIndicator"
+                                        :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- &lt;!&ndash; model & values &ndash;&gt; -->
-                <div class="input-container">
-                    <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>
-                    <div class="values">
-                        <div class="wrap">
-                            <div class="value">
-                                <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                        @click="(e) => inputClick(e, idx)" />
+                    <!-- &lt;!&ndash; model & values &ndash;&gt; -->
+                    <div class="input-container">
+                        <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>
+                        <div class="values">
+                            <div class="wrap">
+                                <div class="value">
+                                    <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
+                                            @click="(e) => inputClick(e, idx)" />
+                                    </div>
+                                </div>
+                                <div class="label">
+                                    <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
                                 </div>
                             </div>
-                            <div class="label">
-                                <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
+                        </div>
+                    </div>
+                    <!-- &lt;!&ndash; 最近使用 &ndash;&gt; -->
+                    <div class="recently-container" v-if="recent.length">
+                        <div class="inner">
+                            <div class="header">{{ t('color.recently') }}</div>
+                            <div class="typical-container">
+                                <div class="block" v-for="(c, idx) in recent" :key="idx"
+                                    @click="() => setColor(c as any)"
+                                    :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- &lt;!&ndash; 最近使用 &ndash;&gt; -->
-                <div class="recently-container" v-if="recent.length">
-                    <div class="inner">
-                        <div class="header">{{ t('color.recently') }}</div>
-                        <div class="typical-container">
-                            <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-                                :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                    <!-- &lt;!&ndash; 文档使用 &ndash;&gt; -->
+                    <div class="dc-container" v-if="document_colors.length">
+                        <div class="inner">
+                            <div class="header">{{ t('color.documentc') }}</div>
+                            <div class="documentc-container" @wheel.stop>
+                                <div class="block" v-for="(c, idx) in document_colors" :key="idx"
+                                    @click="() => setColor(c.color as any)"
+                                    :title="t('color.times').replace('xx', c.times.toString())"
+                                    :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- &lt;!&ndash; 文档使用 &ndash;&gt; -->
-                <div class="dc-container" v-if="document_colors.length">
-                    <div class="inner">
-                        <div class="header">{{ t('color.documentc') }}</div>
-                        <div class="documentc-container" @wheel.stop>
-                            <div class="block" v-for="(c, idx) in document_colors" :key="idx"
-                                @click="() => setColor(c.color as any)"
-                                :title="t('color.times').replace('xx', c.times.toString())"
-                                :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-            <PatternFill :context="context" v-else :scale="imageScale" :imageScaleMode="scaleMode" :image="image_url"
-                :paintFilter="paintFilter" @changeMode="changeScaleMode" @setImageRef="setImageRef"
-                @changeRotate="emit('changeRotate')" @changeScale="(s) => emit('changeScale', s)" />
+                </template>
+                <PatternFill :context="context" v-else :scale="imageScale" :imageScaleMode="scaleMode"
+                    :image="image_url" :paintFilter="paintFilter" @changeMode="changeScaleMode"
+                    @setImageRef="setImageRef" @changeRotate="emit('changeRotate')"
+                    @changeScale="(s) => emit('changeScale', s)" />
+            </div>
+            <div v-if="custom==='style'" class="color-style" >
+                <ColorStyle></ColorStyle>
+            </div>
         </div>
     </div>
 </template>
@@ -1437,6 +1449,11 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .showop {
     opacity: 0.3;
+}
+
+.color-style{
+    margin: 8px 12px;
+    box-sizing: border-box
 }
 
 .color-block {
@@ -1522,8 +1539,8 @@ onUnmounted(() => {
                 }
             }
         }
-
-        .color_type_container {
+        .custom{
+            .color_type_container {
             width: 100%;
             height: 32px;
             display: flex;
@@ -1946,6 +1963,8 @@ onUnmounted(() => {
                 }
             }
         }
+        }
+      
     }
 }
 </style>
