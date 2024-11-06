@@ -270,20 +270,31 @@ export class BundleHandler {
             const context = this.context;
             const page = context.selection.selectedPage!;
             const selected = context.selection.selectedShapes;
+            let params: InsertAction[] | undefined;
             const { shapes, media, originIds } = source;
             const containerSet = new Set<GroupShapeView | ArtboradView | SymbolView>();
+            const isContainer = (view: ShapeView) => view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView;
             for (const view of selected) {
-                if (view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView) {
-                    containerSet.add(view);
+                if (isContainer(view)) {
+                    containerSet.add(view as ArtboradView);
                     continue;
                 }
                 const parent = view.parent!;
-                if (parent instanceof GroupShapeView || parent instanceof ArtboradView || parent instanceof SymbolView) containerSet.add(parent);
+                if (isContainer(view)) containerSet.add(parent as ArtboradView);
             }
             const container = Array.from(containerSet.values());
+            const handler = new ClipboardTransformHandler();
             if (container.length) {
-                const params = new ClipboardTransformHandler().fitEnvs(context, container, source);
-                if (!context.editor4Page(page).insertShapes(params)) return;
+                params = handler.fitEnvs(context, container, source);
+            } else {
+                if (handler.isOuterView(context, shapes)) {
+                    params = handler.center(context, source);
+                } else {
+                    params = handler.fitOrigin(context, source);
+                }
+            }
+            if (params) {
+                context.editor4Page(page).insertShapes(params);
                 const keys = Object.keys(source.media);
                 const assets: UploadAssets[] = [];
                 for (const ref of keys) {
@@ -292,31 +303,6 @@ export class BundleHandler {
                 }
                 const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
                 new ImageLoader(context).upload(uploadPackages);
-            } else {
-                const handler = new ClipboardTransformHandler();
-                if (handler.isOuterView(context, shapes)) {
-                    const params = handler.center(context, source);
-                    if (!context.editor4Page(page).insertShapes(params)) return;
-                    const keys = Object.keys(source.media);
-                    const assets: UploadAssets[] = [];
-                    for (const ref of keys) {
-                        const buff = source.media[ref]?.buff;
-                        buff && assets.push({ ref, buff });
-                    }
-                    const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
-                    new ImageLoader(context).upload(uploadPackages);
-                } else {
-                    const params = handler.fitOrigin(context, source);
-                    if (!context.editor4Page(page).insertShapes(params)) return;
-                    const keys = Object.keys(source.media);
-                    const assets: UploadAssets[] = [];
-                    for (const ref of keys) {
-                        const buff = source.media[ref]?.buff;
-                        buff && assets.push({ ref, buff });
-                    }
-                    const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
-                    new ImageLoader(context).upload(uploadPackages);
-                }
             }
         } else if (paras) {
 
