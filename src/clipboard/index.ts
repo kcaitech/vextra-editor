@@ -65,7 +65,7 @@ export class MossClipboard {
         try {
             // 剪切板执行两种方案：ClipboardEventReader方案兼容性好、NavigatorClipboardReader方案实用性强，将两种方案融合，各取所长应对不同场景
             await new ClipboardEventReader(this.context).read(bundle, event);
-                await new NavigatorClipboardReader(this.context).read(bundle);
+            await new NavigatorClipboardReader(this.context).read(bundle);
 
             // 两种方案都没有获取到有效内容，使用缓存
             if (!Object.keys(bundle).length) return this.cache;
