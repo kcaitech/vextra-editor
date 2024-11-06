@@ -157,7 +157,7 @@ export class ClipboardTransformHandler {
             }
         }
 
-        const actions: { parent: GroupShape; shape: Shape; index?: number }[] = [];
+        const actions: InsertAction[] = [];
         for (let i = 0; i < envs.length; i++) {
             const env = envs[i];
 

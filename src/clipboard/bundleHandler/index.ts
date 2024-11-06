@@ -222,6 +222,47 @@ export class BundleHandler {
         }
     }
 
+    private insertTextShape(shape: Shape) {
+        const context = this.context;
+        const selected = context.selection.selectedShapes;
+        const container: EnvLike[] = selected.filter(view => {
+            return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
+        }) as ArtboradView[];
+
+        const actions: InsertAction[] = [];
+        const area = { ...shape.size };
+        const page = adapt2Shape(context.selection.selectedPage!) as Page;
+        if (container.length) {
+            for (let i = 0; i < container.length; i++) {
+                const env = container[i];
+                const __shape = import_shape_from_clipboard(context.data, page, [shape]).pop()!;
+                const start = { x: (env.frame.width - area.width) / 2, y: (env.frame.height - area.height) / 2 };
+                const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
+                const t = makeShapeTransform2By1(__shape.transform);
+                t.addTransform(offset);
+                __shape.transform = makeShapeTransform1By2(t);
+                actions.push({ parent: adapt2Shape(env) as GroupShape, shape: __shape });
+            }
+        } else {
+            const __shape = import_shape_from_clipboard(context.data, page, [shape]).pop()!;
+            const root = context.workspace.root;
+            const start = context.workspace.matrix.inverseCoord(root.center.x, root.center.y);
+            start.x -= area.width / 2;
+            start.y -= area.height / 2;
+            const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
+            const SH = new SpaceHandler(context);
+            const env = SH.getEnvByArea(area);
+            const matrix = env.matrix2Root();
+            const inverse = makeShapeTransform2By1(new Matrix(matrix.inverse));
+            const t = makeShapeTransform2By1(__shape.transform);
+            t.addTransform(offset);
+            t.addTransform(inverse);
+            __shape.transform = makeShapeTransform1By2(t);
+            actions.push({ parent: adapt2Shape(env) as GroupShape, shape: __shape })
+        }
+        return actions.length && context.editor4Page(context.selection.selectedPage!).insertShapes(actions);
+    }
+
     paste(bundle: Bundle) {
         let { images, SVG, HTML, plain } = bundle;
         const source = this.getSource(HTML) as SourceBundle;        // 图层
@@ -280,7 +321,6 @@ export class BundleHandler {
             let params: InsertAction[] | undefined;
             const { shapes, media, originIds } = source;
             const containerSet = new Set<EnvLike>();
-            // todo 单个容器的偏移
             const isContainer = (view: ShapeView) => view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView;
             for (const view of selected) {
                 if (isContainer(view)) {
@@ -292,7 +332,9 @@ export class BundleHandler {
             }
             const container = Array.from(containerSet.values());
             const handler = new ClipboardTransformHandler();
-            if (container.length) {
+            if (selected.length === 1 && selected[0] instanceof ArtboradView && originIds.length === 1 && originIds[0] === selected[0].id) { // 特殊场景
+                params = handler.rightBy(context, source, selected[0]);
+            } else if (container.length) {
                 params = handler.fitEnvs(context, container, source);
             } else {
                 if (handler.isOuterView(context, shapes)) {
@@ -301,8 +343,7 @@ export class BundleHandler {
                     params = handler.fitOrigin(context, source);
                 }
             }
-            if (params) {
-                context.editor4Page(page).insertShapes(params);
+            if (params && context.editor4Page(page).insertShapes(params)) {
                 const keys = Object.keys(source.media);
                 const assets: UploadAssets[] = [];
                 for (const ref of keys) {
@@ -311,11 +352,17 @@ export class BundleHandler {
                 }
                 const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
                 new ImageLoader(context).upload(uploadPackages);
+                context.nextTick(page, () => {new SpaceHandler(context).fit()});
             }
         } else if (paras) {
-
+            const text = import_text(this.context.data, paras, true);
+            const shape: TextShape = (text as TextShape);
+            const layout = shape.getLayout();
+            shape.size.width = layout.contentWidth;
+            shape.size.height = layout.contentHeight;
+            const context = this.context;
+            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => {new SpaceHandler(context).fit()});
         } else if (plain) {
-            console.log('--plain--', plain);
             const name = plain.length >= 20 ? plain.slice(0, 19) + '...' : plain;
             const shape = creator.newTextShape(name);
             shape.text.insertText(plain, 0);
@@ -323,12 +370,7 @@ export class BundleHandler {
             shape.size.width = layout.contentWidth;
             shape.size.height = layout.contentHeight;
             const context = this.context;
-            const selected = context.selection.selectedShapes;
-
-            const container: EnvLike[] = selected.filter(view => {
-                return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
-            }) as ArtboradView[];
-
+            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => {new SpaceHandler(context).fit()});
         }
     }
 
