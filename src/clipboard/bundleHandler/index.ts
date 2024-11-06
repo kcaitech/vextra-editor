@@ -316,6 +316,19 @@ export class BundleHandler {
 
         } else if (plain) {
             console.log('--plain--', plain);
+            const name = plain.length >= 20 ? plain.slice(0, 19) + '...' : plain;
+            const shape = creator.newTextShape(name);
+            shape.text.insertText(plain, 0);
+            const layout = shape.getLayout();
+            shape.size.width = layout.contentWidth;
+            shape.size.height = layout.contentHeight;
+            const context = this.context;
+            const selected = context.selection.selectedShapes;
+
+            const container: EnvLike[] = selected.filter(view => {
+                return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
+            }) as ArtboradView[];
+
         }
     }
 

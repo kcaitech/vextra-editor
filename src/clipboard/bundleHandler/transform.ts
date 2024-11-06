@@ -1,7 +1,4 @@
-import {
-    Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2,
-    TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView
-} from "@kcdesign/data";
+import { Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2, TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
@@ -140,8 +137,23 @@ export class ClipboardTransformHandler {
      * @description 提供适应指定容器的图层插入参数
      */
     fitEnvs(context: Context, envs: (ArtboradView | SymbolView | GroupShapeView)[], data: SourceBundle): InsertAction[] {
-        const actions: { parent: GroupShape; shape: Shape; index?: number }[] = [];
         const page = adapt2Shape(context.selection.selectedPage!) as Page;
+        const ids = new Set(data.originIds);
+        for (const env of envs) {
+            if (ids.has(env.id)) return this.fitOrigin(context, data);
+            const parent = adapt2Shape(env) as GroupShape;
+            for (const shape of data.shapes) {
+                if ((shape as GroupShape).childs || shape.type === ShapeType.SymbolRef) {
+                    let __p: Shape | undefined = parent;
+                    while (__p) {
+                        if (__p instanceof SymbolShape) return this.fitOrigin(context, data);
+                        __p = __p.parent;
+                    }
+                }
+            }
+        }
+
+        const actions: { parent: GroupShape; shape: Shape; index?: number }[] = [];
         for (let i = 0; i < envs.length; i++) {
             const env = envs[i];
 
@@ -202,15 +214,25 @@ export class ClipboardTransformHandler {
     fitOrigin(context: Context, source: SourceBundle): InsertAction[] {
         const page = adapt2Shape(context.selection.selectedPage!) as Page;
         const shapes = import_shape_from_clipboard(context.data, page, source.shapes);
-        const getParent = ((layers: ShapeView[]) => {
+        const ids = new Set<string>(source.originIds);
+        const getParent = ((shape: Shape, layers: ShapeView[]) => {
             for (const l of layers) {
+                if (shape instanceof GroupShape || shape instanceof SymbolRefShape) {
+                    let __p: ShapeView | undefined = l;
+                    while (__p) {
+                        if (__p instanceof SymbolView) break;
+                        __p = __p.parent;
+                    }
+                    if (__p instanceof SymbolView) continue;
+                }
+                if (ids.has(l.id)) continue;
                 if (l instanceof GroupShapeView && !l.isVirtualShape) return l;
             }
             return context.selection.selectedPage!;
         })
         return shapes.map(shape => {
             const box = this.sourceBounding([shape]);
-            const parent = getParent(context.selection.getLayers({ x: box.left, y: box.top })) as GroupShapeView;
+            const parent = getParent(shape, context.selection.getLayers({ x: box.left, y: box.top })) as GroupShapeView;
             shape.transform = makeShapeTransform1By2(makeShapeTransform2By1(shape.transform).addTransform(parent.transform2FromRoot.getInverse()));
             return { shape, parent: adapt2Shape(parent) as GroupShape }
         });
