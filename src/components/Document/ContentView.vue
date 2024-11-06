@@ -40,6 +40,7 @@ import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from 
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import { MossClipboard } from "@/clipboard";
+import ImagePicker from "@/imageLoader/ImagePicker.vue";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -755,6 +756,7 @@ onUnmounted(() => {
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
         <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="(matrix as Matrix)" />
         <Rule :context="props.context" :page="(props.page as PageView)" />
+        <ImagePicker :context="props.context"/>
         <!-- 页面调整控件，确保在ContentView顶层 -->
         <Space :context="props.context" :visible="spacePressed" />
     </div>

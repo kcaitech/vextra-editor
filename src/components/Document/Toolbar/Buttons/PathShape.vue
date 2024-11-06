@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from "vue-i18n";
@@ -112,12 +111,6 @@ function toolWatcher(t: number) {
 
         if (selected.value) {
             currentTool.value = action;
-        }
-    }
-    if (t === Tool.SELECT_IMAGE) {
-        const filepicker = document.getElementById('filepicker');
-        if (filepicker) {
-            filepicker.click();
         }
     }
 }
