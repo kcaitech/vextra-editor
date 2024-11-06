@@ -86,14 +86,16 @@ export class MossWriter {
             const text_html = new Blob([html || ''], { type: 'text/html' });
             const text_plain = new Blob([plain_text], { type: 'text/plain' });
             const content = [new ClipboardItem({ "text/plain": text_plain, 'text/html': text_html })];
-            await navigator.clipboard.write(content);
+            try {
+                await navigator.clipboard.write(content);
+            } catch (e) {
+                console.warn(e);
+                if (!event?.clipboardData) return;
 
-            if (!event?.clipboardData) return;
-
-            event.clipboardData.setData('text/plain', plain_text);
-            event.clipboardData.setData('text/html', html);
-            event.preventDefault();
-
+                event.clipboardData.setData('text/plain', plain_text);
+                event.clipboardData.setData('text/html', html);
+                event.preventDefault();
+            }
             cache["HTML"] = html;
             cache["plain"] = plain_text;
         } else {
@@ -134,14 +136,23 @@ export class MossWriter {
 
             const blob = new Blob([html || ''], { type: 'text/html' });
             const item: any = { 'text/html': blob };
-
-            await navigator.clipboard.write([new ClipboardItem(item)]);
-
-            if (!event?.clipboardData) return;
-
-            event.clipboardData.clearData();
-            event.clipboardData.setData('text/html', html);
-            event.preventDefault();
+            if (navigator.userAgent.indexOf('Safari') > -1) {
+                if (!event?.clipboardData) return;
+                event.clipboardData.clearData();
+                event.clipboardData.setData('text/html', html);
+                event.preventDefault();
+            } else {
+                try {
+                    await navigator.clipboard.write([new ClipboardItem(item)]);
+                    cache["HTML"] = html;
+                } catch (e) {
+                    console.warn(e);
+                    if (!event?.clipboardData) return;
+                    event.clipboardData.clearData();
+                    event.clipboardData.setData('text/html', html);
+                    event.preventDefault();
+                }
+            }
             cache["HTML"] = html;
         }
     }

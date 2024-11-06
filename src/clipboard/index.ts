@@ -45,6 +45,7 @@ export class MossClipboard {
     async write(event?: ClipboardEvent): Promise<boolean> {
         const cache: Bundle = {};
         await new MossWriter(this.context).write(cache, event);
+        console.log('--write-cache', cache);
         if (Object.keys(cache).length) {
             this.cache = cache;
             return true;
@@ -64,9 +65,12 @@ export class MossClipboard {
         const bundle: Bundle = {};
         try {
             // 剪切板执行两种方案：ClipboardEventReader方案兼容性好、NavigatorClipboardReader方案实用性强，将两种方案融合，各取所长应对不同场景
-            await new ClipboardEventReader(this.context).read(bundle, event);
-            await new NavigatorClipboardReader(this.context).read(bundle);
-
+            if (navigator.userAgent.includes('Safari')) { // 对于Safari这种非常有个性的浏览器，只能忍气吞声
+                await new ClipboardEventReader(this.context).read(bundle, event);
+            } else {
+                await new ClipboardEventReader(this.context).read(bundle, event);
+                await new NavigatorClipboardReader(this.context).read(bundle);
+            }
             // 两种方案都没有获取到有效内容，使用缓存
             if (!Object.keys(bundle).length) return this.cache;
 
