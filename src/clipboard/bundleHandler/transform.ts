@@ -5,7 +5,7 @@ import {
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
-import { InsertAction } from "@/clipboard/bundleHandler/index";
+import { InsertAction, EnvLike } from "@/clipboard/bundleHandler/index";
 import { BoundingLike } from "@/space";
 
 export class ClipboardTransformHandler {
@@ -91,6 +91,15 @@ export class ClipboardTransformHandler {
         }
     }
 
+    isOuterView(context: Context, source: Shape[]) {
+        const box = this.sourceBounding(source);
+        const workspace = context.workspace;
+        const root = workspace.root;
+        const matrix = workspace.matrix;
+        const rootLT = matrix.inverseCoord(0, 0);
+        const rootRB = matrix.inverseCoord(root.width, root.height);
+        return box.left < rootLT.x || box.right > rootRB.x || box.top < rootLT.y || box.bottom > rootRB.y;
+    }
     sourceBounding(source: Shape[]): BoundingLike {
         let left = Infinity;
         let top = Infinity;
@@ -207,13 +216,8 @@ export class ClipboardTransformHandler {
         });
     }
 
-    isOuterView(context: Context, source: Shape[]) {
-        const box = this.sourceBounding(source);
-        const workspace = context.workspace;
-        const root = workspace.root;
-        const matrix = workspace.matrix;
-        const rootLT = matrix.inverseCoord(0, 0);
-        const rootRB = matrix.inverseCoord(root.width, root.height);
-        return box.left < rootLT.x || box.right > rootRB.x || box.top < rootLT.y || box.bottom > rootRB.y;
+
+    plain(context: Context, source: SourceBundle, envs: EnvLike[]) {
+
     }
 }

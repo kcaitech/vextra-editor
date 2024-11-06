@@ -1,7 +1,12 @@
 import { Context } from "@/context";
 import { MossClipboard, Bundle, SVGBundle, ImageBundle, SourceBundle } from "@/clipboard";
 import { ImageLoader } from "@/imageLoader";
-import { ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, ShapeView, Shape, UploadAssets, ShapeFrame, creator, adapt2Shape, import_shape_from_clipboard, import_text, TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2, ImagePack, SVGParseResult, Matrix, Transform, ColVector3D, GroupShape, Page, ShapeType } from "@kcdesign/data";
+import {
+    ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, import_shape_from_clipboard,
+    ShapeView, Shape, UploadAssets, ShapeFrame, creator, adapt2Shape, import_text, GroupShape, Page,
+    TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2, ImagePack, SVGParseResult,
+    Matrix, Transform, ColVector3D
+} from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
 import { SpaceHandler } from "@/space";
@@ -12,6 +17,8 @@ export type InsertAction = {
     shape: Shape;
     index?: number;
 }
+
+export type EnvLike = ArtboradView | SymbolView | GroupShapeView;
 
 export class BundleHandler {
     private readonly context: Context;
@@ -224,7 +231,7 @@ export class BundleHandler {
             const context = this.context;
             const selected = context.selection.selectedShapes;
 
-            const container: (ArtboradView | GroupShapeView | SymbolView)[] = selected.filter(view => {
+            const container: EnvLike[] = selected.filter(view => {
                 return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
             }) as ArtboradView[];
             const pathviews: PathShapeView[] = selected.filter(view => view instanceof PathShapeView) as PathShapeView[];
@@ -272,15 +279,16 @@ export class BundleHandler {
             const selected = context.selection.selectedShapes;
             let params: InsertAction[] | undefined;
             const { shapes, media, originIds } = source;
-            const containerSet = new Set<GroupShapeView | ArtboradView | SymbolView>();
+            const containerSet = new Set<EnvLike>();
+            // todo 单个容器的偏移
             const isContainer = (view: ShapeView) => view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView;
             for (const view of selected) {
                 if (isContainer(view)) {
-                    containerSet.add(view as ArtboradView);
+                    containerSet.add(view as EnvLike);
                     continue;
                 }
                 const parent = view.parent!;
-                if (isContainer(view)) containerSet.add(parent as ArtboradView);
+                if (isContainer(view)) containerSet.add(parent as EnvLike);
             }
             const container = Array.from(containerSet.values());
             const handler = new ClipboardTransformHandler();
@@ -307,7 +315,7 @@ export class BundleHandler {
         } else if (paras) {
 
         } else if (plain) {
-
+            console.log('--plain--', plain);
         }
     }
 
