@@ -175,7 +175,11 @@ const updatePadding = (e: MouseEvent) => {
         padding = (((moveXy.y - downXy.y) / scale) * 2) + layout_padding.top;
     } else if (paddingIndex.value === 1) {
         dir = 'right';
-        padding = (((downXy.x - moveXy.x) / scale) * 2) + layout_padding.right;
+        if (autoInfo.stackPrimarySizing === StackSizing.Fixed) {
+            padding = (((downXy.x - moveXy.x) / scale) * 2) + layout_padding.right;
+        } else {
+            padding = (((moveXy.x - downXy.x) / scale) * 2) + layout_padding.right;
+        }
     } else if (paddingIndex.value === 2) {
         dir = 'bottom';
         if (autoInfo.stackCounterSizing === StackSizing.Fixed) {

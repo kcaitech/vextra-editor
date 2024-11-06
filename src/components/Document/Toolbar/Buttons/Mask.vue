@@ -5,20 +5,28 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from "vue";
 import { Selection } from "@/context/selection";
 import { useMask } from "@/components/Document/Creator/execute";
+import { ShapeType } from "@kcdesign/data";
 
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
 }>();
 
-const disabled = ref<boolean>(!props.context.selection.selectedShapes.length);
+const disabled = ref<boolean>(false);
 
 function mask() {
     useMask(props.context);
 }
 
 function statusUpdater(t: any) {
-    if (t === Selection.CHANGE_SHAPE) disabled.value = !props.context.selection.selectedShapes.length;
+    if (t === Selection.CHANGE_SHAPE){
+         const shapes = props.context.selection.selectedShapes;
+        if (shapes.length && shapes.some(i => i.type !== ShapeType.Cutout)) {
+            disabled.value = true
+        } else {
+            disabled.value = false
+        }
+    }
 }
 onMounted(() => {
     props.context.selection.watch(statusUpdater);
@@ -40,10 +48,10 @@ onUnmounted(() => {
 >
     <ToolButton
         :selected="false"
-        :style="{ width: '32px', 'pointer-events': disabled ? 'none' : 'auto' }"
+        :style="{ width: '32px', 'pointer-events': disabled ? 'auto' : 'none' }"
         @click="mask"
     >
-        <div class="svg-container" :style="{opacity: disabled ? 0.5 : 1}">
+        <div class="svg-container" :style="{opacity: disabled ? 1 : 0.4}">
             <svg-icon icon-class="pattern-mask"/>
         </div>
     </ToolButton>

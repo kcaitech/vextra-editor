@@ -216,6 +216,10 @@ export class Context extends WatchableObject implements IContext {
         this.keyHandlers[keyCode] = handler;
     }
 
+    lastRemoteCmdVersion(): string | undefined {
+        return this.m_coopRepo.lastRemoteCmdVersion()
+    }
+
     hasPendingSyncCmd(): boolean {
         return this.m_coopRepo.hasPendingSyncCmd();
     }

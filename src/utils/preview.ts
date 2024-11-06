@@ -170,15 +170,14 @@ export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], ho
         if (!item.isVisible) {
             continue;
         }
-        if(isAction && (!item.prototypeInterActions || !item.prototypeInterActions.length)) {
-            continue;
-        }
-        const path = item.getPath().clone();
-        const m = getPreviewMatrix(item);
-        m.multiAtLeft(matrix.clone());
-        path.transform(m);
-        if (!scout.isPointInShapeForPreview(item, hot, path.toString(), matrix)) {
-            continue;
+        if (!(isAction && (!item.prototypeInterActions || !item.prototypeInterActions.length))) {
+            const path = item.getPath().clone();
+            const m = getPreviewMatrix(item);
+            m.multiAtLeft(matrix.clone());
+            path.transform(m);
+            if (!scout.isPointInShapeForPreview(item, hot, path.toString(), matrix)) {
+                continue;
+            }
         }
 
         if (item.type === ShapeType.Table) {
@@ -239,7 +238,7 @@ export function getPreviewMatrix(shape: ShapeView) {
             if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME) {
                 m.trans(-offset.translateX, -offset.translateY);
             } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS) {
-                if(s._p_frame.y + offset.translateY < 0) {
+                if (s._p_frame.y + offset.translateY < 0) {
                     m.trans(0, -(s._p_frame.y + offset.translateY));
                 }
             }

@@ -1408,13 +1408,13 @@ export function flattenSelection(context: Context) {
     // const editor = context.editor4Page(page);
     // editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
     const page = context.selection.selectedPage!;
+    const editor = context.editor4Page(page);
+    // editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
     const selection = context.selection;
     const shapes = compare_layer_3(selection.selectedShapes);
     if (shapes.length) {
-        const editor = context.editor4Page(page)
         if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
             if (shapes[0].type === ShapeType.Group) {
-                const editor = context.editor4Page(page);
                 const pathshape = editor.flattenGroup((shapes[0]), shapes[0].name);
                 if (pathshape) {
                     context.nextTick(page, () => {

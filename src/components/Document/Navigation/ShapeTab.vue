@@ -74,7 +74,7 @@ onUnmounted(() => {
             :style="{ height: isPagelistFold ? 'calc(100% - 40px)' : `calc(100% - ${structure.pagelistHeight}px)` }">
             <ShapeList :context="props.context" :page="page" :pageHeight="structure.pagelistHeight"/>
         </div>
-        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft" />
+        <!-- <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft" /> -->
     </div>
 </template>
 

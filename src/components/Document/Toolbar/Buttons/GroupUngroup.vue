@@ -14,7 +14,7 @@ import {
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
-import { getName } from '@/utils/content';
+import { flattenSelection, getName } from '@/utils/content';
 import { debounce } from 'lodash';
 import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 import BooleanObject from "./BooleanObject.vue"
@@ -27,32 +27,35 @@ const isBoolGroup = ref(false)
 const isUngroup = ref(false);
 const isGroup = ref(false);
 
-function _updater(t?: number | string) {
-    if (t === Selection.CHANGE_SHAPE) {
-        const selection = props.context.selection;
-        const shapes = selection.selectedShapes;
-        isBoolGroup.value = false;
-        isUngroup.value = false;
-        isGroup.value = false;
-        if (shapes.length === 1) {
-            const type = shapes[0].type;
-            if (type === ShapeType.Group || type === ShapeType.BoolShape) {
-                isBoolGroup.value = true;
-                isUngroup.value = true;
-            }
-            isGroup.value = true;
-
-        } else {
+const _updater = () => {
+    const selection = props.context.selection;
+    const shapes = selection.selectedShapes;
+    isBoolGroup.value = false;
+    isUngroup.value = false;
+    isGroup.value = false;
+    if (shapes.length === 1) {
+        const type = shapes[0].type;
+        if (type === ShapeType.Group || type === ShapeType.BoolShape) {
             isBoolGroup.value = true;
-            isGroup.value = true;
-            if (shapes.some(s => s.type === ShapeType.Artboard || s.type === ShapeType.Symbol || s.type === ShapeType.SymbolRef || s.type === ShapeType.SymbolUnion)) {
-                isBoolGroup.value = false;
-            }
+            isUngroup.value = true;
+        }
+        isGroup.value = true;
+    } else if (shapes.length > 1) {
+        isBoolGroup.value = true;
+        isGroup.value = true;
+        if (shapes.some(s => s.type === ShapeType.Artboard || s.type === ShapeType.Symbol || s.type === ShapeType.SymbolRef || s.type === ShapeType.SymbolUnion)) {
+            isBoolGroup.value = false;
         }
     }
 }
 
 const updater = debounce(_updater, 50);
+
+function selectedWatcher(t?: number | string) {
+    if (t === Selection.CHANGE_SHAPE) {
+        updater();
+    }
+}
 
 function tool_watcher(t?: number, alt?: boolean) {
     if (t === Tool.GROUP) {
@@ -67,7 +70,6 @@ const groupClick = (alt?: boolean) => {
     const selection = props.context.selection;
     let shapes = filter_for_group1(selection.selectedShapes);
     const page = selection.selectedPage;
-    console.log('!page || !shapes.length', !page || !shapes.length);
     if (!page || !shapes.length) return;
     const bro = Array.from(page.shapes.values());
     const editor = props.context.editor4Page(page);
@@ -153,58 +155,24 @@ const changeBoolGroup = (type: BoolOp, n: string) => {
  * @description 路径拼合
  */
 const flattenShape = () => {
-    const page = props.context.selection.selectedPage!;
-    const selection = props.context.selection;
-    const shapes = compare_layer_3(selection.selectedShapes);
-    if (shapes.length) {
-        const editor = props.context.editor4Page(page)
-        if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
-            if (shapes[0].type === ShapeType.Group) {
-                const editor = props.context.editor4Page(page);
-                const pathshape = editor.flattenGroup((shapes[0]), shapes[0].name);
-                if (pathshape) {
-                    props.context.nextTick(page, () => {
-                        const s = page.getShape(pathshape.id);
-                        props.context.selection.selectShape(s);
-                    });
-                }
-            } else {
-                const flatten = editor.flattenBoolShape((shapes[0]) as BoolShapeView)
-                if (flatten) {
-                    props.context.nextTick(page, () => {
-                        const s = page.getShape(flatten.id);
-                        props.context.selection.selectShape(s)
-                    })
-                }
-            }
-        } else if (shapes.length > 1) {
-            const shapessorted = compare_layer_3(shapes);
-            const flatten = editor.flattenShapes(shapessorted)
-            if (flatten) {
-                props.context.nextTick(page, () => {
-                    const s = page.getShape(flatten.id);
-                    props.context.selection.selectShape(s)
-                })
-            }
-        }
-    }
+    flattenSelection(props.context);
 }
 
 onMounted(() => {
+    _updater();
     props.context.tool.watch(tool_watcher)
-    props.context.selection.watch(updater);
-    updater();
+    props.context.selection.watch(selectedWatcher);
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(updater);
+    props.context.selection.unwatch(selectedWatcher);
     props.context.tool.unwatch(tool_watcher)
 })
 </script>
 
 <template>
 
-    <BooleanObject :context="context" :selection="props.context.selection" @changeBool="changeBoolGroup"
-               @flatten-shape="flattenShape" :disabled="!isBoolGroup"></BooleanObject>
+    <BooleanObject :context="context" @changeBool="changeBoolGroup" @flatten-shape="flattenShape"
+        :disabled="!isBoolGroup"></BooleanObject>
 
 </template>
 
@@ -222,7 +190,7 @@ onUnmounted(() => {
         height: 100%;
         width: 34.5px;
 
-        > div {
+        >div {
             height: 32px;
             width: 32px;
             display: flex;
@@ -233,13 +201,13 @@ onUnmounted(() => {
             margin: 0;
             padding: 0;
 
-            > svg {
+            >svg {
                 height: 18px;
                 width: 18px;
             }
         }
 
-        > .active {
+        >.active {
             color: #ffffff;
         }
     }

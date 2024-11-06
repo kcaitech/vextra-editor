@@ -232,24 +232,31 @@ function contextMenuMount(e: MouseEvent) {
                 contextMenuItems.value.delete(MenuItemType.MergeCell);
             }
         }
-        if (shapes.length) {
-            contextMenuItems.value.add(MenuItemType.Mask);
-        }
+        // if (shapes.length&&shapes.some(i=>i.type!==ShapeType.Cutout)) {
+        //     console.log(shapes,'****************');
+            
+        //     contextMenuItems.value.add(MenuItemType.Mask);
+        // }
         if (_shapes.length) {
             const type = _shapes[0].type;
-            if (_shapes.length === 1 && type !== ShapeType.Table) {
-                contextMenuItems.value.add(MenuItemType.Flatten);
-                contextMenuItems.value.add(MenuItemType.Outline);
+            if (_shapes.length === 1 && type !== ShapeType.Table && area !== MountedAreaType.Root) {
+                if (type !== ShapeType.Cutout) {
+                    contextMenuItems.value.add(MenuItemType.Flatten);
+                    contextMenuItems.value.add(MenuItemType.Outline);
+                    contextMenuItems.value.add(MenuItemType.Mask);
+                }
             }
             if (_shapes.length === 1 && _shapes[0].mask) {
                 contextMenuItems.value.delete(MenuItemType.Mask);
                 contextMenuItems.value.add(MenuItemType.UnMask);
             }
             if (area !== MountedAreaType.Root) {
-                if (_shapes.length > 1) {
+                if (_shapes.length > 1 && _shapes.some(i => i.type !== ShapeType.Cutout)) {
                     contextMenuItems.value.add(MenuItemType.Flatten);
                     contextMenuItems.value.add(MenuItemType.Outline);
+                    contextMenuItems.value.add(MenuItemType.Mask);
                     contextMenuItems.value.add(MenuItemType.AutoLayout);
+                    contextMenuItems.value.add(MenuItemType.Flatten);
                 } else {
                     const shape = _shapes[0] as ArtboradView;
                     if (shape.autoLayout) {
@@ -511,11 +518,11 @@ function cut_watcher(event: ClipboardEvent) {
 
 function paster_watcher(event: ClipboardEvent) {
     if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    {
-        const clip = new MossClipboard(props.context);
-        clip.paste(event);
-    }
-    // return props.context.workspace.clipboard.paste(t, event);
+    // {
+    //     const clip = new MossClipboard(props.context);
+    //     clip.paste(event);
+    // }
+    return props.context.workspace.clipboard.paste(t, event);
 }
 
 function color_watcher(t: number) {
@@ -758,7 +765,7 @@ onUnmounted(() => {
          @mousemove="move" @mouseleave="props.context.selection.unHoverShape"
          @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
-        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix as Matrix"/>
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="(matrix as Matrix)" />
         <Rule :context="props.context" :page="(props.page as PageView)" />
         <!-- 页面调整控件，确保在ContentView顶层 -->
         <Space :context="props.context" :visible="spacePressed" />

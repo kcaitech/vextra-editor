@@ -30,6 +30,7 @@ const horSizingMenu = ref(false);
 const verSizingMenu = ref(false);
 const unfold = ref(false);
 const reflush = ref(0);
+const isDisable = ref(false);
 
 function autoLayout(): void {
     const selectShapes = props.context.selection.selectedShapes;
@@ -69,6 +70,7 @@ const updateData = () => {
     const shape = selection[0] as ArtboradView;
     if (!shape.autoLayout) return;
     autoLayoutDate.value = shape.autoLayout;
+    isDisable.value = shape instanceof SymbolRefView;
     reflush.value++;
 }
 
@@ -399,7 +401,7 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
-        <div class="container-top" v-if="!isActive && autoLayoutDate">
+        <div class="container-top" :class="{ disabled: isDisable }" v-if="!isActive && autoLayoutDate">
             <div class="container-left">
                 <div class="layout-wrap" :reflush="reflush">
                     <div :class="{ active: autoLayoutDate.stackMode === StackMode.Vertical }"
@@ -456,7 +458,7 @@ onUnmounted(() => {
                 </Tooltip>
             </div>
         </div>
-        <div class="layout-padding" v-if="!isActive && autoLayoutDate">
+        <div class="layout-padding" :class="{ disabled: isDisable }" v-if="!isActive && autoLayoutDate">
             <div class="container-input">
                 <AutoLayoutInput :icon="unfold ? 'left-padding' : 'hor-padding'"
                     :name="unfold ? 'left_padding' : 'hor_padding'"
@@ -489,7 +491,7 @@ onUnmounted(() => {
                 </Tooltip>
             </div>
         </div>
-        <div class="layout-area-size" v-if="!isActive && autoLayoutDate">
+        <div class="layout-area-size" :class="{ disabled: isDisable }" v-if="!isActive && autoLayoutDate">
             <div class="title">{{ t('autolayout.layout_area_size') }}</div>
             <div class="area-options">
                 <AutoLayoutInput
@@ -695,5 +697,10 @@ onUnmounted(() => {
 .padding-active {
     background-color: #1989FC !important;
     border: none;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.4;
 }
 </style>

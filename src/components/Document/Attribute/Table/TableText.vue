@@ -240,9 +240,9 @@ const setRowHeight = () => {
         const editor = props.context.editor4TextShape(shape.value)
         if (!isNaN(Number(rowHeight.value))) {
             if (isSelectText()) {
-                editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
+                editor.setLineHeight(Number(rowHeight.value), false, 0, Infinity)
             } else {
-                editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
+                editor.setLineHeight(Number(rowHeight.value), false, textIndex, selectLength)
             }
         } else {
             textFormat();

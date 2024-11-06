@@ -1,11 +1,10 @@
 {
     "name": "@kcdesign/editor",
     "description": "kcdesign editor",
-    "version": "1.0.61",
+    "version": "1.0.62",
     "private": false,
     "type": "module",
     "author": "kcaitech.com",
-    "main": "./dist/index.cjs.js",
     "module": "./dist/index.es.js",
     "types": "./dist/types/index.d.ts",
     "publishConfig": {
@@ -21,7 +20,7 @@
         "test:watch": "jest --watch"
     },
     "dependencies": {
-        "@kcdesign/data": "file:../kcdesign-data",
+        "@kcdesign/data": "1.0.94",
         "element-plus": "2.3.0",
         "jszip": "^3.10.1",
         "lodash": "^4.17.21",
