@@ -45,7 +45,6 @@ export class MossClipboard {
     async write(event?: ClipboardEvent): Promise<boolean> {
         const cache: Bundle = {};
         await new MossWriter(this.context).write(cache, event);
-        console.log('--write-cache', cache);
         if (Object.keys(cache).length) {
             this.cache = cache;
             return true;
@@ -81,8 +80,6 @@ export class MossClipboard {
             // 在用户没有给予剪切板权限、safari浏览器下常常会抛出异常
             console.warn(e);
             return bundle;
-        } finally {
-            console.log('--read-bundle--', bundle);
         }
     }
 
