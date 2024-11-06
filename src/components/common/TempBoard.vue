@@ -8,7 +8,7 @@ import { XY } from "@/context/selection";
 import { XYsBounding } from "@/utils/common";
 import { useI18n } from 'vue-i18n';
 import { message } from "@/utils/message";
-import { getShadowMax, getShapeBorderMax } from "@/utils/cutout";
+import { getShadowMax } from "@/utils/cutout";
 // import CanvasKitInit from 'canvaskit-wasm';
 // import CanvasKitInit from "@kcdesign/canvaskit-wasm";
 
@@ -69,15 +69,14 @@ function write() {
     const points: XY[] = [];
     for (let i = 0; i < renderItems.length; i++) {
         const shape = renderItems[i];
-        const frame = shape.frame;
+        const frame = shape.outerFrame;
 
         const { left, top, right, bottom } = getShadowMax(shape);
-        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
 
-        const x = frame.x - left - l_max;
-        const y = frame.y - top - t_max;
-        const _right = frame.width + (right + l_max + r_max);
-        const _bottom = frame.height + (bottom + t_max + b_max);
+        const x = frame.x - left;
+        const y = frame.y - top;
+        const _right = frame.width + right;
+        const _bottom = frame.height + bottom;
         points.push(...[
             { x, y },
             { x: _right, y },
@@ -126,15 +125,14 @@ function write4LazyLoader(target: ShapeView) {
     const points: XY[] = [];
     for (let i = 0; i < renderItems.length; i++) {
         const shape = renderItems[i];
-        const frame = shape.frame;
+        const frame = shape.outerFrame;
 
         const { left, top, right, bottom } = getShadowMax(shape);
-        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
 
-        const x = -left - l_max;
-        const y = -top - t_max;
-        const _right = frame.width + (right + l_max + r_max);
-        const _bottom = frame.height + (bottom + t_max + b_max);
+        const x = frame.x -left;
+        const y = frame.y -top;
+        const _right = frame.width + right;
+        const _bottom = frame.height + bottom;
         points.push(
             ...[
                 { x, y },

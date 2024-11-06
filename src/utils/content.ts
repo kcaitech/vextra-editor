@@ -1431,7 +1431,7 @@ export function flattenSelection(context: Context) {
                     })
                 }
             }
-        } else if (shapes.length > 1) {
+        } else {
             const shapessorted = compare_layer_3(shapes);
             const flatten = editor.flattenShapes(shapessorted)
             if (flatten) {
