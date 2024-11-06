@@ -2,7 +2,6 @@ import { Bundle } from "@/clipboard";
 import { parse as SVGParse } from "@/svg_parser";
 import { Reader } from "@/clipboard/read/reader";
 import { Context } from "@/context";
-import { result } from "lodash";
 
 export class ClipboardEventReader extends Reader {
     constructor(context: Context) {
