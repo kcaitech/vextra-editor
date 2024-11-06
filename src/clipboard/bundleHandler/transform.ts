@@ -1,4 +1,8 @@
-import { Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2, TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape } from "@kcdesign/data";
+import {
+    Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2,
+    TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView,
+    SymbolRefShape, SymbolShape
+} from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
