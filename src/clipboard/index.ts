@@ -51,7 +51,13 @@ export class MossClipboard {
         } else return false;
     }
 
-    writeAsPNG() {}
+    async writeAsPNG(blob: Blob, name: string, width: number, height: number) {
+        const cache: Bundle = {};
+        if (await new MossWriter(this.context).writeAsPNG(cache, blob, name, width, height)) {
+            this.cache = cache;
+            return true;
+        } else return false;
+    }
 
     writeProperties() {}
     async read(event?: ClipboardEvent): Promise<Bundle | undefined> {

@@ -145,4 +145,20 @@ export class MossWriter {
             cache["HTML"] = html;
         }
     }
+
+    async writeAsPNG(cache: Bundle, blob: Blob, name: string, width: number, height: number) {
+        try {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            const base64 = await new Promise<string>(resolve => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target!.result as string);
+                reader.readAsDataURL(blob);
+            });
+            cache["images"] = [{ base64, name, width, height }];
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    }
 }

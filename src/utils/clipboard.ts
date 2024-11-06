@@ -58,9 +58,9 @@ class ExfContext {
 }
 
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
-const identity = 'design.moss';
-const paras = 'design.moss/paras'; // 文字段落
-const properties = 'design.moss/properties'; // 图层属性
+const identity = 'moss/source';
+const paras = 'moss/paras'; // 文字段落
+const properties = 'moss/properties'; // 图层属性
 
 export class Clipboard {
     context: Context;

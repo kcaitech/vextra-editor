@@ -500,29 +500,17 @@ function cursor_watcher(t: number, type: string) {
 
 function copy_watcher(event: ClipboardEvent) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    // props.context.workspace.clipboard.write(event);
-    {
-        const clip = new MossClipboard(props.context);
-        clip.write(event);
-    }
+    props.context.clip.write(event);
 }
 
 function cut_watcher(event: ClipboardEvent) {
     if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    // props.context.workspace.clipboard.cut(event);
-    {
-        const clip = new MossClipboard(props.context);
-        clip.cut(event);
-    }
+    props.context.clip.cut(event);
 }
 
 function paster_watcher(event: ClipboardEvent) {
     if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    {
-        const clip = new MossClipboard(props.context);
-        clip.paste(event);
-    }
-    // return props.context.workspace.clipboard.paste(t, event);
+    props.context.clip.paste(event);
 }
 
 function color_watcher(t: number) {

@@ -71,8 +71,8 @@ function write() {
             message('info', t('clipboard.copyAsPNGFailed'));
             return;
         }
-        const writeResult = props.context.workspace.clipboard.writeBlob(blob);
-        if (writeResult) {
+        const name = selected.map(i => i.name).toString();
+        if (await props.context.clip.writeAsPNG(blob, name, width.value, height.value)) {
             message('info', t('clipboard.copyAsPNGSuccess'));
         } else {
             message('info', t('clipboard.copyAsPNGFailed'));
