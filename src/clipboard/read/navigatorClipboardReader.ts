@@ -9,7 +9,7 @@ export class NavigatorClipboardReader extends Reader {
     }
 
     async read(bundle: Bundle) {
-        if (bundle["images"] || !navigator.clipboard.read) return;
+        if (Object.keys(bundle).length || !navigator.clipboard.read) return;
         for (const item of await navigator.clipboard.read()) for (const type of item.types) {
             if (type === "text/html") {
                 const blob = await item.getType("text/html");
