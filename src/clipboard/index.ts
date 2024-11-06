@@ -94,6 +94,8 @@ export class MossClipboard {
     }
 
     async pasteHere(xy: XY) {
+        const bundle = await this.read();
+        if (!bundle || !Object.keys(bundle).length) return false;
     }
 
     async pasteProperties() {

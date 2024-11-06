@@ -374,6 +374,9 @@ export class BundleHandler {
         }
     }
 
+    // todo 现在可以先用原来的
+    pasteHere(bundle: Bundle) {}
+
     replace(bundle: Bundle, shapes: ShapeView[]) {
         const { HTML, plain, images, SVG } = bundle;
 
