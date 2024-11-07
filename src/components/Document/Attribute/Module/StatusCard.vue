@@ -80,7 +80,6 @@ const getVarTagValue = () => {
     const shape = props.context.selection.symbolstate;
     if (!shape) return;
     let val = get_tag_value(shape, props.data.variable);
-
     if (val === SymbolShape.Default_State) {
         val = t('compos.dlt');
     }
@@ -123,9 +122,11 @@ function save_change(v: string) {
     editor.modifyStateSymTagValue(props.data.variable.id, v);
 }
 onUpdated(() => {
+    console.log('--update--')
     getVarTagValue();
 })
 onMounted(() => {
+    console.log('--mounted--')
     getVarTagValue();
     props.context.selection.watch(selected_watcher);
 })
