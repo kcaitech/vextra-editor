@@ -416,5 +416,15 @@ export function enter_path_edit_mode(context: Context, event: KeyboardEvent) {
                 return al
             });
         }
+    } else {
+        const target: ShapeView[] = [];
+        let changed = false;
+        for (const view of selected) {
+            if (view instanceof GroupShapeView && view.childs.length) {
+                changed = true;
+                target.push(...view.childs);
+            } else target.push(view);
+        }
+        if (changed) context.selection.rangeSelectShape(target);
     }
 }
