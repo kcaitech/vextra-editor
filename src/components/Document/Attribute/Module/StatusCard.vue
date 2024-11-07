@@ -59,13 +59,13 @@ const onEditAttrValue = (e: KeyboardEvent) => {
         closeValueInput();
     }
 }
-const selectoption = ref(false);
+const selectOption = ref(false);
 const showMenu = (e: MouseEvent) => {
-    if (selectoption.value) {
-        return selectoption.value = false;
+    if (selectOption.value) {
+        return selectOption.value = false;
     }
     props.context.menu.notify(Menu.CLOSE_COMP_MENU);
-    selectoption.value = true;
+    selectOption.value = true;
     nextTick(locate);
 }
 function locate() {
@@ -76,11 +76,9 @@ function locate() {
     }
 }
 
-const getVattagValue = () => {
+const getVarTagValue = () => {
     const shape = props.context.selection.symbolstate;
-    if (!shape) {
-        return;
-    }
+    if (!shape) return;
     let val = get_tag_value(shape, props.data.variable);
 
     if (val === SymbolShape.Default_State) {
@@ -92,15 +90,15 @@ const getVattagValue = () => {
 }
 const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
-        getVattagValue();
-        if (selectoption.value) {
-            selectoption.value = false;
+        getVarTagValue();
+        if (selectOption.value) {
+            selectOption.value = false;
         }
     }
 }
 
 
-function selcet(index: number) {
+function select(index: number) {
     if (index === props.data.values.length - 1) {
         editAttrValue.value = true;
         attrValueInput.value = '新的值';
@@ -112,7 +110,7 @@ function selcet(index: number) {
         const val = props.data.values[index];
         save_change(val);
     }
-    selectoption.value = false;
+    selectOption.value = false;
 }
 
 function save_change(v: string) {
@@ -125,10 +123,10 @@ function save_change(v: string) {
     editor.modifyStateSymTagValue(props.data.variable.id, v);
 }
 onUpdated(() => {
-    getVattagValue();
+    getVarTagValue();
 })
 onMounted(() => {
-    getVattagValue();
+    getVarTagValue();
     props.context.selection.watch(selected_watcher);
 })
 onUnmounted(() => {
@@ -145,11 +143,11 @@ onUnmounted(() => {
                         <span>{{ statusValue }}</span>
                         <el-icon @click.stop="showMenu" class="status-icon-down">
                             <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                                :style="{ transform: selectOption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                         </el-icon>
                     </div>
-                    <SelectMenu v-if="selectoption" :top="top" width="100%" :menuItems="data.values" :context="context"
-                        :menuIndex="menuIndex" @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
+                    <SelectMenu v-if="selectOption" :top="top" width="100%" :menuItems="data.values" :context="context"
+                                :menuIndex="menuIndex" @close="selectOption = false" @selectIndex="select"></SelectMenu>
                 </div>
                 <div class="module_input" v-if="editAttrValue">
                     <el-input v-model="attrValueInput" ref="revalueInput" @blur="input_blur" @focus="selectText"
