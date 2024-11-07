@@ -29,6 +29,8 @@ export interface IContext extends IWatchable {
 
     setCurAction(uuid: string): void;
 
+    lastRemoteCmdVersion(): string | undefined;
+
     hasPendingSyncCmd(): boolean;
 
     get selection(): ISelection

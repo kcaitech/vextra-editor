@@ -40,6 +40,7 @@ import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from 
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import { MossClipboard } from "@/clipboard";
+import ImagePicker from "@/imageLoader/ImagePicker.vue";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -500,21 +501,17 @@ function cursor_watcher(t: number, type: string) {
 
 function copy_watcher(event: ClipboardEvent) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    props.context.workspace.clipboard.write(event);
+    props.context.clip.write(event);
 }
 
 function cut_watcher(event: ClipboardEvent) {
     if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    props.context.workspace.clipboard.cut(event);
+    props.context.clip.cut(event);
 }
 
 function paster_watcher(event: ClipboardEvent) {
     if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    // {
-    //     const clip = new MossClipboard(props.context);
-    //     clip.paste(event);
-    // }
-    return props.context.workspace.clipboard.paste(t, event);
+    props.context.clip.paste(event);
 }
 
 function color_watcher(t: number) {
@@ -698,7 +695,6 @@ const stop1 = watch(() => props.page, (cur, old) => {
 })
 
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
-
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
@@ -760,6 +756,7 @@ onUnmounted(() => {
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
         <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="(matrix as Matrix)" />
         <Rule :context="props.context" :page="(props.page as PageView)" />
+        <ImagePicker :context="props.context"/>
         <!-- 页面调整控件，确保在ContentView顶层 -->
         <Space :context="props.context" :visible="spacePressed" />
     </div>

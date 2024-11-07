@@ -39,7 +39,7 @@ import * as parse_svg from "@/svg_parser";
 import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
-import { ImageLoader } from "@/utils/imageLoader";
+import { ImageLoader } from "@/imageLoader";
 import { UploadAssets } from "@kcdesign/data";
 import { isTarget } from "@/utils/scout";
 
@@ -1003,7 +1003,7 @@ export function root_scale(context: Context, e: WheelEvent) {
     let scale_delta = 1.2;
 
     if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
-        scale_delta = 1.02;
+        scale_delta = 1.08;
     }
 
     let scale_delta_ = 1 / scale_delta;

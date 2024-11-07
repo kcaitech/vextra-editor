@@ -1,8 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import {
-    GroupShapeView, Matrix, PageView, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView
-} from "@kcdesign/data";
+import { GroupShapeView, Matrix, PageView, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { throttle } from "lodash";
@@ -36,6 +34,11 @@ export function scout(context: Context): Scout {
         const scale = context.workspace.curScale;
 
         let stroke = 14 / scale;
+
+        if (shape.type === ShapeType.Contact) {
+            path.setAttributeNS(null, 'stroke-width', `${stroke}`);
+            return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        }
 
         let isClosed = true;
 
@@ -186,11 +189,6 @@ function getBoxPath(transformMatrix: Matrix) {
 
 // 判定点是否在图形内
 export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
-    const masked = shape.masked;
-    if (masked) {
-        const view = (shape.getPage() as PageView).getView(masked.id);
-        if (!view || !scout.isPointInShape(view, p)) return false;
-    }
     return scout.isPointInShape(shape, p);
 }
 

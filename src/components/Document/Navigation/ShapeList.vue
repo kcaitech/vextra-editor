@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { Menu } from "@/context/menu";
-import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import {
@@ -126,7 +126,12 @@ let listviewSource = new class implements IDataSource<ItemData> {
 const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
 
+const searching = computed<boolean>(() => {
+    return !!(keywords.value.length || includes_type.value.length);
+});
+
 function notifySourceChange(t?: number | string) {
+    if (searching.value) return;
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         locate();
         if (t === 'changed') props.context.navi.notify(Navi.COMP_LIST_CHANGED);
@@ -493,7 +498,7 @@ onUnmounted(() => {
             <div class="menu-f" @click="show_types">
                 <svg-icon icon-class="down"></svg-icon>
             </div>
-            <input ref="search_el" type="text" id="xpxp" v-model="keywords"
+            <input ref="search_el" type="text" v-model="keywords"
                    :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="pre_search"
                    @change="search" @input="input" @focus="input_focus">
             <div @click="clear_text" class="close"
@@ -527,17 +532,15 @@ onUnmounted(() => {
         </div>
     </div>
     <div class="body" ref="listBody" @mousedown="reset_selection">
-        <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
-                     :shape-types="includes_type" :accurate="accurate" @item-mousedown="list_mousedown">
-        </SearchPanel>
-        <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
+        <SearchPanel v-if="searching" :keywords="keywords" :context="props.context"
+                     :shape-types="includes_type" :accurate="accurate" @item-mousedown="list_mousedown"/>
+        <ListView v-else ref="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
                   :source="listviewSource" :item-view="ShapeItem" :item-height="itemHeight" :item-width="0"
                   :first-index="0" :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape"
                   @hovershape="hoverShape" @unhovershape="unHoverShape" @scrolltoview="shapeScrollToContentView"
                   @rename="rename" @set-visible="modify_visible_status" @set-lock="modify_lock_status"
                   @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
-                  @after-drag-2="after_drag">
-        </ListView>
+                  @after-drag-2="after_drag"/>
         <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop
                      :items="contextMenuItems">
         </ContextMenu>

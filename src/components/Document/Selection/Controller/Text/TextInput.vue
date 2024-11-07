@@ -100,19 +100,12 @@ function copy_watcher(event: ClipboardEvent) {
 function cut_watcher(event: ClipboardEvent) {
     event.stopPropagation();
 
-    if (!permIsEdit(props.context)) {
-        return;
-    }
+    if (!permIsEdit(props.context)) return;
 
-    const write_result = props.context.workspace.clipboard.write(event);
-    if (!write_result) {
-        return;
-    }
+    if (!props.context.workspace.clipboard.write(event)) return;
 
     const text_shape = props.context.selection.textshape;
-    if (!text_shape) {
-        return;
-    }
+    if (!text_shape) return;
 
     const selection = props.context.textSelection;
     const start = selection.cursorStart;
@@ -125,8 +118,6 @@ function cut_watcher(event: ClipboardEvent) {
     if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
         selection.setCursor(Math.min(start, end), false);
     }
-
-
 }
 
 function paste_watcher(event: ClipboardEvent) {

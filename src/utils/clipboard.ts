@@ -42,9 +42,9 @@ import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_sty
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 import { flattenShapes } from "@/utils/cutout";
 import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
-import { ImageLoader } from "@/utils/imageLoader";
 import { UploadAssets } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
+import { ImageLoader } from "@/imageLoader";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -58,9 +58,9 @@ class ExfContext {
 }
 
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
-const identity = 'design.moss';
-const paras = 'design.moss/paras'; // 文字段落
-const properties = 'design.moss/properties'; // 图层属性
+const identity = 'moss/source';
+const paras = 'moss/paras'; // 文字段落
+const properties = 'moss/properties'; // 图层属性
 
 export class Clipboard {
     context: Context;

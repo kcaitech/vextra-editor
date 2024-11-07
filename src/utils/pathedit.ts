@@ -1,16 +1,6 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import {
-    ContactLineView,
-    CurveMode,
-    CurvePoint,
-    Matrix,
-    PathShape,
-    PathShapeView,
-    PathType,
-    ShapeType,
-    ShapeView
-} from "@kcdesign/data";
+import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView } from "@kcdesign/data";
 import { Action } from "@/context/tool";
 
 export function get_parent_points(context: Context, range?: Map<number, number[]>) {
@@ -399,27 +389,48 @@ export function get_segments(shape: ShapeView, matrix: Matrix, map: Map<number, 
     }
 }
 
-export function enter_path_edit_mode(context: Context) {
+export function enter_path_edit_mode(context: Context, event: KeyboardEvent) {
     const selected = context.selection.selectedShapes;
 
-    if (selected.length !== 1) {
-        console.log('enter_path_edit_mode: selected.length !== 1');
+    if (!context.workspace.is_path_edit_mode && event.shiftKey) {
+        const set = new Set<ShapeView>();
+        let changed = false;
+        for (const view of selected) {
+            if (view.parent!.type === ShapeType.Page) {
+                set.add(view);
+                changed = true;
+            } else {
+                set.add(view.parent!);
+            }
+        }
+        if (set.size && changed) context.selection.rangeSelectShape(Array.from(set.values()));
         return;
     }
 
-    const shape = selected[0];
+    if (selected.length === 1) {
+        const shape = selected[0];
 
-    if (!shape.pathType || shape.isVirtualShape || shape instanceof ContactLineView) {
-        console.log('!shape.pathType || shape.isVirtualShape || shape instanceof ContactLineView');
-        return;
-    }
-    context.tool.setAction(Action.AutoV);
-    context.workspace.setPathEditMode(true); // --开启对象编辑
-    context.escstack.save('path-edit', exist_edit_mode);
-
-    function exist_edit_mode() {
-        const al = context.workspace.is_path_edit_mode;
-        context.workspace.setPathEditMode(false);
-        return al;
+        if (shape instanceof GroupShapeView && shape.childs.length) {
+            context.selection.rangeSelectShape([...shape.childs]);
+        } else {
+            if (!shape.pathType || shape.isVirtualShape || shape instanceof ContactLineView) return;
+            context.tool.setAction(Action.AutoV);
+            context.workspace.setPathEditMode(true); // --开启对象编辑
+            context.escstack.save('path-edit', () => {
+                const al = context.workspace.is_path_edit_mode;
+                context.workspace.setPathEditMode(false);
+                return al
+            });
+        }
+    } else {
+        const target: ShapeView[] = [];
+        let changed = false;
+        for (const view of selected) {
+            if (view instanceof GroupShapeView && view.childs.length) {
+                changed = true;
+                target.push(...view.childs);
+            } else target.push(view);
+        }
+        if (changed) context.selection.rangeSelectShape(target);
     }
 }

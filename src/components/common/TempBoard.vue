@@ -8,9 +8,7 @@ import { XY } from "@/context/selection";
 import { XYsBounding } from "@/utils/common";
 import { useI18n } from 'vue-i18n';
 import { message } from "@/utils/message";
-import { getShadowMax } from "@/utils/cutout";
-// import CanvasKitInit from 'canvaskit-wasm';
-// import CanvasKitInit from "@kcdesign/canvaskit-wasm";
+import { getShadowMax, getShapeBorderMax } from "@/utils/cutout";
 
 interface Props {
     context: Context;
@@ -28,32 +26,6 @@ const background_color = ref<string>('transparent');
 const pedal = ref<boolean>(false);
 const pageCard = ref<PCard>();
 const t = useI18n().t;
-
-// async function drawImage(img: CanvasImageSource) {
-//     const CanvasKit = await CanvasKitInit({
-//         locateFile: (file: string) => {
-//             console.log('__file__', file);
-//             return `/${file}`;
-//         }
-//     });
-//     const canvas = CanvasKit.MakeCanvas(375, 600);
-//
-//     const ctx = canvas.getContext('2d')!;
-//     ctx.drawImage(img, 0, 0);
-//     return dataURLToBlob(canvas.toDataURL('image/png', 0.5));
-// }
-
-function dataURLToBlob(dataURL: string) {
-    let arr = dataURL.split(',');
-    let mine = (arr[0].match(/:(.*?);/) as any)[1];
-    let __atob = atob(arr[1]);
-    let n = __atob.length;
-    let u8Array = new Uint8Array(n);
-    while (n--) {
-        u8Array[n] = __atob.charCodeAt(n);
-    }
-    return new Blob([u8Array], mine);
-}
 
 function write() {
     renderItems.length = 0;
@@ -82,7 +54,7 @@ function write() {
             { x: _right, y },
             { x: _right, y: _bottom },
             { x, y: _bottom }
-        ].map(p => shape.matrix2Root().computeCoord3(p)));
+        ].map(p => shape.matrix2Parent().computeCoord3(p)));
     }
 
     const box = XYsBounding(points);
@@ -98,8 +70,8 @@ function write() {
             message('info', t('clipboard.copyAsPNGFailed'));
             return;
         }
-        const writeResult = props.context.workspace.clipboard.writeBlob(blob);
-        if (writeResult) {
+        const name = selected.map(i => i.name).toString();
+        if (await props.context.clip.writeAsPNG(blob, name, width.value, height.value)) {
             message('info', t('clipboard.copyAsPNGSuccess'));
         } else {
             message('info', t('clipboard.copyAsPNGFailed'));
@@ -177,10 +149,10 @@ function getBlob(): Promise<Blob | null> {
 
         document.body.appendChild(_svg);
         const { width, height } = _svg.viewBox.baseVal;
-        _svg.setAttribute('width', `${width * 2}`);
-        _svg.setAttribute('height', `${height * 2}`);
-        canvas.width = width * 2;
-        canvas.height = height * 2;
+        _svg.setAttribute('width', `${width}`);
+        _svg.setAttribute('height', `${height}`);
+        canvas.width = width;
+        canvas.height = height;
         const svgString = new XMLSerializer().serializeToString(_svg);
         document.body.removeChild(_svg);
         const img = new Image();
@@ -190,7 +162,6 @@ function getBlob(): Promise<Blob | null> {
             canvas.toBlob((blob) => {
                 resolve(blob);
             }, 'image/png');
-            // resolve(await drawImage(img));
         }
         img.onerror = (err) => {
             console.error(err);
@@ -227,7 +198,7 @@ function getBase64(): Promise<string | null> {
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
         img.onload = () => {
             context.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/jpeg', 0.5))
+            resolve(canvas.toDataURL('image/jpeg', 1))
         }
         img.onerror = (err) => {
             console.error(err);
