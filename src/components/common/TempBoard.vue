@@ -8,7 +8,7 @@ import { XY } from "@/context/selection";
 import { XYsBounding } from "@/utils/common";
 import { useI18n } from 'vue-i18n';
 import { message } from "@/utils/message";
-import { getShadowMax, getShapeBorderMax } from "@/utils/cutout";
+import { getShadowMax } from "@/utils/cutout";
 
 interface Props {
     context: Context;
