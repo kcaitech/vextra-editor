@@ -732,13 +732,13 @@ keydownHandler['Numpad9'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['Enter'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (!permIsEdit(context)) return;
-    enter_path_edit_mode(context);
+    enter_path_edit_mode(context, event);
 }
 
 keydownHandler['NumpadEnter'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (!permIsEdit(context)) return;
-    enter_path_edit_mode(context);
+    enter_path_edit_mode(context, event);
 }
 
 keydownHandler['Escape'] = function (event: KeyboardEvent, context: Context) {
