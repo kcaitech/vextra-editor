@@ -394,10 +394,16 @@ export function enter_path_edit_mode(context: Context, event: KeyboardEvent) {
 
     if (!context.workspace.is_path_edit_mode && event.shiftKey) {
         const set = new Set<ShapeView>();
+        let changed = false;
         for (const view of selected) {
-            if (view.parent && view.parent.type !== ShapeType.Page) set.add(view.parent);
+            if (view.parent!.type === ShapeType.Page) {
+                set.add(view);
+                changed = true;
+            } else {
+                set.add(view.parent!);
+            }
         }
-        if (set.size) context.selection.rangeSelectShape(Array.from(set.values()));
+        if (set.size && changed) context.selection.rangeSelectShape(Array.from(set.values()));
         return;
     }
 
