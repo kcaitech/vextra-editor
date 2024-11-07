@@ -438,7 +438,7 @@ onUnmounted(() => {
             </div>
         </div>
     </div>
-    <input v-if="isInput" @change="onChangeName" @click.stop class="rename" type="text" ref="nameInput">
+    <input v-if="isInput" @change="onChangeName" @click.stop @mousedown.stop class="rename" type="text" ref="nameInput">
 </div>
 </template>
 
