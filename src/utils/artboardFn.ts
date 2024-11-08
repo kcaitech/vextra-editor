@@ -24,12 +24,13 @@ import { v4 } from 'uuid';
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
 // 直到没有🍌为止，得到最后的XY;
 
-export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: ShapeFrame): PageXY {
+export function landFinderOnPage(context: Context, frame: ShapeFrame): PageXY {
     const shapes: ShapeView[] = context.selection.selectedPage?.childs || [];
     const { width, height } = frame;
+    const matrix = context.workspace.matrix;
     let center = context.workspace.root.center;
-    center = pageMatrix.inverseCoord(center.x, center.y);
-    const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point
+    center = matrix.inverseCoord(center.x, center.y);
+    const start = { x: center.x - width / 2, y: center.y - height / 2 };
     const offset = 40;
     let pure: boolean = false;
     let max = 0;
@@ -119,16 +120,14 @@ export function insertFrameTemplate(context: Context) {
     if (parent) {
         const editor = context.editor4Page(parent);
         const tf = tool.frameSize
-        const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
-        const { x, y } = landFinderOnPage(matrix, context, frame);
+        const { x, y } = landFinderOnPage(context, frame);
         frame.x = x;
         frame.y = y;
         const fillColor = new Color(1, 255, 255, 255);
         const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, fillColor);
         let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill);
-        // let artboard: Shape | false = editor.create(ShapeType.Artboard, tf.name, frame);
-        artboard = editor.insert(parent.data, shapes.length, artboard);
+        artboard = editor.insert(parent.data, shapes.length, artboard, true);
         context.nextTick(parent, () => {
             if (artboard) {
                 const view = parent.shapes.get(artboard.id);

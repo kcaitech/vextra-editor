@@ -122,10 +122,8 @@ const onRename = () => {
     }
     isInput.value = true
     nextTick(() => {
-        if (!nameInput.value) {
-            return;
-        }
-        (nameInput.value as HTMLInputElement).value = props.data.shape().name.trim();
+        if (!nameInput.value) return;
+        (nameInput.value as HTMLInputElement).value = props.data.shapeview().name.trim();
         nameInput.value.focus();
         nameInput.value.select();
         nameInput.value?.addEventListener('blur', stopInput);
@@ -226,7 +224,7 @@ const tool_watcher = (t?: number) => {
 }
 
 function is_group() {
-    return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(props.data.shape().type);
+    return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(props.data.shapeview().type);
 }
 
 function _updateAbbrView() {
@@ -254,12 +252,8 @@ function updater(...args: any[]) {
         })
         return;
     }
-    if (args.includes('mask') || args.includes('fills') || args.includes('autoLayout')){
-        return update_abbr_view();
-    }
-    if (args.includes('size') || args.includes('points')){
-        return update_abbr_view();
-    } 
+    if (args.includes('mask') || args.includes('fills') || args.includes('autoLayout')) return _updateAbbrView();
+    if (args.includes('size') || args.includes('points')) return update_abbr_view();
 
     const shape = props.data.shapeview();
 
@@ -272,10 +266,10 @@ function updater(...args: any[]) {
     visible_status.value = shape.isVisible ? 0 : 1;
 }
 
-let oldshape: Shape | undefined;
+let oldshape: ShapeView | undefined;
 const stop = watch(() => props.data.id, (value, old) => {
     oldshape && oldshape.unwatch(updater);
-    oldshape = props.data.shape();
+    oldshape = props.data.shapeview();
     oldshape.watch(updater);
     watchShapes();
 }, { immediate: true })
@@ -345,7 +339,7 @@ const selectedWatcher = (t?: any) => {
     }
 }
 const getHovered = () => {
-    const shape = props.data.shape();
+    const shape = props.data.shapeview();
     const hoverShape = props.data.context.selection.hoveredShape;
     hovered.value = Boolean(hoverShape && shape.id === hoverShape.id);
 }

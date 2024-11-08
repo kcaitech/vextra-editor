@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { message } from '@/utils/message';
 
 const { t } = useI18n()
-const props = defineProps<{ context: Context, selection: Selection, disabled: boolean }>();
+const props = defineProps<{ context: Context, disabled: boolean }>();
 type Button = InstanceType<typeof ToolButton>
 
 const popoverVisible = ref<boolean>(false);
@@ -38,11 +38,9 @@ const patterns = ((items: [string, any, BoolOp][]) => (items.map(item => ({
 ]);
 
 function showMenu(e: MouseEvent) {
-    e.stopPropagation()
-    const selected = props.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes;
     if (selected.length > 0 && selected.some(s => s.type === ShapeType.Cutout)) {
-        message('feature', t('cutoutExport.cutoutNotBool'));
-        return;
+        return message('feature', t('cutoutExport.cutoutNotBool'));
     }
     if (popoverVisible.value) return popoverVisible.value = false;
     if (button.value?.toolButtonEl) {
@@ -53,10 +51,8 @@ function showMenu(e: MouseEvent) {
             if (popover.value) {
                 popover.value.style.left = el.offsetLeft + 'px';
                 popover.value.style.top = el.offsetHeight + 13 + 'px';
-
             }
         })
-        document.addEventListener('click', onMenuBlur);
     }
 }
 
@@ -75,14 +71,7 @@ const selector = (active: string, type: BoolOp) => {
 }
 
 function onMenuBlur(e: MouseEvent) {
-    if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu')) {
-        if (e.target.closest('.popover')) return;
-        var timer = setTimeout(() => {
-            popoverVisible.value = false;
-            clearTimeout(timer)
-            document.removeEventListener('click', onMenuBlur);
-        }, 10)
-    }
+    if (e.target instanceof Element && !e.target.closest('.popover, .menu')) popoverVisible.value = false;
 }
 
 var timer: any = null
@@ -98,7 +87,7 @@ const onMouseleave = () => {
 }
 
 const changeBool = () => {
-    const selected = props.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes;
     if (selected.length > 0 && selected.some(s => s.type === ShapeType.Cutout)) {
         message('info', t('cutoutExport.cutoutNotBool'));
         return;
@@ -108,7 +97,7 @@ const changeBool = () => {
 
 const selectionWatch = (t?: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
-        const shapes = props.selection.selectedShapes
+        const shapes = props.context.selection.selectedShapes
         getBoolGroupType(shapes)
     }
 }
@@ -146,6 +135,7 @@ const getBoolGroupType = (shapes: ShapeView[]) => {
         boolName.value = 'union'
         boolType.value = BoolOp.Union
     }
+
 }
 
 const stop = watch(() => props.disabled, (d) => {
@@ -154,14 +144,24 @@ const stop = watch(() => props.disabled, (d) => {
     }
 })
 
+const stop2 = watch(() => popoverVisible.value, (v) => {
+    if (v) {
+        document.addEventListener('click', onMenuBlur);
+    } else {
+        document.removeEventListener('click', onMenuBlur);
+    }
+})
+
 onMounted(() => {
-    const shapes = props.selection.selectedShapes
+    const shapes = props.context.selection.selectedShapes
     getBoolGroupType(shapes)
     props.context.selection.watch(selectionWatch)
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatch)
     stop();
+    document.removeEventListener('click', onMenuBlur);
+    stop2();
 })
 
 </script>
@@ -169,21 +169,21 @@ onUnmounted(() => {
 <template>
     <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
         <template v-for="(item, index) in patterns" :key="item.value">
-            <div class="line" v-if="index === 4"></div>
+            <div class="line" v-if="index === 4"/>
             <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool"
-                :d="selectBool" :state="state"></DropSelect>
+                        :d="selectBool" :state="state"/>
         </template>
     </div>
     <el-tooltip class="box-item" effect="dark" :content="t(`bool.${selectBool}`)" placement="bottom" :show-after="600"
         :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-        <ToolButton :class="{'active-f':popoverVisible}" ref="button" @click="changeBool"
+        <ToolButton :class="{'active-f':popoverVisible}" ref="button"
             :style="{ opacity: disabled ? 0.4 : 1, pointerEvents: disabled ? 'none' : 'auto' }" :selected="false"
             @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
-            <div class="svg-container" :class="{ active: state }">
-                <svg-icon :icon-class="selectBool"></svg-icon>
+            <div class="svg-container" :class="{ active: state }" @click="changeBool">
+                <svg-icon :icon-class="selectBool"/>
             </div>
             <div class="menu" @click="showMenu">
-                <svg-icon icon-class="white-down"></svg-icon>
+                <svg-icon icon-class="white-down"/>
             </div>
         </ToolButton>
     </el-tooltip>

@@ -45,6 +45,7 @@ import { IContext } from "@/openapi";
 import { EscStack } from "./escstack";
 import { scout, Scout } from "@/utils/scout";
 import { Preview } from "./preview";
+import { MossClipboard } from "@/clipboard";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -138,7 +139,8 @@ export class Context extends WatchableObject implements IContext {
     private m_medias: PdMedia;
     private m_user: User;
     private m_attr: Attribute;
-    private m_preview: Preview
+    private m_preview: Preview;
+    private m_clip: MossClipboard;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -175,6 +177,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_user = new User();
         this.m_attr = new Attribute();
         this.m_preview = new Preview(this);
+        this.m_clip = new MossClipboard(this);
         startLoadTask(data, this.m_taskMgr);
     }
 
@@ -364,6 +367,10 @@ export class Context extends WatchableObject implements IContext {
         return this.m_preview;
     }
 
+    get clip() {
+        return this.m_clip;
+    }
+
     private createVDom(page: Page) {
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
@@ -401,5 +408,10 @@ export class Context extends WatchableObject implements IContext {
 
     get documentInfo(): { name: string } {
         return this.m_doc_info || { name: '' };
+    }
+
+    rename(name: string) {
+        const editor = this.editor4Doc();
+        editor.rename(name);
     }
 }

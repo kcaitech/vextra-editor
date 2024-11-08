@@ -13,6 +13,7 @@ export interface IEscStack {
 
 export namespace ContextEvents {
     export const action_change = "action_change"
+    export const document_name_change = "document_name_change"
 }
 
 export interface IContext extends IWatchable {
@@ -47,4 +48,6 @@ export interface IContext extends IWatchable {
     setDocumentInfo(info: { name: string }): void;
 
     get documentInfo(): { name: string };
+
+    rename(name: string): void;
 }

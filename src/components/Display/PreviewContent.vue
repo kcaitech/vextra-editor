@@ -52,6 +52,7 @@ const symRefAnimate = ref<SVGSVGElement>();
 const renderCard = ref(false);
 let event: MouseEvent;
 const reflush = ref(0);
+const showToggle = ref(true);
 
 const previewMode = props.mode === 'preview';
 
@@ -246,7 +247,7 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
         const view = new SymbolDom(domCtx, { data: sym });
         view.layout();
         view.render();
-        const bezier = action.easingFunction ? [action.easingFunction.x1,action.easingFunction.y1,action.easingFunction.x2,action.easingFunction.y2] : [0, 0, 1, 1];
+        const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
         const time = action.transitionDuration ?? 0.3;
         symRefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         symRefAnimate.value.style['transform'] = m.toString();
@@ -625,7 +626,7 @@ function search(e: MouseEvent) {
             }
         }
     } else {
-        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);
+        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);  
     }
     const actions = hover_shape?.prototypeInterActions;
     reflush.value++;
@@ -845,9 +846,10 @@ const backTargetShape = (s?: string) => {
     })
 }
 
-const onMouseEnter = () => {
+const onMouseEnter = (e: MouseEvent) => {    
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
+    onMouseMove_CV(e);
 }
 const onMouseLeave = () => {
     document.removeEventListener('keydown', onKeyDown);
@@ -907,7 +909,17 @@ function watch_shapes() {
         watchedShapes.set(v.id, v)
     });
 }
+let hideTimeout: any;
+function showToggleBox() {
+    showToggle.value = true;
+    clearTimeout(hideTimeout);
+}
 
+function hideToggleBox() {
+    hideTimeout = setTimeout(() => {
+        showToggle.value = false;
+    }, 2500); // 3秒后隐藏
+}
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
     props.context.selection.watch(selectionWatcher);
@@ -923,6 +935,8 @@ onMounted(() => {
     if (preview.value) {
         observer.observe(preview.value);
     }
+    showToggleBox();
+    hideToggleBox();
 })
 onUnmounted(() => {
     observer.disconnect();
@@ -963,13 +977,16 @@ onUnmounted(() => {
             xmlns:xhtml="http://www.w3.org/1999/xhtml" class="sym_ref_animate" preserveAspectRatio="xMinYMin meet"
             viewBox="0 0 100 100" width="100" height="100">
         </svg>
-        <div class="toggle" v-if="listLength && previewMode">
-            <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-                <svg-icon icon-class="left-arrow"></svg-icon>
-            </div>
-            <div class="page">{{ curPage }} / {{ listLength }}</div>
-            <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
-                <svg-icon icon-class="right-arrow" />
+        <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox">
+            <div class="toggle" v-if="showToggle && listLength && previewMode">
+                <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
+                    <svg-icon icon-class="left-arrow"></svg-icon>
+                </div>
+                <div class="page">{{ curPage }} / {{ listLength }}</div>
+                <div class="next" @click.stop="togglePage(1)" @mouseup.stop
+                    :class="{ disable: listLength === curPage }">
+                    <svg-icon icon-class="right-arrow" />
+                </div>
             </div>
         </div>
         <MenuVue v-if="isMenu && previewMode" :context="context" :top="top" :left="left" @close="closeMenu" />
@@ -1009,20 +1026,29 @@ onUnmounted(() => {
         z-index: 19;
     }
 
-    .toggle {
+    .toggleBox {
         position: absolute;
         left: 50%;
-        bottom: 10px;
+        bottom: 0px;
         transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        width: 300px;
+        height: 90px;
+    }
+
+    .toggle {
         display: flex;
         align-items: center;
         height: 24px;
         box-sizing: border-box;
         padding: 9px;
+        margin-top: 10px;
         border-radius: 4px;
         background-color: rgba(0, 0, 0, 0.9);
         color: hsla(0, 0%, 100%, 0.9);
-        z-index: 100;
 
         .last {
             display: flex;

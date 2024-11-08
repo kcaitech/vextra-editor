@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { FrameLike, TransformHandler } from "./handler";
+import { BoundHandler, FrameLike } from "./handler";
 import {
     ColVector3D, CtrlElementType, Matrix, Scaler, ShapeSize, ShapeView, SymbolView, Transform, UniformScaleUnit,
     ArtboradView, GroupShapeView, SymbolRefView
@@ -21,7 +21,7 @@ type Box = {
 
 type BaseFrames = Map<string, Box>;
 
-export class ScaleHandler extends TransformHandler {
+export class ScaleHandler extends BoundHandler {
     readonly shapes: ShapeView[];
     readonly ctrlElementType: CtrlElementType;
 
@@ -415,6 +415,7 @@ export class ScaleHandler extends TransformHandler {
     }
 
     private __execute_normal() {
+
         if (!this.shapes.length) return;
 
         // 光标在选区坐标系下的坐标
@@ -628,20 +629,26 @@ export class ScaleHandler extends TransformHandler {
             sizeForSelection.height / this.selectionSize.height * (__scale.y > 0 ? 1 : -1),
             1,
         ]));
-
+        const w_change = sizeForSelection.width / this.selectionSize.width !== 1;
+        const h_change = sizeForSelection.height / this.selectionSize.height !== 1;
         const units: {
             shape: ShapeView,
             size: ShapeSize,
             transform2: Transform,
-            scale: { x: number, y: number }
+            scale: { x: number, y: number },
+            w_change: boolean,
+            h_change: boolean
         }[] = [];
 
         const shapes = this.shapes;
         const inverseCache = this.transformInverseCache;
         const sizes = this.shapeSizeList;
+        const __is_locked = this.isLocked.bind(this);
 
         this.shapeTransformListInSelection.forEach((transform, i) => {
             const shape = shapes[i];
+
+            if (__is_locked(shape)) return;
 
             const t = transform.clone()
                 .addTransform(transformForSelection)
@@ -661,9 +668,9 @@ export class ScaleHandler extends TransformHandler {
                 x: Math.abs(scale.x),
                 y: Math.abs(scale.y)
             };
-
-            units.push({ shape, size, transform2: t, scale: __scale });
+            units.push({ shape, size, transform2: t, scale: __scale, w_change, h_change });
         });
+
 
         if (this.alignPixel) {
             for (const unit of units) {
@@ -840,8 +847,12 @@ export class ScaleHandler extends TransformHandler {
         const inverseCache = this.transformInverseCache;
         const sizes = this.shapeSizeList;
 
+        const __is_locked = this.isLocked.bind(this);
+
         this.shapeTransformListInSelection.forEach((transform, i) => {
             const shape = shapes[i];
+
+            if (__is_locked(shape)) return;
 
             const t = transform.clone()
                 .addTransform(transformForSelection)

@@ -3,7 +3,7 @@ import ToolButton from './ToolButton.vue';
 import { useI18n } from 'vue-i18n'
 import { Context } from '@/context';
 import { useAuto, useAutoK } from "@/components/Document/Creator/execute";
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Action, Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
@@ -44,58 +44,57 @@ function toolWatch(type: any) {
 }
 
 function blur(e: MouseEvent) {
-    if (!(e.target && (e.target as Element).closest('.popover-auto-tool-0958'))) {
-        popover.value = false;
-        document.removeEventListener('click', blur);
-    }
+    if (!(e.target && (e.target as Element).closest('.popover-auto-tool-0958, .tool-auto-menu-trigger'))) popover.value = false;
 }
 
 function showMenu() {
     if (popover.value) return popover.value = false;
     popover.value = true;
-
-    document.addEventListener('click', blur);
-    props.context.escstack.save('auto-popover-1021', () => {
-        const achieve = popover.value;
-        popover.value = false;
-        document.removeEventListener('click', blur);
-        return achieve;
-    })
 }
 
-function __use_v() {
-    if (stashAction.value !== Action.AutoV) {
-        useAuto(props.context);
+const stop = watch(() => popover.value, (v) => {
+    if (v) {
+        document.addEventListener('click', blur);
+        props.context.escstack.save('auto-popover-1021', () => {
+            const achieve = popover.value;
+            popover.value = false;
+            return achieve;
+        })
+    } else {
+        document.removeEventListener('click', blur);
     }
+})
+
+function __use_v() {
+    if (stashAction.value !== Action.AutoV) useAuto(props.context);
     popover.value = false;
 }
 
 function __use_k() {
-    if (stashAction.value !== Action.AutoK) {
-        useAutoK(props.context);
-    }
+    if (stashAction.value !== Action.AutoK) useAutoK(props.context);
     popover.value = false;
 }
-
 
 onMounted(() => {
     props.context.tool.watch(toolWatch);
 });
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatch);
+    stop();
+    document.removeEventListener('click', blur);
 })
 </script>
 
 <template>
     <div style="position: relative">
-        <ToolButton @click="click" :selected="props.params.active" :class="{ active: popover }" style="display: flex;">
+        <ToolButton :selected="props.params.active" :class="{ active: popover }" style="display: flex;">
             <el-tooltip class="box-item" effect="dark" :content="tips" placement="bottom" :show-after="600" :offset="10"
                 :hide-after="0">
-                <div class="svg-container">
+                <div class="svg-container" @click="click">
                     <svg-icon :icon-class="icon" />
                 </div>
             </el-tooltip>
-            <div class="tool-auto-menu-trigger" @click.stop="showMenu">
+            <div class="tool-auto-menu-trigger" @click="showMenu">
                 <svg-icon icon-class="white-down" />
             </div>
         </ToolButton>

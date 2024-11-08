@@ -42,7 +42,7 @@ const is_tool_visible = ref<boolean>()
 const isEdit = !props.data.context.readonly;
 const emit = defineEmits<{
     (e: "toggleexpand", shape: ShapeView): void;
-    (e: "selectshape", shape: ShapeView, ctrl: boolean, meta: boolean, shift: boolean): void;
+    (e: "selectshape", shape: ShapeView, ctrl: boolean, shift: boolean): void;
     (e: "hovershape", shape: ShapeView): void;
     (e: "unhovershape"): void;
     (e: "isLock", isLock: boolean, shape: ShapeView): void;
@@ -102,7 +102,7 @@ function selectShape(e: MouseEvent) {
     e.stopPropagation();
     if (!is_valid_data(props.data.context, props.data.shape)) return;
     const { ctrlKey, metaKey, shiftKey } = e;
-    emit("selectshape", props.data.shape, ctrlKey, metaKey, shiftKey);
+    emit("selectshape", props.data.shape, (ctrlKey || metaKey), shiftKey);
 }
 
 function hoverShape(e: MouseEvent) {
@@ -217,20 +217,6 @@ function icon_class() {
         return `layer-${shape.type}`;
     }
 }
-
-// const handlePerm = () => {
-//     const perm = props.data.context.workspace.documentPerm
-//     if (perm === Perm.isRead) {
-//         isread.value = true
-//     } else if (perm === Perm.isComment) {
-//         isread.value = false
-//         canComment.value = true
-//     } else {
-//         isread.value = false
-//         canComment.value = false
-//         isEdit.value = true
-//     }
-// }
 
 const isLable = ref(props.data.context.tool.isLable);
 const tool_watcher = (t?: number) => {
@@ -377,9 +363,7 @@ onUnmounted(() => {
             <input v-if="isInput" @change="onChangeName" @click.stop class="rename" type="text" ref="nameInput">
         </div>
         <div class="tips-wrap" :title="title" @click="toggleContainer" :class="{ 'tips-focus': props.data.focus }">
-            <span v-for="(item, index) in tips" :key="index" :class="{ active: item.isKeywords }">{{
-        item.content
-    }}</span>
+            <span v-for="(item, index) in tips" :key="index" :class="{ active: item.isKeywords }">{{ item.content }}</span>
         </div>
     </div>
 </template>

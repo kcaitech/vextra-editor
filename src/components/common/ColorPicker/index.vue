@@ -160,7 +160,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const { t } = useI18n();
-const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
+const modelOptions: SelectSource[] = genOptions([['Hex', 'Hex'], ['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const saturationEL = ref<HTMLElement>();
 const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
 const typicalColor = ref<Color[]>(typical);
@@ -173,7 +173,7 @@ let inputTarget: HTMLInputElement;
 let handleIndex = 0;
 const downXY: ClientXY = { x: 0, y: 0 };
 let isDrag: boolean = false;
-const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
+const model = ref<SelectItem>({ value: 'Hex', content: 'Hex' });
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
 const popoverEl = ref<HTMLDivElement>();
@@ -244,13 +244,15 @@ const labels = computed(() => {
     return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
 
-const values = computed<number[]>(() => {
+const values = computed<(number | string)[]>(() => {
     if (model.value.value === 'RGB') {
         return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
     } else if (model.value.value === 'HSB') {
         return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
     } else if (model.value.value === 'HSL') {
         return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
+    } else if (model.value.value === 'Hex') {
+        return [((1 << 24) + (rgba.R << 16) + (rgba.G << 8) + rgba.B).toString(16).slice(1).toUpperCase(), Math.round(rgba.alpha * 100)]
     } else {
         return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
     }
@@ -633,10 +635,10 @@ function switchModel(item: SelectItem) {
     model.value = item;
 }
 
-function inputClick(e: MouseEvent, hidx: number) {
+function inputClick(e: MouseEvent, idx: number) {
     const target = e.target as HTMLInputElement;
     inputTarget = target;
-    handleIndex = hidx;
+    handleIndex = idx;
     target.select();
     target.addEventListener('keydown', keyboardWatcher);
 }
@@ -648,45 +650,87 @@ function keyboardWatcher(e: KeyboardEvent) {
         passive();
     } else if (e.code === 'ArrowUp') {
         let v: string | number = inputTarget.value;
-        v = Number(v);
-        let _v = v + 1;
-        const valid = validate(model.value.value as any, handleIndex, _v);
-        if (valid) {
+        if (model.value.value === "Hex") {
             if (handleIndex === 0) {
-                rgba.R = Number(v) + 1;
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v) + 1;
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v) + 1;
+                v = v.toString();
+                const valid = validate(model.value.value as any, handleIndex, v);
+                if (valid) {
+                    let color = v.replace(/^#/, '');
+                    if (color.length === 3) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(1), color.charAt(1), color.charAt(2), color.charAt(2)].join('');
+                    } else if (color.length === 1) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0)].join('');
+                    }
+                    let r = parseInt(color.substring(0, 2), 16);
+                    let g = parseInt(color.substring(2, 4), 16);
+                    let b = parseInt(color.substring(4, 6), 16);
+                    rgba.R = Math.min(255, r++);
+                    rgba.G = Math.min(255, g++);
+                    rgba.B = Math.min(255, b++);
+                }
             }
-            const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-            changeColor(color);
-            update_hue_indicator_position(color);
-            update_dot_indicator_position(color);
-            need_update_recent.value = true;
+        } else {
+            v = Number(v);
+            let _v = v + 1;
+            const valid = validate(model.value.value as any, handleIndex, _v);
+            if (valid) {
+                if (handleIndex === 0) {
+                    rgba.R = Number(v) + 1;
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v) + 1;
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v) + 1;
+                }
+                const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
+                changeColor(color);
+                update_hue_indicator_position(color);
+                update_dot_indicator_position(color);
+                need_update_recent.value = true;
 
-            passive();
+                passive();
+            }
         }
     } else if (e.code === 'ArrowDown') {
         let v: string | number = inputTarget.value;
-        v = Number(v);
-        let _v = v - 1;
-        const valid = validate(model.value.value as any, handleIndex, _v);
-        if (valid) {
+        if (model.value.value === "Hex") {
             if (handleIndex === 0) {
-                rgba.R = Number(v) - 1;
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v) - 1;
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v) - 1;
+                v = v.toString();
+                const valid = validate(model.value.value as any, handleIndex, v);
+                if (valid) {
+                    let color = v.replace(/^#/, '');
+                    if (color.length === 3) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(1), color.charAt(1), color.charAt(2), color.charAt(2)].join('');
+                    } else if (color.length === 1) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0)].join('');
+                    }
+                    let r = parseInt(color.substring(0, 2), 16);
+                    let g = parseInt(color.substring(2, 4), 16);
+                    let b = parseInt(color.substring(4, 6), 16);
+                    rgba.R = Math.max(0, r--);
+                    rgba.G = Math.max(0, g--);
+                    rgba.B = Math.max(0, b--);
+                }
             }
-            const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-            changeColor(color);
-            update_dot_indicator_position(color);
-            update_hue_indicator_position(color);
-            need_update_recent.value = true;
+        } else {
+            v = Number(v);
+            let _v = v - 1;
+            const valid = validate(model.value.value as any, handleIndex, _v);
+            if (valid) {
+                if (handleIndex === 0) {
+                    rgba.R = Number(v) - 1;
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v) - 1;
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v) - 1;
+                }
+                const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
+                changeColor(color);
+                update_dot_indicator_position(color);
+                update_hue_indicator_position(color);
+                need_update_recent.value = true;
 
-            passive();
+                passive();
+            }
         }
     }
 }
@@ -694,60 +738,94 @@ function keyboardWatcher(e: KeyboardEvent) {
 // 输入框输入
 function enter() {
     let v: string | number = inputTarget.value;
-    const valid = validate(model.value.value as any, handleIndex, Number(v));
-    if (valid) {
-        if (model.value.value === 'RGB') {
-            v = Math.floor(Number(v));
-            if (handleIndex === 0) {
-                rgba.R = Number(v);
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v);
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v);
-            } else if (handleIndex === 3) {
-                rgba.alpha = Number(v) / 100;
+    if (model.value.value === 'Hex') {
+        if (handleIndex === 0) {
+            const valid = validate(model.value.value as any, handleIndex, v.toString());
+            if (valid) {
+                let c = v.toString().replace(/^#/, '');
+                if (c.length === 3) {
+                    c = [c.charAt(0), c.charAt(0), c.charAt(1), c.charAt(1), c.charAt(2), c.charAt(2)].join('');
+                } else if (c.length === 1) {
+                    c = [c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0)].join('');
+                }
+                let r = parseInt(c.substring(0, 2), 16);
+                let g = parseInt(c.substring(2, 4), 16);
+                let b = parseInt(c.substring(4, 6), 16);
+                rgba.R = r;
+                rgba.G = g;
+                rgba.B = b;
+                const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+                changeColor(color);
+                update_dot_indicator_position(color);
+                update_hue_indicator_position(color);
+                update_alpha_indicator(color);
+                need_update_recent.value = true;
             }
-        } else if (model.value.value === 'HSB') {
-            const { H, S, V, alpha } = hsba.value;
-            const n = { H: H * 360, S, V, alpha };
-            if (handleIndex === 0) {
-                n.H = Number(v);
-            } else if (handleIndex === 1) {
-                n.S = Number(v) / 100;
-            } else if (handleIndex === 2) {
-                n.V = Number(v) / 100;
-            } else if (handleIndex === 3) {
-                n.alpha = Number(v) / 100;
-            }
-            const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
-            rgba.R = rgb_form_n.R;
-            rgba.G = rgb_form_n.G;
-            rgba.B = rgb_form_n.B;
-            rgba.alpha = n.alpha;
-        } else if (model.value.value === 'HSL') {
-            const { H, S, L, alpha } = hsla.value;
-            const n = { h: H, s: S, l: L, alpha };
-            if (handleIndex === 0) {
-                n.h = Number(v);
-            } else if (handleIndex === 1) {
-                n.s = Number(v) / 100;
-            } else if (handleIndex === 2) {
-                n.l = Number(v) / 100;
-            } else if (handleIndex === 3) {
-                n.alpha = Number(v) / 100;
-            }
-            const rgb_form_n = HSL2RGB(n);
-            rgba.R = rgb_form_n.R;
-            rgba.G = rgb_form_n.G;
-            rgba.B = rgb_form_n.B;
-            rgba.alpha = n.alpha;
+        } else {
+            rgba.alpha = Math.max(0, Math.min(100, Number(v))) / 100;
+            const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+            changeColor(color);
+            update_dot_indicator_position(color);
+            update_hue_indicator_position(color);
+            update_alpha_indicator(color);
+            need_update_recent.value = true;
         }
-        const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
-        changeColor(color);
-        update_dot_indicator_position(color);
-        update_hue_indicator_position(color);
-        update_alpha_indicator(color);
-        need_update_recent.value = true;
+    } else {
+        const valid = validate(model.value.value as any, handleIndex, Number(v));
+        if (valid) {
+            if (model.value.value === 'RGB') {
+                v = Math.floor(Number(v));
+                if (handleIndex === 0) {
+                    rgba.R = Number(v);
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v);
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v);
+                } else if (handleIndex === 3) {
+                    rgba.alpha = Number(v) / 100;
+                }
+            } else if (model.value.value === 'HSB') {
+                const { H, S, V, alpha } = hsba.value;
+                const n = { H: H * 360, S, V, alpha };
+                if (handleIndex === 0) {
+                    n.H = Number(v);
+                } else if (handleIndex === 1) {
+                    n.S = Number(v) / 100;
+                } else if (handleIndex === 2) {
+                    n.V = Number(v) / 100;
+                } else if (handleIndex === 3) {
+                    n.alpha = Number(v) / 100;
+                }
+                const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
+                rgba.R = rgb_form_n.R;
+                rgba.G = rgb_form_n.G;
+                rgba.B = rgb_form_n.B;
+                rgba.alpha = n.alpha;
+            } else if (model.value.value === 'HSL') {
+                const { H, S, L, alpha } = hsla.value;
+                const n = { h: H, s: S, l: L, alpha };
+                if (handleIndex === 0) {
+                    n.h = Number(v);
+                } else if (handleIndex === 1) {
+                    n.s = Number(v) / 100;
+                } else if (handleIndex === 2) {
+                    n.l = Number(v) / 100;
+                } else if (handleIndex === 3) {
+                    n.alpha = Number(v) / 100;
+                }
+                const rgb_form_n = HSL2RGB(n);
+                rgba.R = rgb_form_n.R;
+                rgba.G = rgb_form_n.G;
+                rgba.B = rgb_form_n.B;
+                rgba.alpha = n.alpha;
+            }
+            const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+            changeColor(color);
+            update_dot_indicator_position(color);
+            update_hue_indicator_position(color);
+            update_alpha_indicator(color);
+            need_update_recent.value = true;
+        }
     }
     inputTarget.removeEventListener('keydown', keyboardWatcher);
     inputTarget.blur();
@@ -755,10 +833,10 @@ function enter() {
 
 function triggle() {
     const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit) {
+    const exist = menu.isColorPickerMount;
+    if (exist) {
         menu.removeColorPicker();
-        if (exsit !== blockId) {
+        if (exist !== blockId) {
             colorPickerMount();
         }
     } else {
@@ -795,9 +873,7 @@ function colorPickerMount() {
 function blockUnmount() {
     const menu = props.context.menu;
     const e = menu.isColorPickerMount;
-    if (e === blockId) {
-        menu.clearColorPickerId();
-    }
+    if (e === blockId) menu.clearColorPickerId();
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 }
@@ -1212,7 +1288,7 @@ const is_gradient_selected = () => {
                 return false;
             }
         }
-        return shapes[0].type === ShapeType.Contact ? false : true;
+        return shapes[0].type !== ShapeType.Contact;
     } else {
         let ret = false;
         shapes.forEach((s) => {
@@ -1246,7 +1322,6 @@ let elpx: any
 let elpy: any
 let mx: any
 let my: any
-
 
 function startDrag(e: MouseEvent) {
     if (!props.cell) return
@@ -1407,18 +1482,24 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </div>
-                    <!-- &lt;!&ndash; model & values &ndash;&gt; -->
-                    <div class="input-container">
-                        <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>
-                        <div class="values">
-                            <div class="wrap">
-                                <div class="value">
-                                    <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                            @click="(e) => inputClick(e, idx)" />
-                                    </div>
+                </div>
+                <!-- &lt;!&ndash; model & values &ndash;&gt; -->
+                <div class="input-container">
+                    <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"/>
+                    <div class="values">
+                        <div class="wrap">
+                            <div v-if="values.length === 4" class="value">
+                                <div v-for="(i, idx) in values" :key="idx" class="item">
+                                    <input :value="i" @click="(e) => inputClick(e, idx)"/>
                                 </div>
-                                <div class="label">
-                                    <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
+                            </div>
+                            <div v-else class="value">
+                                <div class="item" style="height: 100%;width: 112.5px;">
+                                    <input spellcheck="false" :value="values[0]" @click="(e) => inputClick(e, 0)"
+                                           style="text-align: left;padding-left: 8px;"/>
+                                </div>
+                                <div class="item">
+                                    <input :value="values[1]" @click="(e) => inputClick(e, 1)"/>
                                 </div>
                             </div>
                         </div>
@@ -1797,6 +1878,59 @@ onUnmounted(() => {
                         background-size: auto 75%;
                         border-radius: 5px 5px 5px 5px;
                         cursor: pointer;
+                }
+            }
+
+            >.eyedropper {
+                width: 30px;
+                height: 30px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 2px;
+                transition: 0.1s;
+                padding: 6px;
+                box-sizing: border-box;
+
+                >svg {
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+                }
+            }
+        }
+
+        .input-container {
+            width: 100%;
+            height: fit-content;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            padding: 12px;
+            box-sizing: border-box;
+            justify-content: space-between;
+
+            .model {
+                flex: 0 0 62px;
+                height: 32px;
+            }
+
+            .values {
+                width: 160px;
+
+                .wrap {
+                    width: 160px;
+                    height: 100%;
+                    box-sizing: border-box;
+
+                    .value {
+                        width: 160px;
+                        height: 32px;
+                        display: flex;
+                        align-items: center;
+                        background-color: #F5F5F5;
+                        border-radius: 6px;
+                        padding: 9px 5px;
                         box-sizing: border-box;
 
                         >.alpha {
@@ -1947,6 +2081,8 @@ onUnmounted(() => {
                         display: flex;
                         flex-direction: row;
                         align-items: center;
+                        justify-content: space-between;
+                        padding: 5px;
                         box-sizing: border-box;
 
                         >.block {
@@ -2033,6 +2169,121 @@ onUnmounted(() => {
             }
         }
 
+        >.recently-container {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            box-sizing: border-box;
+            border-top: 1px solid #EBEBEB;
+            border-bottom: 1px solid #EBEBEB;
+
+            .inner {
+                //border-top: 1px solid #cecece;
+                width: 100%;
+
+                .header {
+                    width: 48px;
+                    height: 14px;
+                    font-family: HarmonyOS Sans;
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 14px;
+                    color: #000000;
+                    margin-bottom: 12px;
+                }
+
+                >.typical-container {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    box-sizing: border-box;
+
+                    >.block {
+                        width: 16px;
+                        height: 16px;
+                        border-radius: 3px;
+                        border: 1px solid rgba(0, 0, 0, 0.1);
+                        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
+                        box-sizing: border-box;
+                    }
+
+                    >.block:not(:first-child) {
+                        margin-left: 6.2px;
+                    }
+                }
+            }
+        }
+
+        >.dc-container {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 2px 2px 12px;
+            box-sizing: border-box;
+
+            .inner {
+                //border-top: 1px solid #cecece;
+                width: 100%;
+
+                .header {
+                    // width: 48px;
+                    height: 14px;
+                    font-family: HarmonyOS Sans;
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 14px;
+                    color: #000000;
+                    margin-bottom: 12px;
+                }
+
+                >.documentc-container {
+                    width: 100%;
+                    max-height: 90px;
+                    overflow: scroll;
+                    display: grid;
+                    grid-row-gap: 7px;
+                    grid-column-gap: 7px;
+                    grid-template-columns: repeat(auto-fill, 16px);
+
+                    &::-webkit-scrollbar {
+                        width: 5px;
+                    }
+
+                    &::-webkit-scrollbar-track {
+                        background-color: transparent;
+                    }
+
+                    &::-webkit-scrollbar-thumb {
+                        background-color: #EBEBEB;
+                        border-radius: 150px;
+                    }
+
+                    &::-webkit-scrollbar-thumb:hover {
+                        background-color: transparent;
+                    }
+
+                    &::-webkit-scrollbar-thumb:active {
+                        background-color: transparent;
+                    }
+
+                    >.block {
+                        display: inline-block;
+                        width: 16px;
+                        height: 16px;
+                        border-radius: 3px;
+                        border: 1px solid rgba(0, 0, 0, 0.1);
+                        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
+                        box-sizing: border-box;
+                    }
+                }
+            }
+        }
     }
 }
 </style>

@@ -20,13 +20,12 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY], selectedShape
         const shape = childs[ids];
         if (selectedShapes.get(shape.id) || !shape.isVisible) continue;
         const m = childs[ids].matrix2Root();
-        const { width, height } = shape.frame;
-        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
+        const { width, height, x, y } = shape.outerFrame;
         const { left, top, right, bottom } = getShadowMax(shape);
-        const _x = - (left + l_max);
-        const _y = - (top + t_max);
-        const _w = (left + l_max) + (right + r_max);
-        const _h = (top + t_max) + (bottom + b_max);
+        const _x = x - left;
+        const _y = y - top;
+        const _w = left + right;
+        const _h = top + bottom;
         const ps: XY[] = [{ x: _x, y: _y }, { x: width + _w, y: _y }, { x: width + _w, y: height + _h }, { x: _x, y: height + _h }, { x: _x, y: _y }];
         for (let i = 0; i < 5; i++) {
             const p = ps[i];
@@ -41,33 +40,6 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY], selectedShape
 
 function private_set(key: string, value: ShapeView, selectedShapes: Map<string, ShapeView>) {
     selectedShapes.set(key, value);
-}
-
-export const getShapeBorderMax = (shape: ShapeView) => {
-    const borders = shape.getBorders();
-    let l_max = 0;
-    let t_max = 0;
-    let r_max = 0;
-    let b_max = 0;
-    if (!borders.length) return { l_max, t_max, r_max, b_max };
-    for (let i = 0; i < borders.length; i++) {
-        const border = borders[i];
-        if (!border.isEnabled || border.position === BorderPosition.Inner) continue;
-        const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
-        if (thicknessBottom > b_max) {
-            b_max = border.position === BorderPosition.Center ? thicknessBottom / 2 : thicknessBottom;
-        }
-        if (thicknessLeft > l_max) {
-            l_max = border.position === BorderPosition.Center ? thicknessLeft / 2 : thicknessLeft;
-        }
-        if (thicknessTop > t_max) {
-            t_max = border.position === BorderPosition.Center ? thicknessTop / 2 : thicknessTop;
-        }
-        if (thicknessRight > r_max) {
-            r_max = border.position === BorderPosition.Center ? thicknessRight / 2 : thicknessRight;
-        }
-    }
-    return { l_max, t_max, r_max, b_max };
 }
 
 export const getShadowMax = (shape: ShapeView) => {
@@ -140,97 +112,41 @@ export const getPageBounds = (page: PageView) => {
     };
 }
 
-export const getShapeMaxBounds = (shape: Shape, x: number, y: number, width: number, height: number) => {
-    let rotate = shape.rotation || 0;
-    // todo flip
-    // if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-    // if (shape.isFlippedVertical) rotate = 360 - rotate;
-    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-    const radian = rotate * Math.PI / 180;
-    const sin = Math.sin(radian);
-    const cos = Math.cos(radian);
-    const newx = Math.abs(x * cos) + Math.abs(y * sin);
-    const newy = Math.abs(x * sin) + Math.abs(y * cos);
-    const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
-    const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
-    return {
-        x: newx,
-        y: newy,
-        width: newWidth,
-        height: newHeight,
-        rotate: rotate
-    };
-}
-
-
-// 对图片上任意点(x,y)，绕一个坐标点(rx0,ry0)逆时针旋转a角度后的新的坐标设为(x0, y0)，公式：
-// x0= (x - rx0)*cos(a) - (y - ry0)*sin(a) + rx0 ;    y0= (x - rx0)*sin(a) + (y - ry0)*cos(a) + ry0 ;
 export const getGroupChildBounds = (shape: ShapeView) => {
     const childs = shape.childs as ShapeView[];
     const { x, y, width, height } = shape.frame;
     if (!childs) return { x, y, width, height };
     const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group));
-    const group_bounds_points = getMaxMinPoints(shapes, shape);
+    const group_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
+    const m = shape.matrix2Root();
+    const xy = m.computeCoord2(x, y);
+    
     return {
-        x,
-        y,
-        width,
-        height
+        x: xy.x + min_p.x,
+        y: xy.y + min_p.y,
+        width: max_p.x - min_p.x,
+        height: max_p.y - min_p.y
     }
 }
 
-const getMaxMinPoints = (shapes: ShapeView[], s?: ShapeView) => {
+const getMaxMinPoints = (shapes: ShapeView[]) => {
     const bounds_points = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
         const { left, top, right, bottom } = getShadowMax(shape);
-        const l = (left + l_max);
-        const t = (top + t_max);
-        const r = (left + l_max) + (right + r_max);
-        const b = (top + t_max) + (bottom + b_max);
-        let frame = shape.frame;
-        const cx = (frame.x + frame.width - frame.x + 1) / 2 + frame.x;
-        const cy = (frame.y + frame.height - frame.y + 1) / 2 + frame.y;
-        let rotate = shape.rotation || 0;
-        rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+        const frame = shape._p_outerFrame;
         const points = [];
-        const p1 = getRotatePoint(frame.x - l, frame.y - t, rotate, cx, cy);
-        const p2 = getRotatePoint(frame.x + frame.width + r, frame.y - t, rotate, cx, cy);
-        const p3 = getRotatePoint(frame.x + frame.width + r, frame.y + frame.height + b, rotate, cx, cy);
-        const p4 = getRotatePoint(frame.x - l, frame.y + frame.height + b, rotate, cx, cy);
+        const width = frame.width + left + right;
+        const height = frame.height + top + bottom;
+        const p1 = { x: frame.x - left, y: frame.y - top }
+        const p2 = { x: frame.x + width, y: frame.y - top }
+        const p3 = { x: frame.x + width, y: frame.y + height }
+        const p4 = { x: frame.x - left, y: frame.y + height }
         points.push(p1, p2, p3, p4);
         let max_point = getMaxPoint(points);
         let min_point = getMinPoint(points);
-        let p = shape.parent;
-        if (p && p.type !== ShapeType.Page) {
-            while (p) {
-                const p_farme = p.frame;
-                max_point = {
-                    x: max_point.x + p_farme.x,
-                    y: max_point.y + p_farme.y
-                }
-                min_point = {
-                    x: min_point.x + p_farme.x,
-                    y: min_point.y + p_farme.y
-                }
-                break;
-            }
-        }
-        if (s && s.parent && s.parent.type !== ShapeType.Page) {
-            if (s.parent.type !== ShapeType.Group) {
-                max_point = {
-                    x: max_point.x + s.frame.x,
-                    y: max_point.y + s.frame.y
-                }
-                min_point = {
-                    x: min_point.x + s.frame.x,
-                    y: min_point.y + s.frame.y
-                }
-            }
-        }
         bounds_points.push(max_point, min_point);
     }
     return bounds_points;
@@ -247,19 +163,9 @@ export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
     }, []);
 }
 
-// 一个点沿着另一个点旋转后的位置
-const getRotatePoint = (x: number, y: number, rotate: number, cx: number, cy: number) => {
-    const radian = rotate * Math.PI / 180;
-    const sin = Math.sin(radian);
-    const cos = Math.cos(radian);
-    const x0 = (x - cx) * cos - (y - cy) * sin + cx
-    const y0 = (x - cx) * sin + (y - cy) * cos + cy
-    return { x: x0, y: y0 }
-}
-
 const getMaxPoint = (points: { x: number, y: number }[]) => {
-    let max_x = 0;
-    let max_y = 0;
+    let max_x = points[0].x;
+    let max_y = points[0].y;
     for (let i = 0; i < points.length; i++) {
         const point = points[i];
         if (point.x > max_x) max_x = point.x;

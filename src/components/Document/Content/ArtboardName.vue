@@ -7,6 +7,7 @@ import { permIsEdit } from '@/utils/content';
 import { Translate2 } from "@/transform/translate/translate2";
 
 import { TitleAttri } from "@/components/Document/Content/titleRenderer";
+import { multi_select_shape } from "@/utils/listview";
 
 const props = defineProps<{
     data: TitleAttri;
@@ -124,7 +125,8 @@ function down(e: MouseEvent) {
         e.stopPropagation();
 
         if (e.shiftKey) {
-            context.selection.rangeSelectShape([...context.selection.selectedShapes, shape]);
+            multi_select_shape(props.context, shape);
+            // context.selection.rangeSelectShape([...context.selection.selectedShapes, shape]);
         } else {
             if (!context.selection.isSelectedShape(shape)) {
                 context.selection.selectShape(shape);

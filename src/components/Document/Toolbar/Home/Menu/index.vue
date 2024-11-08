@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue';
+import { nextTick, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import ExportVue from "./Export.vue"
-import ViewVue from "./View.vue"
 import ExportDocView from "./ExportDoc.vue"
 
 interface Props {
@@ -29,27 +28,13 @@ function showMenu(e: MouseEvent) {
         popover.value.style.left = el.offsetLeft + 'px';
         popover.value.style.top = el.offsetHeight + 6 + 'px';
     })
-    document.addEventListener('click', onMenuBlur);
-    props.context.escstack.save('menu-items',()=>{
-        const achieve = popoverVisible.value;
-        popoverVisible.value = false;
-        document.removeEventListener('click', onMenuBlur);
-        return achieve;
-    })
 }
-
 
 /**
  * @description 检测菜单是否失去焦点，若失去则关闭菜单
  */
 function onMenuBlur(e: MouseEvent) {
-    if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.icon')) {
-        let timer = setTimeout(() => {
-            popoverVisible.value = false;
-            clearTimeout(timer)
-            document.removeEventListener('click', onMenuBlur);
-        }, 10)
-    }
+    if (e.target instanceof Element && !e.target.closest('.popover-f, .icon-for-trigger')) popoverVisible.value = false;
 }
 
 const plugins = props.context.pluginsMgr.search2('toolbar.home.menu');
@@ -63,21 +48,37 @@ function close() {
     popoverVisible.value = false;
 }
 
+const stop = watch(() => popoverVisible.value, (v) => {
+    if (v) {
+        document.addEventListener('click', onMenuBlur);
+        props.context.escstack.save('menu-items', () => {
+            const achieve = popoverVisible.value;
+            popoverVisible.value = false;
+            return achieve;
+        })
+    } else {
+        document.removeEventListener('click', onMenuBlur);
+    }
+})
+onUnmounted(() => {
+    stop();
+    document.removeEventListener('click', onMenuBlur);
+})
 </script>
 <template>
-    <div class="icon" :class="{ active: popoverVisible }" @click="showMenu" ref="trigger">
-        <svg-icon icon-class="menu"></svg-icon>
-    </div>
-    <div ref="popover" class="popover-f" v-if="popoverVisible">
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close" />
-    </div>
+<div class="icon-for-trigger" :class="{ active: popoverVisible }" @click="showMenu" ref="trigger">
+    <svg-icon icon-class="menu"/>
+</div>
+<div v-if="popoverVisible" ref="popover" class="popover-f">
+    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close"/>
+</div>
 </template>
 <style scoped lang="scss">
 .active {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-.icon {
+.icon-for-trigger {
     width: 32px;
     height: 32px;
     border-radius: 4px;
@@ -94,7 +95,7 @@ function close() {
     }
 }
 
-.icon:hover {
+.icon-for-trigger:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 

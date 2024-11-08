@@ -11,7 +11,106 @@ import {
 import { StyleManager } from "@/transform/style";
 import { hidden_selection } from "@/utils/content";
 import { MossError } from "@/basic/error";
+import { UserConfig } from "@/context/user"
 
+export class DirectionCalc {
+    static STEP = 1;
+    static FASTER = 10;
+    private m_up: boolean = false;
+    private m_down: boolean = false;
+    private m_left: boolean = false;
+    private m_right: boolean = false;
+    private m_faster: boolean = false;
+
+    is_catfish(code: string) {
+        return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code);
+    }
+
+    down(event: KeyboardEvent) {
+        switch (event.code) {
+            case 'ArrowUp':
+                this.m_up = true;
+                break;
+            case 'ArrowDown':
+                this.m_down = true;
+                break;
+            case 'ArrowLeft':
+                this.m_left = true;
+                break;
+            case 'ArrowRight':
+                this.m_right = true;
+                break;
+            default:
+                break;
+        }
+        if (event.shiftKey) {
+            this.m_faster = true;
+        }
+    }
+
+    up(event: KeyboardEvent) {
+        switch (event.code) {
+            case 'ArrowUp':
+                this.m_up = false;
+                break;
+            case 'ArrowDown':
+                this.m_down = false;
+                break;
+            case 'ArrowLeft':
+                this.m_left = false;
+                break;
+            case 'ArrowRight':
+                this.m_right = false;
+                break;
+            case 'ShiftLeft':
+                this.m_faster = false;
+                break;
+            case 'ShiftRight':
+                this.m_faster = false;
+                break;
+            default:
+                break;
+        }
+
+        return this.m_up || this.m_down || this.m_left || this.m_right;
+    }
+
+    reset() {
+        this.m_up = false;
+        this.m_down = false;
+        this.m_left = false;
+        this.m_right = false;
+        this.m_faster = false;
+    }
+
+    calc() {
+        let x = 0;
+        let y = 0;
+
+        const UserConfig: UserConfig = JSON.parse(localStorage.getItem('userConfig') as string)
+        const step = this.m_faster ? (UserConfig?.fast || DirectionCalc.STEP * 10) : (UserConfig?.slow || DirectionCalc.STEP);
+
+        if (this.m_up) {
+            y -= step;
+        }
+
+        if (this.m_down) {
+            y += step;
+        }
+
+        if (this.m_left) {
+            x -= step;
+        }
+
+        if (this.m_right) {
+            x += step;
+
+
+        }
+
+        return { x, y };
+    }
+}
 export enum ActionMode {
     View = 'view',
     Flex = 'flex',
@@ -29,7 +128,7 @@ export class Direction {
     private readonly page: PageView;
     private readonly api: LinearApi;
     private readonly style: StyleManager;
-
+    private directionCalc: DirectionCalc;
     constructor(context: Context) {
         this.context = context;
 
@@ -37,6 +136,7 @@ export class Direction {
         this.page = page;
         this.api = new LinearApi(context.coopRepo, context.data, page);
         this.style = new StyleManager(context);
+        this.directionCalc = new DirectionCalc();
 
         document.addEventListener('keydown', this.keydown);
         document.addEventListener('keyup', this.keyup);
@@ -99,7 +199,11 @@ export class Direction {
     }
 
     private __view(event: KeyboardEvent) {
-        // console.log('---view---')
+        if (!this.directionCalc.is_catfish(event.code)) return;
+        this.directionCalc.down(event);
+        const { x: dx, y: dy } = this.directionCalc.calc();
+        this.api.modifyShapesXY((this.context.selection.selectedShapes)
+            .map(i => ({ target: i, dx, dy })));
     }
 
     private __envs: ShapeView[] | undefined;
@@ -368,6 +472,7 @@ export class Direction {
 
     private __keyup(event: KeyboardEvent) {
         if (this.__can_not(event)) return;
+        this.directionCalc.up(event);
     }
 
     private keydown = this.__keydown.bind(this);

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { page_scale } from '@/utils/content';
 import { WorkSpace } from '@/context/workspace';
 import { XY } from '@/context/selection';
@@ -40,12 +40,8 @@ function input_cus(e: MouseEvent) {
     document.addEventListener('click', onMenuBlur)
 }
 
-
 function onMenuBlur(e: MouseEvent) {
-    if (e.target instanceof Element && !e.target.closest('.showsubmenu')) {
-        childMenuVisible.value = false
-        document.removeEventListener('click', onMenuBlur);
-    }
+    if (e.target instanceof Element && !e.target.closest('.show-sub-menu, .right')) childMenuVisible.value = false;
 }
 
 function enter(e: KeyboardEvent) {
@@ -54,7 +50,6 @@ function enter(e: KeyboardEvent) {
             page_scale(props.context, (Number(input.value.value) || props.context.workspace.matrix.m00 * 100) / 100);
         }
         cus.value = false;
-        document.removeEventListener('keydown', enter);
     }
 }
 function blur() {
@@ -62,7 +57,6 @@ function blur() {
         page_scale(props.context, (Number(input.value.value) || props.context.workspace.matrix.m00 * 100) / 100);
     }
     cus.value = false;
-    document.removeEventListener('keydown', enter);
 }
 function init() {
     scale.value = (props.context.workspace.matrix.toArray()[0] * 100).toFixed(0) + '%';
@@ -88,55 +82,53 @@ function close() {
     childMenuVisible.value = false;
 }
 
-const SetScale = (e: Event) => {
+const setScale = (e: Event) => {
     page_scale(props.context, (Number(scale.value) || props.context.workspace.matrix.m00 * 100) / 100);
-    if (scale.value.includes('%')) {
-        scale.value = scale.value
-    } else {
+    if (!scale.value.includes('%')) {
         scale.value = scale.value + '%';
     }
 
     (e.target as HTMLInputElement).blur()
 }
 
-const ShowMenu = (e: MouseEvent) => {
+const showMenu = (e: MouseEvent) => {
     const rect = (e.target as Element).getBoundingClientRect()
     const left = window.innerWidth - (rect.left + 158)
     childMenuPosition.x = left > 0 ? rect.left : rect.left + left - 8
     childMenuPosition.y = 48
     childMenuVisible.value = !childMenuVisible.value
-    document.addEventListener('click', onMenuBlur)
-    props.context.escstack.save('scale-menu', () => {
-        const achieve = childMenuVisible.value;
-        childMenuVisible.value = false;
-        document.removeEventListener('click', onMenuBlur);
-        return achieve;
-    })
-}
 
+}
+const stop = watch(() => childMenuVisible.value, (v) => {
+    if (v) {
+        document.addEventListener('click', onMenuBlur)
+        props.context.escstack.save('scale-menu', () => {
+            const achieve = childMenuVisible.value;
+            childMenuVisible.value = false;
+            return achieve;
+        })
+    } else {
+        document.removeEventListener('click', onMenuBlur);
+    }
+})
 onMounted(() => {
     props.context.workspace.watch(watcher);
     init();
 })
 onUnmounted(() => {
     props.context.workspace.watch(watcher);
+    stop();
 })
 </script>
 <template>
     <div class="scale-display-warp">
         <div class="left">
-            <input v-select type="text" v-model="scale" @change="(e: Event) => SetScale(e)">
+            <input v-select type="text" v-model="scale" @change="(e: Event) => setScale(e)" @keydown="enter">
         </div>
-        <div class="right" :class="{ 'arrow-active': childMenuVisible }" @click.stop="(e: MouseEvent) => ShowMenu(e)">
-            <svg-icon icon-class="white-down"></svg-icon>
+        <div class="right" :class="{ 'arrow-active': childMenuVisible }" @click="showMenu">
+            <svg-icon icon-class="white-down"/>
         </div>
-        <!-- <span v-if="!cus" @click.stop="(e: MouseEvent) => input_cus(e)" ref="inputSpan" style="height: 15px;font-size: 13px;display: flex;
-    align-items: center;justify-content: center;" :style="{ width: '100%', height: '100%', minWidth: '33px' }">{{ scale
-            }}%</span>
-        <input v-if="cus" type="text" ref="input" @input="onInputName"
-            :style="{ width: inputWidth + 'px', minWidth: '32px' }">
-        <span v-if="cus" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan2"></span> -->
-        <ViewSubMenu class="showsubmenu" v-if="childMenuVisible" :context="props.context" :fixed="true"
+        <ViewSubMenu class="show-sub-menu" v-if="childMenuVisible" :context="props.context" :fixed="true"
             :x="childMenuPosition.x" :y="childMenuPosition.y" :width="180" @close="close">
         </ViewSubMenu>
     </div>

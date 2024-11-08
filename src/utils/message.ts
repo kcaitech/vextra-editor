@@ -1,7 +1,7 @@
 export const toStyle = (obj: any) => {
     const keys = Object.keys(obj);
     return keys.reduce((pre, cur) => {
-        return pre += `${cur}:${obj[cur]};`
+        return pre + `${cur}:${obj[cur]};`
     }, '')
 }
 type MessageType = "success" | "info" | "danger" | "feature";
@@ -59,9 +59,7 @@ export const message = (type: MessageType, context: string, d = 2.5) => {
 
     const body = document.body;
     const exist = document.querySelector('body > #message');
-    if (exist) {
-        body.removeChild(exist);
-    }
+    if (exist) body.removeChild(exist);
     body.appendChild(el);
     dropIn(el, speed);
 

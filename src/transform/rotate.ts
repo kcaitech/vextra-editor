@@ -3,16 +3,17 @@ import {
     Line,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
-    Matrix,
+    Matrix, PathShapeView,
     Rotator,
     ShapeView,
     Transform,
     TransformMode,
     TransformRaw,
 } from "@kcdesign/data";
-import { FrameLike, TransformHandler } from "./handler";
+import { BoundHandler, FrameLike } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
+import { is_straight } from "@/utils/attri_setting";
 
 type Base4Rotation = {
     XYtoRoot: XY;
@@ -37,13 +38,26 @@ export function rotate(shapes: ShapeView[], deg: number) {
     for (const shape of shapes) {
         const t = makeShapeTransform2By1(shape.transform);
         const { x, y, width, height } = shape.frame;
-
-        const angle = deg % 360 * Math.PI / 180;
+        const oa = deg % 360 * Math.PI / 180;
         const os = t.decomposeEuler().z;
+        let angle = oa - os;
+
+        if (is_straight(shape)) {
+            const points = (shape as PathShapeView).segments[0].points;
+            const p1 = points[0];
+            const p2 = points[1];
+            const m = new Matrix();
+            m.preScale(shape.size.width, shape.size.height);
+            const lt = m.computeCoord3(p1);
+            const rb = m.computeCoord3(p2);
+            let os2 = Math.atan2(rb.y - lt.y, rb.x - lt.x);
+            if (os2 < 0) os2 = Math.PI * 2 + os2;
+            angle -= os2;
+        }
 
         t.rotateAt({
             axis: Line.FromParallelZ(ColVector3D.FromXYZ(x + width / 2, y + height / 2, 0)),
-            angle: angle - os,
+            angle,
             mode: TransformMode.Local,
         });
 
@@ -56,7 +70,7 @@ export function rotate(shapes: ShapeView[], deg: number) {
     return transformList;
 }
 
-export class RotateHandler extends TransformHandler {
+export class RotateHandler extends BoundHandler {
     readonly shapes: ShapeView[];
     readonly referencePoint: XY;
     readonly centerXY: XY;
@@ -308,17 +322,19 @@ export class RotateHandler extends TransformHandler {
             mode: TransformMode.Local,
         });
 
-        // shape最终的Transform
-        const transformList = this.shapeTransformListInSelection.map((transform, i) => transform.clone() // 在选区坐标系下
-            .addTransform(transformForSelection) // 在Root坐标系下
-            .addTransform(this.transformCache.get(this.shapes[i].parent!)!.getInverse()) // 在Parent坐标系下
-        );
+        const units: { shape: ShapeView, transform2: Transform }[] = [];
+        const __is_locked = this.isLocked.bind(this);
+        for (let i = 0; i < this.shapes.length; i++) {
+            const shape = this.shapes[i];
+            if (__is_locked(shape)) continue;
+            const transform = this.shapeTransformListInSelection[i].clone();
+            transform.addTransform(transformForSelection)
+                .addTransform(this.transformCache.get(shape.parent!)!.getInverse());
+            units.push({ shape, transform2: transform });
+        }
 
         // 更新shape
-        (this.asyncApiCaller as Rotator).execute(transformList.map((transform, i) => ({
-            shape: this.shapes[i],
-            transform2: transform
-        })));
+        (this.asyncApiCaller as Rotator).execute(units);
 
         this.updateCtrlView(1);
     }

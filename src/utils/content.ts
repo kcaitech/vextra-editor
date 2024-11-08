@@ -39,7 +39,7 @@ import * as parse_svg from "@/svg_parser";
 import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
-import { ImageLoader } from "@/utils/imageLoader";
+import { ImageLoader } from "@/imageLoader";
 import { UploadAssets } from "@kcdesign/data";
 import { isTarget } from "@/utils/scout";
 
@@ -268,9 +268,8 @@ export function init_insert_table(context: Context, t: Function, land?: ShapeVie
     const tool = context.tool;
     const action = tool.action;
     const table = context.tool.tableSize;
-    const matrix = context.workspace.matrix;
     const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
-    const { x, y } = landFinderOnPage(matrix, context, frame)
+    const { x, y } = landFinderOnPage(context, frame)
     frame.x = x;
     frame.y = y;
     const PageXY = { x: x, y: y };
@@ -1004,7 +1003,7 @@ export function root_scale(context: Context, e: WheelEvent) {
     let scale_delta = 1.2;
 
     if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
-        scale_delta = 1.02;
+        scale_delta = 1.08;
     }
 
     let scale_delta_ = 1 / scale_delta;
@@ -1409,13 +1408,13 @@ export function flattenSelection(context: Context) {
     // const editor = context.editor4Page(page);
     // editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
     const page = context.selection.selectedPage!;
+    const editor = context.editor4Page(page);
+    // editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
     const selection = context.selection;
     const shapes = compare_layer_3(selection.selectedShapes);
     if (shapes.length) {
-        const editor = context.editor4Page(page)
         if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
             if (shapes[0].type === ShapeType.Group) {
-                const editor = context.editor4Page(page);
                 const pathshape = editor.flattenGroup((shapes[0]), shapes[0].name);
                 if (pathshape) {
                     context.nextTick(page, () => {
@@ -1432,7 +1431,7 @@ export function flattenSelection(context: Context) {
                     })
                 }
             }
-        } else if (shapes.length > 1) {
+        } else {
             const shapessorted = compare_layer_3(shapes);
             const flatten = editor.flattenShapes(shapessorted)
             if (flatten) {

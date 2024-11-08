@@ -42,9 +42,9 @@ import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_sty
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 import { flattenShapes } from "@/utils/cutout";
 import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
-import { ImageLoader } from "@/utils/imageLoader";
 import { UploadAssets } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
+import { ImageLoader } from "@/imageLoader";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -58,9 +58,9 @@ class ExfContext {
 }
 
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
-export const identity = 'design.moss';
-export const paras = 'design.moss/paras'; // 文字段落
-export const properties = 'design.moss/properties'; // 图层属性
+const identity = 'moss/source';
+const paras = 'moss/paras'; // 文字段落
+const properties = 'moss/properties'; // 图层属性
 
 export class Clipboard {
     context: Context;
@@ -800,11 +800,18 @@ export class Clipboard {
             const data = await navigator.clipboard.read();
             if (!(data && data.length)) throw new Error('invalid data');
             const is_inner_shape = data[0].types.length === 1 && data[0].types[0] === 'text/html';
-            if (!is_inner_shape) throw new MossError('external data');
+            if (!is_inner_shape) {
+                // todo
+                // const loader = new ImageLoader(this.context);
+                // const type = data[0].types[0];
+                // const val = await data[0].getType(type);
+                // const filePack = await loader.packFile(val as any, true);
+                throw new MossError('external data');
+            }
             clipboard_text_html_replace(this.context, data[0], src);
             return true;
         } catch (error) {
-            console.log('replace error:', error);
+            console.error(error);
             message('info', "替换失败");
             return false;
         }

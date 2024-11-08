@@ -5,7 +5,7 @@ import { Context } from '@/context';
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { Selection } from "@/context/selection";
 import { useMask } from "@/components/Document/Creator/execute";
-import { ShapeType } from '@kcdesign/data';
+import { ShapeType } from "@kcdesign/data";
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -19,14 +19,14 @@ function mask() {
 }
 
 function statusUpdater(t: any) {
-    if (t === Selection.CHANGE_SHAPE) {
-        const shapes = props.context.selection.selectedShapes;
+    if (t === Selection.CHANGE_SHAPE){
+         const shapes = props.context.selection.selectedShapes;
         if (shapes.length && shapes.some(i => i.type !== ShapeType.Cutout)) {
             disabled.value = true
         } else {
             disabled.value = false
         }
-    };
+    }
 }
 onMounted(() => {
     props.context.selection.watch(statusUpdater);
@@ -37,15 +37,25 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <el-tooltip class="box-item" effect="dark" :content="`${t('system.create_mask')} Ctrl Alt M`" placement="bottom"
-        :show-after="600" :offset="10" :hide-after="0">
-        <ToolButton :selected="false" :style="{ width: '32px', 'pointer-events': disabled ? 'auto' : 'none' }"
-            @click="mask">
-            <div class="svg-container" :style="{ opacity: disabled ? 1 : 0.4 }">
-                <svg-icon icon-class="pattern-mask" />
-            </div>
-        </ToolButton>
-    </el-tooltip>
+<el-tooltip
+    class="box-item"
+    effect="dark"
+    :content="`${t('system.create_mask')} Ctrl Alt M`"
+    placement="bottom"
+    :show-after="600"
+    :offset="10"
+    :hide-after="0"
+>
+    <ToolButton
+        :selected="false"
+        :style="{ width: '32px', 'pointer-events': disabled ? 'auto' : 'none' }"
+        @click="mask"
+    >
+        <div class="svg-container" :style="{opacity: disabled ? 1 : 0.4}">
+            <svg-icon icon-class="pattern-mask"/>
+        </div>
+    </ToolButton>
+</el-tooltip>
 </template>
 
 <style scoped lang="scss">

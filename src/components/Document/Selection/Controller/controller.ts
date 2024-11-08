@@ -1,5 +1,4 @@
 import {
-    adapt2Shape,
     AsyncPathEditor,
     AsyncTransfer, ContactLineView,
     CurvePoint,
@@ -11,7 +10,6 @@ import {
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { ClientXY, PageXY, Selection } from "@/context/selection";
-import { DirectionCalc, modify_shapes } from "@/utils/controllerFn";
 import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
 import { WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n';
@@ -24,16 +22,16 @@ import {
     modify_down_position,
     remove_blur_from_window,
     remove_move_and_up_from_document,
-    shapes_picker,
     update_comment
 } from "@/utils/mouse";
-import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
+import { forbidden_to_modify_frame, scout_once } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
 import { Translate2 } from "@/transform/translate/translate2";
 import { Action } from "@/context/tool";
-import { ActionMode, Direction } from "@/transform/direction";
+import { ActionMode, Direction, DirectionCalc } from "@/transform/direction";
+import { multi_select_shape } from "@/utils/listview";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -95,12 +93,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keydown_action(event: KeyboardEvent) {
-        const mode = context.workspace.is_path_edit_mode;
-        if (direction.mode === ActionMode.Flex) return;
-        if (mode) {
+        if (direction.mode === ActionMode.Edit) {
             keydown_action_for_path_edit(event);
-        } else {
-            keydown_action_for_trans(event);
         }
     }
 
@@ -153,28 +147,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const __firstPointTarget = m.inverseCoord(_firstPoint);
 
         asyncPathEditor.execute2(selected, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y);
-    }
-
-    function keydown_action_for_trans(event: KeyboardEvent) {
-        if (!asyncTransfer) {
-            directionCalc.reset();
-
-            shapes = modify_shapes(context, shapes);
-
-            asyncTransfer = context.editor
-                .controller()
-                .asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!);
-        }
-
-        if (!asyncTransfer) {
-            return;
-        }
-
-        directionCalc.down(event)
-
-        const {x, y} = directionCalc.calc();
-
-        asyncTransfer.stick(x, y);
     }
 
     function abortTransact() {
@@ -248,13 +220,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         } else if (check_drag_action(startPosition, mousePosition)) {
             if (asyncTransfer || isDragging) return;
 
-            shapes = modify_shapes(context, shapes);
-
-            shapes = shapes_organize(shapes);
-
             if (!shapes.length) return;
 
-            // transporter?.createApiCaller();
             translate2?.connect();
 
             isDragging = true;
@@ -267,11 +234,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (isDragging) {
             isDragging = false;
         } else {
-            shapes_picker(e, context, startPositionOnPage);
+            if (is_mouse_on_content(e)) shapes_picker(e, context, startPositionOnPage);
         }
-
-        // transporter?.fulfil();
-        // transporter = undefined;
 
         translate2?.fulfil();
         translate2 = undefined;
@@ -280,20 +244,58 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         need_update_comment = update_comment(context, need_update_comment);
     }
 
+    let drop: ShapeView | undefined;
+
     function on_content(e: MouseEvent) {
         const h = selection.hoveredShape;
         if (h) {
-            selection.selectShape(h);
+            if (e.shiftKey) {
+                drop = h;
+                multi_select_shape(context, h);
+            } else {
+                selection.selectShape(h);
+            }
             pre_to_translate(e);
         } else {
             selection.resetSelectShapes();
         }
     }
 
+    function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y: number }) {
+        const selection = context.selection;
+        const selected = selection.selectedShapes;
+        const hoveredShape = selection.hoveredShape;
+
+        if (hoveredShape) {
+            if (e.shiftKey) {
+                multi_select_shape(context, hoveredShape);
+            } else {
+                selection.selectShape(hoveredShape);
+            }
+            return;
+        }
+
+        if (selected.length > 1) {
+            const shape = selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected);
+            if (shape) {
+                if (e.shiftKey) {
+                    const exist = selected.find(s => s.id === shape.id);
+                    if (exist && exist.id !== drop?.id) {
+                        selection.unSelectShape(exist);
+                        scout_once(context, e);
+                    }
+                } else {
+                    selection.selectShape(shape);
+                }
+            } else {
+                selection.resetSelectShapes();
+            }
+        }
+    }
+
     function pre_to_translate(e: MouseEvent) {
         document.addEventListener('mouseup', mouseup);
         if (!context.workspace.can_translate(e)) return;
-        // transporter = new TranslateHandler(context, e, selection.selectedShapes);
         translate2 = new Translate2(context, e, selection.selectedShapes);
         document.addEventListener('mousemove', mousemove);
         shapes = selection.selectedShapes;

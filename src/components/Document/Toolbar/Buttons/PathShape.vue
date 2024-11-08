@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from "vue-i18n";
@@ -15,7 +14,7 @@ import {
     useRect,
     useStar
 } from "@/components/Document/Creator/execute";
-import { ImageLoader } from "@/utils/imageLoader";
+import { ImageLoader } from "@/imageLoader";
 
 const { t } = useI18n();
 
@@ -114,12 +113,6 @@ function toolWatcher(t: number) {
             currentTool.value = action;
         }
     }
-    if (t === Tool.SELECT_IMAGE) {
-        const filepicker = document.getElementById('filepicker');
-        if (filepicker) {
-            filepicker.click();
-        }
-    }
 }
 
 function shot() {
@@ -146,9 +139,7 @@ function shot() {
 function showMenu(e: MouseEvent) {
     props.context.menu.menuMount()
     const el = (e.target as Element)!.closest('.path-button') as HTMLDivElement;
-    if (!el) {
-        return;
-    }
+    if (!el) return;
     if (popover.value) {
         popover.value = false;
         return;
@@ -159,30 +150,15 @@ function showMenu(e: MouseEvent) {
 
     popoverXY.value.x = el.offsetLeft;
     popoverXY.value.y = 45;
-
-    props.context.escstack.save('pathshape-menu', () => {
-        const achieve = popover.value;
-        popover.value = false;
-        return achieve;
-    });
-
-    document.addEventListener('click', blur);
 }
 
 function blur(e: MouseEvent) {
-    if (
-        !(e.target as Element).closest('.popover-shape-tool')
-        || !(e.target as Element).closest('.tool-pathshape-menu-trigger')
-    ) {
-        popover.value = false;
-    }
+    if (!(e.target as Element).closest('.popover-shape-tool, .tool-pathshape-menu-trigger')) popover.value = false;
 }
 
 async function select() {
     const filepicker = document.getElementById('filepicker');
-    if (filepicker) {
-        filepicker.click();
-    }
+    if (filepicker) filepicker.click();
 }
 
 function change(e: Event) {
@@ -195,12 +171,17 @@ function change(e: Event) {
 }
 
 const stop = watch(() => popover.value, (v) => {
-    !v && document.removeEventListener('click', blur);
+    if (v) {
+        props.context.escstack.save('pathshape-menu', () => {
+            const achieve = popover.value;
+            popover.value = false;
+            return achieve;
+        });
+        document.addEventListener('click', blur);
+    } else {
+        document.removeEventListener('click', blur);
+    }
 })
-
-function setAction(type: string) {
-    props.context.tool.setAction(type);
-}
 
 onMounted(() => {
     props.context.tool.watch(toolWatcher);
@@ -208,24 +189,25 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);
     stop();
+    document.removeEventListener('click', blur);
 })
 </script>
 
 <template>
     <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
         <div :class="{ 'path-button': true, 'path-button-selected': selected, active: popover }" @mouseenter.stop="enter"
-            @mouseleave.stop="leave" @click="shot">
-            <div class="svg-container">
-                <svg-icon :icon-class="pattern"></svg-icon>
+             @mouseleave.stop="leave">
+            <div class="svg-container" @click="shot">
+                <svg-icon :icon-class="pattern"/>
             </div>
-            <div class="tool-pathshape-menu-trigger" @click.stop="showMenu">
-                <svg-icon icon-class="white-down"></svg-icon>
+            <div class="tool-pathshape-menu-trigger" @click="showMenu">
+                <svg-icon icon-class="white-down"/>
             </div>
         </div>
     </el-tooltip>
     <div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
         <!--矩形-->
-        <div class="item" @click="() => { useRect(context) }">
+      <div class="item" @click="() => { useRect(context);popover = false }">
             <div v-if="currentTool === Action.AddRect" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -236,7 +218,7 @@ onUnmounted(() => {
             <div class="shortKey">R</div>
         </div>
         <!--圆形-->
-        <div class="item" @click="() => { useEllipse(context) }">
+      <div class="item" @click="() => { useEllipse(context);popover = false  }">
             <div v-if="currentTool === Action.AddEllipse" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -247,7 +229,7 @@ onUnmounted(() => {
             <div class="shortKey">O</div>
         </div>
         <!--线条-->
-        <div class="item" @click="() => { useLine(context) }">
+      <div class="item" @click="() => { useLine(context);popover = false  }">
             <div v-if="currentTool === Action.AddLine" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -258,7 +240,7 @@ onUnmounted(() => {
             <div class="shortKey">L</div>
         </div>
         <!--箭头-->
-        <div class="item" @click="() => { useArrow(context) }">
+      <div class="item" @click="() => { useArrow(context);popover = false  }">
             <div v-if="currentTool === Action.AddArrow" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -268,7 +250,7 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
         </div>
-        <div class="item" @click="() => { usePolygon(context) }">
+      <div class="item" @click="() => { usePolygon(context);popover = false  }">
             <div v-if="currentTool === Action.Polygon" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -279,7 +261,7 @@ onUnmounted(() => {
             <div class="shortKey"></div>
         </div>
         <!--星形-->
-        <div class="item" @click="() => { useStar(context) }">
+      <div class="item" @click="() => { useStar(context);popover = false  }">
             <div v-if="currentTool === Action.Star" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -290,7 +272,7 @@ onUnmounted(() => {
             <div class="shortKey"></div>
         </div>
         <!-- 图片 -->
-        <div class="item" @click="() => select()">
+      <div class="item" @click="() => {select();popover = false }">
             <div v-if="currentTool === Action.AddImage" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -304,7 +286,7 @@ onUnmounted(() => {
         </div>
         <div class="line" />
         <!--钢笔-->
-        <div class="item" @click="() => { usePen(context) }">
+      <div class="item" @click="() => { usePen(context);popover = false  }">
             <div v-if="currentTool === Action.Pen" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -382,7 +364,7 @@ onUnmounted(() => {
     padding: 6px 0;
     box-sizing: border-box;
 
-    background-color: #262626;
+    background-color: var(--theme-color);
     color: var(--theme-color-anti);
 
     border-radius: 4px;

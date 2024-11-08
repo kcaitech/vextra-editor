@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from "@/context"
 import { color2string, shape_track } from "@/utils/content";
-import { getCutoutShape, getGroupChildBounds, getPageBounds, getShadowMax, getShapeBorderMax, parentIsArtboard } from "@/utils/cutout";
+import { getCutoutShape, getGroupChildBounds, getPageBounds, getShadowMax, parentIsArtboard } from "@/utils/cutout";
 import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ShapeFrame, ShapeType, ShapeView } from "@kcdesign/data";
 import { nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import PageCard from "@/components/common/PageCard.vue";
@@ -221,11 +221,10 @@ const getInfo = (shape: ShapeView) => {
             info.height = _h + top + bottom;
         } else {
             const { left, top, right, bottom } = getShadowMax(shape);
-            const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
-            info.x = (shape.frame.x - left - l_max);
-            info.y = (shape.frame.y - top - t_max);
-            info.width = (shape.frame.width + (left + l_max) + (right + r_max));
-            info.height = (shape.frame.height + (top + t_max) + (bottom + b_max));
+            info.x = shape.outerFrame.x - left;
+            info.y = shape.outerFrame.y - top;
+            info.width = (shape.outerFrame.width + left + right);
+            info.height = (shape.outerFrame.height + top + bottom);
         }
         info.children.push(shape);
     }
