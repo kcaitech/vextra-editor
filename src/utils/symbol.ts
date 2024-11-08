@@ -893,13 +893,13 @@ export function get_vari_value_for_ref2(symbol_ref: SymbolRefView, variable: Var
 }
 
 /**
- * @description 修改实例身上某个变量vari的值 ---zrxfix1804
+ * @description 修改实例身上某个变量vari的值
  */
 export function modify_vari_value_for_ref(context: Context, vari: Variable, value: any) {
     const symref = context.selection.symbolrefshape;
     if (!symref) return;
     const editor = context.editor4Shape(symref);
-    editor.modifySymbolRefVariable(vari, value);
+    editor.modifySymbolRefVisibleVariable(vari, value);
 }
 
 /**
