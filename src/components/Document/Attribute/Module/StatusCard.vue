@@ -49,15 +49,11 @@ const closeValueInput = () => {
 }
 function input_blur(e: InputEvent) {
     const v = (e.target as HTMLInputElement).value;
-    save_change(v);
+    if (v !== statusValue.value) save_change(v);
     closeValueInput();
 }
 const onEditAttrValue = (e: KeyboardEvent) => {
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        const v = (e.target as HTMLInputElement).value;
-        save_change(v);
-        closeValueInput();
-    }
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') (e.target as HTMLInputElement).blur();
 }
 const selectOption = ref(false);
 const showMenu = (e: MouseEvent) => {
@@ -122,11 +118,9 @@ function save_change(v: string) {
     editor.modifyStateSymTagValue(props.data.variable.id, v);
 }
 onUpdated(() => {
-    console.log('--update--')
     getVarTagValue();
 })
 onMounted(() => {
-    console.log('--mounted--')
     getVarTagValue();
     props.context.selection.watch(selected_watcher);
 })
@@ -143,8 +137,7 @@ onUnmounted(() => {
                     <div class="input">
                         <span>{{ statusValue }}</span>
                         <el-icon @click.stop="showMenu" class="status-icon-down">
-                            <ArrowDown
-                                :style="{ transform: selectOption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
+                            <ArrowDown/>
                         </el-icon>
                     </div>
                     <SelectMenu v-if="selectOption" :top="top" width="100%" :menuItems="data.values" :context="context"
@@ -155,7 +148,6 @@ onUnmounted(() => {
                         @keydown.stop="onEditAttrValue" />
                 </div>
             </div>
-            <!-- <div class="delete"></div> -->
         </div>
     </div>
 </template>
@@ -174,7 +166,6 @@ onUnmounted(() => {
     .state_item {
         display: flex;
         align-items: center;
-        // width: calc(100% - 22px);
         width: 100%;
 
         .state_name {
