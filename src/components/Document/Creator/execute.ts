@@ -284,7 +284,12 @@ export class CreatorExecute extends TransformHandler {
     modifyFrame(e: MouseEvent) {
         this.isCustomFrame = true;
 
-        this.livingPoint = this.workspace.getRootXY(e); // 底版livingPoint
+        this.livingPoint = this.workspace.getRootXY(e);
+
+        if (this.alignPixel) {
+            this.livingPoint.x = Math.round(this.livingPoint.x);
+            this.livingPoint.y = Math.round(this.livingPoint.y);
+        }
 
         // 修正livingPoint
         // 1. 滚轮修正
