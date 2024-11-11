@@ -46,6 +46,7 @@ import { EscStack } from "./escstack";
 import { scout, Scout } from "@/utils/scout";
 import { Preview } from "./preview";
 import { MossClipboard } from "@/clipboard";
+import { EditorLayout, EditorGUI } from "@/components/Document/Layout/editorlayout";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -141,6 +142,7 @@ export class Context extends WatchableObject implements IContext {
     private m_attr: Attribute;
     private m_preview: Preview;
     private m_clip: MossClipboard;
+    private m_layout: EditorLayout;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -178,6 +180,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_attr = new Attribute();
         this.m_preview = new Preview(this);
         this.m_clip = new MossClipboard(this);
+        this.m_layout = new EditorLayout(this);
         startLoadTask(data, this.m_taskMgr);
     }
 
@@ -413,5 +416,9 @@ export class Context extends WatchableObject implements IContext {
     rename(name: string) {
         const editor = this.editor4Doc();
         editor.rename(name);
+    }
+
+    get layout() {
+        return this.m_layout;
     }
 }

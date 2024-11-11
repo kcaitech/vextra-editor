@@ -162,7 +162,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-<EditorLayout ref="layout">
+<EditorLayout :context="(context as Context)" ref="layout">
     <template #top>
         <Toolbar v-if="contentVisible" :context="(context as Context)"/>
     </template>

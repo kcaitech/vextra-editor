@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import Divider from "@/components/Document/Layout/Divider.vue";
-import { ref, computed, reactive, watch, onUnmounted } from "vue";
+import { ref, computed, reactive, watch, onUnmounted, onMounted } from "vue";
+import { Context } from "@/context";
+import { EditorGUI } from "@/components/Document/Layout/editorlayout";
+
+const props = defineProps<{ context: Context }>();
 
 const leftWidth = ref<number>(250);
 
@@ -16,7 +20,7 @@ function offset(dx: number) {
     leftWidth.value = Math.min(Math.max(real, 250), 640);
 }
 
-const layout = reactive({
+const layout = reactive<EditorGUI>({
     top: true,
     left: true,
     right: true,
@@ -59,30 +63,23 @@ function mouseleave(div: 'left' | 'right') {
     }
 }
 
-function modifyLayout(div: 'left' | 'right' | 'side' | 'all') {
-    if (div === "left") {
-        layout.left = !layout.left;
-    } else if (div === "right") {
-        layout.right = !layout.right;
-    }
-}
-
-defineExpose({ modifyLayout });
-
 const stop1 = watch(() => layout.left, (v) => {
     if (!v) {
         layout.leftTrigger = true;
         clearTimeout(timerL);
         timerL = null;
     }
-})
+});
 const stop2 = watch(() => layout.right, (v) => {
     if (!v) {
         layout.rightTrigger = true;
         clearTimeout(timerR);
         timerR = null;
     }
-})
+});
+onMounted(() => {
+    props.context.layout.gui = layout;
+});
 onUnmounted(() => {
     stop1();
     stop2();
@@ -90,7 +87,7 @@ onUnmounted(() => {
 </script>
 <template>
 <div class="editor-layout-wrapper">
-    <div class="top">
+    <div v-if="layout.top" class="top">
         <slot name="top"/>
     </div>
     <div class="selection">
@@ -102,19 +99,19 @@ onUnmounted(() => {
         </div>
         <div class="center">
             <div v-if="layout.leftTrigger" class="trigger left-d"
-                 :style="layout.left?'':'opacity: 0.2;'"
+                 :style="layout.left?'':'opacity: 0.6;'"
                  @mouseenter="mouseenter('left')"
                  @mouseleave="mouseleave('left')"
-                 @mousedown.stop="modifyLayout('left')"
+                 @mousedown.stop="() => context.layout.left()"
             >
                 <svg-icon icon-class="right" :style="layout.left ? 'transform: rotate(180deg);': ''"/>
             </div>
             <slot name="center"/>
             <div v-if="layout.rightTrigger" class="trigger right-d"
-                 :style="layout.right?'':'opacity: 0.2;'"
+                 :style="layout.right?'':'opacity: 0.6;'"
                  @mouseenter="mouseenter('right')"
                  @mouseleave="mouseleave('right')"
-                 @mousedown.stop="modifyLayout('right')"
+                 @mousedown.stop="() => context.layout.right()"
             >
                 <svg-icon icon-class="right" :style="layout.right ? '': 'transform: rotate(180deg);'"/>
             </div>

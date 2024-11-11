@@ -754,12 +754,13 @@ keydownHandler['Backslash'] = function (event: KeyboardEvent, context: Context) 
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        context.workspace.notify(WorkSpace.HIDDEN_UI, true);
+        context.layout.side();
         return;
     }
     if (is_ctrl) {
         event.preventDefault();
-        context.workspace.notify(WorkSpace.HIDDEN_UI);
+        // context.workspace.notify(WorkSpace.HIDDEN_UI);
+        context.layout.all();
     }
 }
 
