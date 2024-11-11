@@ -27,7 +27,6 @@ const left = ref({ leftMin: 0, leftWidth: 0, leftMinWidth: 0 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
-const showBottom = ref<boolean>(true);
 const docInfo: any = ref({});
 const showHint = ref(false);
 const countdown = ref(10);
@@ -142,8 +141,7 @@ function keyToggleTB() {
     }
     showHiddenLeft();
     showHiddenRight();
-    showBottom.value = !showBottom.value;
-    showTop.value = showBottom.value;
+    showTop.value = !showTop.value;
     const ctx: Context = props.context as Context;
     if (showTop.value) {
         ctx.workspace.matrix.trans(0, -40);
@@ -258,8 +256,6 @@ onMounted(() => {
 onUnmounted(() => {
     const ctx: Context = props.context as Context;
     window.document.title = t('product.name');
-    (window as any).sketchDocument = undefined;
-    (window as any).skrepo = undefined;
     ctx.selection.unwatch(selectionWatcher);
     ctx.workspace.unwatch(workspaceWatcher);
     ctx.tool.unwatch(tool_watcher);
@@ -272,7 +268,6 @@ onUnmounted(() => {
     clearInterval(netErr);
     ctx.component.unwatch(component_watcher);
     uninstall_keyboard_units();
-    stop();
     clearInterval(updateDocumentKeyTimer); // 清除更新文档密钥定时器
 })
 </script>
