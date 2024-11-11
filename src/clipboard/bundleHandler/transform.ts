@@ -1,8 +1,4 @@
-import {
-    Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2,
-    TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView,
-    SymbolRefShape, SymbolShape
-} from "@kcdesign/data";
+import { Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2, TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
@@ -22,14 +18,14 @@ export class ClipboardTransformHandler {
             if (!_t) continue;
             const __transform = makeShapeTransform2By1(_t);
             let width, height;
-            if (shape.type === ShapeType.Group) {
+            if (shape.size) {
+                width = shape.size.width;
+                height = shape.size.height;
+            } else {
                 const children = (shape as GroupShape).childs;
                 const __box = this.sourceBounding(children);
                 width = __box.right - __box.left;
                 height = __box.bottom - __box.top;
-            } else {
-                width = shape.size.width;
-                height = shape.size.height;
             }
             const { col0, col1, col2, col3 } = __transform.transform([
                 ColVector3D.FromXY(0, 0),
