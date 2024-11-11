@@ -226,11 +226,11 @@ function component_watcher(t: number) {
     }
 }
 
-watch(fileName, (NewName) => {
-    if (NewName) {
+const stop = watch(fileName, (newVal) => {
+    if (newVal) {
         (window as any).wx.miniProgram.postMessage({
             data: {
-                name: NewName,
+                name: newVal,
                 id: docInfo.value.document.id
             }
         });
@@ -269,6 +269,7 @@ onUnmounted(() => {
     ctx.component.unwatch(component_watcher);
     uninstall_keyboard_units();
     clearInterval(updateDocumentKeyTimer); // 清除更新文档密钥定时器
+    stop();
 })
 </script>
 
