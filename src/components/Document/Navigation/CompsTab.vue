@@ -5,15 +5,13 @@ import ComponentList from "./Component/ComponentList.vue";
 interface Props {
     context: Context
 }
-
 const props = defineProps<Props>();
-const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
 </script>
 
 <template>
     <div class="comps-container">
-        <ComponentList :context="props.context"></ComponentList>
+        <ComponentList :context="props.context"/>
     </div>
 </template>
 
@@ -57,7 +55,5 @@ const emit = defineEmits<{ (e: 'showNavigation'): void }>()
             background-color: var(--grey-light);
         }
     }
-
-
 }
 </style>

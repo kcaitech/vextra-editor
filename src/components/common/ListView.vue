@@ -732,6 +732,7 @@ onUnmounted(() => {
         top: 0;
         right: 0;
         overflow: hidden;
+        z-index: 1;
 
         > .scroll-bar {
             width: 100%;

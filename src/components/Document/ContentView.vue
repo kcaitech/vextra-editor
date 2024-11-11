@@ -39,7 +39,6 @@ import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/Imag
 import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
-import { MossClipboard } from "@/clipboard";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
 
 const emits = defineEmits<{
@@ -233,11 +232,6 @@ function contextMenuMount(e: MouseEvent) {
                 contextMenuItems.value.delete(MenuItemType.MergeCell);
             }
         }
-        // if (shapes.length&&shapes.some(i=>i.type!==ShapeType.Cutout)) {
-        //     console.log(shapes,'****************');
-            
-        //     contextMenuItems.value.add(MenuItemType.Mask);
-        // }
         if (_shapes.length) {
             const type = _shapes[0].type;
             if (_shapes.length === 1 && type !== ShapeType.Table && area !== MountedAreaType.Root) {
@@ -720,11 +714,6 @@ onMounted(() => {
     if (f) background_color.value = color2string(f);
     timeSlicingTask(props.context, fontNameListZh, 'zh');
     timeSlicingTask(props.context, fontNameListEn, 'en');
-
-    nextTick(() => {
-        // resizeObserver.observe(root.value!);
-        // _updateRoot(props.context, root.value!);
-    });
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
@@ -749,7 +738,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+    <div ref="root" id="content" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
          :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
          @mousemove="move" @mouseleave="props.context.selection.unHoverShape"
          @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
@@ -761,3 +750,11 @@ onUnmounted(() => {
         <Space :context="props.context" :visible="spacePressed" />
     </div>
 </template>
+<style lang="scss" scoped>
+#content {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+</style>

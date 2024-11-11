@@ -12,10 +12,9 @@ import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
 import { PageView } from "@kcdesign/data";
-import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 import { Navi } from "@/context/navigate";
-const props = defineProps<{ context: Context, page: PageView, leftTriggleVisible: boolean, showLeft: boolean }>();
-const emit = defineEmits<{ (e: 'showNavigation'): void }>()
+
+const props = defineProps<{ context: Context, page: PageView }>();
 const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: 120, pagelistHeightBackup: 32 });
 const container = ref<HTMLDivElement>();
 const sash = ref<HTMLDivElement>();
@@ -40,9 +39,6 @@ const observer = new ResizeObserver(() => {
     const el = container.value;
     el && (containerHeight.value = el.clientHeight);
 })
-const showHiddenLeft = () => {
-    emit('showNavigation')
-}
 function init_pagelist_height() {
     isPagelistFold.value = props.context.user.pageListSpace.fold;
     structure.value.pagelistHeight = props.context.user.pageListSpace.height;
@@ -74,7 +70,6 @@ onUnmounted(() => {
             :style="{ height: isPagelistFold ? 'calc(100% - 40px)' : `calc(100% - ${structure.pagelistHeight}px)` }">
             <ShapeList :context="props.context" :page="page" :pageHeight="structure.pagelistHeight"/>
         </div>
-        <!-- <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft" /> -->
     </div>
 </template>
 
