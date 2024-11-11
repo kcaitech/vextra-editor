@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, ArtboradView, BasicArray, Border, Fill, Page, Shadow, Shape, ShapeType,
+    adapt2Shape, ArtboradView, BasicArray, Border, Fill, Page, sessionRefIdKey, Shadow, Shape, ShapeType,
     ShapeView, Style,
     TransformRaw
 } from '@kcdesign/data';
@@ -56,6 +56,10 @@ function assemble() {
     page.isVisible = true;
 
     const domCtx = new DomCtx();
+    const maprefIdArray = props.context.sessionStorage.get(sessionRefIdKey);
+    if (maprefIdArray) {
+        domCtx.sessionStorage.set(sessionRefIdKey, maprefIdArray);
+    }
     initComsMap(domCtx.comsMap);
 
     const dom: PageDom = new PageDom(domCtx, { data: page });
@@ -140,7 +144,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-<svg ref="pageSvg" :style="{ 'background-color': backgroundColor }"/>
+    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }" />
 </template>
 
 <style scoped lang="scss">
