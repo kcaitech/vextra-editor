@@ -62,6 +62,11 @@ export class Menu extends WatchableObject {
     menuMount(mount?: string) {
         this.m_menu_mounted = mount || '';
         if (!mount) this.notify(Menu.SHUTDOWN_MENU);
+        else this.m_context.escstack.save(v4(), () => {
+            const achieve = !!this.m_menu_mounted;
+            this.menuMount();
+            return achieve;
+        });
     }
 
     get isColorPickerMount() {

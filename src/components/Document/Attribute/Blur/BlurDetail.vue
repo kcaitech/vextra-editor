@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { nextTick, onMounted, onUpdated, ref, watch } from 'vue';
+import { nextTick, ref } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
 import { Blur, LinearApi, ShapeView } from '@kcdesign/data';
-
 import { Menu } from "@/context/menu";
 import { hidden_selection } from '@/utils/content';
 import { get_actions_blur_modify } from '@/utils/shape_style';
@@ -22,7 +21,6 @@ interface Props {
 
 const props = defineProps<Props>();
 const popover = ref();
-const reflush = ref<number>(0);
 const blurValue = ref(0);
 let blurModifyHandler: BlurHandler | undefined = undefined;
 function showMenu() {
@@ -155,10 +153,6 @@ watchEffect(() => {
     blurValue.value = props.blur.saturation;
     update();
 })
-
-onUpdated(() => {
-    reflush.value++;
-})
 </script>
 
 <template>
@@ -167,7 +161,7 @@ onUpdated(() => {
             :title="`${t('blur.blur_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
-                    <svg-icon icon-class="gear"></svg-icon>
+                    <svg-icon icon-class="gear"/>
                 </div>
             </template>
             <template #body>
@@ -180,7 +174,7 @@ onUpdated(() => {
                                 <div ref="progressBtn" class="progress-button" @mousedown.stop="onMouseDown"></div>
                             </div>
                         </div>
-                        <input v-focus type="text" ref="blurInput" class="input-text" :value="blurValue"
+                        <input type="text" ref="blurInput" class="input-text" :value="blurValue"
                             @click="clickBlurInput" @change="changeBlurInput"
                             @keydown="e => text_keyboard(e, blurValue)" />
                     </div>

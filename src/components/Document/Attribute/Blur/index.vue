@@ -155,7 +155,7 @@ onUnmounted(() => {
 
 <template>
 <div class="blur-panel">
-    <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="blurInfo ? true : false">
+    <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="!!blurInfo">
         <template #tool>
             <div class="add" @click.stop="addBlur" v-if="!blurInfo || mixed">
                 <svg-icon icon-class="add"></svg-icon>
