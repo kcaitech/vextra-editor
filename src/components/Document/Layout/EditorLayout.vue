@@ -133,6 +133,8 @@ onUnmounted(() => {
     flex-direction: column;
 
     > .top {
+        padding: 0 8px;
+        box-sizing: border-box;
         width: 100%;
         height: 46px;
         flex: 0 0 46px;
