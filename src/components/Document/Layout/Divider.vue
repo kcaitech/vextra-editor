@@ -37,8 +37,7 @@ function end() {
 <div class="divider" :style="locate" @mousedown="down">
     <div :style="assist"/>
     <div v-if="working" ref="divider" class="active"/>
-    <div v-if="working"
-         style="position: fixed;width: 100%; height: 100%;top: 0; left: 0; background-color: transparent;cursor: ew-resize;"/>
+    <div v-if="working" class="mask"/>
 </div>
 </template>
 <style lang="scss" scoped>
@@ -65,6 +64,17 @@ function end() {
         background-color: var(--active-color);
         position: absolute;
         animation: fade-in 0.15s ease-in-out forwards;
+    }
+
+    > .mask {
+        position: fixed;
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background-color: transparent;
+        cursor: ew-resize;
     }
 }
 </style>
