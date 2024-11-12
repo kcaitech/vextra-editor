@@ -1,5 +1,5 @@
 import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D } from '@kcdesign/data';
-import { getShadowMax, getShapeBorderMax } from '@/utils/cutout';
+import { getShadowMax } from '@/utils/cutout';
 import JSZip from 'jszip';
 import { XYsBounding } from './common';
 
@@ -87,7 +87,6 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
             if (el) {
                 const { width, height } = pcloneSvg.viewBox.baseVal
                 const { left, top, right, bottom } = getShadowMax(shape);
-                const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
                 if (isNoTransform(shape)) {
                     pcloneSvg.setAttribute("width", `${width * format.scale}`);
                     pcloneSvg.setAttribute("height", `${height * format.scale}`);
@@ -95,14 +94,14 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                 } else {
                     const matrix = el.style.transform;
                     const m = shape.transform2FromRoot;
-                    const size = shape.frame;
+                    const size = shape.outerFrame;
                     m.translateX(-m.m03);
                     m.translateY(-m.m13);
                     const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
-                        ColVector3D.FromXY(-(left + l_max), -(top + t_max)),
-                        ColVector3D.FromXY(size.width + right + r_max, -(top + t_max)),
-                        ColVector3D.FromXY(size.width + right + r_max, size.height + bottom + b_max),
-                        ColVector3D.FromXY(-(left + l_max), size.height + bottom + b_max),
+                        ColVector3D.FromXY(size.x - left, size.y - top),
+                        ColVector3D.FromXY(size.width + right, size.y - top),
+                        ColVector3D.FromXY(size.width + right, size.height + bottom),
+                        ColVector3D.FromXY(size.x - left, size.height + bottom),
                     ]);
                     const box = XYsBounding([lt, rt, rb, lb]);
                     // 解析 matrix 值
@@ -186,7 +185,6 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
             if (el) {
                 const { width, height } = cloneSvg.viewBox.baseVal
                 const { left, top, right, bottom } = getShadowMax(shape);
-                const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
                 if (isNoTransform(shape)) {
                     cloneSvg.setAttribute("width", `${width * format.scale}`);
                     cloneSvg.setAttribute("height", `${height * format.scale}`);
@@ -198,10 +196,10 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                     m.translateX(-m.m03);
                     m.translateY(-m.m13);
                     const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
-                        ColVector3D.FromXY(-(left + l_max), -(top + t_max)),
-                        ColVector3D.FromXY(size.width + right + r_max, -(top + t_max)),
-                        ColVector3D.FromXY(size.width + right + r_max, size.height + bottom + b_max),
-                        ColVector3D.FromXY(-(left + l_max), size.height + bottom + b_max),
+                        ColVector3D.FromXY(size.x - left, size.y - top),
+                        ColVector3D.FromXY(size.width + right, size.y - top),
+                        ColVector3D.FromXY(size.width + right, size.height + bottom),
+                        ColVector3D.FromXY(size.x - left, size.height + bottom),
                     ]);
                     const box = XYsBounding([lt, rt, rb, lb]);
                     // 解析 matrix 值

@@ -209,7 +209,7 @@ export class ProtoAction {
     }
 
     getMapRefIdLS(key: string): Map<string, string> {
-        let jsonString = sessionStorage.getItem(key);
+        let jsonString = this.m_context.sessionStorage.get(key);
         if (jsonString) {
             let refIdArray = JSON.parse(jsonString);
             return new Map(refIdArray);
@@ -220,7 +220,7 @@ export class ProtoAction {
     saveMapRefIdLS(map: Map<string, string>, key: string) {
         let refIdArray = Array.from(map.entries());
         let jsonString = JSON.stringify(refIdArray);
-        sessionStorage.setItem(key, jsonString);
+        this.m_context.sessionStorage.set(key, jsonString);
     }
 }
 

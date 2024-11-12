@@ -46,6 +46,7 @@ function selectionWatcher(t: number | string) {
     const ctx: Context = props.context as Context;
     if (t === Selection.CHANGE_PAGE) {
         curPage.value = ctx.selection.selectedPage;
+        curPage.value?.m_ctx.setIsDoc(true); // 区分原型页和文档页
     }
 }
 

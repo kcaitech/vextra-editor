@@ -10,9 +10,9 @@ import {
 import { Context } from '@/context';
 import {
     getCutoutShape,
+    getGroupChildBounds,
     getPageBounds,
     getShadowMax,
-    getShapeBorderMax,
     parentIsArtboard
 } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
@@ -162,19 +162,18 @@ const getPosition = (shape: ShapeView) => {
         }
     } else if (shape.type === ShapeType.Group) {
         const { left, top, right, bottom } = getShadowMax(shape);
-        const { x, y, width: _w, height: _h } = shape._p_frame;
+        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
+        xy.value.x = x;
+        xy.value.y = y;
+        width.value = _w;
+        height.value = _h;
+    } else {
+        const { left, top, right, bottom } = getShadowMax(shape);
+        const { x, y, width: _w, height: _h } = shape._p_outerFrame;
         xy.value.x = x - left;
         xy.value.y = y - top;
         width.value = _w + left + right;
         height.value = _h + top + bottom;
-    } else {
-        const { left, top, right, bottom } = getShadowMax(shape);
-        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
-        const { x, y, width: _w, height: _h } = shape._p_frame;
-        xy.value.x = x - left - l_max;
-        xy.value.y = y - top - t_max;
-        width.value = _w + (left + l_max) + (right + r_max);
-        height.value = _h + (top + t_max) + (bottom + b_max);
     }
 }
 

@@ -867,10 +867,34 @@ const addHighlight = () => {
         }
         textFormat()
     } else {
-        const color = props.textShapes[0].text.paras[0].spans[0].highlight;
-        editor.setTextHighlightColorMulti(props.textShapes, color)
+        editor.setTextHighlightColorMulti(props.textShapes, new Color(1, 216, 216, 216))
     }
 }
+
+const setMixedHighlight = () => {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(props.shape)
+    let format: AttrGetter
+    const __text = props.shape.getText();
+    if (length.value) {
+        if (isSelectText()) {
+            format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr())
+            const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
+            editor.setTextHighlightColor(0, Infinity, new Color(alpha, red, green, blue));
+        } else {
+            format = __text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr())
+            const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
+            editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, red, green, blue));
+        }
+    } else {
+        format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
+        const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
+        console.log(format.highlight, 'format.highlight');
+        
+        editor.setTextHighlightColorMulti(props.textShapes, new Color(alpha, red, green, blue));
+    }
+}
+
 const higAlphaInput = () => {
     if (higlighAlpha.value && higlightColor.value) {
         const value = higlighAlpha.value.value;
@@ -1508,7 +1532,7 @@ onUnmounted(() => {
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                     </div>
-                    <div class="add" @click="addHighlight">
+                    <div class="add" @click="setMixedHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>

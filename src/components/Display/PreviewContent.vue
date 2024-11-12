@@ -945,7 +945,7 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
-    sessionStorage.removeItem(sessionRefIdKey);
+    props.context.sessionStorage.delete(sessionRefIdKey);
 
     viewUpdater.atTarget();
     viewUpdater.atPage();

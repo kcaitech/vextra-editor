@@ -234,7 +234,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (isDragging) {
             isDragging = false;
         } else {
-            shapes_picker(e, context, startPositionOnPage);
+            if (is_mouse_on_content(e)) shapes_picker(e, context, startPositionOnPage);
         }
 
         translate2?.fulfil();
