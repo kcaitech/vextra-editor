@@ -15,7 +15,7 @@ import {
     ExportFormatDeleteAction,
     ExportFormatScaleAction,
     ExportFormatNameAction,
-    ExportFormatPerfixAction,
+    ExportFormatPrefixAction,
     ExportFormatFileFormatAction,
     ShapeType,
     ShapeView,
@@ -738,7 +738,7 @@ export function get_actions_export_format_name(shapes: ShapeView[], index: numbe
 }
 
 export function get_actions_export_format_perfix(shapes: ShapeView[], index: number, perfix: ExportFormatNameingScheme) {
-    const actions: ExportFormatPerfixAction[] = [];
+    const actions: ExportFormatPrefixAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: adapt2Shape(shapes[i]), index, value: perfix });
     }
