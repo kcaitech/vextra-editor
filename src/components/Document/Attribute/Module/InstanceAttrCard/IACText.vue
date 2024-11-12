@@ -28,7 +28,7 @@ function get_value() {
     let baseT: string | undefined;
 
     textValue.value = (isMixText(symref.childs) ? t('attr.mixed') : baseT ? baseT : typeof text === 'string' ? text : text.toString())
-        .replace(/\n$/, '');
+        .replace(/\n$/, ''); // 取消最后一个换行
 
     function isMixText(children: ShapeView[]) {
         for (const c of children) {
@@ -44,7 +44,7 @@ function get_value() {
     }
 }
 
-const keysumbit = (e: KeyboardEvent) => {
+const keydown = (e: KeyboardEvent) => {
     const { shiftKey, ctrlKey, metaKey } = e;
     if (e.key === 'Enter') {
         if (ctrlKey || metaKey || shiftKey) {
@@ -74,7 +74,7 @@ onMounted(get_value);
             <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
                 <el-input ref="inputRef" v-model="textValue" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
-                    resize="none" @focus="selectAllText" @change="change" @keydown.stop="keysumbit" />
+                    resize="none" @focus="selectAllText" @change="change" @keydown.stop="keydown" />
             </div>
         </div>
     </div>
