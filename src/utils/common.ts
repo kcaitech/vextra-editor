@@ -475,7 +475,7 @@ export function modifyOpacity(context: Context, val: number, _shapes?: ShapeView
     const page = context.selection.selectedPage!;
     const shapes = _shapes || context.selection.selectedShapes;
     const editor = context.editor4Page(page);
-    editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
+    editor.modifyShapesContextSettingOpacity(shapes, val);
     hidden_selection(context);
 }
 
