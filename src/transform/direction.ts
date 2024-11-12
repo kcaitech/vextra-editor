@@ -168,7 +168,7 @@ export class Direction {
 
     private __can_not(event: KeyboardEvent) {
         const target = event.target;
-        if (target && (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return false;
+        if (target && (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return true;
         return this.context.readonly;
     }
 
