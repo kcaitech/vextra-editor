@@ -995,11 +995,11 @@ onUnmounted(() => {
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up">
             <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
-                :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
+                :disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
                 @dragend="dragend" @keydown="keydownHorTidyup">
             </MdNumberInput>
             <MdNumberInput icon="ver-space2" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyup"
-                :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
+                :disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
                 @dragend="dragend" @keydown="keydownVerTidyup">
             </MdNumberInput>
             <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"

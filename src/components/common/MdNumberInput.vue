@@ -7,7 +7,6 @@ interface Props {
 
     disabled?: boolean;
     draggable?: boolean;
-    tidy_disabled?: boolean;
 }
 
 interface Emits {
@@ -32,9 +31,7 @@ const active = ref<boolean>();
 let isDown = false;
 
 function down(e: MouseEvent) {
-    if (!props.draggable || props.disabled || isDown || e.button !== 0) {
-        return;
-    }
+    if (!props.draggable || props.disabled || isDown || e.button !== 0) return;
 
     document.addEventListener('mousemove', move);
     document.addEventListener('mouseup', up);
@@ -56,9 +53,7 @@ function clearDragStatus() {
 }
 
 function up(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button) return;
 
     clearDragStatus();
 }
@@ -84,9 +79,7 @@ function change(e: Event) {
     emits('change', (e.target as HTMLInputElement).value);
 
     const el = inputEl.value;
-    if (!el) {
-        return;
-    }
+    if (!el) return;
     el.blur();
 }
 
@@ -100,9 +93,7 @@ function foucs() {
 }
 
 function wheel(event: WheelEvent) {
-    if (!active.value) {
-        return;
-    }
+    if (!active.value) return;
     event.preventDefault();
     event.stopPropagation();
 
@@ -112,8 +103,8 @@ function wheel(event: WheelEvent) {
 
 <template>
     <div :class="{ 'md-number-input': true, disabled, active }" @wheel="wheel">
-        <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown="down" />
-        <input :disabled="tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur"
+        <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down" />
+        <input ref="inputEl" :value="value" @click="click" @change="change" @blur="blur"
             @focus="foucs" @keydown="e => emits('keydown', e, value)" />
     </div>
 </template>

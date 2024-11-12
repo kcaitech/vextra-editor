@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import IconText from "@/components/common/IconText.vue";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
@@ -9,7 +8,6 @@ import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
 import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
-import { PathEditor } from "@/transform/pathEdit";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { format_value as format } from '@/utils/common';
 
@@ -235,15 +233,6 @@ function modify_path_closed_status() {
     }
 }
 
-function modify_closed_status() {
-    if (!path_shape) {
-        console.log('modify_closed_status: !path_shape');
-        return;
-    }
-
-    new PathEditor(props.context).modifyClosedStatus(!path_close_status.value);
-}
-
 function modify_model_state() {
     const selected_points = props.context.path.selectedPoints;
     const selected_sides = props.context.path.selectedSides;
@@ -395,9 +384,6 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="btns">
-            <!--            <div :class="{ 'path-status': true }" @click="modify_closed_status">-->
-            <!--                {{ btn_string_for_status }}-->
-            <!--            </div>-->
             <div class="exit" @click="exit">
                 {{ t('attr.exit_path_edit') }}
             </div>
