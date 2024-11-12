@@ -893,16 +893,6 @@ export function get_vari_value_for_ref2(symbol_ref: SymbolRefView, variable: Var
 }
 
 /**
- * @description 修改实例身上某个变量vari的值
- */
-export function modify_vari_value_for_ref(context: Context, vari: Variable, value: any) {
-    const symref = context.selection.symbolrefshape;
-    if (!symref) return;
-    const editor = context.editor4Shape(symref);
-    editor.modifySymbolRefVisibleVariable(vari, value);
-}
-
-/**
  * @description 以shape为根的所有父子对
  * @param shape
  */

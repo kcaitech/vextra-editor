@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { get_vari_value_for_ref, is_circular_ref2, RefAttriListItem } from "@/utils/symbol";
 import { onMounted, onUnmounted, onUpdated, ref, watch } from "vue";
 import { Context } from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
-import { OverrideType, Shape } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
 import { Component } from "@/context/component";
 import { message } from "@/utils/message";
 import { ArrowDown } from '@element-plus/icons-vue'
@@ -84,7 +84,8 @@ function component_watcher(type: number, val: Shape) {
         return;
     }
 
-    modify_vari_value_for_ref(props.context, props.data.variable, val.id);
+    const editor = props.context.editor4Shape(symbolref);
+    editor.modifySymbolRefVariable(props.data.variable, val.id);
     closeDialog();
 }
 

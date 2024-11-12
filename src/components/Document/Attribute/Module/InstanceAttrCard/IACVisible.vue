@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { RefAttriListItem } from "@/utils/symbol";
 
 import { Context } from "@/context";
 import { onMounted, onUpdated, ref, watch } from "vue";
@@ -33,7 +33,8 @@ function change(v: boolean) {
     if (!symref) return console.log("wrong role");
     const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
     const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
-    modify_vari_value_for_ref(props.context, _var, v);
+    const editor = props.context.editor4Shape(symref);
+    editor.modifySymbolRefVisibleVariable(_var, v);
 }
 
 watch(() => props.data, () => {
