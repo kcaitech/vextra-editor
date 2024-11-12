@@ -3,11 +3,12 @@ import Divider from "@/components/Document/Layout/Divider.vue";
 import { ref, computed, reactive, watch, onUnmounted, onMounted } from "vue";
 import { Context } from "@/context";
 import { EditorGUI } from "@/components/Document/Layout/editorlayout";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{ context: Context }>();
 
 const leftWidth = ref<number>(250);
-
+const t = useI18n().t;
 const leftStyle = computed<string>(() => {
     return `flex: 0 0 ${leftWidth.value}px; width: ${leftWidth.value}px;`
 })
@@ -79,6 +80,7 @@ const stop2 = watch(() => layout.right, (v) => {
 });
 onMounted(() => {
     props.context.layout.gui = layout;
+    props.context.layout.next = t('layout.hideUI');
 });
 onUnmounted(() => {
     stop1();

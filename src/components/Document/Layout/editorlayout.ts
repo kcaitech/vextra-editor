@@ -11,11 +11,10 @@ export type EditorGUI = {
 export class EditorLayout {
     private m_context: Context;
     private m_layout: EditorGUI | undefined;
-    private m_next: string;
+    private m_next: string = '';
 
     constructor(context: Context) {
         this.m_context = context;
-        this.m_next = context.workspace.t('layout.hideUI');
     }
 
     set gui(gui: EditorGUI) {
@@ -63,6 +62,10 @@ export class EditorLayout {
             this.m_layout.left = this.m_layout.right = this.m_layout.top = false;
         }
         this.modifyNext();
+    }
+
+    set next(v: string) {
+        this.m_next = v;
     }
 
     get next() {
