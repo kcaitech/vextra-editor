@@ -139,7 +139,7 @@ onUnmounted(() => {
         height: 46px;
         flex: 0 0 46px;
         background: var(--theme-color);
-        z-index: 1;
+        z-index: 2;
     }
 
     > .selection {
