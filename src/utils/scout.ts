@@ -591,14 +591,9 @@ function get_max_thickness_border(shape: ShapeView) {
  */
 export function finder2(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY, selected: ShapeView[], pen: boolean, m: boolean): ShapeView | undefined {
     if (pen) return for_pen(context, scout, scope, hot);
-
     set_env(context, selected, m);
-
-    let result: ShapeView | undefined;
-    result = for_env(context, scout, hot);
-    if (result) return result;
-
-    return for_standard(context, scout, scope, hot);
+    return for_env(context, scout, hot) || for_standard(context, scout, scope, hot);
+    // return for_standard(context, scout, scope, hot);
 }
 
 /**
@@ -656,13 +651,10 @@ function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: P
     for (let i = scope.length - 1; i > -1; i--) {
         const item = scope[i];
 
-        if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
-
-        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
-            continue; // 屏幕外图形，判断图形(除连接线以外)是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
-        }
-
-        if (!isTarget(scout, item, hot)) continue;
+        if (!canBeTarget(item)              // 隐藏图层或已锁定
+            || isShapeOut(context, item)    // 屏幕外图形，判断图形(除连接线以外)是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+            || !isTarget(scout, item, hot)  // 不被鼠标hover
+        ) continue;
 
         if (is_fixed(item)) {
             result = for_fixed(context, scout, item, hot);
@@ -688,19 +680,9 @@ function for_fixed(context: Context, scout: Scout, fixed: ShapeView, hot: PageXY
     const sub = fixed.childs || [];
     for (let i = sub.length - 1; i > -1; i--) {
         const item = sub[i];
-
-        if (!canBeTarget(item)) {
-            continue;
-        }
-
-        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
-            continue;
-        }
-
+        if (!canBeTarget(item) || isShapeOut(context, item)) continue;
         if (is_hollow(item)) {
-            if (for_hollow(context, scout, item, hot)) {
-                return item;
-            }
+            if (for_hollow(context, scout, item, hot)) return item;
         } else if (isTarget(scout, item, hot)) {
             return item;
         }
@@ -719,17 +701,7 @@ function for_hollow(context: Context, scout: Scout, hollow: ShapeView, hot: Page
     for (let i = children.length - 1; i > -1; i--) {
         const item = children[i];
 
-        if (!canBeTarget(item)) {
-            continue;
-        }
-
-        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
-            continue;
-        }
-
-        if (!isTarget(scout, item, hot)) {
-            continue;
-        }
+        if (!canBeTarget(item) || isShapeOut(context, item) || !isTarget(scout, item, hot)) continue;
 
         if (is_hollow(item)) {
             if (for_hollow(context, scout, item, hot)) {
@@ -749,6 +721,7 @@ function is_fixed(shape: ShapeView) {
     return (shape.type === ShapeType.Artboard || shape.type === ShapeType.SymbolUnion) && shape.parent?.type === ShapeType.Page;
 }
 
+// todo 优化成选区变化后更新
 function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
     const parents: Set<ShapeView> = new Set();
 
