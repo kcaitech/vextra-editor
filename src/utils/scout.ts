@@ -580,6 +580,7 @@ function get_max_thickness_border(shape: ShapeView) {
 
 /**
  * @description 图形检索规则以及实现 2
+ * @param { Context } context
  * @param { IScout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或闭合路径的填充中)
  * @param { ShapeView[] } scope 检索的范围，只会在该范围内进行上述匹配
  * @param { PageXY } hot 一个点，在root坐标系上的点
@@ -636,18 +637,10 @@ function for_pen(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY
  */
 function for_env(context: Context, scout: Scout, hot: PageXY) {
     const env = context.selection.envShapes;
-
-    for (let i = 0, l = env.length; i < l; i++) {
-        const shape = env[i];
-
-        if (!canBeTarget(shape)) {
-            continue;
-        }
-
+    for (const shape of env) {
+        if (!canBeTarget(shape)) continue;
         if (is_hollow(shape)) {
-            if (for_hollow(context, scout, shape, hot)) {
-                return shape;
-            }
+            if (for_hollow(context, scout, shape, hot)) return shape;
         } else if (isTarget(scout, shape, hot)) {
             return shape;
         }
@@ -761,17 +754,10 @@ function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
 
     const bros: Set<ShapeView> = new Set();
 
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
-
-        const parent = shape.parent;
-
-        if (!parent || parents.has(parent)) {
-            continue;
-        }
-
+    for (const shape of shapes) {
+        const parent = shape.parent!;
+        if (parents.has(parent)) continue;
         parents.add(parent);
-
         sort_env(parent, bros, parents, m);
     }
 
