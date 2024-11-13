@@ -588,6 +588,7 @@ function get_max_thickness_border(shape: ShapeView) {
  * @param { boolean } pen 穿透侦测
  * @param { boolean } m 标注模式
  * @returns { ShapeView | undefined } 返回符合检索条件的层级最优先的图形
+ * todo 链式穿透
  */
 export function finder2(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY, selected: ShapeView[], pen: boolean, m: boolean): ShapeView | undefined {
     if (pen) return for_pen(context, scout, scope, hot);
