@@ -721,7 +721,7 @@ const tidyUp = () => {
     editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width, 'center');
 }
 
-const changeHorTidyup = (value: string) => {
+const changeHorTidyUp = (value: string) => {
     value = Number
         .parseFloat(computeString(value))
         .toFixed(fix);
@@ -740,8 +740,8 @@ const changeHorTidyup = (value: string) => {
     editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir, algin);
 }
 
-function keydownHorTidyup(e: KeyboardEvent, val: string | number) {
-    let hor: any = sortValue(val.toString());
+function keydownHorTidyUp(e: KeyboardEvent) {
+    let hor: any = sortValue(horSpace.value.toString());
     if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
         hor = hor + (e.code === 'ArrowUp' ? 1 : -1)
         if (isNaN(hor)) return;
@@ -759,7 +759,7 @@ function keydownHorTidyup(e: KeyboardEvent, val: string | number) {
 
 }
 
-const changeVerTidyup = (value: string) => {
+const changeVerTidyUp = (value: string) => {
     value = Number
         .parseFloat(computeString(value))
         .toFixed(fix);
@@ -775,12 +775,11 @@ const changeVerTidyup = (value: string) => {
     disalbeTidyup(shapes, dir);
     const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
     verSpace.value = Math.max(ver, -minVer);
-    const algin = props.context.selection.tidyUpAlgin;
-    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir, algin);
+    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir, props.context.selection.tidyUpAlgin);
 }
 
-function keydownVerTidyup(e: KeyboardEvent, val: string | number) {
-    let ver: any = sortValue(val.toString());
+function keydownVerTidyUp(e: KeyboardEvent) {
+    let ver: any = sortValue(verSpace.value.toString());
     if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
         ver = ver + (e.code === 'ArrowUp' ? 1 : -1)
         if (isNaN(ver)) return;
@@ -791,8 +790,7 @@ function keydownVerTidyup(e: KeyboardEvent, val: string | number) {
         disalbeTidyup(shapes, dir);
         const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
         verSpace.value = Math.max(ver, -minVer);
-        const algin = props.context.selection.tidyUpAlgin;
-        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, algin)
+        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, props.context.selection.tidyUpAlgin);
         e.preventDefault();
     }
 
@@ -994,13 +992,13 @@ onUnmounted(() => {
         <ContentClip v-if="s_clip" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up">
-            <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
+            <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyUp"
                 :disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
-                @dragend="dragend" @keydown="keydownHorTidyup">
+                @dragend="dragend" @keydown="keydownHorTidyUp">
             </MdNumberInput>
-            <MdNumberInput icon="ver-space2" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyup"
+            <MdNumberInput icon="ver-space2" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyUp"
                 :disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
-                @dragend="dragend" @keydown="keydownVerTidyup">
+                @dragend="dragend" @keydown="keydownVerTidyUp">
             </MdNumberInput>
             <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">

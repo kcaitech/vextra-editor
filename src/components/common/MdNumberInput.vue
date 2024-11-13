@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 
-interface Props {
+type Props = {
     icon: string;
     value: string | number;
 
@@ -20,7 +20,7 @@ interface Emits {
 
     (e: "wheel", event: WheelEvent): void;
 
-    (e: "keydown", event: KeyboardEvent, value: string | number): void;
+    (e: "keydown", event: KeyboardEvent): void;
 }
 
 const props = defineProps<Props>();
@@ -53,60 +53,40 @@ function clearDragStatus() {
 }
 
 function up(e: MouseEvent) {
-    if (e.button) return;
-
-    clearDragStatus();
+    if (!e.button) clearDragStatus();
 }
 
 function windowBlur() {
     clearDragStatus();
 }
 
-const is_select = ref(false);
-
-function click() {
-    if (!inputEl.value) return;
-    const el = inputEl.value;
-    if (el.selectionStart !== el.selectionEnd) {
-        return;
-    }
-    if (is_select.value) return;
-    el.select();
-    is_select.value = true;
-}
-
 function change(e: Event) {
     emits('change', (e.target as HTMLInputElement).value);
-
-    const el = inputEl.value;
-    if (!el) return;
-    el.blur();
+    inputEl.value?.blur();
 }
 
 function blur() {
     active.value = false;
-    is_select.value = false;
 }
 
-function foucs() {
+function focus() {
+    inputEl.value?.focus();
+    !active.value && inputEl.value?.select();
     active.value = true;
 }
 
-function wheel(event: WheelEvent) {
-    if (!active.value) return;
-    event.preventDefault();
-    event.stopPropagation();
-
-    emits('wheel', event);
+function keydown(event: KeyboardEvent) {
+    if (event.key === "Escape") return inputEl.value?.blur();
+    emits("keydown", event);
 }
+
 </script>
 
 <template>
-    <div :class="{ 'md-number-input': true, disabled, active }" @wheel="wheel">
-        <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down" />
-        <input ref="inputEl" :value="value" @click="click" @change="change" @blur="blur"
-            @focus="foucs" @keydown="e => emits('keydown', e, value)" />
-    </div>
+<div :class="{ 'md-number-input': true, disabled, active }" @click.stop="focus">
+    <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down"/>
+    <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown"/>
+</div>
 </template>
 
 <style scoped lang="scss">
