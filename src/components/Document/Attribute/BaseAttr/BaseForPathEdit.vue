@@ -8,7 +8,7 @@ import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
 import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
-import MdNumberInput from "@/components/common/MdNumberInput.vue";
+import MossInput from "@/components/common/MossInput.vue";
 import { format_value as format } from '@/utils/common';
 
 interface Props {
@@ -342,18 +342,18 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr">
-            <MdNumberInput icon="X" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
+            <MossInput icon="X" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
                 @dragstart="dragstart" @dragging="draggingX" @dragend="dragend">
-            </MdNumberInput>
-            <MdNumberInput icon="Y" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
+            </MossInput>
+            <MossInput icon="Y" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
                 @dragstart="dragstart" @dragging="draggingY" @dragend="dragend">
-            </MdNumberInput>
+            </MossInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <div class="tr">
-            <MdNumberInput icon="radius" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
+            <MossInput icon="radius" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
                 @dragstart="dragstart" @dragging="draggingR" @dragend="dragend">
-            </MdNumberInput>
+            </MossInput>
         </div>
         <div class="tr">
             <div :class="{ tool: true, tool_disabled: model_state.tool }">

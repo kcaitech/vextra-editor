@@ -79,18 +79,17 @@ function keydown(event: KeyboardEvent) {
     if (event.key === "Escape") return inputEl.value?.blur();
     emits("keydown", event);
 }
-
 </script>
 
 <template>
-<div :class="{ 'md-number-input': true, disabled, active }" @click.stop="focus">
+<div :class="{ 'moss-input': true, disabled, active }" @click.stop="focus">
     <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down"/>
     <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown"/>
 </div>
 </template>
 
 <style scoped lang="scss">
-.md-number-input {
+.moss-input {
     display: flex;
     gap: 8px;
     align-items: center;
