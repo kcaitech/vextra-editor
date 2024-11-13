@@ -70,9 +70,10 @@ function blur() {
 }
 
 function focus() {
-    inputEl.value?.focus();
-    !active.value && inputEl.value?.select();
+    if (active.value) return;
     active.value = true;
+    inputEl.value?.focus();
+    inputEl.value?.select();
 }
 
 function keydown(event: KeyboardEvent) {
