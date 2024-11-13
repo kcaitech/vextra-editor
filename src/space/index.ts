@@ -10,6 +10,16 @@ export type BoundingLike = {
     bottom: number;
 }
 
+export function getVisibleBoundingByMatrix(shape: ShapeView, matrix: Matrix): BoundingLike {
+    const frame = shape.visibleFrame;
+    return XYsBounding([
+        { x: frame.x, y: frame.y },
+        { x: frame.x + frame.width, y: frame.y },
+        { x: frame.x + frame.width, y: frame.y + frame.height },
+        { x: frame.x, y: frame.y + frame.height }
+    ].map(p => matrix.computeCoord3(p)));
+}
+
 export class SpaceHandler {
     private context: Context;
 

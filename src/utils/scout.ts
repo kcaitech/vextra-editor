@@ -1,10 +1,11 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShapeView, Matrix, PageView, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
+import { GroupShapeView, Matrix, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { throttle } from "lodash";
 import { IScout as Scout } from "@/openapi";
+import { getVisibleBoundingByMatrix } from "@/space";
 
 export { IScout as Scout } from "@/openapi";
 
@@ -16,7 +17,7 @@ export function scout(context: Context): Scout {
     temp = uuid().split('-');
     const pathId = temp[temp.length - 1] || 'path';
     const ele: SVGElement = createSVGGeometryElement(scoutId);
-    const path = createPath('M 0 0 l 2 0 l 2 2 l -2 0 z', pathId); // 任意初始化一条path
+    const path: SVGGeometryElement = createPath('M 0 0 l 2 0 l 2 2 l -2 0 z', pathId); // 任意初始化一条path
     ele.appendChild(path);
     document.body.appendChild(ele);
 
@@ -24,40 +25,27 @@ export function scout(context: Context): Scout {
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
     function isPointInShape(shape: ShapeView, point: PageXY): boolean {
-        const d = getPathOnPageString(shape);
+        const matrix = shape.matrix2Root();
 
-        SVGPoint.x = point.x;
-        SVGPoint.y = point.y;
+        // 先判断包围盒
+        const box = getVisibleBoundingByMatrix(shape, matrix);
+        if (point.x < box.left || point.x > box.right || point.y < box.top || point.y > box.bottom) return false;
 
+        // 再判断路径
+        const d = getPathOnPageString(shape, matrix);
         path.setAttributeNS(null, 'd', d);
 
         const scale = context.workspace.curScale;
-
-        let stroke = 14 / scale;
-
-        if (shape.type === ShapeType.Contact) {
-            path.setAttributeNS(null, 'stroke-width', `${stroke}`);
-            return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
-        }
-
-        let isClosed = true;
-
-        if ((shape as PathShapeView)?.segments?.length) {
-            const segments = (shape as PathShapeView).segments;
-            for (let i = 0; i < segments.length; i++) {
-                if (!segments[i].isClosed) {
-                    isClosed = false;
-                    break;
-                }
-            }
-        }
-
-        path.setAttributeNS(null, 'stroke-width', `${stroke}`);
-
-        if (isClosed) {
-            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
+        let onlyStroke = shape instanceof PathShapeView && !shape.getFills().length;
+        if (onlyStroke) {
+            path.setAttributeNS(null, 'stroke-width', `${14 / scale}`);
+            return path.isPointInStroke(SVGPoint);
         } else {
-            return (path as SVGGeometryElement).isPointInFill(SVGPoint) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+            if (path.isPointInFill(SVGPoint)) return true;
+            path.setAttributeNS(null, 'stroke-width', `${4 / scale}`);
+            return path.isPointInStroke(SVGPoint);
         }
     }
 
@@ -161,10 +149,9 @@ function createPath(path: string, id: string): SVGPathElement {
     return p;
 }
 
-export function getPathOnPageString(shape: ShapeView | Shape): string { // path坐标系：页面
+function getPathOnPageString(shape: ShapeView | Shape, matrix: Matrix): string {
     const path = shape.getPath().clone();
-    const m2page = shape.matrix2Root();
-    path.transform(m2page);
+    path.transform(matrix);
     return path.toString();
 }
 
