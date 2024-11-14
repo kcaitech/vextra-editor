@@ -702,6 +702,7 @@ onMounted(() => {
     props.context.user.updateUserConfig();
     rootRegister(true);
     updateBackground();
+    screenFontList(props.context);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     document.addEventListener('copy', copy_watcher);

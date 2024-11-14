@@ -44,7 +44,7 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     if (e.shiftKey) {
         if (start === end) {
             const span = shapetext.spanAt(start);
-            if (span?.placeholder && span.length === 1) start--;
+            if (span?.placeholder && span.length === 1) return;
             selection.setCursor(start, false);
         } else {
             selection.selectText(start, end);
@@ -52,7 +52,7 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     } else {
         const span = shapetext.spanAt(end);
         if (span?.placeholder && span.length === 1) {
-            if (end - 1 <= 0) end = 2;
+            if (end - 1 <= 0) end = 1;
             else end--;
         }
         selection.setCursor(end, false);

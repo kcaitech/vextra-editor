@@ -212,6 +212,7 @@ const changeTextSize = (size: number) => {
     showSize.value = false;
     const shape = props.textShapes[0] as TextShapeView
     const editor = props.context.editor4TextShape(shape)
+    
     if (shapes.value.length === 1) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
