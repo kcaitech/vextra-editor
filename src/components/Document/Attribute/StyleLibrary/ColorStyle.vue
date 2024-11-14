@@ -26,31 +26,60 @@
                     </div>
                     <template v-if="showtypes.has(i.type)">
                         <div class="styles" v-for="s in i.styles.filter(s => s.name.includes(searchval))">
-                            <div class="color">
-                                <div class="main" :style="{ backgroundColor:'#000',opacity: s.content[0] }">
-                                    <div class="mask" :style="{ opacity: 1 - s.content[0] }"></div>
+                            <div class="left">
+                                <div class="color">
+                                    <div class="main" :style="{ backgroundColor: '#000', opacity: s.content[0] }">
+                                        <div class="mask" :style="{ opacity: 1 - s.content[0] }"></div>
+                                    </div>
                                 </div>
+                                <div class="name">{{ s.name }}</div>
                             </div>
-                            <div class="name">{{ s.name }}</div>
+                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event)">
+                                <svg-icon icon-class="export-menu"></svg-icon>
+                            </div>
                         </div>
                     </template>
                 </div>
                 <div v-if="!data.length" class="null">没有搜索到相关样式</div>
             </div>
         </el-scrollbar>
+        <EditorColorStyle v-if="showeditor" :type="'editor'" :top="Top" :left="Left" :shapes="props.context.selection.selectedShapes"
+            :context="props.context" :fills="props.fills" @close="showeditor = !showeditor"></EditorColorStyle>
     </div>
 
 </template>
 <script setup lang="ts">
+import {
+    BasicArray,
+    Color,
+    Fill,
+    FillType,
+    GradientType,
+    ImageScaleMode,
+    ShapeType,
+    ShapeView,
+    Stop, SymbolView,
+    TableView
+} from "@kcdesign/data";
+import { Context } from '@/context';
 import { computed, onMounted, ref, watch, watchEffect } from 'vue';
-
-
-
+import EditorColorStyle from './EditorColorStyle.vue';
+interface FillItem {
+    id: number,
+    fill: Fill
+}
+const props = defineProps<{
+    fills?: FillItem[];
+    context: Context;
+    shapes: ShapeView[];
+}>();
 const showfilter = ref<boolean>(false)
 const searchval = ref<string>('')
 const filterval = ref<string>('')
 const showtypes = ref(new Set<string>())
-
+const showeditor = ref<boolean>(false)
+const Top = ref<number>(0)
+const Left = ref<number>(0)
 const Changefilter = (v: string) => {
     filterval.value = v;
     showfilter.value = false
@@ -82,6 +111,21 @@ const data = computed(() => {
     }
     return d.filter(i => i.styles.filter(s => s.name.includes(searchval.value)).length !== 0)
 })
+
+const EditPanel = (e: MouseEvent) => {
+    let el = e.target as HTMLElement;
+    while (el.parentElement?.className !== 'style-item') {
+        if (el.parentElement) {
+            el = el.parentElement;
+        }
+    }
+    console.log(el.getBoundingClientRect(), '**************');
+    const { top, left } = el.getBoundingClientRect();
+    Top.value = top;
+    Left.value = left - 12 - 250 - 2;
+    showeditor.value = !showeditor.value
+
+}
 
 watchEffect(() => {
     data.value.forEach(i => showtypes.value.add(i.type))
@@ -200,34 +244,73 @@ onMounted(() => {
     .style-item .styles {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 8px;
         height: 32px;
-        padding: 6px;
+        padding: 0 8px;
+        border-radius: 6px;
         box-sizing: border-box;
+
+        &:hover {
+            background-color: #f5f5f5;
+
+            .editor {
+                visibility: visible !important;
+            }
+        }
     }
 
-    .style-item .styles .color {
-        width: 16px;
-        height: 16px;
-        background-color: #fff;
-        border: 1px solid rgba(230, 230, 230, 0.7);
-        border-radius: 3px;
-        overflow: hidden;
+    .style-item .styles .left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
 
-        .main {
+        .color {
             width: 16px;
             height: 16px;
-            background-color: #000;
-            position: relative;
+            background-color: #fff;
+            border: 1px solid rgba(230, 230, 230, 0.7);
+            border-radius: 3px;
+            overflow: hidden;
 
-            .mask {
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 50%;
-                height: 100%;
-                background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
+            .main {
+                width: 16px;
+                height: 16px;
+                background-color: #000;
+                position: relative;
+
+                .mask {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 50%;
+                    height: 100%;
+                    background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
+                }
             }
+        }
+    }
+
+
+    .style-item .styles .name {
+        // color: #c8c8c8;
+    }
+
+    .style-item .styles .editor {
+        display: flex;
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+
+        &:hover {
+            background-color: #e5e5e5;
+        }
+
+        svg {
+            outline: none;
+            margin: auto;
+            width: 16px;
+            height: 16px;
         }
     }
 

@@ -52,6 +52,7 @@ import {
 } from '@/utils/shape_style'
 import { getSideThickness } from "./index"
 import { sortValue } from '../BaseAttr/oval';
+import Borderstyle from '@/components/Document/Attribute/StyleLibrary/BorderStyle.vue';
 
 interface BorderItem {
     id: number
@@ -85,6 +86,8 @@ const reflush_side = ref(0);
 const reflush_apex = ref(0);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
+
+const showborder = ref<boolean>(false)
 
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
@@ -730,6 +733,22 @@ const isGradient = () => {
     return ret;
 }
 
+const Top = ref<number>(0)
+const Left = ref<number>(0)
+const EditPanel = (e: MouseEvent) => {
+    let el = e.target as HTMLElement;
+    while (el.className !== 'border-panel') {
+        if (el.parentElement) {
+            el = el.parentElement;
+        }
+    }
+    const { top, left } = el.getBoundingClientRect();
+    Top.value = top;
+    Left.value = left - 250;
+    showborder.value = !showborder.value
+
+}
+
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 const stop2 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
@@ -1005,6 +1024,9 @@ const strokeClick = (e: Event) => {
     <div class="border-panel">
         <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
             <template #tool>
+                <div class="style" @click.stop="EditPanel($event)">
+                    <svg-icon icon-class="styles"></svg-icon>
+                </div>
                 <div class="add" @click.stop="addBorder">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
@@ -1079,6 +1101,8 @@ const strokeClick = (e: Event) => {
         <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
             :trigger="props.trigger" :reflush_apex="reflush_apex">
         </Apex>
+        <Borderstyle v-if="showborder" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
+            @close="showborder = !showborder"></Borderstyle>
     </div>
     <teleport to="body">
         <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
@@ -1137,15 +1161,16 @@ const strokeClick = (e: Event) => {
     //border-top: 1px solid #F0F0F0;
     border-bottom: 1px solid #F0F0F0;
 
-    .add {
+    .add,
+    .style {
         width: 28px;
         height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: .2s;
         box-sizing: border-box;
         border-radius: var(--default-radius);
+        transition: .2s;
 
         >svg {
             width: 16px;
@@ -1153,7 +1178,16 @@ const strokeClick = (e: Event) => {
         }
     }
 
+    .style svg {
+        padding: 2px;
+        box-sizing: border-box;
+    }
+
     .add:hover {
+        background-color: #F5F5F5;
+    }
+
+    .style:hover {
         background-color: #F5F5F5;
     }
 

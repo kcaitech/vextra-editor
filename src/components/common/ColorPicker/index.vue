@@ -64,9 +64,13 @@ interface FillItem {
 }
 
 interface Props {
+    styletop?: number
+    styleleft?: number
+    open?: boolean
+    entrance?: string
     context: Context
     color: Color
-    fillslist?:FillItem[]
+    fillslist?: FillItem[]
     locat?: { index: number, type: GradientFrom }
     fillType?: FillType
     gradient?: Gradient
@@ -111,6 +115,7 @@ interface Emits {
     (e: 'changeRotate'): void;
     (e: 'changeScale', scale: number): void;
     (e: 'closeMode'): void;
+    (e: 'close'): void;
 }
 
 export interface HRGB { // 色相
@@ -832,8 +837,10 @@ function enter() {
 }
 
 function triggle() {
+    // picker_visible.value = true;
     const menu = props.context.menu;
     const exist = menu.isColorPickerMount;
+    // colorPickerMount();
     if (exist) {
         menu.removeColorPicker();
         if (exist !== blockId) {
@@ -890,6 +897,7 @@ function removeCurColorPicker() {
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
     picker_visible.value = false;
+    emit('close')
     props.context.color.select_stop(undefined);
     props.context.color.setImageScale(undefined);
     props.context.color.setImageScaleMode(undefined);
@@ -1316,6 +1324,16 @@ watch(() => picker_visible.value, (v) => {
     }
 })
 
+watch(() => props.open, () => {
+    console.log(props.open);
+
+    if (props.open) {
+        custom.value = 'style'
+    }
+    picker_visible.value = props.open
+
+})
+
 const observer = new ResizeObserver(locate);
 let isDragging = false
 let elpx: any
@@ -1398,7 +1416,8 @@ onUnmounted(() => {
 <template>
     <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
         <img v-if="fillType === FillType.Pattern" :src="image_url" alt="">
-        <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
+        <div class="popover" v-if="picker_visible" ref="popoverEl"
+            :style="{ top: props.styletop + 'px', left: props.styleleft + 'px' }" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
                 <div class="left">
@@ -1407,16 +1426,14 @@ onUnmounted(() => {
                     <!-- <svg-icon icon-class="down"></svg-icon> -->
                     <div class="style" :class="{ active: custom === 'style' }" @click="custom = 'style'">颜色样式</div>
                 </div>
-
                 <div class="right">
-                    <div class="newstyle" @click.stop="EditorStyle = !EditorStyle">
+                    <div v-if="!props.entrance" class="newstyle" @click.stop="EditorStyle = !EditorStyle">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                     <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
                         <svg-icon icon-class="close"></svg-icon>
                     </div>
                 </div>
-
             </div>
             <div v-if="custom === 'custom'" class="custom">
                 <div class="color_type_container" v-if="fillType && is_gradient_selected()">
@@ -1482,24 +1499,27 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- &lt;!&ndash; model & values &ndash;&gt; -->
-                <div class="input-container">
-                    <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"/>
-                    <div class="values">
-                        <div class="wrap">
-                            <div v-if="values.length === 4" class="value">
-                                <div v-for="(i, idx) in values" :key="idx" class="item">
-                                    <input :value="i" @click="(e) => inputClick(e, idx)"/>
+                    <!-- &lt;!&ndash; model & values &ndash;&gt; -->
+                    <div class="input-container">
+                        <Select class="model" :source="modelOptions" :selected="model" @select="switchModel" />
+                        <div class="values">
+                            <div class="wrap">
+                                <div v-if="values.length === 4" class="value">
+                                    <div v-for="(i, idx) in values" :key="idx" class="item">
+                                        <input :value="i" @click="(e) => inputClick(e, idx)" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div v-else class="value">
-                                <div class="item" style="height: 100%;width: 112.5px;">
-                                    <input spellcheck="false" :value="values[0]" @click="(e) => inputClick(e, 0)"
-                                           style="text-align: left;padding-left: 8px;"/>
+                                <div v-else class="value">
+                                    <div class="item" style="height: 100%;width: 112.5px;">
+                                        <input spellcheck="false" :value="values[0]" @click="(e) => inputClick(e, 0)"
+                                            style="text-align: left;padding-left: 8px;" />
+                                    </div>
+                                    <div class="item">
+                                        <input :value="values[1]" @click="(e) => inputClick(e, 1)" />
+                                    </div>
                                 </div>
-                                <div class="item">
-                                    <input :value="values[1]" @click="(e) => inputClick(e, 1)"/>
+                                <div class="label">
+                                    <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
                                 </div>
                             </div>
                         </div>
@@ -1536,14 +1556,14 @@ onUnmounted(() => {
                     @changeScale="(s) => emit('changeScale', s)" />
             </div>
             <div v-if="custom === 'style'" class="color-style">
-                <ColorStyle></ColorStyle>
+                <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
+                    :fills="props.fillslist" @close="EditorStyle = false"></ColorStyle>
             </div>
-            <!-- <div v-if="EditorStyle" class="editorstyle">
-                <EditorColorStyle :fills="props.fillslist" @close="EditorStyle = false"></EditorColorStyle>
-            </div> -->
-
+            <div v-if="EditorStyle" class="editorstyle">
+                <EditorColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
+                    :fills="props.fillslist" @close="EditorStyle = false"></EditorColorStyle>
+            </div>
         </div>
-
     </div>
 </template>
 
@@ -1685,7 +1705,6 @@ onUnmounted(() => {
                     }
                 }
             }
-
         }
 
         .custom {
@@ -1878,59 +1897,6 @@ onUnmounted(() => {
                         background-size: auto 75%;
                         border-radius: 5px 5px 5px 5px;
                         cursor: pointer;
-                }
-            }
-
-            >.eyedropper {
-                width: 30px;
-                height: 30px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                border-radius: 2px;
-                transition: 0.1s;
-                padding: 6px;
-                box-sizing: border-box;
-
-                >svg {
-                    width: 18px;
-                    height: 18px;
-                    cursor: pointer;
-                }
-            }
-        }
-
-        .input-container {
-            width: 100%;
-            height: fit-content;
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            padding: 12px;
-            box-sizing: border-box;
-            justify-content: space-between;
-
-            .model {
-                flex: 0 0 62px;
-                height: 32px;
-            }
-
-            .values {
-                width: 160px;
-
-                .wrap {
-                    width: 160px;
-                    height: 100%;
-                    box-sizing: border-box;
-
-                    .value {
-                        width: 160px;
-                        height: 32px;
-                        display: flex;
-                        align-items: center;
-                        background-color: #F5F5F5;
-                        border-radius: 6px;
-                        padding: 9px 5px;
                         box-sizing: border-box;
 
                         >.alpha {
@@ -1973,9 +1939,10 @@ onUnmounted(() => {
                 }
             }
 
+
             .input-container {
                 width: 100%;
-                height: 80px;
+                height: fit-content;
                 display: flex;
                 flex-direction: row;
                 align-items: flex-start;
@@ -2032,6 +1999,7 @@ onUnmounted(() => {
                             height: 24px;
                             display: flex;
                             align-items: center;
+                            justify-content: space-between;
                             padding: 5px;
                             box-sizing: border-box;
 
@@ -2081,8 +2049,6 @@ onUnmounted(() => {
                         display: flex;
                         flex-direction: row;
                         align-items: center;
-                        justify-content: space-between;
-                        padding: 5px;
                         box-sizing: border-box;
 
                         >.block {
@@ -2139,7 +2105,7 @@ onUnmounted(() => {
                         }
 
                         &::-webkit-scrollbar-track {
-                            background-color: none;
+                            background-color: transparent;
                         }
 
                         &::-webkit-scrollbar-thumb {
@@ -2148,11 +2114,11 @@ onUnmounted(() => {
                         }
 
                         &::-webkit-scrollbar-thumb:hover {
-                            background-color: none;
+                            background-color: transparent;
                         }
 
                         &::-webkit-scrollbar-thumb:active {
-                            background-color: none;
+                            background-color: transparent;
                         }
 
                         >.block {
@@ -2164,122 +2130,6 @@ onUnmounted(() => {
                             cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
                             box-sizing: border-box;
                         }
-                    }
-                }
-            }
-        }
-
-        >.recently-container {
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            box-sizing: border-box;
-            border-top: 1px solid #EBEBEB;
-            border-bottom: 1px solid #EBEBEB;
-
-            .inner {
-                //border-top: 1px solid #cecece;
-                width: 100%;
-
-                .header {
-                    width: 48px;
-                    height: 14px;
-                    font-family: HarmonyOS Sans;
-                    font-size: 12px;
-                    font-weight: 500;
-                    line-height: 14px;
-                    color: #000000;
-                    margin-bottom: 12px;
-                }
-
-                >.typical-container {
-                    width: 100%;
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    box-sizing: border-box;
-
-                    >.block {
-                        width: 16px;
-                        height: 16px;
-                        border-radius: 3px;
-                        border: 1px solid rgba(0, 0, 0, 0.1);
-                        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
-                        box-sizing: border-box;
-                    }
-
-                    >.block:not(:first-child) {
-                        margin-left: 6.2px;
-                    }
-                }
-            }
-        }
-
-        >.dc-container {
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 2px 2px 12px;
-            box-sizing: border-box;
-
-            .inner {
-                //border-top: 1px solid #cecece;
-                width: 100%;
-
-                .header {
-                    // width: 48px;
-                    height: 14px;
-                    font-family: HarmonyOS Sans;
-                    font-size: 12px;
-                    font-weight: 500;
-                    line-height: 14px;
-                    color: #000000;
-                    margin-bottom: 12px;
-                }
-
-                >.documentc-container {
-                    width: 100%;
-                    max-height: 90px;
-                    overflow: scroll;
-                    display: grid;
-                    grid-row-gap: 7px;
-                    grid-column-gap: 7px;
-                    grid-template-columns: repeat(auto-fill, 16px);
-
-                    &::-webkit-scrollbar {
-                        width: 5px;
-                    }
-
-                    &::-webkit-scrollbar-track {
-                        background-color: transparent;
-                    }
-
-                    &::-webkit-scrollbar-thumb {
-                        background-color: #EBEBEB;
-                        border-radius: 150px;
-                    }
-
-                    &::-webkit-scrollbar-thumb:hover {
-                        background-color: transparent;
-                    }
-
-                    &::-webkit-scrollbar-thumb:active {
-                        background-color: transparent;
-                    }
-
-                    >.block {
-                        display: inline-block;
-                        width: 16px;
-                        height: 16px;
-                        border-radius: 3px;
-                        border: 1px solid rgba(0, 0, 0, 0.1);
-                        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
-                        box-sizing: border-box;
                     }
                 }
             }

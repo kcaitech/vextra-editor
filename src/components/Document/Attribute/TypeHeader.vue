@@ -47,6 +47,8 @@ const props = defineProps<{
         }
 
         .tool {
+            display: flex;
+            align-items: center;
             flex: 0 0 auto;
         }
     }

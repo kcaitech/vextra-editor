@@ -15,6 +15,7 @@ import {
     get_shadows
 } from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
+import EffectStyle from '@/components/Document/Attribute/StyleLibrary/EffectStyle.vue';
 
 interface ShadowItem {
     id: number,
@@ -32,6 +33,9 @@ const watchedShapes = new Map();
 const shadows: ShadowItem[] = reactive([]);
 const mixed = ref<boolean>(false);
 const reflush = ref<number>(0);
+const Top = ref<number>(0)
+const Left = ref<number>(0)
+const showshadow=ref<boolean>(false)
 
 function watchShapes() {
     const needWatchShapes = new Map();
@@ -168,6 +172,20 @@ function update_by_shapes() {
     updateData();
 }
 
+const EditPanel = (e: MouseEvent) => {
+    let el = e.target as HTMLElement;
+    while (el.className !== 'shadow-panel') {
+        if (el.parentElement) {
+            el = el.parentElement;
+        }
+    }
+    const { top, left } = el.getBoundingClientRect();
+    Top.value = top;
+    Left.value = left - 250;
+    showshadow.value = !showshadow.value
+
+}
+
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
 onMounted(update_by_shapes);
@@ -179,36 +197,41 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="shadow-panel">
-    <TypeHeader :title="t('shadow.shadow_stting')" class="mt-24" @click="first" :active="!!shadows.length">
-        <template #tool>
-            <div class="add" @click.stop="addShadow">
-                <svg-icon icon-class="add"></svg-icon>
-            </div>
-        </template>
-    </TypeHeader>
-    <div class="tips-wrap" v-if="mixed">
-        <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
-    </div>
-    <div class="shadows-container" v-else-if="!mixed && shadows.length">
-        <div class="shadow" v-for="(s, idx) in shadows" :key="s.id">
-            <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
-            </div>
-            <div class="shadow_posi">
-                <ShadowPositionItem :context="context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
-                                    :shapes="props.shapes" :reflush="reflush"></ShadowPositionItem>
-            </div>
-            <div class="detail">
-                <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
-                              :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
-            </div>
-            <div class="delete" @click="deleteFill(idx)">
-                <svg-icon icon-class="delete"></svg-icon>
+    <div class="shadow-panel">
+        <TypeHeader :title="t('shadow.shadow_stting')" class="mt-24" @click="first" :active="!!shadows.length">
+            <template #tool>
+                <div class="style" @click.stop="EditPanel($event)">
+                    <svg-icon icon-class="styles"></svg-icon>
+                </div>
+                <div class="add" @click.stop="addShadow">
+                    <svg-icon icon-class="add"></svg-icon>
+                </div>
+            </template>
+        </TypeHeader>
+        <div class="tips-wrap" v-if="mixed">
+            <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
+        </div>
+        <div class="shadows-container" v-else-if="!mixed && shadows.length">
+            <div class="shadow" v-for="(s, idx) in shadows" :key="s.id">
+                <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                    <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
+                </div>
+                <div class="shadow_posi">
+                    <ShadowPositionItem :context="context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
+                        :shapes="props.shapes" :reflush="reflush"></ShadowPositionItem>
+                </div>
+                <div class="detail">
+                    <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
+                        :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
+                </div>
+                <div class="delete" @click="deleteFill(idx)">
+                    <svg-icon icon-class="delete"></svg-icon>
+                </div>
             </div>
         </div>
+        <EffectStyle v-if="showshadow" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
+        @close="showshadow = !showshadow"></EffectStyle>
     </div>
-</div>
 </template>
 
 <style scoped lang="scss">
@@ -220,7 +243,8 @@ onUnmounted(() => {
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
-    .add {
+    .add,
+    .style {
         width: 28px;
         height: 28px;
         display: flex;
@@ -230,13 +254,22 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
     }
 
+    .style svg {
+        padding: 2px;
+        box-sizing: border-box;
+    }
+
     .add:hover {
+        background-color: #F5F5F5;
+    }
+
+    .style:hover {
         background-color: #F5F5F5;
     }
 
@@ -269,7 +302,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                > svg {
+                >svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -304,7 +337,7 @@ onUnmounted(() => {
                 border-radius: var(--default-radius);
                 transition: .2s;
 
-                > svg {
+                >svg {
                     width: 16px;
                     height: 16px;
                 }

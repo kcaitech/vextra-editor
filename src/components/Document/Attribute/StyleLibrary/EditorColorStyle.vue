@@ -1,7 +1,7 @@
 <template>
-    <div class="editor-style">
+    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
-            <div class="title">创建颜色样式</div>
+            <div class="title">{{ props.type === 'editor' ? '编辑颜色样式' : '创建颜色样式' }}</div>
             <div class="close" @click.stop="emits('close')">
                 <svg-icon icon-class="close"></svg-icon>
             </div>
@@ -24,12 +24,14 @@
                 </div>
             </div>
             <div class="color-list">
-                <div class="item" v-for="(f,idx) in props.fills" :key="f.id">
-                    <input type="checkbox">
+                <div class="item" v-for="(f, idx) in props.fills" :key="f.id">
+                    <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                        <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
+                    </div>
                     <div class="editor">
-                        <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
-                            :locat="{ index: props.fills.length - idx - 1, type: 'fills' }" :gradient="f.fill.gradient"
-                            :fillType="f.fill.fillType" :scale="f.fill.scale"
+                        <ColorPicker :color="f.fill.color" :entrance="'styles'" :context="props.context"
+                            :auto_to_right_line="true" :locat="{ index: props.fills!.length - idx - 1, type: 'fills' }"
+                            :gradient="f.fill.gradient" :fillType="f.fill.fillType" :scale="f.fill.scale"
                             :image-scale-mode="(f.fill.imageScaleMode || ImageScaleMode.Fill)"
                             :imageUrl="getImageUrl(f.fill)" @change="c => getColorFromPicker(idx, c)"
                             :image-origin-frame="{ width: f.fill.originalImageWidth || 0, height: f.fill.originalImageHeight || 0 }"
@@ -61,10 +63,13 @@
                             :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"
                             @keydown="(e) => keydownAlpha(e, idx, f.fill, filterAlpha(f.fill))" />
                     </div>
+                    <div class="delete" @click="deleteFill(idx)">
+                        <svg-icon icon-class="delete"></svg-icon>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="create-bnt" @click.stop="emits('close')">创建样式</div>
+        <div v-if="props.type !== 'editor'" class="create-bnt" @click.stop="emits('close')">创建样式</div>
     </div>
 
 </template>
@@ -115,13 +120,58 @@ interface FillItem {
     fill: Fill
 }
 const props = defineProps<{
-    fills?:FillItem[]
+    fills?: FillItem[];
+    context: Context;
+    shapes: ShapeView[];
+    top?: number;
+    left?: number;
+    type?: string;
 }>();
 
 const emits = defineEmits<{
     (e: "close"): void;
 }>()
+
+
+const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
+const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
+const fills: FillItem[] = reactive([]);
+const alphaFill = ref<HTMLInputElement[]>();
+const colorFill = ref<HTMLInputElement[]>();
+const mixed = ref<boolean>(false);
+const mixed_cell = ref(false);
+const shapes = ref<ShapeView[]>();
+const keydownval = ref<boolean>(false)
+const is_color_select = ref(false);
+const is_alpha_select = ref(false);
+const colorValue = ref('');
+const alphaValue = ref('');
+const tableSelect = ref({
+    editingCell: props.context.tableSelection.editingCell,
+    tableRowStart: props.context.tableSelection.tableRowStart,
+    tableRowEnd: props.context.tableSelection.tableRowEnd,
+    tableColStart: props.context.tableSelection.tableColStart,
+    tableColEnd: props.context.tableSelection.tableColEnd
+});
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+
+const alphaInput = (e: Event) => {
+    if (alphaFill.value) {
+        const value = (e.target as HTMLInputElement).value;
+        alphaValue.value = value;
+    }
+}
+
+const alphaClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_alpha_select.value) return;
+    el.select();
+    is_alpha_select.value = true;
+}
 
 const colorClick = (e: Event) => {
     const el = e.target as HTMLInputElement;
@@ -139,7 +189,7 @@ const alpha_message = (idx: number, fill: Fill) => {
     let alpha = 1;
     if (fill.fillType === FillType.SolidColor) {
         alpha = fill.color.alpha * 100;
-    } else  if (fill.fillType === FillType.Pattern) {
+    } else if (fill.fillType === FillType.Pattern) {
         const opacity = fill.contextSettings?.opacity || 1;
         alpha = opacity * 100;
     } else if (fill.gradient && fill.fillType === FillType.Gradient) {
@@ -147,6 +197,52 @@ const alpha_message = (idx: number, fill: Fill) => {
         alpha = (opacity === undefined ? 1 : opacity) * 100;
     }
     alphaFill.value[idx].value = alpha + '%'
+}
+
+function toggleVisible(idx: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const s = selected[0];
+    const table = props.context.tableSelection;
+    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(s as TableView);
+        const range = get_table_range(table);
+        e.setFillEnable4Cell(_idx, !fills[idx].fill.isEnabled, range)
+
+    } else {
+        const shapes = getShapesForStyle(selected);
+        const fills = shapes[0].getFills();
+        const value = !fills[_idx].isEnabled;
+        const actions = get_actions_fill_enabled(shapes, _idx, value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillEnabled(actions);
+        }
+    }
+
+    hidden_selection(props.context);
+}
+
+function deleteFill(idx: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const s = selected[0];
+    const table = props.context.tableSelection;
+    const page = props.context.selection.selectedPage;
+    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(s as TableView);
+        const range = get_table_range(table);
+        e.deleteFill4Cell(_idx, range)
+    } else {
+        const shapes = getShapesForStyle(selected);
+        const actions = get_actions_fill_delete(shapes, _idx);
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.shapesDeleteFill(actions);
+        }
+    }
+    hidden_selection(props.context);
 }
 
 const set_gradient_opacity = (idx: number, opacity: number) => {
@@ -158,7 +254,7 @@ const set_gradient_opacity = (idx: number, opacity: number) => {
     const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'fills');
     if (keydownval.value) {
         linearApi.modifyGradientOpacity(actions)
-        keydownval.value=false
+        keydownval.value = false
     } else {
         editor.setGradientOpacity(actions);
     }
@@ -198,9 +294,9 @@ function setColor(idx: number, clr: string, alpha: number) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(tableSelection);
         const tablecells = (s as TableView).getVisibleCells(range.rowStart,
-        range.rowEnd,
-        range.colStart,
-        range.colEnd);
+            range.rowEnd,
+            range.colStart,
+            range.colEnd);
         if (tablecells.length > 0 && tablecells[0].cell) {
             if (keydownval.value) {
                 linearApi.modifyFillOpacity4Cell(_idx, new Color(alpha, r, g, b), range, s as TableView)
@@ -276,7 +372,7 @@ function getColorFromPicker(idx: number, color: Color) {
  * @description 翻转渐变
  * @param idx
  */
- function gradient_reverse(idx: number) {
+function gradient_reverse(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
@@ -290,7 +386,7 @@ function getColorFromPicker(idx: number, color: Color) {
  * @description 旋转渐变
  * @param idx
  */
- function gradient_rotate(idx: number) {
+function gradient_rotate(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
@@ -306,7 +402,7 @@ function getColorFromPicker(idx: number, color: Color) {
  * @param position
  * @param color
  */
- function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
+function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
@@ -321,7 +417,7 @@ function getColorFromPicker(idx: number, color: Color) {
  * @description 切换渐变类型
  * @param idx
  */
- function togger_gradient_type(idx: number, type: GradientType, fillType: FillType) {
+function togger_gradient_type(idx: number, type: GradientType, fillType: FillType) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
@@ -592,8 +688,10 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
 </script>
 <style lang="scss" scoped>
 .editor-style {
+    position: fixed;
     display: flex;
     flex-direction: column;
+    width: 250px;
     gap: 8px;
     border-radius: 8px;
     background-color: #fff;
@@ -610,8 +708,8 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
         box-sizing: border-box;
 
         .close {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             display: flex;
             border-radius: 4px;
 
@@ -645,6 +743,7 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
             gap: 8px;
 
             input {
+                flex: 1;
                 outline: none;
                 font-size: 12px;
                 padding: 10px 8px;
@@ -666,6 +765,7 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
         flex-direction: column;
         gap: 8px;
         padding: 0 12px;
+        margin-bottom: 8px;
         box-sizing: border-box;
 
         .create-color {
@@ -675,8 +775,8 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
             height: 32px;
 
             .add {
-                width: 24px;
-                height: 24px;
+                width: 28px;
+                height: 28px;
                 display: flex;
                 border-radius: 4px;
 
@@ -701,6 +801,103 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
                 display: flex;
                 align-items: center;
                 height: 32px;
+                gap: 8px;
+
+                .visibility {
+                    flex: 0 0 14px;
+                    width: 14px;
+                    height: 14px;
+                    background-color: var(--active-color);
+                    box-sizing: border-box;
+                    color: #ffffff;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-radius: 4px;
+
+                    >svg {
+                        width: 60%;
+                        height: 60%;
+                    }
+                }
+
+                .hidden {
+                    flex: 0 0 14px;
+                    width: 14px;
+                    height: 14px;
+                    background: #FFFFFF;
+                    border-radius: 4px;
+                    border: 1px solid #EBEBEB;
+                    box-sizing: border-box;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+
+                .editor {
+                    flex: 1;
+                    background-color: var(--input-background);
+                    height: 32px;
+                    padding: 9px 8px;
+                    border-radius: var(--default-radius);
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+
+                    .colorFill {
+                        outline: none;
+                        border: none;
+                        background-color: transparent;
+                        width: calc(100% - 53px);
+                        height: 14px;
+                        margin-left: 8px;
+                        flex: 1;
+                        font-size: 12px;
+                        box-sizing: border-box;
+                    }
+
+                    .alphaFill {
+                        outline: none;
+                        border: none;
+                        background-color: transparent;
+                        width: 37px;
+                        text-align: center;
+                        font-size: 12px;
+                        box-sizing: border-box;
+                    }
+
+                    input+input {
+                        width: 45px;
+                    }
+
+                    .check {
+                        color: #000000;
+                    }
+
+                    .nocheck {
+                        color: rgba(0, 0, 0, 0.3);
+                    }
+                }
+
+                .delete {
+                    flex: 0 0 28px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    width: 28px;
+                    height: 28px;
+                    border-radius: var(--default-radius);
+                    transition: .2s;
+
+                    >svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+
+                .delete:hover {
+                    background-color: #F5F5F5;
+                }
             }
         }
     }

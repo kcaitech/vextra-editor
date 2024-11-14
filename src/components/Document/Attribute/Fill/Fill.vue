@@ -66,8 +66,10 @@ const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
 const shapes = ref<ShapeView[]>();
 const keydownval = ref<boolean>(false)
+const openstyle = ref<boolean>(false)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
-
+const styleTop = ref<number>()
+const styleLeft = ref<number>()
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
@@ -252,9 +254,9 @@ function setColor(idx: number, clr: string, alpha: number) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(tableSelection);
         const tablecells = (s as TableView).getVisibleCells(range.rowStart,
-        range.rowEnd,
-        range.colStart,
-        range.colEnd);
+            range.rowEnd,
+            range.colStart,
+            range.colEnd);
         if (tablecells.length > 0 && tablecells[0].cell) {
             if (keydownval.value) {
                 linearApi.modifyFillOpacity4Cell(_idx, new Color(alpha, r, g, b), range, s as TableView)
@@ -401,7 +403,7 @@ const alpha_message = (idx: number, fill: Fill) => {
     let alpha = 1;
     if (fill.fillType === FillType.SolidColor) {
         alpha = fill.color.alpha * 100;
-    } else  if (fill.fillType === FillType.Pattern) {
+    } else if (fill.fillType === FillType.Pattern) {
         const opacity = fill.contextSettings?.opacity || 1;
         alpha = opacity * 100;
     } else if (fill.gradient && fill.fillType === FillType.Gradient) {
@@ -420,7 +422,7 @@ const set_gradient_opacity = (idx: number, opacity: number) => {
     const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'fills');
     if (keydownval.value) {
         linearApi.modifyGradientOpacity(actions)
-        keydownval.value=false
+        keydownval.value = false
     } else {
         editor.setGradientOpacity(actions);
     }
@@ -704,6 +706,26 @@ const closeMode = (idx: number) => {
         editor.setShapesFillEdit(shape, _idx, false);
     }
 }
+
+const positionpanel = (e: MouseEvent) => {
+    let el = e.target as HTMLElement;
+    while (el.className !== "fill-panel") {
+        if (el.parentElement) {
+            el = el.parentElement;
+        }
+    }
+    const { top, left } = el.getBoundingClientRect();
+    styleTop.value = top;
+    styleLeft.value = left - 250;
+    openstyle.value = !openstyle.value
+}
+
+const initpanel = () => {
+    openstyle.value = false
+    styleTop.value = undefined
+    styleLeft.value = undefined
+}
+
 // hooks
 const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
 const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
@@ -728,6 +750,9 @@ onUnmounted(() => {
     <div class="fill-panel">
         <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first" :active="!!fills.length">
             <template #tool>
+                <div class="style" @click.stop="positionpanel($event)">
+                    <svg-icon icon-class="styles"></svg-icon>
+                </div>
                 <div class="add" @click.stop="addFill">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
@@ -745,7 +770,8 @@ onUnmounted(() => {
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color" v-if="f.fill">
-                    <ColorPicker :fillslist="fills" :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
+                    <ColorPicker :fillslist="fills" :open="openstyle" :styletop="styleTop" :styleleft="styleLeft"
+                        :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
                         :locat="{ index: fills.length - idx - 1, type: 'fills' }" :gradient="f.fill.gradient"
                         :fillType="f.fill.fillType" :scale="f.fill.scale"
                         :image-scale-mode="(f.fill.imageScaleMode || ImageScaleMode.Fill)"
@@ -760,7 +786,7 @@ onUnmounted(() => {
                         @changeMode="(mode) => changeMode(idx, mode)"
                         @setImageRef="(url, origin, imageMgr) => setImageRef(idx, url, origin, imageMgr)"
                         @changeRotate="changeRotate(idx, f.fill)" @changeScale="(scale) => changeScale(idx, scale)"
-                        @closeMode="closeMode(idx)">
+                        @closeMode="closeMode(idx)" @close="initpanel">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType === FillType.SolidColor"
                         :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
@@ -798,7 +824,8 @@ onUnmounted(() => {
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
-    .add {
+    .add,
+    .style {
         width: 28px;
         height: 28px;
         display: flex;
@@ -814,9 +841,17 @@ onUnmounted(() => {
         }
     }
 
+    .style svg {
+        padding: 2px;
+        box-sizing: border-box;
+    }
+
     .add:hover {
         background-color: #F5F5F5;
-        ;
+    }
+
+    .style:hover {
+        background-color: #F5F5F5;
     }
 
     .fills-container {
