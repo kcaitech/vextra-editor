@@ -294,7 +294,7 @@ const selected_watcher = (t: number | string) => {
         props.context.preview.clearDelaySetTimeout();
         props.context.preview.setInteractionAction(undefined);
         props.context.preview.setSwapAction(undefined);
-        sessionStorage.removeItem(sessionRefIdKey);
+        props.context.sessionStorage.delete(sessionRefIdKey);
         delayAction(props.context, props.matrix);
     } else if (t === Selection.PREVIEW_HOVER_CHANGE) {
         createShapeTracing();
