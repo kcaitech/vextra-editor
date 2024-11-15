@@ -400,7 +400,6 @@ onUnmounted(() => {
 
 .disabled {
     opacity: 0.4;
-    z-index: -1;
 }
 
 .wrap {

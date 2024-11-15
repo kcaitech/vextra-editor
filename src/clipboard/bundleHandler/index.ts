@@ -1,11 +1,32 @@
 import { Context } from "@/context";
-import { MossClipboard, Bundle, SVGBundle, ImageBundle, SourceBundle } from "@/clipboard";
+import { Bundle, ImageBundle, MossClipboard, SourceBundle, SVGBundle } from "@/clipboard";
 import { ImageLoader } from "@/imageLoader";
 import {
-    ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, import_shape_from_clipboard,
-    ShapeView, Shape, UploadAssets, ShapeFrame, creator, adapt2Shape, import_text, GroupShape, Page,
-    TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2, ImagePack, SVGParseResult,
-    Matrix, Transform, ColVector3D
+    adapt2Shape,
+    ArtboradView,
+    ColVector3D,
+    creator,
+    getFormatFromBase64,
+    GroupShape,
+    GroupShapeView,
+    ImagePack,
+    import_shape_from_clipboard,
+    import_text,
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    Matrix,
+    Page,
+    PathShapeView,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    ShapeView,
+    SVGParseResult,
+    SymbolView,
+    TextShape,
+    Transform,
+    TransformRaw,
+    UploadAssets
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
@@ -328,7 +349,7 @@ export class BundleHandler {
                     continue;
                 }
                 const parent = view.parent!;
-                if (isContainer(view)) containerSet.add(parent as EnvLike);
+                if (isContainer(parent) && parent.type !== ShapeType.Page) containerSet.add(parent as EnvLike);
             }
             const container = Array.from(containerSet.values());
             const handler = new ClipboardTransformHandler();
