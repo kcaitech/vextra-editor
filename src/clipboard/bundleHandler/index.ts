@@ -5,7 +5,8 @@ import {
     ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, import_shape_from_clipboard,
     ShapeView, Shape, UploadAssets, ShapeFrame, creator, adapt2Shape, import_text, GroupShape, Page,
     TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2, ImagePack, SVGParseResult,
-    Matrix, Transform, ColVector3D
+    Matrix, Transform, ColVector3D,
+    ShapeType
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
@@ -37,7 +38,16 @@ export class BundleHandler {
         document.body.removeChild(d);
         return result;
     }
-
+    assginBeforeInsert(shapes: Shape[]) {
+        for (const shape of shapes) {
+            if (shape instanceof TextShape) {
+                const placeholder = shape.text.paras[0].spans[0].placeholder;
+                if (placeholder) {
+                    shape.name = shape.name.slice(1);
+                }
+            }
+        }
+    }
     private getSource(HTML: string | undefined) {
         if (!HTML) return undefined;
         HTML = this.decode(HTML);
@@ -217,7 +227,7 @@ export class BundleHandler {
         const result = editor.insertImages(packs, true);
 
         if (result) {
-            context.nextTick(page, () => {new SpaceHandler(context).fit();});
+            context.nextTick(page, () => { new SpaceHandler(context).fit(); });
             new ImageLoader(this.context).upload(result);
         }
     }
@@ -320,6 +330,9 @@ export class BundleHandler {
             const selected = context.selection.selectedShapes;
             let params: InsertAction[] | undefined;
             const { shapes, media, originIds } = source;
+            console.log(shapes, 'spae');
+
+            this.assginBeforeInsert(shapes);
             const containerSet = new Set<EnvLike>();
             const isContainer = (view: ShapeView) => view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView;
             for (const view of selected) {
@@ -352,7 +365,7 @@ export class BundleHandler {
                 }
                 const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
                 new ImageLoader(context).upload(uploadPackages);
-                context.nextTick(page, () => {new SpaceHandler(context).fit()});
+                context.nextTick(page, () => { new SpaceHandler(context).fit() });
             }
         } else if (paras) {
             const text = import_text(this.context.data, paras, true);
@@ -361,7 +374,7 @@ export class BundleHandler {
             shape.size.width = layout.contentWidth;
             shape.size.height = layout.contentHeight;
             const context = this.context;
-            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => {new SpaceHandler(context).fit()});
+            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => { new SpaceHandler(context).fit() });
         } else if (plain) {
             const name = plain.length >= 20 ? plain.slice(0, 19) + '...' : plain;
             const shape = creator.newTextShape(name);
@@ -370,12 +383,12 @@ export class BundleHandler {
             shape.size.width = layout.contentWidth;
             shape.size.height = layout.contentHeight;
             const context = this.context;
-            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => {new SpaceHandler(context).fit()});
+            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => { new SpaceHandler(context).fit() });
         }
     }
 
     // todo 现在可以先用原来的
-    pasteHere(bundle: Bundle) {}
+    pasteHere(bundle: Bundle) { }
 
     replace(bundle: Bundle, shapes: ShapeView[]) {
         const { HTML, plain, images, SVG } = bundle;
