@@ -35,7 +35,7 @@ const mixed = ref<boolean>(false);
 const reflush = ref<number>(0);
 const Top = ref<number>(0)
 const Left = ref<number>(0)
-const showshadow=ref<boolean>(false)
+const showshadow = ref<boolean>(false)
 
 function watchShapes() {
     const needWatchShapes = new Map();
@@ -172,7 +172,7 @@ function update_by_shapes() {
     updateData();
 }
 
-const EditPanel = (e: MouseEvent) => {
+const openEffectPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'shadow-panel') {
         if (el.parentElement) {
@@ -183,12 +183,45 @@ const EditPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     showshadow.value = !showshadow.value
+    props.context.escstack.save(v4(), close);
+    if (showshadow.value) {
+        document.addEventListener('click', checktargetlist)
+    }
+}
+
+function close() {
+    const is_achieve_expected_results = showshadow.value;
+    showshadow.value = false;
+    return is_achieve_expected_results;
+}
+
+function checktargetlist(e: MouseEvent) {
+    const muen = document.querySelector('.shadow-container')
+    if (!muen) return;
+    if (!muen.contains(e.target as HTMLElement)) {
+        showshadow.value = false
+        document.removeEventListener('click', checktargetlist)
+    }
+}
+
+let list: Shadow[] = [];
+
+const test = () => {
+    for (let index = 0; index < 5; index++) {
+        const _uuid = v4()
+        const a = new Shadow(new BasicArray(), _uuid, true, Math.random() * 10, new Color(0.3, 0, 0, 0),index % 2 == 0 ?Math.random() * 10*-1:Math.random() * 10*1, index % 2 == 0 ?Math.random() * 10*-1:Math.random() * 10*1, Math.random() * 10, index % 2 == 0 ? ShadowPosition.Outer : ShadowPosition.Inner);
+        list.push(a)
+    }
+    console.log(list);
 
 }
 
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
-onMounted(update_by_shapes);
+onMounted(() => {
+    update_by_shapes();
+    test();
+});
 onUnmounted(() => {
     stop();
     watchedShapes.forEach(i => i.unwatch(watcher));
@@ -200,7 +233,7 @@ onUnmounted(() => {
     <div class="shadow-panel">
         <TypeHeader :title="t('shadow.shadow_stting')" class="mt-24" @click="first" :active="!!shadows.length">
             <template #tool>
-                <div class="style" @click.stop="EditPanel($event)">
+                <div class="style" @click.stop="openEffectPanel($event)">
                     <svg-icon icon-class="styles"></svg-icon>
                 </div>
                 <div class="add" @click.stop="addShadow">
@@ -229,8 +262,8 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        <EffectStyle v-if="showshadow" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-        @close="showshadow = !showshadow"></EffectStyle>
+        <EffectStyle v-if="showshadow" :shadowlist="list" :context="props.context" :shapes="props.shapes" :top="Top"
+            :left="Left" @close="showshadow = !showshadow"></EffectStyle>
     </div>
 </template>
 

@@ -7,7 +7,7 @@
             <div class="filter" @click.stop="showfilter = !showfilter">
                 <svg-icon icon-class="arrow"></svg-icon>
             </div>
-            <input v-focus type="text" placeholder="搜索样式" v-model="searchval">
+            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval">
             <div v-if="showfilter" class="filter-list">
                 <div class="list-item" @click.stop="Changefilter('全部')">
                     <span>全部</span>
@@ -43,8 +43,9 @@
                 <div v-if="!data.length" class="null">没有搜索到相关样式</div>
             </div>
         </el-scrollbar>
-        <EditorColorStyle v-if="showeditor" :type="'editor'" :top="Top" :left="Left" :shapes="props.context.selection.selectedShapes"
-            :context="props.context" :fills="props.fills" @close="showeditor = !showeditor"></EditorColorStyle>
+        <EditorColorStyle v-if="showeditor" :type="'editor'" :top="Top" :left="Left"
+            :shapes="props.context.selection.selectedShapes" :context="props.context" :fills="props.fills"
+            @close="showeditor = !showeditor"></EditorColorStyle>
     </div>
 
 </template>
@@ -62,7 +63,7 @@ import {
     TableView
 } from "@kcdesign/data";
 import { Context } from '@/context';
-import { computed, onMounted, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import EditorColorStyle from './EditorColorStyle.vue';
 interface FillItem {
     id: number,
@@ -85,6 +86,7 @@ const Changefilter = (v: string) => {
     showfilter.value = false
     showtypes.value.add(v)
 }
+const search = ref<HTMLInputElement>()
 
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
@@ -131,8 +133,18 @@ watchEffect(() => {
     data.value.forEach(i => showtypes.value.add(i.type))
 })
 
-onMounted(() => {
+function inputBlur(e: KeyboardEvent) {
+    if (e.code === 'Escape') {
+        search.value?.blur()
+    }
+}
 
+onMounted(() => {
+    document.addEventListener('keydown',inputBlur)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('keydown',inputBlur)
 })
 
 

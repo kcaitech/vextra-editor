@@ -1022,9 +1022,9 @@ const strokeClick = (e: Event) => {
 
 <template>
     <div class="border-panel">
-        <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
+        <TypeHeader :title="t('attr.border')" class="mt-24" @click="first" :active="!!borders.length">
             <template #tool>
-                <div class="style" @click.stop="EditPanel($event)">
+                <div class="style" @click="EditPanel($event)">
                     <svg-icon icon-class="styles"></svg-icon>
                 </div>
                 <div class="add" @click.stop="addBorder">

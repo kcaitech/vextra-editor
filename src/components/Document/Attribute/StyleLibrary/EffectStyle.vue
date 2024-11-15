@@ -1,5 +1,5 @@
 <template>
-    <div class="container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop>
+    <div class="shadow-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop>
         <div class="header">
             <div class="title">特效样式</div>
             <div class="tool">
@@ -18,7 +18,7 @@
             <div class="filter" @click.stop="showfilter = !showfilter">
                 <svg-icon icon-class="arrow"></svg-icon>
             </div>
-            <input v-focus type="text" placeholder="搜索样式" v-model="searchval">
+            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval">
             <div v-if="showfilter" class="filter-list">
                 <div class="list-item" @click.stop="Changefilter('全部')">
                     <span>全部</span>
@@ -31,21 +31,26 @@
         <el-scrollbar>
             <div class="content">
                 <div class="style-item" v-for="i in data" :key="i.type">
-                    <div class="type" @click.stop="showtype(i.type)">
+                    <div class="type" @click="showtype(i.type)">
                         <svg-icon :icon-class="showtypes.has(i.type) ? 'triangle-down' : 'triangle-right'"></svg-icon>
                         <span>{{ i.type }}</span>
                     </div>
                     <template v-if="showtypes.has(i.type)">
-                        <div class="styles" v-for="s in i.styles.filter(s => s.name.includes(searchval))">
+                        <div class="styles" :class="{ 'active': showeditor && currenttarget === i.id }">
                             <div class="left">
-                                <div class="color">
-                                    <div class="main" :style="{ backgroundColor: '#000', opacity: s.content[0] }">
-                                        <div class="mask" :style="{ opacity: 1 - s.content[0] }"></div>
-                                    </div>
+                                <div class="effect" :style="{
+                                    boxShadow: `
+                                    ${i.styles[0].position.includes('in') ? 'inset' : ''} 
+                                    ${i.styles[0].offsetX > 0 ? '1px' : i.styles[0].offsetX < 0 ? '-1px' : '0'} 
+                                    ${i.styles[0].offsetY > 0 ? '1px' : i.styles[0].offsetY < 0 ? '-1px' : '0'} 
+                                    ${i.styles[0].blurRadius > 0 ? '1px' : '0'}
+                                    ${i.styles[0].spread > 0 ? '1px' : '0'}
+                                    #0000004d
+                                    `}">
                                 </div>
-                                <div class="name">{{ s.name }}</div>
+                                <div class="name">{{ i.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event)">
+                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event, i.id,i.styles,i.name,i.des)">
                                 <svg-icon icon-class="export-menu"></svg-icon>
                             </div>
                         </div>
@@ -55,7 +60,7 @@
             </div>
         </el-scrollbar>
         <EditorEffectStyle v-if="showeditor" :type="Type" :top="Top" :left="Left" :shapes="props.shapes"
-            :context="props.context" :list="list" @close="showeditor = !showeditor" @set-position="setPositoin"
+            :context="props.context" :list="Data" :name="effectname" :des="effectdes" @close="showeditor = !showeditor" @set-position="setPositoin"
             @add-shadow="addShadow" @set-shadow-enable="setEbable" @del-shadow="delShadow">
         </EditorEffectStyle>
     </div>
@@ -82,6 +87,7 @@ import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EditorEffectStyle from './EditorEffectStyle.vue';
 import { SelectItem } from "@/components/common/Select.vue";
+import { first } from "lodash";
 interface FillItem {
     id: number,
     fill: Fill
@@ -90,6 +96,7 @@ interface FillItem {
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[]
+    shadowlist: Shadow[]
     top: number;
     left: number
 }>()
@@ -108,26 +115,24 @@ const showeditor = ref<boolean>(false)
 const Top = ref<number>(0)
 const Left = ref<number>(0)
 const Type = ref<string>('')
+const currenttarget = ref<number>(-1)
 const Changefilter = (v: string) => {
     filterval.value = v;
     showfilter.value = false
     showtypes.value.add(v)
 }
-
+const search = ref<HTMLInputElement>()
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
 }
+const effectname=ref<string>()
+const effectdes=ref<string>()
+const Data=ref<Shadow[]>()
 
-const list = ref<Shadow[]>([])
-
-const addShadow = () => {
-    const _uuid = v4()
-    const a = new Shadow(new BasicArray(), _uuid, true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
-    list.value.unshift(a)
-}
 
 const test = [
-    { type: 'location', styles: [{ name: '33', content: [0.2] }, { name: '2', content: [1] }] },
+    { type: 'location',styletype:'effect',id:1,name:'test',des:'s12323',styles: props.shadowlist},
+    { type: 'location',styletype:'effect',id:2,name:'123213',des:'上海市是',styles: props.shadowlist}
 ]
 
 const setEbable = (id: string, b: boolean) => {
@@ -145,21 +150,24 @@ const setPositoin = (value: SelectItem, id: string) => {
     })
 }
 
-const delShadow=(id:string)=>{
-    list.value.splice(list.value.findIndex(i=>i.id===id),1)
+const delShadow = (id: string) => {
+    list.value.splice(list.value.findIndex(i => i.id === id), 1)
 }
 
 const data = computed(() => {
     let d;
     if (filterval.value && filterval.value !== '全部') {
-        d = test.filter(i => i.type === filterval.value)
+        d = test.filter(i => i.type === filterval.value).filter(i=>i.styletype==='effect')
     } else {
-        d = test
+        d = test.filter(i=>i.styletype==='effect')
     }
-    return d.filter(i => i.styles.filter(s => s.name.includes(searchval.value)).length !== 0)
+    return d.filter(i => i.name.includes(searchval.value))
 })
 
-const EditPanel = (e: MouseEvent) => {
+const EditPanel = (e: MouseEvent, idx: number,effects:Shadow[],name:string,des:string) => {
+    Data.value=effects;
+    effectname.value=name;
+    effectdes.value=des;
     let el = e.target as HTMLElement;
     while (el.parentElement?.className !== 'style-item') {
         if (el.parentElement) {
@@ -170,12 +178,30 @@ const EditPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 12 - 250 - 2;
     Type.value = 'editor'
-    showeditor.value = !showeditor.value
+    if (currenttarget.value === idx) {
+        showeditor.value = !showeditor.value
+    } else {
+        showeditor.value = true
+    }
+    if (showeditor.value) {
+        document.addEventListener('click', checktargetlist)
+    }
+    currenttarget.value = idx
+}
+
+function checktargetlist(e: MouseEvent) {
+    const muen = document.querySelector('.editor-style')
+    if (!muen) return;
+    if (!muen.contains(e.target as HTMLElement)) {
+        showeditor.value = false
+        document.removeEventListener('click', checktargetlist)
+    }
 }
 
 const NewPanel = (e: MouseEvent) => {
+    currenttarget.value =-1;
     let el = e.target as HTMLElement;
-    while (el.className !== 'container') {
+    while (el.className !== 'shadow-container') {
         if (el.parentElement) {
             el = el.parentElement;
         }
@@ -183,23 +209,45 @@ const NewPanel = (e: MouseEvent) => {
     const { top, left } = el.getBoundingClientRect();
     Top.value = top;
     Left.value = left - 250;
-    Type.value = 'new'
-    showeditor.value = !showeditor.value
+    if (showeditor.value) {
+        if (Type.value !== 'new') {
+            Type.value = 'new'
+        } else {
+            showeditor.value = false
+            document.removeEventListener('click', checktargetlist)
+        }
+    } else {
+        showeditor.value = true
+        Type.value = 'new'
+        document.addEventListener('click', checktargetlist)
+    }
 }
+
+watch(showfilter, () => {
+    if (showfilter) {
+        document.addEventListener('click', (e) => {
+            const muen = document.querySelector('.filter-list')
+            if (!muen) return;
+            if (!muen.contains(e.target as HTMLElement)) {
+                showfilter.value = false
+            }
+        })
+    }
+})
 
 watchEffect(() => {
     data.value.forEach(i => showtypes.value.add(i.type))
 })
 
 onMounted(() => {
-    console.log(props.top, props.left);
+    console.log(props.shadowlist);
 
 })
 
 
 </script>
 <style lang="scss" scoped>
-.container {
+.shadow-container {
     position: fixed;
     background-color: #fff;
     z-index: 9;
@@ -394,11 +442,11 @@ onMounted(() => {
         align-items: center;
         gap: 8px;
 
-        .color {
+        .effect {
             width: 16px;
             height: 16px;
             background-color: #fff;
-            border: 1px solid rgba(230, 230, 230, 0.7);
+            border: 1px solid #000000e5;
             border-radius: 3px;
             overflow: hidden;
 
@@ -445,6 +493,15 @@ onMounted(() => {
 
     .null {
         margin: auto;
+    }
+}
+
+.active {
+    background-color: #f5f5f5;
+
+    .editor {
+        visibility: visible !important;
+        background-color: #e5e5e5;
     }
 }
 </style>

@@ -1325,13 +1325,13 @@ watch(() => picker_visible.value, (v) => {
 })
 
 watch(() => props.open, () => {
-    console.log(props.open);
-
     if (props.open) {
         custom.value = 'style'
     }
     picker_visible.value = props.open
-
+    if(picker_visible.value){
+        props.context.menu.setupColorPicker(blockId)
+    }
 })
 
 const observer = new ResizeObserver(locate);

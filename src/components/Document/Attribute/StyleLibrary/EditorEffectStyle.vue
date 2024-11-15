@@ -9,11 +9,11 @@
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input type="text" id="name">
+                <input type="text" id="name" v-model="name">
             </div>
             <div class="des">
                 <label for="des">描述</label>
-                <input type="text" id="des">
+                <input type="text" id="des" v-model="des">
             </div>
         </div>
         <div class="effect">
@@ -36,7 +36,7 @@
                     <div class="setting">
                         <svg-icon icon-class="gear"></svg-icon>
                     </div>
-                    <div class="delete" :class="{ disable }" @click.stop="emits('delShadow',s.id)">
+                    <div class="delete" :class="{ disable }" @click.stop="emits('delShadow', s.id)">
                         <svg-icon icon-class="delete"></svg-icon>
                     </div>
                 </div>
@@ -61,7 +61,9 @@ const props = defineProps<{
     shapes: ShapeView[];
     top: number;
     left: number
-    list: Shadow[]
+    list: Shadow[] | undefined
+    name:string
+    des:string
 }>();
 
 const emits = defineEmits<{
@@ -69,7 +71,7 @@ const emits = defineEmits<{
     (e: 'setShadowEnable', id: string, b: boolean): void
     (e: 'addShadow'): void
     (e: 'setPosition', selected: SelectItem, id: string): void
-    (e:'delShadow',id:string):void
+    (e: 'delShadow', id: string): void
 }>()
 
 const { t } = useI18n();
@@ -80,15 +82,23 @@ const positonOptionsSource: SelectSource[] = genOptions([
     [BlurType.Background, t(`blur.background`)]
 ]);
 
+const name = ref<string>();
+const des = ref<string>();
 const disable = computed(() => {
-    return props.list.length <= 1
+    return props.list!.length <= 1
 })
 
 function positionSelect(selected: SelectItem, id: string) {
     emits('setPosition', selected, id)
 }
 
+const update=()=>{
+    name.value=props.name
+    des.value=props.des
+}
+
 onMounted(() => {
+    update();
     if (props.type === 'new') {
         emits('addShadow')
     }
