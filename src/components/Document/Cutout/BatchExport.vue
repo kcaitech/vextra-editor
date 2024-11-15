@@ -122,11 +122,11 @@ const getExportInfo = () => {
         for (let i = 0; i < exportShapes.value.length; i++) {
             const shape = exportShapes.value[i];
             const info = getInfo(shape);
-            const formats = shape.exportOptions.exportFormats as ExportFormat[];
+            const formats = shape.exportOptions!.exportFormats as ExportFormat[];
             for (let index = 0; index < formats.length; index++) {
                 let item: ExportInfo
                 const format = formats[index];
-                const background = shape.exportOptions.canvasBackground ? DEFAULT_COLOR() : 'transparent';
+                const background = shape.exportOptions!.canvasBackground ? DEFAULT_COLOR() : 'transparent';
                 item = { ...info, format, frame: shape.frame, repeat: formatRepeat(format, formats), background }
                 exportItems.push(item);
             }
@@ -283,7 +283,7 @@ const getSvgUrl = async (item: ExportInfo, index: number) => {
         const { width, height } = pageCard.value[index].pageSvg!.viewBox.baseVal
         pageCard.value[index].pageSvg!.setAttribute("width", `${width * item.format.scale}`);
         pageCard.value[index].pageSvg!.setAttribute("height", `${height * item.format.scale}`);
-        await getSvgImageData(pageCard.value[index].pageSvg!, shape.exportOptions.trimTransparent, shape.id, item.format, svgImageUrls, shape);
+        await getSvgImageData(pageCard.value[index].pageSvg!, shape.exportOptions!.trimTransparent, shape.id, item.format, svgImageUrls, shape);
     }
 }
 
