@@ -4,7 +4,7 @@ import { Assist } from '@/context/assist';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
-import { ArtboradView, Matrix, ShapeView } from '@kcdesign/data';
+import { ArtboradView, Matrix, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 interface Props {
@@ -43,7 +43,10 @@ const getIntersectShapes = () => {
         const f = s.frame;
         const x = f.x;
         const y = f.y;
-        const r = x + f.width;
+        let r = x + f.width;
+        if(s.type === ShapeType.Line && !(s as PathShapeView).haveEdit) {
+            r = x;
+        }
         const b = y + f.height;
         const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord3(p));
         points.push(...ps);
@@ -70,7 +73,10 @@ const getBoxs = (box: Box, shapes: ShapeView[]) => {  // 获取shape在视图上
         const f = shape.frame;
         const x = f.x;
         const y = f.y;
-        const r = x + f.width;
+        let r = x + f.width;
+        if(shape.type === ShapeType.Line && !(shape as PathShapeView).haveEdit) {
+            r = x;
+        }
         const b = y + f.height;
         const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord3(p));
         points.push(...ps);
@@ -140,7 +146,6 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
             }
         }
     }
-
     let before = false;
     let after = false;
     let before_bounds: Box[] = [];
@@ -162,8 +167,8 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
                 const adsorbx = getAdsorbX(box, (boxs[move_index].b.right - boxs[move_index].b.left) / 2, false); // 吸附位置
                 adsorbXs.push(...adsorbx);
                 for (const [key, value] of hor_spacings) {
-                    if (Math.abs(key - left_space) < 3) { // 移动shape左侧有无相同间距
-                        const before_bound = value.filter(item => item.right < box.left);
+                    if (Math.abs(key - left_space) < 2) { // 移动shape左侧有无相同间距
+                        const before_bound = value.filter(item => item.right <= box.left);
                         if (before_bound.length) {
                             before_bounds.push(...before_bound, box);  // 存入当前移动shape与之左侧shape之间相等的间距
                             before = true;
@@ -189,8 +194,8 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
                 const adsorbx = getAdsorbX(box, (boxs[move_index].b.right - boxs[move_index].b.left) / 2, true);
                 adsorbXs.push(...adsorbx);
                 for (const [key, value] of hor_spacings) {
-                    if (Math.abs(key - right_space) < 3) { // 移动shape右侧有无相同间距
-                        const before_bound = value.filter(item => item.left > box.right);
+                    if (Math.abs(key - right_space) < 2) { // 移动shape右侧有无相同间距
+                        const before_bound = value.filter(item => item.left >= box.right);
                         if (before_bound.length) {
                             after_bounds.push(...before_bound, box);
                             after = true;
@@ -206,7 +211,7 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
         const center = (after_spacings.right + before_spacings.left) / 2
         adsorbXs.push(center);
     }
-    if (Math.abs(right_space - left_space) < 3 && (after_spacings && before_spacings)) { //移动shape左右间距相等时
+    if (Math.abs(right_space - left_space) < 2 && (after_spacings && before_spacings)) { //移动shape左右间距相等时
         after_bounds.push(after_spacings!, before_spacings!);
     }
 
@@ -220,7 +225,7 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
     props.context.assist.setSpaceAdsorbX(adsorbXs);
     const result = [...after_bounds, ...before_bounds];
     if (result.length > 1) {
-        if (Math.abs(right_space - left_space) > 3) {
+        if (Math.abs(right_space - left_space) > 2) {
             if (after && after_spacings) spaceing_hor_line.value.push(after_spacings);
             if (before && before_spacings) spaceing_hor_line.value.push(before_spacings);
         } else {
@@ -307,8 +312,8 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
                 const adsorby = getAdsorbY(box, (boxs[move_index].b.bottom - boxs[move_index].b.top) / 2, false); // 吸附位置
                 adsorbYs.push(...adsorby);
                 for (const [key, value] of ver_spacings) {
-                    if (Math.abs(key - top_space) < 3) {
-                        const before_bound = value.filter(item => item.bottom < box.top);
+                    if (Math.abs(key - top_space) < 2) {
+                        const before_bound = value.filter(item => item.bottom <= box.top);
                         if (before_bound.length) {
                             before_bounds.push(...before_bound, box);
                             before = true;
@@ -334,8 +339,8 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
                 const adsorby = getAdsorbY(box, (boxs[move_index].b.bottom - boxs[move_index].b.top) / 2, true); // 吸附位置
                 adsorbYs.push(...adsorby);
                 for (const [key, value] of ver_spacings) {
-                    if (Math.abs(key - bottom_space) < 3) {
-                        const after_bound = value.filter(item => item.top > box.bottom);
+                    if (Math.abs(key - bottom_space) < 2) {
+                        const after_bound = value.filter(item => item.top >= box.bottom);
                         if (after_bound.length) {
                             after_bounds.push(...after_bound, box);
                             after = true;
@@ -351,7 +356,7 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
         const center = (after_spacings.bottom + before_spacings.top) / 2
         adsorbYs.push(center);
     }
-    if (Math.abs(top_space - bottom_space) < 3 && (after_spacings && before_spacings)) {
+    if (Math.abs(top_space - bottom_space) < 2 && (after_spacings && before_spacings)) {
         after_bounds.push(after_spacings!, before_spacings!);
     }
 
@@ -364,7 +369,7 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
     props.context.assist.setSpaceAdsorbY(adsorbYs);
     const result = [...after_bounds, ...before_bounds];
     if (result.length > 1) {
-        if (Math.abs(top_space - bottom_space) > 3) {
+        if (Math.abs(top_space - bottom_space) > 2) {
             if (after && after_spacings) spaceing_ver_line.value.push(after_spacings);
             if (before && before_spacings) spaceing_ver_line.value.push(before_spacings);
         } else {
