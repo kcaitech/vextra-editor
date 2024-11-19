@@ -434,10 +434,11 @@ const getExportUrl = async () => {
                 svg.setAttribute("width", `${width * format.scale}`);
                 svg.setAttribute("height", `${height * format.scale}`);
                 let promise: Promise<void> = Promise.resolve();
+                const isTrim = shape.type === ShapeType.Line || shape.type === ShapeType.Star || shape.type === ShapeType.Polygon
                 if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
-                    promise = getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
+                    promise = getPngImageData(svg, shape.exportOptions!.trimTransparent || isTrim, id, format, pngImageUrls, shape);
                 } else if (format.fileFormat === ExportFileFormat.Svg) {
-                    promise = getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
+                    promise = getSvgImageData(svg, shape.exportOptions!.trimTransparent || isTrim, id, format, pngImageUrls, shape);
                 }
                 promises.push(promise);
             });
