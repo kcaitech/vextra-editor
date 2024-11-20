@@ -24,11 +24,18 @@ export type Bundle = {
     SVG?: SVGBundle[];              // 矢量图层
 }
 
+export type RefShapeBase ={
+    symbol: string;
+    base: Shape;
+    shapeId: string;
+}
+
 export type SourceBundle = {
     shapes: Shape[];
     originTransform: any;
     originIds: string[];
     media: any;
+    unbindRefs: RefShapeBase[];
 }
 
 export class MossClipboard {
