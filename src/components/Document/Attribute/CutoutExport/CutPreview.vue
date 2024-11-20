@@ -176,7 +176,9 @@ const getPosition = (shape: ShapeView) => {
             y -= (maxB * 5);
             _w += (maxB * 10);
             _h += (maxB * 10);
-            shapeTrim.value = true;
+            if (shape.type === ShapeType.Star || shape.type === ShapeType.Polygon) {
+                shapeTrim.value = true;
+            }
         }
         xy.value.x = x - left;
         xy.value.y = y - top;
