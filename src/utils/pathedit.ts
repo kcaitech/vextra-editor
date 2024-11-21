@@ -3,6 +3,19 @@ import { XY } from "@/context/selection";
 import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView } from "@kcdesign/data";
 import { Action } from "@/context/tool";
 
+export type Segment = {
+    mode: CurveMode
+    start: XY
+    from: XY
+    to: XY
+    end: XY
+    add: XY
+    segment: number
+    index: number
+    is_selected: boolean
+    path: string
+}
+
 export function get_parent_points(context: Context, range?: Map<number, number[]>) {
     const path_shape = context.selection.pathshape;
     if (!path_shape)  return;
@@ -218,17 +231,8 @@ export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, curre
     return _a_xy;
 }
 
-export function __round_curve_point2(points: CurvePoint[], index: number) {
-    const previous_index = index === 0 ? points.length - 1 : index - 1;
-    const next_index = index === points.length - 1 ? 0 : index + 1;
-    return {
-        previous: points[previous_index],
-        next: points[next_index],
-    }
-}
-
-export function __next_points(points: CurvePoint[], index: number, is_cloesed: boolean) {
-    if (!is_cloesed && index === points.length - 1) {
+export function __next_points(points: CurvePoint[], index: number, is_closed: boolean) {
+    if (!is_closed && index === points.length - 1) {
         return;
     }
     const next_index = index === points.length - 1 ? 0 : index + 1;
@@ -249,17 +253,10 @@ export function straightPoint(t: number, p0: XY, p1: XY) {
     }
 }
 
-export interface Segment {
-    mode: CurveMode
-    start: XY
-    from: XY
-    to: XY
-    end: XY
-    add: XY
-    segment: number
-    index: number
-    is_selected: boolean
-    path: string
+function qua2cube(p0: XY, p1: XY, p2: XY) {
+    const p3 = {x: p0.x / 3 + 2 * p1.x / 3, y: p0.y / 3 + 2 * p1.y / 3}
+    const p4 = {x: p2.x / 3 + 2 * p1.x / 3, y: p2.y / 3 + 2 * p1.y / 3}
+    return [p0, p3, p4, p2];
 }
 
 function s_s(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, index: number, segment_set: Set<number>): Segment {
@@ -285,18 +282,19 @@ function s_c(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, in
     const _p = m.computeCoord2(point.x, point.y);
     const _next_to = m.computeCoord2(next.toX || 0, next.toY || 0);
     const _next = m.computeCoord2(next.x, next.y);
-    const add = bezierCurvePoint(0.5, _p, _p, _next_to, _next);
+    const [start, from, to, end] = qua2cube(_p, _next_to, _next);
+    const add = bezierCurvePoint(0.5, start, from, to, end);
     return {
         mode: point.mode,
-        start: _p,
-        from: _p,
-        to: _next_to,
-        end: _next,
+        start,
+        from,
+        to,
+        end,
         add,
         segment,
         index,
         is_selected: segment_set.has(index),
-        path: `M ${_p.x} ${_p.y} C ${_p.x} ${_p.y} ${_next_to.x} ${_next_to.y} ${_next.x} ${_next.y}`
+        path: `M ${start.x} ${start.y} C ${from.x} ${from.y} ${to.x} ${to.y} ${end.x} ${end.y}`
     }
 }
 
@@ -304,18 +302,19 @@ function c_s(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, in
     const _p = m.computeCoord2(point.x, point.y);
     const _point_from = m.computeCoord2(point.fromX || 0, point.fromY || 0);
     const _next = m.computeCoord2(next.x, next.y);
-    const add = bezierCurvePoint(0.5, _p, _point_from, _next, _next);
+    const [start, from, to, end] = qua2cube(_p, _point_from, _next);
+    const add = bezierCurvePoint(0.5, start, from, to, end);
     return {
         mode: point.mode,
-        start: _p,
-        from: _point_from,
-        to: _next,
-        end: _next,
+        start,
+        from,
+        to,
+        end,
         add,
         segment,
         index,
         is_selected: segment_set.has(index),
-        path: `M ${_p.x} ${_p.y} C ${_point_from.x} ${_point_from.y} ${_next.x} ${_next.y} ${_next.x} ${_next.y}`
+        path: `M ${start.x} ${start.y} C ${from.x} ${from.y} ${to.x} ${to.y} ${end.x} ${end.y}`
     }
 }
 
@@ -339,7 +338,7 @@ function c_c(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, in
     }
 }
 
-function _segmeng_generator(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, index: number, segment_set: Set<number>) {
+function _segment_generator(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, index: number, segment_set: Set<number>) {
     if (point.hasFrom) {
         if (next.hasTo) {
             return c_c(m, point, next, segment, index, segment_set);
@@ -382,7 +381,7 @@ export function get_segments(shape: ShapeView, matrix: Matrix, map: Map<number, 
             if (!next) {
                 break;
             }
-            __seg.push(_segmeng_generator(m, point, next, segment, index, segment_set))
+            __seg.push(_segment_generator(m, point, next, segment, index, segment_set))
         }
 
         return __seg;

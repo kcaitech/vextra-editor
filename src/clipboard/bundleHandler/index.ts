@@ -71,7 +71,26 @@ export class BundleHandler {
     private getSource(HTML: string | undefined) {
         if (!HTML) return undefined;
         HTML = this.decode(HTML);
-        return HTML && HTML.slice(0, 60).indexOf(MossClipboard.source) > -1 ? JSON.parse(HTML.split(MossClipboard.source)[1]) : undefined;
+        const source = HTML && HTML.slice(0, 60).indexOf(MossClipboard.source) > -1 ? JSON.parse(HTML.split(MossClipboard.source)[1]) : undefined;
+        if (source) {
+            const {unbindRefs, shapes} = source as SourceBundle;
+            const manger = this.context.data.symbolsMgr;
+            const binds = new Map<string, Shape>();
+            for (const ref of unbindRefs) {
+                if (!manger.get(ref.symbol)) binds.set(ref.shapeId, ref.base);
+            }
+            if (binds.size) replace(binds, shapes);
+        }
+        return source;
+
+        function replace(binds: Map<string, Shape>, shapes: Shape[]) {
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const base = binds.get(shape.id);
+                if (base) shapes[i] = base;
+                if ((shape as GroupShape).childs?.length) replace(binds, (shape as GroupShape).childs);
+            }
+        }
     }
 
     private getParas(HTML: string | undefined) {

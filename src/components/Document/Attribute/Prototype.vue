@@ -1225,7 +1225,7 @@ const scrollDirection = (data: SelectItem) => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    e.setscrollDirection(shape as ShapeView, data.value as ScrollDirection);
+    e.setScrollDirection(shape as ShapeView, data.value as ScrollDirection);
     updateData()
 }
 

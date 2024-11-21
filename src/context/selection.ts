@@ -35,6 +35,7 @@ import { ISelection, SelectionEvents } from "@/openapi/selection";
 import { skipUserSelectShapes } from "@/utils/content";
 import { DocSelectionData } from "./user";
 import { initpal } from "@/components/common/initpal";
+import { EnvChainGenerator } from "@/mouse/envchain";
 
 export interface XY {
     x: number,
@@ -101,8 +102,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     private m_textselection: TextSelectionLite;
     private m_comment_page_id: string | undefined;
     private m_table_area: { id: TableArea, area: string }[] = [];
-    private m_selected_sym_ref_menber: ShapeView | undefined;
-    private m_selected_sym_ref_bros: ShapeView[] = [];
     private m_context: Context;
     private m_is_new_shape_selection: boolean = false;
     private m_shapes_set: Set<string> = new Set();
@@ -118,6 +117,8 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     private m_hover_stroke: number = 14;
 
+    chainGenerator: EnvChainGenerator;
+
     constructor(document: Document, context: Context) {
         super();
         this.m_document = document;
@@ -126,6 +127,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.m_tableselection = new TableSelection(context, () => {
             this.m_textselection.reset();
         });
+        this.chainGenerator = new EnvChainGenerator();
     }
 
     get scout(): Scout {
@@ -239,7 +241,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         let shape: ShapeView | undefined;
         const page = this.m_selectPage!;
         const childs: ShapeView[] = scope || page.childs;
-        shape = finder2(this.m_context, this.scout, childs, position, this.selectedShapes, isCtrl, this.m_context.tool.isLable)
+        shape = finder2(this.m_context, this.scout, childs, position, isCtrl)
         return shape;
     }
 
@@ -284,6 +286,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             this.m_selectShapes.push(shape);
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
+            this.chainGenerator.gen(this.m_selectShapes);
         }
     }
 
@@ -292,6 +295,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         if (index > -1) {
             this.m_selectShapes.splice(index, 1);
             this.notify(Selection.CHANGE_SHAPE);
+            this.chainGenerator.gen(this.m_selectShapes);
         }
     }
 
@@ -300,15 +304,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.m_selectShapes.push(...shapes);
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
-    }
-
-    addSelectShape(shape: ShapeView) {
-        // check?
-        if (this.isSelectedShape(shape)) {
-            return;
-        }
-        this.m_selectShapes.push(shape);
-        this.notify(Selection.CHANGE_SHAPE);
+        this.chainGenerator.gen(this.m_selectShapes);
     }
 
     resetSelectShapes() {
@@ -323,6 +319,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE_HOVER);
             this.notify(Selection.CHANGE_SHAPE);
+            this.chainGenerator.gen(this.m_selectShapes);
         }
     }
 
@@ -538,51 +535,12 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
     }
 
-    get selectedSymOrRefMenber() {
-        return this.m_selected_sym_ref_menber;
-    }
-
-    setSelectSoRMenber(shape: ShapeView | undefined) {
-        this.m_selected_sym_ref_menber = shape;
-    }
-
-    get selectedSymRefBros() {
-        return this.m_selected_sym_ref_bros;
-    }
-
-    setSelectedSymRefBros(shapes: ShapeView[]) {
-        this.m_selected_sym_ref_bros = shapes;
-    }
-
-    get_closest_container(shape: ShapeView) {
-        let result: ShapeView | undefined = this.m_selectPage!;
-        let p = shape.parent;
-        while (p) {
-            if (p.type === ShapeType.Artboard) {
-                result = p;
-                break;
-            }
-            p = p.parent;
-        }
-        return result;
-    }
-
     get isNewShapeSelection() {
         return this.m_is_new_shape_selection;
     }
 
     setSelectionNewShapeStatus(v: boolean) {
         this.m_is_new_shape_selection = v;
-    }
-
-    private m_env_shapes: ShapeView[] = [];
-
-    setEnvShapes(shapes: ShapeView[]) {
-        this.m_env_shapes = shapes;
-    }
-
-    get envShapes() {
-        return this.m_env_shapes;
     }
 
     // #region 特殊类型shape的读取

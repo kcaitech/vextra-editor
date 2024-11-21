@@ -4,7 +4,7 @@ import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { ArtboradView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboradView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView, CircleChecker } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY, XY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -686,8 +686,11 @@ const stop1 = watch(() => props.page, (cur, old) => {
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
     updateBackground(cur);
-})
-
+});
+(window as any).__test_circle = () => {
+    const shapes = props.context.selection.selectedShapes;
+    return CircleChecker.assert4view(shapes[0], shapes[1]);
+}
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
 onMounted(() => {
     props.context.selection.scoutMount(props.context);

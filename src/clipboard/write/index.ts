@@ -1,14 +1,13 @@
 import { Context } from "@/context";
-import { Bundle, MossClipboard, SourceBundle } from "@/clipboard";
+import { Bundle, MossClipboard, RefShapeBase, SourceBundle } from "@/clipboard";
 import {
-    Text, TableCellType, import_text, export_text, TransformRaw, CurvePoint, makeShapeTransform1By2, ContactLineView, export_shape, adapt2Shape,
-    PathShape, Document
+    Text, TableCellType, import_text, export_text, TransformRaw, CurvePoint, makeShapeTransform1By2, ContactLineView, export_shape, adapt2Shape, PathShape, Document, ShapeView, SymbolRefView, RefUnbind
 } from "@kcdesign/data";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
 
 class ExfContext {
-    medias = new Set<string>()
+    medias = new Set<string>();
 }
 
 export class MossWriter {
@@ -26,6 +25,27 @@ export class MossWriter {
             media[v] = res;
         });
         return media;
+    }
+
+    private __sort_symbolref(views: ShapeView[]) {
+        const refs = sort(views);
+        const bases: RefShapeBase[] = [];
+        for (const ref of refs) {
+            const base = RefUnbind.unbind(ref);
+            if (!base) continue;
+            bases.push({symbol: ref.refId, base: base as any, shapeId: ref.id})
+        }
+
+        return bases;
+
+        function sort(views: ShapeView[]) {
+            const refs: SymbolRefView[] = [];
+            for (const view of views) {
+                if (view instanceof SymbolRefView) refs.push(view);
+                if (view.childs?.length) refs.push(...sort(view.childs));
+            }
+            return refs;
+        }
     }
 
     private encode(identity: string, data: any, text?: string) {
@@ -78,7 +98,6 @@ export class MossWriter {
 
     async write(cache: Bundle, event?: ClipboardEvent) {
         const text = this.text;
-
         if (text) {
             const _text = export_text(text);
             const plain_text = text.getText(0, text.length);
@@ -104,17 +123,14 @@ export class MossWriter {
             const origin_transform_map: any = {};
             const position_map: Map<string, TransformRaw> = new Map();
             const points_map: Map<string, CurvePoint[]> = new Map();
-
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
                 origin_transform_map[`${shape.id}`] = shape.transform.clone();
                 position_map.set(shape.id, makeShapeTransform1By2(shape.transform2FromRoot) as TransformRaw);
                 if (shape instanceof ContactLineView) points_map.set(shape.id, shape.getPoints());
             }
-
             const { shapes: _shapes, ctx } = export_shape(shapes.map((s => adapt2Shape(s))));
             if (!_shapes) return;
-
             for (let i = 0, len = _shapes.length; i < len; i++) {
                 const shape = _shapes[i];
                 shape.transform = position_map.get(shape.id)!;
@@ -123,17 +139,15 @@ export class MossWriter {
                     (shape as PathShape).pathsegs[0].points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
                 }
             }
-
             const media = this.__sort_media(this.context.data, ctx);
             const data: SourceBundle = {
                 originIds: _shapes.map(i => i.id),
                 originTransform: origin_transform_map,
                 shapes: _shapes,
                 media,
+                unbindRefs: this.__sort_symbolref(shapes)
             }
-
             const html = this.encode(MossClipboard.source, data);
-
             const blob = new Blob([html || ''], { type: 'text/html' });
             const item: any = { 'text/html': blob };
             if (navigator.userAgent.indexOf('Safari') > -1) {

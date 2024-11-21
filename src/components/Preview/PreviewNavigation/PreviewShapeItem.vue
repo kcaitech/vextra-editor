@@ -1,24 +1,23 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
-import { Shape, ShapeView } from '@kcdesign/data';
+import { onUnmounted, ref } from "vue";
+import { ShapeView } from '@kcdesign/data';
 import { Context } from "@/context";
 import { get_name } from "@/utils/shapelist";
 import { useI18n } from 'vue-i18n';
-import ShapeCard from "./PreviewShapeCard.vue";
 import StaticShape from "@/components/Document/Content/StaticShape.vue";
 
 export interface ItemData {
-    id: string
-    shape: () => ShapeView // 作用function，防止vue对shape内部数据进行proxy
-    selected: boolean
-    context: Context
+    id: string;
+    shape: () => ShapeView;
+    selected: boolean;
+    context: Context;
 }
 
 interface Props {
     data: ItemData
 }
 
-const emit = defineEmits<{
+const emits = defineEmits<{
     (e: 'selectShape', shape: ShapeView): void;
 }>();
 
@@ -30,22 +29,18 @@ const t = useI18n().t;
 const hovered = ref(false);
 
 const selectShape = () => {
-    emit("selectShape", props.data.shape());
+    emits("selectShape", props.data.shape());
 }
 
-onMounted(() => {
-})
-onUnmounted(() => {
-    stop();
-})
+onUnmounted(stop);
 </script>
 
 <template>
 <div ref="shapeItem"
      :class="{ container: true, selected: props.data.selected, hovered: hovered && !props.data.selected }"
      @click="selectShape">
-    <div class="container-svg zero-symbol">
-        <ShapeCard :shape="data.shape()"/>
+    <div class="content">
+        <StaticShape :context="data.context" :shape="data.shape()" :size="34"/>
     </div>
     <div class="text">
         <div class="txt">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
@@ -56,21 +51,21 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .container {
     display: flex;
+    gap: 6px;
     flex-flow: row;
     align-items: center;
     width: calc(100% - 6px);
     height: 52px;
     padding-left: 12px;
     box-sizing: border-box;
+    border-radius: 8px;
 
-
-    > .container-svg {
+    > .content {
         width: 38px;
         height: 38px;
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-right: 5px;
         border: 1px solid rgba(0, 0, 0, 0.25);
         border-radius: 2px;
         box-sizing: border-box;
@@ -103,23 +98,19 @@ onUnmounted(() => {
             padding-left: 2px;
         }
     }
-
 }
 
 .container:hover {
     z-index: -1;
-    border-radius: 8px;
     background-color: #efefef;
 }
 
 .selected {
     z-index: 1;
-    border-radius: 8px;
     background-color: rgba($color: #1878F5, $alpha: 0.2) !important;
 }
 
 .hovered {
-    border-radius: var(--default-radius);
     background-color: #efefef;
 }
 </style>

@@ -1395,7 +1395,6 @@ export const getTransformCol = (context: Context, shape: ShapeView, x: number, y
     return { x: col0.x, y: col0.y };
 }
 
-
 export function outlineSelection(context: Context) {
     const page = context.selection.selectedPage!;
     const shapes = context.selection.selectedShapes;
