@@ -881,7 +881,7 @@ export class ScaleHandler extends BoundHandler {
             units.push({ shape, size, transform: t, decomposeScale: __scale });
         });
 
-        (this.asyncApiCaller as Scaler).executeUniform(units, sizeForSelection.width / this.selectionSize.width * (__scale.x > 0 ? 1 : -1));
+        (this.asyncApiCaller as Scaler).executeUniform(units, sizeForSelection.width / this.selectionSize.width * Math.abs(__scale.x));
 
         this.updateCtrlView(1);
     }
