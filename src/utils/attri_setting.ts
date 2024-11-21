@@ -105,10 +105,10 @@ export function get_straight_line_length(shape: ShapeView) {
 }
 
 export function is_straight(shape: ShapeView) {
-    if (!(shape instanceof PathShapeView) || shape.type === ShapeType.Contact) {
+    if ((shape as PathShapeView).segments?.length !== 1) {
         return false;
     }
-    if (shape.segments.length !== 1) {
+    if (!(shape instanceof PathShapeView) || shape.type === ShapeType.Contact) {
         return false;
     }
     const points = shape.segments[0]?.points;
