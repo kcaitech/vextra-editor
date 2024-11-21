@@ -1,8 +1,9 @@
 import { Context } from "@/context";
 import { PageXY2, PointGroup1, PT4P1, PT4P2 } from "@/context/assist";
 import { PageXY } from "@/context/selection";
-import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, PathShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { debounce } from "lodash";
+import { is_straight } from "@/utils/attri_setting";
 
 /**
  * @description 判断两数是否相等
@@ -19,6 +20,23 @@ export function is_equal(a: number, b: number) {
 export function collect_point_group(host: ShapeView, align: boolean): PointGroup1 {
     const m = host.matrix2Root();
     const f = host.frame;
+    if (is_straight(host)) {
+        m.preScale(f.width, f.height);
+        const lt = m.computeCoord3((host as PathShapeView).segments[0].points[0]);
+        const rb = m.computeCoord3((host as PathShapeView).segments[0].points[1]);
+        const pivot = {x: (lt.x + rb.x) / 2, y: (lt.y + rb.y) / 2}
+        if (align) {
+            lt.x = Math.round(lt.x);
+            lt.y = Math.round(lt.y);
+            rb.x = Math.round(rb.x);
+            rb.y = Math.round(rb.y);
+            pivot.x = Math.round(pivot.x);
+            pivot.y = Math.round(pivot.y);
+        }
+        const apexX = [lt.x, rb.x, pivot.x];
+        const apexY = [lt.y, rb.y, pivot.y];
+        return {lt, rb, pivot, apexX, apexY};
+    }
     const x = f.x;
     const y = f.y;
     const r = x + f.width;
@@ -28,11 +46,6 @@ export function collect_point_group(host: ShapeView, align: boolean): PointGroup
     const lt = m.computeCoord2(x, y);
     const rb = m.computeCoord2(r, b);
     const pivot = m.computeCoord2(cx, cy);
-    if (host.type === ShapeType.Line) {
-        const apexX = [lt.x, rb.x, pivot.x];
-        const apexY = [lt.y, rb.y, pivot.y];
-        return { lt, rb, pivot, apexX, apexY };
-    }
     const rt = m.computeCoord2(r, y);
     const lb = m.computeCoord2(x, b);
 
