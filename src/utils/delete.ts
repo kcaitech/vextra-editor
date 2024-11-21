@@ -1,7 +1,8 @@
 import { Context } from "@/context";
 import { ColorCtx } from "@/context/color";
-import { ShapeView, TableCellType, TableView } from "@kcdesign/data";
+import { PathShapeView, ShapeView, TableCellType, TableView } from "@kcdesign/data";
 import { ReferLineHandler } from "@/components/Document/Rule/refer";
+import { PathClipper } from "@/path/clipper";
 
 export function deleteUnits(context: Context) {
     // 删除参考线
@@ -46,23 +47,15 @@ export function deleteUnits(context: Context) {
 
 function delete_for_path_edit(context: Context) {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) {
-        console.log('!path_shape');
-        return;
-    }
+    if (!path_shape) return;
 
-    const points = context.path.syntheticPoints;
-
-    const editor = context.editor4Shape(path_shape);
-
-    const result = editor.removePoints(points);
-
-    if (result === 1) {
-        context.path.reset();
-    } else if (result === 0) {
+    const result = new PathClipper(context, path_shape as PathShapeView).clip();
+    if (result === 0) {
         context.workspace.setPathEditMode(false);
         context.path._reset();
         context.selection.resetSelectShapes();
+    } else if (result > 0) {
+        context.path.reset();
     }
 }
 

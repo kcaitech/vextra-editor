@@ -3,7 +3,7 @@ import { Context } from "@/context";
 
 interface ClipResult {
     originSegmentIndex: number;
-    segments: CurvePoint[][];
+    slices: CurvePoint[][];
 }
 
 /**
@@ -19,6 +19,11 @@ export class PathClipper {
     }
 
     private disconnect(slices: CurvePoint[][], sides: number[], points: CurvePoint[], closed: boolean) {
+        if (sides.length === 1 && closed) { // 打开路径就好了
+            const index = sides[0];
+            slices.push([...points.slice(index + 1), ...points.slice(0, index + 1)]);
+            return;
+        }
         points = points.slice(0);
         sides = sides.sort((a, b) => b - a);
         for (let i = 0; i < sides.length; i++) {
@@ -30,17 +35,21 @@ export class PathClipper {
             const last = sides[i - 1];
             if (last) {
                 if (index === last - 1) {
-                    points.pop();
-                    continue;
+                    points.splice(last, 1);
+                } else {
+                    slices.unshift(points.splice(index + 1, last - index));
                 }
             } else {
                 if (index === points.length - 1) {
                     points.pop();
-                    continue;
+                } else {
+                    slices.unshift(points.splice(index + 1, points.length - 1 - index));
                 }
             }
-            const next = index + 1;
-            slices.unshift(points.splice(next, points.length - next));
+        }
+        const last = sides[sides.length - 1];
+        if (last !== points.length - 1) {
+            points = [...points.slice(last + 1), ...points.slice(0, last + 1)];
         }
         slices.unshift(points);
     }
@@ -57,7 +66,7 @@ export class PathClipper {
         }
     }
 
-    clip() {
+    private __clip() {
         const path = this.context.path;
         const segments = this.view.segments;
         const sides = path.selectedSides;
@@ -72,8 +81,14 @@ export class PathClipper {
             if (_sides) this.disconnect(slices, _sides, segment.points as CurvePoint[], segment.isClosed);
             const _points = points.get(index);
             if (_points) this.del(slices, _points, segment.points as CurvePoint[]);
-            result.push({originSegmentIndex: index, segments: slices});
+            result.push({originSegmentIndex: index, slices});
         }
         return result;
+    }
+
+    clip() {
+        const params = this.__clip();
+        if (!params.length) return -1;
+        return this.context.editor4Shape(this.view).clipPath(params)
     }
 }
