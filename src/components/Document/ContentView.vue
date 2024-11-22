@@ -4,7 +4,7 @@ import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { ArtboradView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView, CircleChecker } from '@kcdesign/data';
+import { ArtboradView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY, XY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -40,6 +40,7 @@ import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from 
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
+import { SpaceHandler } from "@/space";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -86,6 +87,7 @@ let isDragging: boolean = false;
 let wheel: Wheel | undefined = undefined;
 let down: boolean = false;
 let timer: any = null;
+let zoomIn = false;
 
 function _updateRoot(context: Context, element: HTMLElement) {
     const { x, y, right, bottom, width, height } = element.getBoundingClientRect();
@@ -363,6 +365,7 @@ function select(e: MouseEvent) {
         props.context.workspace.selecting(true);
         props.context.cursor.cursor_freeze(true);
         wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
+        zoomIn = props.context.selection.zoomIn;
     }
 }
 
@@ -391,6 +394,8 @@ function selectEnd() {
     if (wheel) wheel = wheel.remove();
 
     isDragging = false;
+
+    if (zoomIn ?? props.context.selection.zoomIn) new SpaceHandler(props.context).zoomIn(selectorFrame.left, selectorFrame.top, selectorFrame.width, selectorFrame.height);
 
     selectorFrame.top = 0;
     selectorFrame.left = 0;
@@ -687,10 +692,7 @@ const stop1 = watch(() => props.page, (cur, old) => {
     info!.m.reset(matrix.toArray())
     updateBackground(cur);
 });
-(window as any).__test_circle = () => {
-    const shapes = props.context.selection.selectedShapes;
-    return CircleChecker.assert4view(shapes[0], shapes[1]);
-}
+
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
 onMounted(() => {
     props.context.selection.scoutMount(props.context);

@@ -720,4 +720,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     get selectedTidyUpShapes(): ShapeView[] {
         return this.m_tidyup_selectShapes;
     }
+
+    zoomIn: boolean = false;
 }

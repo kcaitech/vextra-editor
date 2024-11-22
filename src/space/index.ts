@@ -174,4 +174,32 @@ export class SpaceHandler {
     scrollToView() {
 
     }
+
+    zoomIn(left: number, top: number, width: number, height: number, space = 36) {
+        const workspace = this.context.workspace;
+        const {root, matrix, curScale} = workspace;
+
+        const ratioW = (root.width - space * 2) / width;
+        const ratioH = (root.height - space * 2) / height;
+
+        let ratio: number = Math.min(ratioW, ratioH);
+        if (curScale * ratio < 0.02) ratio = 0.02 / curScale;
+        if (curScale * ratio > 256) ratio = 256 / curScale;
+        matrix.trans(-left, -top);
+        matrix.scale(ratio);
+        matrix.trans(left, top);
+
+        let offsetX: number;
+        let offsetY: number;
+        if (ratioW > ratioH) {
+            offsetX = ((root.width - space * 2) - width * ratio) / 2 - left;
+            offsetY = 36 - top;
+        } else {
+            offsetX = 36 - left;
+            offsetY = ((root.height - space * 2) - height * ratio) / 2 - top;
+        }
+        matrix.trans(offsetX, offsetY);
+
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    }
 }
