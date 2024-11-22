@@ -1,7 +1,9 @@
+import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { getFrameList, viewBox } from "@/utils/preview";
 import {
+    EL,
     Matrix,
     PrototypeActions,
     PrototypeConnectionType,
@@ -85,7 +87,42 @@ export class ProtoAction {
                 this.m_context.selection.selectShape(shape);
             }, time * 1000);
             this.m_context.preview.addSetTimeout(timer);
+        } else if (action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
+            // 智能动画
+            this.smartAmimateTransition(action);
+            this.executeSmartShape(select_shape, shape)
+            this.m_context.preview.setInteractionAction(action);
+            const timer = setTimeout(() => {
+                this.m_context.selection.selectShape(shape);
+            }, time * 1000)
+            this.m_context.preview.addSetTimeout(timer);
         }
+    }
+
+    getShapeAllChilds(shape: ShapeView) {
+        function flattenShapes(shapes: ShapeView[]): ShapeView[] {
+            return shapes.reduce((result: any, item: ShapeView) => {
+                if (item.childs) {
+                    const childs = (item).childs;
+                    if (Array.isArray(childs)) {
+                        result = result.concat(flattenShapes(childs));
+                    }
+                }
+                return result.concat(item);
+            }, []);
+        }
+        return [shape, ...flattenShapes(shape.childs)];
+    }
+
+    executeSmartShape(exe_shape: ShapeView, shape: ShapeView) {
+        const shapes = this.getShapeAllChilds(shape);
+        const names = shapes.map(s => s.name);
+        console.log((exe_shape as ShapeDom).el);
+        exe_shape.childs.forEach(s => {
+            if(names.includes(s.name)) {
+
+            }
+        })
     }
 
     // 返回上一级
@@ -221,6 +258,12 @@ export class ProtoAction {
         let refIdArray = Array.from(map.entries());
         let jsonString = JSON.stringify(refIdArray);
         this.m_context.sessionStorage.set(key, jsonString);
+    }
+
+    smartAmimateTransition(action: PrototypeActions) {
+        const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
+        const time = action.transitionDuration ?? 0.3;
+        return `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
     }
 }
 

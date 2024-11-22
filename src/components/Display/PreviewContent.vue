@@ -216,49 +216,57 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
             props.context.preview.addSetTimeout(timer);
         }
     } else if (t === Preview.SYMBOL_REF_SWITCH) {
-        const m = new Matrix();
         if (!s && symRefAnimate.value) {
             symRefAnimate.value.style['transition'] = '';
-            symRefAnimate.value.style['transform'] = m.toString();
+            symRefAnimate.value.style['transform'] = new Matrix().toString();
             symRefAnimate.value.style.opacity = '0';
             return;
         }
         const action = s as PrototypeActions;
-        const hover_shape = action_s || props.context.selection.hoveredShape;
-        if (!action.targetNodeID || !hover_shape || !symRefAnimate.value) return;
-        const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
-        const box = viewBox(matrix, hover_shape);
-        m.scale(viewUpdater.v_matrix.m00);
-        const domCtx = new DomCtx();
-        initComsMap(domCtx.comsMap);
-        const sym = props.context.data.symbolsMgr.get(action.targetNodeID);
-        if (!sym) return;
-        const cur_frame = sym.frame;
-        const _m = sym.matrix2Parent();
-        _m.multiAtLeft(m.clone());
-        const points = [
-            _m.computeCoord2(0, 0),
-            _m.computeCoord2(cur_frame.width, 0),
-            _m.computeCoord2(cur_frame.width, cur_frame.height),
-            _m.computeCoord2(0, cur_frame.height)
-        ];
-        const sym_box = XYsBounding(points);
-        m.trans(box.left - sym_box.left, box.top - sym_box.top);
-        const view = new SymbolDom(domCtx, { data: sym });
-        view.layout();
-        view.render();
-        const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
-        const time = action.transitionDuration ?? 0.3;
-        symRefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
-        symRefAnimate.value.style['transform'] = m.toString();
-        if (view.el) {
-            symRefAnimate.value.appendChild(view.el);
-            symRefAnimate.value.style.opacity = '1';
-            const timer = setTimeout(() => {
-                view.el && symRefAnimate.value?.removeChild(view.el);
-            }, time * 1000);
-            props.context.preview.addSetTimeout(timer);
+        if(action.transitionType === PrototypeTransitionType.DISSOLVE) {
+            symbolTranAnimate(action, action_s);
+        } else if (action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
+            
         }
+    }
+}
+
+const symbolTranAnimate = (action: PrototypeActions, action_s: any) => {
+    const m = new Matrix();
+    const hover_shape = action_s || props.context.selection.hoveredShape;
+    if (!action.targetNodeID || !hover_shape || !symRefAnimate.value) return;
+    const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
+    const box = viewBox(matrix, hover_shape);
+    m.scale(viewUpdater.v_matrix.m00);
+    const domCtx = new DomCtx();
+    initComsMap(domCtx.comsMap);
+    const sym = props.context.data.symbolsMgr.get(action.targetNodeID);
+    if (!sym) return;
+    const cur_frame = sym.frame;
+    const _m = sym.matrix2Parent();
+    _m.multiAtLeft(m.clone());
+    const points = [
+        _m.computeCoord2(0, 0),
+        _m.computeCoord2(cur_frame.width, 0),
+        _m.computeCoord2(cur_frame.width, cur_frame.height),
+        _m.computeCoord2(0, cur_frame.height)
+    ];
+    const sym_box = XYsBounding(points);
+    m.trans(box.left - sym_box.left, box.top - sym_box.top);
+    const view = new SymbolDom(domCtx, { data: sym });
+    view.layout();
+    view.render();
+    const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
+    const time = action.transitionDuration ?? 0.3;
+    symRefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+    symRefAnimate.value.style['transform'] = m.toString();
+    if (view.el) {
+        symRefAnimate.value.appendChild(view.el);
+        symRefAnimate.value.style.opacity = '1';
+        const timer = setTimeout(() => {
+            view.el && symRefAnimate.value?.removeChild(view.el);
+        }, time * 1000);
+        props.context.preview.addSetTimeout(timer);
     }
 }
 
@@ -626,7 +634,7 @@ function search(e: MouseEvent) {
             }
         }
     } else {
-        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);  
+        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);
     }
     const actions = hover_shape?.prototypeInterActions;
     reflush.value++;
@@ -757,6 +765,9 @@ const getTargetShapes = () => {
                         }
                     }
                 }
+                if (action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
+                    shape.transform.trans(50, 0);
+                }
                 const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
                 const el = els[i] as SVGSVGElement;
                 if (m) {
@@ -846,7 +857,7 @@ const backTargetShape = (s?: string) => {
     })
 }
 
-const onMouseEnter = (e: MouseEvent) => {    
+const onMouseEnter = (e: MouseEvent) => {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     onMouseMove_CV(e);
