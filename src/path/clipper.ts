@@ -73,7 +73,16 @@ export class PathClipper {
         const points = path.selectedPoints;
         const result: ClipResult[] = [];
         if (!(sides.size || points.size)) return result;
-        const affected = Array.from(new Set([...Array.from(sides.keys()), ...Array.from(points.keys())])).sort((a, b) => b - a);
+        const affected = Array.from(new Set((() => {
+            const __affected: number[] = [];
+            sides.forEach((i, k) => {
+                i.length && __affected.push(k)
+            });
+            points.forEach((i, k) => {
+                i.length && __affected.push(k)
+            });
+            return __affected;
+        })())).sort((a, b) => b - a);
         for (const index of affected) {
             const segment = segments[index];
             const slices: CurvePoint[][] = [];
