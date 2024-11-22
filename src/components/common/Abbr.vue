@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
-import { Artboard, ArtboradView, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboradView, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Props {
@@ -24,28 +24,23 @@ function updateIconClass() {
     else return icon_class.value = `layer-${s.type}`;
 }
 
-
 function getPath() {
-    const shape = props.shape.data;
+    const shape = props.shape;
     is_image.value = shape.isImageFill && !shape.mask;
     flex_abbr.value = shape.isPathIcon && !is_image.value && !shape.mask;
-
     if (!flex_abbr.value ) return updateIconClass();
-
     const f = shape.frame;
     const m = new Matrix();
-    m.trans(-f.width / 2, -f.height / 2);
+    m.trans(-(f.x + f.width / 2), -(f.y + f.height / 2));
     if (!props.shape.isNoTransform()) {
         if (shape.rotation) m.rotate(shape.rotation / 180 * Math.PI);
     }
-    const box = XYsBounding(
-        [
-            { x: 0, y: 0 },
-            { x: f.width, y: 0 },
-            { x: f.width, y: f.height },
-            { x: 0, y: f.height }
-        ].map(p => m.computeCoord3(p))
-    );
+    const box = XYsBounding([
+        {x: f.x, y: f.y},
+        {x: f.x + f.width, y: f.y},
+        {x: f.x + f.width, y: f.y + f.height},
+        {x: f.x, y: f.y + f.height}
+    ].map(p => m.computeCoord3(p)));
 
     const new_w = box.right - box.left;
     const new_h = box.bottom - box.top;
@@ -57,9 +52,7 @@ function getPath() {
     m.scale(ratio);
     m.trans(50, 50);
 
-    const _path = props.shape
-        .getPath()
-        .clone();
+    const _path = props.shape.getPath().clone();
 
     _path.transform(m);
     path.value = _path.toString();
