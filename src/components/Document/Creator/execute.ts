@@ -249,6 +249,8 @@ export class CreatorExecute extends TransformHandler {
     readonly shapeType: ShapeType;
     private namePrefix: string | undefined;
 
+    private space: boolean = false;
+
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
 
@@ -275,6 +277,8 @@ export class CreatorExecute extends TransformHandler {
         this.action = context.tool.action; // 记录点击时的动作类型，避免中途切换动作类型造成的影响
 
         this.shapeType = ResultByAction(this.action) || ShapeType.Rectangle;
+
+        context.workspace.creating(true);
     }
 
     createApiCaller() {
@@ -913,7 +917,7 @@ export class CreatorExecute extends TransformHandler {
             clearInterval(this.__wheel_timer);
             this.__wheel_timer = null;
         }
-
+        context.workspace.creating(false);
         super.fulfil();
         context.cursor.reset();
     }
@@ -930,6 +934,9 @@ export class CreatorExecute extends TransformHandler {
             this.altStatus = true;
             this.passiveExecute();
         }
+        if (event.code === "Space") {
+            this.space = true;
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -941,6 +948,9 @@ export class CreatorExecute extends TransformHandler {
         if (code === "AltLeft" || code === "AltRight") {
             this.altStatus = false;
             this.passiveExecute();
+        }
+        if (code === "Space") {
+            this.space = false;
         }
     }
 }
