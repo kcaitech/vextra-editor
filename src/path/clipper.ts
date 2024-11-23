@@ -57,12 +57,12 @@ export class PathClipper {
     private del(slices: CurvePoint[][], indexes: number[], points: CurvePoint[]) {
         const idSet = new Set<string>();
         for (const index of indexes) idSet.add(points[index].id);
+        if (!slices.length) slices.push(points.slice(0));
         for (let j = slices.length - 1; j > -1; j--) {
             const slice = slices[j];
             for (let i = slice.length - 1; i > -1; i--) {
                 if (idSet.has(slice[i].id)) slice.splice(i, 1);
             }
-            if (!slices.length) slices.splice(j, 1);
         }
     }
 
@@ -90,12 +90,12 @@ export class PathClipper {
             if (_sides) this.disconnect(slices, _sides, segment.points as CurvePoint[], segment.isClosed);
             const _points = points.get(index);
             if (_points) this.del(slices, _points, segment.points as CurvePoint[]);
-            result.push({originSegmentIndex: index, slices});
+            result.push({originSegmentIndex: index, slices: slices.filter(s => s.length > 1)});
         }
         return result;
     }
 
-    clip() {
+    clip(keepClosed = true) {
         const params = this.__clip();
         if (!params.length) return -1;
         return this.context.editor4Shape(this.view).clipPath(params)
