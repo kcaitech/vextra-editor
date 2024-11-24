@@ -859,7 +859,7 @@ export class CreatorExecute extends TransformHandler {
             params.frame.x += 50;
             params.frame.y += 38;
             params.frame.width = 20;
-            params.frame.height = 24;
+            params.frame.height = 16;
             params.textFormat = this.context.textSelection.getTextAttr;
         }
 
