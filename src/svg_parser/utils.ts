@@ -81,10 +81,8 @@ export function getAllStyleFromString(content: string) {
 export function parseTransform(transformContent: string, size?: { width: number, height: number }) {
     const functionCalls = getAllFunctionCallFromString(transformContent)
     const transform = new Transform()
-
     for (const [name, args] of functionCalls) {
         const argList = args.split(/,|\s+/).filter(arg => arg && arg.trim()) // 分隔符为逗号或空格
-
         const numArgList = argList.map((value, i) => {
             if (value.includes("deg")) return parseFloat(value.replace("deg", "")) * Math.PI / 180;
             else if (value.includes("rad")) return parseFloat(value.replace("rad", ""));
@@ -110,14 +108,15 @@ export function parseTransform(transformContent: string, size?: { width: number,
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
                 if (numArgList.length === 1) {
-                    if (size) {
-                        transform.rotateAt({
-                            axis: Line.FromParallelZ(ColVector3D.FromXYZ(size.width / 2, size.height / 2, 0)),
-                            angle: numArgList[0],
-                        });
-                    } else {
-                        transform.rotateZ({angle: numArgList[0]});
-                    }
+                    // if (size) {
+                    //     transform.rotateAt({
+                    //         axis: Line.FromParallelZ(ColVector3D.FromXYZ(size.width / 2, size.height / 2, 0)),
+                    //         angle: numArgList[0]
+                    //     })
+                    // } else {
+                    //     transform.rotateZ({angle: numArgList[0]});
+                    // }
+                    transform.rotateZ({angle: numArgList[0]});
                 } else if (numArgList.length === 3) {
                     transform.rotateAt({
                         axis: new Line(ColVector3D.FromXYZ(0, 0, 1), ColVector3D.FromXYZ(numArgList[0], numArgList[1], 0)),
