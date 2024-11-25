@@ -256,7 +256,7 @@ export class BaseCreator extends BaseTreeNode {
             this.attributes.transform = this.localAttributes["transform"] ?? undefined
             transform = this.attributes.transform
         }
-        if (transform) this.transform.addTransform(parseTransform(transform));
+        if (transform) this.transform.addTransform(parseTransform(transform, {width: this.attributes.width ?? 0, height: this.attributes.height ?? 0}));
 
         // opacity
         const opacity = this.localAttributes["opacity"]
