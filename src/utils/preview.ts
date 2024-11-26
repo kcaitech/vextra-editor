@@ -238,6 +238,9 @@ export function getPreviewMatrix(shape: ShapeView) {
             m.multiAtLeft(offset.toMatrix());
             if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME) {
                 m.trans(-offset.translateX, -offset.translateY);
+                if (fixed_offset && (fixed_offset.translateY < 0 || fixed_offset.translateX < 0)) {
+                    m.trans(fixed_offset.translateX < 0 ? -fixed_offset.translateX : 0, fixed_offset.translateY < 0 ? -fixed_offset.translateY : 0);
+                }
             } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS) {
                 if (s._p_frame.y + offset.translateY < 0) {
                     m.trans(0, -(s._p_frame.y + offset.translateY));

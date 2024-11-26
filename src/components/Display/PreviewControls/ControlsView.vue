@@ -331,8 +331,8 @@ onUnmounted(() => {
         <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
             @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
-        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="red"
-            stroke-width="5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="transparent"
+            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
     </svg>
 </template>

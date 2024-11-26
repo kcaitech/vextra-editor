@@ -516,6 +516,7 @@ const pageViewDragging = (e: MouseEvent, scroll?: { x: boolean, y: boolean }) =>
     }
 
     viewUpdater.setAttri(matrix);
+    setFixedTransform();
 }
 
 const getCurLayerShape = (id?: string) => {
@@ -551,7 +552,6 @@ function onMouseUp(e: MouseEvent) {
     isDragging = false;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
-
 }
 
 const isSpacePressed = () => {
@@ -688,15 +688,24 @@ function search2(e: MouseEvent) {
 const setFixedTransform = () => {
     const scale = viewUpdater.v_matrix.m00;
     const selectShape = props.context.selection.selectedShapes[0] as ArtboradView;
-    const superposeShape = isSuperposed.value ? target_shapes[target_shapes.length - 1] : props.context.selection.selectedShapes[0];
     const select_box = viewBox(viewUpdater.v_matrix, selectShape);
-    console.log(select_box, 'select_box');
     const t1 = select_box.top / scale;
     const l1 = select_box.left / scale;
     const transform1 = new TransformRaw();
     transform1.trans(l1, t1);
     props.context.preview.setFixedTransform(selectShape.id, transform1);
     selectShape.setFixedTransform(transform1);
+    if (isSuperposed.value) {
+        target_shapes.forEach(s => {
+            const select_box = viewBox(end_matrix.value as Matrix, s);
+            const t2 = Math.max(select_box.top / scale, t1);
+            const l2 = Math.max(select_box.left / scale, l1);
+            const transform2 = new TransformRaw();
+            transform2.trans(l2, t2);
+            props.context.preview.setFixedTransform(s.id, transform2);
+            (s as ArtboradView).setFixedTransform(transform2);
+        })
+    }
 }
 
 const updateSearch = (e?: MouseEvent) => {
@@ -1005,7 +1014,7 @@ onUnmounted(() => {
             xmlns:xhtml="http://www.w3.org/1999/xhtml" class="sym_ref_animate" preserveAspectRatio="xMinYMin meet"
             viewBox="0 0 100 100" width="100" height="100">
         </svg>
-        <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox">
+        <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox"  @mousedown.stop>
             <div class="toggle" v-if="showToggle && listLength && previewMode">
                 <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
                     <svg-icon icon-class="left-arrow"></svg-icon>
