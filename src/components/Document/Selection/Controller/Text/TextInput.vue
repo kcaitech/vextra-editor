@@ -113,7 +113,7 @@ function cut_watcher(event: ClipboardEvent) {
     if (start === end) {
         return;
     }
-
+    
     const editor = props.context.editor4TextShape(text_shape);
     if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
         selection.setCursor(Math.min(start, end), false);
@@ -129,7 +129,15 @@ function paste_watcher(event: ClipboardEvent) {
     props.context.workspace.clipboard.paste_text(event);
 }
 
+
 onMounted(() => {
+    // 自动聚集
+    document.addEventListener('keydown', function (event) {
+        if (document.activeElement?.tagName !== 'INPUT' && props.context.textSelection.cursorStart > -1) {
+            attention();
+            oninput(event);
+        }
+    }, true)
     props.shape.watch(updateInputPos)
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspaceWatcher);
@@ -154,6 +162,7 @@ onUnmounted(() => {
         inputel.value.addEventListener('paste', paste_watcher);
     }
 })
+
 
 function committext() {
     if (!inputel.value) return;

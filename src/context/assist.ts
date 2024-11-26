@@ -1,4 +1,4 @@
-import { ArtboradView, GroupShapeView, GuideAxis, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { ArtboradView, GroupShapeView, GuideAxis, PathShapeView, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
@@ -902,10 +902,17 @@ export class Assist extends WatchableObject {
             const m = inner_shape.matrix2Root();
             m.multiAtLeft(matrix);
             const f = inner_shape.frame;
-            const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+            const x = f.x;
+            const y = f.y;
+            let r = x + f.width;
+            if (inner_shape.type === ShapeType.Line && !(inner_shape as PathShapeView).haveEdit) {
+                r = x;
+            }
+            const b = y + f.height;
+            const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord(p.x, p.y));
             points.push(...ps);
-            const b = XYsBounding(points);
-            if (top <= b.bottom && bottom >= b.top) {
+            const bound = XYsBounding(points);
+            if (top <= bound.bottom && bottom >= bound.top) {
                 result.push(inner_shape);
             }
         }
@@ -925,10 +932,17 @@ export class Assist extends WatchableObject {
             const m = inner_shape.matrix2Root();
             m.multiAtLeft(matrix);
             const f = inner_shape.frame;
-            const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+            const x = f.x;
+            const y = f.y;
+            let r = x + f.width;
+            if (inner_shape.type === ShapeType.Line && !(inner_shape as PathShapeView).haveEdit) {
+                r = x;
+            }
+            const b = y + f.height;
+            const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord(p.x, p.y));
             points.push(...ps);
-            const b = XYsBounding(points);
-            if (left <= b.right && right >= b.left) {
+            const bound = XYsBounding(points);
+            if (left <= bound.right && right >= bound.left) {
                 result.push(inner_shape);
             }
         }

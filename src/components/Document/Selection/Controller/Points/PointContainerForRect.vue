@@ -109,8 +109,8 @@ function point_mousemove(e: MouseEvent) {
             pointModifyHandler.createApiCaller();
         }
         let r = radiusDotMove(e);
-
-        const isAlt = props.context.selection.is_interval;
+        const isAlt = e.altKey;
+        
         const max_r = maxRadius(props.shape.frame);
         if (r > max_r) r = max_r;
         if (r < 0) r = 0;
