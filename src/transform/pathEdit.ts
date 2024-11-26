@@ -19,6 +19,7 @@ import { Assist } from "@/context/assist";
 import { is_layers_tree_unit } from "@/utils/scout";
 import { forbidden_to_modify_frame } from "@/utils/common";
 import { permIsEdit } from "@/utils/permission";
+import { roundBy } from "@/path/common";
 
 type Base = {
     x: number;
@@ -633,6 +634,12 @@ export class PathEditor extends TransformHandler {
     }
 
     private __execute() {
+        if (this.context.user.isPixelAlignMent) {
+            this.fixedPoint.x = roundBy(this.fixedPoint.x);
+            this.fixedPoint.y = roundBy(this.fixedPoint.y);
+            this.livingPoint.x = roundBy(this.livingPoint.x);
+            this.livingPoint.y = roundBy(this.livingPoint.y);
+        }
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
 

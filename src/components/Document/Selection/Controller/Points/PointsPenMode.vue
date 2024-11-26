@@ -11,6 +11,7 @@ import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/transform/pathEdit";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
+import { roundBy } from "@/path/common";
 
 type Props = {
     context: Context
@@ -502,7 +503,17 @@ function getLastPoint() {
 
 function documentMove(e: MouseEvent) {
     props.context.path.saveEvent(e);
+
     const __client = props.context.workspace.getContentXY(e);
+
+    if (props.context.user.isPixelAlignMent) {
+        let root = props.context.workspace.getRootXY(e);
+        root.x = roundBy(root.x);
+        root.y = roundBy(root.y);
+        root = props.context.workspace.matrix.computeCoord3(root);
+        __client.x = root.x;
+        __client.y = root.y;
+    }
 
     let delX = Infinity;
     let delY = Infinity;
@@ -512,7 +523,7 @@ function documentMove(e: MouseEvent) {
     let TX = 0;
     let TY = 0;
 
-    if (!mapX.size && !mapY.size) buildMap();
+    if (!mapX.size || !mapY.size) buildMap();
 
     const xs = Array.from(mapX.keys());
     const ys = Array.from(mapY.keys());
