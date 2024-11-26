@@ -149,7 +149,7 @@ export class ViewUpdater {
         const rootCX = root.width / 2;
         const rootCY = root.height / 2;
         transformMatrix.trans(rootCX - cx, rootCY - cy);
-
+        
         return transformMatrix;
     }
 
@@ -183,8 +183,7 @@ export class ViewUpdater {
 
     private __update(...args: any[]) {
         (this.m_page_card as any)?.repaint() // 执行PreviewPageCard内部重绘函数
-
-        if (args.includes('frame') || args.includes('rotation') || args.includes('transform')) {
+        if (args.includes('frame') || args.includes('rotation') || args.includes('transform') || args.includes('layout')) {
             this.modifyTransform();
         }
     }
@@ -1237,7 +1236,7 @@ export class ViewUpdater {
             const trans = (inner_shape as ArtboradView).innerTransform;
             let stepx = this.m_context.preview.artboardScrollOffset.x - (trans?.translateX || 0);
             let stepy = this.m_context.preview.artboardScrollOffset.y - (trans?.translateY || 0);
-            scrollAtrboard(inner_shape, { x: stepx, y: stepy });
+            scrollAtrboard(this.m_context, inner_shape, { x: stepx, y: stepy });
         }
     }
 

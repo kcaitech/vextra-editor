@@ -13,6 +13,7 @@ import {
     sessionRefIdKey,
     ShapeType,
     ShapeView,
+    TransformRaw,
     XYsBounding
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
@@ -223,10 +224,10 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
             return;
         }
         const action = s as PrototypeActions;
-        if(action.transitionType === PrototypeTransitionType.DISSOLVE) {
+        if (action.transitionType === PrototypeTransitionType.DISSOLVE) {
             symbolTranAnimate(action, action_s);
         } else if (action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
-            
+
         }
     }
 }
@@ -288,6 +289,7 @@ const selectionWatcher = (v: number | string) => {
     if (v === Selection.CHANGE_PAGE) {
         changePage();
         props.context.preview.setFromShapeAction(undefined);
+        reflush.value++;
     } else if (v === Selection.CHANGE_SHAPE) {
         removeChildSymRefAnimate();
         props.context.preview.clearInnerTransform();
@@ -302,6 +304,7 @@ const selectionWatcher = (v: number | string) => {
             return;
         }
         page_watcher();
+        reflush.value++;
     }
 }
 
@@ -336,11 +339,13 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
         previewMode && viewUpdater.scale(e);
+        setFixedTransform();
     } else {
         let hover_shape = search2(e);
         hover_shape = getScrollShape(hover_shape);
         if (!hover_shape) {
             viewUpdater.trans(e);
+            setFixedTransform();
         } else {
             artboard = hover_shape as ArtboradView;
             const scale = viewUpdater.v_matrix.m00;
@@ -350,20 +355,21 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
                 stepx = stepy;
                 stepy = 0;
             }
-            let scroll = scrollAtrboard(artboard, { x: -stepx / scale, y: -stepy / scale });
+            let scroll = scrollAtrboard(props.context, artboard, { x: -stepx / scale, y: -stepy / scale });
             let p_x = hover_shape.parent;
             p_x = getScrollShape(p_x);
             while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                scroll.x = scrollAtrboard(p_x as ArtboradView, { x: -stepx / scale, y: 0 }).x;
+                scroll.x = scrollAtrboard(props.context, p_x as ArtboradView, { x: -stepx / scale, y: 0 }).x;
                 p_x = p_x.parent;
             }
             let p_y = hover_shape.parent;
             p_y = getScrollShape(p_y);
             while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: -stepy / scale }).y;
+                scroll.y = scrollAtrboard(props.context, p_y as ArtboradView, { x: 0, y: -stepy / scale }).y;
                 p_y = p_y.parent;
             }
             viewUpdater.trans(e, scroll);
+            setFixedTransform();
         }
     }
 }
@@ -417,9 +423,9 @@ const onMouseDown = (e: MouseEvent) => {
             preview.value.style.cursor = 'grabbing';
         }
         closeSupernatant(e);
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
     }
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
 }
 
 function onMouseMove(e: MouseEvent) {
@@ -440,17 +446,17 @@ function onMouseMove(e: MouseEvent) {
             if (diff > 4) {
                 artboard = hover_shape as ArtboradView;
                 const scale = viewUpdater.v_matrix.m00;
-                let scroll = scrollAtrboard(artboard, { x: e.movementX / scale, y: e.movementY / scale });
+                let scroll = scrollAtrboard(props.context, artboard, { x: e.movementX / scale, y: e.movementY / scale });
                 let p_x = hover_shape.parent;
                 p_x = getScrollShape(p_x);
                 while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                    scroll.x = scrollAtrboard(p_x as ArtboradView, { x: e.movementX / scale, y: 0 }).x;
+                    scroll.x = scrollAtrboard(props.context, p_x as ArtboradView, { x: e.movementX / scale, y: 0 }).x;
                     p_x = p_x.parent;
                 }
                 let p_y = hover_shape.parent;
                 p_y = getScrollShape(p_y);
                 while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                    scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: e.movementY / scale }).y;
+                    scroll.y = scrollAtrboard(props.context, p_y as ArtboradView, { x: 0, y: e.movementY / scale }).y;
                     p_y = p_y.parent;
                 }
                 pageViewDragging(e, scroll);
@@ -677,6 +683,20 @@ function search2(e: MouseEvent) {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     }
     return hover_shape;
+}
+
+const setFixedTransform = () => {
+    const scale = viewUpdater.v_matrix.m00;
+    const selectShape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const superposeShape = isSuperposed.value ? target_shapes[target_shapes.length - 1] : props.context.selection.selectedShapes[0];
+    const select_box = viewBox(viewUpdater.v_matrix, selectShape);
+    console.log(select_box, 'select_box');
+    const t1 = select_box.top / scale;
+    const l1 = select_box.left / scale;
+    const transform1 = new TransformRaw();
+    transform1.trans(l1, t1);
+    props.context.preview.setFixedTransform(selectShape.id, transform1);
+    selectShape.setFixedTransform(transform1);
 }
 
 const updateSearch = (e?: MouseEvent) => {
@@ -932,17 +952,14 @@ function hideToggleBox() {
     }, 2500); // 3秒后隐藏
 }
 onMounted(() => {
-    props.context.preview.watch(previewWatcher);
     props.context.selection.watch(selectionWatcher);
-    watch_shapes();
+    props.context.preview.watch(previewWatcher);
     // 等cur_shape触发pageCard的挂载
-    page_watcher();
     nextTick(() => {
-        watch_shapes();
         // 然后初始化视图渲染管理器
         viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
+        watch_shapes();
     })
-
     if (preview.value) {
         observer.observe(preview.value);
     }
@@ -974,7 +991,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush"
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
         <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
             :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true" />
@@ -1005,7 +1022,7 @@ onUnmounted(() => {
             :reflush="reflush" @updateSearch="updateSearch">
         </ControlsView>
         <div v-if="is_overlay" class="overlay" />
-        <div v-if="cur_shape" class="preview_overlay" />
+        <div v-if="cur_shape.length" class="preview_overlay" />
     </div>
 </template>
 
