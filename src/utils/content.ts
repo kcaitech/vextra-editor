@@ -475,7 +475,6 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
 
 /**
  * 使page全部内容都在可视区，并居中
- * @param context
  */
 export function adapt_page(context: Context, initPage = false, is_select = false) {
     const selectedShapes = context.selection.selectedShapes || [];

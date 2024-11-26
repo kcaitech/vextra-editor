@@ -547,23 +547,23 @@ const comps: { component: any, params?: any }[] = [];
 const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
 
+const pageView = {
+    component: PageViewVue, params: {
+        get data() {
+            return props.page
+        },
+        get matrix() {
+            return matrix
+        },
+        get visibleRect() {
+            return visibleRect;
+        },
+        onRenderDone,
+        onContentVisible
+    }
+}
+
 comps.push(
-    // 页面
-    {
-        component: PageViewVue, params: {
-            get data() {
-                return props.page
-            },
-            get matrix() {
-                return matrix
-            },
-            get visibleRect() {
-                return visibleRect;
-            },
-            onRenderDone,
-            onContentVisible
-        }
-    },
     // 筛选结果文本高亮
     {
         component: TextSelection, params: {
@@ -684,6 +684,12 @@ comps.push(
 )
 
 comps.push(...plugins.end);
+
+props.context.setOnLoaded(() => {
+    // console.log('第一次将数据加载回来')
+    comps.unshift(pageView);
+    reflush.value++;
+})
 
 const stop1 = watch(() => props.page, (cur, old) => {
     old.unwatch(page_watcher)
