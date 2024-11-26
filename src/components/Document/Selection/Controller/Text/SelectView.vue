@@ -66,7 +66,7 @@ function _update() {
         // cursor
         const cursorAtBefore = text_selection.cursorAtBefore;
         const index = text_selection.cursorStart;
-        const cursor = props.shape.locateCursor(index, cursorAtBefore);
+        const cursor = props.shape.locateCursor(index, cursorAtBefore);        
         if (!cursor) {
             cursor_points = [];
             cursorPath.value = "";

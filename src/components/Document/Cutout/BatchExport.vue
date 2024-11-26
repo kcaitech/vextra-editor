@@ -684,7 +684,6 @@ onUnmounted(() => {
 
 .checkbox:indeterminate::before {
     content: "";
-    display: absolute;
     width: 8px;
     height: 2px;
     background-color: #ffffff;
