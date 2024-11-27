@@ -685,6 +685,7 @@ function search2(e: MouseEvent) {
     return hover_shape;
 }
 
+// 吸顶固定和固定的视图偏移值
 const setFixedTransform = () => {
     const scale = viewUpdater.v_matrix.m00;
     const selectShape = props.context.selection.selectedShapes[0] as ArtboradView;
