@@ -27,7 +27,6 @@ const countdown = ref(10);
 const loading = ref<boolean>(true);
 const contentVisible = ref<boolean>(false);
 const bridge = ref<boolean>(false);
-const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
 let uninstall_keyboard_units: () => void = () => {
 };
@@ -134,9 +133,7 @@ onMounted(() => {
     init_watcher();
     init_keyboard_units();
     localStorage.setItem('project_id', '');
-    initpal().then(() => {
-        inited.value = true;
-    }).catch((e) => {
+    initpal().catch((e) => {
         console.error(e)
     });
 })
