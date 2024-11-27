@@ -534,8 +534,6 @@ function windowFocus() {
 
 const onRenderDone = () => {
     emits('closeLoading');
-    resizeObserver.observe(root.value!);
-    _updateRoot(props.context, root.value!);
     initMatrix(props.page);
 }
 const onContentVisible = () => {
@@ -546,24 +544,22 @@ const comps: { component: any, params?: any }[] = [];
 
 const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
-
-const pageView = {
-    component: PageViewVue, params: {
-        get data() {
-            return props.page
-        },
-        get matrix() {
-            return matrix
-        },
-        get visibleRect() {
-            return visibleRect;
-        },
-        onRenderDone,
-        onContentVisible
-    }
-}
-
 comps.push(
+    {
+        component: PageViewVue, params: {
+            get data() {
+                return props.page
+            },
+            get matrix() {
+                return matrix
+            },
+            get visibleRect() {
+                return visibleRect;
+            },
+            onRenderDone,
+            onContentVisible
+        }
+    },
     // 筛选结果文本高亮
     {
         component: TextSelection, params: {
@@ -685,12 +681,6 @@ comps.push(
 
 comps.push(...plugins.end);
 
-props.context.setOnLoaded(() => {
-    // console.log('第一次将数据加载回来')
-    comps.unshift(pageView);
-    reflush.value++;
-})
-
 const stop1 = watch(() => props.page, (cur, old) => {
     old.unwatch(page_watcher)
     cur.watch(page_watcher)
@@ -726,6 +716,9 @@ onMounted(() => {
     if (f) background_color.value = color2string(f);
     timeSlicingTask(props.context, fontNameListZh, 'zh');
     timeSlicingTask(props.context, fontNameListEn, 'en');
+
+    resizeObserver.observe(root.value!);
+    _updateRoot(props.context, root.value!);
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
