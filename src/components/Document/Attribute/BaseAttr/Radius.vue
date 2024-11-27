@@ -25,7 +25,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const rect = ref<boolean>(false);
+const rect = ref<boolean>(localStorage.getItem('radius-corner-display') === "all");
 const can_be_rect = ref<boolean>(false);
 const radius = reactive<{ lt: number | string, rt: number | string, rb: number | string, lb: number | string }>({
     lt: 0,
@@ -113,6 +113,7 @@ function checkKeyup(event: KeyboardEvent) {
 
 function rectToggle() {
     rect.value = !rect.value;
+    localStorage.setItem('radius-corner-display', rect.value ? 'all' : 'corner');
     modify_radius_value();
 }
 
@@ -129,22 +130,16 @@ function selection_watcher(t: Number | string) {
 
 function modify_can_be_rect() {
     can_be_rect.value = false;
-
-    const need_reset = rect.value;
-
+    const origin = rect.value;
     rect.value = false;
 
     const selected = props.context.selection.selectedShapes;
-
     for (let i = 0, l = selected.length; i < l; i++) {
         if (selected[i].radiusType !== RadiusType.Rect) return;
     }
 
-    if (need_reset) {
-        rect.value = true;
-    }
-
     can_be_rect.value = true;
+    rect.value = origin;
 }
 
 function reset_radius_value() {
