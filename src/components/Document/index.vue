@@ -29,7 +29,6 @@ const contentVisible = ref<boolean>(false);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
-const layout = ref<any>();
 let uninstall_keyboard_units: () => void = () => {
 };
 
@@ -163,7 +162,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-<EditorLayout :context="(context as Context)" ref="layout">
+<EditorLayout :context="(context as Context)">
     <template #top>
         <Toolbar v-if="contentVisible" :context="(context as Context)"/>
     </template>
