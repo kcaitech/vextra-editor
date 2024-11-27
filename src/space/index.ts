@@ -159,15 +159,16 @@ export class SpaceHandler {
         const offset = 36 / workspace.curScale;
         if (box.left - rootLT.x < offset) {
             dx = rootLT.x + offset - box.left;
-        } else if (box.right + offset > rootRB.x) {
+        }
+        if (box.right + offset > rootRB.x) {
             dx = rootRB.x - offset - box.right;
         }
         if (box.top - rootLT.y < offset) {
             dy = rootLT.y + offset - box.top;
-        } else if (box.bottom + offset > rootRB.y) {
+        }
+        if (box.bottom + offset > rootRB.y) {
             dy = rootRB.y - offset - box.bottom;
         }
-        if (dx || dy) matrix.trans(dx * matrix.m00, dy * matrix.m00);
         if (dx || dy) matrix.trans(dx * matrix.m00, dy * matrix.m00);
 
         if (ratio < target || dx || dy) workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);

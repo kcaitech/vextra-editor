@@ -58,7 +58,8 @@ export class BundleHandler {
         document.body.removeChild(d);
         return result;
     }
-    assginBeforeInsert(shapes: Shape[]) {
+
+    assignBeforeInsert(shapes: Shape[]) {
         for (const shape of shapes) {
             if (shape instanceof TextShape) {
                 const placeholder = shape.text.paras[0].spans[0].placeholder;
@@ -369,9 +370,8 @@ export class BundleHandler {
             const selected = context.selection.selectedShapes;
             let params: InsertAction[] | undefined;
             const { shapes, media, originIds } = source;
-            console.log(shapes, 'spae');
 
-            this.assginBeforeInsert(shapes);
+            this.assignBeforeInsert(shapes);
             const containerSet = new Set<EnvLike>();
             const isContainer = (view: ShapeView) => view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView;
             for (const view of selected) {
@@ -396,10 +396,10 @@ export class BundleHandler {
                 }
             }
             if (params && context.editor4Page(page).insertShapes(params)) {
-                const keys = Object.keys(source.media);
+                const keys = Object.keys(media);
                 const assets: UploadAssets[] = [];
                 for (const ref of keys) {
-                    const buff = source.media[ref]?.buff;
+                    const buff = media[ref].buff ?? Uint8Array.from(atob(media[ref].split(",")[1]), c => c.charCodeAt(0));
                     buff && assets.push({ ref, buff });
                 }
                 const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
