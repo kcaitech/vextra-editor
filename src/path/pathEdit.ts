@@ -696,19 +696,42 @@ export class PathEditor extends TransformHandler {
             if (!point) continue;
 
             const base = this.baseData.get(point.id);
-            if (!base) {
-                continue;
-            }
+            if (!base) continue;
 
             __units.push({
                 index,
                 x: base.x + dx,
                 y: base.y + dy,
-                fromX: (base.fromX || 0) + dx,
-                fromY: (base.fromY || 0) + dy,
-                toX: (base.toX || 0) + dx,
-                toY: (base.toY || 0) + dy,
+                fromX: (base.fromX ?? 0) + dx,
+                fromY: (base.fromY ?? 0) + dy,
+                toX: (base.toX ?? 0) + dx,
+                toY: (base.toY ?? 0) + dy
             })
+        }
+
+        if (this.context.user.isPixelAlignMent) {
+            const matrix = this.baseMatrix;
+            const inverse = this.baseMatrixInverse;
+            __units.forEach(unit => {
+                let xy = matrix.computeCoord2(unit.x, unit.y);
+                xy.x = roundBy(xy.x);
+                xy.y = roundBy(xy.y);
+                xy = inverse.computeCoord3(xy);
+                unit.x = xy.x;
+                unit.y = xy.y;
+                let fromXY = matrix.computeCoord2(unit.fromX, unit.fromY);
+                fromXY.x = roundBy(fromXY.x);
+                fromXY.y = roundBy(fromXY.y);
+                fromXY = inverse.computeCoord3(fromXY);
+                unit.fromX = fromXY.x;
+                unit.fromY = fromXY.y;
+                let toXY = matrix.computeCoord2(unit.toX, unit.toY);
+                toXY.x = roundBy(toXY.x);
+                toXY.y = roundBy(toXY.y);
+                toXY = inverse.computeCoord3(toXY);
+                unit.toX = toXY.x;
+                unit.toY = toXY.y;
+            });
         }
 
         actions.set(segment, __units);

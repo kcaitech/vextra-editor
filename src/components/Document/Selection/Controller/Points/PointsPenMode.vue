@@ -8,7 +8,7 @@ import { Path } from "@/context/path";
 import { Segment, get_segments } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
 import { roundBy } from "@/path/common";

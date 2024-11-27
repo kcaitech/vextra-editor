@@ -8,7 +8,7 @@ import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";
-import { startEdit } from "@/transform/pathEdit";
+import { startEdit } from "@/path/pathEdit";
 import { LineHandler } from "@/transform/line";
 import { CursorType } from "@/utils/cursor2";
 

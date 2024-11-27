@@ -7,7 +7,7 @@ import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
 import { ScaleHandler } from "@/transform/scale";
 import { dbl_action } from "@/utils/mouse_interactive";
-import { startEdit } from "@/transform/pathEdit";
+import { startEdit } from "@/path/pathEdit";
 import { CursorType } from "@/utils/cursor2";
 import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
