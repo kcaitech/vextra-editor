@@ -717,20 +717,18 @@ export class PathEditor extends TransformHandler {
                 xy.x = roundBy(xy.x);
                 xy.y = roundBy(xy.y);
                 xy = inverse.computeCoord3(xy);
+                const offsetX = xy.x - unit.x;
+                const offsetY = xy.y - unit.y;
                 unit.x = xy.x;
                 unit.y = xy.y;
-                let fromXY = matrix.computeCoord2(unit.fromX, unit.fromY);
-                fromXY.x = roundBy(fromXY.x);
-                fromXY.y = roundBy(fromXY.y);
-                fromXY = inverse.computeCoord3(fromXY);
-                unit.fromX = fromXY.x;
-                unit.fromY = fromXY.y;
-                let toXY = matrix.computeCoord2(unit.toX, unit.toY);
-                toXY.x = roundBy(toXY.x);
-                toXY.y = roundBy(toXY.y);
-                toXY = inverse.computeCoord3(toXY);
-                unit.toX = toXY.x;
-                unit.toY = toXY.y;
+                if (offsetX) {
+                    unit.fromX += offsetX;
+                    unit.toX += offsetX;
+                }
+                if (offsetY) {
+                    unit.fromY += offsetY;
+                    unit.toY += offsetY;
+                }
             });
         }
 
@@ -1051,7 +1049,18 @@ export class PathEditor extends TransformHandler {
 
         const isFrom = side === 'from';
 
-        const activePoint = isFrom ? m.computeCoord3(from) : m.computeCoord3(to);
+        let modified = false;
+
+        let activePoint = isFrom ? m.computeCoord3(from) : m.computeCoord3(to);
+
+        if (this.context.user.isPixelAlignMent) {
+            let __active_on_root = this.context.workspace.matrix.inverseCoord(activePoint.x, activePoint.y);
+            __active_on_root.x = roundBy(__active_on_root.x);
+            __active_on_root.y = roundBy(__active_on_root.y);
+            __active_on_root = this.context.workspace.matrix.computeCoord3(__active_on_root);
+            modified = __active_on_root.x !== activePoint.x || __active_on_root.y !== activePoint.y;
+            activePoint = __active_on_root;
+        }
 
         let deltaX = Infinity;
         let dx = 0;
@@ -1082,7 +1091,6 @@ export class PathEditor extends TransformHandler {
         }
 
         const assist = this.context.assist;
-        let modified = false;
         if (deltaX < PathEditor.DELTA) {
             activePoint.x += dx;
             const xNodes = [...this.mapX.get(TX) || []];
