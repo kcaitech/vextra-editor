@@ -36,7 +36,7 @@ const reflush = ref<number>(0);
 const Top = ref<number>(0)
 const Left = ref<number>(0)
 const showshadow = ref<boolean>(false)
-
+const escid = ref<string>('')
 function watchShapes() {
     const needWatchShapes = new Map();
     const selection = props.context.selection;
@@ -124,6 +124,7 @@ function addShadow(): void {
             }
         }
     }
+    if (showshadow.value) props.context.escstack.execute();
     hidden_selection(props.context);
 }
 
@@ -186,22 +187,33 @@ const openEffectPanel = (e: MouseEvent) => {
     props.context.escstack.save(v4(), close);
     if (showshadow.value) {
         document.addEventListener('click', checktargetlist)
+    }else{
+        document.removeEventListener('click', checktargetlist)
     }
 }
 
 function close() {
     const is_achieve_expected_results = showshadow.value;
     showshadow.value = false;
+    document.removeEventListener('click', checktargetlist)
     return is_achieve_expected_results;
 }
 
 function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelector('.shadow-container')
+    const muen = document.querySelector('.shadow-style')
+    const muen2 = document.querySelector('.shadow-container')
     if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
+    if (!muen2) return;
+    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
         showshadow.value = false
         document.removeEventListener('click', checktargetlist)
     }
+}
+
+const closepanel=()=>{
+    props.context.escstack.execute()
+    showshadow.value=false
+    document.removeEventListener('click', checktargetlist)
 }
 
 let list: Shadow[] = [];
@@ -209,11 +221,9 @@ let list: Shadow[] = [];
 const test = () => {
     for (let index = 0; index < 5; index++) {
         const _uuid = v4()
-        const a = new Shadow(new BasicArray(), _uuid, true, Math.random() * 10, new Color(0.3, 0, 0, 0),index % 2 == 0 ?Math.random() * 10*-1:Math.random() * 10*1, index % 2 == 0 ?Math.random() * 10*-1:Math.random() * 10*1, Math.random() * 10, index % 2 == 0 ? ShadowPosition.Outer : ShadowPosition.Inner);
+        const a = new Shadow(new BasicArray(), _uuid, true, Math.random() * 10, new Color(0.3, 0, 0, 0), index % 2 == 0 ? Math.random() * 10 * -1 : Math.random() * 10 * 1, index % 2 == 0 ? Math.random() * 10 * -1 : Math.random() * 10 * 1, Math.random() * 10, index % 2 == 0 ? ShadowPosition.Outer : ShadowPosition.Inner);
         list.push(a)
     }
-    console.log(list);
-
 }
 
 // hooks
@@ -233,10 +243,10 @@ onUnmounted(() => {
     <div class="shadow-panel">
         <TypeHeader :title="t('shadow.shadow_stting')" class="mt-24" @click="first" :active="!!shadows.length">
             <template #tool>
-                <div class="style" @click.stop="openEffectPanel($event)">
+                <div class="shadow-style" @click="openEffectPanel($event)">
                     <svg-icon icon-class="styles"></svg-icon>
                 </div>
-                <div class="add" @click.stop="addShadow">
+                <div class="add" @click="addShadow">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </template>
@@ -245,7 +255,7 @@ onUnmounted(() => {
             <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
         </div>
         <div class="shadows-container" v-else-if="!mixed && shadows.length">
-            <div class="shadow" v-for="(s, idx) in shadows" :key="s.id">
+            <div class="shadow" v-for="(s, idx) in shadows" :key="s.shadow.id">
                 <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
                 </div>
@@ -254,8 +264,8 @@ onUnmounted(() => {
                         :shapes="props.shapes" :reflush="reflush"></ShadowPositionItem>
                 </div>
                 <div class="detail">
-                    <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
-                        :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
+                    <ShadowDetail :context="props.context" :shadow="s.shadow" :id:="s.shadow.id" :idx="idx"
+                        :length="shadows.length" :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
                 </div>
                 <div class="delete" @click="deleteFill(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
@@ -263,7 +273,7 @@ onUnmounted(() => {
             </div>
         </div>
         <EffectStyle v-if="showshadow" :shadowlist="list" :context="props.context" :shapes="props.shapes" :top="Top"
-            :left="Left" @close="showshadow = !showshadow"></EffectStyle>
+            :left="Left" @close="closepanel"></EffectStyle>
     </div>
 </template>
 
@@ -277,7 +287,7 @@ onUnmounted(() => {
     border-bottom: 1px solid #F0F0F0;
 
     .add,
-    .style {
+    .shadow-style {
         width: 28px;
         height: 28px;
         display: flex;
@@ -293,7 +303,7 @@ onUnmounted(() => {
         }
     }
 
-    .style svg {
+    .shadow-style svg {
         padding: 2px;
         box-sizing: border-box;
     }
@@ -302,7 +312,7 @@ onUnmounted(() => {
         background-color: #F5F5F5;
     }
 
-    .style:hover {
+    .shadow-style:hover {
         background-color: #F5F5F5;
     }
 

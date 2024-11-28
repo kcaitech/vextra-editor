@@ -35,6 +35,8 @@ import { fontWeightConvert } from './FontNameList';
 import { Attribute } from '@/context/atrribute';
 import { format_value, is_mac } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
+import TextStyle from '../StyleLibrary/TextStyle.vue';
+import { v4 } from 'uuid';
 
 interface Props {
     context: Context
@@ -890,7 +892,7 @@ const setMixedHighlight = () => {
         format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
         const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
         console.log(format.highlight, 'format.highlight');
-        
+
         editor.setTextHighlightColorMulti(props.textShapes, new Color(alpha, red, green, blue));
     }
 }
@@ -1289,6 +1291,52 @@ function click(e: Event, variate: boolean) {
     variate = true;
 }
 
+const Top=ref<number>(0)
+const Left=ref<number>(0)
+const showtext=ref<boolean>(false)
+const openTextPanel=(e: MouseEvent)=>{
+    let el = e.target as HTMLElement;
+    while (el.className !== 'text-panel') {
+        if (el.parentElement) {
+            el = el.parentElement;
+        }
+    }
+    const { top, left } = el.getBoundingClientRect();
+    Top.value = top;
+    Left.value = left - 250;
+    showtext.value = !showtext.value
+    props.context.escstack.save(v4(), close);
+    if (showtext.value) {
+        document.addEventListener('click', checktargetlist)
+    }else{
+        document.removeEventListener('click', checktargetlist)
+    }
+}
+
+function close() {
+    const is_achieve_expected_results = showtext.value;
+    showtext.value = false;
+    document.removeEventListener('click', checktargetlist)
+    return is_achieve_expected_results;
+}
+
+function checktargetlist(e: MouseEvent) {
+    const muen = document.querySelector('.shadow-style')
+    const muen2 = document.querySelector('.shadow-container')
+    if (!muen) return;
+    if (!muen2) return;
+    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
+        showtext.value = false
+        document.removeEventListener('click', checktargetlist)
+    }
+}
+
+const closepanel=()=>{
+    props.context.escstack.execute()
+    showtext.value=false
+    document.removeEventListener('click', checktargetlist)
+}
+
 // const stop = watch(() => props.dataChange, textFormat);
 const stop2 = watch(() => props.textShapes, (v) => {
     shapes.value = v;
@@ -1321,6 +1369,9 @@ onUnmounted(() => {
     <div class="text-panel" @mousedown.stop>
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
+                <div class="text-style" @click="openTextPanel($event)">
+                    <svg-icon icon-class="styles"></svg-icon>
+                </div>
                 <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
             </template>
@@ -1458,8 +1509,8 @@ onUnmounted(() => {
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
-            t('attr.font_color')
-        }}
+                    t('attr.font_color')
+                    }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
@@ -1477,7 +1528,7 @@ onUnmounted(() => {
                         @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput"
                         @click="(e) => click(e, is_font_color_select)" @blur="is_font_color_select = false" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
+                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
                         @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false"
@@ -1488,8 +1539,8 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
-            t('attr.font_color')
-        }}
+                        t('attr.font_color')
+                        }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -1550,6 +1601,8 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
+        <TextStyle v-if="showtext" :context="props.context" :textShape="props.shape" :textShapes="props.textShapes" :top="Top"
+        :left="Left" @close="closepanel"></TextStyle>
         <teleport to="body">
             <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
             </div>
@@ -1584,6 +1637,31 @@ onUnmounted(() => {
         }
     }
 
+    .text-style {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        border-radius: var(--default-radius);
+        transition: .2s;
+
+        >svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .text-style svg {
+        padding: 2px;
+        box-sizing: border-box;
+    }
+
+    .text-style:hover {
+        background-color: #F5F5F5;
+    }
+
     .text-container {
         font-size: var(--font-default-fontsize);
 
@@ -1596,6 +1674,7 @@ onUnmounted(() => {
             align-items: center;
 
             >svg {
+                // outline: none;
                 width: 16px;
                 height: 16px;
                 overflow: visible !important;

@@ -15,6 +15,8 @@ import { useI18n } from "vue-i18n";
 import { fixedZero } from '@/utils/common';
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { LinearApi } from "@kcdesign/data"
+import RadiusStyle from '../StyleLibrary/RadiusStyle.vue';
+import { v4 } from 'uuid';
 
 const { t } = useI18n();
 
@@ -35,6 +37,10 @@ const radius = reactive<{ lt: number | string, rt: number | string, rb: number |
 });
 const mixed = props.context.workspace.t('attr.mixed');
 const keyupdate = ref<boolean>(false)
+const lt = ref<boolean>(false)
+const rt = ref<boolean>(false)
+const lb = ref<boolean>(false)
+const rb = ref<boolean>(false)
 
 function get_value_from_input(val: any) {
     let value = Number.parseFloat(val);
@@ -456,6 +462,83 @@ const pointerLockChange = () => {
     }
 }
 
+const Top = ref<number>(0)
+const Left = ref<number>(0)
+const showradius = ref<boolean>(false)
+function EditPanel(e: MouseEvent, type: string) {
+    let el = e.target as HTMLElement;
+    while (el.className !== 'tr') {
+        if (el.parentElement) {
+            el = el.parentElement;
+        }
+    }
+    const { top, left } = el.getBoundingClientRect();
+    Top.value = top;
+    Left.value = left - 8 - 250;
+    reset()
+    showradius.value = !showradius.value
+    if (showradius.value) {
+        if (type === 'lt') {
+            lt.value = true;
+        }
+        if (type === 'rt') {
+            rt.value = true
+        }
+        if (type === 'lb') {
+            lb.value = true
+        }
+        if (type === 'rb') {
+            rb.value = true
+        }
+    }
+
+    props.context.escstack.save(v4(), close);
+    if (showradius.value) {
+        document.addEventListener('click', checktargetlist)
+    } else {
+        document.removeEventListener('click', checktargetlist)
+    }
+}
+
+function close() {
+    const is_achieve_expected_results = showradius.value;
+    showradius.value = false;
+    reset();
+    document.removeEventListener('click', checktargetlist)
+    return is_achieve_expected_results;
+}
+
+function checktargetlist(e: MouseEvent) {
+    const muen = document.querySelectorAll('.radius-style')
+    const muen2 = document.querySelector('.radius-container')
+    if (!muen) return;
+    if (!muen2) return;
+    let b: boolean = false;
+    muen.forEach(i => {
+        if (i.contains(e.target as HTMLElement)) {
+            b = true
+        }
+    })
+    if (!b && !muen2.contains(e.target as HTMLElement)) {
+        showradius.value = false
+        reset()
+        document.removeEventListener('click', checktargetlist)
+    }
+}
+
+const reset = () => {
+    rt.value = false
+    lt.value = false
+    lb.value = false
+    rb.value = false
+}
+
+function closepanel() {
+    showradius.value = false;
+    reset();
+    document.removeEventListener('click', checktargetlist);
+}
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     update();
@@ -467,14 +550,17 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="tr">
-        <MdNumberInput icon="radius" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
-            @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT" @dragend="dragend"
-            @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup">
+        <MdNumberInput icon="radius" :position="lt" :show="showradius" :draggable="radius.lt !== mixed"
+            :value="radius.lt" :disabled="disabled" @change="value => change(value, 'lt')" @dragstart="dragstart"
+            @dragging="draggingLT" @dragend="dragend" @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup"
+            @stylepanel="e => EditPanel(e, 'lt')">
         </MdNumberInput>
         <div class="space" v-if="!rect"></div>
-        <MdNumberInput v-if="rect" class="r-90" icon="radius" :draggable="radius.rt !== mixed" :value="radius.rt"
-            :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT"
-            @dragend="dragend" @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup"></MdNumberInput>
+        <MdNumberInput v-if="rect" :position="rt" :show="showradius" class="r-90" icon="radius"
+            :draggable="radius.rt !== mixed" :value="radius.rt" :disabled="disabled"
+            @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT" @dragend="dragend"
+            @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup" @stylepanel="e => EditPanel(e, 'rt')">
+        </MdNumberInput>
         <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
             <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
                 <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
@@ -483,14 +569,21 @@ onUnmounted(() => {
         </Tooltip>
     </div>
     <div class="tr" v-if="rect">
-        <MdNumberInput class="r-270" icon="radius" :draggable="radius.lb !== mixed" :value="radius.lb"
-            :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart" @dragging="draggingLB"
-            @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"></MdNumberInput>
-        <MdNumberInput class="r-180" icon="radius" :draggable="radius.rb !== mixed" :value="radius.rb"
-            :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart" @dragging="draggingRB"
-            @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"></MdNumberInput>
+        <MdNumberInput class="r-270" :position="lb" :show="showradius" icon="radius" :draggable="radius.lb !== mixed"
+            :value="radius.lb" :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart"
+            @dragging="draggingLB" @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"
+            @stylepanel="e => EditPanel(e, 'lb')">
+        </MdNumberInput>
+        <MdNumberInput class="r-180" :position="rb" :show="showradius" icon="radius" :draggable="radius.rb !== mixed"
+            :value="radius.rb" :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart"
+            @dragging="draggingRB" @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"
+            @stylepanel="e => EditPanel(e, 'rb')">
+        </MdNumberInput>
         <div style="width: 32px;height: 32px;"></div>
     </div>
+    <RadiusStyle v-if="(lt || rt || lb || rb) && showradius" :context="props.context" :top="Top" :left="Left"
+        @close="closepanel">
+    </RadiusStyle>
     <teleport to="body">
         <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
         </div>

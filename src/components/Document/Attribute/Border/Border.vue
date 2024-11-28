@@ -746,7 +746,30 @@ const EditPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     showborder.value = !showborder.value
+    props.context.escstack.save(v4(), close);
+    if(showborder.value){
+        document.addEventListener('click', checktargetlist)
+    }else{
+        document.removeEventListener('click', checktargetlist)
+    }
+}
 
+function close() {
+    const is_achieve_expected_results = showborder.value;
+    showborder.value = false;
+    document.removeEventListener('click', checktargetlist)
+    return is_achieve_expected_results;
+}
+
+function checktargetlist(e: MouseEvent) {
+    const muen = document.querySelector('.border-style')
+    const muen2 = document.querySelector('.border-container')
+    if (!muen) return;
+    if (!muen2) return;
+    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
+        showborder.value = false
+        document.removeEventListener('click', checktargetlist)
+    }
 }
 
 // hooks
@@ -1018,16 +1041,22 @@ const strokeClick = (e: Event) => {
     is_stroke_select.value = true;
 }
 
+const closepanel=()=>{
+    props.context.escstack.execute()
+    showborder.value=false
+    document.removeEventListener('click', checktargetlist)
+}
+
 </script>
 
 <template>
     <div class="border-panel">
         <TypeHeader :title="t('attr.border')" class="mt-24" @click="first" :active="!!borders.length">
             <template #tool>
-                <div class="style" @click="EditPanel($event)">
+                <div class="border-style" @click="EditPanel($event)">
                     <svg-icon icon-class="styles"></svg-icon>
                 </div>
-                <div class="add" @click.stop="addBorder">
+                <div class="add" @click="addBorder">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </template>
@@ -1102,7 +1131,7 @@ const strokeClick = (e: Event) => {
             :trigger="props.trigger" :reflush_apex="reflush_apex">
         </Apex>
         <Borderstyle v-if="showborder" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="showborder = !showborder"></Borderstyle>
+            @close="closepanel"></Borderstyle>
     </div>
     <teleport to="body">
         <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
@@ -1162,7 +1191,7 @@ const strokeClick = (e: Event) => {
     border-bottom: 1px solid #F0F0F0;
 
     .add,
-    .style {
+    .border-style {
         width: 28px;
         height: 28px;
         display: flex;
@@ -1178,7 +1207,7 @@ const strokeClick = (e: Event) => {
         }
     }
 
-    .style svg {
+    .border-style svg {
         padding: 2px;
         box-sizing: border-box;
     }
@@ -1187,7 +1216,7 @@ const strokeClick = (e: Event) => {
         background-color: #F5F5F5;
     }
 
-    .style:hover {
+    .border-style:hover {
         background-color: #F5F5F5;
     }
 

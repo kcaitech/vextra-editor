@@ -840,6 +840,7 @@ function triggle() {
     // picker_visible.value = true;
     const menu = props.context.menu;
     const exist = menu.isColorPickerMount;
+    custom.value = 'custom'
     // colorPickerMount();
     if (exist) {
         menu.removeColorPicker();
@@ -1329,7 +1330,7 @@ watch(() => props.open, () => {
         custom.value = 'style'
     }
     picker_visible.value = props.open
-    if(picker_visible.value){
+    if (picker_visible.value) {
         props.context.menu.setupColorPicker(blockId)
     }
 })
@@ -1417,14 +1418,16 @@ onUnmounted(() => {
     <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
         <img v-if="fillType === FillType.Pattern" :src="image_url" alt="">
         <div class="popover" v-if="picker_visible" ref="popoverEl"
-            :style="{ top: props.styletop + 'px', left: props.styleleft + 'px' }" @click.stop @wheel="wheel" @mousedown.stop>
+            :style="{ top: props.styletop + 'px', left: props.styleleft + 'px' }" @click.stop @wheel="wheel"
+            @mousedown.stop>
             <!-- 头部 -->
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
                 <div class="left">
                     <div class="color-type" :class="{ active: custom === 'custom' }" @click="custom = 'custom'">{{
                         t(`attr.fill`) }}</div>
                     <!-- <svg-icon icon-class="down"></svg-icon> -->
-                    <div class="style" :class="{ active: custom === 'style' }" @click="custom = 'style'">颜色样式</div>
+                    <div v-if="fillType && is_gradient_selected()" class="style" :class="{ active: custom === 'style' }"
+                        @click="custom = 'style'">颜色样式</div>
                 </div>
                 <div class="right">
                     <div v-if="!props.entrance" class="newstyle" @click.stop="EditorStyle = !EditorStyle">

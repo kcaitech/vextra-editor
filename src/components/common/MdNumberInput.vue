@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
 interface Props {
     icon: string;
     value: string | number;
-
+    show?: boolean;
+    position?: boolean;
     disabled?: boolean;
     draggable?: boolean;
     tidy_disabled?: boolean;
@@ -22,13 +23,15 @@ interface Emits {
     (e: "wheel", event: WheelEvent): void;
 
     (e: "keydown", event: KeyboardEvent, value: string | number): void;
+
+    (e: "stylepanel", event: MouseEvent): void
 }
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
-
 const inputEl = ref<HTMLInputElement>();
 const active = ref<boolean>();
+const RadiusActive = ref<boolean>(false)
 let isDown = false;
 
 function down(e: MouseEvent) {
@@ -108,6 +111,13 @@ function wheel(event: WheelEvent) {
 
     emits('wheel', event);
 }
+
+watch(() => props.position, (v) => {
+    console.log(v);
+    
+    RadiusActive.value = v
+})
+
 </script>
 
 <template>
@@ -115,6 +125,10 @@ function wheel(event: WheelEvent) {
         <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown="down" />
         <input :disabled="tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur"
             @focus="foucs" @keydown="e => emits('keydown', e, value)" />
+        <div v-if="icon.includes('radius')" class="radius-style" :class="{ 'active-radius': RadiusActive}"
+            @click="e => emits('stylepanel', e)">
+            <svg-icon icon-class="styles"></svg-icon>
+        </div>
     </div>
 </template>
 
@@ -137,6 +151,31 @@ function wheel(event: WheelEvent) {
         height: 12px;
         display: block;
         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
+    }
+
+    .radius-style {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        border-radius: 4px;
+        visibility: hidden;
+
+        >svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+    .radius-style svg {
+        padding: 1px;
+        box-sizing: border-box;
+    }
+
+    .radius-style:hover {
+        background-color: #e5e5e5;
     }
 
     .un-draggable {
@@ -165,6 +204,10 @@ function wheel(event: WheelEvent) {
         color: #FFFFFF;
         background: #1878F5;
     }
+
+    &:hover .radius-style {
+        visibility: visible;
+    }
 }
 
 .disabled {
@@ -175,5 +218,10 @@ function wheel(event: WheelEvent) {
 .active {
     background-color: transparent !important;
     border: 1px solid #1878F5;
+}
+
+.active-radius {
+    visibility: visible !important;
+    background-color: #e5e5e5;
 }
 </style>

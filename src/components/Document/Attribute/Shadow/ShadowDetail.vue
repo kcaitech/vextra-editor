@@ -28,6 +28,7 @@ interface Props {
     context: Context
     shadow: Shadow
     idx: number
+    id?:string
     length: number
     shapes: ShapeView[]
 }
@@ -485,7 +486,7 @@ const pointerLockChange = () => {
 function draggingX(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
     let val = props.shadow.offsetX + e.movementX;
-
+    const _idx = props.length - props.idx - 1;
     if (val < -3000) {
         val = -3000;
     } else if (val > 3000) {
@@ -500,14 +501,14 @@ function draggingX(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    lockMouseHandler.executeShadowX(props.idx, val);
+    lockMouseHandler.executeShadowX(_idx, val);
 }
 
 function draggingY(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
     let val = props.shadow.offsetY + e.movementX;
-
+    const _idx = props.length - props.idx - 1;
     if (val < -3000) {
         val = -3000;
     } else if (val > 3000) {
@@ -522,14 +523,14 @@ function draggingY(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    lockMouseHandler.executeShadowY(props.idx, val);
+    lockMouseHandler.executeShadowY(_idx, val);
 }
 
 function draggingB(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
     let val = props.shadow.blurRadius + e.movementX;
-
+    const _idx = props.length - props.idx - 1;
     if (val < 0) {
         val = 0;
     } else if (val > 200) {
@@ -544,14 +545,14 @@ function draggingB(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    lockMouseHandler.executeShadowB(props.idx, val);
+    lockMouseHandler.executeShadowB(_idx, val);
 }
 
 function draggingS(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
     let val = props.shadow.spread + e.movementX;
-
+    const _idx = props.length - props.idx - 1;
     if (val < 0) {
         val = 0;
     } else if (val > 200) {
@@ -566,7 +567,7 @@ function draggingS(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    lockMouseHandler.executeShadowS(props.idx, val);
+    lockMouseHandler.executeShadowS(_idx, val);
 }
 
 function dragEnd() {
@@ -630,7 +631,7 @@ function extend(base: number) {
                     <div class="setting">
                         <div class="name-title">{{ t('shadow.color') }}</div>
                         <div class="color">
-                            <ColorPicker :color="(shadow.color as Color)" :context="props.context" :late="24"
+                            <ColorPicker :color="(shadow.color as Color)" :entrance="'shadow'" :context="props.context" :late="24"
                                 @change="(c: Color) => getColorFromPicker(c)" />
                             <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
                                 @change="e => onColorChange(e)" @click="colorClick" @blur="is_color_select = false" />

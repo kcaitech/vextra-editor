@@ -48,14 +48,14 @@ const onShowWeightBlur = (e: MouseEvent) => {
 }
 const selectItem = (item: string) => {
     const { weight, italic } = fontweightNameConvert(item);
-    if(item === props.selected) return;
+    if (item === props.selected) return;
     emit('setFontWeight', weight, italic);
     isSelectList.value = false;
 }
 
 function getFontWeightList(fontName: string) {
     const results = fontWeightList(fontName, true);
-    if(!results.length) {
+    if (!results.length) {
         return fontWeight = ["Regular"];
     }
     fontWeight = results.map((item: any) => {
@@ -105,7 +105,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="font_weight jointly-text">
+    <div v-bind="$attrs" class="font_weight jointly-text">
         <div :class="{ font_weight_preview: !disable, disabled: disable }" :style="{ opacity: disable ? 0.5 : 1 }"
             style="padding-right: 0;" @click="showWeightList">
             <span v-if="weightMixed">{{ t('attr.more_value') }}</span>
@@ -247,5 +247,10 @@ onUnmounted(() => {
     height: 100%;
     z-index: 1000;
     background-color: transparent;
+}
+
+.weight {
+    flex: 0.5;
+    margin: 0;
 }
 </style>

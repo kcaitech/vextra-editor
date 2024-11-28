@@ -177,10 +177,14 @@ const unfoldFontName = (num: number) => {
 const get_top_posi = () => {
     if (font_context.value) {
         const p_container = props.fontNameEl?.getBoundingClientRect()
+        console.log(p_container);
+
         if (p_container) {
             const body_h = document.body.clientHeight;
-            const { y, height } = font_context.value.getBoundingClientRect();
+            const { y, height, width } = font_context.value.getBoundingClientRect();
+            console.log(font_context.value.getBoundingClientRect());
             font_context.value.style.top = p_container.y + 'px';
+            font_context.value.style.left = (p_container.left - width - 8) + 'px';
             const su = body_h - p_container.y;
             const cur_t = su - height;
             if (cur_t - 10 < 0) {

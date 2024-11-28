@@ -117,6 +117,8 @@ export function FontAvailable(fontName: string) {
 
 
 export const fontWeightConvert = (weight: number | undefined, italic: boolean) => {
+    console.log(weight,italic);
+    
     switch (weight) {
         case 400:
             if (italic) {

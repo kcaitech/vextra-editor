@@ -9,7 +9,7 @@ const props = defineProps<{
     <div class="header-container">
         <div class="header">
             <div class="title" :class="{ 'checked': active }">{{ props.title }}</div>
-            <div class="tool">
+            <div class="tool" @click.stop>
                 <slot name="tool"></slot>
             </div>
         </div>

@@ -41,10 +41,8 @@ import { format_value, genOptions } from '@/utils/common';
 
 const props = defineProps<{
     context: Context;
-    shapes: ShapeView[];
     top: number;
     left: number
-    border: Border | undefined
 }>();
 
 const emits = defineEmits<{

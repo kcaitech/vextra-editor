@@ -1,12 +1,13 @@
 <template>
-    <div class="container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop>
+    <div class="border-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop
+        @mousedown.stop>
         <div class="header">
             <div class="title">边框样式</div>
             <div class="tool">
-                <div class="newstyle" @click.stop="NewPanel($event)">
+                <div class="newstyle" @click="NewPanel($event)">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
-                <div class="close" @click.stop="emits('close')">
+                <div class="close" @click="emits('close')">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
@@ -15,11 +16,12 @@
             <div class="icon">
                 <svg-icon icon-class="search"></svg-icon>
             </div>
-            <div class="filter" @click.stop="showfilter = !showfilter">
+            <div class="filter" @click="FilterPanel">
                 <svg-icon icon-class="arrow"></svg-icon>
             </div>
-            <input v-focus type="text" placeholder="搜索样式" v-model="searchval">
-            <div v-if="showfilter" class="filter-list">
+            <input v-focus type="text" placeholder="搜索样式" v-model="searchval"
+                @keydown.esc="props.context.escstack.execute()">
+            <div v-if="filterpanel" class="filter-list">
                 <div class="list-item" @click.stop="Changefilter('全部')">
                     <span>全部</span>
                 </div>
@@ -36,16 +38,22 @@
                         <span>{{ i.type }}</span>
                     </div>
                     <template v-if="showtypes.has(i.type)">
-                        <div class="styles" v-for="s in i.styles.filter(s => s.name.includes(searchval))">
+                        <div class="styles" :class="{ 'active': editorpanel && currenttarget === s.content[0].id }"
+                            v-for="s in i.styles.filter(s => s.name.includes(searchval))">
                             <div class="left">
-                                <div class="color">
-                                    <div class="main" :style="{ backgroundColor: '#000', opacity: s.content[0] }">
-                                        <div class="mask" :style="{ opacity: 1 - s.content[0] }"></div>
-                                    </div>
+                                <div class="border" :style="{
+                                    borderTop: s.content[0].sideSetting.thicknessTop < 3 ? s.content[0].sideSetting.thicknessTop : 3 + 'px',
+                                    borderRight: s.content[0].sideSetting.thicknessRight < 3 ? s.content[0].sideSetting.thicknessRight : 3 + 'px',
+                                    borderBottom: s.content[0].sideSetting.thicknessBottom < 3 ? s.content[0].sideSetting.thicknessBottom : 3 + 'px',
+                                    borderLeft: s.content[0].sideSetting.thicknessLeft < 3 ? s.content[0].sideSetting.thicknessLeft : 3 + 'px',
+                                    borderColor: 'black',
+                                    borderStyle: 'solid'
+                                }">
                                 </div>
                                 <div class="name">{{ s.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event)">
+                            <div class="editor clickeditor" style="visibility: hidden;"
+                                @click="EditPanel($event, s.content[0].id, s.content[0])">
                                 <svg-icon icon-class="export-menu"></svg-icon>
                             </div>
                         </div>
@@ -54,28 +62,38 @@
                 <div v-if="!data.length" class="null">没有搜索到相关样式</div>
             </div>
         </el-scrollbar>
-        <EditorBorderStyle v-if="showeditor" :type="Type" :top="Top" :left="Left" :shapes="props.shapes"
-            :context="props.context" @close="showeditor = !showeditor"></EditorBorderStyle>
+        <NewBorderStyle v-if="newpanel" :top="Top" :left="Left" :context="props.context" :shapes="props.shapes"
+            @close="props.context.escstack.execute()"></NewBorderStyle>
+        <EditorBorderStyle v-if="editorpanel" :border="borders" :top="Top" :left="Left" :shapes="props.shapes"
+            :context="props.context" @close="props.context.escstack.execute()"></EditorBorderStyle>
     </div>
 
 </template>
 <script setup lang="ts">
 import {
     BasicArray,
+    Border,
+    BorderPosition,
+    BorderSideSetting,
+    BorderStyle,
     Color,
+    CornerType,
     Fill,
     FillType,
     GradientType,
     ImageScaleMode,
     ShapeType,
     ShapeView,
+    SideType,
     Stop, SymbolView,
     TableView
 } from "@kcdesign/data";
 import { Context } from '@/context';
-import { computed, onMounted, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EditorBorderStyle from './EditorBorderStyle.vue';
+import NewBorderStyle from "./NewBorderStyle.vue";
+import { v4 } from "uuid";
 interface FillItem {
     id: number,
     fill: Fill
@@ -94,34 +112,29 @@ const emits = defineEmits<{
 
 
 const { t } = useI18n();
-const showfilter = ref<boolean>(false)
+const filterpanel = ref<boolean>(false)
 const searchval = ref<string>('')
 const filterval = ref<string>('')
 const showtypes = ref(new Set<string>())
-const showeditor = ref<boolean>(false)
+const newpanel = ref<boolean>(false)
+const editorpanel = ref<boolean>(false)
 const Top = ref<number>(0)
 const Left = ref<number>(0)
 const Type = ref<string>('')
-const Changefilter = (v: string) => {
-    filterval.value = v;
-    showfilter.value = false
-    showtypes.value.add(v)
-}
 
+const currenttarget = ref<string>('')
+const borders = ref<Border>()
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
 }
 
+const color = new Color(1, 0, 0, 0);
+const borderStyle = new BorderStyle(0, 0);
+const side = new BorderSideSetting(SideType.Normal, 1, 2, 0, 4);
+const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
+
 const test = [
-    { type: 'location', styles: [{ name: '33', content: [0.2] }, { name: '2', content: [1] }] },
-    { type: 'ios', styles: [{ name: '1', content: [1, 2, 3, 4] }, { name: '12', content: [1, 2, 3, 4] }] },
-    { type: 'android', styles: [{ name: '1', content: [1, 2, 3, 4] }, { name: '22', content: [1, 2, 3, 4] }] },
-    { type: 'test', styles: [{ name: '1', content: [1, 2, 3, 4] }, { name: 'ss', content: [1, 2, 3, 4] }] },
-    { type: '样式', styles: [{ name: 'ssq', content: [1, 2, 3, 4] }, { name: 'hs', content: [1, 2, 3, 4] }] },
-    { type: '哈哈哈', styles: [{ name: 'jj', content: [1, 2, 3, 4] }, { name: '2', content: [1, 2, 3, 4] }] },
-    { type: '啥啥啥', styles: [{ name: 'oop', content: [1, 2, 3, 4] }, { name: '2', content: [1, 2, 3, 4] }] },
-    { type: '4898', styles: [{ name: '换行', content: [1, 2, 3, 4] }, { name: 'SHW', content: [1, 2, 3, 4] }] },
-    { type: '你好SGG88', styles: [{ name: '瓦特', content: [1, 2, 3, 4] }, { name: '2', content: [1, 2, 3, 4] }] },
+    { type: 'location', styles: [{ name: '33', content: [border] }, { name: '2', content: [border] }] },
 ]
 
 const data = computed(() => {
@@ -133,24 +146,57 @@ const data = computed(() => {
     }
     return d.filter(i => i.styles.filter(s => s.name.includes(searchval.value)).length !== 0)
 })
+let timer: any
 
-const EditPanel = (e: MouseEvent) => {
+const EditPanel = (e: MouseEvent, id: string, b: Border) => {
+    borders.value = b;
     let el = e.target as HTMLElement;
-    while (el.parentElement?.className !== 'style-item') {
+    const { top } = el.getBoundingClientRect()
+    while (el.parentElement?.className !== 'border-container') {
         if (el.parentElement) {
             el = el.parentElement;
         }
     }
-    const { top, left } = el.getBoundingClientRect();
+    const { left } = el.getBoundingClientRect();
     Top.value = top;
-    Left.value = left - 12 - 250 - 2;
-    Type.value='editor'
-    showeditor.value = !showeditor.value
+    Left.value = left - 250;
+    currenttarget.value === id ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
+    currenttarget.value = id;
+    if (editorpanel.value) {
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+            document.addEventListener('click', checkeditorpanel)
+            clearTimeout(timer)
+        }, 0);
+        props.context.escstack.save(v4(), closeEditorPanel)
+    } else {
+        document.removeEventListener('click', checkeditorpanel)
+    }
 }
 
+function checkeditorpanel(e: MouseEvent) {
+    const muen2 = document.querySelectorAll('.clickeditor')
+    let b: boolean[] = [];
+    muen2.forEach((i) => {
+        b.push(i.contains(e.target as HTMLElement))
+    })
+    const a = b.some(i => i === true)
+    if (!a) {
+        editorpanel.value = false
+        document.removeEventListener('click', checkeditorpanel)
+    }
+}
+
+const closeEditorPanel = () => {
+    const exe_result: boolean = editorpanel.value;
+    editorpanel.value = false
+    document.removeEventListener('click', checkeditorpanel)
+    return exe_result
+}
+let timer2: any
 const NewPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
-    while (el.className !== 'container') {
+    while (el.className !== 'border-container') {
         if (el.parentElement) {
             el = el.parentElement;
         }
@@ -158,8 +204,65 @@ const NewPanel = (e: MouseEvent) => {
     const { top, left } = el.getBoundingClientRect();
     Top.value = top;
     Left.value = left - 250;
-    Type.value='new'
-    showeditor.value = !showeditor.value
+    newpanel.value = !newpanel.value
+    if (editorpanel.value) editorpanel.value = false
+    if (newpanel.value) {
+        if (timer2) clearTimeout(timer2)
+        timer2 = setTimeout(() => {
+            document.addEventListener('click', checknewpanel)
+            clearTimeout(timer2)
+        }, 0);
+        props.context.escstack.save(v4(), closeNewPanel)
+    } else {
+        document.removeEventListener('click', checknewpanel)
+    }
+}
+
+function checknewpanel(e: MouseEvent) {
+    const muen = document.querySelector('.new-style')
+    if (!muen) return;
+    if (!muen.contains(e.target as HTMLElement)) {
+        newpanel.value = false
+        document.removeEventListener('click', checknewpanel)
+    }
+}
+
+const closeNewPanel = () => {
+    const exe_result: boolean = newpanel.value;
+    newpanel.value = false
+    document.removeEventListener('click', checknewpanel)
+    return exe_result
+}
+
+
+let timer3: any
+const FilterPanel = () => {
+    filterpanel.value = !filterpanel.value
+    if (filterpanel.value) {
+        if (timer3) clearTimeout(timer3)
+        timer3 = setTimeout(() => {
+            document.addEventListener('click', checkfilterpanel)
+            clearTimeout(timer3)
+        }, 0);
+    } else {
+        document.removeEventListener('click', checkfilterpanel)
+    }
+}
+
+const checkfilterpanel = (e: MouseEvent) => {
+    const muen = document.querySelector('.filter-list')
+    if (!muen) return;
+    if (!muen.contains(e.target as HTMLElement)) {
+        filterpanel.value = false
+        document.removeEventListener('click', checkfilterpanel)
+    }
+}
+
+const Changefilter = (v: string) => {
+    filterval.value = v;
+    filterpanel.value = false
+    showtypes.value.add(v)
+    document.removeEventListener('click', checkfilterpanel)
 }
 
 watchEffect(() => {
@@ -167,14 +270,14 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-    console.log(props.top, props.left);
+
 
 })
 
 
 </script>
 <style lang="scss" scoped>
-.container {
+.border-container {
     position: fixed;
     background-color: #fff;
     z-index: 9;
@@ -369,29 +472,12 @@ onMounted(() => {
         align-items: center;
         gap: 8px;
 
-        .color {
+        .border {
             width: 16px;
             height: 16px;
-            background-color: #fff;
-            border: 1px solid rgba(230, 230, 230, 0.7);
-            border-radius: 3px;
+            background-color: #e5e5e5;
             overflow: hidden;
-
-            .main {
-                width: 16px;
-                height: 16px;
-                background-color: #000;
-                position: relative;
-
-                .mask {
-                    position: absolute;
-                    top: 0;
-                    right: 0;
-                    width: 50%;
-                    height: 100%;
-                    background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
-                }
-            }
+            box-sizing: border-box;
         }
     }
 
@@ -420,6 +506,15 @@ onMounted(() => {
 
     .null {
         margin: auto;
+    }
+}
+
+.active {
+    background-color: #f5f5f5;
+
+    .editor {
+        visibility: visible !important;
+        background-color: #e5e5e5;
     }
 }
 </style>

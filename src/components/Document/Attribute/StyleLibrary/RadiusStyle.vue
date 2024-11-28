@@ -1,8 +1,8 @@
 <template>
-    <div class="shadow-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop
+    <div class="radius-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop
         @mousedown.stop>
         <div class="header">
-            <div class="title">特效样式</div>
+            <div class="title">圆角样式</div>
             <div class="tool">
                 <div class="newstyle" @click="NewPanel($event)">
                     <svg-icon icon-class="add"></svg-icon>
@@ -19,13 +19,13 @@
             <div class="filter" @click="FilterPanel">
                 <svg-icon icon-class="arrow"></svg-icon>
             </div>
-            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
-                @keydown.esc="props.context.escstack.execute()">
-            <div v-if="filterpanel" class="filter-list" @click.stop>
-                <div class="list-item" @click="Changefilter('全部')">
+            <input v-focus type="text" placeholder="搜索样式" v-model="searchval"
+                @keydown.esc="emits('close')">
+            <div v-if="filterpanel" class="filter-list">
+                <div class="list-item" @click.stop="Changefilter('全部')">
                     <span>全部</span>
                 </div>
-                <div class="list-item" v-for="i in test" :key="i.type" @click="Changefilter(i.type)">
+                <div class="list-item" v-for="i in test" :key="i.type" @click.stop="Changefilter(i.type)">
                     <span> {{ i.type }}</span>
                 </div>
             </div>
@@ -33,27 +33,27 @@
         <el-scrollbar>
             <div class="content">
                 <div class="style-item" v-for="i in data" :key="i.type">
-                    <div class="type" @click="showtype(i.type)">
+                    <div class="type" @click.stop="showtype(i.type)">
                         <svg-icon :icon-class="showtypes.has(i.type) ? 'triangle-down' : 'triangle-right'"></svg-icon>
                         <span>{{ i.type }}</span>
                     </div>
                     <template v-if="showtypes.has(i.type)">
-                        <div class="styles" :class="{ 'active': editorpanel && currenttarget === i.id }">
+                        <div class="styles" :class="{ 'active': editorpanel && currenttarget === s.content[0].id }"
+                            v-for="s in i.styles.filter(s => s.name.includes(searchval))">
                             <div class="left">
-                                <div class="effect" :style="{
-                                    boxShadow: `
-                                    ${i.styles[0].position.includes('in') ? 'inset' : ''} 
-                                    ${i.styles[0].offsetX > 0 ? '1px' : i.styles[0].offsetX < 0 ? '-1px' : '0'} 
-                                    ${i.styles[0].offsetY > 0 ? '1px' : i.styles[0].offsetY < 0 ? '-1px' : '0'} 
-                                    ${i.styles[0].blurRadius > 0 ? '1px' : '0'}
-                                    ${i.styles[0].spread > 0 ? '1px' : '0'}
-                                    #0000004d
-                                    `}">
+                                <div class="border" :style="{
+                                    borderTop: s.content[0].sideSetting.thicknessTop < 3 ? s.content[0].sideSetting.thicknessTop : 3 + 'px',
+                                    borderRight: s.content[0].sideSetting.thicknessRight < 3 ? s.content[0].sideSetting.thicknessRight : 3 + 'px',
+                                    borderBottom: s.content[0].sideSetting.thicknessBottom < 3 ? s.content[0].sideSetting.thicknessBottom : 3 + 'px',
+                                    borderLeft: s.content[0].sideSetting.thicknessLeft < 3 ? s.content[0].sideSetting.thicknessLeft : 3 + 'px',
+                                    borderColor: 'black',
+                                    borderStyle: 'solid'
+                                }">
                                 </div>
-                                <div class="name">{{ i.name }}</div>
+                                <div class="name">{{ s.name }}</div>
                             </div>
                             <div class="editor clickeditor" style="visibility: hidden;"
-                                @click="EditPanel($event, i.id, i.styles, i.name, i.des)">
+                                @click="EditPanel($event, s.content[0].id, s.content[0])">
                                 <svg-icon icon-class="export-menu"></svg-icon>
                             </div>
                         </div>
@@ -62,37 +62,38 @@
                 <div v-if="!data.length" class="null">没有搜索到相关样式</div>
             </div>
         </el-scrollbar>
-        <NewEffectStyle v-if="newpanel" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closenewpanel"></NewEffectStyle>
-        <EditorEffectStyle v-if="editorpanel" :top="Top" :left="Left" :shapes="props.shapes" :context="props.context"
-            :list="Data" :name="effectname" :des="effectdes" @close="closeeditorpanel">
-        </EditorEffectStyle>
+        <NewRadiusStyle v-if="newpanel" :top="Top" :left="Left" :context="props.context"
+            @close="props.context.escstack.execute()"></NewRadiusStyle>
+        <EditorRadiusStyle v-if="editorpanel" :border="borders" :top="Top" :left="Left" :context="props.context"
+            @close="props.context.escstack.execute()"></EditorRadiusStyle>
     </div>
 
 </template>
 <script setup lang="ts">
 import {
     BasicArray,
+    Border,
+    BorderPosition,
+    BorderSideSetting,
+    BorderStyle,
     Color,
+    CornerType,
     Fill,
     FillType,
     GradientType,
     ImageScaleMode,
     ShapeType,
     ShapeView,
+    SideType,
     Stop, SymbolView,
-    TableView,
-    Shadow,
-    ShadowPosition
+    TableView
 } from "@kcdesign/data";
-import { v4 } from 'uuid';
 import { Context } from '@/context';
-import { computed, nextTick, onMounted, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
-import EditorEffectStyle from './EditorEffectStyle.vue';
-import NewEffectStyle from './NewEffectStyle.vue';
-import { SelectItem } from "@/components/common/Select.vue";
-import { first } from "lodash";
+import EditorRadiusStyle from './EditorRadiusStyle.vue';
+import NewRadiusStyle from "./NewRadiusStyle.vue";
+import { v4 } from "uuid";
 interface FillItem {
     id: number,
     fill: Fill
@@ -100,8 +101,6 @@ interface FillItem {
 
 const props = defineProps<{
     context: Context;
-    shapes: ShapeView[]
-    shadowlist: Shadow[]
     top: number;
     left: number
 }>()
@@ -116,68 +115,43 @@ const filterpanel = ref<boolean>(false)
 const searchval = ref<string>('')
 const filterval = ref<string>('')
 const showtypes = ref(new Set<string>())
-const editorpanel = ref<boolean>(false)
 const newpanel = ref<boolean>(false)
+const editorpanel = ref<boolean>(false)
 const Top = ref<number>(0)
 const Left = ref<number>(0)
 const Type = ref<string>('')
-const currenttarget = ref<number>(-1)
 
-const search = ref<HTMLInputElement>()
+const currenttarget = ref<string>('')
+const borders = ref<Border>()
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
 }
-const effectname = ref<string>('')
-const effectdes = ref<string>('')
-const Data = ref<Shadow[]>()
 
+const color = new Color(1, 0, 0, 0);
+const borderStyle = new BorderStyle(0, 0);
+const side = new BorderSideSetting(SideType.Normal, 1, 2, 0, 4);
+const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
 
 const test = [
-    { type: 'location', styletype: 'effect', id: 1, name: 'test', des: 's12323', styles: props.shadowlist },
-    { type: 'location', styletype: 'effect', id: 2, name: '123213', des: '上海市是', styles: props.shadowlist }
+    { type: 'location', styles: [{ name: '33', content: [border] }, { name: '2', content: [border] }] },
 ]
-
-const setEbable = (id: string, b: boolean) => {
-
-}
-
-const setPositoin = (value: SelectItem, id: string) => {
-
-}
-
-const delShadow = (id: string) => {
-
-}
-
-const closenewpanel=()=>{
-    props.context.escstack.execute()
-    newpanel.value=false
-}
-
-const closeeditorpanel=()=>{
-    props.context.escstack.execute()
-    editorpanel.value=false
-}
 
 const data = computed(() => {
     let d;
     if (filterval.value && filterval.value !== '全部') {
-        d = test.filter(i => i.type === filterval.value).filter(i => i.styletype === 'effect')
+        d = test.filter(i => i.type === filterval.value)
     } else {
-        d = test.filter(i => i.styletype === 'effect')
+        d = test
     }
-    return d.filter(i => i.name.includes(searchval.value))
+    return d.filter(i => i.styles.filter(s => s.name.includes(searchval.value)).length !== 0)
 })
-
 let timer: any
 
-const EditPanel = (e: MouseEvent, idx: number, effects: Shadow[], name: string, des: string) => {
-    Data.value = effects;
-    effectname.value = name;
-    effectdes.value = des;
+const EditPanel = (e: MouseEvent, id: string, b: Border) => {
+    borders.value = b;
     let el = e.target as HTMLElement;
     const { top } = el.getBoundingClientRect()
-    while (el.parentElement?.className !== 'shadow-container') {
+    while (el.parentElement?.className !== 'radius-container') {
         if (el.parentElement) {
             el = el.parentElement;
         }
@@ -185,8 +159,8 @@ const EditPanel = (e: MouseEvent, idx: number, effects: Shadow[], name: string, 
     const { left } = el.getBoundingClientRect();
     Top.value = top;
     Left.value = left - 250;
-    currenttarget.value === idx ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
-    currenttarget.value = idx;
+    currenttarget.value === id ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
+    currenttarget.value = id;
     if (editorpanel.value) {
         if (timer) clearTimeout(timer)
         timer = setTimeout(() => {
@@ -218,12 +192,10 @@ const closeEditorPanel = () => {
     document.removeEventListener('click', checkeditorpanel)
     return exe_result
 }
-
 let timer2: any
-
 const NewPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
-    while (el.className !== 'shadow-container') {
+    while (el.className !== 'radius-container') {
         if (el.parentElement) {
             el = el.parentElement;
         }
@@ -231,7 +203,8 @@ const NewPanel = (e: MouseEvent) => {
     const { top, left } = el.getBoundingClientRect();
     Top.value = top;
     Left.value = left - 250;
-    newpanel.value = !newpanel.value;
+    newpanel.value = !newpanel.value
+    if (editorpanel.value) editorpanel.value = false
     if (newpanel.value) {
         if (timer2) clearTimeout(timer2)
         timer2 = setTimeout(() => {
@@ -245,7 +218,7 @@ const NewPanel = (e: MouseEvent) => {
 }
 
 function checknewpanel(e: MouseEvent) {
-    const muen = document.querySelector('.newstyle')
+    const muen = document.querySelector('.new-style')
     if (!muen) return;
     if (!muen.contains(e.target as HTMLElement)) {
         newpanel.value = false
@@ -259,6 +232,7 @@ const closeNewPanel = () => {
     document.removeEventListener('click', checknewpanel)
     return exe_result
 }
+
 
 let timer3: any
 const FilterPanel = () => {
@@ -295,14 +269,14 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-   
+
 
 })
 
 
 </script>
 <style lang="scss" scoped>
-.shadow-container {
+.radius-container {
     position: fixed;
     background-color: #fff;
     z-index: 9;
@@ -497,29 +471,12 @@ onMounted(() => {
         align-items: center;
         gap: 8px;
 
-        .effect {
+        .border {
             width: 16px;
             height: 16px;
-            background-color: #fff;
-            border: 1px solid #000000e5;
-            border-radius: 3px;
+            background-color: #e5e5e5;
             overflow: hidden;
-
-            .main {
-                width: 16px;
-                height: 16px;
-                background-color: #000;
-                position: relative;
-
-                .mask {
-                    position: absolute;
-                    top: 0;
-                    right: 0;
-                    width: 50%;
-                    height: 100%;
-                    background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
-                }
-            }
+            box-sizing: border-box;
         }
     }
 
