@@ -62,7 +62,7 @@ function update_status_set(id: string) {
 }
 
 function document_watcher(t: string) {
-    if (t === 'update-symbol-list') list_loader();
+    if (t === 'update-symbol-list') list_loader(); // todo 改用symbolMgr的监听
 }
 const select_watch = (t: number) => {
     if (t === Selection.PAGE_RENAME) {
