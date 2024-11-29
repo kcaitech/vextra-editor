@@ -9,7 +9,6 @@ import { Cursor } from '@/context/cursor';
 import { PathEditor } from "@/path/pathEdit";
 import { CreatorExecute } from "./execute";
 import { roundBy } from "@/path/common";
-import { WorkSpace } from "@/context/workspace";
 
 interface Props {
     context: Context,
