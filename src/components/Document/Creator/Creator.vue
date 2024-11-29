@@ -8,6 +8,7 @@ import ContactInit from '../Toolbar/ContactInit.vue';
 import { Cursor } from '@/context/cursor';
 import { PathEditor } from "@/path/pathEdit";
 import { CreatorExecute } from "./execute";
+import { roundBy } from "@/path/common";
 
 interface Props {
     context: Context,
@@ -63,9 +64,7 @@ function down(e: MouseEvent) {
                 path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
 
                 const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
-                if (point) {
-                    path.setLastPoint({ point, segment: 0, index: 0 });
-                }
+                if (point) path.setLastPoint({point, segment: 0, index: 0});
 
                 mode.value = 'normal';
             })
@@ -104,9 +103,13 @@ function move(e: MouseEvent) {
 function move2(e: MouseEvent) {
     if (just_search || e.buttons === 0) {
         dotXY.value = props.context.workspace.getContentXY(e);
-        if (props.context.tool.action === Action.AddContact) {
-            search_apex(e);
+        if (props.context.user.isPixelAlignMent) {
+            const rootXY = props.context.workspace.matrix.inverseCoord(dotXY.value);
+            rootXY.x = roundBy(rootXY.x);
+            rootXY.y = roundBy(rootXY.y);
+            dotXY.value = props.context.workspace.matrix.computeCoord3(rootXY);
         }
+        if (props.context.tool.action === Action.AddContact) search_apex(e);
     }
 }
 

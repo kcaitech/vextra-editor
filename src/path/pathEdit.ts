@@ -951,6 +951,10 @@ export class PathEditor extends TransformHandler {
         const m = new Matrix(env.matrix2Root().inverse);
 
         const __xy = m.computeCoord3(this.livingPoint);
+        if (this.context.user.isPixelAlignMent) {
+            __xy.x = roundBy(__xy.x);
+            __xy.y = roundBy(__xy.y);
+        }
         frame.x = __xy.x;
         frame.y = __xy.y;
 
