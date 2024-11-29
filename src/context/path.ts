@@ -9,7 +9,7 @@ import {
 import { Context } from ".";
 import { Segment } from "@/utils/pathedit";
 import { Action } from "./tool";
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 
 export type PointEditType = CurveMode | 'INVALID'
 

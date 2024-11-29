@@ -1,8 +1,5 @@
-import {Color, Shadow,} from "@kcdesign/data"
-import {Transform} from "@kcdesign/data"
-import {ColVector3D, Matrix2 as Matrix, LineThrough0, Line} from "@kcdesign/data"
-import {NumberArray2D} from "@kcdesign/data"
-import {BaseCreator} from "./creator/base"
+import { Color, ColVector3D, Line, LineThrough0, Matrix2 as Matrix, NumberArray2D, Shadow, Transform, TransformMode, } from "@kcdesign/data"
+import { BaseCreator } from "./creator/base"
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标
@@ -81,13 +78,11 @@ export function getAllStyleFromString(content: string) {
     return result
 }
 
-export function parseTransform(transformContent: string) {
+export function parseTransform(transformContent: string, size?: { width: number, height: number }) {
     const functionCalls = getAllFunctionCallFromString(transformContent)
     const transform = new Transform()
-
     for (const [name, args] of functionCalls) {
         const argList = args.split(/,|\s+/).filter(arg => arg && arg.trim()) // 分隔符为逗号或空格
-
         const numArgList = argList.map((value, i) => {
             if (value.includes("deg")) return parseFloat(value.replace("deg", "")) * Math.PI / 180;
             else if (value.includes("rad")) return parseFloat(value.replace("rad", ""));
@@ -110,11 +105,18 @@ export function parseTransform(transformContent: string) {
                 0, 0, 0, 1,
             ], true) as any);
             transform.addTransform(new Transform({ matrix: matrix as any }))
-            // console.log("不支持的变换函数", name, args)
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
                 if (numArgList.length === 1) {
-                    transform.rotateZ({ angle: numArgList[0] })
+                    // if (size) {
+                    //     transform.rotateAt({
+                    //         axis: Line.FromParallelZ(ColVector3D.FromXYZ(size.width / 2, size.height / 2, 0)),
+                    //         angle: numArgList[0]
+                    //     })
+                    // } else {
+                    //     transform.rotateZ({angle: numArgList[0]});
+                    // }
+                    transform.rotateZ({angle: numArgList[0]});
                 } else if (numArgList.length === 3) {
                     transform.rotateAt({
                         axis: new Line(ColVector3D.FromXYZ(0, 0, 1), ColVector3D.FromXYZ(numArgList[0], numArgList[1], 0)),
@@ -134,9 +136,9 @@ export function parseTransform(transformContent: string) {
                 })
             }
         } else if (name === "scale") {
-            transform.scale({ vector: new ColVector3D([numArgList[0], numArgList[1], numArgList[2] || 1]) })
+            transform.scale({vector: new ColVector3D([numArgList[0], numArgList[1], numArgList[2] ?? 1])})
         } else if (name === "translate") {
-            transform.translate(new ColVector3D([numArgList[0], numArgList[1] || numArgList[0], numArgList[2] || 0]))
+            transform.translate(new ColVector3D([numArgList[0], numArgList[1] ?? numArgList[0], numArgList[2] ?? 0]))
         } else {
             console.log("不支持的变换函数", name, args)
         }

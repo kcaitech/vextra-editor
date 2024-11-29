@@ -11,7 +11,7 @@ import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { Action } from '@/context/tool';
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 
 interface Props {
     context: Context

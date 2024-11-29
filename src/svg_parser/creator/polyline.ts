@@ -1,9 +1,8 @@
 import {
     creator as shapeCreator, Path,
-    ShapeFrame,
+    ShapeFrame, ColVector3D, Transform
 } from "@kcdesign/data"
 import {BaseCreator} from "./base"
-import {ColVector3D} from "@kcdesign/data"
 
 export class Polyline extends BaseCreator {
     createShape() {
@@ -15,7 +14,7 @@ export class Polyline extends BaseCreator {
         const height = this.attributes.height || 0
         const path = new Path(pointsToPathD)
         path.translate(-x, -y)
-        this.transform.translate(new ColVector3D([x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0]))
+        this.transform.addPreTransform(new Transform().translate(new ColVector3D([x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0])));
         this.shape = shapeCreator.newPathShape(this.htmlElement?.tagName || "polyline", new ShapeFrame(x, y, width, height), path, this.style)
     }
 }

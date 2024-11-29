@@ -6,7 +6,7 @@ import { ContactForm, CurvePoint, PathShapeView } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import ContactInit from '../Toolbar/ContactInit.vue';
 import { Cursor } from '@/context/cursor';
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 import { CreatorExecute } from "./execute";
 
 interface Props {
