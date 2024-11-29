@@ -48,6 +48,7 @@ export class Preview extends WatchableObject {
     private m_arboard_fixed_transform: Map<string, TransformRaw | undefined> = new Map();
     private m_inner_scroll: ShapeView | undefined;
     private m_save_last_shape: ShapeView | undefined;
+    private m_supernatant_shapes: ShapeView[] = [];
 
     constructor(context: Context) {
         super();
@@ -187,6 +188,13 @@ export class Preview extends WatchableObject {
         return this.m_supernatant_open;
     }
 
+    setSupernatantShapes(s?: ShapeView[]) {
+        this.m_supernatant_shapes = s || [];
+    }
+    get supernatantShapes() {
+        return this.m_supernatant_shapes;
+    }
+
     setSwapAction(action?: PrototypeActions) {
         if (action) {
             this.m_swap_action.add(action);
@@ -270,7 +278,7 @@ export class Preview extends WatchableObject {
         this.m_arboard_fixed_transform.clear();
     }
 
-    saveLastHoverShape(shape: ShapeView | undefined) {        
+    saveLastHoverShape(shape: ShapeView | undefined) {
         this.m_save_last_shape = shape;
     }
 

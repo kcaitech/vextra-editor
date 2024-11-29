@@ -737,6 +737,7 @@ const closeMenu = () => {
 }
 const getTargetShapes = () => {
     target_shapes = [];
+    props.context.preview.setSupernatantShapes();
     renderCard.value = false;
     const page = props.context.selection.selectedPage;
     const shapes = getFrameList(page!);
@@ -756,6 +757,7 @@ const getTargetShapes = () => {
         }
     })
     target_shapes = toRaw(render_shapes);
+    props.context.preview.setSupernatantShapes(render_shapes);
     renderCard.value = true;
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     watch_shapes();
@@ -827,6 +829,7 @@ const getTargetShapes = () => {
 // 返回上一级动画
 const backTargetShape = (s?: string) => {
     target_shapes = [];
+    props.context.preview.setSupernatantShapes();
     renderCard.value = false;
     const page = props.context.selection.selectedPage;
     const shapes = getFrameList(page!);
@@ -850,6 +853,7 @@ const backTargetShape = (s?: string) => {
         }
     })
     target_shapes = toRaw(render_shapes);
+    props.context.preview.setSupernatantShapes(render_shapes);
     renderCard.value = true;
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     watch_shapes();
@@ -1015,7 +1019,7 @@ onUnmounted(() => {
             xmlns:xhtml="http://www.w3.org/1999/xhtml" class="sym_ref_animate" preserveAspectRatio="xMinYMin meet"
             viewBox="0 0 100 100" width="100" height="100">
         </svg>
-        <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox"  @mousedown.stop>
+        <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox" @mousedown.stop>
             <div class="toggle" v-if="showToggle && listLength && previewMode">
                 <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
                     <svg-icon icon-class="left-arrow"></svg-icon>
