@@ -47,6 +47,7 @@ import { scout, Scout } from "@/utils/scout";
 import { Preview } from "./preview";
 import { MossClipboard } from "@/clipboard";
 import { EditorLayout } from "@/components/Document/Layout/editorlayout";
+import { RenderContext } from "@/context/render";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -154,6 +155,8 @@ export class Context extends WatchableObject implements IContext {
     private m_net?: INet;
     private m_readonly?: boolean;
 
+    private m_render: RenderContext;
+
     constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
         super();
         (window as any).__context = this;
@@ -185,6 +188,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_preview = new Preview(this);
         this.m_clip = new MossClipboard(this);
         this.m_layout = new EditorLayout(this);
+        this.m_render = new RenderContext();
         startLoadTask(data, this.m_taskMgr);
     }
 
@@ -428,5 +432,9 @@ export class Context extends WatchableObject implements IContext {
 
     setOnLoaded(onLoaded: () => void) {
         this.m_repo.setOnLoaded(onLoaded);
+    }
+
+    get render() {
+        return this.m_render;
     }
 }
