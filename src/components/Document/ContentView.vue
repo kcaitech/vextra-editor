@@ -548,23 +548,8 @@ const comps: { component: any, params?: any }[] = [];
 const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
 comps.push(
-    {
-        component: MossCanvas, params: {
-            get data() {
-                return props.page
-            },
-            get matrix() {
-                return matrix
-            },
-            get visibleRect() {
-                return visibleRect;
-            },
-            onRenderDone,
-            onContentVisible
-        }
-    },
     // {
-    //     component: PageViewVue, params: {
+    //     component: MossCanvas, params: {
     //         get data() {
     //             return props.page
     //         },
@@ -578,6 +563,21 @@ comps.push(
     //         onContentVisible
     //     }
     // },
+    {
+        component: PageViewVue, params: {
+            get data() {
+                return props.page
+            },
+            get matrix() {
+                return matrix
+            },
+            get visibleRect() {
+                return visibleRect;
+            },
+            onRenderDone,
+            onContentVisible
+        }
+    },
     // 筛选结果文本高亮
     {
         component: TextSelection, params: {
@@ -738,8 +738,8 @@ onMounted(() => {
     resizeObserver.observe(root.value!);
     _updateRoot(props.context, root.value!);
 
-    onRenderDone();
-    onContentVisible();
+    // onRenderDone();
+    // onContentVisible();
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
