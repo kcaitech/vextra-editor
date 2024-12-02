@@ -196,12 +196,12 @@ export function delayering2(groupshape: ShapeView, flat?: ShapeView[]): ShapeVie
 }
 
 export function is_layers_tree_unit(shape: ShapeView) {
-    return ShapeType.Group === shape.type
+    return shape.isVisible && !shape.isLocked && (ShapeType.Group === shape.type
         || ShapeType.Artboard === shape.type
         || ShapeType.SymbolUnion === shape.type
         || ShapeType.Symbol === shape.type
         || ShapeType.SymbolRef === shape.type
-        || ShapeType.BoolShape === shape.type
+        || ShapeType.BoolShape === shape.type)
 }
 
 /**

@@ -40,6 +40,7 @@ export class EnvChainGenerator {
                 const bros = parent.childs;
                 for (let l = bros.length - 1; l >= 0; l--) {
                     const v = bros[l];
+                    if (!v.isVisible || v.isLocked) continue;
                     if ((v.type === ShapeType.Group || v.type === ShapeType.BoolShape) && porter.has(v)) continue;
                     chain.children.push({ base: v, children: [] });
                 }
