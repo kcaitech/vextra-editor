@@ -19,6 +19,7 @@ import gapAssist from "@/components/Document/Assist/gapAssist.vue";
 import AutoLayoutChildEdit from "./Controller/AutoLayoutController/AutoLayoutChildEdit.vue"
 import InsertBar from "@/components/Document/Selection/Controller/InsertBar.vue";
 import TidyUpOutline from "./TidyUpOutline.vue";
+import { debounce } from "lodash";
 
 export interface Point {
     x: number
@@ -214,11 +215,11 @@ function createController() {
 }
 
 /**
- * @description 创建控件
+ * @description 图层被损坏的情况下，被动更新控件
  */
-function createController2() {
+function _createController2() {
     const selection: ShapeView[] = [];
-    let temp = props.context.selection.selectedShapes;
+    const temp = props.context.selection.selectedShapes;
     let adjust = false;
     for (let i = 0; i < temp.length; i++) {
         const shape = temp[i];
@@ -240,9 +241,10 @@ function createController2() {
     modify_controller_type(selection);
     modify_rotate(selection);
     modify_theme(selection);
-    // tracing.value = false;
     controller.value = true;
 }
+
+const createController2 = debounce(_createController2, 60);
 
 function modify_controller_frame(shapes: ShapeView[]) {
     if (shapes.length === 1) {
