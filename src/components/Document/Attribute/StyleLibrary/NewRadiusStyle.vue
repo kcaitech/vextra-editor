@@ -38,10 +38,6 @@ import { get_actions_border_position, get_borders } from '@/utils/shape_style';
 import { Selection } from "@/context/selection";
 import { getShapesForStyle } from '@/utils/style';
 
-interface BorderItem {
-    id: number
-    border: Border
-}
 const props = defineProps<{
     context: Context;
     top: number;
@@ -53,20 +49,7 @@ const emits = defineEmits<{
 }>()
 
 const { t } = useI18n();
-const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const watchedShapes = new Map();
-const positonOptionsSource: SelectSource[] = genOptions([
-    [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
-    [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
-    [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
-]);
-const reflush_side = ref(0);
-const reflush_apex = ref(0);
-const show_apex = ref<boolean>(false);
-const mixed = ref<boolean>(false);
-const mixed_cell = ref(false);
-const data: { borders: BorderItem[] } = reactive({ borders: [] });
-const { borders } = data;
 const radius = ref<string>('')
 const oldvalue = ref<string>('')
 const name = ref<string>('name')
@@ -75,7 +58,9 @@ const des = ref<string>('des')
 const setRadius = () => {
     let arrs = radius.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
     const b = arrs.every(i => isNaN(Number(i)) === false)
+    console.log(b);
     if (!b) return radius.value = oldvalue.value;
+    console.log(b);
     if (arrs.length === 1) {
         arrs = arrs.concat(...arrs, ...arrs, ...arrs)
     }
@@ -86,6 +71,7 @@ const setRadius = () => {
         arrs = arrs.concat('0')
     }
     radius.value = arrs.join(', ')
+    oldvalue.value = radius.value
 }
 
 function positionSelect(selected: SelectItem, id: number | undefined) {
@@ -137,30 +123,16 @@ function watcher(...args: any[]) {
     if ((args.includes('layout') || args.includes('borders'))) {
         updateData();
     }
-    if (args.includes('pathsegs') && args.includes('points')) {
-        layout();
-        reflush_apex.value++;
-    }
 }
 
 function updateData() {
     const selecteds = props.context.selection.selectedShapes;
     if (selecteds.length < 1) return;
-   
 }
 
-function layout() {
-    show_apex.value = false;
-    const shapes = flattenShapes(props.context.selection.selectedShapes).filter(s => s.type !== ShapeType.Group);
 
-    show_apex.value = line_end_point(shapes);
-}
 
-const line_end_point = (shapes: ShapeView[]) => {
-    const segment = shapes.every(v => ((v instanceof PathShapeView) && ((v.segments.length === 1 && !v.segments[0].isClosed) || v.segments.length > 1)));
-    const endpoint = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
-    return endpoint;
-}
+
 
 function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
@@ -169,7 +141,6 @@ function selection_watcher(t: number | string) {
 function update_by_shapes() {
     watchShapes();
     updateData();
-    layout();
 }
 
 onMounted(() => {

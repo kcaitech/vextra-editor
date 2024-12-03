@@ -130,7 +130,7 @@ const showtype = (t: string) => {
 
 const color = new Color(1, 0, 0, 0);
 const borderStyle = new BorderStyle(0, 0);
-const side = new BorderSideSetting(SideType.Normal, 1, 2, 0, 4);
+const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 2, 0, 4);
 const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
 
 const test = [

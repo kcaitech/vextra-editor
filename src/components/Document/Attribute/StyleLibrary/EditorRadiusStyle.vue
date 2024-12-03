@@ -1,7 +1,7 @@
 <template>
     <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
         <div class="header">
-            <div class="title">编辑边框样式</div>
+            <div class="title">编辑圆角样式</div>
             <div class="close" @click.stop="emits('close')">
                 <svg-icon icon-class="close"></svg-icon>
             </div>
@@ -16,17 +16,9 @@
                 <input type="text" id="des">
             </div>
         </div>
-        <div class="border">
-            <div class="type">
-                <div class="title">位置</div>
-                <Select class="select" :context="props.context" :shapes="props.shapes" :source="positonOptionsSource"
-                    :selected="positonOptionsSource.find(i => i.data.value === props.border?.position)?.data"
-                    @select="positionSelect"></Select>
-            </div>
-            <div class="thickness">
-                <div class="title">粗细</div>
-                <input type="text" v-model="thickness" @change="setThickness">
-            </div>
+        <div class="radius">
+            <div class="title">圆角</div>
+            <input type="text" v-model="radius" @change="setRadius">
         </div>
     </div>
 
@@ -58,32 +50,30 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 const thickness = ref<string>('')
 const oldvalue = ref<string>('')
-
+const radius = ref<string>('')
 function positionSelect(selected: SelectItem, id: number | undefined) {
 
 }
 
-const setThickness = () => {
-    thickness.value = thickness.value.replace(/，/g, ',').replace(/\s+/g, '').split(',').slice(0, 4).join(', ');
-    const b = thickness.value.split(',').every(i => isNaN(Number(i)) === false)
-    if (!b) return thickness.value = oldvalue.value;
-    let arr = thickness.value.split(',')
-    if (arr.length === 1) {
-        thickness.value = arr.concat(...arr, ...arr, ...arr).toString()
+const setRadius = () => {
+    let arrs = radius.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
+    const b = arrs.every(i => isNaN(Number(i)) === false)
+    if (!b) return radius.value = oldvalue.value;
+    if (arrs.length === 1) {
+        arrs = arrs.concat(...arrs, ...arrs, ...arrs)
     }
-    if (arr.length === 2) {
-        thickness.value = arr.concat(arr[0], arr[1]).toString()
+    if (arrs.length === 2) {
+        arrs = arrs.concat('0', '0')
     }
-    if (arr.length === 3) {
-        thickness.value = arr.concat(arr[1]).toString()
+    if (arrs.length === 3) {
+        arrs = arrs.concat('0')
     }
-    thickness.value = thickness.value.replaceAll(' ', '').replaceAll('.', '').replaceAll(',', ', ')
+    radius.value = arrs.join(', ')
 }
 
+
 onMounted(() => {
-    if (!props.border) return
-    const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = props.border.sideSetting;
-    thickness.value = `${thicknessTop},${thicknessRight},${thicknessBottom},${thicknessLeft}`;
+ 
 })
 
 </script>
@@ -161,69 +151,32 @@ onMounted(() => {
         }
     }
 
-    .border {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 0 12px;
-        margin-bottom: 8px;
-        box-sizing: border-box;
-
-        .type {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-
-            .title {}
-
-            .select {
-                flex: 1;
-            }
-        }
-
-        .thickness {
-
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-sizing: border-box;
-
-            .title {}
-
-            input {
-                flex: 1;
-                width: 100%;
-                outline: none;
-                border: none;
-                padding: 10px 8px;
-                background-color: #F5F5F5;
-                height: 32px;
-                border-radius: 6px;
-                box-sizing: border-box;
-            }
-        }
-    }
-
-    .create-bnt {
+    .radius {
         display: flex;
         align-items: center;
-        justify-content: center;
-        margin: auto;
-        margin-bottom: 12px;
-        font-size: 12px;
-        width: 100px;
-        height: 40px;
-        border-radius: 6px;
-        background-color: #1878f5;
-        color: #fff;
+        gap: 8px;
+        padding: 0 12px;
+        box-sizing: border-box;
+        margin-bottom: 8px;
+        .title {}
 
-        &:hover {
-            background-color: #429AFF;
-        }
+        input {
+            flex: 1;
+            width: 100%;
+            outline: none;
+            border: none;
+            padding: 10px 8px;
+            background-color: #F5F5F5;
+            border: 1px solid transparent;
+            height: 32px;
+            border-radius: 6px;
+            box-sizing: border-box;
 
-        &:active {
-            background-color: #0A59CF;
+            &:focus {
+                border: 1px solid #1878f5;
+            }
         }
     }
+
 }
 </style>

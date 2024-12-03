@@ -226,7 +226,7 @@ const setRowHeight = (val?: number) => {
         if (!isNaN(Number(value))) {
             keydownval.value
                 ?
-                linearApi.modifyTextLineHeightMulit(props.textShapes, val!, isAuto)
+                linearApi.modifyTextLineHeightMulti(props.textShapes, val!, isAuto)
                 :
                 editor.setLineHeightMulit(props.textShapes, value.length === 0 ? undefined : Number(value), isAuto);
         } else {
@@ -308,7 +308,7 @@ const setWordSpace = (val?: number) => {
         if (!isNaN(Number(wordSpace.value))) {
             keydownval.value
                 ?
-                linearApi.modifyTextCharSpacingMulit(props.textShapes, val!)
+                linearApi.modifyTextCharSpacingMulti(props.textShapes, val!)
                 :
                 editor.setCharSpacingMulit(props.textShapes, Number(wordSpace.value))
         } else {

@@ -8,7 +8,7 @@ import {
 } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
-import MossInput from "@/components/common/MossInput.vue";
+import MossInput2 from "@/components/common/MossInput2.vue";
 import { LockMouse } from "@/transform/lockMouse";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { useI18n } from "vue-i18n";
@@ -486,7 +486,6 @@ function EditPanel(e: MouseEvent, type: string) {
             rb.value = true
         }
     }
-
     props.context.escstack.save(v4(), close);
     if (showradius.value) {
         document.addEventListener('click', checktargetlist)
@@ -545,14 +544,16 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="tr">
-        <MossInput icon="radius" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
-            @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT" @dragend="dragend"
-            @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup">
-        </MossInput>
+        <MossInput2 icon="radius" icon2="styles" :draggable="radius.lt !== mixed" :value="radius.lt"
+            :disabled="disabled" @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT"
+            @dragend="dragend" @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup"
+            @click="EditPanel($event, 'lt')">
+        </MossInput2>
         <div class="space" v-if="!rect"></div>
-        <MossInput v-if="rect" class="r-90" icon="radius" :draggable="radius.rt !== mixed" :value="radius.rt"
-            :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT"
-            @dragend="dragend" @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup"></MossInput>
+        <MossInput2 v-if="rect" class="r-90" icon="radius" icon2="styles" :draggable="radius.rt !== mixed"
+            :value="radius.rt" :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart"
+            @dragging="draggingRT" @dragend="dragend" @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup"
+            @click="EditPanel($event, 'rt')"></MossInput2>
         <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
             <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
                 <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
@@ -561,16 +562,17 @@ onUnmounted(() => {
         </Tooltip>
     </div>
     <div class="tr" v-if="rect">
-        <MossInput class="r-270" icon="radius" :draggable="radius.lb !== mixed" :value="radius.lb"
+        <MossInput2 class="r-270" icon="radius" icon2="styles" :draggable="radius.lb !== mixed" :value="radius.lb"
             :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart" @dragging="draggingLB"
-            @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"></MossInput>
-        <MossInput class="r-180" icon="radius" :draggable="radius.rb !== mixed" :value="radius.rb"
+            @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"
+            @click="EditPanel($event, 'lb')"></MossInput2>
+        <MossInput2 class="r-180" icon="radius" icon2="styles" :draggable="radius.rb !== mixed" :value="radius.rb"
             :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart" @dragging="draggingRB"
-            @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"></MossInput>
+            @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"
+            @click="EditPanel($event, 'rb')"></MossInput2>
         <div style="width: 32px;height: 32px;"></div>
     </div>
-    <RadiusStyle v-if="(lt || rt || lb || rb) && showradius" :context="props.context" :top="Top" :left="Left"
-        @close="closepanel">
+    <RadiusStyle v-if="lt || rt || lb || rb" :context="props.context" :top="Top" :left="Left" @close="closepanel">
     </RadiusStyle>
     <teleport to="body">
         <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
@@ -578,6 +580,31 @@ onUnmounted(() => {
     </teleport>
 </template>
 <style scoped lang="scss">
+.radius-style {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: var(--default-radius);
+    transition: .2s;
+
+    >svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.shadow-style svg {
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+.shadow-style:hover {
+    background-color: #F5F5F5;
+}
+
 .tr {
     position: relative;
     width: 100%;
