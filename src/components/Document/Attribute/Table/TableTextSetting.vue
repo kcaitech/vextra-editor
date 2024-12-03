@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Popover from '@/components/common/Popover.vue';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch, shallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -19,7 +19,7 @@ const selectCase = ref()
 const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref()
 const paraSpacing = ref<HTMLInputElement>()
-const shape = ref<TableCellView>()
+const shape = shallowRef<TableCellView>()
 // const selection = ref(props.context.selection)
 const isActived1 = ref(false)
 const isActived2 = ref(false)

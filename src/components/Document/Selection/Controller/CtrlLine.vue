@@ -150,9 +150,8 @@ onUnmounted(() => {
 watchEffect(updateControllerView)
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
+    <svg xmlns="http://www.w3.org/2000/svg"
+         data-area="controller" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
          :width="width"
          :height="height"
          :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"

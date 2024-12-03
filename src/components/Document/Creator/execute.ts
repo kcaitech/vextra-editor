@@ -249,6 +249,8 @@ export class CreatorExecute extends TransformHandler {
     readonly shapeType: ShapeType;
     private namePrefix: string | undefined;
 
+    private space: boolean = false;
+
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
 
@@ -275,6 +277,8 @@ export class CreatorExecute extends TransformHandler {
         this.action = context.tool.action; // 记录点击时的动作类型，避免中途切换动作类型造成的影响
 
         this.shapeType = ResultByAction(this.action) || ShapeType.Rectangle;
+
+        context.workspace.creating(true);
     }
 
     createApiCaller() {
@@ -284,7 +288,7 @@ export class CreatorExecute extends TransformHandler {
     modifyFrame(e: MouseEvent) {
         this.isCustomFrame = true;
 
-        this.livingPoint = this.workspace.getRootXY(e); // 底版livingPoint
+        this.livingPoint = this.workspace.getRootXY(e);
 
         // 修正livingPoint
         // 1. 滚轮修正
@@ -684,6 +688,11 @@ export class CreatorExecute extends TransformHandler {
     private __extendFrame() {
         const frame = this.frame;
 
+        if (this.alignPixel) {
+            this.livingPoint.x = Math.round(this.livingPoint.x);
+            this.livingPoint.y = Math.round(this.livingPoint.y);
+        }
+
         const fixedPoint = { ...this.fixedPoint };
         const livingPoint = { ...this.livingPoint };
 
@@ -850,7 +859,7 @@ export class CreatorExecute extends TransformHandler {
             params.frame.x += 50;
             params.frame.y += 38;
             params.frame.width = 20;
-            params.frame.height = 24;
+            params.frame.height = 16;
             params.textFormat = this.context.textSelection.getTextAttr;
         }
 
@@ -908,7 +917,7 @@ export class CreatorExecute extends TransformHandler {
             clearInterval(this.__wheel_timer);
             this.__wheel_timer = null;
         }
-
+        context.workspace.creating(false);
         super.fulfil();
         context.cursor.reset();
     }
@@ -925,6 +934,9 @@ export class CreatorExecute extends TransformHandler {
             this.altStatus = true;
             this.passiveExecute();
         }
+        if (event.code === "Space") {
+            this.space = true;
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -936,6 +948,9 @@ export class CreatorExecute extends TransformHandler {
         if (code === "AltLeft" || code === "AltRight") {
             this.altStatus = false;
             this.passiveExecute();
+        }
+        if (code === "Space") {
+            this.space = false;
         }
     }
 }

@@ -11,7 +11,7 @@ import { add_move_and_up_for_document, remove_move_and_up_from_document } from "
 import ClipMode from "../../Controller/ClipMode.vue";
 import PenMode from "@/components/Document/Selection/Controller/PathEdit/PenMode.vue";
 import { scout_once } from "@/utils/common";
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 
 interface Props {
     context: Context;

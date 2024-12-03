@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { ClientXY, XY } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
 import { dbl_action } from "@/utils/mouse_interactive";
@@ -11,7 +11,7 @@ import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { Action } from '@/context/tool';
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 
 interface Props {
     context: Context
@@ -44,9 +44,7 @@ let current_curve_point_index: number = -1;
 let current_side: number = -1;
 
 function update() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
 
     dots.length = 0;
     segments.length = 0;

@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { RefAttriListItem } from "@/utils/symbol";
 import { ref, onMounted, watch } from "vue";
 import { Context } from "@/context";
-import { OverrideType } from "@kcdesign/data";
+import { OverrideType, ShapeView, VariableType, GroupShapeView, TextShapeView } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 
 interface Props {
     context: Context
     data: RefAttriListItem
 }
 
+const t = useI18n().t;
 const props = defineProps<Props>();
 const textValue = ref('');
 const inputRef = ref();
@@ -19,12 +21,30 @@ const selectAllText = () => {
 
 function get_value() {
     const symref = props.context.selection.symbolrefshape;
-    if (!symref) return console.log("wrong role");
-    const text = get_vari_value_for_ref(symref, props.data.variable);
-    textValue.value = typeof text === 'string' ? text : text.toString();
+    if (!symref) return console.error("wrong role");
+    const id = props.data.variable.id;
+    const overrides = symref.findOverride(id, OverrideType.Variable);
+    const text = overrides ? overrides[overrides.length - 1].value : props.data.variable.value;
+    let baseT: string | undefined;
+
+    textValue.value = (isMixText(symref.childs) ? t('attr.mixed') : baseT ? baseT : typeof text === 'string' ? text : text.toString())
+        .replace(/\n$/, ''); // 取消最后一个换行
+
+    function isMixText(children: ShapeView[]) {
+        for (const c of children) {
+            if (c instanceof GroupShapeView && isMixText(c.childs)) return true;
+            if (!(c instanceof TextShapeView)) continue;
+            if (c.varbinds?.get(VariableType.Text) === id) {
+                const __t = c.getText().getText(0, Number.MAX_VALUE);
+                if (baseT && __t !== baseT) return true;
+                else baseT = __t;
+            }
+        }
+        return false;
+    }
 }
 
-const keysumbit = (e: KeyboardEvent) => {
+const keydown = (e: KeyboardEvent) => {
     const { shiftKey, ctrlKey, metaKey } = e;
     if (e.key === 'Enter') {
         if (ctrlKey || metaKey || shiftKey) {
@@ -42,7 +62,8 @@ function change(v: string) {
     if (!symref) return console.log("wrong role");
     const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
     const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
-    modify_vari_value_for_ref(props.context, _var, v);
+    const editor = props.context.editor4Shape(symref);
+    editor.modifySymbolRefTextVariable(_var, v);
 }
 
 onMounted(get_value);
@@ -53,10 +74,9 @@ onMounted(get_value);
             <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
                 <el-input ref="inputRef" v-model="textValue" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
-                    resize="none" @focus="selectAllText" @change="change" @keydown.stop="keysumbit" />
+                    resize="none" @focus="selectAllText" @change="change" @keydown.stop="keydown" />
             </div>
         </div>
-        <!-- <div class="delete"></div> -->
     </div>
 </template>
 <style lang="scss" scoped>

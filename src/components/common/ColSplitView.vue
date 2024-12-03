@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watchEffect, onBeforeMount, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, watchEffect } from "vue";
 import Sash from "@/components/common/Sash.vue";
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
@@ -140,7 +140,7 @@ function init() {
 onMounted(() => {
     if (refRoot.value) observer.observe(refRoot.value);
     props.context.workspace.watch(handle_left);
-    init();
+    // init();
 })
 onUnmounted(() => {
     observer.disconnect();
@@ -153,14 +153,14 @@ watchEffect(initSizeBounds);
 <template>
 <div class="column-split" ref="refRoot">
     <div class="column1"
-         :style="{width: leftSize.width+'px', 'min-width': leftSize.minWidth+'px','max-width':leftSize.maxWidth+'px',transition}">
+         :style="{width: leftSize.width+'px', 'min-width': leftSize.minWidth+'px','max-width':leftSize.maxWidth+'px'}">
         <slot name="slot1"/>
         <Sash side="right" @dragStart="leftCtx.onDragStart" @offset="leftCtx.onDragOffset"/>
     </div>
-    <div class="column2" :style="{transition}">
+    <div class="column2">
         <slot name="slot2"/>
     </div>
-    <div class="column3" :style="{transition, width:right+'px' }">
+    <div class="column3" :style="{ width:right+'px' }">
         <slot name="slot3"/>
     </div>
 </div>

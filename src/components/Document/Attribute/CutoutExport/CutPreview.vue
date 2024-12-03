@@ -6,6 +6,7 @@ import {
     ShapeType,
     ShapeView,
     adapt2Shape, ColVector3D,
+    PathShapeView,
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import {
@@ -68,7 +69,7 @@ const selectedShapes: Map<string, ShapeView> = new Map();
 const pngImage = ref();
 const renderSvgs = ref<SvgFormat[]>([]);
 const svgImageUrls: Map<string, string> = new Map();
-
+const shapeTrim = ref(false);
 const pageCard = ref<PCard>();
 
 const toggleExpand = () => {
@@ -134,7 +135,7 @@ const getSvgUrl = async () => {
         const { width, height } = pageCard.value.pageSvg.viewBox.baseVal
         pageCard.value.pageSvg.setAttribute("width", `${width * format.scale}`);
         pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
-        await getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, svgImageUrls, shape);
+        await getSvgImageData(pageCard.value.pageSvg, props.trim_bg || shapeTrim.value, id, format, svgImageUrls, shape);
         pngImage.value = svgImageUrls.get(id);
         reflush.value++;
     }
@@ -143,12 +144,12 @@ const getSvgUrl = async () => {
 const getCanvasShape = debounce(_getCanvasShape, 250);
 
 const getPosition = (shape: ShapeView) => {
+    shapeTrim.value = false;
     const p_artboard = parentIsArtboard(shape);
     if (shape.type === ShapeType.Cutout) {
         if (p_artboard) {
             const __frame = shape._p_frame;
             const _f = shape.parent!.transform2.transform(ColVector3D.FromXY(__frame.x, __frame.y)).col0;
-
             xy.value.x = _f.x;
             xy.value.y = _f.y;
             width.value = shape.frame.width;
@@ -161,7 +162,6 @@ const getPosition = (shape: ShapeView) => {
             xy.value.y = p.y;
         }
     } else if (shape.type === ShapeType.Group) {
-        const { left, top, right, bottom } = getShadowMax(shape);
         const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
         xy.value.x = x;
         xy.value.y = y;
@@ -169,7 +169,17 @@ const getPosition = (shape: ShapeView) => {
         height.value = _h;
     } else {
         const { left, top, right, bottom } = getShadowMax(shape);
-        const { x, y, width: _w, height: _h } = shape._p_outerFrame;
+        let { x, y, width: _w, height: _h } = shape._p_outerFrame;
+        const maxB = Math.abs(shape.outerFrame.x)
+        if (shape instanceof PathShapeView || shape.type === ShapeType.Star || shape.type === ShapeType.Polygon) {
+            x -= (maxB * 5);
+            y -= (maxB * 5);
+            _w += (maxB * 10);
+            _h += (maxB * 10);
+            if (shape.type === ShapeType.Star || shape.type === ShapeType.Polygon) {
+                shapeTrim.value = true;
+            }
+        }
         xy.value.x = x - left;
         xy.value.y = y - top;
         width.value = _w + left + right;
@@ -314,25 +324,25 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="preview_box" v-if="props.context.selection.selectedShapes.length <= 1">
-    <div class="title" @click="toggleExpand">
-        <div class="triangle">
-            <div :class="{ 'triangle-right': !isTriangle, 'triangle-down': isTriangle }">
+    <div class="preview_box" v-if="props.context.selection.selectedShapes.length <= 1">
+        <div class="title" @click="toggleExpand">
+            <div class="triangle">
+                <div :class="{ 'triangle-right': !isTriangle, 'triangle-down': isTriangle }">
+                </div>
+            </div>
+            <span>{{ t('cutoutExport.preview') }}</span>
+        </div>
+        <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
+            :shapes="renderItems" :width="width" :height="height" />
+        <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush">
+            <div class="preview-image" v-if="pngImage">
+                <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
             </div>
         </div>
-        <span>{{ t('cutoutExport.preview') }}</span>
-    </div>
-    <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
-              :shapes="renderItems" :width="width" :height="height"/>
-    <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush">
-        <div class="preview-image" v-if="pngImage">
+        <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage" :reflush="reflush">
             <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
         </div>
     </div>
-    <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage" :reflush="reflush">
-        <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
-    </div>
-</div>
 </template>
 
 <style scoped lang="scss">
@@ -346,7 +356,7 @@ onUnmounted(() => {
         width: 100%;
         align-items: center;
 
-        > .triangle {
+        >.triangle {
             width: 12px;
             min-width: 12px;
             height: 100%;
@@ -354,7 +364,7 @@ onUnmounted(() => {
             justify-content: center;
             margin-right: 5px;
 
-            > .triangle-right {
+            >.triangle-right {
                 width: 0;
                 height: 0;
                 border-left: 5px solid #434343;
@@ -365,7 +375,7 @@ onUnmounted(() => {
                 top: 13px;
             }
 
-            > .triangle-down {
+            >.triangle-down {
                 width: 0;
                 height: 0;
                 border-top: 5px solid #434343;
@@ -405,7 +415,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            > img {
+            >img {
                 max-width: 100%;
                 max-height: 100%;
                 margin: auto;
@@ -423,7 +433,7 @@ onUnmounted(() => {
         background-position: 0 0, 8px 8px;
         background-size: 16px 16px;
 
-        > img {
+        >img {
             max-width: 100%;
             max-height: 240px;
             margin: auto;

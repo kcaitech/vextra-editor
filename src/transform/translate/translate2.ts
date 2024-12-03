@@ -2,7 +2,7 @@ import { BoundHandler } from "@/transform/handler";
 import {
     ArtboradView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
     ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
-    adapt2Shape, layoutShapesOrder, makeShapeTransform1By2
+    adapt2Shape, layoutShapesOrder, makeShapeTransform1By2, PathShapeView
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -15,6 +15,7 @@ import { isShapeOut } from "@/utils/assist";
 import { StyleManager } from "@/transform/style";
 import { WorkSpace } from "@/context/workspace";
 import { Navi } from "@/context/navigate";
+import { is_straight } from "@/utils/attri_setting";
 enum TranslateMode {
     Linear = 'linear',
     Prev = 'prev',
@@ -354,19 +355,31 @@ class SelModel {
 
             const { x, y, width, height } = shape.frame;
 
-            const { col0, col1, col2, col3 } = transform.transform([
-                ColVector3D.FromXY(x, y),
-                ColVector3D.FromXY(x + width, y),
-                ColVector3D.FromXY(x + width, y + height),
-                ColVector3D.FromXY(x, y + height),
-            ])
-            const points = [col0, col1, col2, col3];
+            let points: XY[];
+            if (is_straight(shape)) {
+                const unitTransform = new Transform().setScale(ColVector3D.FromXYZ(width, height, 1)).addTransform(transform);
+                const lt = (shape as PathShapeView).segments[0].points[0];
+                const rb = (shape as PathShapeView).segments[0].points[1];
+                const {col0, col1} = unitTransform.transform([
+                    ColVector3D.FromXY(lt.x, lt.y),
+                    ColVector3D.FromXY(rb.x, rb.y)
+                ])
+                points = [col0, col1];
+            } else {
+                const {col0, col1, col2, col3} = transform.transform([
+                    ColVector3D.FromXY(x, y),
+                    ColVector3D.FromXY(x + width, y),
+                    ColVector3D.FromXY(x + width, y + height),
+                    ColVector3D.FromXY(x, y + height),
+                ])
+                points = [col0, col1, col2, col3];
+            }
 
             for (const point of points) {
                 if (point.x < left) left = point.x;
-                else if (point.x > right) right = point.x;
+                if (point.x > right) right = point.x;
                 if (point.y < top) top = point.y;
-                else if (point.y > bottom) bottom = point.y;
+                if (point.y > bottom) bottom = point.y;
             }
         }
 

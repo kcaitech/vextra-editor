@@ -712,7 +712,13 @@ export class ScaleHandler extends BoundHandler {
     private __execute_uniform() {
         if (!this.shapes.length) return;
 
-        const cursorPointFromRoot = ColVector3D.FromXY(this.livingPoint.x, this.livingPoint.y);
+        const living = {...this.livingPoint};
+        if (this.alignPixel) {
+            living.x = Math.round(living.x);
+            living.y = Math.round(living.y);
+        }
+
+        const cursorPointFromRoot = ColVector3D.FromXY(living.x, living.y);
         const cursorPointFromSelection = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot));
 
         const { width: selectionWidth, height: selectionHeight } = this.selectionSize;
@@ -875,7 +881,7 @@ export class ScaleHandler extends BoundHandler {
             units.push({ shape, size, transform: t, decomposeScale: __scale });
         });
 
-        (this.asyncApiCaller as Scaler).executeUniform(units, sizeForSelection.width / this.selectionSize.width * (__scale.x > 0 ? 1 : -1));
+        (this.asyncApiCaller as Scaler).executeUniform(units, sizeForSelection.width / this.selectionSize.width * Math.abs(__scale.x));
 
         this.updateCtrlView(1);
     }

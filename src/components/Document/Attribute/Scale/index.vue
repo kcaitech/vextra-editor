@@ -7,7 +7,7 @@ import { useAuto } from "@/components/Document/Creator/execute";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { AnchorType } from "@/components/Document/Attribute/Scale/index";
 import { format_value as format } from "@/utils/common";
-import MdNumberInput from "@/components/common/MdNumberInput.vue";
+import MossInput from "@/components/common/MossInput.vue";
 import { computeString } from "@/utils/content";
 import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
@@ -342,14 +342,14 @@ onUnmounted(() => {
     <TypeHeader :title="t('attr.scale')" class="mt-24" :active="true"/>
     <div class="content">
         <div class="tr">
-            <MdNumberInput icon="W" :value="format(w)" @change="changeW" draggable
+            <MossInput icon="W" :value="format(w)" @change="changeW" draggable
                            @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"/>
-            <MdNumberInput icon="H" :value="format(h)" @change="changeH" draggable
+            <MossInput icon="H" :value="format(h)" @change="changeH" draggable
                            @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"/>
         </div>
         <div style="display: flex; gap: 13px;margin-bottom: 8px;">
             <div style="position: relative">
-                <MdNumberInput icon="scale-simple" :value="`${format(k)}x`" @change="changeK"
+                <MossInput icon="scale-simple" :value="`${format(k)}x`" @change="changeK"
                                draggable @dragstart="dragstart" @dragging="draggingK" @dragend="dragend2"/>
                 <div class="options" id="scale-popover-0903">
                     <div class="trigger" @click.stop="emitTrigger">

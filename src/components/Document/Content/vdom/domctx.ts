@@ -1,6 +1,11 @@
 import { DViewCtx, Shape, ShapeView } from "@kcdesign/data";
+import { markRaw } from "vue";
 
 export class DomCtx extends DViewCtx {
+    constructor() {
+        super()
+        this.setMarkRawFun(markRaw)
+    }
     private idleCallback?: () => boolean;
     private beforeRender?: () => void;
     getFocusShape(): ShapeView | undefined {

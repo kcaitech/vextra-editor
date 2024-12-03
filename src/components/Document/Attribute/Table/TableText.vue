@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick, shallowRef } from 'vue';
 import { Context } from '@/context';
 import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, TableCellType, AsyncTextAttrEditor } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -18,7 +18,7 @@ import { getGradient, gradient_equals } from '../../Selection/Controller/ColorEd
 import { throttle } from 'lodash';
 import FontWeightSelected from '../Text/FontWeightSelected.vue';
 import { fontWeightConvert } from '../Text/FontNameList';
-import { is_mac } from "@/utils/common";
+import { format_value, is_mac } from "@/utils/common";
 interface Props {
     context: Context
     shape: TableView
@@ -45,8 +45,8 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const shape = ref<TableCellView>()
-const table = ref<TableCellView>()
+const shape = shallowRef<TableCellView>()
+const table = shallowRef<TableCellView>()
 const sizeHoverIndex = ref(-1);
 const fillType = ref<FillType>(FillType.SolidColor);
 const gradient = ref<Gradient>();
@@ -60,6 +60,7 @@ const rowHeight = ref()
 // const selection = ref(props.context.selection) 
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
+const isAutoLineHeight = ref<boolean>(true);
 function toHex(r: number, g: number, b: number, prefix = true) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
@@ -232,31 +233,40 @@ const setFont = (font: string) => {
 }
 
 const setRowHeight = () => {
-    if (rowHeight.value.length < 1) {
-        rowHeight.value = 24
+    let isAuto = isAutoLineHeight.value;
+    if ((rowHeight.value as string).toLowerCase() === 'auto' || rowHeight.value === '自动') {
+        rowHeight.value = '';
     }
+    if (rowHeight.value.length < 1) {
+        isAuto = true;
+    } else if (rowHeight.value[rowHeight.value.length - 1] === '%') {
+        isAuto = true;
+    } else {
+        isAuto = false;
+    }
+    const value = rowHeight.value[rowHeight.value.length - 1] === '%' ? rowHeight.value.slice(0, -1) : rowHeight.value;
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value)
-        if (!isNaN(Number(rowHeight.value))) {
+        if (!isNaN(Number(value))) {
             if (isSelectText()) {
-                editor.setLineHeight(Number(rowHeight.value), false, 0, Infinity)
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, 0, Infinity)
             } else {
-                editor.setLineHeight(Number(rowHeight.value), false, textIndex, selectLength)
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, textIndex, selectLength)
             }
         } else {
             textFormat();
         }
     } else {
-        if (!isNaN(Number(rowHeight.value))) {
+        if (!isNaN(Number(value))) {
             const table = props.shape;
             const table_Selection = props.context.tableSelection;
             const editor = props.context.editor4Table(table)
             if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-                editor.setLineHeight(Number(rowHeight.value));
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto);
             } else {
                 const cell_selection = cellSelect(table_Selection)
-                editor.setLineHeight(Number(rowHeight.value), cell_selection);
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, cell_selection);
             }
         } else {
             textFormat();
@@ -368,8 +378,9 @@ const textFormat = (_t?: any) => {
         } else {
             format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
         }
+        isAutoLineHeight.value = format.autoLineHeight ?? true;
         colorIsMulti.value = format.colorIsMulti;
-        rowHeight.value = format.minimumLineHeight || '';
+        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0)
         wordSpace.value = format.kerning || 0;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
@@ -383,7 +394,7 @@ const textFormat = (_t?: any) => {
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
-        if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeightIsMulti || format.autoLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`;
         if (format.italicIsMulti) weightMixed.value = true;
         if (format.weightIsMulti) weightMixed.value = true;
         if (format.fontNameIsMulti) {
@@ -451,9 +462,10 @@ const textFormat = (_t?: any) => {
                 }
             }
         }
+        isAutoLineHeight.value = format.autoLineHeight ?? true;
         colorIsMulti.value = format.colorIsMulti;
         wordSpace.value = format.kerning || 0;
-        rowHeight.value = format.minimumLineHeight || ''
+        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0) as number;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
@@ -480,8 +492,8 @@ const textFormat = (_t?: any) => {
         }
         if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
         if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
-        if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-        if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeight === 'unlikeness' || format.autoLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeightIsMulti === 'unlikeness' || format.autoLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;

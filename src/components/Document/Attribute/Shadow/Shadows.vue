@@ -143,7 +143,7 @@ function deleteFill(idx: number) {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.shapesDeleteShasow(actions);
+            editor.shapesDeleteShadow(actions);
         }
     }
     hidden_selection(props.context);

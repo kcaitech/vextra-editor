@@ -39,8 +39,8 @@ import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/Imag
 import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
-import { MossClipboard } from "@/clipboard";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
+import { SpaceHandler } from "@/space";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -87,6 +87,7 @@ let isDragging: boolean = false;
 let wheel: Wheel | undefined = undefined;
 let down: boolean = false;
 let timer: any = null;
+let zoomIn = false;
 
 function _updateRoot(context: Context, element: HTMLElement) {
     const { x, y, right, bottom, width, height } = element.getBoundingClientRect();
@@ -233,11 +234,6 @@ function contextMenuMount(e: MouseEvent) {
                 contextMenuItems.value.delete(MenuItemType.MergeCell);
             }
         }
-        // if (shapes.length&&shapes.some(i=>i.type!==ShapeType.Cutout)) {
-        //     console.log(shapes,'****************');
-            
-        //     contextMenuItems.value.add(MenuItemType.Mask);
-        // }
         if (_shapes.length) {
             const type = _shapes[0].type;
             if (_shapes.length === 1 && type !== ShapeType.Table && area !== MountedAreaType.Root) {
@@ -369,6 +365,7 @@ function select(e: MouseEvent) {
         props.context.workspace.selecting(true);
         props.context.cursor.cursor_freeze(true);
         wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
+        zoomIn = props.context.selection.zoomIn;
     }
 }
 
@@ -397,6 +394,8 @@ function selectEnd() {
     if (wheel) wheel = wheel.remove();
 
     isDragging = false;
+
+    if (zoomIn ?? props.context.selection.zoomIn) new SpaceHandler(props.context).zoomIn(selectorFrame.left, selectorFrame.top, selectorFrame.width, selectorFrame.height);
 
     selectorFrame.top = 0;
     selectorFrame.left = 0;
@@ -533,11 +532,11 @@ function windowFocus() {
     firstTime = true;
 }
 
+const renderDone = ref<boolean>(false);
 const onRenderDone = () => {
     emits('closeLoading');
-    resizeObserver.observe(root.value!);
-    _updateRoot(props.context, root.value!);
     initMatrix(props.page);
+    renderDone.value = true;
 }
 const onContentVisible = () => {
     emits('contentVisible');
@@ -547,9 +546,7 @@ const comps: { component: any, params?: any }[] = [];
 
 const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
-
 comps.push(
-    // 页面
     {
         component: PageViewVue, params: {
             get data() {
@@ -692,7 +689,7 @@ const stop1 = watch(() => props.page, (cur, old) => {
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
     updateBackground(cur);
-})
+});
 
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
 onMounted(() => {
@@ -708,6 +705,7 @@ onMounted(() => {
     props.context.user.updateUserConfig();
     rootRegister(true);
     updateBackground();
+    screenFontList(props.context);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     document.addEventListener('copy', copy_watcher);
@@ -721,10 +719,8 @@ onMounted(() => {
     timeSlicingTask(props.context, fontNameListZh, 'zh');
     timeSlicingTask(props.context, fontNameListEn, 'en');
 
-    nextTick(() => {
-        // resizeObserver.observe(root.value!);
-        // _updateRoot(props.context, root.value!);
-    });
+    resizeObserver.observe(root.value!);
+    _updateRoot(props.context, root.value!);
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
@@ -749,15 +745,23 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+    <div ref="root" id="content" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
          :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
          @mousemove="move" @mouseleave="props.context.selection.unHoverShape"
          @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
         <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="(matrix as Matrix)" />
-        <Rule :context="props.context" :page="(props.page as PageView)" />
+        <Rule v-if="renderDone" :context="props.context" :page="(props.page as PageView)"/>
         <ImagePicker :context="props.context"/>
         <!-- 页面调整控件，确保在ContentView顶层 -->
         <Space :context="props.context" :visible="spacePressed" />
     </div>
 </template>
+<style lang="scss" scoped>
+#content {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+</style>

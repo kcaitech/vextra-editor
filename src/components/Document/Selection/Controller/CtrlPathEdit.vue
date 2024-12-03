@@ -75,13 +75,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+    <svg xmlns="http://www.w3.org/2000/svg" data-area="controller" preserveAspectRatio="xMinYMin meet"
          :width="width" :height="height" overflow="visible" :viewBox="genViewBox(bounds)"
          :style="{transform: `translate(${bounds.left}px,${bounds.top}px)`}"
     >
-        <PointsPathEditContainer :context="props.context"></PointsPathEditContainer>
+        <PointsPathEditContainer :context="props.context"/>
     </svg>
 </template>
 <style lang="scss" scoped>

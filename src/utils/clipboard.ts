@@ -149,7 +149,7 @@ export class Clipboard {
 
     write_text(text: Text, event?: ClipboardEvent): boolean {
         const _text = export_text(text);
-
+        
         const plain_text = text.getText(0, text.length);
 
         const h = encode_html(paras, _text, plain_text);
@@ -620,6 +620,7 @@ export class Clipboard {
             }
 
             const items = event.clipboardData && event.clipboardData.items;
+            
             if (items?.length) {
                 return this.paste_text_sync(items);
             }
@@ -641,7 +642,7 @@ export class Clipboard {
             if (!text_shape) {
                 return;
             }
-
+            
             const editor = this.context.editor4TextShape(text_shape);
 
             if (types.length === 1) {
@@ -681,6 +682,7 @@ export class Clipboard {
 
     paste_text_sync(items: DataTransferItemList) {
         const html = get_html(items);
+
         if (html) {
             this.paste_text_sync_for_html(items, html);
             return;
@@ -701,6 +703,7 @@ export class Clipboard {
     paste_text_sync_for_html(items: DataTransferItemList, html: DataTransferItem) {
         html.getAsString(val => {
             const html = decode_html(val);
+            
             const is_paras = html.slice(0, 70).indexOf(paras) > -1; // 文本段落
             if (is_paras) {
                 this.insert_paras(html);
@@ -868,7 +871,12 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
         const source = JSON.parse(text_html.split(`${paras}`)[1]);
+        if(source.paras[0].spans.length > 0 && source.paras[0].spans[0].placeholder) {
+            source.paras[0].spans[0].placeholder = false;
+            source.paras[0].text = source.paras[0].text.slice(1);
+        }
         const text = import_text(context.data, source, false) as Text;
+        
         editor.insertFormatText(text, s, Math.abs(start - end));
         selection.setCursor(s + text.length, false);
     }
@@ -1340,6 +1348,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
     if (page && parent) {
         const editor = context.editor.controller();
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+        
         new_shape = asyncCreator.init_text(page.data, parent.data, frame, content);
     }
     if (asyncCreator && new_shape) {

@@ -1,14 +1,13 @@
 <script lang="ts" setup>
 import { ref, watch } from "vue";
 
-interface Props {
+type Props = {
     icon: string;
     value: string | number;
     show?: boolean;
     position?: boolean;
     disabled?: boolean;
     draggable?: boolean;
-    tidy_disabled?: boolean;
 }
 
 interface Emits {
@@ -22,9 +21,7 @@ interface Emits {
 
     (e: "wheel", event: WheelEvent): void;
 
-    (e: "keydown", event: KeyboardEvent, value: string | number): void;
-
-    (e: "stylepanel", event: MouseEvent): void
+    (e: "keydown", event: KeyboardEvent): void;
 }
 
 const props = defineProps<Props>();
@@ -35,9 +32,7 @@ const RadiusActive = ref<boolean>(false)
 let isDown = false;
 
 function down(e: MouseEvent) {
-    if (!props.draggable || props.disabled || isDown || e.button !== 0) {
-        return;
-    }
+    if (!props.draggable || props.disabled || isDown || e.button !== 0) return;
 
     document.addEventListener('mousemove', move);
     document.addEventListener('mouseup', up);
@@ -59,57 +54,32 @@ function clearDragStatus() {
 }
 
 function up(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
-    }
-
-    clearDragStatus();
+    if (!e.button) clearDragStatus();
 }
 
 function windowBlur() {
     clearDragStatus();
 }
 
-const is_select = ref(false);
-
-function click() {
-    if (!inputEl.value) return;
-    const el = inputEl.value;
-    if (el.selectionStart !== el.selectionEnd) {
-        return;
-    }
-    if (is_select.value) return;
-    el.select();
-    is_select.value = true;
-}
-
 function change(e: Event) {
     emits('change', (e.target as HTMLInputElement).value);
-
-    const el = inputEl.value;
-    if (!el) {
-        return;
-    }
-    el.blur();
+    inputEl.value?.blur();
 }
 
 function blur() {
     active.value = false;
-    is_select.value = false;
 }
 
-function foucs() {
+function focus() {
+    if (active.value) return;
     active.value = true;
+    inputEl.value?.focus();
+    inputEl.value?.select();
 }
 
-function wheel(event: WheelEvent) {
-    if (!active.value) {
-        return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-
-    emits('wheel', event);
+function keydown(event: KeyboardEvent) {
+    if (event.key === "Escape") return inputEl.value?.blur();
+    emits("keydown", event);
 }
 
 watch(() => props.position, (v) => {
@@ -121,19 +91,14 @@ watch(() => props.position, (v) => {
 </script>
 
 <template>
-    <div :class="{ 'md-number-input': true, disabled, active }" @wheel="wheel">
-        <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown="down" />
-        <input :disabled="tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur"
-            @focus="foucs" @keydown="e => emits('keydown', e, value)" />
-        <div v-if="icon.includes('radius')" class="radius-style" :class="{ 'active-radius': RadiusActive}"
-            @click="e => emits('stylepanel', e)">
-            <svg-icon icon-class="styles"></svg-icon>
-        </div>
-    </div>
+<div :class="{ 'moss-input': true, disabled, active }" @click.stop="focus">
+    <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down"/>
+    <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown"/>
+</div>
 </template>
 
 <style scoped lang="scss">
-.md-number-input {
+.moss-input {
     display: flex;
     gap: 8px;
     align-items: center;

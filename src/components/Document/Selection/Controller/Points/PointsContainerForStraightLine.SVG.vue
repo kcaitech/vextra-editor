@@ -8,7 +8,7 @@ import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";
-import { startEdit } from "@/transform/pathEdit";
+import { startEdit } from "@/path/pathEdit";
 import { LineHandler } from "@/transform/line";
 import { CursorType } from "@/utils/cursor2";
 
@@ -32,13 +32,11 @@ interface Dot {
 
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const submatrix = new Matrix();
 const data: { dots: Dot[] } = reactive({ dots: [] });
 let { dots } = data;
 let isDragging = false;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.LineStart;
-let index = -1;
 let need_reset_cursor_after_transform = true;
 
 let lineHandle: LineHandler | undefined;
@@ -57,9 +55,7 @@ function update_dot_path() {
     m.preScale(f.width, f.height);
 
     const points = (props.shape as PathShapeView)?.segments[0]?.points;
-    if (!points[0] || !points[1]) {
-        return;
-    }
+    if (!points[0] || !points[1]) return;
 
     const p1 = m.computeCoord3(points[0]);
     const p2 = m.computeCoord3(points[1]);
@@ -68,19 +64,13 @@ function update_dot_path() {
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
 
     event.stopPropagation();
 
-    if (dbl_action()) {
-        return startEdit(props.context);
-    }
+    if (dbl_action()) return startEdit(props.context);
 
-    if (forbidden_to_modify_frame(props.shape)) {
-        return;
-    }
+    if (forbidden_to_modify_frame(props.shape)) return;
 
     lineHandle = new LineHandler(props.context, event, ele);
     downXY = event;
@@ -105,9 +95,7 @@ function point_mousemove(event: MouseEvent) {
 }
 
 function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
     clear_status();
 }
 
@@ -182,8 +170,8 @@ onUnmounted(() => {
         </path>
         <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
            @mouseleave="point_mouseleave">
-            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
-            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
+            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"/>
+            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"/>
         </g>
     </g>
 </template>

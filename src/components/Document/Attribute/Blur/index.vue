@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { ShapeView, ShapeType, Blur, Point2D, BlurType } from "@kcdesign/data";
+import { ShapeView, ShapeType, Blur, Point2D, BlurType, BasicArray } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -15,7 +15,7 @@ import { hidden_selection } from '@/utils/content';
 import BlurDetail from "./BlurDetail.vue";
 import BlurTypeSelect from "./BlurTypeSelect.vue";
 
-interface Props {
+type Props = {
     context: Context
     shapes: ShapeView[]
 }
@@ -70,8 +70,7 @@ function updateData() {
     const len = props.shapes.length;
     if (len === 1) {
         const shape = props.shapes[0];
-        const blur = shape.blur;
-        blurInfo.value = blur;
+        blurInfo.value = shape.blur;
     } else if (len > 1) {
         const blur = get_blur(props.shapes);
         if (blur === 'mixed') {
@@ -90,21 +89,17 @@ function watcher(...args: any[]) {
 function addBlur(): void {
     const len = props.shapes.length;
     if (len < 1) return;
-    const blur = new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
+    const blur = new Blur(new BasicArray(),true, new Point2D(0, 0), 10, BlurType.Gaussian);
+    const page = props.context.selection.selectedPage!;
     if (mixed.value) {
         const actions = get_actions_blur_unify(props.shapes);
-        const page = props.context.selection.selectedPage;
-        if (page && actions) {
+        if (actions) {
             const editor = props.context.editor4Page(page);
             editor.shapesBlurUnify(actions);
         }
     } else {
-        const actions = get_actions_add_blur(props.shapes, blur);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.shapesAddBlur(actions);
-        }
+        const editor = props.context.editor4Page(page);
+        editor.shapesAddBlur(get_actions_add_blur(props.shapes, blur));
     }
     hidden_selection(props.context);
 }
@@ -155,10 +150,10 @@ onUnmounted(() => {
 
 <template>
 <div class="blur-panel">
-    <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="blurInfo ? true : false">
+    <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="!!blurInfo">
         <template #tool>
             <div class="add" @click.stop="addBlur" v-if="!blurInfo || mixed">
-                <svg-icon icon-class="add"></svg-icon>
+                <svg-icon icon-class="add"/>
             </div>
         </template>
     </TypeHeader>

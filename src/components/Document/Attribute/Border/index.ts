@@ -1,4 +1,5 @@
 import {
+    BasicArray,
     BatchAction,
     Border,
     BorderSideSetting, PageView,
@@ -51,32 +52,32 @@ export const getSideInfo = (border: Border, type: SideType) => {
     const max_thickness = Math.max(thicknessTop, thicknessLeft, thicknessBottom, thicknessRight)
     switch (type) {
         case SideType.Normal:
-            return new BorderSideSetting(type, max_thickness, max_thickness, max_thickness, max_thickness);
+            return new BorderSideSetting(new BasicArray(),type, max_thickness, max_thickness, max_thickness, max_thickness);
         case SideType.Top:
-            return new BorderSideSetting(type, thicknessTop === 0 ? max_thickness : thicknessTop, 0, 0, 0);
+            return new BorderSideSetting(new BasicArray(),type, thicknessTop === 0 ? max_thickness : thicknessTop, 0, 0, 0);
         case SideType.Left:
-            return new BorderSideSetting(type, 0, thicknessLeft === 0 ? max_thickness : thicknessLeft, 0, 0);
+            return new BorderSideSetting(new BasicArray(),type, 0, thicknessLeft === 0 ? max_thickness : thicknessLeft, 0, 0);
         case SideType.Right:
-            return new BorderSideSetting(type, 0, 0, 0, thicknessRight === 0 ? max_thickness : thicknessRight);
+            return new BorderSideSetting(new BasicArray(),type, 0, 0, 0, thicknessRight === 0 ? max_thickness : thicknessRight);
         case SideType.Bottom:
-            return new BorderSideSetting(type, 0, 0, thicknessBottom === 0 ? max_thickness : thicknessBottom, 0);
+            return new BorderSideSetting(new BasicArray(),type, 0, 0, thicknessBottom === 0 ? max_thickness : thicknessBottom, 0);
         case SideType.Custom:
             switch (sideType) {
                 case SideType.Top:
-                    return new BorderSideSetting(type, thicknessTop, 0, 0, 0);
+                    return new BorderSideSetting(new BasicArray(),type, thicknessTop, 0, 0, 0);
                 case SideType.Left:
-                    return new BorderSideSetting(type, 0, thicknessLeft, 0, 0);
+                    return new BorderSideSetting(new BasicArray(),type, 0, thicknessLeft, 0, 0);
                 case SideType.Right:
-                    return new BorderSideSetting(type, 0, 0, 0, thicknessRight);
+                    return new BorderSideSetting(new BasicArray(),type, 0, 0, 0, thicknessRight);
                 case SideType.Bottom:
-                    return new BorderSideSetting(type, 0, 0, thicknessBottom, 0);
+                    return new BorderSideSetting(new BasicArray(),type, 0, 0, thicknessBottom, 0);
                 case SideType.Normal:
-                    return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
+                    return new BorderSideSetting(new BasicArray(),type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
                 default:
-                    return new BorderSideSetting(type, 0, 0, 0, 0);
+                    return new BorderSideSetting(new BasicArray(),type, 0, 0, 0, 0);
             }
         default:
-            return new BorderSideSetting(SideType.Normal, 0, 0, 0, 0);
+            return new BorderSideSetting(new BasicArray(),SideType.Normal, 0, 0, 0, 0);
     }
 }
 
@@ -85,7 +86,7 @@ export function get_actions_border_side_info(shapes: ShapeView[], index: number,
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = info;
-        const data = new BorderSideSetting(sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
+        const data = new BorderSideSetting(new BasicArray(),sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
         actions.push({ target: (shapes[i]), index, value: data });
     }
     return actions;

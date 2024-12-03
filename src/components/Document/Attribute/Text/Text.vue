@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
@@ -75,7 +75,7 @@ const higlighAlpha = ref<HTMLInputElement>()
 const sizeHoverIndex = ref(-1);
 const fontWeight = ref('Regular');
 const weightMixed = ref<boolean>(false);
-const shapes = ref<TextShapeView[]>(props.textShapes);
+const shapes = shallowRef<TextShapeView[]>(props.textShapes);
 const disableWeight = ref(false);
 const fontNameEl = ref<HTMLDivElement>();
 const selectText = ref('autowidth');
@@ -214,6 +214,7 @@ const changeTextSize = (size: number) => {
     showSize.value = false;
     const shape = props.textShapes[0] as TextShapeView
     const editor = props.context.editor4TextShape(shape)
+    
     if (shapes.value.length === 1) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
@@ -295,7 +296,7 @@ const setWordSpace = (val?: number) => {
         if (!isNaN(Number(wordSpace.value))) {
             keydownval.value
                 ?
-                linearApi.modifyTextCharSpacingMulit(props.textShapes, val!)
+                linearApi.modifyTextCharSpacingMulti(props.textShapes, val!)
                 :
                 editor.setCharSpacingMulit(props.textShapes, Number(wordSpace.value))
         } else {
@@ -369,7 +370,7 @@ const setRowHeight = (val?: number) => {
         if (!isNaN(Number(value))) {
             keydownval.value
                 ?
-                linearApi.modifyTextLineHeightMulit(props.textShapes, val!, isAuto)
+                linearApi.modifyTextLineHeightMulti(props.textShapes, val!, isAuto)
                 :
                 editor.setLineHeightMulit(props.textShapes, value.length === 0 ? undefined : Number(value), isAuto);
         } else {

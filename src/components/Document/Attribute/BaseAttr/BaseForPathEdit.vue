@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import IconText from "@/components/common/IconText.vue";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
@@ -9,8 +8,7 @@ import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
 import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
-import { PathEditor } from "@/transform/pathEdit";
-import MdNumberInput from "@/components/common/MdNumberInput.vue";
+import MossInput from "@/components/common/MossInput.vue";
 import { format_value as format } from '@/utils/common';
 
 interface Props {
@@ -235,15 +233,6 @@ function modify_path_closed_status() {
     }
 }
 
-function modify_closed_status() {
-    if (!path_shape) {
-        console.log('modify_closed_status: !path_shape');
-        return;
-    }
-
-    new PathEditor(props.context).modifyClosedStatus(!path_close_status.value);
-}
-
 function modify_model_state() {
     const selected_points = props.context.path.selectedPoints;
     const selected_sides = props.context.path.selectedSides;
@@ -353,18 +342,18 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr">
-            <MdNumberInput icon="X" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
+            <MossInput icon="X" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
                 @dragstart="dragstart" @dragging="draggingX" @dragend="dragend">
-            </MdNumberInput>
-            <MdNumberInput icon="Y" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
+            </MossInput>
+            <MossInput icon="Y" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
                 @dragstart="dragstart" @dragging="draggingY" @dragend="dragend">
-            </MdNumberInput>
+            </MossInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <div class="tr">
-            <MdNumberInput icon="radius" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
+            <MossInput icon="radius" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
                 @dragstart="dragstart" @dragging="draggingR" @dragend="dragend">
-            </MdNumberInput>
+            </MossInput>
         </div>
         <div class="tr">
             <div :class="{ tool: true, tool_disabled: model_state.tool }">
@@ -395,9 +384,6 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="btns">
-            <!--            <div :class="{ 'path-status': true }" @click="modify_closed_status">-->
-            <!--                {{ btn_string_for_status }}-->
-            <!--            </div>-->
             <div class="exit" @click="exit">
                 {{ t('attr.exit_path_edit') }}
             </div>

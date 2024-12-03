@@ -1,11 +1,32 @@
 import { Context } from "@/context";
-import { MossClipboard, Bundle, SVGBundle, ImageBundle, SourceBundle } from "@/clipboard";
+import { Bundle, ImageBundle, MossClipboard, SourceBundle, SVGBundle } from "@/clipboard";
 import { ImageLoader } from "@/imageLoader";
 import {
-    ArtboradView, GroupShapeView, SymbolView, PathShapeView, getFormatFromBase64, import_shape_from_clipboard,
-    ShapeView, Shape, UploadAssets, ShapeFrame, creator, adapt2Shape, import_text, GroupShape, Page,
-    TextShape, TransformRaw, makeShapeTransform2By1, makeShapeTransform1By2, ImagePack, SVGParseResult,
-    Matrix, Transform, ColVector3D
+    adapt2Shape,
+    ArtboradView,
+    ColVector3D,
+    creator,
+    getFormatFromBase64,
+    GroupShape,
+    GroupShapeView,
+    ImagePack,
+    import_shape_from_clipboard,
+    import_text,
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    Matrix,
+    Page,
+    PathShapeView,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    ShapeView,
+    SVGParseResult,
+    SymbolView,
+    TextShape,
+    Transform,
+    TransformRaw,
+    UploadAssets
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
@@ -38,10 +59,39 @@ export class BundleHandler {
         return result;
     }
 
+    assignBeforeInsert(shapes: Shape[]) {
+        for (const shape of shapes) {
+            if (shape instanceof TextShape) {
+                const placeholder = shape.text.paras[0].spans[0].placeholder;
+                if (placeholder) {
+                    shape.name = shape.name.slice(1);
+                }
+            }
+        }
+    }
     private getSource(HTML: string | undefined) {
         if (!HTML) return undefined;
         HTML = this.decode(HTML);
-        return HTML && HTML.slice(0, 60).indexOf(MossClipboard.source) > -1 ? JSON.parse(HTML.split(MossClipboard.source)[1]) : undefined;
+        const source = HTML && HTML.slice(0, 60).indexOf(MossClipboard.source) > -1 ? JSON.parse(HTML.split(MossClipboard.source)[1]) : undefined;
+        if (source) {
+            const {unbindRefs, shapes} = source as SourceBundle;
+            const manger = this.context.data.symbolsMgr;
+            const binds = new Map<string, Shape>();
+            for (const ref of unbindRefs) {
+                if (!manger.get(ref.symbol)) binds.set(ref.shapeId, ref.base);
+            }
+            if (binds.size) replace(binds, shapes);
+        }
+        return source;
+
+        function replace(binds: Map<string, Shape>, shapes: Shape[]) {
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const base = binds.get(shape.id);
+                if (base) shapes[i] = base;
+                if ((shape as GroupShape).childs?.length) replace(binds, (shape as GroupShape).childs);
+            }
+        }
     }
 
     private getParas(HTML: string | undefined) {
@@ -217,7 +267,7 @@ export class BundleHandler {
         const result = editor.insertImages(packs, true);
 
         if (result) {
-            context.nextTick(page, () => {new SpaceHandler(context).fit();});
+            context.nextTick(page, () => { new SpaceHandler(context).fit(); });
             new ImageLoader(this.context).upload(result);
         }
     }
@@ -320,6 +370,8 @@ export class BundleHandler {
             const selected = context.selection.selectedShapes;
             let params: InsertAction[] | undefined;
             const { shapes, media, originIds } = source;
+
+            this.assignBeforeInsert(shapes);
             const containerSet = new Set<EnvLike>();
             const isContainer = (view: ShapeView) => view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView;
             for (const view of selected) {
@@ -328,7 +380,7 @@ export class BundleHandler {
                     continue;
                 }
                 const parent = view.parent!;
-                if (isContainer(view)) containerSet.add(parent as EnvLike);
+                if (isContainer(parent) && parent.type !== ShapeType.Page) containerSet.add(parent as EnvLike);
             }
             const container = Array.from(containerSet.values());
             const handler = new ClipboardTransformHandler();
@@ -344,15 +396,15 @@ export class BundleHandler {
                 }
             }
             if (params && context.editor4Page(page).insertShapes(params)) {
-                const keys = Object.keys(source.media);
+                const keys = Object.keys(media);
                 const assets: UploadAssets[] = [];
                 for (const ref of keys) {
-                    const buff = source.media[ref]?.buff;
+                    const buff = media[ref].buff ?? Uint8Array.from(atob(media[ref].split(",")[1]), c => c.charCodeAt(0));
                     buff && assets.push({ ref, buff });
                 }
                 const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
                 new ImageLoader(context).upload(uploadPackages);
-                context.nextTick(page, () => {new SpaceHandler(context).fit()});
+                context.nextTick(page, () => { new SpaceHandler(context).fit() });
             }
         } else if (paras) {
             const text = import_text(this.context.data, paras, true);
@@ -361,7 +413,7 @@ export class BundleHandler {
             shape.size.width = layout.contentWidth;
             shape.size.height = layout.contentHeight;
             const context = this.context;
-            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => {new SpaceHandler(context).fit()});
+            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => { new SpaceHandler(context).fit() });
         } else if (plain) {
             const name = plain.length >= 20 ? plain.slice(0, 19) + '...' : plain;
             const shape = creator.newTextShape(name);
@@ -370,12 +422,12 @@ export class BundleHandler {
             shape.size.width = layout.contentWidth;
             shape.size.height = layout.contentHeight;
             const context = this.context;
-            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => {new SpaceHandler(context).fit()});
+            if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => { new SpaceHandler(context).fit() });
         }
     }
 
     // todo 现在可以先用原来的
-    pasteHere(bundle: Bundle) {}
+    pasteHere(bundle: Bundle) { }
 
     replace(bundle: Bundle, shapes: ShapeView[]) {
         const { HTML, plain, images, SVG } = bundle;

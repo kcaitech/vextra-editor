@@ -15,7 +15,7 @@ import {
     ExportFormatDeleteAction,
     ExportFormatScaleAction,
     ExportFormatNameAction,
-    ExportFormatPerfixAction,
+    ExportFormatPrefixAction,
     ExportFormatFileFormatAction,
     ShapeType,
     ShapeView,
@@ -738,7 +738,7 @@ export function get_actions_export_format_name(shapes: ShapeView[], index: numbe
 }
 
 export function get_actions_export_format_perfix(shapes: ShapeView[], index: number, perfix: ExportFormatNameingScheme) {
-    const actions: ExportFormatPerfixAction[] = [];
+    const actions: ExportFormatPrefixAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: adapt2Shape(shapes[i]), index, value: perfix });
     }
@@ -814,7 +814,7 @@ export function get_actions_add_blur(shapes: ShapeView[], blur: Blur) {
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, saturation, type, center } = blur;
-        const new_blur = new Blur(isEnabled, new Point2D(center.x, center.y), saturation, type);
+        const new_blur = new Blur(new BasicArray(),isEnabled, new Point2D(center.x, center.y), saturation, type);
         actions.push({ target: (shapes[i]), value: new_blur });
     }
     return actions;
@@ -832,7 +832,7 @@ export function get_actions_blur_unify(shapes: ShapeView[]) {
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout || i === b - 1) continue;
         const { isEnabled, saturation, type, center, motionAngle, radius } = blur;
-        const new_blur = new Blur(isEnabled, new Point2D(center.x, center.y), saturation, type, motionAngle, radius);
+        const new_blur = new Blur(new BasicArray(),isEnabled, new Point2D(center.x, center.y), saturation, type, motionAngle, radius);
         actions.push({ target: shapes[i], value: new_blur });
     }
     return actions;

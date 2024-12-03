@@ -66,7 +66,7 @@ const selectFont = (font: string) => {
 const selectLocalFont = (font: string) => {
     const results = fontWeightList(font, true);
     const weight = results.filter((item: any) => item.key === props.fontWeight);
-    const f = fontList.local.find(i => i === font);
+    const f = fontList.local.find(i => i.toLowerCase() === font.toLowerCase());
     if (!f) {
         const saveList = [...props.context.workspace.userLocalFontList, font];
         props.context.workspace.setUserLocalFontList(saveList);
@@ -91,24 +91,12 @@ const onSearchFont = () => {
     const failureLocalList = fontList.failure_local.filter(item => pattern.test(item));
     const usedSuccess = fontList.used.success.filter(item => pattern.test(item));
     const usedFailureL = fontList.used.failurel.filter(item => pattern.test(item));;
-    filterFontList.ch = [];
-    filterFontList.en = [];
-    filterFontList.local = [];
-    filterFontList.failure_local = [];
-    filterFontList.used.success = [];
-    filterFontList.used.failurel = [];
-    filterFontList.ch.push(...chList);
-    filterFontList.en.push(...enList);
-    filterFontList.local.push(...localList);
-    filterFontList.failure_local.push(...failureLocalList);
-    filterFontList.used.success.push(...usedSuccess);
-    filterFontList.used.failurel.push(...usedFailureL);
-    filterFontList.ch = Array.from(new Set(filterFontList.ch));
-    filterFontList.en = Array.from(new Set(filterFontList.en));
-    filterFontList.local = Array.from(new Set(filterFontList.local));
-    filterFontList.failure_local = Array.from(new Set(filterFontList.failure_local));
-    filterFontList.used.success = Array.from(new Set(filterFontList.used.success));
-    filterFontList.used.failurel = Array.from(new Set(filterFontList.used.failurel));
+    filterFontList.ch = Array.from(new Set(chList));
+    filterFontList.en = Array.from(new Set(enList));
+    filterFontList.local = Array.from(new Set(localList));
+    filterFontList.failure_local = Array.from(new Set(failureLocalList));
+    filterFontList.used.success = Array.from(new Set(usedSuccess));
+    filterFontList.used.failurel = Array.from(new Set(usedFailureL));
     _findLocalText();
 }
 

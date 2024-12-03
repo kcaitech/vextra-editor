@@ -1,5 +1,5 @@
 import { ArtboradView, PageView, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
-import { PositonAdjust } from "@kcdesign/data";
+import { PositionAdjust } from "@kcdesign/data";
 // 群的最左端
 export function get_colony_left(shapes: ShapeView[]) {
     const _xs: number[] = [];
@@ -358,7 +358,7 @@ export function align_left(shapes: ShapeView[]) {
         c_apex = get_colony_left(shapes);
     }
 
-    const actions: PositonAdjust[] = [];
+    const actions: PositionAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if ((shape as ArtboradView).autoLayout) continue;
@@ -396,7 +396,7 @@ export function align_center_x(shapes: ShapeView[]) {
         c_apex = get_colony_center_x(shapes);
     }
 
-    const actions: PositonAdjust[] = [];
+    const actions: PositionAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if ((shape as ArtboradView).autoLayout) continue;
@@ -429,7 +429,7 @@ export function align_right(shapes: ShapeView[]) {
         c_apex = get_colony_right(shapes);
     }
 
-    const actions: PositonAdjust[] = [];
+    const actions: PositionAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if ((shape as ArtboradView).autoLayout) continue;
@@ -466,7 +466,7 @@ export function align_top(shapes: ShapeView[]) {
         c_apex = get_colony_top(shapes);
     }
 
-    const actions: PositonAdjust[] = [];
+    const actions: PositionAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if ((shape as ArtboradView).autoLayout) continue;
@@ -503,7 +503,7 @@ export function align_center_y(shapes: ShapeView[]) {
         c_apex = get_colony_center_y(shapes);
     }
 
-    const actions: PositonAdjust[] = [];
+    const actions: PositionAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if ((shape as ArtboradView).autoLayout) continue;
@@ -539,7 +539,7 @@ export function align_bottom(shapes: ShapeView[]) {
         c_apex = get_colony_bottom(shapes);
     }
 
-    const actions: PositonAdjust[] = [];
+    const actions: PositionAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if ((shape as ArtboradView).autoLayout) continue;
@@ -589,7 +589,7 @@ export function distribute_horizontally(shapes: ShapeView[]) {
             inner_space -= new_shapes[i].width;
         }
         const gap = inner_space / (new_shapes.length - 1);
-        const actions: PositonAdjust[] = [];
+        const actions: PositionAdjust[] = [];
         for (let i = 1; i < new_shapes.length - 1; i++) {
             const s_left = new_shapes[i].left;
             actions.push({
@@ -642,7 +642,7 @@ export function vertical_uniform_distribution(shapes: ShapeView[]) {
             inner_space -= new_shapes[i].height;
         }
         const gap = inner_space / (new_shapes.length - 1);
-        const actions: PositonAdjust[] = [];
+        const actions: PositionAdjust[] = [];
         for (let i = 1; i < new_shapes.length - 1; i++) {
             const s_top = new_shapes[i].top;
             actions.push({

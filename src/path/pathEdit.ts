@@ -19,6 +19,7 @@ import { Assist } from "@/context/assist";
 import { is_layers_tree_unit } from "@/utils/scout";
 import { forbidden_to_modify_frame } from "@/utils/common";
 import { permIsEdit } from "@/utils/permission";
+import { roundBy } from "@/path/common";
 
 type Base = {
     x: number;
@@ -633,6 +634,12 @@ export class PathEditor extends TransformHandler {
     }
 
     private __execute() {
+        if (this.context.user.isPixelAlignMent) {
+            this.fixedPoint.x = roundBy(this.fixedPoint.x);
+            this.fixedPoint.y = roundBy(this.fixedPoint.y);
+            this.livingPoint.x = roundBy(this.livingPoint.x);
+            this.livingPoint.y = roundBy(this.livingPoint.y);
+        }
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
@@ -689,19 +696,40 @@ export class PathEditor extends TransformHandler {
             if (!point) continue;
 
             const base = this.baseData.get(point.id);
-            if (!base) {
-                continue;
-            }
+            if (!base) continue;
 
             __units.push({
                 index,
                 x: base.x + dx,
                 y: base.y + dy,
-                fromX: (base.fromX || 0) + dx,
-                fromY: (base.fromY || 0) + dy,
-                toX: (base.toX || 0) + dx,
-                toY: (base.toY || 0) + dy,
+                fromX: (base.fromX ?? 0) + dx,
+                fromY: (base.fromY ?? 0) + dy,
+                toX: (base.toX ?? 0) + dx,
+                toY: (base.toY ?? 0) + dy
             })
+        }
+
+        if (this.context.user.isPixelAlignMent) {
+            const matrix = this.baseMatrix;
+            const inverse = this.baseMatrixInverse;
+            __units.forEach(unit => {
+                let xy = matrix.computeCoord2(unit.x, unit.y);
+                xy.x = roundBy(xy.x);
+                xy.y = roundBy(xy.y);
+                xy = inverse.computeCoord3(xy);
+                const offsetX = xy.x - unit.x;
+                const offsetY = xy.y - unit.y;
+                unit.x = xy.x;
+                unit.y = xy.y;
+                if (offsetX) {
+                    unit.fromX += offsetX;
+                    unit.toX += offsetX;
+                }
+                if (offsetY) {
+                    unit.fromY += offsetY;
+                    unit.toY += offsetY;
+                }
+            });
         }
 
         actions.set(segment, __units);
@@ -923,6 +951,10 @@ export class PathEditor extends TransformHandler {
         const m = new Matrix(env.matrix2Root().inverse);
 
         const __xy = m.computeCoord3(this.livingPoint);
+        if (this.context.user.isPixelAlignMent) {
+            __xy.x = roundBy(__xy.x);
+            __xy.y = roundBy(__xy.y);
+        }
         frame.x = __xy.x;
         frame.y = __xy.y;
 
@@ -1021,7 +1053,18 @@ export class PathEditor extends TransformHandler {
 
         const isFrom = side === 'from';
 
-        const activePoint = isFrom ? m.computeCoord3(from) : m.computeCoord3(to);
+        let modified = false;
+
+        let activePoint = isFrom ? m.computeCoord3(from) : m.computeCoord3(to);
+
+        if (this.context.user.isPixelAlignMent) {
+            let __active_on_root = this.context.workspace.matrix.inverseCoord(activePoint.x, activePoint.y);
+            __active_on_root.x = roundBy(__active_on_root.x);
+            __active_on_root.y = roundBy(__active_on_root.y);
+            __active_on_root = this.context.workspace.matrix.computeCoord3(__active_on_root);
+            modified = __active_on_root.x !== activePoint.x || __active_on_root.y !== activePoint.y;
+            activePoint = __active_on_root;
+        }
 
         let deltaX = Infinity;
         let dx = 0;
@@ -1052,7 +1095,6 @@ export class PathEditor extends TransformHandler {
         }
 
         const assist = this.context.assist;
-        let modified = false;
         if (deltaX < PathEditor.DELTA) {
             activePoint.x += dx;
             const xNodes = [...this.mapX.get(TX) || []];

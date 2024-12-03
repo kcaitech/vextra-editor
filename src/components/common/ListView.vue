@@ -638,8 +638,8 @@ onUnmounted(() => {
     <!-- items container -->
     <div :class="orientation" :style="{
             transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
-            width: orientation === 'horizontal' ? measureWidth + 'px' : 'auto',
-            height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
+            width: orientation === 'horizontal' ? measureWidth + 'px' : '100%',
+            height: orientation === 'vertical' ? measureHeight + 'px' : '100%'
         }" ref="contents">
         <component class="list-item" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
                    v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
@@ -675,6 +675,10 @@ onUnmounted(() => {
 
     > .horizontal,
     .vertical {
+        position: absolute;
+        top: 0;
+        left: 0;
+
         > .list-item {
             position: absolute;
         }
@@ -728,6 +732,7 @@ onUnmounted(() => {
         top: 0;
         right: 0;
         overflow: hidden;
+        z-index: 1;
 
         > .scroll-bar {
             width: 100%;

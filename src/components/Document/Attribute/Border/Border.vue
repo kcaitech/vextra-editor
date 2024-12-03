@@ -187,7 +187,7 @@ function updateData() {
 function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
-    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 1, 1, 1);
     const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];

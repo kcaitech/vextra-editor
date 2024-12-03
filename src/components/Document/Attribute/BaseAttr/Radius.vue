@@ -8,7 +8,7 @@ import {
 } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
-import MdNumberInput from "@/components/common/MdNumberInput.vue";
+import MossInput from "@/components/common/MossInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { useI18n } from "vue-i18n";
@@ -27,7 +27,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const rect = ref<boolean>(false);
+const rect = ref<boolean>(localStorage.getItem('radius-corner-display') === "all");
 const can_be_rect = ref<boolean>(false);
 const radius = reactive<{ lt: number | string, rt: number | string, rb: number | string, lb: number | string }>({
     lt: 0,
@@ -119,6 +119,7 @@ function checkKeyup(event: KeyboardEvent) {
 
 function rectToggle() {
     rect.value = !rect.value;
+    localStorage.setItem('radius-corner-display', rect.value ? 'all' : 'corner');
     modify_radius_value();
 }
 
@@ -135,22 +136,16 @@ function selection_watcher(t: Number | string) {
 
 function modify_can_be_rect() {
     can_be_rect.value = false;
-
-    const need_reset = rect.value;
-
+    const origin = rect.value;
     rect.value = false;
 
     const selected = props.context.selection.selectedShapes;
-
     for (let i = 0, l = selected.length; i < l; i++) {
         if (selected[i].radiusType !== RadiusType.Rect) return;
     }
 
-    if (need_reset) {
-        rect.value = true;
-    }
-
     can_be_rect.value = true;
+    rect.value = origin;
 }
 
 function reset_radius_value() {
@@ -550,17 +545,14 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="tr">
-        <MdNumberInput icon="radius" :position="lt" :show="showradius" :draggable="radius.lt !== mixed"
-            :value="radius.lt" :disabled="disabled" @change="value => change(value, 'lt')" @dragstart="dragstart"
-            @dragging="draggingLT" @dragend="dragend" @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup"
-            @stylepanel="e => EditPanel(e, 'lt')">
-        </MdNumberInput>
+        <MossInput icon="radius" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
+            @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT" @dragend="dragend"
+            @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup">
+        </MossInput>
         <div class="space" v-if="!rect"></div>
-        <MdNumberInput v-if="rect" :position="rt" :show="showradius" class="r-90" icon="radius"
-            :draggable="radius.rt !== mixed" :value="radius.rt" :disabled="disabled"
-            @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT" @dragend="dragend"
-            @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup" @stylepanel="e => EditPanel(e, 'rt')">
-        </MdNumberInput>
+        <MossInput v-if="rect" class="r-90" icon="radius" :draggable="radius.rt !== mixed" :value="radius.rt"
+            :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT"
+            @dragend="dragend" @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup"></MossInput>
         <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
             <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
                 <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
@@ -569,16 +561,12 @@ onUnmounted(() => {
         </Tooltip>
     </div>
     <div class="tr" v-if="rect">
-        <MdNumberInput class="r-270" :position="lb" :show="showradius" icon="radius" :draggable="radius.lb !== mixed"
-            :value="radius.lb" :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart"
-            @dragging="draggingLB" @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"
-            @stylepanel="e => EditPanel(e, 'lb')">
-        </MdNumberInput>
-        <MdNumberInput class="r-180" :position="rb" :show="showradius" icon="radius" :draggable="radius.rb !== mixed"
-            :value="radius.rb" :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart"
-            @dragging="draggingRB" @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"
-            @stylepanel="e => EditPanel(e, 'rb')">
-        </MdNumberInput>
+        <MossInput class="r-270" icon="radius" :draggable="radius.lb !== mixed" :value="radius.lb"
+            :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart" @dragging="draggingLB"
+            @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"></MossInput>
+        <MossInput class="r-180" icon="radius" :draggable="radius.rb !== mixed" :value="radius.rb"
+            :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart" @dragging="draggingRB"
+            @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"></MossInput>
         <div style="width: 32px;height: 32px;"></div>
     </div>
     <RadiusStyle v-if="(lt || rt || lb || rb) && showradius" :context="props.context" :top="Top" :left="Left"

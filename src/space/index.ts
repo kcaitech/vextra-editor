@@ -10,6 +10,16 @@ export type BoundingLike = {
     bottom: number;
 }
 
+export function getVisibleBoundingByMatrix(shape: ShapeView, matrix: Matrix): BoundingLike {
+    const frame = shape.visibleFrame;
+    return XYsBounding([
+        { x: frame.x, y: frame.y },
+        { x: frame.x + frame.width, y: frame.y },
+        { x: frame.x + frame.width, y: frame.y + frame.height },
+        { x: frame.x, y: frame.y + frame.height }
+    ].map(p => matrix.computeCoord3(p)));
+}
+
 export class SpaceHandler {
     private context: Context;
 
@@ -146,15 +156,18 @@ export class SpaceHandler {
         const rootRB = matrix.inverseCoord(root.width, root.height);
         let dx: number = 0;
         let dy: number = 0;
-        if (box.left - rootLT.x < 36) {
-            dx = rootLT.x + 36 - box.left;
-        } else if (box.right + 36 > rootRB.x) {
-            dx = rootRB.x - 36 - box.right;
+        const offset = 36 / workspace.curScale;
+        if (box.left - rootLT.x < offset) {
+            dx = rootLT.x + offset - box.left;
         }
-        if (box.top - rootLT.y < 36) {
-            dy = rootLT.y + 36 - box.top;
-        } else if (box.bottom + 36 > rootRB.y) {
-            dy = rootRB.y - 36 - box.bottom;
+        if (box.right + offset > rootRB.x) {
+            dx = rootRB.x - offset - box.right;
+        }
+        if (box.top - rootLT.y < offset) {
+            dy = rootLT.y + offset - box.top;
+        }
+        if (box.bottom + offset > rootRB.y) {
+            dy = rootRB.y - offset - box.bottom;
         }
         if (dx || dy) matrix.trans(dx * matrix.m00, dy * matrix.m00);
 
@@ -163,5 +176,33 @@ export class SpaceHandler {
 
     scrollToView() {
 
+    }
+
+    zoomIn(left: number, top: number, width: number, height: number, space = 36) {
+        const workspace = this.context.workspace;
+        const {root, matrix, curScale} = workspace;
+
+        const ratioW = (root.width - space * 2) / width;
+        const ratioH = (root.height - space * 2) / height;
+
+        let ratio: number = Math.min(ratioW, ratioH);
+        if (curScale * ratio < 0.02) ratio = 0.02 / curScale;
+        if (curScale * ratio > 256) ratio = 256 / curScale;
+        matrix.trans(-left, -top);
+        matrix.scale(ratio);
+        matrix.trans(left, top);
+
+        let offsetX: number;
+        let offsetY: number;
+        if (ratioW > ratioH) {
+            offsetX = ((root.width - space * 2) - width * ratio) / 2 - left;
+            offsetY = 36 - top;
+        } else {
+            offsetX = 36 - left;
+            offsetY = ((root.height - space * 2) - height * ratio) / 2 - top;
+        }
+        matrix.trans(offsetX, offsetY);
+
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }

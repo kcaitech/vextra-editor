@@ -893,16 +893,6 @@ export function get_vari_value_for_ref2(symbol_ref: SymbolRefView, variable: Var
 }
 
 /**
- * @description 修改实例身上某个变量vari的值 ---zrxfix1804
- */
-export function modify_vari_value_for_ref(context: Context, vari: Variable, value: any) {
-    const symref = context.selection.symbolrefshape;
-    if (!symref) return;
-    const editor = context.editor4Shape(symref);
-    editor.modifySymbolRefVariable(vari, value);
-}
-
-/**
  * @description 以shape为根的所有父子对
  * @param shape
  */
@@ -983,12 +973,10 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
  */
 export function is_circular_ref2(set: Shape, symbol: string): boolean {
     let deps: { shape: string, ref: string }[] = [...get_topology_map(set), { shape: symbol, ref: set.id }];
-    console.log('--deps---', JSON.parse(JSON.stringify(deps)));
     while (deps.length && is_exist_single_stick(deps)) {
         deps = filter_deps(deps, 'shape', 'ref');
         deps = filter_deps(deps, 'ref', 'shape');
     }
-    console.log('--deps---', JSON.parse(JSON.stringify(deps)));
     return !!deps.length;
 }
 

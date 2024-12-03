@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
-import { useI18n } from "vue-i18n";
+import { RefAttriListItem } from "@/utils/symbol";
 
 import { Context } from "@/context";
 import { onMounted, onUpdated, ref, watch } from "vue";
-import { OverrideType } from "@kcdesign/data";
-
-const { t } = useI18n();
+import { OverrideType, ShapeView, GroupShapeView, VariableType } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -19,7 +16,16 @@ const open = ref(false);
 function get_value() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
-    open.value = get_vari_value_for_ref(symref, props.data.variable);
+    const id = props.data.variable.id;
+    open.value = !!symref.naviChilds && deep(symref.naviChilds);
+
+    function deep(children: ShapeView[]) {
+        for (const c of children) {
+            if (c.varbinds?.get(VariableType.Visible) === id && c.isVisible) return true;
+            if (c instanceof GroupShapeView && deep(c.childs)) return true;
+        }
+        return false;
+    }
 }
 
 function change(v: boolean) {
@@ -27,10 +33,11 @@ function change(v: boolean) {
     if (!symref) return console.log("wrong role");
     const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
     const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
-    modify_vari_value_for_ref(props.context, _var, v);
+    const editor = props.context.editor4Shape(symref);
+    editor.modifySymbolRefVisibleVariable(_var, v);
 }
 
-watch(() => props.data, (v) => {
+watch(() => props.data, () => {
     get_value();
 })
 

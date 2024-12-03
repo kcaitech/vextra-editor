@@ -5,7 +5,7 @@ import { Segment, get_segments } from '@/utils/pathedit';
 import { Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { get_path_by_point } from '../Points/common';
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 
 interface Props {
     context: Context

@@ -9,7 +9,6 @@ import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
-import { Navi } from "@/context/navigate";
 import { Tool } from "@/context/tool";
 import { copyLink } from "@/utils/clipboard";
 import { v4 } from "uuid";
@@ -38,7 +37,6 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const pagelist = ref<List>();
 const list_body = ref<HTMLDivElement>()
-const ListH = ref<number>(0)
 const fold = ref<boolean>(props.context.user.pageListSpace.fold)
 const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 });
@@ -123,24 +121,23 @@ const pageSource = new class implements IDataSource<ItemData> {
 const addPage = () => {
     const editor = props.context.editor4Doc();
     const _tail = props.context.data.pagesList.length + 1;
-    const id = props.context.selection.selectedPage?.id;
+    const id = props.context.selection.selectedPage!.id;
     const index = props.context.data.pagesList.findIndex((item) => item.id === id);
     const new_page = editor.insertPage(`${t('navi.page')} ${_tail}`, index + 1);
     if (!new_page) return;
     props.context.selection.selectPage(props.context.getPageDom(new_page).dom);
-    if (list_body.value) ListH.value = list_body.value.clientHeight;
+    const height = list_body.value!.clientHeight;
     if (pagelist.value && index + 1 >= 0) {
         const itemScrollH = (index + 1) * 32;
-        if (itemScrollH + 32 >= ListH.value - pagelist.value.scroll.y) {
-            if ((itemScrollH) + pagelist.value.scroll.y >= ListH.value) {
-                pagelist.value.clampScroll(0, -(itemScrollH + 32 - ListH.value))
+        if (itemScrollH + 32 >= height - pagelist.value.scroll.y) {
+            if ((itemScrollH) + pagelist.value.scroll.y >= height) {
+                pagelist.value.clampScroll(0, -(itemScrollH + 32 - height));
             }
         } else if (itemScrollH + 32 < -(pagelist.value.scroll.y)) {
             pagelist.value.clampScroll(0, -itemScrollH)
         }
+        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
-    if (_tail <= 5) props.context.navi.notify(Navi.ADD_PAGE);
-    pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     nextTick(() => props.context.selection.reName());
 }
 
@@ -151,9 +148,6 @@ function toggle() {
     nextTick(() => {
         const id = props.context.selection.selectedPage?.id;
         const index = props.context.data.pagesList.findIndex((item) => item.id === id);
-        if (list_body.value) {
-            ListH.value = list_body.value.clientHeight
-        }
         scrollList(index);
     })
     if (!fold.value) {
@@ -418,8 +412,6 @@ onUnmounted(() => {
     }
 
     .body {
-        height: calc(100% - 30px);
-
         > .container {
             height: 100%;
         }

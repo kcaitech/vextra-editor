@@ -231,6 +231,21 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
             canvas.width = width;
             canvas.height = height;
         }
+        const { x, y, width, height } = cloneSvg.viewBox.baseVal;
+        if (x !== 0 && y !== 0) {
+            cloneSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            const children: HTMLElement[] = cloneSvg.children as any;
+            Array.from(children).forEach((child) => {
+                const styleTransform = child.style.transform;
+                if (styleTransform && styleTransform.startsWith('matrix')) {
+                    const matrixValues = styleTransform.replace('matrix(', '').replace(')', '').split(',').map(parseFloat);
+                    matrixValues[4] -= x;
+                    matrixValues[5] -= y;
+                    const newMatrix = `matrix(${matrixValues.join(',')})`;
+                    child.style.transform = newMatrix;
+                }
+            });
+        }
         let imageUrl = '';
         const img = new Image();
         const svgString = new XMLSerializer().serializeToString(cloneSvg);
@@ -259,7 +274,19 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                 const h = (bottom - top);
                 cloneSvg.setAttribute("width", `${w}`);
                 cloneSvg.setAttribute("height", `${h}`);
-                cloneSvg.setAttribute("viewBox", `${x + left / format.scale} ${y + top / format.scale} ${w / format.scale} ${h / format.scale}`);
+                cloneSvg.setAttribute("viewBox", `0 0 ${w / format.scale} ${h / format.scale}`);
+                // 获取所有子元素
+                const children: HTMLElement[] = cloneSvg.children as any;
+                Array.from(children).forEach((child) => {
+                    const styleTransform = child.style.transform;
+                    if (styleTransform && styleTransform.startsWith('matrix')) {
+                        const matrixValues = styleTransform.replace('matrix(', '').replace(')', '').split(',').map(parseFloat);
+                        matrixValues[4] -= x + left / format.scale;
+                        matrixValues[5] -= y + top / format.scale;
+                        const newMatrix = `matrix(${matrixValues.join(',')})`;
+                        child.style.transform = newMatrix;
+                    }
+                });
                 // 创建一个新Canvas元素，用于存储裁剪后的图像
                 const newSvgString = new XMLSerializer().serializeToString(cloneSvg);
                 const newImgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(newSvgString)));

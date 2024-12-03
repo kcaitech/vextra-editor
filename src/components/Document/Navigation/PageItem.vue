@@ -99,7 +99,7 @@ onUnmounted(() => {
         <div class="item zero-symbol">
             <div class="title" @dblclick="onRename" :class="{ selected: props.data.selected }"
                 :style="{ display: isInput ? 'none' : '' }">{{ props.data.name }}</div>
-            <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput">
+            <input v-if="isInput" class="rename" @mousedown.stop @change="onChangeName" type="text" ref="nameInput">
         </div>
     </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { CurvePoint, Matrix, PathShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -8,15 +8,16 @@ import { Path } from "@/context/path";
 import { Segment, get_segments } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
+import { roundBy } from "@/path/common";
 
-interface Props {
+type Props = {
     context: Context
 }
 
-interface Dot {
+type Dot = {
     point: {
         x: number,
         y: number
@@ -31,11 +32,10 @@ const data: {
     dots: Dot[],
     segments: Segment[][]
 } = reactive({ dots: [], segments: [] });
+const shape = props.context.selection.selectedShapes[0] as PathShapeView;
+
 const { dots, segments } = data;
 const dragActiveDis = 5;
-const new_high_light = ref<string>('');
-const add_rect = ref<string>('');
-let shape: ShapeView;
 
 let bridged = false;
 
@@ -51,7 +51,7 @@ const maskPath = `M0 0, h${root.width} v${root.height} h${-root.width} z`;
 
 const preparePointVisible = ref<boolean>(false);
 
-// 每次更新都是全局更新，虽然计算量大的场景少，但要是可以有局部更新的方案会更好
+// 每次更新都是全局更新，可以有局部更新的方案会更好
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
 
@@ -69,9 +69,7 @@ function update() {
 
     buildMap();
 
-    if (livingPathVisible.value) {
-        modifyLivingPath();
-    }
+    if (livingPathVisible.value) modifyLivingPath();
 }
 
 const mapX = new Map<number, XY[]>();
@@ -81,33 +79,21 @@ function buildMap() {
     mapX.clear();
     mapY.clear();
 
-    const shape = props.context.selection.pathshape! as PathShapeView;
-
-    if (!shape) {
-        return console.log('wrong shape');
-    }
-
     const m = shape.matrix2Root();
     const frame = shape.frame;
     m.preScale(frame.width, frame.height);
-
     m.multiAtLeft(props.context.workspace.matrix);
 
     const segments = shape.segments;
 
     for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
-
         if (!segment) continue;
-
         const points = segment.points;
-
         for (let j = 0; j < points.length; j++) {
             const point = points[j];
             if (!point) continue;
-
             const xy = m.computeCoord3(point);
-
             const xKey = Number(xy.x.toFixed(2));
             let xContainer = mapX.get(xKey);
             if (!xContainer) {
@@ -131,8 +117,6 @@ function buildMap() {
 function passiveUpdate() {
     dots.length = 0;
     segments.length = 0;
-
-    if (!(shape as PathShapeView)?.segments?.length) return;
 
     const matrix = init_matrix();
 
@@ -235,12 +219,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
                 asyncEnvMount();
 
-                props.context.escstack.save('contact-status', () => {
-                    path.reset();
-                    const achieve = props.context.path.isContacting;
-                    props.context.path.setContactStatus(false);
-                    return achieve;
-                });
+                setDisContactTrigger(path);
             }
         } else if (index === (points.length - 1) && !__segment.isClosed) {
             // 不需要调换点的顺序
@@ -256,12 +235,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             pathModifier.createApiCaller();
             asyncEnvMount();
 
-            props.context.escstack.save('contact-status', () => {
-                path.reset();
-                const achieve = props.context.path.isContacting;
-                props.context.path.setContactStatus(false);
-                return achieve;
-            });
+            setDisContactTrigger(path);
         } else {
             console.log(`将新增一条路径，并进入链接状态`);
 
@@ -274,19 +248,21 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
             if (!addRes) return;
             props.context.path.setContactStatus(true);
-
-            props.context.escstack.save('contact-status', () => {
-                path.reset();
-                const achieve = path.isContacting;
-                path.setContactStatus(false);
-                return achieve;
-            });
+            setDisContactTrigger(props.context.path);
 
             asyncEnvMount();
         }
     }
 }
 
+function setDisContactTrigger(path: Path) {
+    props.context.escstack.save('contact-status', () => {
+        path.reset();
+        const achieve = path.isContacting;
+        path.setContactStatus(false);
+        return achieve;
+    });
+}
 function checkStatus() {
     const path = props.context.path;
     const params = path.bridgeParam;
@@ -315,14 +291,7 @@ function checkStatus() {
         });
     }
 
-    if (path.isContacting) {
-        props.context.escstack.save('contact-status', () => {
-            path.reset();
-            const achieve = path.isContacting;
-            path.setContactStatus(false);
-            return achieve;
-        });
-    }
+    if (path.isContacting) setDisContactTrigger(path);
 
     if (!e.buttons) { // Mac环境与Window环境下，这个判断结果会不同，很奇怪的机制
         handler?.fulfil();
@@ -371,24 +340,6 @@ function clearStatus() {
     document.removeEventListener('mouseup', point_mouseup);
 }
 
-function enter(event: MouseEvent, segment: number, index: number) {
-    clear_high_light();
-
-    const path = props.context.path;
-    if (path.no_hover) return;
-
-    new_high_light.value = `${segment}-${index}`;
-}
-
-function leave() {
-    clear_high_light();
-}
-
-function clear_high_light() {
-    new_high_light.value = '';
-    add_rect.value = '';
-}
-
 function window_blur() {
     clearStatus();
 }
@@ -405,16 +356,11 @@ function path_watcher(type: number) {
         case Path.SELECTION_CHANGE:
             update();
             break;
-        case Path.CLEAR_HIGH_LIGHT:
-            clear_high_light();
-            break;
         case Path.BRIDGING_COMPLETED:
             bridging_completed();
             break;
         case Path.CONTACT_STATUS_CHANGE:
             modifyLivingPath();
-            break;
-        default:
             break;
     }
 }
@@ -435,14 +381,7 @@ function matrix_watcher(t: number | string) {
     }
 }
 
-function isEqu(a: number, b: number) {
-    return Math.abs(a - b) < 0.00001;
-}
-
 function fixXYByShift(e: MouseEvent) {
-    // 1. 8边；
-    // 2. 吸附；
-
     if (!e.shiftKey) return;
 
     const _previous = getLastPoint();
@@ -564,7 +503,17 @@ function getLastPoint() {
 
 function documentMove(e: MouseEvent) {
     props.context.path.saveEvent(e);
+
     const __client = props.context.workspace.getContentXY(e);
+
+    if (props.context.user.isPixelAlignMent) {
+        let root = props.context.workspace.getRootXY(e);
+        root.x = roundBy(root.x);
+        root.y = roundBy(root.y);
+        root = props.context.workspace.matrix.computeCoord3(root);
+        __client.x = root.x;
+        __client.y = root.y;
+    }
 
     let delX = Infinity;
     let delY = Infinity;
@@ -574,7 +523,7 @@ function documentMove(e: MouseEvent) {
     let TX = 0;
     let TY = 0;
 
-    if (!mapX.size && !mapY.size) buildMap();
+    if (!mapX.size || !mapY.size) buildMap();
 
     const xs = Array.from(mapX.keys());
     const ys = Array.from(mapY.keys());
@@ -659,8 +608,8 @@ function modifyLivingPath() {
 
     const p1 = m.computeCoord3(previous);
 
-    if (previous.hasFrom && previous.fromX !== undefined && previous.fromY !== undefined) {
-        const c1 = m.computeCoord2(previous.fromX, previous.fromY);
+    if (previous.hasFrom) {
+        const c1 = m.computeCoord2(previous.fromX ?? 0, previous.fromY ?? 0);
         livingPath.value = `M${p1.x} ${p1.y} C${c1.x} ${c1.y} ${preXY.value.x} ${preXY.value.y} ${preXY.value.x} ${preXY.value.y}`;
     } else {
         livingPath.value = `M${p1.x} ${p1.y} L${preXY.value.x} ${preXY.value.y}`;
@@ -695,12 +644,7 @@ function down(e: MouseEvent) {
 
         props.context.path.setContactStatus(true);
 
-        props.context.escstack.save('contact-status', () => {
-            props.context.path.reset();
-            const achieve = props.context.path.isContacting;
-            props.context.path.setContactStatus(false);
-            return achieve;
-        });
+        setDisContactTrigger(props.context.path);
 
         asyncEnvMount();
 
@@ -752,8 +696,8 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
     const p1 = m.computeCoord3(previous);
     const p2 = m.computeCoord3(toPoint);
 
-    if (previous.hasFrom && previous.fromX !== undefined && previous.fromY !== undefined) {
-        const c1 = m.computeCoord2(previous.fromX, previous.fromY);
+    if (previous.hasFrom) {
+        const c1 = m.computeCoord2(previous.fromX ?? 0, previous.fromY ?? 0);
         if (hasTo) {
             const c2 = m.computeCoord2(toPoint.toX || toPoint.x, toPoint.toY || toPoint.y);
             livingPath.value = `M${p1.x} ${p1.y} C${c1.x} ${c1.y} ${c2.x} ${c2.y} ${p2.x} ${p2.y}`;
@@ -772,11 +716,6 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
 
-    shape = props.context.selection.pathshape!;
-    if (!shape) {
-        return console.log('wrong shape');
-    }
-
     checkStatus();
 
     shape.watch(update);
@@ -788,27 +727,19 @@ onMounted(() => {
 
     document.addEventListener('mousemove', documentMove);
 
-
     if (path.isContacting && path.lastEvent) {
         preXY.value = props.context.workspace.getContentXY(path.lastEvent);
-
         modifyLivingPath();
-
         preparePointVisible.value = true;
     }
-
 })
 
 onUnmounted(() => {
     props.context.workspace.unwatch(matrix_watcher);
     props.context.path.unwatch(path_watcher);
-
-    shape?.unwatch(update);
-
+    shape.unwatch(update);
     window.removeEventListener('blur', window_blur);
-
     document.removeEventListener('mousemove', documentMove);
-
     props.context.assist.notify(Assist.CLEAR);
 })
 </script>
@@ -818,19 +749,18 @@ onUnmounted(() => {
 <path v-if="livingPathVisible" :d="livingPath" stroke="#1878f5" fill="none" style="pointer-events: none"/>
 
 <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
-    <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
-       @mouseleave="leave">
+    <g v-for="(p, i) in seg" :key="i">
         <path class="path" :d="p.path"/>
     </g>
 </g>
 
 <Handle :context="props.context"/>
-<!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
+    <!--点序 for Dev-->
 <!--    <text v-for="(p, i) in dots"-->
-<!--          :key="i"-->
-<!--          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">-->
-<!--        {{ `${p.segment},${p.index}` }}-->
-<!--    </text>-->
+    <!--          :key="i"-->
+    <!--          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">-->
+    <!--        {{ `${p.segment},${p.index}` }}-->
+    <!--    </text>-->
 <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
       class="point" rx="4" ry="4" data-area="controller-element"
       @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
@@ -861,43 +791,9 @@ onUnmounted(() => {
     width: 8px;
 }
 
-.selected {
-    stroke: #ffffff;
-    fill: var(--active-color) !important;
-}
-
-.background-path {
-    stroke: transparent;
-    stroke-width: 14px;
-    fill: none;
-}
-
 .path {
     stroke: gray;
     fill: none;
     pointer-events: none;
-}
-
-.path-high-light {
-    stroke: rgba($color: #1878f5, $alpha: 0.5);
-}
-
-.path-selected {
-    stroke: var(--active-color);
-}
-
-.insert-point {
-    stroke: gray;
-    fill: #fff;
-    height: 8px;
-    width: 8px;
-}
-
-.insert-point-high-light {
-    stroke: rgba($color: #1878f5, $alpha: 0.5);
-}
-
-.insert-point-selected {
-    stroke: var(--active-color);
 }
 </style>

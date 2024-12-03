@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {Context} from '@/context';
 import {ArtboradView, ShapeType, ShapeView} from '@kcdesign/data';
-import {PositonAdjust} from "@kcdesign/data";
+import {PositionAdjust} from "@kcdesign/data";
 import {onMounted, onUnmounted, watch} from 'vue';
 import {
   align_left,
@@ -37,7 +37,7 @@ function flex_start() {
   if (!model_enable.o) {
     return;
   }
-  const actions: PositonAdjust[] = align_left(props.shapes);
+  const actions: PositionAdjust[] = align_left(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
@@ -50,7 +50,7 @@ function flex_start() {
 // 水平线对齐
 function justify_middle_h() {
   if (!model_enable.o) return;
-  const actions: PositonAdjust[] = align_center_x(props.shapes);
+  const actions: PositionAdjust[] = align_center_x(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
@@ -63,7 +63,7 @@ function justify_middle_h() {
 // 靠右对齐
 function flex_end() {
   if (!model_enable.o) return;
-  const actions: PositonAdjust[] = align_right(props.shapes);
+  const actions: PositionAdjust[] = align_right(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
@@ -78,7 +78,7 @@ function flex_start_col() {
   if (!model_enable.o) {
     return;
   }
-  const actions: PositonAdjust[] = align_top(props.shapes);
+  const actions: PositionAdjust[] = align_top(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
@@ -93,7 +93,7 @@ function justify_middle_v() {
   if (!model_enable.o) {
     return;
   }
-  const actions: PositonAdjust[] = align_center_y(props.shapes);
+  const actions: PositionAdjust[] = align_center_y(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
@@ -108,7 +108,7 @@ function flex_end_col() {
   if (!model_enable.o) {
     return;
   }
-  const actions: PositonAdjust[] = align_bottom(props.shapes);
+  const actions: PositionAdjust[] = align_bottom(props.shapes);
   const page = props.context.selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);

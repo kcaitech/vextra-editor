@@ -12,7 +12,7 @@ import {
     Shadow, Page, ShapeType, TransformRaw, XYsBounding
 } from "@kcdesign/data";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
-import { onMounted, onUnmounted, ref } from "vue";
+import { onBeforeMount, onMounted, onUnmounted, ref } from "vue";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 
@@ -37,7 +37,7 @@ const assetsSrc = ref<string | undefined>(props.src);
 
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
 const pageSvg = ref<SVGSVGElement>();
-const viewBox = ref<string>('');
+const viewBox = ref<string>("");
 
 function getViewBox() {
     const data = props.shape;
@@ -51,19 +51,14 @@ function getViewBox() {
 
     let left;
     let top;
-
-    const size = props.size;
-
     if (height > width) {
         const delta = height - width;
-        const scale = height / size;
-        top = box.top - scale * 2;
-        left = box.left - (delta / 2) - (scale * 2);
+        top = box.top;
+        left = box.left - (delta / 2);
     } else {
         const delta = width - height;
-        const scale = width / size;
-        top = box.top - (delta / 2) - (scale * 2);
-        left = box.left - scale * 2
+        top = box.top - (delta / 2);
+        left = box.left;
     }
 
     viewBox.value = `${left} ${top} ${width} ${height}`;
@@ -72,11 +67,9 @@ function getViewBox() {
 function mount() {
     if (assetsSrc.value || !pageSvg.value) return;
     const data = props.shape instanceof ShapeView ? adapt2Shape(props.shape) : props.shape;
-    getViewBox();
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
-
     const page = new Page(
         new BasicArray<number>(),
         'assemble-page',
@@ -195,12 +188,11 @@ function getBase64(): Promise<string> {
     })
 }
 
+onBeforeMount(getViewBox);
 onMounted(mount);
 onUnmounted(unBind);
 </script>
 <template>
-<div>
     <img v-if="assetsSrc" alt="static" :src="assetsSrc">
     <svg v-else ref="pageSvg" :width="size" :height="size" :viewBox="viewBox"/>
-</div>
 </template>

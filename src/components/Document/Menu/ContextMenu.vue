@@ -244,7 +244,7 @@ function pixel() {
 }
 
 function operation() {
-    props.context.workspace.notify(WorkSpace.HIDDEN_UI);
+    props.context.layout.all();
     emits('close');
 }
 
@@ -608,8 +608,8 @@ onUnmounted(() => {
         </div>
         <component v-if="comps.length" v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
         <div v-if="items.has(MenuItemType.Operation)" @click="operation" class="menu-item">
-            <span>{{ t('system.hide_operation_interface') }}</span>
-            <Key code="Ctrl(Shift) \"></Key>
+            <span>{{ context.layout.next }}</span>
+            <Key code="Ctrl \"></Key>
         </div>
         <div v-if="items.has(MenuItemType.Forward)"
             style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />

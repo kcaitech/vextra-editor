@@ -26,7 +26,6 @@ function focus() {
 }
 
 function show() {
-    console.log('--show--');
     if (props.context.menu.isPopoverExisted) {
         props.context.menu.notify(Menu.SHUTDOWN_POPOVER);
         props.context.menu.isPopoverExisted = false;
