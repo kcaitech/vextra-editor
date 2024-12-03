@@ -11,7 +11,9 @@ type Props = {
 
 const props = defineProps<Props>();
 
-const canvas = ref<HTMLCanvasElement | null>(null)
+const canvas = ref<HTMLCanvasElement | null>(null);
+const width = ref<number>(300);
+const height = ref<number>(150);
 
 function register() {
     if (canvas.value) {
@@ -25,13 +27,11 @@ onMounted(() => {
 });
 </script>
 <template>
-    <canvas ref="canvas"/>
+    <canvas ref="canvas" :width="width" :height="height">The current browser does not support Canvas API</canvas>
 </template>
 <style scoped lang="scss">
 canvas {
     position: absolute;
     transform-origin: top left;
-    width: 100%;
-    height: 100%;
 }
 </style>
