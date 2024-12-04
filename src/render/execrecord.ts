@@ -1,4 +1,5 @@
 import { Action } from "./recordcanvas";
+import msgpack from "@msgpack/msgpack"
 
 const actionHandlers: { [key: number]: (p: any[], canvas: OffscreenCanvasRenderingContext2D) => void } = {}
 
@@ -185,4 +186,9 @@ export function execRecord(records: { a: Action, p: any[] }[], canvas: Offscreen
         }
         h(r.p, canvas)
     })
+}
+
+export function execRecordRaw(records: Uint8Array, canvas: OffscreenCanvasRenderingContext2D) {
+    const _records = msgpack.decode(records) as { a: Action, p: any[] }[]
+    execRecord(_records, canvas)
 }

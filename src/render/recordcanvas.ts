@@ -1,4 +1,5 @@
 import { CanvasApi } from "./canvasapi";
+import msgpack from "@msgpack/msgpack"
 
 export enum Action {
     globalAlpha = 1,
@@ -610,5 +611,9 @@ export class RecordCanvas implements CanvasApi {
         //     a: Action.drawFocusIfNeeded,
         //     p: [path, element]
         // })
+    }
+
+    encodeRecords(): Uint8Array {
+        return msgpack.encode(this._records)
     }
 }

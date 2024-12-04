@@ -77,7 +77,7 @@ export class Memory {
         return idx
     }
 
-    private __alloc(len: number): { idx: number, len: number } {
+    private __alloc(len: number): number {
         if (this._capacity < len) {
             if (!this.buffer.growable) throw new Error("OOM");
             const byteLength = this.buffer.byteLength
@@ -86,18 +86,17 @@ export class Memory {
             this._capacity += this.buffer.byteLength - byteLength
             if (this._capacity < len) throw new Error("OOM")
         }
-        const ret = { idx: this._freeidx, len }
+        const ret = this._freeidx
         this._freeidx += len;
         this._capacity -= len;
-
         // set head
-        this._sethead(ret.idx, { ref: 0, capacity: len - mem_head_len - mem_tail_len })
+        this._sethead(ret, { ref: 0, capacity: len - mem_head_len - mem_tail_len })
         // set tail
-        this._settail(ret.idx, { free: false, capacity: len - mem_head_len - mem_tail_len })
+        this._settail(ret, { free: false, capacity: len - mem_head_len - mem_tail_len })
         return ret;
     }
 
-    private _alloc(len: number): { idx: number, len: number } {
+    private _alloc(len: number): number {
         len = align4bytes(len) + mem_head_len + mem_tail_len
         if (this.freebuffer.length === 0) {
             return this.__alloc(len)
@@ -107,56 +106,56 @@ export class Memory {
             // 不存在足够大的
             return this.__alloc(len)
         }
-        const mem = {idx: this.freebuffer[idx].idxs.pop()!, len: this.freebuffer[idx].len}
+        const mem = this.freebuffer[idx].idxs.pop()!
+        const alloclen = this.freebuffer[idx].len
         if (this.freebuffer[idx].idxs.length === 0) {
             this.freebuffer.splice(idx, 1)
         }
-        if (mem.len >= len * 2) {
+        if (alloclen >= len * 2) {
             // todo 拆分mem
         }
-        this._settail(mem.idx, { free: false, capacity: mem.len - mem_head_len - mem_tail_len })
+        this._settail(mem, { free: false, capacity: alloclen - mem_head_len - mem_tail_len })
         return mem
     }
 
-    private _free(index: { idx: number, len: number }) {
-        const head = this._gethead(index.idx)
-        const tail = this._gettail(index.idx)
+    private _free(index: number) {
+        const head = this._gethead(index)
+        const tail = this._gettail(index)
         if (head.ref > 0) throw new Error();
         if (tail.free) throw new Error();
         if (head.capacity !== tail.capacity) throw new Error();
 
         // todo 合并前后空闲内存块
 
-        this._settail(index.idx, { free: true, capacity: head.capacity })
+        this._settail(index, { free: true, capacity: head.capacity })
         const len = head.capacity + mem_head_len + mem_tail_len
         const idx = lowerBound(this.freebuffer, len)
         if (idx >= this.freebuffer.length || idx < 0) {
-            this.freebuffer.push({ len, idxs: [index.idx] })
+            this.freebuffer.push({ len, idxs: [index] })
         } else if (this.freebuffer[idx].len === len) {
-            this.freebuffer[idx].idxs.push(index.idx)
+            this.freebuffer[idx].idxs.push(index)
         } else {
-            this.freebuffer.splice(idx, 0, { len, idxs: [index.idx] })
+            this.freebuffer.splice(idx, 0, { len, idxs: [index] })
         }
     }
 
     update(index: { idx: number, len: number }, value: Uint8Array) {
-        const head = this._gethead(index.idx)
-
+        let idx = index.idx
+        const head = this._gethead(idx)
         const buffer = new Uint8Array(this.buffer)
         if (head.ref > 0 || head.capacity <= value.length) {
-            index = this._alloc(value.length)
+            idx = this._alloc(value.length)
         }
-
-        buffer.set(value, index.idx + mem_head_len)
-        buffer.fill(0, index.idx + mem_head_len + value.length) // 最后填充0
-        return { idx: index.idx, len: value.length }
+        buffer.set(value, idx + mem_head_len)
+        buffer.fill(0, idx + mem_head_len + value.length) // 最后填充0
+        return { idx: idx, len: value.length }
     }
     put(value: Uint8Array): { idx: number, len: number } {
         const index = this._alloc(value.length)
-        const buffer = new Uint8Array(this.buffer, index.idx + mem_head_len)
+        const buffer = new Uint8Array(this.buffer, index + mem_head_len)
         buffer.set(value)
         buffer.fill(0, value.length) // 最后填充0
-        return { idx: index.idx, len: value.length }
+        return {idx: index, len: value.length}
     }
     get(index: { idx: number, len: number }): Uint8Array {
         return new Uint8Array(this.buffer, index.idx + mem_head_len, index.len)
@@ -173,7 +172,7 @@ export class Memory {
         if (head.ref <= 0) throw new Error()
         --head.ref;
         this._sethead(index.idx, head)
-        if (head.ref === 1) this._free(index)
+        if (head.ref === 1) this._free(index.idx)
     }
 
     // 怎么防止内存泄露？
