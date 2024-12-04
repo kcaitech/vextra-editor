@@ -705,7 +705,7 @@ export class BaseCreator extends BaseTreeNode {
                 cornerType = CornerType.Miter;
             }
             const borderStyle = new BorderStyle(stroke.dashArray[0], stroke.dashArray[1])
-            const side = new BorderSideSetting(SideType.Normal, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
+            const side = new BorderSideSetting(new BasicArray(),SideType.Normal, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
             const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color), position, strokeWidth, borderStyle, cornerType, side)
             borders.push(border)
 

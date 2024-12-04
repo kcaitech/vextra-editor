@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShapeType, Border, TableCellView, PathShapeView } from '@kcdesign/data';
+import { ShapeView, BorderPosition, ShapeType, Border, TableCellView, PathShapeView, BasicArray } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
@@ -37,6 +37,8 @@ import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_position, get_borders } from '@/utils/shape_style';
 import { Selection } from "@/context/selection";
 import { getShapesForStyle } from '@/utils/style';
+import { CornerRadiusMask } from '@kcdesign/data';
+import { v4 } from 'uuid';
 
 const props = defineProps<{
     context: Context;
@@ -72,20 +74,10 @@ const setRadius = () => {
     }
     radius.value = arrs.join(', ')
     oldvalue.value = radius.value
-}
-
-function positionSelect(selected: SelectItem, id: number | undefined) {
-    console.log(selected.value, id);
-
-    const selecteds = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
-    const shapes = getShapesForStyle(selecteds);
-    const actions = get_actions_border_position(shapes, id!, selected.value as BorderPosition);
-    if (actions && actions.length) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesBorderPosition(actions);
-    }
+    const editor=props.context.editor4Doc()
+    
+    const style=new CornerRadiusMask(v4(),'radius',new BasicArray<number>(),Number(arrs[0]),Number(arrs[1]),Number(arrs[3]),Number(arrs[2]))
+    editor.insertStyleLib(style)
 }
 
 function watchShapes() {

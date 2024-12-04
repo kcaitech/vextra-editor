@@ -69,7 +69,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="props.type !== 'editor'" class="create-bnt" @click.stop="emits('close')">创建样式</div>
+        <div v-if="props.type !== 'editor'" class="create-bnt" @click.stop="insertStyleLib">创建样式</div>
     </div>
 
 </template>
@@ -80,6 +80,7 @@ import {
     BasicArray,
     Color,
     Fill,
+    FillMask,
     FillType,
     GradientType,
     ImageScaleMode,
@@ -155,6 +156,18 @@ const tableSelect = ref({
     tableColEnd: props.context.tableSelection.tableColEnd
 });
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+
+
+const insertStyleLib = () => {
+    const color = new Color(0.2, 0, 0, 0);
+    const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
+    const editor = props.context.editor4Doc()
+    const fills = new BasicArray<Fill>()
+    props.fills?.forEach(s => fills.push(s.fill))
+    const style = new FillMask(new BasicArray(), props.context.data.id, v4(), 'fill', '1231', fills)
+    editor.insertStyleLib(style);
+    emits('close')
+}
 
 const alphaInput = (e: Event) => {
     if (alphaFill.value) {
