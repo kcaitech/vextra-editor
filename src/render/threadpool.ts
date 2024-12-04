@@ -19,11 +19,12 @@ export class ThreadPool {
     private terminated: boolean = false;
 
     private _onmessage(e: MessageEvent) {
-        const data = e.data as { id: number, result: any }
+        const data = e.data as { id: number, result: any, err: any }
         const idx = this.running.findIndex((v) => v.id === data.id)
         if (idx >= 0) { // throw new Error();
             const task = this.running.splice(idx, 1)[0];
-            task.resolve(data.result)
+            if (data.err) task.reject(data.err)
+            else task.resolve(data.result)
         }
         this._continue()
     }
@@ -47,19 +48,21 @@ export class ThreadPool {
             worker.onmessage = this._onmessage
             this.workers.push(worker)
         }
-        if (worker) {
-            let task = this.pending.pop()
-            while (task && task.task.cancled) {
-                task.reject("cancled")
-                task = this.pending.pop();
-            }
-            if (task) {
-                task.id = ++this._uid
-                this.running.push(task)
-                worker.postMessage({ id: task.id, args: task.task.args() })
-            } else {
-                this.idles.push(worker)
-            }
+        if (!worker) {
+            return
+        }
+
+        let task = this.pending.pop()
+        while (task && task.task.cancled) {
+            task.reject("cancled")
+            task = this.pending.pop();
+        }
+        if (task) {
+            task.id = ++this._uid
+            this.running.push(task)
+            worker.postMessage({ id: task.id, args: task.task.args() })
+        } else {
+            this.idles.push(worker)
         }
     }
 
@@ -78,7 +81,8 @@ export class ThreadPool {
         this.workers.forEach(w => w.terminate())
         this.pending.forEach(t => t.reject("terminated"))
         this.pending.length = 0
-        this.running.forEach(t => t.reject("terminated"))
-        this.running.length = 0
+        // 不能简单reject，可能会导致线程在使用的数据被提前释放掉了
+        // this.running.forEach(t => t.reject("terminated"))
+        // this.running.length = 0
     }
 }
