@@ -1,18 +1,37 @@
-import { ArtboradView, PageView, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { ArtboradView, PageView, Shape, ShapeType, ShapeView, adapt2Shape, PathShapeView, Matrix } from "@kcdesign/data";
 import { PositionAdjust } from "@kcdesign/data";
+import { is_straight } from "@/utils/attri_setting";
+
+function getFrameAnchor(view: ShapeView) {
+    const m = view.matrix2Root();
+    const frame = view.frame;
+    if (is_straight(view)) {
+        const width = frame.width;
+        const height = frame.height;
+        const __m = new Matrix();
+        __m.preScale(width, height);
+        __m.multiAtLeft(m);
+        const lt = __m.computeCoord((view as PathShapeView).segments[0].points[0]);
+        const rb = __m.computeCoord((view as PathShapeView).segments[0].points[1]);
+        return [[lt.x, lt.y], [rb.x, rb.y]];
+    } else {
+        return [
+            [frame.x, frame.y],
+            [frame.x + frame.width, frame.y],
+            [frame.x + frame.width, frame.y + frame.height],
+            [frame.x, frame.y + frame.height]
+        ].map(point => {
+            const p = m.computeCoord2(point[0], point[1]);
+            return [p.x, p.y];
+        });
+    }
+}
 // 群的最左端
 export function get_colony_left(shapes: ShapeView[]) {
     const _xs: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let xs: [number, number][] = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]];
-        xs = xs.map(p => {
-            const _s = m.computeCoord2(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
+        const points = getFrameAnchor(shapes[i]);
+        points.forEach(p => _xs.push(p[0]));
     }
     return Math.min(..._xs);
 }
@@ -20,20 +39,8 @@ export function get_colony_left(shapes: ShapeView[]) {
 export function get_colony_center_x(shapes: ShapeView[]) {
     const _xs: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let xs: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
-        xs = xs.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
+        const points = getFrameAnchor(shapes[i]);
+        points.forEach(p => _xs.push(p[0]));
     }
     return (Math.min(..._xs) + Math.max(..._xs)) / 2;
 }
@@ -41,20 +48,8 @@ export function get_colony_center_x(shapes: ShapeView[]) {
 export function get_colony_right(shapes: ShapeView[]) {
     const _xs: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let xs: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
-        xs = xs.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
+        const points = getFrameAnchor(shapes[i]);
+        points.forEach(p => _xs.push(p[0]));
     }
     return Math.max(..._xs);
 }
@@ -62,20 +57,8 @@ export function get_colony_right(shapes: ShapeView[]) {
 export function get_colony_top(shapes: ShapeView[]) {
     const _ys: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let ys: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
-        ys = ys.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
+        const points = getFrameAnchor(shapes[i]);
+        points.forEach(p => _ys.push(p[1]));
     }
     return Math.min(..._ys);
 }
@@ -83,20 +66,8 @@ export function get_colony_top(shapes: ShapeView[]) {
 export function get_colony_center_y(shapes: ShapeView[]) {
     const _ys: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let ys: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
-        ys = ys.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
+        const points = getFrameAnchor(shapes[i]);
+        points.forEach(p => _ys.push(p[1]));
     }
     return (Math.min(..._ys) + Math.max(..._ys)) / 2;
 }
@@ -104,228 +75,66 @@ export function get_colony_center_y(shapes: ShapeView[]) {
 export function get_colony_bottom(shapes: ShapeView[]) {
     const _ys: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let ys: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
-        ys = ys.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
+        const points = getFrameAnchor(shapes[i]);
+        points.forEach(p => _ys.push(p[1]));
     }
     return Math.max(..._ys);
 }
-// 群的宽度
-export function get_colony_width(shapes: Shape[]) {
-    const _xs: number[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let xs: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
-        xs = xs.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
-    }
-    return Math.max(..._xs) - Math.min(..._xs);
-}
-// 群的左右
-export function get_colony_l_r(shapes: Shape[]) {
-    const _xs: number[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let xs: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
-        xs = xs.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
-    }
-    return { right: Math.max(..._xs), left: Math.min(..._xs) };
-}
-// 群的高度
-export function get_colony_height(shapes: Shape[]) {
-    const _ys: number[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        const m = shape.matrix2Root();
-        let ys: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
-        ys = ys.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
-            return [_s.x, _s.y];
-        });
-        _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
-    }
-    return Math.max(..._ys) - Math.min(..._ys);
-}
+
 // 个体的最左端
 export function get_individuality_left(shape: ShapeView) {
     const _xs: number[] = [];
-    const frame = shape.frame;
-    const m = shape.matrix2Root();
-    let xs: [number, number][] = [
-        [0, 0],
-        [frame.width, 0],
-        [frame.width, frame.height],
-        [0, frame.height]
-    ];
-    xs = xs.map(p => {
-        const _s = m.computeCoord(p[0], p[1]);
-        return [_s.x, _s.y];
-    });
-    _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
+    const points = getFrameAnchor(shape);
+    points.forEach(p => _xs.push(p[0]));
     return Math.min(..._xs);
 }
 // 个体的水平中心
 export function get_individuality_center_x(shape: ShapeView) {
     const _xs: number[] = [];
-    const frame = shape.frame;
-    const m = shape.matrix2Root();
-    let xs: [number, number][] = [
-        [0, 0],
-        [frame.width, 0],
-        [frame.width, frame.height],
-        [0, frame.height]
-    ];
-    xs = xs.map(p => {
-        const _s = m.computeCoord(p[0], p[1]);
-        return [_s.x, _s.y];
-    });
-    _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
+    const points = getFrameAnchor(shape);
+    points.forEach(p => _xs.push(p[0]));
     return (Math.min(..._xs) + Math.max(..._xs)) / 2;
 }
 // 个体的最右端
 export function get_individuality_right(shape: ShapeView) {
     const _xs: number[] = [];
-    const frame = shape.frame;
-    const m = shape.matrix2Root();
-    let xs: [number, number][] = [
-        [0, 0],
-        [frame.width, 0],
-        [frame.width, frame.height],
-        [0, frame.height]
-    ];
-    xs = xs.map(p => {
-        const _s = m.computeCoord(p[0], p[1]);
-        return [_s.x, _s.y];
-    });
-    _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
+    const points = getFrameAnchor(shape);
+    points.forEach(p => _xs.push(p[0]));
     return Math.max(..._xs);
 }
 // 个体的最顶端
 export function get_individuality_top(shape: ShapeView) {
     const _ys: number[] = [];
-    const frame = shape.frame;
-    const m = shape.matrix2Root();
-    let ys: [number, number][] = [
-        [0, 0],
-        [frame.width, 0],
-        [frame.width, frame.height],
-        [0, frame.height]
-    ];
-    ys = ys.map(p => {
-        const _s = m.computeCoord(p[0], p[1]);
-        return [_s.x, _s.y];
-    });
-    _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
+    const points = getFrameAnchor(shape);
+    points.forEach(p => _ys.push(p[1]));
     return Math.min(..._ys);
 }
 // 个体的垂直中心
 export function get_individuality_center_y(shape: ShapeView) {
     const _ys: number[] = [];
-    const frame = shape.frame;
-    const m = shape.matrix2Root();
-    let ys: [number, number][] = [
-        [0, 0],
-        [frame.width, 0],
-        [frame.width, frame.height],
-        [0, frame.height]
-    ];
-    ys = ys.map(p => {
-        const _s = m.computeCoord(p[0], p[1]);
-        return [_s.x, _s.y];
-    });
-    _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
+    const points = getFrameAnchor(shape);
+    points.forEach(p => _ys.push(p[1]));
     return (Math.min(..._ys) + Math.max(..._ys)) / 2;
 }
 // 个体的最底端
 export function get_individuality_bottom(shape: ShapeView) {
     const _ys: number[] = [];
-    const frame = shape.frame;
-    const m = shape.matrix2Root();
-    let ys: [number, number][] = [
-        [0, 0],
-        [frame.width, 0],
-        [frame.width, frame.height],
-        [0, frame.height]
-    ];
-    ys = ys.map(p => {
-        const _s = m.computeCoord(p[0], p[1]);
-        return [_s.x, _s.y];
-    });
-    _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
+    const points = getFrameAnchor(shape);
+    points.forEach(p => _ys.push(p[1]));
     return Math.max(..._ys);
 }
 // 获取个体左右
 export function get_individuality_l_r(shape: ShapeView) {
     const _xs: number[] = [];
-    const frame = shape.frame;
-    const m = shape.matrix2Root();
-    let xs: [number, number][] = [
-        [0, 0],
-        [frame.width, 0],
-        [frame.width, frame.height],
-        [0, frame.height]
-    ];
-    xs = xs.map(p => {
-        const _s = m.computeCoord(p[0], p[1]);
-        return [_s.x, _s.y];
-    });
-    _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
+    const points = getFrameAnchor(shape);
+    points.forEach(p => _xs.push(p[0]));
     return { left: Math.min(..._xs), right: Math.max(..._xs) };
 }
 // 获取个体上下
 export function get_individuality_t_b(shape: ShapeView) {
     const _ys: number[] = [];
-    const frame = shape.frame;
-    const m = shape.matrix2Root();
-    let ys: [number, number][] = [
-        [0, 0],
-        [frame.width, 0],
-        [frame.width, frame.height],
-        [0, frame.height]
-    ];
-    ys = ys.map(p => {
-        const _s = m.computeCoord(p[0], p[1]);
-        return [_s.x, _s.y];
-    });
-    _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
+    const points = getFrameAnchor(shape);
+    points.forEach(p => _ys.push(p[1]));
     return { top: Math.min(..._ys), bottom: Math.max(..._ys) };
 }
 
