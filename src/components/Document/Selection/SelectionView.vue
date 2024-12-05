@@ -60,6 +60,7 @@ const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
 const theme = ref<SelectionTheme>(SelectionTheme.Normal);
 const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normal);
 const updateTrigger = ref<number>(0);
+const borderPath = ref<string>("");
 
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -175,11 +176,13 @@ function modify_tracing_class(shape: ShapeView) {
 function createShapeTracing() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
     tracing.value = false;
+    borderPath.value = "";
 
     if (!hoveredShape) return;
 
     if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) {
         tracing.value = false;
+        borderPath.value = "";
     } else {
         const m = hoveredShape.matrix2Root();
         m.multiAtLeft(props.params.matrix);
@@ -190,6 +193,11 @@ function createShapeTracing() {
         const h = bottom - y;
         tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
         tracing.value = true;
+        if (hoveredShape.borderPath) {
+            const path = hoveredShape.borderPath.clone();
+            path.transform(m);
+            borderPath.value = path.toString();
+        }
         modify_tracing_class(hoveredShape);
     }
 }
@@ -437,11 +445,10 @@ onUnmounted(() => {
      :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
      style="transform: translate(0px, 0px); position: absolute;">
     <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
-          @mousedown="(e: MouseEvent) => pathMousedown(e)">
-    </path>
+          @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
     <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
-          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-    </path>
+          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
+    <path v-if="borderPath" :d="borderPath" fill="rgba(255, 0, 0, 0.3)" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
 </svg>
 <TidyUpOutline :context="props.context" :controller-frame="controllerFrame"/>
 

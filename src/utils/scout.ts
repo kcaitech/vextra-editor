@@ -19,6 +19,7 @@ export function scout(context: Context): Scout {
     const ele: SVGElement = createSVGGeometryElement(scoutId);
     const path: SVGGeometryElement = createPath('M 0 0 l 2 0 l 2 2 l -2 0 z', pathId); // 任意初始化一条path
     ele.appendChild(path);
+    path.setAttributeNS(null, "fill-rule", "evenodd");
     document.body.appendChild(ele);
 
     // 任意初始化一个point
@@ -38,6 +39,9 @@ export function scout(context: Context): Scout {
         const scale = context.workspace.curScale;
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
+        if (shape.borderPath) {
+            if (path.isPointInFill(SVGPoint)) return true;
+        }
         let onlyStroke = shape instanceof PathShapeView && !shape.getFills().length;
         if (onlyStroke) {
             path.setAttributeNS(null, 'stroke-width', `${14 / scale}`);
@@ -130,8 +134,8 @@ function createPath(path: string, id: string): SVGPathElement {
     return p;
 }
 
-function getPathOnPageString(shape: ShapeView | Shape, matrix: Matrix): string {
-    const path = shape.getPath().clone();
+function getPathOnPageString(shape: ShapeView, matrix: Matrix): string {
+    const path = shape.borderPath ? shape.borderPath.clone() : shape.getPath().clone();
     path.transform(matrix);
     return path.toString();
 }
