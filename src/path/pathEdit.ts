@@ -116,18 +116,14 @@ function point2curve3rd(point: XY, start: XY, c1: XY, c2: XY, end: XY) {
 
         const derivativeDotProduct = dxToPoint * _der.x + dyToPoint * _der.y;
 
-        if (Math.abs(derivativeDotProduct) < epsilon) {
-            break;
-        }
+        if (Math.abs(derivativeDotProduct) < epsilon) break;
 
         t -= (derivativeDotProduct / (_der.x * _der.x + _der.y * _der.y));
 
         i++;
     }
 
-    if (t < 0 || t > 1) {
-        return;
-    }
+    if (t < 0 || t > 1) return;
 
     const xy = cubicBezier(t, start, c1, c2, end);
     const distance = Math.sqrt((point.x - xy.x) ** 2 + (point.y - xy.y) ** 2);
