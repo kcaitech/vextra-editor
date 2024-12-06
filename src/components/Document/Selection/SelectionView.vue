@@ -11,7 +11,7 @@ import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
 import { is_shape_in_selected } from "@/utils/scout";
 import ShapeSize from "./ShapeSize.vue";
-import LableLine from "../Assist/LableLine.vue";
+import LabelLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
@@ -137,7 +137,7 @@ function selectionWatcher(t: string | number) { // selection的部分动作可�
         watchShapes();
     }
     if (t === Selection.SHOW_INTERVAL) {
-        lableLineStatus();
+        labelLineStatus();
     }
 }
 
@@ -146,7 +146,7 @@ function tool_watcher(t: number) {
         // matrix.reset(props.params.matrix);
         createController();
         watchShapes();
-        lableLineStatus();
+        labelLineStatus();
     }
 }
 
@@ -398,12 +398,12 @@ function window_blur() {
 }
 
 //标注线
-const isLableLine = ref(false);
-const lableLineStatus = () => {
-    const isLable = props.context.tool.isLable;
+const isLabelLine = ref(false);
+const labelLineStatus = () => {
+    const label = props.context.tool.isLable;
     const interval = props.context.selection.is_interval;
 
-    isLableLine.value = isLable || interval;
+    isLabelLine.value = label || interval;
 }
 
 function page_watcher() {
@@ -464,8 +464,8 @@ onUnmounted(() => {
 <Assist :context="props.context" :controller-frame="controllerFrame"/>
 <gapAssist :context="props.context"/>
 <!-- 标注线 -->
-<LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
-           :update-trigger="updateTrigger"></LableLine>
+<LabelLine v-if="isLabelLine" :context="props.context" :matrix="props.params.matrix"
+           :update-trigger="updateTrigger"></LabelLine>
 <!-- 选中大小 -->
 <ShapeSize :context="props.context" :controller-frame="controllerFrame"/>
 </template>
