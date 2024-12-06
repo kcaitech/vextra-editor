@@ -98,10 +98,11 @@ export function scout(context: Context): Scout {
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
 
-    function isPointInStroke(d: string, point: XY): boolean {
-        SVGPoint.x = point.x, SVGPoint.y = point.y;
+    function isPointInStroke(d: string, point: XY, stroke = 14): boolean {
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
-        path.setAttributeNS(null, 'stroke-width', '14');
+        path.setAttributeNS(null, 'stroke-width', `${stroke}`);
         return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
     }
 

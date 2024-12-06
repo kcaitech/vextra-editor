@@ -20,6 +20,7 @@ import { is_layers_tree_unit } from "@/utils/scout";
 import { forbidden_to_modify_frame } from "@/utils/common";
 import { permIsEdit } from "@/utils/permission";
 import { roundBy } from "@/path/common";
+import { Point2D } from "../../../kcdesign-data/src";
 
 type Base = {
     x: number;
@@ -855,14 +856,16 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
-    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
-        if (!this.asyncApiCaller || !this.shape) {
-            return false;
-        }
+    addPoint(segmentIdx: number, index: number, apex?: { xy: XY, t?: number }) {
+        if (!this.asyncApiCaller || !this.shape) return false;
+        if (!this.isInitMatrix) this.init();
+        return (this.asyncApiCaller as PathModifier).addPoint(this.shape, segmentIdx, index, apex as any);
+    }
 
-        if (!this.isInitMatrix) {
-            this.init();
-        }
+    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
+        if (!this.asyncApiCaller || !this.shape) return false;
+
+        if (!this.isInitMatrix) this.init();
 
         let xy;
 
@@ -878,9 +881,7 @@ export class PathEditor extends TransformHandler {
         let addRes = false;
         if (index > -1 && segment > -1) {
             const __segment = (this.shape as PathShapeView).segments[segment];
-            if (!__segment) {
-                return this.addSegmentForPen(down);
-            }
+            if (!__segment) return this.addSegmentForPen(down);
 
             index = __segment.points.length;
 
@@ -903,13 +904,9 @@ export class PathEditor extends TransformHandler {
     }
 
     addSegmentForPen(down: XY, point?: CurvePoint) {
-        if (!this.asyncApiCaller || !this.shape) {
-            return false;
-        }
+        if (!this.asyncApiCaller || !this.shape) return false;
 
-        if (!this.isInitMatrix) {
-            this.init();
-        }
+        if (!this.isInitMatrix) this.init();
 
         let xy;
 
