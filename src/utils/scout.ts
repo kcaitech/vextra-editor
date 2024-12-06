@@ -44,7 +44,7 @@ export function scout(context: Context): Scout {
         }
         let onlyStroke = shape instanceof PathShapeView && !shape.getFills().length;
         if (onlyStroke) {
-            path.setAttributeNS(null, 'stroke-width', `${14 / scale}`);
+            path.setAttributeNS(null, 'stroke-width', `${8 / scale}`);
             return path.isPointInStroke(SVGPoint);
         } else {
             if (path.isPointInFill(SVGPoint)) return true;
