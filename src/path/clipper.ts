@@ -23,7 +23,7 @@ export class PathClipper {
         if (sides.length === 1 && closed) { // 打开路径就好了
             const index = sides[0];
             slices.push([...points.slice(index + 1), ...points.slice(0, index + 1)]);
-            return closed;
+            return false;
         }
         points = points.slice(0);
         sides = sides.sort((a, b) => b - a);
