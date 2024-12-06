@@ -36,6 +36,8 @@ function selectionWatcher(t: number | string) {
     if (t === Selection.CHANGE_PAGE) {
         titleRenderer.updateUnderRootContainerMap();
         watch_shapes();
+    } else if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_SHAPE_HOVER) {
+        titleRenderer.updateActive();
     }
 }
 
@@ -46,12 +48,7 @@ const rename = (value: string, shape: ShapeView) => {
 }
 
 function hover(shape: ShapeView) {
-    const page = props.data;
-
-    const _s = page.getShape(shape.id);
-    if (_s) {
-        props.context.selection.hoverShape(_s);
-    }
+    props.context.selection.hoverShape(shape);
 }
 
 const stopDataWatcher = watch(() => props.data, (n, o) => {
@@ -64,10 +61,7 @@ function leave() {
 }
 
 const update_by_shapes = (...args: any[]) => {
-    if (args.length === 1 && args[0] === 'isVisible') {
-        titleRenderer.fullUpdate();
-    }
-    
+    if (args.length === 1 && args[0] === 'isVisible') titleRenderer.fullUpdate();
 }
 const watchedShapes = new Map<string, ShapeView>(); // 图层监听
 function watch_shapes() {
