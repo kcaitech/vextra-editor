@@ -57,7 +57,7 @@ export class PathClipper {
         return closed;
     }
 
-    private del(slices: CurvePoint[][], indexes: number[], points: CurvePoint[]) {
+    private subtract(slices: CurvePoint[][], indexes: number[], points: CurvePoint[]) {
         const idSet = new Set<string>();
         for (const index of indexes) idSet.add(points[index].id);
         if (!slices.length) slices.push(points.slice(0));
@@ -69,7 +69,7 @@ export class PathClipper {
         }
     }
 
-    private cut(slices: CurvePoint[][], indexes: number[], points: CurvePoint[], isClosed: boolean) {
+    private split(slices: CurvePoint[][], indexes: number[], points: CurvePoint[], isClosed: boolean) {
         const idSet = new Set<string>();
         for (const index of indexes) idSet.add(points[index].id);
         if (!slices.length) slices.push(points.slice(0));
@@ -100,7 +100,7 @@ export class PathClipper {
         return closed;
     }
 
-    private __clip(keepClosed = false) {
+    private getSlices(keepClosed = false) {
         const path = this.context.path;
         const segments = this.view.segments;
         const sides = path.selectedSides;
@@ -126,9 +126,9 @@ export class PathClipper {
             const _points = points.get(index);
             if (_points) {
                 if (keepClosed) {
-                    this.del(slices, _points, segment.points as CurvePoint[]);
+                    this.subtract(slices, _points, segment.points as CurvePoint[]);
                 } else {
-                    closed = this.cut(slices, _points, segment.points as CurvePoint[], segment.isClosed && !_sides);
+                    closed = this.split(slices, _points, segment.points as CurvePoint[], segment.isClosed && !_sides);
                 }
             }
             result.push({closed, originSegmentIndex: index, slices: slices.filter(s => s.length > 1)});
@@ -137,8 +137,8 @@ export class PathClipper {
     }
 
     clip(keepClosed = false) {
-        const params = this.__clip(keepClosed);
-        if (!params.length) return -1;
-        return this.context.editor4Shape(this.view).clipPath(params)
+        const slices = this.getSlices(keepClosed);
+        if (!slices.length) return -1;
+        return this.context.editor4Shape(this.view).clipPath(slices)
     }
 }
