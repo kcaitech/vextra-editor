@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
@@ -73,7 +73,7 @@ const higlighAlpha = ref<HTMLInputElement>()
 const sizeHoverIndex = ref(-1);
 const fontWeight = ref('Regular');
 const weightMixed = ref<boolean>(false);
-const shapes = ref<TextShapeView[]>(props.textShapes);
+const shapes = shallowRef<TextShapeView[]>(props.textShapes);
 const disableWeight = ref(false);
 const fontNameEl = ref<HTMLDivElement>();
 const selectText = ref('autowidth');

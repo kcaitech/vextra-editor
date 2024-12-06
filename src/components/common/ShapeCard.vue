@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { adapt2Shape, DViewCtx, Shape, ShapeView } from "@kcdesign/data";
-import { onMounted, onUnmounted, ref } from "vue";
+import { markRaw, onMounted, onUnmounted, ref } from "vue";
 import { elpatch } from "@/components/Document/Content/vdom/patch";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { debounce } from "lodash";
@@ -31,6 +31,7 @@ function mount() {
     if (!container.value) return;
 
     const ctx = new DViewCtx();
+    ctx.setMarkRawFun(markRaw)
     initComsMap(ctx.comsMap);
 
     const data = props.shape instanceof ShapeView ? adapt2Shape(props.shape) : props.shape;

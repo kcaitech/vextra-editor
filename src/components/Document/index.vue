@@ -132,7 +132,7 @@ onMounted(() => {
     initUI();
     init_watcher();
     init_keyboard_units();
-    localStorage.setItem('project_id', '');
+    // sessionStorage.setItem('project_id', ''); // 不是editor要处理的
     initpal().catch((e) => {
         console.error(e)
     });
