@@ -450,7 +450,7 @@ onUnmounted(() => {
           @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
     <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
           stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
-    <path v-if="borderPath" :d="borderPath" fill="transparent" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
+    <path v-if="borderPath" :d="borderPath" fill="rgba(255, 0, 0, 0.3)" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
 </svg>
 <TidyUpOutline :context="props.context" :controller-frame="controllerFrame"/>
 
