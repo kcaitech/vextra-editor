@@ -578,56 +578,52 @@ export class PathEditor extends TransformHandler {
     }
 
     private modifyBySegment(activePoints: XY[]) {
+        return false;
         // 点与线之间 比对、吸附、挣脱
-        if (!this.initFixedSegments) {
-            this.__initFS();
-        }
-
-        if (!this.initFixedSegments) {
-            return;
-        }
-
-        let distance = Infinity;
-        let dx = 0;
-        let dy = 0;
-
-        for (let i = 0; i < activePoints.length; i++) {
-            const point = activePoints[i];
-
-            this.fixedSegments.forEach(segment => {
-                let d: { point: { x: number, y: number }, distance: number } | undefined;
-
-                if (segment.type === SegmentType.Straight) {
-                    const seg = segment.seg as Line;
-                    d = point2line(point, seg.start, seg.end)
-                } else {
-                    const seg = segment.seg as Curve3rd;
-                    d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
-                }
-
-                if (d === undefined) return;
-
-                const D = Math.abs(d.distance);
-
-                if (D < distance) {
-                    const targetPoint = d.point;
-
-                    dx = targetPoint.x - point.x;
-                    dy = targetPoint.y - point.y;
-                    distance = D;
-                }
-            })
-        }
-
-        let modified = false;
-
-        if (distance < PathEditor.DELTA) {
-            activePoints[0].x += dx;
-            activePoints[0].y += dy;
-            modified = true;
-        }
-
-        return modified;
+        // if (!this.initFixedSegments) this.__initFS();
+        //
+        // if (!this.initFixedSegments) return;
+        //
+        // let distance = Infinity;
+        // let dx = 0;
+        // let dy = 0;
+        // for (let i = 0; i < activePoints.length; i++) {
+        //     const point = activePoints[i];
+        //
+        //     this.fixedSegments.forEach(segment => {
+        //         let d: { point: { x: number, y: number }, distance: number } | undefined;
+        //
+        //         if (segment.type === SegmentType.Straight) {
+        //             const seg = segment.seg as Line;
+        //             d = point2line(point, seg.start, seg.end)
+        //         } else {
+        //             const seg = segment.seg as Curve3rd;
+        //             d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
+        //         }
+        //
+        //         if (d === undefined) return;
+        //
+        //         const D = Math.abs(d.distance);
+        //
+        //         if (D < distance) {
+        //             const targetPoint = d.point;
+        //
+        //             dx = targetPoint.x - point.x;
+        //             dy = targetPoint.y - point.y;
+        //             distance = D;
+        //         }
+        //     })
+        // }
+        //
+        // let modified = false;
+        //
+        // if (distance < PathEditor.DELTA) {
+        //     activePoints[0].x += dx;
+        //     activePoints[0].y += dy;
+        //     modified = true;
+        // }
+        //
+        // return modified;
     }
 
     private __execute() {

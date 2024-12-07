@@ -631,6 +631,7 @@ function down(e: MouseEvent) {
         if (lastPoint) {
             pathModifier = new PathEditor(props.context, e);
             pathModifier.createApiCaller();
+            pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1, { ...preXY.value });
             const m = new Matrix(shape.matrix2Root());
             m.preScale(shape.frame.width, shape.frame.height);
             m.multiAtLeft(props.context.workspace.matrix);
@@ -641,15 +642,15 @@ function down(e: MouseEvent) {
                 const apex: { xy: XY, t?: number } = {xy: m.inverseCoord(preXY.value)};
                 if (isCurve && t) apex["t"] = t;
                 if (!pathModifier.addPoint(segmentIndex, index + 1, apex)) return;
+                props.context.path.adjust_points(segmentIndex, index + 1);
             }
-            pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1, { ...preXY.value });
             asyncEnvMount();
             e.stopPropagation();
         }
     } else {
         pathModifier = new PathEditor(props.context, e);
         pathModifier.createApiCaller();
-
+        if (!pathModifier.addSegmentForPen(preXY.value)) return;
         const m = new Matrix(shape.matrix2Root());
         m.preScale(shape.frame.width, shape.frame.height);
         m.multiAtLeft(props.context.workspace.matrix);
@@ -660,16 +661,11 @@ function down(e: MouseEvent) {
             const apex: { xy: XY, t?: number } = {xy: m.inverseCoord(preXY.value)};
             if (isCurve && t) apex["t"] = t;
             if (!pathModifier.addPoint(segmentIndex, index + 1, apex)) return;
+            props.context.path.adjust_points(segmentIndex, index + 1);
         }
-
-        if (!pathModifier.addSegmentForPen(preXY.value)) return;
-
         props.context.path.setContactStatus(true);
-
         setDisContactTrigger(props.context.path);
-
         asyncEnvMount();
-
         e.stopPropagation();
     }
 }
