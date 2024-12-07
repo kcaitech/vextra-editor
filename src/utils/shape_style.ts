@@ -37,7 +37,8 @@ import {
     Point2D,
     ImageScaleMode,
     PaintFilter,
-    PatternTransform
+    PatternTransform,
+    FillMask
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 
@@ -62,13 +63,17 @@ interface FormatItems {
 }
 
 // fills
-export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
+export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' | 'mask' {
     const fills: FillItem[] = [];
     const shape = shapes[0];
     const stylefills = shape?.getFills() || [];
     const compare_str: string[] = [];
     const has_g_str: string[] = [];
     const image_str: string[] = [];
+    const mask = shape.style.fillsMask ?? 'undefined';
+    const fill_mask: string[] = [];
+    fill_mask.push(mask)
+
     for (let i = 0, len = stylefills.length; i < len; i++) {
         const fill = stylefills[i];
         const f = { id: i, fill };
@@ -92,6 +97,11 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
         if (shape.type === ShapeType.Cutout) continue;
         const stylefills = shape.getFills();
         const len = stylefills.length;
+        if (shape.style.fillsMask) {
+            fill_mask.push(shape.style.fillsMask)
+        } else {
+            fill_mask.push('undefined')
+        }
         if (len !== fills.length) return 'mixed';
         const s_fs = stylefills;
         for (let j = 0; j < len; j++) {
@@ -110,6 +120,12 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
             }
         }
     }
+    const mask_b = fill_mask.every(i => mask !== 'undefined' && i === mask)
+    const mask_s = fill_mask.some(i => i !== 'undefined')
+
+    if (mask_b) return 'mask'
+    if (mask_s) return 'mixed'
+
     return fills;
 }
 
@@ -146,6 +162,25 @@ export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
     }
     return actions;
 }
+
+export function get_actions_add_fillmask(shapes: ShapeView[], id: string) {
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push({ target: (shapes[i]), value: id });
+    }
+    return actions;
+}
+
+export function get_actions_del_fillmask(shapes: ShapeView[], value: undefined) {
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push({ target: (shapes[i]), value });
+    }
+    return actions;
+}
+
 
 export function get_aciton_gradient(shapes: ShapeView[], index: number, type: 'fills' | 'borders') {
     const actions: BatchAction4[] = [];
@@ -222,6 +257,45 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
     return actions;
 }
 
+export function get_actions_fill_mask(shapes: ShapeView[]) {
+    const actions: BatchAction2[] = [];
+    let fills: Fill[] = [];
+    const id = shapes[0].style.fillsMask!
+    fills= (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        const new_fills: Fill[] = [];
+        for (let i = 0; i < fills.length; i++) {
+            const fill = fills[i];
+            const { isEnabled, fillType, color, contextSettings, imageRef, imageScaleMode, rotation, scale, originalImageWidth, originalImageHeight, paintFilter, transform } = fill;
+            const new_fill = new Fill(new BasicArray(), v4(), isEnabled, fillType, color);
+            if (fill.gradient) {
+                const _g = cloneGradient(fill.gradient);
+                new_fill.gradient = _g;
+            }
+            new_fill.imageRef = imageRef;
+            new_fill.imageScaleMode = imageScaleMode;
+            new_fill.rotation = rotation;
+            new_fill.scale = scale;
+            new_fill.originalImageWidth = originalImageWidth;
+            new_fill.originalImageHeight = originalImageHeight;
+            new_fill.originalImageHeight = originalImageHeight;
+            if (paintFilter) {
+                new_fill.paintFilter = new PaintFilter(paintFilter.exposure, paintFilter.contrast, paintFilter.saturation, paintFilter.temperature, paintFilter.tint, paintFilter.shadow, paintFilter.hue);
+            }
+            if (transform) {
+                new_fill.transform = new PatternTransform(transform.m00, transform.m01, transform.m02, transform.m10, transform.m11, transform.m12);
+            }
+            const imageMgr = fill.getImageMgr();
+            imageMgr && new_fill.setImageMgr(imageMgr);
+            new_fill.contextSettings = contextSettings;
+            new_fills.push(new_fill);
+        }
+        actions.push({ target: (shapes[i]), value: new_fills });
+    }
+    return actions;
+}
+
 export function get_actions_fill_enabled(shapes: ShapeView[], index: number, value: boolean) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -266,6 +340,7 @@ export function get_actions_fill_delete(shapes: ShapeView[], index: number) {
     }
     return actions;
 }
+
 
 // borders
 export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mixed' {
@@ -814,7 +889,7 @@ export function get_actions_add_blur(shapes: ShapeView[], blur: Blur) {
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, saturation, type, center } = blur;
-        const new_blur = new Blur(new BasicArray(),isEnabled, new Point2D(center.x, center.y), saturation, type);
+        const new_blur = new Blur(new BasicArray(), isEnabled, new Point2D(center.x, center.y), saturation, type);
         actions.push({ target: (shapes[i]), value: new_blur });
     }
     return actions;
@@ -832,7 +907,7 @@ export function get_actions_blur_unify(shapes: ShapeView[]) {
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout || i === b - 1) continue;
         const { isEnabled, saturation, type, center, motionAngle, radius } = blur;
-        const new_blur = new Blur(new BasicArray(),isEnabled, new Point2D(center.x, center.y), saturation, type, motionAngle, radius);
+        const new_blur = new Blur(new BasicArray(), isEnabled, new Point2D(center.x, center.y), saturation, type, motionAngle, radius);
         actions.push({ target: shapes[i], value: new_blur });
     }
     return actions;

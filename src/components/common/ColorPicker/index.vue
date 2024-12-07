@@ -116,6 +116,7 @@ interface Emits {
     (e: 'changeScale', scale: number): void;
     (e: 'closeMode'): void;
     (e: 'close'): void;
+    (e: "addfill"): void
 }
 
 export interface HRGB { // 色相
@@ -1560,11 +1561,12 @@ onUnmounted(() => {
             </div>
             <div v-if="custom === 'style'" class="color-style">
                 <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
-                    :fills="props.fillslist" @close="EditorStyle = false"></ColorStyle>
+                :fill="props.fillslist"  @close="EditorStyle = false">
+                </ColorStyle>
             </div>
             <div v-if="EditorStyle" class="editorstyle">
                 <EditorColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
-                    :fills="props.fillslist" @close="EditorStyle = false"></EditorColorStyle>
+                    :fill="props.fillslist" @close="EditorStyle = false" @addfill="emit('addfill')"></EditorColorStyle>
             </div>
         </div>
     </div>

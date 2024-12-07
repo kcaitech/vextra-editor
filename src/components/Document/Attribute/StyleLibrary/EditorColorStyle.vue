@@ -9,28 +9,28 @@
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input type="text" id="name">
+                <input type="text" id="name" v-model="styleName">
             </div>
             <div class="des">
                 <label for="des">描述</label>
-                <input type="text" id="des">
+                <input type="text" id="des" v-model="styleDes">
             </div>
         </div>
         <div class="color">
             <div class="create-color">
                 <div class="title">颜色</div>
-                <div class="add">
+                <div class="add" @click.stop="addfill">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </div>
             <div class="color-list">
-                <div class="item" v-for="(f, idx) in props.fills" :key="f.id">
+                <div class="item" v-for="(f, idx) in fills" :key="f.id">
                     <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                         <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                     </div>
                     <div class="editor">
                         <ColorPicker :color="f.fill.color" :entrance="'styles'" :context="props.context"
-                            :auto_to_right_line="true" :locat="{ index: props.fills!.length - idx - 1, type: 'fills' }"
+                            :auto_to_right_line="true" :locat="{ index: fills.length - idx - 1, type: 'fills' }"
                             :gradient="f.fill.gradient" :fillType="f.fill.fillType" :scale="f.fill.scale"
                             :image-scale-mode="(f.fill.imageScaleMode || ImageScaleMode.Fill)"
                             :imageUrl="getImageUrl(f.fill)" @change="c => getColorFromPicker(idx, c)"
@@ -98,6 +98,7 @@ import {
     get_aciton_gradient,
     get_aciton_gradient_stop,
     get_actions_add_fill,
+    get_actions_add_fillmask,
     get_actions_fill_color,
     get_actions_fill_delete,
     get_actions_fill_enabled,
@@ -121,7 +122,8 @@ interface FillItem {
     fill: Fill
 }
 const props = defineProps<{
-    fills?: FillItem[];
+    fill?: FillItem[];
+    style?: FillMask;
     context: Context;
     shapes: ShapeView[];
     top?: number;
@@ -131,13 +133,14 @@ const props = defineProps<{
 
 const emits = defineEmits<{
     (e: "close"): void;
+    (e: "addfill"): void;
 }>()
 
 
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
-const fills: FillItem[] = reactive([]);
+let fills: FillItem[] = reactive([]);
 const alphaFill = ref<HTMLInputElement[]>();
 const colorFill = ref<HTMLInputElement[]>();
 const mixed = ref<boolean>(false);
@@ -155,17 +158,26 @@ const tableSelect = ref({
     tableColStart: props.context.tableSelection.tableColStart,
     tableColEnd: props.context.tableSelection.tableColEnd
 });
+const styleName = ref<string>('')
+const styleDes = ref<string>('')
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 
+const addfill = () => {
+    if (!props.type) {
+        emits('addfill')
+    }
+}
+
 const insertStyleLib = () => {
-    const color = new Color(0.2, 0, 0, 0);
-    const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
     const editor = props.context.editor4Doc()
     const fills = new BasicArray<Fill>()
-    props.fills?.forEach(s => fills.push(s.fill))
-    const style = new FillMask(new BasicArray(), props.context.data.id, v4(), 'fill', '1231', fills)
-    editor.insertStyleLib(style);
+    props.fill?.forEach(s => fills.push(s.fill))
+    const style = new FillMask(new BasicArray(), props.context.data.id, v4(), styleName.value, styleDes.value, fills.reverse())
+    const page =props.context.selection.selectedPage!
+    const selected = props.context.selection.selectedShapes;
+    const shapes = getShapesForStyle(selected);
+    editor.insertStyleLib(style,page,shapes);
     emits('close')
 }
 
@@ -697,6 +709,26 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
     }
 
 }
+
+const update = () => {
+    if (props.fill) {
+        fills = props.fill
+        console.log('props.fills', props.fill, fills);
+    }
+    if (props.style) {
+        props.style.fills.forEach((f, idx) => fills.push({ id: idx, fill: f }))
+        fills = fills.reverse()
+        console.log('props.style', props.style);
+    }
+    // fills=fills.reverse()
+    styleName.value = props.style?.name ?? '颜色样式';
+    styleDes.value = props.style?.description ?? '';
+}
+
+onMounted(() => {
+    update();
+})
+
 
 </script>
 <style lang="scss" scoped>

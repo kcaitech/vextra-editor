@@ -605,6 +605,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             position: relative;
+            gap: 8px;
 
             .cutout-icon {
                 width: 28px;

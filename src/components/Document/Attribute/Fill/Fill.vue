@@ -5,6 +5,7 @@ import {
     BasicArray,
     Color,
     Fill,
+    FillMask,
     FillType,
     GradientType,
     ImageScaleMode,
@@ -22,9 +23,12 @@ import {
     get_aciton_gradient,
     get_aciton_gradient_stop,
     get_actions_add_fill,
+    get_actions_add_fillmask,
+    get_actions_del_fillmask,
     get_actions_fill_color,
     get_actions_fill_delete,
     get_actions_fill_enabled,
+    get_actions_fill_mask,
     get_actions_fill_opacity,
     get_actions_fill_unify,
     get_actions_filltype,
@@ -70,6 +74,8 @@ const openstyle = ref<boolean>(false)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const styleTop = ref<number>()
 const styleLeft = ref<number>()
+const mask = ref<boolean>(false)
+const fill = ref<FillMask>()
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
@@ -79,6 +85,7 @@ function updateData() {
     fills.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
+    mask.value = false;
     const selected = props.context.selection.selectedShapes;
     if (!selected.length) {
         return;
@@ -109,6 +116,8 @@ function updateData() {
             const _fs = get_fills(cells);
             if (_fs === 'mixed') {
                 mixed_cell.value = true;
+            } else if (_fs === 'mask') {
+                mask.value = true
             } else {
                 if (_fs.length > 0 && might_is_mixed) {
                     mixed_cell.value = true;
@@ -122,6 +131,12 @@ function updateData() {
         const _fs = get_fills(shapes);
         if (_fs === 'mixed') {
             mixed.value = true;
+        } else if (_fs === 'mask') {
+            const id = shapes[0].style.fillsMask
+            if (!id) return
+            const libs = shapes[0].style.getStylesMgr()
+            fill.value = libs?.getSync(id) as FillMask
+            mask.value = true
         } else {
             fills.push(..._fs.reverse());
         }
@@ -158,10 +173,19 @@ function addFill(): void {
     } else {
         const page = props.context.selection.selectedPage!;
         const shapes = getShapesForStyle(selected);
+        const mask = shapes.some(s => s.style.fillsMask !== undefined)
         if (mixed.value) {
-            const actions = get_actions_fill_unify(shapes);
             const editor = props.context.editor4Page(page);
-            editor.shapesFillsUnify(actions);
+            if (mask) {
+                const s = shapes.find(i => i.style.fillsMask !== undefined)
+                const id = s?.style.fillsMask as string
+                const actions = get_actions_add_fillmask(shapes, id);
+                editor.shapesSetFillMask(actions);
+            } else {
+                const actions = get_actions_fill_unify(shapes);
+                editor.shapesFillsUnify(actions);
+            }
+
         } else {
             const actions = get_actions_add_fill(shapes, fill);
             const editor = props.context.editor4Page(page);
@@ -726,6 +750,17 @@ const initpanel = () => {
     styleLeft.value = undefined
 }
 
+const delfillmask = () => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions=get_actions_fill_mask(shapes)
+    const editor = props.context.editor4Page(page);
+    editor.shapesDelFillMask(actions);
+
+}
+
+
 // hooks
 const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
 const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
@@ -750,10 +785,10 @@ onUnmounted(() => {
     <div class="fill-panel">
         <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first" :active="!!fills.length">
             <template #tool>
-                <div class="style" @click.stop="positionpanel($event)">
+                <div v-if="!mask && !mixed" class="style" @click.stop="positionpanel($event)">
                     <svg-icon icon-class="styles"></svg-icon>
                 </div>
-                <div class="add" @click.stop="addFill">
+                <div v-if="!mask" class="add" @click.stop="addFill">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </template>
@@ -761,10 +796,29 @@ onUnmounted(() => {
         <div class="tips-wrap" v-if="mixed">
             <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
         </div>
+        <div class="fillmask" v-if="mask">
+            <div class="info">
+                <div class="left" @click="">
+                    <div class="color">
+                        <div class="main"
+                            :style="{ backgroundColor: `rgb(${fill?.fills[0].color.red},${fill?.fills[0].color.green},${fill?.fills[0].color.blue})`, opacity: fill?.fills[0].color.alpha }">
+                            <div class="mask" :style="{ opacity: 1 - fill?.fills[0].color.alpha }"></div>
+                        </div>
+                    </div>
+                    <div class="name">{{ fill?.name }}</div>
+                </div>
+                <div class="unbind" @click="delfillmask">
+                    <svg-icon icon-class="unbind"></svg-icon>
+                </div>
+            </div>
+            <div class="delete-style">
+                <svg-icon icon-class="delete"></svg-icon>
+            </div>
+        </div>
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="fills-container" v-else-if="!mixed && !mixed_cell && fills.length">
+        <div class="fills-container" v-else-if="!mixed && !mask && !mixed_cell && fills.length">
             <div class="fill" v-for="(f, idx) in fills" :key="f.id">
                 <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
@@ -786,7 +840,7 @@ onUnmounted(() => {
                         @changeMode="(mode) => changeMode(idx, mode)"
                         @setImageRef="(url, origin, imageMgr) => setImageRef(idx, url, origin, imageMgr)"
                         @changeRotate="changeRotate(idx, f.fill)" @changeScale="(scale) => changeScale(idx, scale)"
-                        @closeMode="closeMode(idx)" @close="initpanel">
+                        @closeMode="closeMode(idx)" @close="initpanel" @addfill="addFill">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType === FillType.SolidColor"
                         :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
@@ -983,6 +1037,103 @@ onUnmounted(() => {
             height: 14px;
             text-align: center;
             font-size: var(--font-default-fontsize);
+        }
+    }
+
+    .fillmask {
+        display: flex;
+        height: 32px;
+        border-radius: 6px;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        gap: 8px;
+
+        .info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+            overflow: hidden;
+            background-color: #f4f5f5;
+            height: 100%;
+
+            .left {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                background-color: #F5F5F5;
+                height: 100%;
+
+                &:hover {
+                    background-color: #e5e5e5;
+                }
+
+                .color {
+                    width: 16px;
+                    height: 16px;
+                    background-color: #fff;
+                    border: 1px solid rgba(230, 230, 230, 0.7);
+                    border-radius: 3px;
+                    overflow: hidden;
+                    margin: 0 8px;
+
+                    .main {
+                        width: 16px;
+                        height: 16px;
+                        background-color: #000;
+                        position: relative;
+
+                        .mask {
+                            position: absolute;
+                            top: 0;
+                            right: 0;
+                            width: 50%;
+                            height: 100%;
+                            background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
+                        }
+                    }
+                }
+            }
+
+            .unbind {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 32px;
+
+                >svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+
+            .unbind:hover {
+                background-color: #e5e5e5;
+            }
+        }
+
+
+        .delete-style {
+            flex: 0 0 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--default-radius);
+            overflow: hidden;
+
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .delete-style:hover {
+            background-color: #F5F5F5;
         }
     }
 

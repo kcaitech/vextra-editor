@@ -12,39 +12,43 @@
                 <div class="list-item" @click.stop="Changefilter('全部')">
                     <span>全部</span>
                 </div>
-                <div class="list-item" v-for="i in test" :key="i.type" @click.stop="Changefilter(i.type)">
-                    <span> {{ i.type }}</span>
+                <div class="list-item" v-for="s in data" :key="s.id" @click.stop="Changefilter(s.name)">
+                    <span> {{ s.name }}</span>
                 </div>
             </div>
         </div>
         <el-scrollbar>
             <div class="content">
-                <div class="style-item" v-for="i in data" :key="i.type">
-                    <div class="type" @click.stop="showtype(i.type)">
-                        <svg-icon :icon-class="showtypes.has(i.type) ? 'triangle-down' : 'triangle-right'"></svg-icon>
-                        <span>{{ i.type }}</span>
+                <div class="style-item" v-for="s in data" :key="s.id">
+                    <div class="type" @click.stop="showtype(s.name)">
+                        <svg-icon :icon-class="showtypes.has(s.name) ? 'triangle-down' : 'triangle-right'"></svg-icon>
+                        <span>{{ s.name }}</span>
                     </div>
-                    <template v-if="showtypes.has(i.type)">
-                        <div class="styles" v-for="s in i.styles.filter(s => s.name.includes(searchval))">
+                    <template v-if="showtypes.has(s.name)">
+                        <div class="styles" v-for="f in s.variables.filter(v => v.name.includes(searchval))" :key="f.id"
+                            @click="addfillmask(f.id)">
                             <div class="left">
                                 <div class="color">
-                                    <div class="main" :style="{ backgroundColor: '#000', opacity: s.content[0] }">
-                                        <div class="mask" :style="{ opacity: 1 - s.content[0] }"></div>
+                                    <div class="main"
+                                        :style="{ backgroundColor: `rgb(${f.fills[0].color.red},${f.fills[0].color.green},${f.fills[0].color.blue})`, opacity: f.fills[0].color.alpha }">
+                                        <div class="mask" :style="{ opacity: 1 - f.fills[0].color.alpha }"></div>
                                     </div>
                                 </div>
-                                <div class="name">{{ s.name }}</div>
+                                <div class="name">{{ f.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event)">
+                            <div class="editor" style="visibility: hidden;"
+                                @click.stop="EditPanel($event, f as FillMask)">
                                 <svg-icon icon-class="export-menu"></svg-icon>
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-if="!data.length" class="null">没有搜索到相关样式</div>
+                <div v-if="!data?.length && searchval" class="search-null">没有搜索到相关样式</div>
+                <div v-if="!data?.length && !searchval" class="data-null">暂无颜色样式</div>
             </div>
         </el-scrollbar>
         <EditorColorStyle v-if="showeditor" :type="'editor'" :top="Top" :left="Left"
-            :shapes="props.context.selection.selectedShapes" :context="props.context" :fills="props.fills"
+            :shapes="props.context.selection.selectedShapes" :context="props.context" :style="styles"
             @close="showeditor = !showeditor"></EditorColorStyle>
     </div>
 
@@ -54,6 +58,7 @@ import {
     BasicArray,
     Color,
     Fill,
+    FillMask,
     FillType,
     GradientType,
     ImageScaleMode,
@@ -63,8 +68,11 @@ import {
     TableView
 } from "@kcdesign/data";
 import { Context } from '@/context';
-import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import EditorColorStyle from './EditorColorStyle.vue';
+import { FillMask_fills } from "@kcdesign/data/dist/types/data/typesdefine";
+import { getShapesForStyle } from "@/utils/style";
+import { get_actions_add_fillmask } from "@/utils/shape_style";
 interface FillItem {
     id: number,
     fill: Fill
@@ -74,6 +82,8 @@ const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
 }>();
+
+
 const showfilter = ref<boolean>(false)
 const searchval = ref<string>('')
 const filterval = ref<string>('')
@@ -87,34 +97,52 @@ const Changefilter = (v: string) => {
     showtypes.value.add(v)
 }
 const search = ref<HTMLInputElement>()
-
+const styles = ref<FillMask>()
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
+    console.log(showtypes.value);
+
 }
 
-const test = [
-    { type: 'location', styles: [{ name: '33', content: [0.2] }, { name: '2', content: [1] }] },
-    { type: 'ios', styles: [{ name: '1', content: [1, 2, 3, 4] }, { name: '12', content: [1, 2, 3, 4] }] },
-    { type: 'android', styles: [{ name: '1', content: [1, 2, 3, 4] }, { name: '22', content: [1, 2, 3, 4] }] },
-    { type: 'test', styles: [{ name: '1', content: [1, 2, 3, 4] }, { name: 'ss', content: [1, 2, 3, 4] }] },
-    { type: '样式', styles: [{ name: 'ssq', content: [1, 2, 3, 4] }, { name: 'hs', content: [1, 2, 3, 4] }] },
-    { type: '哈哈哈', styles: [{ name: 'jj', content: [1, 2, 3, 4] }, { name: '2', content: [1, 2, 3, 4] }] },
-    { type: '啥啥啥', styles: [{ name: 'oop', content: [1, 2, 3, 4] }, { name: '2', content: [1, 2, 3, 4] }] },
-    { type: '4898', styles: [{ name: '换行', content: [1, 2, 3, 4] }, { name: 'SHW', content: [1, 2, 3, 4] }] },
-    { type: '你好SGG88', styles: [{ name: '瓦特', content: [1, 2, 3, 4] }, { name: '2', content: [1, 2, 3, 4] }] },
-]
+function update() {
+    const lib = props.context.data.stylesMgr
+    console.log(lib);
+
+    if (!lib) return
+}
+
+const addfillmask = (id: string) => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    if (false) {
+        const actions = get_actions_fill_unify(shapes);
+        const editor = props.context.editor4Page(page);
+        editor.shapesFillsUnify(actions);
+    } else {
+        const actions = get_actions_add_fillmask(shapes, id);
+        const editor = props.context.editor4Page(page);
+        editor.shapesSetFillMask(actions);
+    }
+}
+
+
 
 const data = computed(() => {
+    if (!props.context.data.stylelib) return []
     let d;
     if (filterval.value && filterval.value !== '全部') {
-        d = test.filter(i => i.type === filterval.value)
+        d = props.context.data.stylelib.filter(s => s.name === filterval.value)
     } else {
-        d = test
+        d = props.context.data.stylelib
     }
-    return d.filter(i => i.styles.filter(s => s.name.includes(searchval.value)).length !== 0)
+    return d.filter(s => s.variables.filter(v => v.name.includes(searchval.value)).length !== 0)
 })
 
-const EditPanel = (e: MouseEvent) => {
+
+
+const EditPanel = (e: MouseEvent, style: FillMask) => {
+    styles.value = style
     let el = e.target as HTMLElement;
     while (el.parentElement?.className !== 'style-item') {
         if (el.parentElement) {
@@ -130,7 +158,8 @@ const EditPanel = (e: MouseEvent) => {
 }
 
 watchEffect(() => {
-    data.value.forEach(i => showtypes.value.add(i.type))
+    data.value.forEach(i => showtypes.value.add(i.name))
+    console.log(showtypes.value);
 })
 
 function inputBlur(e: KeyboardEvent) {
@@ -140,11 +169,14 @@ function inputBlur(e: KeyboardEvent) {
 }
 
 onMounted(() => {
-    document.addEventListener('keydown',inputBlur)
+    // update();
+    // console.log(data.value);
+
+    document.addEventListener('keydown', inputBlur)
 })
 
 onUnmounted(() => {
-    document.removeEventListener('keydown',inputBlur)
+    document.removeEventListener('keydown', inputBlur)
 })
 
 
@@ -326,7 +358,11 @@ onUnmounted(() => {
         }
     }
 
-    .null {
+    .search-null {
+        margin: auto;
+    }
+
+    .data-null {
         margin: auto;
     }
 }
