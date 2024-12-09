@@ -42,7 +42,9 @@ export function get_colony_center_x(shapes: ShapeView[]) {
         const points = getFrameAnchor(shapes[i]);
         points.forEach(p => _xs.push(p[0]));
     }
-    return (Math.min(..._xs) + Math.max(..._xs)) / 2;
+    let center = (Math.min(..._xs) + Math.max(..._xs));
+    if (Math.round(center) % 2) center--;
+    return center / 2;
 }
 // 群的最右端
 export function get_colony_right(shapes: ShapeView[]) {
@@ -69,7 +71,9 @@ export function get_colony_center_y(shapes: ShapeView[]) {
         const points = getFrameAnchor(shapes[i]);
         points.forEach(p => _ys.push(p[1]));
     }
-    return (Math.min(..._ys) + Math.max(..._ys)) / 2;
+    let center = (Math.min(..._ys) + Math.max(..._ys));
+    if (Math.round(center) % 2) center--;
+    return center / 2;
 }
 // 群的最低端
 export function get_colony_bottom(shapes: ShapeView[]) {
