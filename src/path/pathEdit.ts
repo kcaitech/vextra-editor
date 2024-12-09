@@ -20,7 +20,6 @@ import { is_layers_tree_unit } from "@/utils/scout";
 import { forbidden_to_modify_frame } from "@/utils/common";
 import { permIsEdit } from "@/utils/permission";
 import { roundBy } from "@/path/common";
-import { Point2D } from "../../../kcdesign-data/src";
 
 type Base = {
     x: number;
@@ -206,6 +205,8 @@ export class PathEditor extends TransformHandler {
         if (flattenPoint) { // 用于减去重合的点
             this.getUniquePosition();
         }
+
+        context.workspace.linearEditorExist = true;
     }
 
     private mapX = new Map<number, XY[]>();
@@ -1239,9 +1240,9 @@ export class PathEditor extends TransformHandler {
     }
 
     fulfil() {
-        this.workspace.setSelectionViewUpdater(true);
         this.path.editing(false);
-
+        this.workspace.setSelectionViewUpdater(true);
+        this.workspace.linearEditorExist = false;
         super.fulfil();
     }
 
@@ -1285,26 +1286,6 @@ export class PathEditor extends TransformHandler {
             }
 
             (this.asyncApiCaller as PathModifier).sortSegment(this.shape);
-        } finally {
-            this.fulfil();
-        }
-    }
-
-    modifyClosedStatus(val: boolean) {
-        try {
-            if (!this.isInitMatrix) {
-                this.init();
-            }
-
-            if (!this.asyncApiCaller) {
-                this.createApiCaller();
-            }
-
-            if (!this.asyncApiCaller || !this.isInitMatrix) {
-                return;
-            }
-
-            (this.asyncApiCaller as PathModifier).modifyClosedStatus(this.shape, val);
         } finally {
             this.fulfil();
         }
