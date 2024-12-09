@@ -20,6 +20,7 @@ import { is_layers_tree_unit } from "@/utils/scout";
 import { forbidden_to_modify_frame } from "@/utils/common";
 import { permIsEdit } from "@/utils/permission";
 import { roundBy } from "@/path/common";
+import { Point2D } from "../../../kcdesign-data/src";
 
 type Base = {
     x: number;
@@ -116,18 +117,14 @@ function point2curve3rd(point: XY, start: XY, c1: XY, c2: XY, end: XY) {
 
         const derivativeDotProduct = dxToPoint * _der.x + dyToPoint * _der.y;
 
-        if (Math.abs(derivativeDotProduct) < epsilon) {
-            break;
-        }
+        if (Math.abs(derivativeDotProduct) < epsilon) break;
 
         t -= (derivativeDotProduct / (_der.x * _der.x + _der.y * _der.y));
 
         i++;
     }
 
-    if (t < 0 || t > 1) {
-        return;
-    }
+    if (t < 0 || t > 1) return;
 
     const xy = cubicBezier(t, start, c1, c2, end);
     const distance = Math.sqrt((point.x - xy.x) ** 2 + (point.y - xy.y) ** 2);
@@ -581,56 +578,52 @@ export class PathEditor extends TransformHandler {
     }
 
     private modifyBySegment(activePoints: XY[]) {
+        return false;
         // 点与线之间 比对、吸附、挣脱
-        if (!this.initFixedSegments) {
-            this.__initFS();
-        }
-
-        if (!this.initFixedSegments) {
-            return;
-        }
-
-        let distance = Infinity;
-        let dx = 0;
-        let dy = 0;
-
-        for (let i = 0; i < activePoints.length; i++) {
-            const point = activePoints[i];
-
-            this.fixedSegments.forEach(segment => {
-                let d: { point: { x: number, y: number }, distance: number } | undefined;
-
-                if (segment.type === SegmentType.Straight) {
-                    const seg = segment.seg as Line;
-                    d = point2line(point, seg.start, seg.end)
-                } else {
-                    const seg = segment.seg as Curve3rd;
-                    d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
-                }
-
-                if (d === undefined) return;
-
-                const D = Math.abs(d.distance);
-
-                if (D < distance) {
-                    const targetPoint = d.point;
-
-                    dx = targetPoint.x - point.x;
-                    dy = targetPoint.y - point.y;
-                    distance = D;
-                }
-            })
-        }
-
-        let modified = false;
-
-        if (distance < PathEditor.DELTA) {
-            activePoints[0].x += dx;
-            activePoints[0].y += dy;
-            modified = true;
-        }
-
-        return modified;
+        // if (!this.initFixedSegments) this.__initFS();
+        //
+        // if (!this.initFixedSegments) return;
+        //
+        // let distance = Infinity;
+        // let dx = 0;
+        // let dy = 0;
+        // for (let i = 0; i < activePoints.length; i++) {
+        //     const point = activePoints[i];
+        //
+        //     this.fixedSegments.forEach(segment => {
+        //         let d: { point: { x: number, y: number }, distance: number } | undefined;
+        //
+        //         if (segment.type === SegmentType.Straight) {
+        //             const seg = segment.seg as Line;
+        //             d = point2line(point, seg.start, seg.end)
+        //         } else {
+        //             const seg = segment.seg as Curve3rd;
+        //             d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
+        //         }
+        //
+        //         if (d === undefined) return;
+        //
+        //         const D = Math.abs(d.distance);
+        //
+        //         if (D < distance) {
+        //             const targetPoint = d.point;
+        //
+        //             dx = targetPoint.x - point.x;
+        //             dy = targetPoint.y - point.y;
+        //             distance = D;
+        //         }
+        //     })
+        // }
+        //
+        // let modified = false;
+        //
+        // if (distance < PathEditor.DELTA) {
+        //     activePoints[0].x += dx;
+        //     activePoints[0].y += dy;
+        //     modified = true;
+        // }
+        //
+        // return modified;
     }
 
     private __execute() {
@@ -859,14 +852,16 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
-    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
-        if (!this.asyncApiCaller || !this.shape) {
-            return false;
-        }
+    addPoint(segmentIdx: number, index: number, apex?: { xy: XY, t?: number }) {
+        if (!this.asyncApiCaller || !this.shape) return false;
+        if (!this.isInitMatrix) this.init();
+        return (this.asyncApiCaller as PathModifier).addPoint(this.shape, segmentIdx, index, apex as any);
+    }
 
-        if (!this.isInitMatrix) {
-            this.init();
-        }
+    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
+        if (!this.asyncApiCaller || !this.shape) return false;
+
+        if (!this.isInitMatrix) this.init();
 
         let xy;
 
@@ -882,9 +877,7 @@ export class PathEditor extends TransformHandler {
         let addRes = false;
         if (index > -1 && segment > -1) {
             const __segment = (this.shape as PathShapeView).segments[segment];
-            if (!__segment) {
-                return this.addSegmentForPen(down);
-            }
+            if (!__segment) return this.addSegmentForPen(down);
 
             index = __segment.points.length;
 
@@ -907,13 +900,9 @@ export class PathEditor extends TransformHandler {
     }
 
     addSegmentForPen(down: XY, point?: CurvePoint) {
-        if (!this.asyncApiCaller || !this.shape) {
-            return false;
-        }
+        if (!this.asyncApiCaller || !this.shape) return false;
 
-        if (!this.isInitMatrix) {
-            this.init();
-        }
+        if (!this.isInitMatrix) this.init();
 
         let xy;
 

@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick, shallowRef } from 'vue';
 import { Context } from '@/context';
 import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, TableCellType, AsyncTextAttrEditor } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -45,8 +45,8 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const shape = ref<TableCellView>()
-const table = ref<TableCellView>()
+const shape = shallowRef<TableCellView>()
+const table = shallowRef<TableCellView>()
 const sizeHoverIndex = ref(-1);
 const fillType = ref<FillType>(FillType.SolidColor);
 const gradient = ref<Gradient>();

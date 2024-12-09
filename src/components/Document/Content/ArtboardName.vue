@@ -25,7 +25,6 @@ const nameInput = ref<HTMLInputElement>();
 const inputSpan = ref<HTMLSpanElement>();
 const esc = ref<boolean>(false)
 const inputWidth = ref(5)
-const hover = ref(false)
 let isDragging: boolean = false;
 let translate2: Translate2 | undefined = undefined;
 
@@ -100,13 +99,11 @@ const ChangeReName = (e: Event) => {
 const hoverShape = (e: MouseEvent) => {
     if (isDragging) return;
     emit('hover', props.data.shape)
-    hover.value = true
 }
 
 const unHoverShape = (e: MouseEvent) => {
     if (isDragging) return;
     emit('leave')
-    hover.value = false
 }
 
 function down(e: MouseEvent) {
@@ -197,7 +194,7 @@ function windowBlur() {
     <div
         v-if="!isInput"
         class="name"
-        :class="{  active: hover }"
+        :class="{ 'active-box': data.active }"
         :style="{ maxWidth: data.width + 'px' }"
         @dblclick="onRename"
     >
@@ -233,7 +230,7 @@ function windowBlur() {
                       rx="0.5" fill="#B7A4F3"/>
             </g>
         </svg>
-        <span :class="{'force-theme':data.isSymbol }">{{ data.name }}</span>
+        <span :class="{'force-theme': data.isSymbol }">{{ data.name }}</span>
     </div>
     <input
         v-if="isInput"
@@ -288,11 +285,7 @@ function windowBlur() {
         box-sizing: border-box;
     }
 
-    .selected {
-        color: var(--active-color);
-    }
-
-    .active {
+    .active-box {
         color: var(--active-color);
     }
 
