@@ -256,7 +256,7 @@ export class BaseCreator extends BaseTreeNode {
             this.attributes.transform = this.localAttributes["transform"] ?? undefined
             transform = this.attributes.transform
         }
-        if (transform) this.transform.addTransform(parseTransform(transform));
+        if (transform) this.transform.addTransform(parseTransform(transform, {width: this.attributes.width ?? 0, height: this.attributes.height ?? 0}));
 
         // opacity
         const opacity = this.localAttributes["opacity"]
@@ -575,18 +575,17 @@ export class BaseCreator extends BaseTreeNode {
         //     console.log("scale", scale.toString())
         //     console.log("shape.frame", shape.frame.width, shape.frame.height)
         // }
-
         // 抵消视图层在前后加的两次平移操作
-        if (this.transform.hasRotation()) {
-            const res = this.transform.clone()
-                .preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0]))
-                .translate(new ColVector3D([-w1 / 2, -h1 / 2, 0]))
-                .decompose()
-            translate = res.translate
-            rotate = res.rotate
-            skew = res.skew
-            scale = res.scale
-        }
+        // if (this.transform.hasRotation()) {
+        //     const res = this.transform.clone()
+        //         .preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0]))
+        //         .translate(new ColVector3D([-w1 / 2, -h1 / 2, 0]))
+        //         .decompose()
+        //     translate = res.translate
+        //     rotate = res.rotate
+        //     skew = res.skew
+        //     scale = res.scale
+        // }
 
         // dev code
         // if (this.htmlElement?.tagName === "rect") {

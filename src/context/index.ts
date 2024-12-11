@@ -46,7 +46,7 @@ import { EscStack } from "./escstack";
 import { scout, Scout } from "@/utils/scout";
 import { Preview } from "./preview";
 import { MossClipboard } from "@/clipboard";
-import { EditorLayout, EditorGUI } from "@/components/Document/Layout/editorlayout";
+import { EditorLayout } from "@/components/Document/Layout/editorlayout";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -79,6 +79,10 @@ export class RepoWraper {
 
     unwatch(f: Function) {
         throw new Error("Not implemented")
+    }
+
+    setOnLoaded(onLoaded: () => void) {
+        this.m_repo.setOnLoaded(onLoaded);
     }
 
     // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
@@ -420,5 +424,9 @@ export class Context extends WatchableObject implements IContext {
 
     get layout() {
         return this.m_layout;
+    }
+
+    setOnLoaded(onLoaded: () => void) {
+        this.m_repo.setOnLoaded(onLoaded);
     }
 }

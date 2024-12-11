@@ -8,7 +8,7 @@ import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";
-import { startEdit } from "@/transform/pathEdit";
+import { startEdit } from "@/path/pathEdit";
 import { LineHandler } from "@/transform/line";
 import { CursorType } from "@/utils/cursor2";
 
@@ -55,7 +55,7 @@ function update_dot_path() {
     m.preScale(f.width, f.height);
 
     const points = (props.shape as PathShapeView)?.segments[0]?.points;
-    if (!points[0] || !points[1]) return;
+    if (!points?.[0] || !points?.[1]) return;
 
     const p1 = m.computeCoord3(points[0]);
     const p2 = m.computeCoord3(points[1]);

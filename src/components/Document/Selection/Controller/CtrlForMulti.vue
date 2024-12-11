@@ -99,11 +99,7 @@ const tidyUpHidden = () => {
     const shapes = props.context.selection.selectedShapes;
     const length = shapes.filter(shape => shape.isVisible).length;
     if (length <= 1 || length > 100) return isTidyUp.value = false;
-    if (hiddenTidyUp(shapes)) {
-        isTidyUp.value = false;
-    } else {
-        isTidyUp.value = true;
-    }
+    isTidyUp.value = !hiddenTidyUp(shapes);
 }
 
 function mousedown(e: MouseEvent) {

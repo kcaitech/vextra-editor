@@ -47,7 +47,6 @@ import {
 import { unAutoLayoutFn } from "./auto_layout";
 import { MossClipboard } from "@/clipboard";
 
-// todo 键盘事件的权限处理
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
@@ -63,9 +62,15 @@ function keydown(event: KeyboardEvent, context: Context) {
 }
 
 function keyup(event: KeyboardEvent, context: Context) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
+        return;
+    }
     if (event.code === 'AltLeft' || event.code === 'AltRight') {
         event.preventDefault();
         context.selection.setShowInterval(false);
+    }
+    if (event.code === "KeyZ") {
+        context.selection.zoomIn = false;
     }
 }
 
@@ -449,6 +454,7 @@ keydownHandler['KeyY'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     event.preventDefault();
+    if (!is_ctrl && !event.repeat) context.selection.zoomIn = true;
     if (!permIsEdit(context)) return;
     try {
         if (is_ctrl && event.shiftKey) { // 重做
@@ -456,7 +462,6 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
             redo(context);
             return;
         }
-
         if (is_ctrl) { // 撤销
             event.preventDefault();
             undo(context);
@@ -767,13 +772,13 @@ keydownHandler['Backslash'] = function (event: KeyboardEvent, context: Context) 
 keydownHandler['Backspace'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (!permIsEdit(context)) return;
-    deleteUnits(context);
+    deleteUnits(context, event.shiftKey);
 }
 
 keydownHandler['Delete'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (!permIsEdit(context)) return;
-    deleteUnits(context);
+    deleteUnits(context, event.shiftKey);
 }
 
 keydownHandler['BracketRight'] = function (event: KeyboardEvent, context: Context) {

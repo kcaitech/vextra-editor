@@ -27,9 +27,7 @@ const countdown = ref(10);
 const loading = ref<boolean>(true);
 const contentVisible = ref<boolean>(false);
 const bridge = ref<boolean>(false);
-const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
-const layout = ref<any>();
 let uninstall_keyboard_units: () => void = () => {
 };
 
@@ -134,10 +132,8 @@ onMounted(() => {
     initUI();
     init_watcher();
     init_keyboard_units();
-    localStorage.setItem('project_id', '');
-    initpal().then(() => {
-        inited.value = true;
-    }).catch((e) => {
+    // sessionStorage.setItem('project_id', ''); // 不是editor要处理的
+    initpal().catch((e) => {
         console.error(e)
     });
 })
@@ -163,7 +159,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-<EditorLayout :context="(context as Context)" ref="layout">
+<EditorLayout :context="(context as Context)">
     <template #top>
         <Toolbar v-if="contentVisible" :context="(context as Context)"/>
     </template>

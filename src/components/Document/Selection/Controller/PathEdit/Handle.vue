@@ -15,7 +15,7 @@ import {
 import { CurvePoint } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { check_drag_action } from "@/utils/mouse";
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 
 interface Props {
     context: Context

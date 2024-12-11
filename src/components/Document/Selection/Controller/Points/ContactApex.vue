@@ -62,7 +62,7 @@ let downXY = { x: 0, y: 0 };
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
-    fromOrTo.value = props.shape.fromAndto as FAT
+    fromOrTo.value = props.shape.apexes as FAT
 }
 
 function update_dot_path() {

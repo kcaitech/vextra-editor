@@ -11,7 +11,7 @@ import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { Action } from '@/context/tool';
-import { PathEditor } from "@/transform/pathEdit";
+import { PathEditor } from "@/path/pathEdit";
 
 interface Props {
     context: Context
@@ -309,15 +309,13 @@ function workspaceWatcher(t: number | string) {
 
 onMounted(() => {
     shape = props.context.selection.pathshape!;
-    if (!shape) {
-        return console.log('wrong shape');
-    }
+    if (!shape) return console.log('wrong shape');
     shape.watch(update);
-
     update();
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
     props.context.workspace.watch(workspaceWatcher);
+    props.context.path.setContactStatus(false);
 })
 
 onUnmounted(() => {

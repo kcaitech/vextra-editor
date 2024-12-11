@@ -19,6 +19,7 @@ import { Assist } from "@/context/assist";
 import { is_layers_tree_unit } from "@/utils/scout";
 import { forbidden_to_modify_frame } from "@/utils/common";
 import { permIsEdit } from "@/utils/permission";
+import { roundBy } from "@/path/common";
 
 type Base = {
     x: number;
@@ -115,18 +116,14 @@ function point2curve3rd(point: XY, start: XY, c1: XY, c2: XY, end: XY) {
 
         const derivativeDotProduct = dxToPoint * _der.x + dyToPoint * _der.y;
 
-        if (Math.abs(derivativeDotProduct) < epsilon) {
-            break;
-        }
+        if (Math.abs(derivativeDotProduct) < epsilon) break;
 
         t -= (derivativeDotProduct / (_der.x * _der.x + _der.y * _der.y));
 
         i++;
     }
 
-    if (t < 0 || t > 1) {
-        return;
-    }
+    if (t < 0 || t > 1) return;
 
     const xy = cubicBezier(t, start, c1, c2, end);
     const distance = Math.sqrt((point.x - xy.x) ** 2 + (point.y - xy.y) ** 2);
@@ -208,6 +205,8 @@ export class PathEditor extends TransformHandler {
         if (flattenPoint) { // 用于减去重合的点
             this.getUniquePosition();
         }
+
+        context.workspace.linearEditorExist = true;
     }
 
     private mapX = new Map<number, XY[]>();
@@ -580,59 +579,61 @@ export class PathEditor extends TransformHandler {
     }
 
     private modifyBySegment(activePoints: XY[]) {
+        return false;
         // 点与线之间 比对、吸附、挣脱
-        if (!this.initFixedSegments) {
-            this.__initFS();
-        }
-
-        if (!this.initFixedSegments) {
-            return;
-        }
-
-        let distance = Infinity;
-        let dx = 0;
-        let dy = 0;
-
-        for (let i = 0; i < activePoints.length; i++) {
-            const point = activePoints[i];
-
-            this.fixedSegments.forEach(segment => {
-                let d: { point: { x: number, y: number }, distance: number } | undefined;
-
-                if (segment.type === SegmentType.Straight) {
-                    const seg = segment.seg as Line;
-                    d = point2line(point, seg.start, seg.end)
-                } else {
-                    const seg = segment.seg as Curve3rd;
-                    d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
-                }
-
-                if (d === undefined) return;
-
-                const D = Math.abs(d.distance);
-
-                if (D < distance) {
-                    const targetPoint = d.point;
-
-                    dx = targetPoint.x - point.x;
-                    dy = targetPoint.y - point.y;
-                    distance = D;
-                }
-            })
-        }
-
-        let modified = false;
-
-        if (distance < PathEditor.DELTA) {
-            activePoints[0].x += dx;
-            activePoints[0].y += dy;
-            modified = true;
-        }
-
-        return modified;
+        // if (!this.initFixedSegments) this.__initFS();
+        //
+        // if (!this.initFixedSegments) return;
+        //
+        // let distance = Infinity;
+        // let dx = 0;
+        // let dy = 0;
+        // for (let i = 0; i < activePoints.length; i++) {
+        //     const point = activePoints[i];
+        //
+        //     this.fixedSegments.forEach(segment => {
+        //         let d: { point: { x: number, y: number }, distance: number } | undefined;
+        //
+        //         if (segment.type === SegmentType.Straight) {
+        //             const seg = segment.seg as Line;
+        //             d = point2line(point, seg.start, seg.end)
+        //         } else {
+        //             const seg = segment.seg as Curve3rd;
+        //             d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
+        //         }
+        //
+        //         if (d === undefined) return;
+        //
+        //         const D = Math.abs(d.distance);
+        //
+        //         if (D < distance) {
+        //             const targetPoint = d.point;
+        //
+        //             dx = targetPoint.x - point.x;
+        //             dy = targetPoint.y - point.y;
+        //             distance = D;
+        //         }
+        //     })
+        // }
+        //
+        // let modified = false;
+        //
+        // if (distance < PathEditor.DELTA) {
+        //     activePoints[0].x += dx;
+        //     activePoints[0].y += dy;
+        //     modified = true;
+        // }
+        //
+        // return modified;
     }
 
     private __execute() {
+        if (this.context.user.isPixelAlignMent) {
+            this.fixedPoint.x = roundBy(this.fixedPoint.x);
+            this.fixedPoint.y = roundBy(this.fixedPoint.y);
+            this.livingPoint.x = roundBy(this.livingPoint.x);
+            this.livingPoint.y = roundBy(this.livingPoint.y);
+        }
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
@@ -689,19 +690,40 @@ export class PathEditor extends TransformHandler {
             if (!point) continue;
 
             const base = this.baseData.get(point.id);
-            if (!base) {
-                continue;
-            }
+            if (!base) continue;
 
             __units.push({
                 index,
                 x: base.x + dx,
                 y: base.y + dy,
-                fromX: (base.fromX || 0) + dx,
-                fromY: (base.fromY || 0) + dy,
-                toX: (base.toX || 0) + dx,
-                toY: (base.toY || 0) + dy,
+                fromX: (base.fromX ?? 0) + dx,
+                fromY: (base.fromY ?? 0) + dy,
+                toX: (base.toX ?? 0) + dx,
+                toY: (base.toY ?? 0) + dy
             })
+        }
+
+        if (this.context.user.isPixelAlignMent) {
+            const matrix = this.baseMatrix;
+            const inverse = this.baseMatrixInverse;
+            __units.forEach(unit => {
+                let xy = matrix.computeCoord2(unit.x, unit.y);
+                xy.x = roundBy(xy.x);
+                xy.y = roundBy(xy.y);
+                xy = inverse.computeCoord3(xy);
+                const offsetX = xy.x - unit.x;
+                const offsetY = xy.y - unit.y;
+                unit.x = xy.x;
+                unit.y = xy.y;
+                if (offsetX) {
+                    unit.fromX += offsetX;
+                    unit.toX += offsetX;
+                }
+                if (offsetY) {
+                    unit.fromY += offsetY;
+                    unit.toY += offsetY;
+                }
+            });
         }
 
         actions.set(segment, __units);
@@ -831,14 +853,16 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
-    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
-        if (!this.asyncApiCaller || !this.shape) {
-            return false;
-        }
+    addPoint(segmentIdx: number, index: number, apex?: { xy: XY, t?: number }) {
+        if (!this.asyncApiCaller || !this.shape) return false;
+        if (!this.isInitMatrix) this.init();
+        return (this.asyncApiCaller as PathModifier).addPoint(this.shape, segmentIdx, index, apex as any);
+    }
 
-        if (!this.isInitMatrix) {
-            this.init();
-        }
+    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
+        if (!this.asyncApiCaller || !this.shape) return false;
+
+        if (!this.isInitMatrix) this.init();
 
         let xy;
 
@@ -854,9 +878,7 @@ export class PathEditor extends TransformHandler {
         let addRes = false;
         if (index > -1 && segment > -1) {
             const __segment = (this.shape as PathShapeView).segments[segment];
-            if (!__segment) {
-                return this.addSegmentForPen(down);
-            }
+            if (!__segment) return this.addSegmentForPen(down);
 
             index = __segment.points.length;
 
@@ -879,13 +901,9 @@ export class PathEditor extends TransformHandler {
     }
 
     addSegmentForPen(down: XY, point?: CurvePoint) {
-        if (!this.asyncApiCaller || !this.shape) {
-            return false;
-        }
+        if (!this.asyncApiCaller || !this.shape) return false;
 
-        if (!this.isInitMatrix) {
-            this.init();
-        }
+        if (!this.isInitMatrix) this.init();
 
         let xy;
 
@@ -923,6 +941,10 @@ export class PathEditor extends TransformHandler {
         const m = new Matrix(env.matrix2Root().inverse);
 
         const __xy = m.computeCoord3(this.livingPoint);
+        if (this.context.user.isPixelAlignMent) {
+            __xy.x = roundBy(__xy.x);
+            __xy.y = roundBy(__xy.y);
+        }
         frame.x = __xy.x;
         frame.y = __xy.y;
 
@@ -1021,7 +1043,18 @@ export class PathEditor extends TransformHandler {
 
         const isFrom = side === 'from';
 
-        const activePoint = isFrom ? m.computeCoord3(from) : m.computeCoord3(to);
+        let modified = false;
+
+        let activePoint = isFrom ? m.computeCoord3(from) : m.computeCoord3(to);
+
+        if (this.context.user.isPixelAlignMent) {
+            let __active_on_root = this.context.workspace.matrix.inverseCoord(activePoint.x, activePoint.y);
+            __active_on_root.x = roundBy(__active_on_root.x);
+            __active_on_root.y = roundBy(__active_on_root.y);
+            __active_on_root = this.context.workspace.matrix.computeCoord3(__active_on_root);
+            modified = __active_on_root.x !== activePoint.x || __active_on_root.y !== activePoint.y;
+            activePoint = __active_on_root;
+        }
 
         let deltaX = Infinity;
         let dx = 0;
@@ -1052,7 +1085,6 @@ export class PathEditor extends TransformHandler {
         }
 
         const assist = this.context.assist;
-        let modified = false;
         if (deltaX < PathEditor.DELTA) {
             activePoint.x += dx;
             const xNodes = [...this.mapX.get(TX) || []];
@@ -1208,9 +1240,9 @@ export class PathEditor extends TransformHandler {
     }
 
     fulfil() {
-        this.workspace.setSelectionViewUpdater(true);
         this.path.editing(false);
-
+        this.workspace.setSelectionViewUpdater(true);
+        this.workspace.linearEditorExist = false;
         super.fulfil();
     }
 
@@ -1254,26 +1286,6 @@ export class PathEditor extends TransformHandler {
             }
 
             (this.asyncApiCaller as PathModifier).sortSegment(this.shape);
-        } finally {
-            this.fulfil();
-        }
-    }
-
-    modifyClosedStatus(val: boolean) {
-        try {
-            if (!this.isInitMatrix) {
-                this.init();
-            }
-
-            if (!this.asyncApiCaller) {
-                this.createApiCaller();
-            }
-
-            if (!this.asyncApiCaller || !this.isInitMatrix) {
-                return;
-            }
-
-            (this.asyncApiCaller as PathModifier).modifyClosedStatus(this.shape, val);
         } finally {
             this.fulfil();
         }

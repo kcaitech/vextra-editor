@@ -2,7 +2,7 @@
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderApexStyleItem from './BorderApexStyleItem.vue';
 import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue';
-import { GroupShapeView, MarkerType, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
+import { MarkerType, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { genOptions } from '@/utils/common';
 import { Context } from '@/context';
@@ -180,7 +180,7 @@ function exchange() {
 const stop = watch(() => props.shapes, init_v);
 const stop2 = watch(() => props.view, init_v);
 const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
-    if (v.length > 0 && (v.includes('style') || v.includes('variable'))) init_v();
+    if (v.length > 0 && (v.includes('style') || v.includes('variable') || v.includes('pathsegs'))) init_v();
 });
 const stop4 = watch(() => props.reflush_apex, () => {
     apexStyle();

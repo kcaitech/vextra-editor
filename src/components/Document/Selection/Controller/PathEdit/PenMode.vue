@@ -27,18 +27,14 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 
 function modify_matrix() {
     const path_shape = props.context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
+    if (!path_shape) return;
     matrix.value = path_shape.matrix2Root();
     matrix.value.multiAtLeft(props.context.workspace.matrix);
 }
 
 function update() {
     const path_shape = props.context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
+    if (!path_shape) return;
     modify_matrix();
     const f = path_shape.frame;
     const __points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
@@ -53,31 +49,23 @@ function update() {
 }
 
 function matrix_watcher(t: number | string) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        update();
-    }
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) update();
 }
 
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
     const path_shape = props.context.selection.pathshape;
-    if (path_shape) {
-        path_shape.watch(update);
-    }
+    if (path_shape) path_shape.watch(update);
     update();
 });
 onUnmounted(() => {
     props.context.workspace.unwatch(matrix_watcher);
     const path_shape = props.context.selection.pathshape;
-    if (path_shape) {
-        path_shape.unwatch(update);
-    }
+    if (path_shape) path_shape.unwatch(update);
 })
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+    <svg xmlns="http://www.w3.org/2000/svg" data-area="controller" preserveAspectRatio="xMinYMin meet"
          :width="width" :height="height" overflow="visible" :viewBox="genViewBox(bounds)"
          :style="{transform: `translate(${bounds.left}px,${bounds.top}px)`}"
     >

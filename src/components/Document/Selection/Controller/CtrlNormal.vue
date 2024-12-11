@@ -123,7 +123,7 @@ const mouseleave = () => {
 }
 
 const pointVisible = computed(() => {
-    return !(props.shape as PathShapeView).haveEdit && pointActivated.value && (bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90);
+    return !(props.shape as PathShapeView).haveEdit && pointActivated.value && (bounds.bottom - bounds.top > 60 && bounds.right - bounds.left > 60);
 })
 
 const paddingIndex = ref(-1);

@@ -48,7 +48,6 @@ function pageViewRegister(mount: boolean) {
     props.context.workspace.setPageViewId(rootId.value);
 }
 
-
 function page_watcher() {
     matrixWithFrame.reset(props.params.matrix);
     const frame = props.params.data._p_frame;
@@ -85,37 +84,13 @@ function updateVisibleRect() {
     page.updateVisibleRect({ x: lt.x + innerFrame.x, y: lt.y + innerFrame.y, width: rb.x - lt.x, height: rb.y - lt.y }, matrixWithFrame)
 }
 
-const prepareDom = (page: Page | PageView) => {
-    pageReady.value = false;
-    if (!pagesvg.value) return;
-    const dom = props.context.getPageDom(page);
-
-    dom.ctx.loop(window.requestAnimationFrame);
-
-    // clear pagesvg
-    const svg = pagesvg.value;
-    const childs = Array.from(svg.childNodes);
-    childs.forEach(c => svg.removeChild(c))
-
-    removeRenderIdle = dom.dom.once("renderidle", () => {
-        if (pagesvg.value) { // 离屏更新，绘制好后再bind
-            dom.dom.bind(pagesvg.value);
-            dom.dom.asyncRender();
-            pageReady.value = true;
-        }
-        removeRenderIdle = undefined;
-        if (props.params.onRenderDone) props.params.onRenderDone();
-    })
-    props.context.nextTick(props.params.data, () => {
-        if (props.params.onContentVisible) props.params.onContentVisible();
-    })
-}
-
 const stopWatchPage = watch(() => props.params.data, (value, old) => {
     old.unwatch(page_watcher);
     value.watch(page_watcher);
     pageViewRegister(true);
     page_watcher();
+
+    if (!loaded) return;
 
     if (removeRenderIdle) {
         removeRenderIdle.remove();
@@ -128,36 +103,18 @@ const stopWatchPage = watch(() => props.params.data, (value, old) => {
         dom.dom.unbind();
     }
     prepareDom(value.data);
-
     updateVisibleRect();
 })
 const stop_watch_matrix = watch(() => props.params.matrix, page_watcher, { deep: true });
 const stop_watch_visibleRect = watch(() => props.params.visibleRect, updateVisibleRect);
 
-function tool_watcher(t?: number) {
+function tool_watcher(t: number) {
     if (t === Tool.TITLE_VISIBLE) {
         show_t.value = props.context.tool.isShowTitle;
     } else if (t === Tool.CUTOUT_VISIBLE) {
         cutoutVisible.value = props.context.tool.isCutoutVisible;
     }
 }
-
-onMounted(() => {
-    props.params.data.watch(page_watcher);
-    props.context.tool.watch(tool_watcher);
-    pageViewRegister(true);
-    props.context.selection.watch(selection_watcher);
-    page_watcher();
-})
-onUnmounted(() => {
-    props.params.data.unwatch(page_watcher);
-    props.context.tool.unwatch(tool_watcher);
-    pageViewRegister(false);
-    stopWatchPage();
-    stop_watch_matrix();
-    stop_watch_visibleRect();
-    props.context.selection.unwatch(selection_watcher);
-})
 
 function selection_watcher(...args: any[]) {
     if (args.includes(Selection.CHANGE_SHAPE)) {
@@ -171,11 +128,52 @@ function selection_watcher(...args: any[]) {
 let removeRenderIdle: {
     remove: () => void;
 } | undefined;
-onMounted(() => {
-    prepareDom(props.params.data);
-})
+let loaded: boolean = false; // 文档数据未加载完成前不进行页面的绘制
+const prepareDom = (page: Page | PageView) => {
+    if (!loaded) return;
 
+    pageReady.value = false;
+
+    const dom = props.context.getPageDom(page);
+    dom.ctx.loop(window.requestAnimationFrame);
+
+    // clear pagesvg
+    const svg = pagesvg.value!;
+    const childs = Array.from(svg.childNodes);
+    childs.forEach(c => svg.removeChild(c))
+
+    removeRenderIdle = dom.dom.once("renderidle", () => {
+        dom.dom.bind(svg);
+        dom.dom.asyncRender();
+        pageReady.value = true;
+        removeRenderIdle = undefined;
+        props.params.onRenderDone?.();
+    })
+
+    props.context.nextTick(props.params.data, () => {
+        props.params.onContentVisible?.();
+    })
+}
+
+onMounted(() => {
+    props.params.data.watch(page_watcher);
+    props.context.tool.watch(tool_watcher);
+    pageViewRegister(true);
+    props.context.selection.watch(selection_watcher);
+    page_watcher();
+    props.context.setOnLoaded(() => {
+        loaded = true;
+        prepareDom(props.params.data);
+    })
+})
 onUnmounted(() => {
+    props.params.data.unwatch(page_watcher);
+    props.context.tool.unwatch(tool_watcher);
+    pageViewRegister(false);
+    stopWatchPage();
+    stop_watch_matrix();
+    stop_watch_visibleRect();
+    props.context.selection.unwatch(selection_watcher);
     const dom = props.context.getPageDom(props.params.data);
     if (dom) {
         dom.ctx.stopLoop();
