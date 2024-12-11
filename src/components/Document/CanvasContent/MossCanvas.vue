@@ -45,6 +45,8 @@ onMounted(() => {
     document.addEventListener("keydown", (e) => {
         if (e.repeat) return;
         if (e.code === "F5") {
+            props.context.render.renderCtx.clearRect(0, 0, width.value, height.value);
+
             props.params.data.m_ctx.setReLayout(props.params.data);
             props.params.data.m_ctx.setDirty(props.params.data);
             props.params.data.layout();
