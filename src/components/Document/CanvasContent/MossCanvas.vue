@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // page view
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix, PageView } from "@kcdesign/data";
 
@@ -17,7 +17,7 @@ type Props = {
 const props = defineProps<Props>();
 
 const canvas = ref<HTMLCanvasElement | null>(null);
-const width = ref<number>(2000);
+const width = ref<number>(1000);
 const height = ref<number>(800);
 
 function register() {
