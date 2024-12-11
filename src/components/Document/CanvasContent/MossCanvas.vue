@@ -1,33 +1,51 @@
 <script setup lang="ts">
 // page view
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix, PageView } from "@kcdesign/data";
 
-
 type Props = {
     context: Context;
+    params: {
+        data: PageView
+        matrix: Matrix
+        onRenderDone?: () => void,
+        onContentVisible?: () => void,
+    }
 }
 
 const props = defineProps<Props>();
 
 const canvas = ref<HTMLCanvasElement | null>(null);
-const width = ref<number>(300);
-const height = ref<number>(150);
+const width = ref<number>(2000);
+const height = ref<number>(800);
 
 function register() {
     if (canvas.value) {
         const ctx = canvas.value.getContext("2d");
-        if (ctx) props.context.render.registerRenderCtx(ctx);
+        if (ctx) {
+            props.context.render.registerRenderCtx(ctx);
+            props.params.data.m_ctx.m_canvas = ctx;
+
+        }
+        props.params.data.render();
     }
 }
 
 onMounted(() => {
     register();
+    props.context.setOnLoaded(() => {
+        props.params.data.m_ctx.setReLayout(props.params.data);
+        props.params.data.m_ctx.setDirty(props.params.data);
+        props.params.data.layout();
+        props.params.data.render();
+    })
 });
 </script>
 <template>
-    <canvas ref="canvas" :width="width" :height="height">The current browser does not support Canvas API</canvas>
+    <canvas ref="canvas" :width="width" :height="height" :style="{transform:props.params.matrix.toString()}">
+        The current browser does not support Canvas API
+    </canvas>
 </template>
 <style scoped lang="scss">
 canvas {
