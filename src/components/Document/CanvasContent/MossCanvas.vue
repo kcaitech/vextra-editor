@@ -40,6 +40,19 @@ onMounted(() => {
         props.params.data.layout();
         props.params.data.render();
     })
+
+    // dev config
+    document.addEventListener("keydown", (e) => {
+        if (e.repeat) return;
+        if (e.code === "F5") {
+            props.params.data.m_ctx.setReLayout(props.params.data);
+            props.params.data.m_ctx.setDirty(props.params.data);
+            props.params.data.layout();
+            props.params.data.render();
+
+            e.preventDefault();
+        }
+    })
 });
 </script>
 <template>
