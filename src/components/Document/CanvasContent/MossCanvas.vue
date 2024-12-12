@@ -33,7 +33,6 @@ function register() {
             ctx.imageSmoothingQuality = "high";
             props.context.render.registerRenderCtx(ctx);
             props.params.data.m_ctx.m_canvas = ctx;
-            ctx.transform(dpr, 0, 0, dpr, 0, 0);
         }
         props.params.data.render();
     }
@@ -44,7 +43,6 @@ onMounted(() => {
     props.context.setOnLoaded(() => {
         const dpr = window.devicePixelRatio || 1;
         props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
-
         props.params.data.m_ctx.setReLayout(props.params.data);
         props.params.data.m_ctx.setDirty(props.params.data);
         props.params.data.render();
@@ -56,11 +54,9 @@ onMounted(() => {
         if (e.code === "F5") {
             const dpr = window.devicePixelRatio || 1;
             props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
-
             props.params.data.m_ctx.setReLayout(props.params.data);
             props.params.data.m_ctx.setDirty(props.params.data);
             props.params.data.render();
-
             e.preventDefault();
         }
     })
