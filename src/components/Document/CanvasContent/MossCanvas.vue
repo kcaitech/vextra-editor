@@ -29,9 +29,11 @@ function register() {
         canvas.value.style.height = `${height.value}px`;
         const ctx = canvas.value.getContext("2d");
         if (ctx) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
             props.context.render.registerRenderCtx(ctx);
             props.params.data.m_ctx.m_canvas = ctx;
-
+            ctx.transform(dpr, 0, 0, dpr, 0, 0);
         }
         props.params.data.render();
     }
@@ -40,11 +42,11 @@ function register() {
 onMounted(() => {
     register();
     props.context.setOnLoaded(() => {
-        props.context.render.renderCtx.clearRect(0, 0, width.value, height.value);
+        const dpr = window.devicePixelRatio || 1;
+        props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
 
         props.params.data.m_ctx.setReLayout(props.params.data);
         props.params.data.m_ctx.setDirty(props.params.data);
-        props.params.data.layout();
         props.params.data.render();
     })
 
@@ -52,11 +54,11 @@ onMounted(() => {
     document.addEventListener("keydown", (e) => {
         if (e.repeat) return;
         if (e.code === "F5") {
-            props.context.render.renderCtx.clearRect(0, 0, width.value, height.value);
+            const dpr = window.devicePixelRatio || 1;
+            props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
 
             props.params.data.m_ctx.setReLayout(props.params.data);
             props.params.data.m_ctx.setDirty(props.params.data);
-            props.params.data.layout();
             props.params.data.render();
 
             e.preventDefault();
