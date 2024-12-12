@@ -22,6 +22,11 @@ const height = ref<number>(800);
 
 function register() {
     if (canvas.value) {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.value.width = width.value * dpr;
+        canvas.value.height = height.value * dpr;
+        canvas.value.style.width = `${width.value}px`;
+        canvas.value.style.height = `${height.value}px`;
         const ctx = canvas.value.getContext("2d");
         if (ctx) {
             props.context.render.registerRenderCtx(ctx);
@@ -60,7 +65,7 @@ onMounted(() => {
 });
 </script>
 <template>
-    <canvas ref="canvas" :width="width" :height="height" :style="{transform:props.params.matrix.toString()}">
+    <canvas ref="canvas" :style="{transform:props.params.matrix.toString()}">
         The current browser does not support Canvas API
     </canvas>
 </template>
