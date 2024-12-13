@@ -17,8 +17,8 @@ type Props = {
 const props = defineProps<Props>();
 
 const canvas = ref<HTMLCanvasElement | null>(null);
-const width = ref<number>(1000);
-const height = ref<number>(800);
+const width = ref<number>(3000);
+const height = ref<number>(2000);
 
 function register() {
     if (canvas.value) {
