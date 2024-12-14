@@ -194,16 +194,16 @@ export class PalPath implements IPalPath {
         this._path = _ck.FromSVGString(path);
     }
     difference(path: PalPath): boolean {
-        return this._path.op((path)._path, _ck.PathOp.XOR);
+        return this._path.op(path._path, _ck.PathOp.XOR);
     }
     intersection(path: PalPath): boolean {
-        return this._path.op((path)._path, _ck.PathOp.INTERSECT);
+        return this._path.op(path._path, _ck.PathOp.INTERSECT);
     }
     subtract(path: PalPath): boolean {
-        return this._path.op((path)._path, _ck.PathOp.DIFFERENCE);
+        return this._path.op(path._path, _ck.PathOp.DIFFERENCE);
     }
     union(path: PalPath): boolean {
-        return this._path.op((path)._path, _ck.PathOp.UNION);
+        return this._path.op(path._path, _ck.PathOp.UNION);
     }
     stroke(ops?: StrokeOpts) {
         const path = this._path.stroke(ops);
