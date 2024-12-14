@@ -22,7 +22,7 @@ const height = ref<number>(2000);
 
 function register() {
     if (canvas.value) {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.ceil(window.devicePixelRatio || 1);
         canvas.value.width = width.value * dpr;
         canvas.value.height = height.value * dpr;
         canvas.value.style.width = `${width.value}px`;
@@ -41,7 +41,7 @@ function register() {
 onMounted(() => {
     register();
     props.context.setOnLoaded(() => {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.ceil(window.devicePixelRatio || 1);
         props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
         props.params.data.m_ctx.setReLayout(props.params.data);
         props.params.data.m_ctx.setDirty(props.params.data);
@@ -50,9 +50,8 @@ onMounted(() => {
 
     // dev config
     document.addEventListener("keydown", (e) => {
-        if (e.repeat) return;
         if (e.code === "F5") {
-            const dpr = window.devicePixelRatio || 1;
+            const dpr = Math.ceil(window.devicePixelRatio || 1);
             props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
             props.params.data.m_ctx.setReLayout(props.params.data);
             props.params.data.m_ctx.setDirty(props.params.data);
