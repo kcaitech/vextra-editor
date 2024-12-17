@@ -5,8 +5,8 @@ const mem_head_len = 4 // 1个uint32
 const mem_tail_len = 4; // 1个uint32
 
 // 对齐4个字节
-function align4bytes(len: number) {
-    return Math.round((len + 1) / 4) * 4
+export function align4bytes(len: number) {
+    return Math.ceil(len / 4) * 4
 }
 
 function lowerBound(data: { len: number, idxs: number[] }[], len: number) {
@@ -77,14 +77,27 @@ export class Memory {
         return idx
     }
 
+    private _grow(len: number) {
+        const byteLength = this.buffer.byteLength
+        const growto = Math.max(align4bytes(len), byteLength * 2)
+        // copy
+        const newbuffer = new SharedArrayBuffer(growto)
+        const newbufferuint32 = new Uint8Array(newbuffer)
+        const bufferuint32 = new Uint8Array(this.buffer)
+        newbufferuint32.set(bufferuint32)
+        this.buffer = newbuffer
+        this._capacity = growto - this._capacity
+    }
+
     private __alloc(len: number): number {
         if (this._capacity < len) {
-            if (!this.buffer.growable) throw new Error("OOM");
-            const byteLength = this.buffer.byteLength
-            const grow = Math.max(len - this._capacity, byteLength)
-            this.buffer.grow(grow)
-            this._capacity += this.buffer.byteLength - byteLength
-            if (this._capacity < len) throw new Error("OOM")
+            // if (!this.buffer.growable) throw new Error("OOM");
+            // const byteLength = this.buffer.byteLength
+            // const grow = Math.max(len - this._capacity, byteLength)
+            // this.buffer.grow(grow)
+            // this._capacity += this.buffer.byteLength - byteLength
+            // if (this._capacity < len) throw new Error("OOM")
+            this._grow(len)
         }
         const ret = this._freeidx
         this._freeidx += len;
