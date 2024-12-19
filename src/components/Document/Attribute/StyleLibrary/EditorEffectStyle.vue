@@ -26,20 +26,20 @@
                 </div>
             </div>
             <div class="effect-list">
-                <div class="item" v-for="(s,index) in list" :key="s.id">
+                <div class="item" v-for="(s, index) in shadows" :key="s.id">
                     <div class="show">
-                        <div :class="s.isEnabled ? 'visibility' : 'hidden'"
-                            @click.stop="emits('setShadowEnable', s.id, !s.isEnabled)">
-                            <svg-icon v-if="s.isEnabled" icon-class="select"></svg-icon>
+                        <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'"
+                            @click.stop="emits('setShadowEnable', s.shadow.id, !s.shadow.isEnabled)">
+                            <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
                         :source="positonOptionsSource"
-                        :selected="positonOptionsSource.find(i => i.data.value === s.position)?.data"
-                        @select="(value) => positionSelect(value, s.id)"></Select>
-                    <ShadowDetail :context="props.context" :shadow="s" :idx="index" :length="list!.length"
+                        :selected="positonOptionsSource.find(i => i.data.value === s.shadow.position)?.data"
+                        @select="(value) => positionSelect(value, s.shadow.id)"></Select>
+                    <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="index" :length="shadows!.length"
                         :shapes="props.shapes"></ShadowDetail>
-                    <div class="delete" :class="{ disable }" @click.stop="emits('delShadow', s.id)">
+                    <div class="delete" :class="{ disable }" @click.stop="emits('delShadow', s.shadow.id)">
                         <svg-icon icon-class="delete"></svg-icon>
                     </div>
                 </div>
@@ -52,21 +52,28 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow } from '@kcdesign/data';
-import { onMounted, ref, watch } from 'vue';
+import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow, ShadowMask } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
 import { computed } from 'vue';
 import ShadowDetail from '../Shadow/ShadowDetail.vue'
+// import { FillRenderer } from './fillRenderer';
+
+interface FillItem {
+    id: number,
+    shadow: Shadow
+}
 
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
     top: number;
     left: number
-    list: Shadow[] | undefined
+    list: ShadowMask | undefined
     name: string
     des: string
+    // reder?: FillRenderer
 }>();
 
 const emits = defineEmits<{
@@ -88,8 +95,10 @@ const effectname = ref<HTMLInputElement>()
 const effectdes = ref<HTMLInputElement>()
 const name = ref<string>();
 const des = ref<string>();
+
+let shadows: FillItem[] = reactive([]);
 const disable = computed(() => {
-    return props.list!.length <= 1
+    return props.list!.shadows.length <= 1
 })
 
 function positionSelect(selected: SelectItem, id: string) {
@@ -97,16 +106,35 @@ function positionSelect(selected: SelectItem, id: string) {
 }
 
 const update = () => {
-    name.value = props.name
-    des.value = props.des
+    if (props.list) {
+        props.list.shadows.forEach((s, idx) => shadows.push({ id: idx, shadow: s }))
+        shadows = shadows.reverse()
+        console.log('props.style', props.list);
+    }
+    // fills=fills.reverse()
+    name.value = props.list?.name ?? '颜色样式';
+    des.value = props.list?.description ?? '';
 }
 
-watch([() => props.name, () => props.des], () => {
-    update();
-})
+// function stylelib_watcher(t: number | string) {
+//     if (t === 'stylelib') {
+//         if (!props.list) return
+//         shadows.length = 0
+//         if (props.reder) {
+//             props.reder.currentTarget(props.list.id)?.shadows?.forEach((s, idx) => shadows.push({ id: idx, shadow: s }))
+//         }
+//         shadows = shadows.reverse()
+//     }
+
+// }
 
 onMounted(() => {
     update();
+    // props.context.data.watch(stylelib_watcher)
+})
+
+onUnmounted(() => {
+    // props.context.data.unwatch(stylelib_watcher)
 })
 
 

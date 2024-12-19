@@ -37,7 +37,6 @@ import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_position, get_borders } from '@/utils/shape_style';
 import { Selection } from "@/context/selection";
 import { getShapesForStyle } from '@/utils/style';
-import { CornerRadiusMask } from '@kcdesign/data';
 import { v4 } from 'uuid';
 
 const props = defineProps<{
@@ -75,9 +74,6 @@ const setRadius = () => {
     radius.value = arrs.join(', ')
     oldvalue.value = radius.value
     const editor=props.context.editor4Doc()
-    
-    const style=new CornerRadiusMask(v4(),'radius',new BasicArray<number>(),Number(arrs[0]),Number(arrs[1]),Number(arrs[3]),Number(arrs[2]))
-    editor.insertStyleLib(style)
 }
 
 function watchShapes() {

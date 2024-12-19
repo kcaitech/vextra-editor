@@ -7,31 +7,42 @@
             <div class="filter" @click.stop="showfilter = !showfilter">
                 <svg-icon icon-class="arrow"></svg-icon>
             </div>
-            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval">
+            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
+                @input="fillRenderer.searchstyle(filterval, searchval)">
             <div v-if="showfilter" class="filter-list">
                 <div class="list-item" @click.stop="Changefilter('全部')">
                     <span>全部</span>
                 </div>
-                <div class="list-item" v-for="s in data" :key="s.id" @click.stop="Changefilter(s.name)">
+                <div class="list-item" @click.stop="Changefilter('其他')">
+                    <span>其他</span>
+                </div>
+                <div class="list-item" v-for="(s, index) in sheets" :key="index" @click.stop="Changefilter(s.name)">
                     <span> {{ s.name }}</span>
                 </div>
             </div>
         </div>
         <el-scrollbar>
             <div class="content">
-                <div class="style-item" v-for="s in data" :key="s.id">
+                <div class="style-item" v-for="s in sheets" :key="s.id">
                     <div class="type" @click.stop="showtype(s.name)">
                         <svg-icon :icon-class="showtypes.has(s.name) ? 'triangle-down' : 'triangle-right'"></svg-icon>
                         <span>{{ s.name }}</span>
                     </div>
                     <template v-if="showtypes.has(s.name)">
-                        <div class="styles" v-for="f in s.variables.filter(v => v.name.includes(searchval))" :key="f.id"
-                            @click="addfillmask(f.id)">
+                        <div class="styles" v-for="f in s.variables" :key="f.id" @click="addfillmask(f.id)">
                             <div class="left">
                                 <div class="color">
-                                    <div class="main"
-                                        :style="{ backgroundColor: `rgb(${f.fills[0].color.red},${f.fills[0].color.green},${f.fills[0].color.blue})`, opacity: f.fills[0].color.alpha }">
-                                        <div class="mask" :style="{ opacity: 1 - f.fills[0].color.alpha }"></div>
+                                    <div class="containerfill" v-for="fill in f.fills" :key="fill.id">
+                                        <img v-if="fill.fillType === FillType.Pattern" :src="getImageUrl(fill as Fill)"
+                                            alt="" :style="{ opacity: fill.contextSettings?.opacity }">
+                                        <div class="gradient" v-if="fill.fillType === FillType.Gradient"
+                                            :style="[style(fill.color as Color, fill.gradient as Gradient, fill.fillType), { opacity: fill.gradient?.gradientOpacity }]">
+                                        </div>
+                                        <div v-if="fill.fillType === FillType.SolidColor" class="main"
+                                            :style="{ backgroundColor: `rgb(${fill.color.red},${fill.color.green},${fill.color.blue})`, opacity: fill.color.alpha }">
+                                            <div v-if="f.fills?.length == 1" class="mask"
+                                                :style="{ opacity: 1 - fill.color.alpha }"></div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="name">{{ f.name }}</div>
@@ -43,13 +54,13 @@
                         </div>
                     </template>
                 </div>
-                <div v-if="!data?.length && searchval" class="search-null">没有搜索到相关样式</div>
-                <div v-if="!data?.length && !searchval" class="data-null">暂无颜色样式</div>
+                <div v-if="!sheets?.length && searchval" class="search-null">没有搜索到相关样式</div>
+                <div v-if="!sheets?.length && !searchval" class="data-null">暂无颜色样式</div>
             </div>
         </el-scrollbar>
         <EditorColorStyle v-if="showeditor" :type="'editor'" :top="Top" :left="Left"
-            :shapes="props.context.selection.selectedShapes" :context="props.context" :style="styles"
-            @close="showeditor = !showeditor"></EditorColorStyle>
+            :shapes="props.context.selection.selectedShapes" :context="props.context" :maskid :style="styles"
+            @close="showeditor = !showeditor" :reder="fillRenderer"></EditorColorStyle>
     </div>
 
 </template>
@@ -60,6 +71,7 @@ import {
     Fill,
     FillMask,
     FillType,
+    Gradient,
     GradientType,
     ImageScaleMode,
     ShapeType,
@@ -70,9 +82,13 @@ import {
 import { Context } from '@/context';
 import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import EditorColorStyle from './EditorColorStyle.vue';
-import { FillMask_fills } from "@kcdesign/data/dist/types/data/typesdefine";
+import { DocumentMeta_stylelib, FillMask_fills, StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { getShapesForStyle } from "@/utils/style";
 import { get_actions_add_fillmask } from "@/utils/shape_style";
+import { Mask, FillRenderer } from "./fillRenderer";
+import { block_style_generator } from "../../../common/ColorPicker/utils"
+
+
 interface FillItem {
     id: number,
     fill: Fill
@@ -91,56 +107,79 @@ const showtypes = ref(new Set<string>())
 const showeditor = ref<boolean>(false)
 const Top = ref<number>(0)
 const Left = ref<number>(0)
-const Changefilter = (v: string) => {
-    filterval.value = v;
-    showfilter.value = false
-    showtypes.value.add(v)
-}
+
+const sheets = reactive<StyleSheet[]>([])
 const search = ref<HTMLInputElement>()
 const styles = ref<FillMask>()
+const count = ref<number>(0);
+const filterlib = reactive<StyleSheet[]>([])
+
+
+const fillList = reactive<Mask[]>([]);
+const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[],fillList as Mask[]);
+
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
     console.log(showtypes.value);
 
 }
 
-function update() {
-    const lib = props.context.data.stylesMgr
-    console.log(lib);
 
+const Changefilter = (v: string) => {
+    filterval.value = v;
+    showfilter.value = false
+    showtypes.value.add(v)
+    fillRenderer.searchstyle(filterval.value, searchval.value)
+}
+
+// const data = computed(() => {
+//     const result: StyleSheet[] = [];
+//     sheets.forEach(obj => {
+//         // 过滤对象中的数组，找出包含特定值的数组
+//         const arraysContainingTarget = obj.variables.filter(array =>
+//             array.name.includes(searchval.value)
+//         );
+//         // 如果有匹配的数组，添加到结果中
+//         // if (arraysContainingTarget.length > 0) {
+//         //     result.push({
+//         //         ...obj, // 复制对象
+//         //         variables: arraysContainingTarget // 替换values为过滤后的数组
+//         //     });
+//         // }
+//     });
+//     return result;
+// })
+
+
+
+
+const style = computed(() => {
+    return (c: Color, g: Gradient, t: FillType) => block_style_generator(c, g, t)
+})
+
+const getImageUrl = (fill: Fill) => {
+    return fill.peekImage(true) || props.context.attr.defaultImage;
+}
+
+function update() {
+    const lib = props.context.data.stylelib
     if (!lib) return
+    fillRenderer.updateUnderRootContainerMap();
 }
 
 const addfillmask = (id: string) => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
-    if (false) {
-        const actions = get_actions_fill_unify(shapes);
-        const editor = props.context.editor4Page(page);
-        editor.shapesFillsUnify(actions);
-    } else {
-        const actions = get_actions_add_fillmask(shapes, id);
-        const editor = props.context.editor4Page(page);
-        editor.shapesSetFillMask(actions);
-    }
+    const actions = get_actions_add_fillmask(shapes, id);
+    const editor = props.context.editor4Page(page);
+    editor.shapesSetFillMask(actions);
 }
 
 
 
-const data = computed(() => {
-    if (!props.context.data.stylelib) return []
-    let d;
-    if (filterval.value && filterval.value !== '全部') {
-        d = props.context.data.stylelib.filter(s => s.name === filterval.value)
-    } else {
-        d = props.context.data.stylelib
-    }
-    return d.filter(s => s.variables.filter(v => v.name.includes(searchval.value)).length !== 0)
-})
 
-
-
+const maskid = ref<string>('')
 const EditPanel = (e: MouseEvent, style: FillMask) => {
     styles.value = style
     let el = e.target as HTMLElement;
@@ -149,16 +188,14 @@ const EditPanel = (e: MouseEvent, style: FillMask) => {
             el = el.parentElement;
         }
     }
-    console.log(el.getBoundingClientRect(), '**************');
     const { top, left } = el.getBoundingClientRect();
     Top.value = top;
     Left.value = left - 12 - 250 - 2;
     showeditor.value = !showeditor.value
-
 }
 
 watchEffect(() => {
-    data.value.forEach(i => showtypes.value.add(i.name))
+    sheets.forEach(i => showtypes.value.add(i.name))
     console.log(showtypes.value);
 })
 
@@ -168,14 +205,18 @@ function inputBlur(e: KeyboardEvent) {
     }
 }
 
-onMounted(() => {
-    // update();
-    // console.log(data.value);
+function stylelib_watcher(t: number | string) {
+    if (t === 'stylelib') update();
+}
 
+onMounted(() => {
+    update();
+    props.context.data.watch(stylelib_watcher);
     document.addEventListener('keydown', inputBlur)
 })
 
 onUnmounted(() => {
+    props.context.data.unwatch(stylelib_watcher)
     document.removeEventListener('keydown', inputBlur)
 })
 
@@ -310,6 +351,7 @@ onUnmounted(() => {
         gap: 8px;
 
         .color {
+            position: relative;
             width: 16px;
             height: 16px;
             background-color: #fff;
@@ -317,21 +359,39 @@ onUnmounted(() => {
             border-radius: 3px;
             overflow: hidden;
 
-            .main {
-                width: 16px;
-                height: 16px;
-                background-color: #000;
-                position: relative;
+            .containerfill {
+                position: absolute;
+                width: 100%;
+                height: 100%;
 
-                .mask {
-                    position: absolute;
-                    top: 0;
-                    right: 0;
-                    width: 50%;
+                img {
                     height: 100%;
-                    background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
+                    width: 100%;
+                    object-fit: contain;
+                }
+
+                .gradient {
+                    width: 100%;
+                    height: 100%;
+                }
+
+                .main {
+                    width: 16px;
+                    height: 16px;
+                    background-color: #000;
+                    position: relative;
+
+                    .mask {
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                        width: 50%;
+                        height: 100%;
+                        background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
+                    }
                 }
             }
+
         }
     }
 

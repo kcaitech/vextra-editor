@@ -7,6 +7,7 @@ import {
     Fill,
     FillMask,
     FillType,
+    Gradient,
     GradientType,
     ImageScaleMode,
     ShapeType,
@@ -43,6 +44,7 @@ import { getShapesForStyle } from '@/utils/style';
 import { ImgFrame } from '@/context/atrribute';
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { LinearApi } from "@kcdesign/data"
+import { block_style_generator } from '@/components/common/ColorPicker/utils';
 
 interface FillItem {
     id: number,
@@ -754,12 +756,24 @@ const delfillmask = () => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
-    const actions=get_actions_fill_mask(shapes)
+    const actions = get_actions_fill_mask(shapes)
     const editor = props.context.editor4Page(page);
     editor.shapesDelFillMask(actions);
 
 }
 
+const delstylefill = () => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_fill_mask(shapes)
+    const editor = props.context.editor4Page(page);
+    editor.shapesDelStyleFill(actions);
+}
+
+const style = computed(() => {
+    return (c: Color, g: Gradient, t: FillType) => block_style_generator(c, g, t)
+})
 
 // hooks
 const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
@@ -798,21 +812,28 @@ onUnmounted(() => {
         </div>
         <div class="fillmask" v-if="mask">
             <div class="info">
-                <div class="left" @click="">
+                <div class="left" @click.stop="">
                     <div class="color">
-                        <div class="main"
-                            :style="{ backgroundColor: `rgb(${fill?.fills[0].color.red},${fill?.fills[0].color.green},${fill?.fills[0].color.blue})`, opacity: fill?.fills[0].color.alpha }">
-                            <div class="mask" :style="{ opacity: 1 - fill?.fills[0].color.alpha }"></div>
+                        <div class="containerfill" v-for="f in fill!.fills" :key="f.id">
+                            <img v-if="f.fillType === FillType.Pattern" :src="getImageUrl(f as Fill)" alt=""
+                                :style="{ opacity: f.contextSettings?.opacity }">
+                            <div class="gradient" v-if="f.fillType === FillType.Gradient"
+                                :style="[style(f.color as Color, f.gradient as Gradient, f.fillType), { opacity: f.gradient?.gradientOpacity }]">
+                            </div>
+                            <div v-if="f.fillType === FillType.SolidColor" class="main"
+                                :style="{ backgroundColor: `rgb(${f.color.red},${f.color.green},${f.color.blue})`, opacity: f.color.alpha }">
+                                <div v-if="fill!.fills.length==1" class="mask" :style="{ opacity: 1 - f.color.alpha }"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="name">{{ fill?.name }}</div>
                 </div>
-                <div class="unbind" @click="delfillmask">
+                <div class="unbind" @click.stop="delfillmask">
                     <svg-icon icon-class="unbind"></svg-icon>
                 </div>
             </div>
             <div class="delete-style">
-                <svg-icon icon-class="delete"></svg-icon>
+                <svg-icon icon-class="delete" @click.stop="delstylefill"></svg-icon>
             </div>
         </div>
         <div class="tips-wrap" v-if="mixed_cell">
@@ -963,6 +984,7 @@ onUnmounted(() => {
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
+                position: relative;
 
                 .colorFill {
                     outline: none;
@@ -974,6 +996,11 @@ onUnmounted(() => {
                     flex: 1;
                     font-size: 12px;
                     box-sizing: border-box;
+                }
+
+                .gradient {
+                    width: 100%;
+                    height: 100%;
                 }
 
                 .alphaFill {
@@ -1071,6 +1098,7 @@ onUnmounted(() => {
                 }
 
                 .color {
+                    position: relative;
                     width: 16px;
                     height: 16px;
                     background-color: #fff;
@@ -1079,19 +1107,36 @@ onUnmounted(() => {
                     overflow: hidden;
                     margin: 0 8px;
 
-                    .main {
-                        width: 16px;
-                        height: 16px;
-                        background-color: #000;
-                        position: relative;
+                    .containerfill {
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
 
-                        .mask {
-                            position: absolute;
-                            top: 0;
-                            right: 0;
-                            width: 50%;
+                        img {
                             height: 100%;
-                            background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
+                            width: 100%;
+                            object-fit: contain;
+                        }
+
+                        .gradient {
+                            width: 100%;
+                            height: 100%;
+                        }
+
+                        .main {
+                            width: 16px;
+                            height: 16px;
+                            background-color: #000;
+                            position: relative;
+
+                            .mask {
+                                position: absolute;
+                                top: 0;
+                                right: 0;
+                                width: 50%;
+                                height: 100%;
+                                background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
+                            }
                         }
                     }
                 }

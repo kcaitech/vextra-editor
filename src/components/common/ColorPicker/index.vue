@@ -12,6 +12,7 @@ import {
     TableView,
     Fill,
     TextShapeView,
+    FillMask,
 } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -68,6 +69,7 @@ interface Props {
     styleleft?: number
     open?: boolean
     entrance?: string
+    style?: FillMask
     context: Context
     color: Color
     fillslist?: FillItem[]
@@ -838,19 +840,19 @@ function enter() {
 }
 
 function triggle() {
-    // picker_visible.value = true;
+    picker_visible.value = true;
     const menu = props.context.menu;
     const exist = menu.isColorPickerMount;
     custom.value = 'custom'
-    // colorPickerMount();
-    if (exist) {
-        menu.removeColorPicker();
-        if (exist !== blockId) {
-            colorPickerMount();
-        }
-    } else {
-        colorPickerMount();
-    }
+    colorPickerMount();
+    // if (exist) {
+    //     menu.removeColorPicker();
+    //     if (exist !== blockId) {
+    //         colorPickerMount();
+    //     }
+    // } else {
+    //     colorPickerMount();
+    // }
 }
 
 /**
@@ -1100,7 +1102,12 @@ function move_stop_position(e: MouseEvent) {
         const stop_p = line_width / line_rect.width;
         gradient_channel_style.value = gradient_channel_generator(props.gradient!);
         stop_els.value[index].left = stop_p * 152 + 16;
-        gradientEditor.execute_stop_position(stop_p, stop_id.value);
+        if (props.entrance) {
+            gradientEditor.execute_fillmask_stop_position!(props.style!.sheet, props.style!.id, props.locat.index, stop_p, stop_id.value);
+        } else {
+            gradientEditor.execute_stop_position(stop_p, stop_id.value);
+        }
+
         passive();
     } else {
         if (Math.hypot(dx, dy) > 3) {
@@ -1427,7 +1434,7 @@ onUnmounted(() => {
                     <div class="color-type" :class="{ active: custom === 'custom' }" @click="custom = 'custom'">{{
                         t(`attr.fill`) }}</div>
                     <!-- <svg-icon icon-class="down"></svg-icon> -->
-                    <div v-if="fillType && is_gradient_selected()" class="style" :class="{ active: custom === 'style' }"
+                    <div v-if="fillType && is_gradient_selected() && !props.entrance" class="style" :class="{ active: custom === 'style' }"
                         @click="custom = 'style'">颜色样式</div>
                 </div>
                 <div class="right">
@@ -1554,14 +1561,14 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </template>
-                <PatternFill :context="context" v-else :scale="imageScale" :imageScaleMode="scaleMode"
+                <PatternFill :context="context" :entrance="props.entrance" v-else :scale="imageScale" :imageScaleMode="scaleMode"
                     :image="image_url" :paintFilter="paintFilter" @changeMode="changeScaleMode"
                     @setImageRef="setImageRef" @changeRotate="emit('changeRotate')"
-                    @changeScale="(s) => emit('changeScale', s)" />
+                    @changeScale="(s) => emit('changeScale', s)" @imagefilter="(color,type,v)=>color.execute_fillmask_ImageFilter(props.style?.sheet!,props.style?.id!,type,v,props.locat?.index!)"/>
             </div>
-            <div v-if="custom === 'style'" class="color-style">
+            <div v-if="custom === 'style' && !props.entrance" class="color-style">
                 <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
-                :fill="props.fillslist"  @close="EditorStyle = false">
+                    :fill="props.fillslist" @close="EditorStyle = false">
                 </ColorStyle>
             </div>
             <div v-if="EditorStyle" class="editorstyle">

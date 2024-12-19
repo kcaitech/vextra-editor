@@ -9,11 +9,11 @@
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input type="text" id="name" v-model="styleName">
+                <input type="text" id="name" v-model="styleName" @change="setSheetName">
             </div>
             <div class="des">
                 <label for="des">描述</label>
-                <input type="text" id="des" v-model="styleDes">
+                <input type="text" id="des" v-model="styleDes" @change="setSheetDes">
             </div>
         </div>
         <div class="color">
@@ -29,9 +29,10 @@
                         <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                     </div>
                     <div class="editor">
-                        <ColorPicker :color="f.fill.color" :entrance="'styles'" :context="props.context"
-                            :auto_to_right_line="true" :locat="{ index: fills.length - idx - 1, type: 'fills' }"
-                            :gradient="f.fill.gradient" :fillType="f.fill.fillType" :scale="f.fill.scale"
+                        <ColorPicker :color="f.fill.color" :style="props.style" :entrance="'styles'"
+                            :context="props.context" :auto_to_right_line="true"
+                            :locat="{ index: fills.length - idx - 1, type: 'fills' }" :gradient="f.fill.gradient"
+                            :fillType="f.fill.fillType" :scale="f.fill.scale"
                             :image-scale-mode="(f.fill.imageScaleMode || ImageScaleMode.Fill)"
                             :imageUrl="getImageUrl(f.fill)" @change="c => getColorFromPicker(idx, c)"
                             :image-origin-frame="{ width: f.fill.originalImageWidth || 0, height: f.fill.originalImageHeight || 0 }"
@@ -63,7 +64,7 @@
                             :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"
                             @keydown="(e) => keydownAlpha(e, idx, f.fill, filterAlpha(f.fill))" />
                     </div>
-                    <div class="delete" @click="deleteFill(idx)">
+                    <div class="delete" :class="{ 'invalid': fills.length === 1 }" @click="deleteFill(idx)">
                         <svg-icon icon-class="delete"></svg-icon>
                     </div>
                 </div>
@@ -116,7 +117,7 @@ import { getShapesForStyle } from '@/utils/style';
 import { ImgFrame } from '@/context/atrribute';
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { LinearApi } from "@kcdesign/data"
-
+import { Mask, FillRenderer } from "./fillRenderer";
 interface FillItem {
     id: number,
     fill: Fill
@@ -129,6 +130,8 @@ const props = defineProps<{
     top?: number;
     left?: number;
     type?: string;
+    maskid?: string,
+    reder?: FillRenderer
 }>();
 
 const emits = defineEmits<{
@@ -166,19 +169,40 @@ const linearApi = new LinearApi(props.context.coopRepo, props.context.data, prop
 const addfill = () => {
     if (!props.type) {
         emits('addfill')
+        return
+    }
+    const editor = props.context.editor4Doc()
+    if (props.style?.sheet && props.style?.id) {
+        const color = new Color(0.2, 0, 0, 0);
+        const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
+        editor.modifyFillMaskFillAddFill(props.style?.sheet, props.style?.id, fill)
     }
 }
 
 const insertStyleLib = () => {
     const editor = props.context.editor4Doc()
     const fills = new BasicArray<Fill>()
-    props.fill?.forEach(s => fills.push(s.fill))
-    const style = new FillMask(new BasicArray(), props.context.data.id, v4(), styleName.value, styleDes.value, fills.reverse())
-    const page =props.context.selection.selectedPage!
+    props.fill?.reverse().forEach(s => fills.push(s.fill))
+    const style = new FillMask(new BasicArray(), props.context.data.id, v4(), styleName.value, styleDes.value, fills)
+    const page = props.context.selection.selectedPage!
     const selected = props.context.selection.selectedShapes;
     const shapes = getShapesForStyle(selected);
-    editor.insertStyleLib(style,page,shapes);
+    editor.insertStyleLib(style, page, shapes);
     emits('close')
+}
+
+const setSheetName = () => {
+    if (!props.type) return
+    const editor = props.context.editor4Doc()
+    if (!props.style?.sheet) return
+    editor.modifyStyleName(props.style?.sheet, props.style?.id, styleName.value)
+}
+
+const setSheetDes = () => {
+    if (!props.type) return
+    const editor = props.context.editor4Doc()
+    if (!props.style?.sheet) return
+    editor.modifyStyleDescription(props.style?.sheet, props.style?.id, styleDes.value)
 }
 
 const alphaInput = (e: Event) => {
@@ -235,14 +259,10 @@ function toggleVisible(idx: number) {
         e.setFillEnable4Cell(_idx, !fills[idx].fill.isEnabled, range)
 
     } else {
-        const shapes = getShapesForStyle(selected);
-        const fills = shapes[0].getFills();
-        const value = !fills[_idx].isEnabled;
-        const actions = get_actions_fill_enabled(shapes, _idx, value);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesFillEnabled(actions);
+        const editor = props.context.editor4Doc()
+        if (props.style?.sheet && props.style?.id) {
+            const value = !props.style.fills[_idx].isEnabled
+            editor.modifyFillMaskFillEnabled(props.style?.sheet, props.style?.id, _idx, value)
         }
     }
 
@@ -260,12 +280,13 @@ function deleteFill(idx: number) {
         const range = get_table_range(table);
         e.deleteFill4Cell(_idx, range)
     } else {
-        const shapes = getShapesForStyle(selected);
-        const actions = get_actions_fill_delete(shapes, _idx);
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.shapesDeleteFill(actions);
+        if (props.type) {
+            const editor = props.context.editor4Doc()
+            if (props.style?.sheet && props.style?.id) {
+                editor.modifyFillMaskFillDelFill(props.style?.sheet, props.style?.id, _idx)
+            }
         }
+
     }
     hidden_selection(props.context);
 }
@@ -281,7 +302,14 @@ const set_gradient_opacity = (idx: number, opacity: number) => {
         linearApi.modifyGradientOpacity(actions)
         keydownval.value = false
     } else {
-        editor.setGradientOpacity(actions);
+        if (props.type) {
+            const editor = props.context.editor4Doc()
+            if (!props.style) return
+            editor.modifyFillMaskGradientOpacity(props.style?.sheet, props.style?.id, _idx, opacity)
+        } else {
+            editor.setGradientOpacity(actions);
+        }
+
     }
 
 }
@@ -292,10 +320,19 @@ function setFillOpacity(idx: number, opacity: number) {
     const _idx = fills.length - idx - 1;
     const s = getShapesForStyle(selected);
     const actions = get_actions_fill_opacity(s, _idx, opacity);
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesFillOpacity(actions);
+
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (!props.style) return
+        editor.modifyFillMaskImageOpacity(props.style.sheet, props.style.id, _idx, opacity)
+    } else {
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillOpacity(actions);
+        }
     }
+
+
     hidden_selection(props.context);
 }
 
@@ -314,6 +351,14 @@ function setColor(idx: number, clr: string, alpha: number) {
     const s = selected[0] as ShapeView;
     const _idx = fills.length - idx - 1;
     const tableSelection = props.context.tableSelection;
+
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (props.style?.sheet && props.style?.id) {
+            editor.modifyFillMaskFillColor(props.style?.sheet, props.style?.id, _idx, new Color(alpha, r, g, b))
+        }
+        return
+    }
 
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(tableSelection)) {
         const e = props.context.editor4Table(s as TableView);
@@ -358,12 +403,22 @@ function toggle_fill_type(idx: number, fillType: FillType) {
         const range = get_table_range(table);
         e.setFillType4Cell(_idx, fillType, range)
     } else {
-        const selected = props.context.selection.selectedShapes;
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_filltype(shapes, _idx, fillType);
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesFillType(actions);
+
+        if (props.type) {
+            console.log('1111111');
+
+            const editor = props.context.editor4Doc()
+            if (!props.style) return
+            editor.modifyFillMaskFillFillType(props.style?.sheet, props.style?.id, _idx, fillType)
+        } else {
+            console.log('2222222');
+            const selected = props.context.selection.selectedShapes;
+            const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+            const actions = get_actions_filltype(shapes, _idx, fillType);
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesFillType(actions);
+            }
         }
     }
 }
@@ -382,12 +437,20 @@ function getColorFromPicker(idx: number, color: Color) {
         const range = get_table_range(table);
         e.setFillColor4Cell(_idx, color, range)
     } else {
-        const selected = props.context.selection.selectedShapes;
-        const shapes = getShapesForStyle(selected);
-        const actions = get_actions_fill_color(shapes, _idx, color);
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesFillColor(actions);
+        if (props.type) {
+            const editor = props.context.editor4Doc()
+            if (props.style?.sheet && props.style?.id) {
+                editor.modifyFillMaskFillColor(props.style?.sheet, props.style?.id, _idx, color)
+            }
+            return
+        } else {
+            const selected = props.context.selection.selectedShapes;
+            const shapes = getShapesForStyle(selected);
+            const actions = get_actions_fill_color(shapes, _idx, color);
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesFillColor(actions);
+            }
         }
     }
     hidden_selection(props.context);
@@ -404,7 +467,15 @@ function gradient_reverse(idx: number) {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient(shapes, _idx, 'fills');
-    editor.reverseShapesGradient(actions);
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (props.style?.sheet && props.style?.id) {
+            editor.modifyFillMaskGradientReverse(props.style?.sheet, props.style?.id, _idx)
+        }
+    } else {
+        editor.reverseShapesGradient(actions);
+    }
+
 }
 
 /**
@@ -418,7 +489,15 @@ function gradient_rotate(idx: number) {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient(shapes, _idx, 'fills');
-    editor.rotateShapesGradient(actions);
+
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (props.style?.sheet && props.style?.id) {
+            editor.modifyFillMaskGradientRotate(props.style?.sheet, props.style?.id, _idx)
+        }
+    } else {
+        editor.rotateShapesGradient(actions);
+    }
 }
 
 /**
@@ -435,7 +514,14 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
     const editor = props.context.editor4Page(page);
     const stop = new Stop(new BasicArray(), id, position, color);
     const actions = get_aciton_gradient_stop(shapes, _idx, stop, 'fills');
-    editor.addShapesGradientStop(actions);
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (!(props.style?.sheet && props.style.id)) return
+        editor.modifyFillMaskGradientStop(props.style?.sheet, props.style?.id, _idx, stop)
+    } else {
+        editor.addShapesGradientStop(actions);
+    }
+
 }
 
 /**
@@ -448,11 +534,20 @@ function togger_gradient_type(idx: number, type: GradientType, fillType: FillTyp
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
+    console.log('fillType', fillType);
+
     if (fillType !== FillType.Gradient) {
         toggle_fill_type(idx, fillType);
     } else {
-        const actions = get_aciton_gradient_stop(shapes, _idx, type, 'fills');
-        editor.toggerShapeGradientType(actions);
+        if (props.type) {
+            const editor = props.context.editor4Doc()
+            if (!props.style) return
+            editor.modifyFillMaskGradientType(props.style?.sheet, props.style?.id, _idx, type)
+        } else {
+            const actions = get_aciton_gradient_stop(shapes, _idx, type, 'fills');
+            editor.toggerShapeGradientType(actions);
+        }
+
     }
 }
 
@@ -468,7 +563,14 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, { color, stop_i: index }, 'fills');
-    editor.setShapesGradientStopColor(actions);
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (!props.style) return
+        editor.modifyFillMaskGradientStopColor(props.style?.sheet, props.style?.id, _idx, { color, stop_i: index })
+    } else {
+        editor.setShapesGradientStopColor(actions);
+    }
+
 }
 
 /**
@@ -489,13 +591,18 @@ function gradient_stop_delete(idx: number, index: number) {
 const changeMode = (idx: number, mode: ImageScaleMode) => {
     const _idx = fills.length - idx - 1;
     const page = props.context.selection.selectedPage;
-
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const actions = get_actions_image_scale_mode(shapes, _idx, mode);
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesFillImageScaleMode(actions);
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (!props.style) return
+        editor.modifyFillMaskImageScaleMode(props.style?.sheet, props.style?.id, _idx, mode)
+    } else {
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillImageScaleMode(actions);
+        }
     }
 }
 
@@ -505,10 +612,18 @@ const setImageRef = (idx: number, urlRef: string, origin: ImgFrame, imageMgr: { 
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const actions = get_actions_image_ref(shapes, _idx, { urlRef, origin, imageMgr });
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesFillImageRef(actions);
+
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (!props.style) return
+        editor.modifyFillMaskImageRef(props.style?.sheet, props.style?.id, _idx, { urlRef, origin, imageMgr })
+    } else {
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillImageRef(actions);
+        }
     }
+
 }
 
 const changeRotate = (idx: number, fill: Fill) => {
@@ -519,9 +634,16 @@ const changeRotate = (idx: number, fill: Fill) => {
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const actions = get_actions_image_ref(shapes, _idx, (rotate + 90) % 360);
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesFillImageRotate(actions);
+
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (!props.style) return
+        editor.modifyFillMaskImageRotate(props.style?.sheet, props.style?.id, _idx, (rotate + 90) % 360)
+    } else {
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillImageRotate(actions);
+        }
     }
 }
 
@@ -531,9 +653,17 @@ const changeScale = (idx: number, scale: number) => {
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const actions = get_actions_image_ref(shapes, _idx, scale / 100);
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesFillImageScale(actions);
+
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (!props.style) return
+        editor.modifyFillMaskImageScale(props.style?.sheet, props.style?.id, _idx, scale / 100)
+    } else {
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillImageScale(actions);
+        }
+
     }
 }
 
@@ -710,6 +840,8 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
 
 }
 
+
+
 const update = () => {
     if (props.fill) {
         fills = props.fill
@@ -725,8 +857,30 @@ const update = () => {
     styleDes.value = props.style?.description ?? '';
 }
 
+watch(() => props.style, () => {
+    console.log('styles 变了');
+
+})
+
+function stylelib_watcher(t: number | string) {
+    if (t === 'stylelib')
+    if (!props.style) return
+    fills.length = 0
+    if (props.reder) {
+        props.reder.currentTarget(props.style!.id)?.fills?.forEach((f, idx) => fills.push({ id: idx, fill: f }))
+    }
+    fills = fills.reverse()
+
+}
+
+
 onMounted(() => {
     update();
+    props.context.data.watch(stylelib_watcher)
+})
+
+onUnmounted(() => {
+    props.context.data.unwatch(stylelib_watcher)
 })
 
 
@@ -942,6 +1096,11 @@ onMounted(() => {
 
                 .delete:hover {
                     background-color: #F5F5F5;
+                }
+
+                .invalid {
+                    opacity: 0.4;
+                    pointer-events: none;
                 }
             }
         }

@@ -19,12 +19,14 @@ const props = defineProps<{
     imageScaleMode: ImageScaleMode | undefined
     image: string | undefined
     paintFilter?: PaintFilter
+    entrance?: string
 }>()
 const emits = defineEmits<{
     (e: 'changeMode', mode: ImageScaleMode): void;
     (e: 'setImageRef', ref: string, origin: ImgFrame, imageMgr: any): void;
     (e: 'changeScale', scale: number): void;
     (e: 'changeRotate'): void;
+    (e: 'imagefilter', Color: ColorPicker, type: PaintFilterType, value: number): void
 }>();
 let colorEditor: ColorPicker | undefined;
 const paint_filter = ref<PaintFilter>();
@@ -75,8 +77,13 @@ const changePaint = (value: number, type: PaintFilterType) => {
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const v = (value - 80) * (type === PaintFilterType.Hue ? 2.25 : 1.25);
-    colorEditor?.executeImageFilter(shapes, type, v, locat.index);
+    if (props.entrance) {
+        emits('imagefilter', colorEditor, type, v)
+    } else {
+        colorEditor?.executeImageFilter(shapes, type, v, locat.index);
+    }
 }
+
 
 const startChange = (e: MouseEvent) => {
     const page = props.context.selection.selectedPage;
@@ -94,44 +101,39 @@ watch(() => props.paintFilter, (v) => {
 
 </script>
 <template>
-<div class="container">
-    <div class="header">
-        <PatternMode :context="context" :scale="scale" :imageScaleMode="imageScaleMode"
-                     @changeMode="(mode) => emits('changeMode', mode)" @changeRotate="emits('changeRotate')"
-                     @changeScale="(s) => emits('changeScale', s)"></PatternMode>
-    </div>
-    <div class="body">
-        <div class="mask" @click="selectImage">
-            <img :src="image" alt="">
-            <div class="pic-picker">
-                <div> {{ t('attr.selected_picture') }}</div>
+    <div class="container">
+        <div class="header">
+            <PatternMode :context="context" :scale="scale" :imageScaleMode="imageScaleMode"
+                @changeMode="(mode) => emits('changeMode', mode)" @changeRotate="emits('changeRotate')"
+                @changeScale="(s) => emits('changeScale', s)"></PatternMode>
+        </div>
+        <div class="body">
+            <div class="mask" @click="selectImage">
+                <img :src="image" alt="">
+                <div class="pic-picker">
+                    <div> {{ t('attr.selected_picture') }}</div>
+                </div>
+                <input type="file" ref="picker" :accept="accept" :multiple="false" id="fillfilepicker"
+                    @change.stop="(e: Event) => { change(e) }" />
             </div>
-            <input type="file" ref="picker" :accept="accept" :multiple="false" id="fillfilepicker"
-                   @change.stop="(e: Event) => { change(e) }"/>
+        </div>
+        <div class="tool">
+            <pattern-tool-bit :type="t('attr.brightness')" :value="paint_filter?.exposure || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Exposure)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit :type="t('attr.contrast')" :value="paint_filter?.contrast || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Contrast)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit :type="t('attr.saturation')" :value="paint_filter?.saturation || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Saturation)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit :type="t('attr.temperature')" :value="paint_filter?.temperature || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Temperature)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit :type="t('attr.tint')" :value="paint_filter?.tint || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Tint)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit :type="t('attr.shadow')" :value="paint_filter?.shadow || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Shadow)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit :type="t('attr.hue')" :value="(paint_filter?.hue || 0) * (100 / 180)"
+                @change="(v) => changePaint(v, PaintFilterType.Hue)" @down="startChange" @onUp="endChange" />
         </div>
     </div>
-    <div class="tool">
-        <pattern-tool-bit :type="t('attr.brightness')" :value="paint_filter?.exposure || 0"
-                          @change="(v) => changePaint(v, PaintFilterType.Exposure)" @down="startChange"
-                          @onUp="endChange"/>
-        <pattern-tool-bit :type="t('attr.contrast')" :value="paint_filter?.contrast || 0"
-                          @change="(v) => changePaint(v, PaintFilterType.Contrast)" @down="startChange"
-                          @onUp="endChange"/>
-        <pattern-tool-bit :type="t('attr.saturation')" :value="paint_filter?.saturation || 0"
-                          @change="(v) => changePaint(v, PaintFilterType.Saturation)" @down="startChange"
-                          @onUp="endChange"/>
-        <pattern-tool-bit :type="t('attr.temperature')" :value="paint_filter?.temperature || 0"
-                          @change="(v) => changePaint(v, PaintFilterType.Temperature)" @down="startChange"
-                          @onUp="endChange"/>
-        <pattern-tool-bit :type="t('attr.tint')" :value="paint_filter?.tint || 0"
-                          @change="(v) => changePaint(v, PaintFilterType.Tint)" @down="startChange" @onUp="endChange"/>
-        <pattern-tool-bit :type="t('attr.shadow')" :value="paint_filter?.shadow || 0"
-                          @change="(v) => changePaint(v, PaintFilterType.Shadow)" @down="startChange"
-                          @onUp="endChange"/>
-        <pattern-tool-bit :type="t('attr.hue')" :value="(paint_filter?.hue || 0) * (100 / 180)"
-                          @change="(v) => changePaint(v, PaintFilterType.Hue)" @down="startChange" @onUp="endChange"/>
-    </div>
-</div>
 
 
 </template>
@@ -175,7 +177,7 @@ watch(() => props.paintFilter, (v) => {
                 object-fit: contain;
             }
 
-            > .pic-picker {
+            >.pic-picker {
                 position: absolute;
                 width: 100%;
                 height: 100%;
@@ -204,7 +206,7 @@ watch(() => props.paintFilter, (v) => {
         }
 
         .mask:hover {
-            > .pic-picker {
+            >.pic-picker {
                 background-color: rgba(0, 0, 0, 0.1);
 
                 div {

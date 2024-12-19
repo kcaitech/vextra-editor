@@ -25,7 +25,7 @@
                 </div>
             </div>
             <div class="effect-list">
-                <div class="item" v-for="(s,index) in shadows" :key="s.id">
+                <div class="item" v-for="(s, index) in shadows" :key="s.id">
                     <div class="show">
                         <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'">
                             <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
@@ -34,7 +34,7 @@
                     <Select class="select" :context="props.context" :shapes="props.shapes"
                         :source="positonOptionsSource"
                         :selected="positonOptionsSource.find(i => i.data.value === s.shadow.position)?.data"
-                        @select="(value) => positionSelect(value, s.id)"></Select>
+                        @select="(value) => positionSelect(value, index)"></Select>
                     <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="index" :length="shadows.length"
                         :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
                     <div class="delete" :class="{ disable }">
@@ -50,19 +50,21 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow, ShapeType, BasicArray, Color } from '@kcdesign/data';
+import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow, ShapeType, BasicArray, Color, ShadowMask } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
 import ShadowDetail from '../Shadow/ShadowDetail.vue'
 import {
     get_actions_add_shadow,
+    get_actions_shadow_position,
     get_actions_shadow_unify,
     get_shadows
 } from '@/utils/shape_style';
 import { computed } from 'vue';
 import { v4 } from 'uuid';
 import { hidden_selection } from '@/utils/content';
+import { getShapesForStyle } from '@/utils/style';
 
 
 interface ShadowItem {
@@ -96,11 +98,34 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 const watchedShapes2 = new Map();
 const reflush = ref<number>(0);
-function positionSelect(selected: SelectItem, id: number | undefined) {
-
+function positionSelect(selected: SelectItem, id: number) {
+    const _idx = shadows.length - id - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        if (shadows[id].shadow.position === selected.value) return ;
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowPosition(_idx, selected.value as ShadowPosition);
+    } else if (len > 1) {
+        const actions = get_actions_shadow_position(props.shapes, _idx, selected.value as ShadowPosition);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesShadowPosition(actions);
+            }
+        }
+    }
 }
 
 const Neweffect = () => {
+    const editor = props.context.editor4Doc()
+    const shadow = new BasicArray<Shadow>()
+    shadows.reverse().forEach(s => shadow.push(s.shadow))
+    const style = new ShadowMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, shadow)
+    const page = props.context.selection.selectedPage!
+    const selected = props.context.selection.selectedShapes;
+    const shapes = getShapesForStyle(selected);
+    editor.insertStyleLib(style, page, shapes);
     props.context.escstack.execute()
 }
 
