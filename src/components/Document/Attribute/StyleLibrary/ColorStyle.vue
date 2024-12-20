@@ -29,7 +29,7 @@
                         <span>{{ s.name }}</span>
                     </div>
                     <template v-if="showtypes.has(s.name)">
-                        <div class="styles" v-for="f in s.variables" :key="f.id" @click="addfillmask(f.id)">
+                        <div class="styles" v-for="f in fillList" :key="f.id" @click="addfillmask(f.id)">
                             <div class="left">
                                 <div class="color">
                                     <div class="containerfill" v-for="fill in f.fills" :key="fill.id">
@@ -54,8 +54,8 @@
                         </div>
                     </template>
                 </div>
-                <div v-if="!sheets?.length && searchval" class="search-null">没有搜索到相关样式</div>
-                <div v-if="!sheets?.length && !searchval" class="data-null">暂无颜色样式</div>
+                <div v-if="!fillList?.length && searchval" class="search-null">没有搜索到相关样式</div>
+                <div v-if="!fillList?.length && !searchval" class="data-null">暂无颜色样式</div>
             </div>
         </el-scrollbar>
         <EditorColorStyle v-if="showeditor" :type="'editor'" :top="Top" :left="Left"
@@ -84,9 +84,9 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } f
 import EditorColorStyle from './EditorColorStyle.vue';
 import { DocumentMeta_stylelib, FillMask_fills, StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { getShapesForStyle } from "@/utils/style";
-import { get_actions_add_fillmask } from "@/utils/shape_style";
 import { Mask, FillRenderer } from "./fillRenderer";
 import { block_style_generator } from "../../../common/ColorPicker/utils"
+import { get_actions_add_mask } from "@/utils/shape_style";
 
 
 interface FillItem {
@@ -164,14 +164,14 @@ const getImageUrl = (fill: Fill) => {
 function update() {
     const lib = props.context.data.stylelib
     if (!lib) return
-    fillRenderer.updateUnderRootContainerMap();
+    fillRenderer.updateUnderRootContainerMap('fill');
 }
 
 const addfillmask = (id: string) => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
-    const actions = get_actions_add_fillmask(shapes, id);
+    const actions = get_actions_add_mask(shapes, id);
     const editor = props.context.editor4Page(page);
     editor.shapesSetFillMask(actions);
 }

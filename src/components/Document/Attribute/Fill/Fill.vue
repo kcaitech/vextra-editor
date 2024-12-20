@@ -24,8 +24,7 @@ import {
     get_aciton_gradient,
     get_aciton_gradient_stop,
     get_actions_add_fill,
-    get_actions_add_fillmask,
-    get_actions_del_fillmask,
+    get_actions_add_mask,
     get_actions_fill_color,
     get_actions_fill_delete,
     get_actions_fill_enabled,
@@ -181,7 +180,7 @@ function addFill(): void {
             if (mask) {
                 const s = shapes.find(i => i.style.fillsMask !== undefined)
                 const id = s?.style.fillsMask as string
-                const actions = get_actions_add_fillmask(shapes, id);
+                const actions = get_actions_add_mask(shapes, id);
                 editor.shapesSetFillMask(actions);
             } else {
                 const actions = get_actions_fill_unify(shapes);

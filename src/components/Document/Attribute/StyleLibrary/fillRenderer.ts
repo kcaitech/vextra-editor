@@ -11,6 +11,7 @@ import {
     Matrix2,
     NumberArray2D,
     Shadow,
+    ShadowMask,
     ShapeView, SymbolView,
     Transform
 } from "@kcdesign/data";
@@ -59,23 +60,23 @@ export class FillRenderer {
         this.m_list.push(titleCtx);
     }
 
-    // private getshadowmask(v: ShadowMask) {
-    //     const titleCtx: Mask = {
-    //         id: v.id,
-    //         name: v.name,
-    //         description: v.description,
-    //         sheet: v.sheet, 
-    //         shadows: v.shadows
-    //     };
-    //     this.m_list.push(titleCtx);
-    // }
+    private getshadowmask(v: ShadowMask) {
+        const titleCtx: Mask = {
+            id: v.id,
+            name: v.name,
+            description: v.description,
+            sheet: v.sheet,
+            shadows: v.shadows
+        };
+        this.m_list.push(titleCtx);
+    }
 
 
     currentTarget(mask: string) {
         return this.m_list.find(f => f.id === mask)
     }
 
-    updateUnderRootContainerMap() {
+    updateUnderRootContainerMap(type: string) {
 
         this.m_list_lib.length = 0;
         this.m_list.length = 0;
@@ -87,12 +88,16 @@ export class FillRenderer {
         const sheet = lib.find(s => s.id === ctx.data.id)
         if (!sheet) return
         sheet.variables.forEach(s => {
-            if (s instanceof FillMask) {
-                this.getfillmask(s)
+            if (type === 'fill') {
+                if (s instanceof FillMask) {
+                    this.getfillmask(s)
+                }
             }
-            // if (s instanceof ShadowMask) {
-            //     this.getshadowmask(s)
-            // }
+            if (type === 'shadow') {
+                if (s instanceof ShadowMask) {
+                    this.getshadowmask(s)
+                }
+            }
         })
 
     }

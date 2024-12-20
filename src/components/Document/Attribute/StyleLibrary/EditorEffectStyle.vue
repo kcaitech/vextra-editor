@@ -58,7 +58,7 @@ import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
 import { computed } from 'vue';
 import ShadowDetail from '../Shadow/ShadowDetail.vue'
-// import { FillRenderer } from './fillRenderer';
+import { FillRenderer } from './fillRenderer';
 
 interface FillItem {
     id: number,
@@ -70,10 +70,8 @@ const props = defineProps<{
     shapes: ShapeView[];
     top: number;
     left: number
-    list: ShadowMask | undefined
-    name: string
-    des: string
-    // reder?: FillRenderer
+    maskid: string
+    reder: FillRenderer
 }>();
 
 const emits = defineEmits<{
@@ -98,7 +96,7 @@ const des = ref<string>();
 
 let shadows: FillItem[] = reactive([]);
 const disable = computed(() => {
-    return props.list!.shadows.length <= 1
+    return shadows.length <= 1
 })
 
 function positionSelect(selected: SelectItem, id: string) {
@@ -106,35 +104,37 @@ function positionSelect(selected: SelectItem, id: string) {
 }
 
 const update = () => {
-    if (props.list) {
-        props.list.shadows.forEach((s, idx) => shadows.push({ id: idx, shadow: s }))
-        shadows = shadows.reverse()
-        console.log('props.style', props.list);
+    console.log('update',props.maskid,props.reder);
+    
+    if (props.maskid) {
+        shadows.length = 0
+        if (props.reder) {
+            const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+            if (mask) {
+                mask.shadows.forEach((s, idx) => shadows.push({ id: idx, shadow: s }));
+                name.value = mask.name ?? '颜色样式';
+                des.value = mask.description ?? '';
+            }
+            shadows = shadows.reverse()
+        }
+       
     }
-    // fills=fills.reverse()
-    name.value = props.list?.name ?? '颜色样式';
-    des.value = props.list?.description ?? '';
 }
 
-// function stylelib_watcher(t: number | string) {
-//     if (t === 'stylelib') {
-//         if (!props.list) return
-//         shadows.length = 0
-//         if (props.reder) {
-//             props.reder.currentTarget(props.list.id)?.shadows?.forEach((s, idx) => shadows.push({ id: idx, shadow: s }))
-//         }
-//         shadows = shadows.reverse()
-//     }
+function stylelib_watcher(t: number | string) {
+    if (t === 'stylelib') {
+        update();
+    }
 
-// }
+}
 
 onMounted(() => {
     update();
-    // props.context.data.watch(stylelib_watcher)
+    props.context.data.watch(stylelib_watcher)
 })
 
 onUnmounted(() => {
-    // props.context.data.unwatch(stylelib_watcher)
+    props.context.data.unwatch(stylelib_watcher)
 })
 
 

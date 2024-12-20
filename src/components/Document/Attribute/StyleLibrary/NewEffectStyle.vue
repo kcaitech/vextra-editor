@@ -127,6 +127,7 @@ const Neweffect = () => {
     const shapes = getShapesForStyle(selected);
     editor.insertStyleLib(style, page, shapes);
     props.context.escstack.execute()
+    emits('close')
 }
 
 function addShadow(): void {
@@ -208,7 +209,9 @@ const updateData2 = () => {
         const _shadows = get_shadows(props.shapes);
         if (_shadows === 'mixed') {
             mixed.value = true;
-        } else {
+        } else if(_shadows === 'mask'){
+            return 
+        }else {
             shadows.push(..._shadows.reverse());
         }
     }

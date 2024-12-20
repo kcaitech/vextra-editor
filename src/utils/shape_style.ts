@@ -38,7 +38,8 @@ import {
     ImageScaleMode,
     PaintFilter,
     PatternTransform,
-    FillMask
+    FillMask,
+    ShadowMask
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 
@@ -163,7 +164,7 @@ export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
     return actions;
 }
 
-export function get_actions_add_fillmask(shapes: ShapeView[], id: string) {
+export function get_actions_add_mask(shapes: ShapeView[], id: string) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -172,7 +173,16 @@ export function get_actions_add_fillmask(shapes: ShapeView[], id: string) {
     return actions;
 }
 
-export function get_actions_del_fillmask(shapes: ShapeView[], value: undefined) {
+// export function get_actions_add_shadowmask(shapes: ShapeView[], id: string) {
+//     const actions: BatchAction2[] = [];
+//     for (let i = 0; i < shapes.length; i++) {
+//         if (shapes[i].type === ShapeType.Cutout) continue;
+//         actions.push({ target: (shapes[i]), value: id });
+//     }
+//     return actions;
+// }
+
+export function get_actions_del_mask(shapes: ShapeView[], value: undefined) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -261,7 +271,7 @@ export function get_actions_fill_mask(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
     let fills: Fill[] = [];
     const id = shapes[0].style.fillsMask!
-    fills= (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
+    fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const new_fills: Fill[] = [];
@@ -536,11 +546,14 @@ export function get_actions_border_exchange(shapes: ShapeView[]) {
 }
 
 // shadows
-export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
+export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' | 'mask' {
     const shadows: ShadowItem[] = [];
     const shape = shapes[0];
     const styleshadows = shape?.getShadows();
     const compare_str: string[] = [];
+    const mask = shape.style.shadowsMask ?? 'undefined';
+    const shadow_mask: string[] = [];
+    shadow_mask.push(mask)
     for (let i = 0, len = styleshadows.length; i < len; i++) {
         const shadow = styleshadows[i];
         const s = { id: i, shadow };
@@ -563,6 +576,11 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const styleshadows = shape.getShadows();
         const len = styleshadows.length;
+        if (shape.style.shadowsMask) {
+            shadow_mask.push(shape.style.shadowsMask)
+        } else {
+            shadow_mask.push('undefined')
+        }
         if (len !== shadows.length) return 'mixed';
         const s_bs = styleshadows;
         for (let j = 0; j < len; j++) {
@@ -581,6 +599,13 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
             if (str !== compare_str[j]) return 'mixed';
         }
     }
+
+    const mask_b = shadow_mask.every(i => mask !== 'undefined' && i === mask)
+    const mask_s = shadow_mask.some(i => i !== 'undefined')
+
+    if (mask_b) return 'mask'
+    if (mask_s) return 'mixed'
+
     return shadows;
 
     function extend(base: number, view: ShapeView) {
@@ -593,6 +618,28 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
         // }
         return base;
     }
+}
+
+export function get_actions_shadow_mask(shapes: ShapeView[]) {
+    const actions: BatchAction2[] = [];
+    let shadows: Shadow[] = [];
+    let s = 0;
+    const id = shapes[0].style.shadowsMask!
+    shadows = (shapes[0].style.getStylesMgr()?.getSync(id) as ShadowMask).shadows
+
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
+        const new_shadows: Shadow[] = [];
+        for (let i = 0; i < shadows.length; i++) {
+            const shadow = shadows[i];
+            const { isEnabled, blurRadius, color, position, spread, offsetX, offsetY,contextSettings} = shadow;
+            const new_shadow = new Shadow(new BasicArray(), v4(), isEnabled, blurRadius, color, offsetX, offsetY, spread, position);
+            new_shadow.contextSettings = contextSettings;
+            new_shadows.push(new_shadow);
+        }
+        actions.push({ target: shapes[i], value: new_shadows });
+    }
+    return actions;
 }
 
 export function get_actions_shadow_unify(shapes: ShapeView[]) {

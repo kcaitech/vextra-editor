@@ -25,48 +25,50 @@
                 <div class="list-item" @click="Changefilter('全部')">
                     <span>全部</span>
                 </div>
-                <div class="list-item" v-for="i in sheets" :key="i.id" @click="Changefilter(i.name)">
-                    <span> {{ i.name }}</span>
+                <div class="list-item" v-for="sheet in sheets" :key="sheet.id" @click="Changefilter(sheet.name)">
+                    <span> {{ sheet.name }}</span>
                 </div>
             </div>
         </div>
         <el-scrollbar>
-            <!-- <div class="content">
-                <div class="style-item" v-for="i in shadowlist" :key="i.id">
-                    <div class="type" @click="showtype(i.name)">
-                        <svg-icon :icon-class="showtypes.has(i.name) ? 'triangle-down' : 'triangle-right'"></svg-icon>
-                        <span>{{ i.name }}</span>
+            <div class="content">
+                <div class="style-item" v-for="sheet in sheets" :key="sheet.id">
+                    <div class="type" @click="showtype(sheet.name)">
+                        <svg-icon
+                            :icon-class="showtypes.has(sheet.name) ? 'triangle-down' : 'triangle-right'"></svg-icon>
+                        <span>{{ sheet.name }}</span>
                     </div>
-                    <template v-if="showtypes.has(i.name)">
-                        <div class="styles" :class="{ 'active': editorpanel && currenttarget === i.id }">
+                    <template v-if="showtypes.has(sheet.name)">
+                        <div class="styles" :class="{ 'active': editorpanel && Mask_ID === shadow.id }"
+                            v-for="shadow in masklist" :key="shadow.id" @click.stop="addshadowmask(shadow.id)">
                             <div class="left">
                                 <div class="effect" :style="{
                                     boxShadow: `
-                                    ${i.shadows![0].position.includes('in') ? 'inset' : ''} 
-                                    ${i.shadows![0].offsetX > 0 ? '1px' : i.shadows![0].offsetX < 0 ? '-1px' : '0'} 
-                                    ${i.shadows![0].offsetY > 0 ? '1px' :i.shadows![0].offsetY < 0 ? '-1px' : '0'} 
-                                    ${i.shadows![0].blurRadius > 0 ? '1px' : '0'}
-                                    ${i.shadows![0].spread > 0 ? '1px' : '0'}
+                                    ${shadow.shadows![0].position.includes('in') ? 'inset' : ''} 
+                                    ${shadow.shadows![0].offsetX > 0 ? '1px' : shadow.shadows![0].offsetX < 0 ? '-1px' : '0'} 
+                                    ${shadow.shadows![0].offsetY > 0 ? '1px' : shadow.shadows![0].offsetY < 0 ? '-1px' : '0'} 
+                                    ${shadow.shadows![0].blurRadius > 0 ? '1px' : '0'}
+                                    ${shadow.shadows![0].spread > 0 ? '1px' : '0'}
                                     #0000004d
                                     `}">
                                 </div>
-                                <div class="name">{{ i.name }}</div>
+                                <div class="name">{{ shadow.name }}</div>
                             </div>
                             <div class="editor clickeditor" style="visibility: hidden;"
-                                @click="EditPanel($event, i.id, i as ShadowMask, i.name, i.description)">
+                                @click.stop="EditPanel($event, shadow.id)">
                                 <svg-icon icon-class="export-menu"></svg-icon>
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-if="!shadowlist.length" class="null">没有搜索到相关样式</div>
-            </div> -->
+                <div v-if="!masklist.length" class="null">没有搜索到相关样式</div>
+            </div>
         </el-scrollbar>
         <NewEffectStyle v-if="newpanel" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
             @close="closenewpanel"></NewEffectStyle>
-        <!-- <EditorEffectStyle v-if="editorpanel" :top="Top" :left="Left" :shapes="props.shapes" :context="props.context"
-            :list="Data" :name="effectname" :des="effectdes" @close="closeeditorpanel">
-        </EditorEffectStyle> -->
+        <EditorEffectStyle v-if="editorpanel" :top="Top" :left="Left" :shapes="props.shapes" :context="props.context"
+            :maskid="Mask_ID" :reder="fillRenderer" @close="closeeditorpanel">
+        </EditorEffectStyle>
     </div>
 
 </template>
@@ -95,6 +97,8 @@ import NewEffectStyle from './NewEffectStyle.vue';
 import { SelectItem } from "@/components/common/Select.vue";
 import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { FillRenderer, Mask } from "./fillRenderer";
+import { getShapesForStyle } from "@/utils/style";
+import { get_actions_add_mask } from "@/utils/shape_style";
 interface FillItem {
     id: number,
     fill: Fill
@@ -103,7 +107,6 @@ interface FillItem {
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[]
-    shadowlist: Shadow[]
     top: number;
     left: number
 }>()
@@ -122,18 +125,15 @@ const editorpanel = ref<boolean>(false)
 const newpanel = ref<boolean>(false)
 const Top = ref<number>(0)
 const Left = ref<number>(0)
-const Type = ref<string>('')
-const currenttarget = ref<string>('')
-
+const Mask_ID = ref<string>('')
 const search = ref<HTMLInputElement>()
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
 }
-const effectname = ref<string>('')
-const effectdes = ref<string>('')
+
 const sheets = reactive<StyleSheet[]>([])
-// const shadowlist = reactive<Mask[]>([]);
-// const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], shadowlist as Mask[]);
+const masklist = reactive<Mask[]>([]);
+const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], masklist as Mask[]);
 
 const setEbable = (id: string, b: boolean) => {
 
@@ -147,9 +147,20 @@ const delShadow = (id: string) => {
 
 }
 
+const addshadowmask = (id: string) => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_add_mask(shapes, id);
+    const editor = props.context.editor4Page(page);
+    editor.shapesSetShadowMask(actions);
+    emits('close')
+}
+
 const closenewpanel = () => {
     props.context.escstack.execute()
     newpanel.value = false
+    emits('close')
 }
 
 const closeeditorpanel = () => {
@@ -159,10 +170,7 @@ const closeeditorpanel = () => {
 
 
 let timer: any
-const EditPanel = (e: MouseEvent, id: string, effects: ShadowMask, name: string, des: string) => {
-    
-    effectname.value = name;
-    effectdes.value = des;
+const EditPanel = (e: MouseEvent, maskid: string) => {
     let el = e.target as HTMLElement;
     const { top } = el.getBoundingClientRect()
     while (el.parentElement?.className !== 'shadow-container') {
@@ -173,8 +181,8 @@ const EditPanel = (e: MouseEvent, id: string, effects: ShadowMask, name: string,
     const { left } = el.getBoundingClientRect();
     Top.value = top;
     Left.value = left - 250;
-    currenttarget.value === id ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
-    currenttarget.value = id;
+    Mask_ID.value === maskid ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
+    Mask_ID.value = maskid;
     if (editorpanel.value) {
         if (timer) clearTimeout(timer)
         timer = setTimeout(() => {
@@ -282,6 +290,7 @@ const Changefilter = (v: string) => {
 function update() {
     const lib = props.context.data.stylelib
     if (!lib) return
+    fillRenderer.updateUnderRootContainerMap('shadow')
 
 }
 
@@ -291,13 +300,13 @@ function stylelib_watcher(t: number | string) {
 }
 
 onMounted(() => {
-    // update();
-    // props.context.data.watch(stylelib_watcher);
-  
+    update();
+    props.context.data.watch(stylelib_watcher);
+
 })
 
 onUnmounted(() => {
-    // props.context.data.unwatch(stylelib_watcher)
+    props.context.data.unwatch(stylelib_watcher)
 })
 
 

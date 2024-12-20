@@ -371,7 +371,7 @@ onUnmounted(() => {
                     <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"
                         :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
                     <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
-                        :context="props.context">
+                        :context="props.context" :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                     </Shadow>
                     <BlurVue v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context"></BlurVue>
                     <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
