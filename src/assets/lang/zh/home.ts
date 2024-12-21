@@ -39,6 +39,7 @@ export const system = {
     'unbind_instance': '解绑实例',
     'reset_instance_roperties': '重置实例属性',
     'edit_component': '编辑组件',
+    'create_mask': 'Use as Mask',
     'wx_login': '微信扫码登录',
     'login_read': '扫码表示已阅读并同意',
     'read_TOS': '服务协议',

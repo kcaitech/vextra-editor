@@ -38,6 +38,7 @@ export const system = {
     'unbind_instance': 'Unbind',
     'reset_instance_roperties': 'Reset',
     'edit_component': 'Edit component',
+    'create_mask': 'Use as Mask',
     'wx_login': 'Wechat scan code login',
     'login_read': 'Scanning code indicates that you have read and agreed',
     'read_TOS': 'Service Agreement',
