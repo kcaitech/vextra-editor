@@ -10,36 +10,43 @@
             <div class="name">
                 <label for="name">名称</label>
                 <input v-focus ref="effectname" type="text" id="name" v-model="name"
-                    @keydown.esc="props.context.escstack.execute()">
+                    @keydown.esc="props.context.escstack.execute()" @change="setSheetName">
             </div>
             <div class="des">
                 <label for="des">描述</label>
                 <input ref="effectdes" type="text" id="des" v-model="des"
-                    @keydown.esc="props.context.escstack.execute()">
+                    @keydown.esc="props.context.escstack.execute()" @change="setSheetDes">
             </div>
         </div>
         <div class="effect">
             <div class="create-effect">
                 <div class="title">特效</div>
-                <div class="add" @click.stop="emits('addShadow')">
+                <div class="add" @click.stop="addshadow">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </div>
             <div class="effect-list">
                 <div class="item" v-for="(s, index) in shadows" :key="s.id">
                     <div class="show">
-                        <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'"
-                            @click.stop="emits('setShadowEnable', s.shadow.id, !s.shadow.isEnabled)">
+                        <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click.stop="toggleVisible(index)">
                             <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
                         :source="positonOptionsSource"
                         :selected="positonOptionsSource.find(i => i.data.value === s.shadow.position)?.data"
-                        @select="(value) => positionSelect(value, s.shadow.id)"></Select>
-                    <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="index" :length="shadows!.length"
-                        :shapes="props.shapes"></ShadowDetail>
-                    <div class="delete" :class="{ disable }" @click.stop="emits('delShadow', s.shadow.id)">
+                        @select="(value) => positionSelect(value, index)"></Select>
+                    <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="index" :id:="s.shadow.id"
+                        :length="shadows.length" :shapes="props.shapes" :entry="'style'" :reflush="reflush"
+                        @set-offset-x="(v) => setOffsetX(v, index)" @set-offset-y="(v) => setOffsetY(v, index)"
+                        @set-blur-radius="(v) => setBlurRadius(v, index)" @set-spread="(v) => setSpread(v, index)"
+                        @picker-color="(v) => setShadowColor(v, index)" @set-color="(v) => setShadowColor(v, index)"
+                        @keydownoffset-x="(v) => keydownoffsetX(v, index)"
+                        @keydownoffset-y="(v) => keydownoffsetY(v, index)"
+                        @keydown-blur-radius="(v:number) => keydownblurRadius(v, index)"
+                        @keydown-spread="(v:number) => keydownspread(v, index)">
+                    </ShadowDetail>
+                    <div class="delete" :class="{ disable }" @click.stop="deleteShadow(index)">
                         <svg-icon icon-class="delete"></svg-icon>
                     </div>
                 </div>
@@ -52,15 +59,16 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow, ShadowMask } from '@kcdesign/data';
+import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow, ShadowMask, Color, BasicArray, LinearApi } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
 import { computed } from 'vue';
 import ShadowDetail from '../Shadow/ShadowDetail.vue'
 import { FillRenderer } from './fillRenderer';
+import { v4 } from 'uuid';
 
-interface FillItem {
+interface ShadowItem {
     id: number,
     shadow: Shadow
 }
@@ -76,10 +84,6 @@ const props = defineProps<{
 
 const emits = defineEmits<{
     (e: 'close'): void;
-    (e: 'setShadowEnable', id: string, b: boolean): void
-    (e: 'addShadow'): void
-    (e: 'setPosition', selected: SelectItem, id: string): void
-    (e: 'delShadow', id: string): void
 }>()
 
 const { t } = useI18n();
@@ -93,32 +97,144 @@ const effectname = ref<HTMLInputElement>()
 const effectdes = ref<HTMLInputElement>()
 const name = ref<string>();
 const des = ref<string>();
-
-let shadows: FillItem[] = reactive([]);
+const reflush = ref<number>(0);
+const shadows: ShadowItem[] = reactive([]);
 const disable = computed(() => {
     return shadows.length <= 1
 })
 
-function positionSelect(selected: SelectItem, id: string) {
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+
+const keydownblurRadius = (value: number, idx: number) => {
+    console.log('keydownblurRadius', value, idx);
+    
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    linearApi.modifyShadowMaskShadowBlur(mask.sheet, mask.id, _idx, value)
+}
+
+const keydownoffsetY = (value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    linearApi.modifyShadowMaskShadowOffsetY(mask.sheet, mask.id, _idx, value)
+}
+
+const keydownspread = (value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    linearApi.modifyShadowMaskShadowSpread(mask.sheet, mask.id, _idx, value)
+}
+
+const keydownoffsetX = (value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    linearApi.modifyShadowMaskShadowOffsetX(mask.sheet, mask.id, _idx, value)
+}
+
+const setShadowColor = (color: Color, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyShadowMaskShadowColor(mask.sheet, mask.id, _idx, color)
+}
+
+const setSpread = (value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyShadowMaskShadowSpread(mask.sheet, mask.id, _idx, value)
+}
+
+const setBlurRadius = (value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyShadowMaskShadowBlur(mask.sheet, mask.id, _idx, value)
+}
+
+const setOffsetY = (value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyShadowMaskShadowOffsetY(mask.sheet, mask.id, _idx, value)
+}
+
+const setOffsetX = (value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyShadowMaskShadowOffsetX(mask.sheet, mask.id, _idx, value)
+}
+
+function positionSelect(selected: SelectItem, idx: number) {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyShadowMaskShadowPosition(mask.sheet, mask.id, _idx, selected.value as ShadowPosition)
+}
+
+const addshadow = () => {
+    const editor = props.context.editor4Doc()
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    if (!props.maskid) return
+    const color = new Color(0.2, 0, 0, 0);
+    const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
+    editor.modifyShadowMaskShadowAddShadow(mask.sheet, mask.id, shadow)
+}
+
+const deleteShadow = (idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyShadowMaskShadowRemoveShadow(mask.sheet, mask.id, _idx)
+}
+
+const toggleVisible = (idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    if (!props.maskid) return
+    const value = !shadows[idx].shadow.isEnabled;
+    editor.modifyShadowMaskShadowEnabled(mask.sheet, mask.id, _idx, value)
 
 }
 
+const setSheetName = () => {
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyStyleName(mask.sheet, mask.id, name.value)
+}
+
+const setSheetDes = () => {
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    const editor = props.context.editor4Doc()
+    editor.modifyStyleDescription(mask.sheet, mask.id, des.value)
+}
+
 const update = () => {
-    console.log('update',props.maskid,props.reder);
-    
-    if (props.maskid) {
-        shadows.length = 0
-        if (props.reder) {
-            const mask = props.reder.currentTarget(props.maskid) as ShadowMask
-            if (mask) {
-                mask.shadows.forEach((s, idx) => shadows.push({ id: idx, shadow: s }));
-                name.value = mask.name ?? '颜色样式';
-                des.value = mask.description ?? '';
-            }
-            shadows = shadows.reverse()
-        }
-       
+    shadows.length = 0
+    if (props.reder && props.maskid) {
+        const mask = props.reder.currentTarget(props.maskid) as ShadowMask;
+        name.value = mask.name ?? '颜色样式';
+        des.value = mask.description ?? '';
+        const _shadows: ShadowItem[] = [];
+        mask.shadows.forEach((shadow, index) => {
+            _shadows.push({ id: index, shadow })
+        })
+        shadows.push(..._shadows.reverse())
     }
+    reflush.value++;
 }
 
 function stylelib_watcher(t: number | string) {

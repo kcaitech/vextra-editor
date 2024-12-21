@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { onUpdated, ref, watch } from 'vue';
+import { onUpdated, reactive, ref, watch } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import ShadowInput from './ShadowInput.vue';
 import { useI18n } from 'vue-i18n';
@@ -28,11 +28,26 @@ interface Props {
     context: Context
     shadow: Shadow
     idx: number
-    id?:string
+    id?: string
     length: number
     shapes: ShapeView[]
+    entry?: string
 }
 
+interface Emits {
+    (e: 'setOffsetX', value: number): void;
+    (e: 'setOffsetY', value: number): void;
+    (e: 'setBlurRadius', value: number): void;
+    (e: 'setSpread', value: number): void;
+    (e: 'pickerColor', color: Color): void;
+    (e: 'setColor', color: Color): void;
+    (e: 'keydownoffsetX', value: number): void;
+    (e: 'keydownoffsetY', value: number): void;
+    (e: 'keydownBlurRadius', value: number): void;
+    (e: 'keydownSpread', value: number): void;
+}
+
+const emits = defineEmits<Emits>();
 const props = defineProps<Props>();
 const popover = ref();
 const reflush = ref<number>(0);
@@ -46,7 +61,9 @@ const keydownval = ref<boolean>(false);
 const setOffsetX = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
-    if (len === 1) {
+    if (props.entry === 'style') {
+        emits('setOffsetX', value);
+    } else if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         e.setShadowOffsetX(_idx, value);
     } else if (len > 1) {
@@ -62,9 +79,9 @@ const setOffsetX = (value: number) => {
     hidden_selection(props.context);
 }
 
-watch(()=>props.shapes,()=>{
+watch(() => props.shapes, () => {
     console.log('切换了图形');
-    
+
 })
 
 function keydownOffsetX(e: KeyboardEvent, val: string | number) {
@@ -75,7 +92,9 @@ function keydownOffsetX(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
-        if (len === 1) {
+        if (props.entry === 'style') {
+            emits('keydownoffsetX', value);
+        } else if (len === 1) {
             linearApi.modifyShadowOffSetX(_idx, value, props.context.selection.selectedShapes[0]);
         } else if (len > 1) {
             const actions = get_actions_shadow_offsetx(props.shapes, _idx, value);
@@ -94,7 +113,9 @@ function keydownOffsetX(e: KeyboardEvent, val: string | number) {
 const setOffsetY = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
-    if (len === 1) {
+    if (props.entry === 'style') {
+        emits('setOffsetY', value);
+    } else if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         e.setShadowOffsetY(_idx, value);
     } else if (len > 1) {
@@ -118,7 +139,9 @@ function keydownOffsetY(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
-        if (len === 1) {
+        if (props.entry === 'style') {
+            emits('keydownoffsetY', value);
+        } else if (len === 1) {
             linearApi.modifyShadowOffSetY(_idx, value, props.context.selection.selectedShapes[0]);
         } else if (len > 1) {
             const actions = get_actions_shadow_offsety(props.shapes, _idx, value);
@@ -137,7 +160,9 @@ function keydownOffsetY(e: KeyboardEvent, val: string | number) {
 const setBlurRadius = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
-    if (len === 1) {
+    if (props.entry === 'style') {
+        emits('setBlurRadius', value);
+    } else if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         e.setShadowBlur(_idx, value);
     } else if (len > 1) {
@@ -161,7 +186,9 @@ function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= 0 ? 0 : value <= 200 ? value : 200;
-        if (len === 1) {
+        if (props.entry === 'style') {
+            emits('keydownBlurRadius', value as number);
+        } else if (len === 1) {
             linearApi.modifyShadowBlur(_idx, value, props.context.selection.selectedShapes[0]);
         } else if (len > 1) {
             const actions = get_actions_shadow_blur(props.shapes, _idx, value);
@@ -180,7 +207,9 @@ function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
 const setSpread = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
-    if (len === 1) {
+    if (props.entry === 'style') {
+        emits('setSpread', value);
+    } else if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         e.setShadowSpread(_idx, value);
     } else if (len > 1) {
@@ -204,7 +233,9 @@ function keydownSpread(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
-        if (len === 1) {
+        if (props.entry === 'style') {
+            emits('keydownSpread', value as number);
+        } else if (len === 1) {
             linearApi.modifyShadowSpread(_idx, value, props.context.selection.selectedShapes[0]);
         } else if (len > 1) {
             const actions = get_actions_shadow_spread(props.shapes, _idx, value);
@@ -231,7 +262,10 @@ function setColor(clr: string, alpha: number) {
     const b = Number.parseInt(res[3], 16);
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
-    if (len === 1) {
+    if (props.entry === 'style') {
+        const color = new Color(alpha, r, g, b);
+        emits('setColor', color);
+    } else if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         if (keydownval.value) {
             linearApi.modifyShadowColor(_idx, new Color(alpha, r, g, b), props.context.selection.selectedShapes[0])
@@ -336,7 +370,9 @@ function keydownAlpha(event: KeyboardEvent, val: string | number) {
 function getColorFromPicker(color: Color) {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
-    if (len === 1) {
+    if (props.entry === 'style') {
+        emits('pickerColor', color);
+    } else if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         e.setShadowColor(_idx, color);
     } else if (len > 1) {
@@ -348,7 +384,6 @@ function getColorFromPicker(color: Color) {
         }
     }
     hidden_selection(props.context);
-
 }
 
 const filterAlpha = (a: number) => {
@@ -579,6 +614,11 @@ function dragEnd() {
     document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
+watch(() => props.shadow, () => {
+    console.log('更新了', props.shadow);
+
+}, { deep: true });
+
 function extend(base: number) {
     return Number(format_value(base));
     // const view = props.shapes[0];
@@ -631,8 +671,8 @@ function extend(base: number) {
                     <div class="setting">
                         <div class="name-title">{{ t('shadow.color') }}</div>
                         <div class="color">
-                            <ColorPicker :color="(shadow.color as Color)" :entrance="'shadow'" :context="props.context" :late="24"
-                                @change="(c: Color) => getColorFromPicker(c)" />
+                            <ColorPicker :color="(shadow.color as Color)" :entrance="'shadow'" :context="props.context"
+                                :late="24" @change="(c: Color) => getColorFromPicker(c)" />
                             <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
                                 @change="e => onColorChange(e)" @click="colorClick" @blur="is_color_select = false" />
                             <input ref="alphaShadow" style="text-align: right;"

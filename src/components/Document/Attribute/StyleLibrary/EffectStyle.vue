@@ -73,36 +73,17 @@
 
 </template>
 <script setup lang="ts">
-import {
-    BasicArray,
-    Color,
-    Fill,
-    FillType,
-    GradientType,
-    ImageScaleMode,
-    ShapeType,
-    ShapeView,
-    Stop, SymbolView,
-    TableView,
-    Shadow,
-    ShadowPosition,
-    ShadowMask,
-} from "@kcdesign/data";
+import { ShapeView } from "@kcdesign/data";
 import { v4 } from 'uuid';
 import { Context } from '@/context';
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EditorEffectStyle from './EditorEffectStyle.vue';
 import NewEffectStyle from './NewEffectStyle.vue';
-import { SelectItem } from "@/components/common/Select.vue";
 import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { FillRenderer, Mask } from "./fillRenderer";
 import { getShapesForStyle } from "@/utils/style";
 import { get_actions_add_mask } from "@/utils/shape_style";
-interface FillItem {
-    id: number,
-    fill: Fill
-}
 
 const props = defineProps<{
     context: Context;
@@ -127,6 +108,7 @@ const Top = ref<number>(0)
 const Left = ref<number>(0)
 const Mask_ID = ref<string>('')
 const search = ref<HTMLInputElement>()
+
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
 }
@@ -134,18 +116,6 @@ const showtype = (t: string) => {
 const sheets = reactive<StyleSheet[]>([])
 const masklist = reactive<Mask[]>([]);
 const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], masklist as Mask[]);
-
-const setEbable = (id: string, b: boolean) => {
-
-}
-
-const setPositoin = (value: SelectItem, id: string) => {
-
-}
-
-const delShadow = (id: string) => {
-
-}
 
 const addshadowmask = (id: string) => {
     const selected = props.context.selection.selectedShapes;
@@ -167,6 +137,11 @@ const closeeditorpanel = () => {
     props.context.escstack.execute()
     editorpanel.value = false
 }
+
+watchEffect(() => {
+    sheets.forEach(i => showtypes.value.add(i.name))
+    console.log(showtypes.value);
+})
 
 
 let timer: any
@@ -216,7 +191,6 @@ const closeEditorPanel = () => {
 }
 
 let timer2: any
-
 const NewPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'shadow-container') {
@@ -286,14 +260,11 @@ const Changefilter = (v: string) => {
     document.removeEventListener('click', checkfilterpanel)
 }
 
-
 function update() {
     const lib = props.context.data.stylelib
     if (!lib) return
     fillRenderer.updateUnderRootContainerMap('shadow')
-
 }
-
 
 function stylelib_watcher(t: number | string) {
     if (t === 'stylelib') update();
@@ -302,13 +273,11 @@ function stylelib_watcher(t: number | string) {
 onMounted(() => {
     update();
     props.context.data.watch(stylelib_watcher);
-
 })
 
 onUnmounted(() => {
     props.context.data.unwatch(stylelib_watcher)
 })
-
 
 </script>
 <style lang="scss" scoped>

@@ -64,7 +64,7 @@ const source = ref<SelectSource[]>([]);
 
 function toggle() {
     // console.log(props.source, arr.value);
-    
+
     optionsContainerVisible.value = !optionsContainerVisible.value;
     if (!optionsContainerVisible.value) {
         return;
@@ -142,6 +142,7 @@ function select(data: SelectItem) {
 
     const index = source.value.findIndex((item: SelectSource) => item.data === data);
     curValueIndex.value = index;
+    if (curValue.value?.content === data.content) return optionsContainerVisible.value = false, clear_events();;
     curValue.value = data;
     emits('select', curValue.value, props.index!);
     optionsContainerVisible.value = false;
@@ -152,7 +153,7 @@ function select(data: SelectItem) {
 function render() {
     curHoverValueIndex.value = -1
     // console.log(props.source, props.action, props.selected);
-    
+
     if (props.source.length) {
         source.value = cloneDeep(props.source);
     }
@@ -206,7 +207,7 @@ onMounted(() => {
                 <svg-icon :icon-class="curValue?.icon"></svg-icon>
             </div>
             <div v-if="!props.valueView || mixed" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{
-            curValue?.content }}
+                curValue?.content }}
             </div>
             <div v-else class="value-wrap">
                 <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
@@ -231,14 +232,14 @@ onMounted(() => {
             </div>
             <div v-else-if="visibility">
                 <div v-for="(c, idx) in source" class="item-default" :style="c.data.type === PrototypeNavigationType.SWAPSTATE ? {
-            pointerEvents: props.status ? 'auto' : 'none',
-            opacity: props.status ? 1 : 0.4,
-            borderTop: '1px solid #EBEBEB',
-            borderBottom: '1px solid #EBEBEB',
-        } : c.data.content === '延迟' ? {
-            pointerEvents: props.iscontainer ? 'auto' : 'none',
-            opacity: props.iscontainer ? 1 : 0.4
-        } : {}" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
+                    pointerEvents: props.status ? 'auto' : 'none',
+                    opacity: props.status ? 1 : 0.4,
+                    borderTop: '1px solid #EBEBEB',
+                    borderBottom: '1px solid #EBEBEB',
+                } : c.data.content === '延迟' ? {
+                    pointerEvents: props.iscontainer ? 'auto' : 'none',
+                    opacity: props.iscontainer ? 1 : 0.4
+                } : {}" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
                     @mouseleave="curHoverValueIndex = -1">
                     <svg-icon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
                         :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
@@ -248,9 +249,9 @@ onMounted(() => {
             </div>
             <div v-else-if="animation">
                 <div v-for="(c, idx) in source" class="item-default" :style="{
-            pointerEvents: (arr.includes(c.data.content)) ? 'auto' : 'none',
-            opacity: (arr.includes(c.data.content)) ? 1 : 0.4
-        }" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
+                    pointerEvents: (arr.includes(c.data.content)) ? 'auto' : 'none',
+                    opacity: (arr.includes(c.data.content)) ? 1 : 0.4
+                }" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
                     @mouseleave="curHoverValueIndex = -1">
                     <svg-icon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
                         :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
