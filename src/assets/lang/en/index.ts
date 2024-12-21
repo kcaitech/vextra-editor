@@ -15,4 +15,4 @@ export * from "./miniprogram"
 export * from "./product"
 export * from "./pattern"
 export * from "./kchome"
-
+export * from "./layout"

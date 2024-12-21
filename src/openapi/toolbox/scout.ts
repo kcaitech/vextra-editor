@@ -1,12 +1,16 @@
 // import { IContext } from "@/IContext";
 // import { {x: number, y: number}, {x: number, y: number} } from "@/IContext/selection";
-import { XY } from "@/context/selection";
+// import { XY } from "@/context/selection";
 import {
     Matrix,
     ShapeView,
     // SymbolRefView
 } from "@kcdesign/data";
 
+interface XY {
+    x: number,
+    y: number
+}
 export interface IScout {
     path: SVGPathElement
     remove: () => void

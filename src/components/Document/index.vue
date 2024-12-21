@@ -28,6 +28,9 @@ const loading = ref<boolean>(true);
 const contentVisible = ref<boolean>(false);
 const bridge = ref<boolean>(false);
 const fileName = ref<string>(t('product.name'));
+
+const customLoading = ref(false);
+
 let uninstall_keyboard_units: () => void = () => {
 };
 
@@ -136,6 +139,13 @@ onMounted(() => {
     initpal().catch((e) => {
         console.error(e)
     });
+    const ctx: Context = props.context as Context;
+    if (ctx.customLoading) {
+        customLoading.value = true;
+        ctx.watchCustomLoading((v) => {
+            customLoading.value = v;
+        })
+    }
 })
 
 onUnmounted(() => {
@@ -168,7 +178,7 @@ onUnmounted(() => {
                     @switchpage="switchPage" :page="(curPage as PageView)"/>
     </template>
     <template #center>
-        <ContentView v-if="curPage" :context="(context as Context)" :page="(curPage as PageView)"
+        <ContentView v-if="curPage && !customLoading" :context="(context as Context)" :page="(curPage as PageView)"
                      @closeLoading="closeLoading" @contentVisible="onContentVisible"/>
     </template>
     <template #right>
@@ -176,5 +186,5 @@ onUnmounted(() => {
     </template>
 </EditorLayout>
 <Bridge v-if="bridge" :context="(context as Context)"/>
-<Loading v-if="loading" :size="20"/>
+<Loading v-if="loading || customLoading" :size="20"/>
 </template>
