@@ -14,5 +14,5 @@ import '@/style/app.scss'
 const app = createApp(SClient)
 app.use(i18n)
 app.component('svg-icon', SvgIcon)
-app.mount("#app")
 app.use(ElementPlus)
+app.mount("#app")
