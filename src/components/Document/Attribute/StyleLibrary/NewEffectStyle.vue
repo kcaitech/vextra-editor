@@ -43,7 +43,7 @@
                 </div>
             </div>
         </div>
-        <div class="create-bnt" @click.stop="Neweffect">创建样式</div>
+        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="Neweffect">创建样式</div>
     </div>
 
 </template>
@@ -98,11 +98,16 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 const watchedShapes2 = new Map();
 const reflush = ref<number>(0);
+
+const invalid = computed(() => {
+    return !shadows.length || !name.value
+})
+
 function positionSelect(selected: SelectItem, id: number) {
     const _idx = shadows.length - id - 1;
     const len = props.shapes.length;
     if (len === 1) {
-        if (shadows[id].shadow.position === selected.value) return ;
+        if (shadows[id].shadow.position === selected.value) return;
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         e.setShadowPosition(_idx, selected.value as ShadowPosition);
     } else if (len > 1) {
@@ -118,6 +123,7 @@ function positionSelect(selected: SelectItem, id: number) {
 }
 
 const Neweffect = () => {
+    if(invalid.value) return 
     const editor = props.context.editor4Doc()
     const shadow = new BasicArray<Shadow>()
     shadows.reverse().forEach(s => shadow.push(s.shadow))
@@ -209,9 +215,9 @@ const updateData2 = () => {
         const _shadows = get_shadows(props.shapes);
         if (_shadows === 'mixed') {
             mixed.value = true;
-        } else if(_shadows === 'mask'){
-            return 
-        }else {
+        } else if (_shadows === 'mask') {
+            return
+        } else {
             shadows.push(..._shadows.reverse());
         }
     }
@@ -448,6 +454,11 @@ onUnmounted(() => {
         &:active {
             background-color: #0A59CF;
         }
+    }
+
+    .invalid {
+        opacity: 0.5;
+        pointer-events: none;
     }
 }
 </style>

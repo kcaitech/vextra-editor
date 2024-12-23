@@ -81,6 +81,22 @@ export class LockMouse extends TransformHandler {
         (this.asyncApiCaller as LockMouseHandler).executeShadowS(this.shapes, idx, s);
     }
 
+    executeShadowMaskX(sheetid: string, maskid: string, index: number, offsetX: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowMaskX(sheetid, maskid, index, offsetX);
+    }
+
+    executeShadowMaskY(sheetid: string, maskid: string, index: number, offsetY: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowMaskY(sheetid, maskid, index, offsetY);
+    }
+
+    executeShadowMaskB(sheetid: string, maskid: string, index: number, blur: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowMaskB(sheetid, maskid, index, blur);
+    }
+
+    executeShadowMaskS(sheetid: string, maskid: string, index: number, spread: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowMaskS(sheetid, maskid, index, spread);
+    }
+
     executeTidyup(shapes_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
         (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver, dir, algin);
     }

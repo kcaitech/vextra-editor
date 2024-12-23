@@ -45,6 +45,11 @@ interface Emits {
     (e: 'keydownoffsetY', value: number): void;
     (e: 'keydownBlurRadius', value: number): void;
     (e: 'keydownSpread', value: number): void;
+    (e: 'keydownColor', color: Color): void;
+    (e: 'dragoffsetX', fn: LockMouse, value: number): void;
+    (e: 'dragoffsetY', fn: LockMouse, value: number): void;
+    (e: 'dragBlurRadius', fn: LockMouse, value: number): void;
+    (e: 'dragSpread', fn: LockMouse, value: number): void;
 }
 
 const emits = defineEmits<Emits>();
@@ -264,8 +269,12 @@ function setColor(clr: string, alpha: number) {
     const len = props.shapes.length;
     if (props.entry === 'style') {
         const color = new Color(alpha, r, g, b);
-        emits('setColor', color);
-    } else if (len === 1) {
+        if (keydownval.value) {
+            emits('keydownColor', color);
+        } else {
+            emits('setColor', color);
+        }
+    } else if (len === 1 && props.entry !== 'style') {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         if (keydownval.value) {
             linearApi.modifyShadowColor(_idx, new Color(alpha, r, g, b), props.context.selection.selectedShapes[0])
@@ -273,7 +282,7 @@ function setColor(clr: string, alpha: number) {
             e.setShadowColor(_idx, new Color(alpha, r, g, b));
         }
 
-    } else if (len > 1) {
+    } else if (len > 1 && props.entry !== 'style') {
         const actions = get_actions_shadow_color(props.shapes, _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -522,11 +531,8 @@ function draggingX(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
     let val = props.shadow.offsetX + e.movementX;
     const _idx = props.length - props.idx - 1;
-    if (val < -3000) {
-        val = -3000;
-    } else if (val > 3000) {
-        val = 300;
-    }
+    
+    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
 
     if (!lockMouseHandler) {
         return
@@ -536,7 +542,12 @@ function draggingX(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    lockMouseHandler.executeShadowX(_idx, val);
+    if (props.entry === 'style') {
+        emits('dragoffsetX', lockMouseHandler, val);
+    } else {
+        lockMouseHandler.executeShadowX(_idx, val);
+    }
+
 }
 
 function draggingY(e: MouseEvent) {
@@ -544,11 +555,8 @@ function draggingY(e: MouseEvent) {
 
     let val = props.shadow.offsetY + e.movementX;
     const _idx = props.length - props.idx - 1;
-    if (val < -3000) {
-        val = -3000;
-    } else if (val > 3000) {
-        val = 300;
-    }
+
+    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
 
     if (!lockMouseHandler) {
         return
@@ -557,8 +565,11 @@ function draggingY(e: MouseEvent) {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-
-    lockMouseHandler.executeShadowY(_idx, val);
+    if (props.entry === 'style') {
+        emits('dragoffsetY', lockMouseHandler, val);
+    } else {
+        lockMouseHandler.executeShadowY(_idx, val);
+    }
 }
 
 function draggingB(e: MouseEvent) {
@@ -566,12 +577,9 @@ function draggingB(e: MouseEvent) {
 
     let val = props.shadow.blurRadius + e.movementX;
     const _idx = props.length - props.idx - 1;
-    if (val < 0) {
-        val = 0;
-    } else if (val > 200) {
-        val = 200;
-    }
 
+    val = val < 0 ? 0 : val > 200 ? 200 : val;
+  
     if (!lockMouseHandler) {
         return
     }
@@ -579,8 +587,11 @@ function draggingB(e: MouseEvent) {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-
-    lockMouseHandler.executeShadowB(_idx, val);
+    if (props.entry === 'style') {
+        emits('dragBlurRadius', lockMouseHandler, val);
+    } else {
+        lockMouseHandler.executeShadowB(_idx, val);
+    }
 }
 
 function draggingS(e: MouseEvent) {
@@ -588,11 +599,8 @@ function draggingS(e: MouseEvent) {
 
     let val = props.shadow.spread + e.movementX;
     const _idx = props.length - props.idx - 1;
-    if (val < 0) {
-        val = 0;
-    } else if (val > 200) {
-        val = 200;
-    }
+
+    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
 
     if (!lockMouseHandler) {
         return
@@ -601,8 +609,11 @@ function draggingS(e: MouseEvent) {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-
-    lockMouseHandler.executeShadowS(_idx, val);
+    if (props.entry === 'style') {
+        emits('dragSpread', lockMouseHandler, val);
+    } else {
+        lockMouseHandler.executeShadowS(_idx, val);
+    }
 }
 
 function dragEnd() {

@@ -43,8 +43,13 @@
                         @picker-color="(v) => setShadowColor(v, index)" @set-color="(v) => setShadowColor(v, index)"
                         @keydownoffset-x="(v) => keydownoffsetX(v, index)"
                         @keydownoffset-y="(v) => keydownoffsetY(v, index)"
-                        @keydown-blur-radius="(v:number) => keydownblurRadius(v, index)"
-                        @keydown-spread="(v:number) => keydownspread(v, index)">
+                        @keydown-blur-radius="(v) => keydownblurRadius(v, index)"
+                        @keydown-spread="(v) => keydownspread(v, index)" @keydown-color="(v) => keydowncolor(v, index)"
+                        @dragoffset-x="(fn, value) => dragoffsetX(fn, value, index)"
+                        @dragoffset-y="(fn, value) => dragoffsetY(fn, value, index)"
+                        @drag-blur-radius="(fn, value) => dragblurRadius(fn, value, index)"
+                        @drag-spread="(fn, value) => dragspread(fn, value, index)"
+                        >
                     </ShadowDetail>
                     <div class="delete" :class="{ disable }" @click.stop="deleteShadow(index)">
                         <svg-icon icon-class="delete"></svg-icon>
@@ -67,6 +72,7 @@ import { computed } from 'vue';
 import ShadowDetail from '../Shadow/ShadowDetail.vue'
 import { FillRenderer } from './fillRenderer';
 import { v4 } from 'uuid';
+import { LockMouse } from '@/transform/lockMouse';
 
 interface ShadowItem {
     id: number,
@@ -105,9 +111,42 @@ const disable = computed(() => {
 
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
+const dragspread = (fn: LockMouse, value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    fn.executeShadowMaskS(mask.sheet, mask.id, _idx, value)
+}
+
+const dragblurRadius = (fn: LockMouse, value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    fn.executeShadowMaskB(mask.sheet, mask.id, _idx, value)
+}
+
+const dragoffsetY = (fn: LockMouse, value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    fn.executeShadowMaskY(mask.sheet, mask.id, _idx, value)
+}
+
+const dragoffsetX = (fn: LockMouse, value: number, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    fn.executeShadowMaskX(mask.sheet, mask.id, _idx, value)
+}
+
+const keydowncolor = (color: Color, idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    if (!props.maskid) return
+    const mask = props.reder.currentTarget(props.maskid) as ShadowMask
+    linearApi.modifyShadowMaskShadowColor(mask.sheet, mask.id, _idx, color)
+}
+
 const keydownblurRadius = (value: number, idx: number) => {
-    console.log('keydownblurRadius', value, idx);
-    
     const _idx = shadows.length - idx - 1;
     if (!props.maskid) return
     const mask = props.reder.currentTarget(props.maskid) as ShadowMask
