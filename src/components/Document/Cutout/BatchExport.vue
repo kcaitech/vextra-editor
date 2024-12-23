@@ -393,7 +393,9 @@ onUnmounted(() => {
     document.removeEventListener('click', documentClick);
     close();
 })
-
+import close_icon from '@/assets/icons/svg/close.svg';
+import caution_icon from '@/assets/icons/svg/caution.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 
 <template>
@@ -402,7 +404,7 @@ onUnmounted(() => {
         <div class="header" @mousedown="mousedown">
             <div class="title">{{ t('cutoutExport.export') }}</div>
             <div class="close" @click="close">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"/>
             </div>
         </div>
         <div class="dialog-body">
@@ -423,7 +425,7 @@ onUnmounted(() => {
                                 <div>
                                     <h5>{{ getName(item) }}</h5>
                                     <Tooltip :content="`${t('cutoutExport.repeat')}`" v-if="item.repeat">
-                                        <svg-icon icon-class="caution"></svg-icon>
+                                        <SvgIcon :icon="caution_icon"/>
                                     </Tooltip>
                                 </div>
                                 <p>{{ item.format.scale + 'x' }} {{ item.format.fileFormat.toUpperCase() }},

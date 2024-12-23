@@ -64,10 +64,11 @@ onUnmounted(() => {
     stop();
     document.removeEventListener('click', onMenuBlur);
 })
+import menu_icon from '@/assets/icons/svg/menu.svg';
 </script>
 <template>
 <div class="icon-for-trigger" :class="{ active: popoverVisible }" @click="showMenu" ref="trigger">
-    <svg-icon icon-class="menu"/>
+    <SvgIcon :icon="menu_icon"/>
 </div>
 <div v-if="popoverVisible" ref="popover" class="popover-f">
     <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close"/>

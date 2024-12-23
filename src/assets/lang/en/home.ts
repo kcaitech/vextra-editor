@@ -1,4 +1,4 @@
-import { BlendMode, BorderPosition } from "@kcdesign/data";
+import { BlendMode, BorderPosition, StackSizing } from "@kcdesign/data";
 
 export const system = {
     incorrect_input: 'Incorrect input!',
@@ -27,19 +27,24 @@ export const system = {
     'select_all': 'Select all',
     'fit_canvas': 'Adapt to artboard',
     'show_many_cursor': 'Show others cursor',
-    'show_comment': 'Show Cutout',
+    'show_comment': 'Show Comment',
+    'show_cutout': 'Show Cutout',
     'show_ruler': 'show ruler',
     'show_pixel_network': 'Show grid',
     'hide_operation_interface': 'Hide UI',
     'creating_groups': 'Create group',
     'create_container': 'Create artboard',
+    'outline': 'Outline',
+    'set_mask': 'Use as mask',
+    'remove_mask': 'Remove mask',
     'un_group': 'Dissolve the group',
     'create_component': 'Create component',
     'unbind_instance': 'Unbind',
     'reset_instance_roperties': 'Reset',
     'edit_component': 'Edit component',
     'create_mask': 'Use as Mask',
-    'wx_login': 'Wechat scan code login',
+    'mask_group': 'Mask Group',
+    'wx_login': 'Scan the code on WeChat',
     'login_read': 'Scanning code indicates that you have read and agreed',
     'read_TOS': 'Service Agreement',
     'read_Privacy': 'Privacy Agreement',
@@ -67,7 +72,12 @@ export const system = {
     grid: 'Pixel grid',
     rule: 'Rule',
     uploadMediaFail: 'Image upload failed',
-    internet: 'Go Home'
+    internet: 'Go Home',
+    notfound: 'Sorry, this page does not exist.',
+    gohome: 'Return to official website',
+    trynow: 'Try it now',
+    updatetips: 'Update_',
+    timeout: 'Timeout'
 }
 
 export const home = {
@@ -155,7 +165,15 @@ export const home = {
     contact: 'Contact',
     full: 'Full screen',
     exit_full: 'Exit full screen',
-    not_preview_frame: 'There is no demonstrable container'
+    not_preview_frame: 'There is no demonstrable container',
+    image_uploaded: 'xx images uploaded successfully',
+    publish: 'Publish',
+    downloadJs: 'Download JS',
+    homePage: 'Home page',
+    download: 'Download',
+    downloading: 'Downloading',
+    downloaded: 'Downloaded',
+    no_board: 'No frame exists',
 }
 
 export const search = {
@@ -169,12 +187,12 @@ export const search = {
 
 export const navi = {
     shape: 'Shapes',
-    comps: 'Compnents',
+    comps: 'Components',
     resource: 'Resource',
     page: 'Page',
     add_page: 'Add new page',
     copy: 'copy',
-    development: 'Functional development…',
+    development: 'Functional development in progress',
     overname: 'The maximum length of filenames is 50 characters'
 }
 
@@ -211,7 +229,7 @@ export const attr: any = {
     prototype: 'Prototype',
     inspect: 'Inspect',
     constraints: 'Constraints',
-    groupings: 'Groupings',
+    groupings: 'Constraints',
     border: 'Border',
     opacity: 'Opacity',
     fill: 'Fill',
@@ -285,6 +303,8 @@ export const attr: any = {
     used_font: 'Used font',
     no_font_is_currently_in_use: 'No font is currently in use',
     chinese_font: 'Chinese font',
+    font_missing: 'Local font missing',
+    local_font: 'Local font',
     english_font: 'English font',
     find_the_fonts: "Can't find the fonts",
     font_is_not: 'The font is not present locally. Use the default font effect instead',
@@ -310,7 +330,32 @@ export const attr: any = {
     unilateral: 'unilateral',
     independentCorners: 'Independent corners',
     constrainProportions: 'Constrain proportions',
-    frameSize: 'Frame'
+    frameSize: 'Frame',
+    outlineNameSuffix: '(stroke)',
+    brightness: 'Brightness',
+    contrast: 'Contrast',
+    saturation: 'Saturation',
+    temperature: 'Temperature',
+    tint: 'Tint',
+    shadow: 'Shadow',
+    hue: 'Hue',
+    selected_picture: 'swap image',
+    tidy_up: 'Tidy up',
+    scale: "Scale",
+    scale_from_lt: "transform-origin: top left",
+    scale_from_top: "transform-origin: top",
+    scale_from_rt: "transform-origin: top right",
+    scale_from_right: "transform-origin: right",
+    scale_from_rb: "transform-origin: bottom right",
+    scale_from_bottom: "transform-origin: bottom",
+    scale_from_lb: "transform-origin: bottom left",
+    scale_from_left: "transform-origin: left",
+    scale_from_center: "transform-origin: center",
+    exit_scale: "Exit",
+    startingAngle: "Start",
+    sweep: "Sweep",
+    ratio: "Ratio",
+    clip: 'Clip content'
 }
 
 export const login = {
@@ -351,10 +396,11 @@ export const clipboard = {
     'not_supported2': 'The current browser does not support it, please use ctrl X to cut',
     'copyAsPNGSuccess': 'copied as PNG',
     'copyAsPNGFailed': 'Failed',
-    'copyAsPNG': 'copy as PNG'
+    'copyAsPNG': 'copy as PNG',
+    'copyStyle': 'Copy properties',
+    'pasteStyle': 'Paste properties'
 }
-export const opacity: any = {
-}
+export const opacity: any = {}
 export const message = {
     doc_notopen: "Network anomalies, the document can't open, please try again after checking the network.",
     list_for_failure: 'Network exception, file list acquisition failed, please check the network and try again.',
@@ -379,6 +425,11 @@ export const bool = {
 export const date = {
     just_now: 'Just now',
     s: 's',
+    minutes: 'Minutes ago',
+    hour: 'Hour ago',
+    today: 'today',
+    yesterday: 'yesterday',
+    day: 'Day ago'
 }
 
 export const preview: any = {
@@ -391,8 +442,64 @@ export const preview: any = {
     fill_screen: 'Fill screen',
     fit_width: 'Fit width',
     fit_screen: 'Fit screen',
-    all: 'All canvas'
+    all: 'All canvas',
+    hot_zone: 'Hot zone warning',
+    flow_describe: 'Flow describe',
 }
+
+export const userconfig = {
+    settings: 'Preferences',
+    movetips: 'Nudge amount',
+    keysdown: 'Small nudge',
+    shift_keysdown: 'Big nudge',
+}
+
+
+export const autolayout: any = {
+    auto_layout: 'Auto layout',
+    auto_layout_settings: 'Auto layout settings',
+    included: 'Included',
+    excluded: 'Excluded',
+    canvas_stack: 'Canvas stacking',
+    stack: 'Stacking',
+    reverse_stack: 'Reverse stacking',
+    stroke: 'Strokes',
+    add_auto_layout: 'Add auto layout',
+    remove_auto_layout: 'Remove auto layout',
+    ver: 'Vertical',
+    hor: 'Horizontal',
+    wrap: 'Wrap',
+    hor_gap: 'Horizontal gap',
+    ver_gap: 'Vertical gap',
+    hor_padding: 'Horizontal padding',
+    ver_padding: 'Vertical padding',
+    top_padding: 'Top padding',
+    right_padding: 'Right padding',
+    bottom_padding: 'bottom padding',
+    left_padding: 'Left padding',
+    hor_fixed: 'Horizontal Fixed',
+    ver_fixed: 'Vertical Fixed',
+    hor_resizing: 'Horizontal resizing',
+    ver_resizing: 'Vertical resizing',
+    unfold: 'Unfold',
+    fold: 'Fold',
+    settings: 'Auto layout settings',
+    lt_align: 'Align top left',
+    ct_align: 'Align top center',
+    rt_align: 'Align top right',
+    lc_align: 'Align left',
+    center_align: 'Align center',
+    rc_align: 'Align right',
+    lb_align: 'Align bottom left',
+    cb_align: 'Align bottom center',
+    rb_align: 'Align bottom right',
+    top_align: 'Align top',
+    bottom_align: 'Align bottom',
+    layout_area_size: 'Layout area size:',
+    auto: 'Auto',
+    adapt: 'Adapt'
+}
+
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';
@@ -415,3 +522,6 @@ opacity[BlendMode.Color] = "Color";
 opacity[BlendMode.Luminosity] = "Lightness";
 opacity[BlendMode.PlusDarker] = "Plus darker";
 opacity[BlendMode.PlusLighter] = "Plus lighter";
+
+autolayout[StackSizing.Auto] = "Auto";
+autolayout[StackSizing.Fixed] = "Fixed";

@@ -17,8 +17,47 @@ interface Props {
     cellMenu: CellMenu
     cells: TableCell[]
 }
+
+import text_left_icon from '@/assets/icons/svg/text-left.svg';
+import text_center_icon from '@/assets/icons/svg/text-center.svg';
+import text_right_icon from '@/assets/icons/svg/text-right.svg';
+import text_justify_icon from '@/assets/icons/svg/text-justify.svg';
+import align_top_icon from '@/assets/icons/svg/align-top.svg';
+import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
+import align_middle_icon from '@/assets/icons/svg/align-middle.svg';
+
 const horIcon = ref('text-left');
 const verIcon = ref('align-top');
+
+function getHorIcon() {
+    switch (horIcon.value) {
+        case 'text-left':
+            return text_left_icon;
+        case 'text-center':
+            return text_center_icon;
+        case 'text-right':
+            return text_right_icon;
+        case 'text-justify':
+            return text_justify_icon;
+        default:
+            return text_left_icon;
+    }
+}
+
+function getVerIcon() {
+    switch (verIcon.value) {
+        case 'align-top':
+            return align_top_icon;
+        case 'align-middle':
+            return align_middle_icon;
+        case 'align-bottom':
+            return align_bottom_icon;
+        default:
+            return align_top_icon;
+    }
+}
+
+
 const mixed_h = ref(false);
 const mixed_v = ref(false);
 const props = defineProps<Props>();
@@ -249,6 +288,10 @@ onUnmounted(() => {
     props.context.tableSelection.unwatch(table_watcher);
     props.context.tableSelection.setTableMenuVisible(false);
 })
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import down_icon from '@/assets/icons/svg/down.svg';
+import layer_image_icon from '@/assets/icons/svg/layer-image.svg';
 </script>
 
 <template>
@@ -258,9 +301,9 @@ onUnmounted(() => {
         <div v-if="props.cellMenu === CellMenu.MultiSelect" class="popover-content">
             <div class="hor" @mouseenter="showAlginMenu('hor')" @mouseleave="hiddenAlginMenu"
                 :class="{ selected_bgc: isAlignMenu === 'hor' }">
-                <svg-icon :icon-class="horIcon"></svg-icon>
+                <SvgIcon :icon="getHorIcon()"/>
                 <div class="menu">
-                    <svg-icon icon-class="down"></svg-icon>
+                    <SvgIcon :icon="down_icon"/>
                 </div>
                 <div class="bridge" style="width: 130px;" v-if="isAlignMenu === 'hor'"></div>
                 <TableContextAlgin v-if="isAlignMenu === 'hor'" :context="context" :cells="[]" :menu="isAlignMenu"
@@ -270,9 +313,9 @@ onUnmounted(() => {
             <div class="divider"></div>
             <div class="ver" @mouseenter="showAlginMenu('ver')" @mouseleave="hiddenAlginMenu"
                 :class="{ selected_bgc: isAlignMenu === 'ver' }">
-                <svg-icon :icon-class="verIcon"></svg-icon>
+                <SvgIcon :icon="getVerIcon()"/>
                 <div class="menu">
-                    <svg-icon icon-class="down"></svg-icon>
+                    <SvgIcon :icon="down_icon"/>
                 </div>
                 <div class="bridge" style="width: 100px;" v-if="isAlignMenu === 'ver'"></div>
                 <TableContextAlgin v-if="isAlignMenu === 'ver'" :context="context" :cells="[]" :menu="isAlignMenu"
@@ -297,7 +340,7 @@ onUnmounted(() => {
                 </svg>
             </div>
             <div style="padding: 2px;" v-if="singleChoice" @click="onPickImge">
-                <svg-icon icon-class="layer-image" style="stroke: black"></svg-icon>
+                <SvgIcon :icon="layer_image_icon" style="stroke: black"/>
             </div>
         </div>
         <div v-if="props.cellMenu === CellMenu.SelectRow || props.cellMenu === CellMenu.selectCol"

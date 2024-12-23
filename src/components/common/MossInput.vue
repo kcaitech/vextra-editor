@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref } from "vue";
+import SvgIcon from "./SvgIcon.vue";
 
 type Props = {
     icon: string;
@@ -84,7 +85,7 @@ function keydown(event: KeyboardEvent) {
 
 <template>
 <div :class="{ 'moss-input': true, disabled, active }" @click.stop="focus">
-    <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down"/>
+    <SvgIcon :icon="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down"/>
     <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown"/>
 </div>
 </template>

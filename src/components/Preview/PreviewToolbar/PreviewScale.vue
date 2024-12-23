@@ -4,6 +4,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { Preview, ScaleType } from '@/context/preview';
 import MenuVue from '@/components/Display/PreviewMenu.vue';
 import { useI18n } from 'vue-i18n';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context
 }
@@ -51,13 +52,15 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.preview.watch(watcher);
 })
+
+import down_icon from '@/assets/icons/svg/down.svg';
 </script>
 <template>
     <div class="scale-display-warp" @click="showMenu">
         <span ref="inputSpan" v-if="scaleType === ScaleType.Actual || !scaleType">{{ scale }}%</span>
         <span ref="inputSpan" v-else>{{ t(`preview.${scaleType}`) }}</span>
         <div class="down">
-            <svg-icon icon-class="down"></svg-icon>
+            <SvgIcon :icon="down_icon"/>
         </div>
         <MenuVue :context="context" :top="50" :left="5" :isDown="true" v-if="isMenu" @close="closeMenu"></MenuVue>
     </div>

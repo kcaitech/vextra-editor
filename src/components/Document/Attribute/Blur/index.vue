@@ -14,6 +14,7 @@ import {
 import { hidden_selection } from '@/utils/content';
 import BlurDetail from "./BlurDetail.vue";
 import BlurTypeSelect from "./BlurTypeSelect.vue";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 type Props = {
     context: Context
@@ -146,6 +147,10 @@ onUnmounted(() => {
     watchedShapes.forEach(i => i.unwatch(watcher));
     watchedShapes.clear();
 });
+
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
 </script>
 
 <template>
@@ -153,7 +158,7 @@ onUnmounted(() => {
     <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="!!blurInfo">
         <template #tool>
             <div class="add" @click.stop="addBlur" v-if="!blurInfo || mixed">
-                <svg-icon icon-class="add"/>
+                <SvgIcon :icon="add_icon"/>
             </div>
         </template>
     </TypeHeader>
@@ -163,7 +168,7 @@ onUnmounted(() => {
     <div class="blur-container" v-else-if="!mixed && blurInfo">
         <div class="blur">
             <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
-                <svg-icon v-if="blurInfo.isEnabled" icon-class="select" />
+                <SvgIcon v-if="blurInfo.isEnabled" :icon="select_icon" />
             </div>
             <div class="blur_posi">
                 <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" />
@@ -172,7 +177,7 @@ onUnmounted(() => {
                 <BlurDetail :context="context" :blur="blurInfo" :shapes="shapes" />
             </div>
             <div class="delete" @click="deleteBlur">
-                <svg-icon icon-class="delete" />
+                <SvgIcon :icon="delete_icon" />
             </div>
         </div>
     </div>

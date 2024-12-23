@@ -3,6 +3,7 @@ import ToolButton from '../Buttons/ToolButton.vue';
 import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -15,12 +16,13 @@ const emit = defineEmits<{
 function select(action: string) {
     emit('select', action);
 }
+import curve_tool_icon from '@/assets/icons/svg/curve-tool.svg';
 </script>
 <template>
     <Tooltip :content="t('shape.curve')">
         <ToolButton @click="() => {select(Action.Curve)}" :selected="props.active" :width="32" :height="32">
             <div class="svg-container">
-                <svg-icon icon-class="curve-tool"></svg-icon>
+                <SvgIcon :icon="curve_tool_icon"/>
             </div>
         </ToolButton>
     </Tooltip>

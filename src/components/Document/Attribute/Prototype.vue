@@ -11,31 +11,31 @@
                         <div class="text" :class="{ active: prototypeinteraction?.length }">
                             {{ t('prototype.interaction') }}</div>
                         <div class="add">
-                            <svg-icon icon-class="add"></svg-icon>
+                            <SvgIcon :icon="add_icon"/>
                         </div>
                     </div>
                     <div class="actions" v-if="prototypeinteraction?.length">
                         <div class="actions-item" v-for="action in prototypeinteraction " :key="action.id">
                             <div class="item" @click.stop="showhandel(action.id)">
                                 <div class="arrow" :class="{ activation: showaction && acitonindex === action.id }">
-                                    <svg-icon icon-class="arrows-dr"></svg-icon>
+                                    <SvgIcon :icon="arrows_dr_icon"/>
                                 </div>
                                 <div class="item-content">
                                     <span class="event">{{ event.get(action.event.interactionType) }}</span>
                                     <div v-if="action.actions.connectionType !== 'NONE'" class="icon-img">
-                                        <svg-icon :icon-class="actions.find(item => item.data.value === action.actions.connectionType &&
-                                            item.data.type === action.actions.navigationType)?.data.icon"></svg-icon>
+                                        <SvgIcon :icon="actions.find(item => item.data.value === action.actions.connectionType &&
+                                            item.data.type === action.actions.navigationType)?.data.icon!"/>
                                     </div>
                                     <span class="name">{{ getText(action.actions) }}</span>
                                     <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
                                         <Tooltip :content="t('prototype.warning')">
-                                            <svg-icon icon-class="warning"></svg-icon>
+                                            <SvgIcon :icon="warning_icon"/>
                                         </Tooltip>
                                     </div>
 
                                 </div>
                                 <div class="delete" @click.stop="deleteAction(action.id)">
-                                    <svg-icon icon-class="delete"></svg-icon>
+                                    <SvgIcon :icon="delete_icon"/>
                                 </div>
                             </div>
                             <div class="item-setting" v-if="showaction && acitonindex === action.id">
@@ -76,7 +76,7 @@
                                     <div class="container">
                                         <div class="retract-x">
                                             <Tooltip :content="t('prototype.offsetx')" :offset="15">
-                                                <svg-icon icon-class="indent-x" @click.stop></svg-icon>
+                                                <SvgIcon :icon="indent_x_icon" @click.stop/>
                                             </Tooltip>
                                             <input v-select ref="indentx" class="indent" type="text"
                                                 :value="action.actions.extraScrollOffset?.x ?? 0"
@@ -84,7 +84,7 @@
                                         </div>
                                         <div class="retract-y">
                                             <Tooltip :content="t('prototype.offsety')" :offset="15">
-                                                <svg-icon icon-class="indent-y" @click.stop></svg-icon>
+                                                <SvgIcon :icon="indent_y_icon" @click.stop/>
                                             </Tooltip>
                                             <input v-select ref="indenty" class="indent" type="text"
                                                 :value="action.actions.extraScrollOffset?.y ?? 0"
@@ -105,7 +105,7 @@
                                     v-if="action.actions.connectionType === PrototypeConnectionType.URL">
                                     <div :class="action.actions.openUrlInNewTab ? 'visibility_select' : 'hidden_select'"
                                         @click="changeLinkSelect(action.id, !action.actions.openUrlInNewTab)">
-                                        <svg-icon v-if="action.actions.openUrlInNewTab" icon-class="select"></svg-icon>
+                                        <SvgIcon v-if="action.actions.openUrlInNewTab" :icon="select_icon"/>
                                     </div>
                                     <span>{{ t('prototype.open_in_new_tab') }}</span>
                                 </div>
@@ -159,8 +159,8 @@
                                                     :class="{ 'select-item': action.actions.transitionType?.split('_').findLast(i => i) === i[0] }"
                                                     v-for="  i of Direction " :key="i[0]"
                                                     @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i[0])">
-                                                    <svg-icon :style="{ rotate: (`${i[1]}` + 'deg') }"
-                                                        icon-class="right-arrows"></svg-icon>
+                                                    <SvgIcon :style="{ rotate: (`${i[1]}` + 'deg') }"
+                                                    :icon="right_arrows_icon"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -210,6 +210,18 @@
 </template>
 
 <script setup lang="ts">
+
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import add_icon from '@/assets/icons/svg/add.svg';
+import arrows_dr_icon from '@/assets/icons/svg/arrows-dr.svg';
+import warning_icon from '@/assets/icons/svg/warning.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import indent_x_icon from '@/assets/icons/svg/indent-x.svg';
+import indent_y_icon from '@/assets/icons/svg/indent-y.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import right_arrows_icon from '@/assets/icons/svg/right-arrows.svg';
+
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
@@ -328,17 +340,25 @@ const event = new Map([
     [PrototypeEvents.AFTERTIMEOUT, t('prototype.trigger_delay')],
 ])
 
+import jump_page_icon from "@/assets/icons/svg/jump-page.svg";
+import retrun_page_icon from "@/assets/icons/svg/retrun-page.svg";
+import scroll_page_icon from "@/assets/icons/svg/scroll-page.svg";
+import open_link_icon from "@/assets/icons/svg/open-link.svg";
+import component_state_icon from "@/assets/icons/svg/component-state.svg";
+import open_float_layer_icon from "@/assets/icons/svg/open-float-layer.svg";
+import close_float_layer_icon from "@/assets/icons/svg/close-float-layer.svg";
+import change_float_layer_icon from "@/assets/icons/svg/change-float-layer.svg";
 
 const actions: SelectSource[] = genOptions([
     [PrototypeConnectionType.NONE, t('prototype.action_none')],
-    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_nav'), 'jump-page', PrototypeNavigationType.NAVIGATE],
-    [PrototypeConnectionType.BACK, t('prototype.action_back'), 'retrun-page'],
-    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_scroll'), 'scroll-page', PrototypeNavigationType.SCROLLTO],
-    [PrototypeConnectionType.URL, t('prototype.action_link'), 'open-link'],
-    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_change'), 'component-state', PrototypeNavigationType.SWAPSTATE],
-    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_open'), 'open-float-layer', PrototypeNavigationType.OVERLAY],
-    [PrototypeConnectionType.CLOSE, t('prototype.action_close'), 'close-float-layer'],
-    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_swap'), 'change-float-layer', PrototypeNavigationType.SWAP],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_nav'), jump_page_icon, PrototypeNavigationType.NAVIGATE],
+    [PrototypeConnectionType.BACK, t('prototype.action_back'), retrun_page_icon],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_scroll'), scroll_page_icon, PrototypeNavigationType.SCROLLTO],
+    [PrototypeConnectionType.URL, t('prototype.action_link'), open_link_icon],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_change'), component_state_icon, PrototypeNavigationType.SWAPSTATE],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_open'), open_float_layer_icon, PrototypeNavigationType.OVERLAY],
+    [PrototypeConnectionType.CLOSE, t('prototype.action_close'), close_float_layer_icon],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_swap'), change_float_layer_icon, PrototypeNavigationType.SWAP],
 ])
 
 

@@ -52,6 +52,7 @@ import {
 } from '@/utils/shape_style'
 import { getSideThickness } from "./index"
 import { sortValue } from '../BaseAttr/oval';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface BorderItem {
     id: number
@@ -998,7 +999,10 @@ const strokeClick = (e: Event) => {
     el.select();
     is_stroke_select.value = true;
 }
-
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import thickness_icon from '@/assets/icons/svg/thickness.svg';
 </script>
 
 <template>
@@ -1006,7 +1010,7 @@ const strokeClick = (e: Event) => {
         <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
             <template #tool>
                 <div class="add" @click.stop="addBorder">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </template>
         </TypeHeader>
@@ -1020,7 +1024,7 @@ const strokeClick = (e: Event) => {
             <div class="border" v-for="(b, idx) in borders" :key="b.id">
                 <div class="top">
                     <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                        <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
+                        <SvgIcon v-if="b.border.isEnabled" :icon="select_icon"/>
                     </div>
                     <div class="color">
                         <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
@@ -1049,7 +1053,7 @@ const strokeClick = (e: Event) => {
                             @keydown="(e) => keydownAlpha(e, b.border, idx, filterAlpha(b.border))" />
                     </div>
                     <div class="delete" @click="deleteBorder(idx)">
-                        <svg-icon icon-class="delete"></svg-icon>
+                        <SvgIcon :icon="delete_icon"/>
                     </div>
                 </div>
                 <div class="bottom">
@@ -1062,9 +1066,9 @@ const strokeClick = (e: Event) => {
                     </div>
                     <div class="thickness-container" style=" flex: calc(50% - 20px);"
                         :class="{ actived: isActived === idx }">
-                        <svg-icon icon-class="thickness"
+                        <SvgIcon :icon="thickness_icon"
                             :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
-                            @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
+                            @mousedown.stop="onMouseDown($event, idx)"/>
                         <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
                             @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur"
                             @click="strokeClick" @focus="selectBorderThicknes($event, idx)"

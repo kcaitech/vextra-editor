@@ -3,7 +3,7 @@
         @dragover="onDragOver" @dragleave="onDragLeave" @drop="onDrop">
         <div class="layout">
             <div class="content" @click="picker.invoke()">
-                <svg-icon icon-class="drop-here" class-name="drop-icon" />
+                <SvgIcon :icon="drop_here_icon" class-name="drop-icon" />
                 <!-- <DropHereIcon /> -->
                 <p class="tip">Click or Drop Sketch/Fig/Moss Files Here</p>
             </div>
@@ -14,6 +14,8 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue';
 import { FilePicker } from './filepicker';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import drop_here_icon from '@/assets/icons/svg/drop-here.svg';
 const active = ref(false);
 
 const emit = defineEmits<{

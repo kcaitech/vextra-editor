@@ -5,6 +5,7 @@ import { page_scale } from '@/utils/content';
 import { WorkSpace } from '@/context/workspace';
 import { XY } from '@/context/selection';
 import ViewSubMenu from '../Home/Menu/ViewSubMenu.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context,
     params: any
@@ -119,6 +120,8 @@ onUnmounted(() => {
     props.context.workspace.watch(watcher);
     stop();
 })
+
+import white_down_icon from '@/assets/icons/svg/white-down.svg';
 </script>
 <template>
     <div class="scale-display-warp">
@@ -126,7 +129,7 @@ onUnmounted(() => {
             <input v-select type="text" v-model="scale" @change="(e: Event) => setScale(e)" @keydown="enter">
         </div>
         <div class="right" :class="{ 'arrow-active': childMenuVisible }" @click="showMenu">
-            <svg-icon icon-class="white-down"/>
+            <SvgIcon :icon="white_down_icon"/>
         </div>
         <ViewSubMenu class="show-sub-menu" v-if="childMenuVisible" :context="props.context" :fixed="true"
             :x="childMenuPosition.x" :y="childMenuPosition.y" :width="180" @close="close">

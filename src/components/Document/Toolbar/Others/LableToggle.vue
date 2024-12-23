@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n'
 import { Action } from '@/context/tool';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 interface Props {
@@ -40,7 +41,7 @@ const toggleSwitch = () => {
     isActive.value = !isActive.value;
     input.value?.blur();
 }
-
+import switch_icon from '@/assets/icons/svg/switch.svg';
 </script>
 
 <template>
@@ -52,7 +53,7 @@ const toggleSwitch = () => {
                 <input class="d-switch__input" ref="input" type="checkbox" :checked="isActive" @change.stop="toggleSwitch"
                     :true-value="isActive" :false-value="!isActive" />
                 <span class="d-switch_action">
-                    <svg-icon icon-class="switch" style="width: 16px;height: 16px"></svg-icon>
+                    <SvgIcon :icon="switch_icon" style="width: 16px;height: 16px"/>
                 </span>
             </div>
         </el-tooltip>

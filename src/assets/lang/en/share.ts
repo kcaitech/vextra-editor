@@ -21,7 +21,7 @@ export const share = {
     founder: 'Founder',
     document_permission: 'Document permission',
     reviewable: 'Reviewable',
-    no_document:'No such document',
+    no_document: 'No such document',
 
 }
 
@@ -33,7 +33,7 @@ export const apply = {
     file_access_request: "File access request",
     applicant: "Applicant",
     access_file: "Access file",
-    authority: 'Authority',
+    authority: 'Authority:',
     remarks: 'Remarks',
     agree: 'Agree',
     refuse: 'Refuse',
@@ -48,7 +48,7 @@ export const apply = {
     file_deleted: 'The file has been deleted, or the creator has closed the share',
     authorization_failure: 'Authorization failure',
     notification_message: 'Notification message',
-    application_documents: 'Application documents',
+    application_documents: 'Application',
     have_agreed: 'Have agreed',
     rejected: 'Rejected',
     no_message_received: 'No message received',
@@ -58,5 +58,10 @@ export const apply = {
     project: 'project',
     team: 'Team',
     team_apply: 'Join team application',
-    file: 'File'
+    file: 'File',
+    apply_team: 'Apply to join the team:',
+    apply_project: 'Application project:',
+    apply: 'apply',
+    tips_team: 'you apply to join the team',
+    tips_project: 'you apply to join the project'
 }

@@ -119,6 +119,9 @@ onMounted(() => {
         surplusX.value = document.documentElement.clientWidth - props.site.x
     }
 })
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
 </script>
 <template>
     <div ref="subMenu" v-bind="$attrs"
@@ -126,56 +129,56 @@ onMounted(() => {
         @mousemove.stop>
         <div class="item" v-if="items.includes('half')" @click="(e: MouseEvent) => half(e)">
             <div class="choose" :style="{ visibility: isScale.includes('50') ? 'visible' : 'hidden' }">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <span>50%</span>
         </div>
         <div class="item" v-if="items.includes('hundred')" @click="(e: MouseEvent) => hundred(e)">
             <div class="choose" :style="{ visibility: isScale.includes('100') ? 'visible' : 'hidden' }">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <span>100%</span>
         </div>
         <div class="item" v-if="items.includes('double')" @click="(e: MouseEvent) => double(e)">
             <div class="choose" :style="{ visibility: isScale.includes('200') ? 'visible' : 'hidden' }">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <span>200%</span>
         </div>
         <div class="item" v-if="items.includes('canvas')" @click="canvas">
             <div class="choose" :style="{ visibility: 'hidden' }">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <span>{{ t('system.fit_canvas') }}</span>
         </div>
         <div class="line" v-if="items.includes('cursor')"></div>
         <div class="item" v-if="items.includes('cursor')" @click="cursor">
             <div class="choose">
-                <svg-icon icon-class="white-select" v-show="isCursor"></svg-icon>
+                <SvgIcon :icon="white_select_icon" v-show="isCursor"/>
             </div>
             <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
         </div>
         <!-- <div class="item" v-if="items.includes('comment')" @click="comment">
             <div class="choose">
-                <svg-icon icon-class="white-select" v-show="isComment"></svg-icon>
+                <SvgIcon :icon="white_select_icon" v-show="isComment"/>
             </div>
             <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
         </div> -->
         <div class="item" v-if="items.includes('grid')" @click="modifyPixelGrid">
             <div class="choose">
-                <svg-icon icon-class="white-select" v-show="isGrid"></svg-icon>
+                <SvgIcon :icon="white_select_icon" v-show="isGrid"/>
             </div>
             <span :style="{ marginLeft: isGrid ? '8px' : '20px' }">{{ t('system.grid') }}</span>
         </div>
         <div class="item" v-if="items.includes('pixel')" @click="modifyPixelAlgin">
             <div class="choose">
-                <svg-icon icon-class="white-select" v-show="isPixel"></svg-icon>
+                <SvgIcon :icon="white_select_icon" v-show="isPixel"/>
             </div>
             <span :style="{ marginLeft: isPixel ? '8px' : '20px' }">{{ t('system.pixel') }}</span>
         </div>
         <div class="item" v-if="items.includes('rule')" @click="modifyRuleVisible">
             <div class="choose">
-                <svg-icon icon-class="white-select" v-show="isRule"></svg-icon>
+                <SvgIcon :icon="white_select_icon" v-show="isRule"/>
             </div>
             <span :style="{ marginLeft: isRule ? '8px' : '20px' }">{{ t('system.rule') }}</span>
         </div>

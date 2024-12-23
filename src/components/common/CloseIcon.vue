@@ -1,10 +1,13 @@
 <template>
     <div class="close" @click.stop="emits('close')">
-        <svg-icon icon-class="close"
-            :style="{ width: size ? `${size}px` : '18px', height: size ? `${size}px` : '18px' }"></svg-icon>
+        <SvgIcon :icon="close_icon"
+            :style="{ width: size ? `${size}px` : '18px', height: size ? `${size}px` : '18px' }"/>
     </div>
 </template>
 <script setup lang="ts">
+import close_icon from "@/assets/icons/close.svg"
+import SvgIcon from "./SvgIcon.vue";
+
 interface Props {
     size?: number
     width?: number

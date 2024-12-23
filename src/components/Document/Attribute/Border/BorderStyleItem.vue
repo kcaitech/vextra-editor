@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue'
+import SvgIcon from '@/components/common/SvgIcon.vue';
 import { onMounted, ref } from 'vue';
 interface Props {
     data: SelectItem;
@@ -16,17 +17,27 @@ function select() {
     emits('select', props.data)
 }
 
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+
+import solid_icon from '@/assets/icons/svg/solid.svg';
+import dash_icon from '@/assets/icons/svg/dash.svg';
+const border_style_icons:{[key: string]: string} = {
+    'solid': solid_icon,
+    'dash': dash_icon
+}
+
 </script>
 
 <template>
     <div class="border-style-item-container" @click="select" @mouseenter="isHoverCurValue = true"
         @mouseleave="isHoverCurValue = false">
         <div class="content">
-            <svg-icon :icon-class="props.data.value"></svg-icon>
+            <SvgIcon :icon="border_style_icons[props.data.value]"/>
             <span>{{ props.data.content }}</span>
         </div>
-        <svg-icon class="check" v-show="props.isCurValue"
-            :icon-class="isHoverCurValue ? 'white-select' : 'page-select'"></svg-icon>
+        <SvgIcon class="check" v-show="props.isCurValue"
+            :icon="isHoverCurValue ? white_select_icon : page_select_icon"/>
     </div>
 </template>
 

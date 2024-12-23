@@ -24,7 +24,8 @@ const handleBoolean = (e: MouseEvent) => {
   e.stopPropagation()
   emit('selectBool',props.select, props.bool!)
 }
-
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
 </script>
 <template>
   <!-- cursor -->
@@ -32,10 +33,10 @@ const handleBoolean = (e: MouseEvent) => {
       <div style="display: flex; align-items: center;">
 <!--        <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>-->
           <div class="choose">
-              <svg-icon icon-class="white-select" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"></svg-icon>
+              <SvgIcon :icon="white_select_icon" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"/>
           </div>
         <div class="svg-container">
-          <svg-icon :icon-class="select"></svg-icon>
+          <SvgIcon :icon="select"/>
         </div>
         <div class="select">{{ t(`home.${props.lg}`) }}</div>
       </div>
@@ -46,10 +47,10 @@ const handleBoolean = (e: MouseEvent) => {
       <div style="display: flex; align-items: center;">
 <!--        <div class="choose" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden'  }"></div>-->
           <div class="choose">
-              <svg-icon icon-class="white-select" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden' }"></svg-icon>
+              <SvgIcon :icon="white_select_icon" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden' }"/>
           </div>
         <div class="svg-container">
-          <svg-icon :icon-class="select"></svg-icon>
+          <SvgIcon :icon="select"/>
         </div>
         <div class="select">{{ t(`bool.${props.lg}`) }}</div>
       </div>

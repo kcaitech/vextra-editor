@@ -207,6 +207,13 @@ onUnmounted(() => {
 const getValue = (value: Text | string | undefined) => {
     return value instanceof Text ? value.getText(0, Number.MAX_VALUE) : value;
 }
+
+import relevance_icon from '@/assets/icons/svg/relevance.svg';
+import text_icon from '@/assets/icons/svg/text.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
 </script>
 <template>
     <div class="line" style="width: 240px;height: 1px;border-bottom: 1px solid #F0F0F0;margin: 12px 0;"></div>
@@ -215,7 +222,7 @@ const getValue = (value: Text | string | undefined) => {
             <template #tool>
                 <div class="edit-comps">
                     <div class="edit_svg" @click="textDialog" v-if="!is_bind" :class="{ 'clicked': isTextShow }">
-                        <svg-icon icon-class="relevance"></svg-icon>
+                        <SvgIcon :icon="relevance_icon"/>
                     </div>
                 </div>
             </template>
@@ -227,7 +234,7 @@ const getValue = (value: Text | string | undefined) => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="text"></svg-icon>
+                        <SvgIcon :icon="text_icon"/>
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind?.name }}</span>
@@ -236,7 +243,7 @@ const getValue = (value: Text | string | undefined) => {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px"

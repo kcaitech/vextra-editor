@@ -20,6 +20,7 @@ import { Selection } from '@/context/selection';
 import { v4 } from "uuid";
 import { Menu } from '@/context/menu';
 import Key from '@/components/common/Key.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface Props {
     context: Context
@@ -189,6 +190,9 @@ onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
     watchedShapes.forEach(v => v.unwatch(shape_watcher));
 })
+
+import reset_comp_icon from "@/assets/icons/svg/reset_comp.svg"
+import comp_state_icon from "@/assets/icons/svg/comp-state.svg"
 </script>
 
 <template>
@@ -197,11 +201,11 @@ onUnmounted(() => {
             <template #tool>
                 <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
-                        <svg-icon icon-class="comp-state"></svg-icon>
+                        <SvgIcon :icon="comp_state_icon"/>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset"
                         :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
-                        <svg-icon icon-class="reset_comp"></svg-icon>
+                        <SvgIcon :icon="reset_comp_icon"/>
                         <div class="reset_menu" v-if="resetMenu">
                             <div :class="{ untie, disabled: !untie_state }" @click="untie">
                                 <span>{{ t('compos.untie') }}</span>

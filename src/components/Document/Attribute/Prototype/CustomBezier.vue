@@ -6,7 +6,7 @@
         <span>预设</span>
         <div class="items">
             <div class="item" v-for="(i, index) in easingFn" :key="i[0]" @click="defaultesfn(i[1])">
-                <svg-icon :icon-class="`bezier${index + 1}`"></svg-icon>
+                <SvgIcon :icon="bezier_icons[index + 1]"/>
             </div>
         </div>
     </div>
@@ -26,6 +26,23 @@ import {
     PrototypeEasingBezier
 } from '@kcdesign/data';
 import { computed, onMounted, ref, watch, watchEffect } from 'vue';
+
+import bezier1_icon from '@/assets/icons/svg/bezier1.svg';
+import bezier2_icon from '@/assets/icons/svg/bezier2.svg';
+import bezier3_icon from '@/assets/icons/svg/bezier3.svg';
+import bezier4_icon from '@/assets/icons/svg/bezier4.svg';
+import bezier5_icon from '@/assets/icons/svg/bezier5.svg';
+import bezier6_icon from '@/assets/icons/svg/bezier6.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
+const bezier_icons: {[key: number]: string} = {
+    1: bezier1_icon,
+    2: bezier2_icon,
+    3: bezier3_icon,
+    4: bezier4_icon,
+    5: bezier5_icon,
+    6: bezier6_icon,
+}
 
 interface Position {
     x: number

@@ -87,6 +87,8 @@ onMounted(() => {
 onUnmounted(() => {
     props.data.context.selection.unwatch(update)
 });
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
 </script>
 
 <template>
@@ -94,7 +96,7 @@ onUnmounted(() => {
         :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected, select: isInput }"
         @mousedown="onMouseDown">
         <div class="ph">
-            <svg-icon v-if="props.data.selected" icon-class="page-select"></svg-icon>
+            <SvgIcon v-if="props.data.selected" :icon="page_select_icon"/>
         </div>
         <div class="item zero-symbol">
             <div class="title" @dblclick="onRename" :class="{ selected: props.data.selected }"

@@ -78,7 +78,7 @@ export default defineConfig({
         createHtmlPlugin({
             minify: true,
             template: 'public/index.html',
-            entry: '/src/sclient/index.ts',
+            entry: '/src/client/index.ts',
         }),
 
         basicSsl(),

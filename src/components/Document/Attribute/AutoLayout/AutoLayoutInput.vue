@@ -144,35 +144,41 @@ onMounted(() => {
 onUnmounted(() => {
 
 })
+
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import down_icon from "@/assets/icons/svg/down.svg";
+import white_select_icon from "@/assets/icons/svg/white-select.svg";
+import page_select_icon from "@/assets/icons/svg/page-select.svg";
+
 </script>
 
 <template>
     <div :class="{ 'md-number-input': true, active }" @wheel="wheel">
         <Tooltip :content="t(`autolayout.${name}`)">
             <div class="drag-icon">
-                <svg-icon :icon-class="icon" :class="{ 'un-draggable': disabled || draggable }" @mousedown="down" />
+                <SvgIcon :icon="icon" :class="{ 'un-draggable': disabled || draggable }" @mousedown="down" />
             </div>
         </Tooltip>
         <input :disabled="disabled" :style="{ opacity: draggable ? '0.4' : '1' }" ref="inputEl" :value="value"
             @click="click" @change="change" @blur="blur" @focus="foucs" />
         <div class="layout-menu-svg" v-if="isMenu" @click.stop="showMenu">
-            <svg-icon icon-class="down" />
+            <SvgIcon :icon="down_icon" />
         </div>
         <div class="auto-layout-options" :style="{ top: item === value ? '-4px' : '-36px' }"
             v-if="isMenu && show && (typeof item !== 'undefined')">
             <div class="item" :class="{ hovered: hoverItem === item }" @click="changeItem(StackSizing.Fixed)"
                 @mouseenter="hoverItem = item">
                 <div class="icon">
-                    <svg-icon v-if="item === value"
-                        :icon-class="hoverItem === item ? 'white-select' : 'page-select'"></svg-icon>
+                    <SvgIcon v-if="item === value"
+                        :icon="hoverItem === item ? white_select_icon : page_select_icon"/>
                 </div>
                 <div class="text">{{ item }}</div>
             </div>
             <div class="item" :class="{ hovered: hoverItem !== item }" @click="changeItem(StackSizing.Auto)"
                 @mouseenter="hoverItem = t(`autolayout.${disabled ? 'adapt' : StackSizing.Auto}`)">
                 <div class="icon">
-                    <svg-icon v-if="item !== value"
-                        :icon-class="hoverItem !== item ? 'white-select' : 'page-select'"></svg-icon>
+                    <SvgIcon v-if="item !== value"
+                        :icon="hoverItem !== item ? white_select_icon : page_select_icon"/>
                 </div>
                 <div class="text">{{ t(`autolayout.${disabled ? 'adapt' : StackSizing.Auto}`) }}</div>
             </div>

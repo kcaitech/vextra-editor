@@ -350,6 +350,12 @@ onUnmounted(() => {
     stop2();
 })
 
+import arrow2_icon from '@/assets/icons/svg/arrow2.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
 </script>
 <template>
     <div class="opacity-panel" ref="panel">
@@ -358,7 +364,7 @@ onUnmounted(() => {
                 <div class="icon" @click="showMenu" ref="trigger">
                     <div class="mode_box">{{ selectedMixMode ? t(`opacity.${selectedMixMode}`) : t('attr.more_value') }}
                     </div>
-                    <svg-icon icon-class="arrow2"></svg-icon>
+                    <SvgIcon :icon="arrow2_icon"/>
                 </div>
                 <div ref="popover" class="popover-f" v-if="popoverVisible">
                     <div class="item" style="opacity: 0.3;" v-if="!selectedMixMode">
@@ -370,9 +376,8 @@ onUnmounted(() => {
                         <div class="item" ref="modeList" :class="{ 'hovered': hovered === item }"
                             @mouseenter="enterMixMode(item)" @click="onClickMode(item)">
                             <div>
-                                <svg-icon v-if="selectedMixMode === item"
-                                    :icon-class="hovered === item ? 'white-select' : 'page-select'">
-                                </svg-icon>
+                                <SvgIcon v-if="selectedMixMode === item"
+                                    :icon="hovered === item ? white_select_icon : page_select_icon"/>
                             </div>
                             <span>{{ t(`opacity.${item}`) }}</span>
                         </div>

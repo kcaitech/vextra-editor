@@ -137,14 +137,18 @@ onUnmounted(() => {
     document.removeEventListener('click', close);
     document.removeEventListener('keydown', keyClose);
 })
+
+import SvgIcon from '../common/SvgIcon.vue';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import arrow_right_icon from '@/assets/icons/svg/arrow-right.svg';
 </script>
 
 <template>
     <div class="preview_menu" ref="previewMenu" @mousedown.stop>
         <div class="item" @click.stop="changeScale(ScaleType.Actual)">
             <div class="choose">
-                <svg-icon v-if="scaleType === ScaleType.Actual || scaleType === undefined"
-                    icon-class="choose"></svg-icon>
+                <SvgIcon v-if="scaleType === ScaleType.Actual || scaleType === undefined"
+                    :icon="choose_icon"/>
             </div>
             <div class="text">{{ t('preview.actual_size') }}（100%）</div>
             <div class="key" style="padding-right: 3px;">
@@ -153,21 +157,21 @@ onUnmounted(() => {
         </div>
         <div class="item" @click.stop="changeScale(ScaleType.FitScreen)">
             <div class="choose">
-                <svg-icon v-if="scaleType === ScaleType.FitScreen" icon-class="choose"></svg-icon>
+                <SvgIcon v-if="scaleType === ScaleType.FitScreen" :icon="choose_icon"/>
             </div>
             <div class="text">{{ t('preview.fit_screen') }}</div>
             <div class="key"><span class="span">Z</span></div>
         </div>
         <div class="item" @click.stop="changeScale(ScaleType.FillScreen)">
             <div class="choose">
-                <svg-icon v-if="scaleType === ScaleType.FillScreen" icon-class="choose"></svg-icon>
+                <SvgIcon v-if="scaleType === ScaleType.FillScreen" :icon="choose_icon"/>
             </div>
             <div class="text">{{ t('preview.fill_screen') }}</div>
             <div class="key"><span class="span">Z</span></div>
         </div>
         <div class="item" @click.stop="changeScale(ScaleType.FitWidth)">
             <div class="choose">
-                <svg-icon v-if="scaleType === ScaleType.FitWidth" icon-class="choose"></svg-icon>
+                <SvgIcon v-if="scaleType === ScaleType.FitWidth" :icon="choose_icon"/>
             </div>
             <div class="text">{{ t('preview.fit_width') }}</div>
             <div class="key"><span class="span">Z</span></div>
@@ -176,13 +180,16 @@ onUnmounted(() => {
         <div class="item" @click.stop="togglePage(-1)">
             <div class="choose"></div>
             <div class="text">{{ t('preview.previous_page') }}</div>
-            <div class="key" style="font-size: 20px;"><svg-icon
-                    icon-class="arrow-right"></svg-icon></div>
+            <div class="key" style="font-size: 20px;">
+                <SvgIcon :icon="arrow_right_icon"/>
+            </div>
         </div>
         <div class="item" @click.stop="togglePage(1)">
             <div class="choose"></div>
             <div class="text">{{ t('preview.next_page') }}</div>
-            <div class="key" style="font-size: 20px; transform: rotate(180deg);"><svg-icon icon-class="arrow-right"></svg-icon></div>
+            <div class="key" style="font-size: 20px; transform: rotate(180deg);">
+                <SvgIcon :icon="arrow_right_icon"/>
+            </div>
         </div>
         <div class="item" @click.stop="firstPage">
             <div class="choose"></div>
@@ -192,14 +199,14 @@ onUnmounted(() => {
         <div class="line"></div>
         <div class="item" @click.stop="hiddenHotZone">
             <div class="choose">
-                <svg-icon v-if="isHotZone" icon-class="choose"></svg-icon>
+                <SvgIcon v-if="isHotZone" :icon="choose_icon"/>
             </div>
             <div class="text">{{ t('preview.hot_zone') }}</div>
             <div class="key"></div>
         </div>
         <div class="item" @click.stop="hiddenUi">
             <div class="choose">
-                <svg-icon v-if="!showUi" icon-class="choose"></svg-icon>
+                <SvgIcon v-if="!showUi" :icon="choose_icon"/>
             </div>
             <div class="text">{{ t('system.hide_operation_interface') }}</div>
             <div class="key" style="padding-right: 3px;">

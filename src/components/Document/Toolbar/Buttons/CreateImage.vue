@@ -6,6 +6,7 @@ import { ref } from 'vue';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { ImageLoader } from "@/imageLoader";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -29,12 +30,13 @@ function change(e: Event) {
     loader.insertImageByPackages(files, true);
     if (picker.value) (picker.value as HTMLInputElement).value = '';
 }
+import picture_icon from '@/assets/icons/svg/picture.svg';
 </script>
 <template>
 <Tooltip :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)">
     <ToolButton ref="button" @click="select" :selected="props.params.active">
         <div class="svg-container">
-            <svg-icon icon-class="picture"/>
+            <SvgIcon :icon="picture_icon"/>
         </div>
     </ToolButton>
 </Tooltip>

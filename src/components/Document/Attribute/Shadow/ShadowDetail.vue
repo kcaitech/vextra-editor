@@ -592,6 +592,9 @@ function extend(base: number) {
     //
     // return Number(format_value(base));
 }
+
+import gear_icon from '@/assets/icons/svg/gear.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 
 <template>
@@ -600,7 +603,7 @@ function extend(base: number) {
             :title="`${t('shadow.shadow_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
-                    <svg-icon icon-class="gear"></svg-icon>
+                    <SvgIcon :icon="gear_icon"/>
                 </div>
             </template>
             <template #body>

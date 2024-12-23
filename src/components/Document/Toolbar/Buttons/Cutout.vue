@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Context } from '@/context';
 import { useCutout } from "@/components/Document/Creator/execute";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 const { t } = useI18n()
 defineProps<{
   context: Context,
@@ -11,13 +12,13 @@ defineProps<{
     active: boolean,
   }
 }>();
-
+import cutout_icon from '@/assets/icons/svg/cutout.svg';
 </script>
 <template>
   <Tooltip :content="`${t('cutoutExport.cutout')} &nbsp;&nbsp; S`">
       <ToolButton ref="button" @click="() => {useCutout(context)}" :selected="params.active" style="width: 32px">
       <div class="svg-container">
-          <svg-icon icon-class="cutout"/>
+          <SvgIcon :icon="cutout_icon"/>
       </div>
     </ToolButton>
   </Tooltip>

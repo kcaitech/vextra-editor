@@ -1,5 +1,4 @@
-
 export const layout = {
-    showUI: 'Show UI',
-    hideUI: 'Hide UI',
+    showUI: '显示操作面板',
+    hideUI: '隐藏操作面板',
 }

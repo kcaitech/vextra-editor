@@ -722,6 +722,10 @@ onUnmounted(() => {
     stop4();
     stop5();
 })
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import add_icon from "@/assets/icons/svg/add.svg"
+import select_icon from "@/assets/icons/svg/select.svg"
+import delete_icon from "@/assets/icons/svg/delete.svg"
 </script>
 
 <template>
@@ -729,7 +733,7 @@ onUnmounted(() => {
         <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first" :active="!!fills.length">
             <template #tool>
                 <div class="add" @click.stop="addFill">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </template>
         </TypeHeader>
@@ -742,7 +746,7 @@ onUnmounted(() => {
         <div class="fills-container" v-else-if="!mixed && !mixed_cell && fills.length">
             <div class="fill" v-for="(f, idx) in fills" :key="f.id">
                 <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                    <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
+                    <SvgIcon v-if="f.fill.isEnabled" :icon="select_icon"/>
                 </div>
                 <div class="color" v-if="f.fill">
                     <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
@@ -781,7 +785,7 @@ onUnmounted(() => {
                 </div>
                 <!--                <div class="temporary"></div>-->
                 <div class="delete" @click="deleteFill(idx)">
-                    <svg-icon icon-class="delete"></svg-icon>
+                    <SvgIcon :icon="delete_icon"/>
                 </div>
             </div>
         </div>

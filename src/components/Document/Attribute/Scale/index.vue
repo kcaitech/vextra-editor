@@ -336,29 +336,36 @@ onUnmounted(() => {
     stop();
     stop2();
 });
+
+import w_icon from "@/assets/icons/svg/W.svg";
+import h_icon from "@/assets/icons/svg/H.svg";
+import scale_simple_icon from "@/assets/icons/svg/scale-simple.svg";
+import down_icon from "@/assets/icons/svg/down.svg";
+import page_select_icon from "@/assets/icons/svg/page-select.svg";
+
 </script>
 <template>
 <div class="scale-panel">
     <TypeHeader :title="t('attr.scale')" class="mt-24" :active="true"/>
     <div class="content">
         <div class="tr">
-            <MossInput icon="W" :value="format(w)" @change="changeW" draggable
+            <MossInput :icon="w_icon" :value="format(w)" @change="changeW" draggable
                            @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"/>
-            <MossInput icon="H" :value="format(h)" @change="changeH" draggable
+            <MossInput :icon="h_icon" :value="format(h)" @change="changeH" draggable
                            @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"/>
         </div>
         <div style="display: flex; gap: 13px;margin-bottom: 8px;">
             <div style="position: relative">
-                <MossInput icon="scale-simple" :value="`${format(k)}x`" @change="changeK"
+                <MossInput :icon="scale_simple_icon" :value="`${format(k)}x`" @change="changeK"
                                draggable @dragstart="dragstart" @dragging="draggingK" @dragend="dragend2"/>
                 <div class="options" id="scale-popover-0903">
                     <div class="trigger" @click.stop="emitTrigger">
-                        <svg-icon icon-class="down" style="width: 12px; height: 12px"/>
+                        <SvgIcon :icon="down_icon" style="width: 12px; height: 12px"/>
                     </div>
                     <div v-if="optionsVisible" ref="popover" class="popover">
                         <div v-for="i in presetOptions" :key="i" class="option" @click="() => select(i)">
                             <span>{{ i }}</span>
-                            <svg-icon v-if="(k+'x') ===i" icon-class="page-select"/>
+                            <SvgIcon v-if="(k+'x') ===i" :icon="page_select_icon"/>
                         </div>
                     </div>
                 </div>

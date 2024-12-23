@@ -4,6 +4,7 @@ import { Context } from "@/context";
 import { useI18n } from "vue-i18n";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Action } from '@/context/tool';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 
@@ -24,14 +25,14 @@ const exportClick = () => {
 
     props.context.tool.setAction(Action.Export);
 }
-
+import dialog_icon from '@/assets/icons/svg/dialog.svg';
 </script>
 
 <template>
     <Tooltip :content="`${t('cutoutExport.export_cutout')}`">
         <ToolButton ref="button" @click.stop="exportClick" style="width: 32px" :selected="params.active">
             <div class="svg-container" id="export_dialog">
-                <svg-icon icon-class="dialog"></svg-icon>
+                <SvgIcon :icon="dialog_icon"/>
             </div>
         </ToolButton>
     </Tooltip>

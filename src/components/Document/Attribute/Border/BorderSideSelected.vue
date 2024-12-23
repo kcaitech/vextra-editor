@@ -21,6 +21,7 @@ import { can_custom, getSideInfo, get_actions_border_side_info, get_borders_side
 import { Menu } from '@/context/menu';
 import { format_value } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 
@@ -225,6 +226,14 @@ onMounted(() => {
 onUnmounted(() => {
   props.context.selection.unwatch(selection_wather);
 })
+
+import border_all_icon from '@/assets/icons/svg/border-all.svg';
+import border_top_icon from '@/assets/icons/svg/border-top.svg';
+import border_bottom_icon from '@/assets/icons/svg/border-bottom.svg';
+import border_left_icon from '@/assets/icons/svg/border-left.svg';
+import border_right_icon from '@/assets/icons/svg/border-right.svg';
+import border_custom_icon from '@/assets/icons/svg/border-custom.svg';
+
 </script>
 
 <template>
@@ -233,24 +242,24 @@ onUnmounted(() => {
       <div class="border">{{ t('attr.unilateral') }}</div>
       <div class="border-select">
         <div class="all" :class="{ selected: select_side === SideType.Normal }" @click="setSideType(SideType.Normal)">
-          <svg-icon icon-class="border-all"></svg-icon>
+          <SvgIcon :icon="border_all_icon"/>
         </div>
         <div class="top" :class="{ selected: select_side === SideType.Top }" @click="setSideType(SideType.Top)">
-          <svg-icon icon-class="border-top"></svg-icon>
+          <SvgIcon :icon="border_top_icon"/>
         </div>
         <div class="bottom" :class="{ selected: select_side === SideType.Bottom }"
           @click="setSideType(SideType.Bottom)">
-          <svg-icon icon-class="border-bottom"></svg-icon>
+          <SvgIcon :icon="border_bottom_icon"/>
         </div>
         <div class="left" :class="{ selected: select_side === SideType.Left }" @click="setSideType(SideType.Left)">
-          <svg-icon icon-class="border-left"></svg-icon>
+          <SvgIcon :icon="border_left_icon"/>
         </div>
         <div class="right" :class="{ selected: select_side === SideType.Right }" @click="setSideType(SideType.Right)">
-          <svg-icon icon-class="border-right"></svg-icon>
+          <SvgIcon :icon="border_right_icon"/>
         </div>
         <div class="custom" :class="{ selected: select_side === SideType.Custom }"
           @click="setSideType(SideType.Custom)">
-          <svg-icon icon-class="border-custom"></svg-icon>
+          <SvgIcon :icon="border_custom_icon"/>
         </div>
       </div>
     </div>

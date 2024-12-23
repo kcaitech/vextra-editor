@@ -73,6 +73,16 @@ onMounted(() => {
 })
 onUnmounted(() => {
 })
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import down_icon from "@/assets/icons/svg/down.svg";
+import white_select_icon from "@/assets/icons/svg/white-select.svg";
+import page_select_icon from "@/assets/icons/svg/page-select.svg";
+import select_more_icon from "@/assets/icons/svg/select-more.svg";
+import included_strokes_icon from "@/assets/icons/svg/included-strokes.svg";
+import excluded_strokes_icon from "@/assets/icons/svg/excluded-strokes.svg";
+import reverse_stack_icon from "@/assets/icons/svg/reverse-stack.svg";
+import pile_up_icon from "@/assets/icons/svg/pile-up.svg";
 </script>
 
 <template>
@@ -82,7 +92,7 @@ onUnmounted(() => {
             <template #trigger>
                 <div class="trigger">
                     <div class="bg" :class="{ actived: props.context.menu.isPopoverExisted }" @click="showMenu">
-                        <svg-icon icon-class="select-more"></svg-icon>
+                        <SvgIcon :icon="select_more_icon"/>
                     </div>
                 </div>
             </template>
@@ -95,22 +105,22 @@ onUnmounted(() => {
                                 {{ autoLayoutDate.bordersTakeSpace ? t('autolayout.included') : t('autolayout.excluded')
                                 }}
                             </span>
-                            <div class="icon"><svg-icon icon-class="down"></svg-icon></div>
+                            <div class="icon"><SvgIcon :icon="down_icon"/></div>
                             <div class="select_menu" v-if="borderSelect"
                                 :style="{ top: autoLayoutDate.bordersTakeSpace ? '-4px' : '-36px' }">
                                 <div class="item" :class="{ 'active-item': hoverBorderItem }"
                                     @click.stop="changeBorderItem(true)" @mouseenter="hoverBorderItem = true">
                                     <div class="icon">
-                                        <svg-icon v-if="autoLayoutDate.bordersTakeSpace"
-                                            :icon-class="hoverBorderItem ? 'white-select' : 'page-select'"></svg-icon>
+                                        <SvgIcon v-if="autoLayoutDate.bordersTakeSpace"
+                                            :icon="hoverBorderItem ? white_select_icon : page_select_icon"/>
                                     </div>
                                     <div class="text">{{ t('autolayout.included') }}</div>
                                 </div>
                                 <div class="item" :class="{ 'active-item': !hoverBorderItem }"
                                     @click.stop="changeBorderItem(false)" @mouseenter="hoverBorderItem = false">
                                     <div class="icon">
-                                        <svg-icon v-if="!autoLayoutDate.bordersTakeSpace"
-                                            :icon-class="!hoverBorderItem ? 'white-select' : 'page-select'"></svg-icon>
+                                        <SvgIcon v-if="!autoLayoutDate.bordersTakeSpace"
+                                            :icon="!hoverBorderItem ? white_select_icon : page_select_icon"/>
                                     </div>
                                     <div class="text">{{ t('autolayout.excluded') }}</div>
                                 </div>
@@ -118,8 +128,8 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="preview">
-                        <div style="width: 120px;"><svg-icon
-                                :icon-class="hoverBorderItem ? 'included-strokes' : 'excluded-strokes'"></svg-icon>
+                        <div style="width: 120px;">
+                            <SvgIcon :icon="hoverBorderItem ? included_strokes_icon : excluded_strokes_icon"/>
                         </div>
                     </div>
                     <div class="selected">
@@ -127,22 +137,22 @@ onUnmounted(() => {
                         <div class="auto-setting-options" @click.stop="openStackMenu">
                             <span> {{ !autoLayoutDate.stackReverseZIndex ? t('autolayout.reverse_stack')
             : t('autolayout.stack') }}</span>
-                            <div class="icon"><svg-icon icon-class="down"></svg-icon></div>
+                            <div class="icon"><SvgIcon :icon="down_icon"/></div>
                             <div class="select_menu" v-if="stackSelect"
                                 :style="{ top: !autoLayoutDate.stackReverseZIndex ? '-36px' : '-4px' }">
                                 <div class="item" :class="{ 'active-item': hoverStackItem }"
                                     @click.stop="changeStackZIndexItem(true)" @mouseenter="hoverStackItem = true">
                                     <div class="icon">
-                                        <svg-icon v-if="autoLayoutDate.stackReverseZIndex"
-                                            :icon-class="hoverStackItem ? 'white-select' : 'page-select'"></svg-icon>
+                                        <SvgIcon v-if="autoLayoutDate.stackReverseZIndex"
+                                            :icon="hoverStackItem ? white_select_icon : page_select_icon"/>
                                     </div>
                                     <div class="text">{{ t('autolayout.stack') }}</div>
                                 </div>
                                 <div class="item" :class="{ 'active-item': !hoverStackItem }"
                                     @click.stop="changeStackZIndexItem(false)" @mouseenter="hoverStackItem = false">
                                     <div class="icon">
-                                        <svg-icon v-if="!autoLayoutDate.stackReverseZIndex"
-                                            :icon-class="!hoverStackItem ? 'white-select' : 'page-select'"></svg-icon>
+                                        <SvgIcon v-if="!autoLayoutDate.stackReverseZIndex"
+                                            :icon="!hoverStackItem ? white_select_icon : page_select_icon"/>
                                     </div>
                                     <div class="text">{{ t('autolayout.reverse_stack') }}</div>
                                 </div>
@@ -150,7 +160,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="preview">
-                        <div><svg-icon :icon-class="!hoverStackItem ? 'reverse-stack' : 'pile-up'"></svg-icon></div>
+                        <div><SvgIcon :icon="!hoverStackItem ? reverse_stack_icon : pile_up_icon"/></div>
                     </div>
                 </div>
             </template>
