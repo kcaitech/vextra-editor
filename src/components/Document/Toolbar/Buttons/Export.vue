@@ -49,7 +49,7 @@ import dialog_icon from '@/assets/icons/svg/dialog.svg';
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 
-  >svg {
+  >img {
       width: 18px;
       height: 18px;
   }

@@ -68,7 +68,7 @@ import white_down_icon from '@/assets/icons/svg/white-down.svg';
   justify-content: center;
   align-items: center;
   color: #ffffff;
-  > svg {
+  > img {
     width: 18px;
     height: 18px;
   }

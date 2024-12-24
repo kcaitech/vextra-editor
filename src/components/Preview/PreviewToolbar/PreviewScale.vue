@@ -99,7 +99,7 @@ import down_icon from '@/assets/icons/svg/down.svg';
         width: 30px;
         height: 32px;
 
-        svg {
+        img {
             fill: #FFFFFF;
             width: 14px;
             height: 14px;

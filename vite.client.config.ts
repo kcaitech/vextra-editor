@@ -3,7 +3,6 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import vueJsx from '@vitejs/plugin-vue-jsx';
-import createSvgSpritePlugin from 'vite-plugin-svg-sprite';
 import svgLoader from 'vite-svg-loader';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import arraybuffer from "vite-plugin-arraybuffer";
@@ -44,7 +43,7 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 entryFileNames: '[name]-[hash].js',
-                dir: 'dist',
+                dir: 'dist_client',
                 manualChunks(id) {
                     if (id.includes('node_modules')) {
                         return id.toString().split('node_modules/')[1].split('/')[0].toString();
@@ -64,21 +63,12 @@ export default defineConfig({
                 }],
             }
         }),
-        createSvgSpritePlugin({
-            symbolId: "icon-[name]",
-            svgo: {
-                plugins: [{
-                    name: 'convertColors',
-                }]
-            },
-            include: ['**/icons/**/**.svg'],
-        }),
         vue(),
         vueJsx(),
         createHtmlPlugin({
             minify: true,
             template: 'public/index.html',
-            entry: '/src/client/index.ts',
+            entry: '/client/index.ts',
         }),
 
         basicSsl(),

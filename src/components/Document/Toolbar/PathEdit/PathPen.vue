@@ -36,7 +36,7 @@ import pattern_pen_icon from '@/assets/icons/svg/pattern-pen.svg';
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

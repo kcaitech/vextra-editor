@@ -148,7 +148,7 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
 
-    >svg {
+    >img {
         width: 18px;
         height: 18px;
         fill: var(--theme-color-anti);

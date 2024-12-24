@@ -188,12 +188,12 @@ import white_down_icon from '@/assets/icons/svg/white-down.svg';
         &:hover {
             background-color: rgba(255, 255, 255, 0.1);
 
-            svg {
+            img {
                 transform: translateY(2px)
             }
         }
 
-        svg {
+        img {
             width: 12px;
             height: 12px;
             margin: auto;

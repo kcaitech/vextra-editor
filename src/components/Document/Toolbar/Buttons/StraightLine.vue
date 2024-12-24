@@ -36,7 +36,7 @@ import pattern_line_icon from '@/assets/icons/svg/pattern-line.svg';
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

@@ -54,7 +54,7 @@ import picture_icon from '@/assets/icons/svg/picture.svg';
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

@@ -188,7 +188,7 @@ import cutout_icon from '@/assets/icons/svg/cutout.svg';
   padding: 6px 6px 6px 6px;
   box-sizing: border-box;
 
-  >svg {
+  >img {
     width: 18px;
     height: 18px;
   }
@@ -211,7 +211,7 @@ import cutout_icon from '@/assets/icons/svg/cutout.svg';
     flex-direction: row-reverse;
     height: 100%;
 
-    >svg {
+    >img {
       width: 18px;
       height: 18px;
     }

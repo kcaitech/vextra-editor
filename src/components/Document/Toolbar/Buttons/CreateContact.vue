@@ -34,7 +34,7 @@ import pattern_contact_icon from '@/assets/icons/svg/pattern-contact.svg';
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 
-  >svg {
+  >img {
       width: 18px;
       height: 18px;
   }

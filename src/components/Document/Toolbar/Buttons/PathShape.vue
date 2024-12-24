@@ -333,7 +333,7 @@ import picture_icon from "@/assets/icons/svg/picture.svg";
         flex-direction: row-reverse;
         height: 100%;
 
-        >svg {
+        >img {
             width: 18px;
             height: 18px;
         }

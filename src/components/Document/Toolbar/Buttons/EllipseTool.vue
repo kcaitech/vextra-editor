@@ -34,7 +34,7 @@ import pattern_ellipse_icon from '@/assets/icons/svg/pattern-ellipse.svg';
   justify-content: center;
   align-items: center;
   color: #ffffff;
-  > svg {
+  > img {
     width: 18px;
     height: 18px;
   }

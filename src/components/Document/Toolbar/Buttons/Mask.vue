@@ -72,7 +72,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 
     transition: 0.1s;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

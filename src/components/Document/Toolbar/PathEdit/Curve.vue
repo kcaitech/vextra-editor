@@ -36,7 +36,7 @@ import curve_tool_icon from '@/assets/icons/svg/curve-tool.svg';
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

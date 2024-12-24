@@ -104,7 +104,7 @@ import white_select_icon from '@/assets/icons/svg/white-select.svg';
         margin-left: 8px;
         margin-right: 8px;
 
-    svg {
+        img {
       width: 100%;
       height: 100%;
     }

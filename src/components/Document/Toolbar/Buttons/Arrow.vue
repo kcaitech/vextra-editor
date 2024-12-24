@@ -37,7 +37,7 @@ import pattern_arrow_icon from '@/assets/icons/svg/pattern-arrow.svg';
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

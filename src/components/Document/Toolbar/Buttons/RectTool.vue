@@ -33,7 +33,7 @@ import pattern_rectangle_icon from '@/assets/icons/svg/pattern-rectangle.svg';
   display: flex;
   justify-content: center;
   align-items: center;
-  > svg {
+  > img {
     width: 18px;
     height: 18px;
   }

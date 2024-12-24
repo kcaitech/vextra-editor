@@ -37,7 +37,7 @@ import clip_tool_icon from '@/assets/icons/svg/clip-tool.svg';
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

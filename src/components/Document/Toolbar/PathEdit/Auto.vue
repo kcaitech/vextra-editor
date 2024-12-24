@@ -37,7 +37,7 @@ import drag_icon from '@/assets/icons/svg/drag.svg';
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }
