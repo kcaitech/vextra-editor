@@ -2,7 +2,7 @@
     <div class="origin">
         <div class="title" @click.stop=createOrigin>
             <div class="text" :class="{ active: prototypestart }">{{ t('prototype.origin_title') }}</div>
-            <div v-if="!prototypestart" class="add_icon">
+            <div v-if="!prototypestart" class="add">
                 <SvgIcon :icon="add_icon"/>
             </div>
             <div v-else class="delete" @click.stop=deleteOrigin>
@@ -157,7 +157,7 @@ onMounted(() => {
             }
         }
 
-        svg {
+        img {
             width: 16px;
             height: 16px;
         }

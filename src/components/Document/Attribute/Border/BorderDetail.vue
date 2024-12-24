@@ -211,7 +211,7 @@ import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
                 justify-content: center;
                 border-radius: var(--default-radius);
 
-                >svg {
+                >img {
                     width: 16px;
                     height: 16px;
                 }
@@ -261,7 +261,7 @@ import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
                     display: flex;
                     align-items: center;
 
-                    >svg {
+                    >img {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
@@ -296,7 +296,7 @@ import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
                         justify-content: space-around;
                         border-radius: 4px;
 
-                        >svg {
+                        >img {
                             width: 12px;
                             height: 12px;
                         }
@@ -354,7 +354,7 @@ import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
                     border-radius: 4px;
                     height: 28px;
 
-                    >svg {
+                    >img {
                         width: 16px;
                         height: 16px;
                     }

@@ -743,7 +743,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
             fill: #000;
         }
 
-        >svg {
+        >img {
             width: 9px;
             height: 9px;
 
@@ -794,8 +794,9 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
             fill: #FFF;
         }
 
-        >svg {
-            fill: #fff;
+        >img {
+            // fill: #fff;
+            filter: invert(1);
             transform: rotate(0deg);
         }
     }

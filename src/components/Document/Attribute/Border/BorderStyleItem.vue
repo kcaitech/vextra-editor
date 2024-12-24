@@ -58,7 +58,7 @@ const border_style_icons:{[key: string]: string} = {
         align-items: center;
         justify-content: space-between;
 
-        >svg {
+        >img {
             width: 24px;
             height: 100%;
             color: #BFBFBF;
@@ -86,7 +86,7 @@ const border_style_icons:{[key: string]: string} = {
             color: #fff;
         }
 
-        >svg {
+        >img {
             color: #fff;
         }
     }

@@ -667,7 +667,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
             align-items: center;
             border-radius: var(--default-radius);
 
-            >svg {
+            >img {
                 width: 16px;
                 height: 16px;
             }
@@ -707,7 +707,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
                     display: flex;
                     align-items: center;
 
-                    >svg {
+                    >img {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
@@ -725,7 +725,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
                         width: 10px;
                         height: 100%;
 
-                        >svg {
+                        >img {
                             width: 10px;
                             height: 10px;
                         }
@@ -803,7 +803,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         justify-content: center;
         align-items: center;
 
-        >svg {
+        >img {
             width: 60%;
             height: 60%;
         }

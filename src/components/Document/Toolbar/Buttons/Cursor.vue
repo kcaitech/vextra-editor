@@ -108,10 +108,10 @@ onUnmounted(() => {
                 <div style="display: flex; align-items: center;">
                     <div style="width: 18px">
                         <SvgIcon v-if="stashAction === Action.AutoV" :icon="page_select_icon"
-                            style="width: 12px; height: 12px;fill: var(--theme-color-anti)" />
+                            style="width: 12px; height: 12px; filter: invert(1);" />
                     </div>
                     <div style="display: flex; align-items: center;gap: 8px">
-                        <SvgIcon :icon="drag_icon" style="width: 14px; height: 14px" />
+                        <SvgIcon :icon="drag_icon" style="width: 14px; height: 14px;" />
                         <span>{{ t('home.object_selector') }}</span>
                     </div>
                 </div>
@@ -121,11 +121,11 @@ onUnmounted(() => {
                 <div style="display: flex; align-items: center;">
                     <div style="width: 18px">
                         <SvgIcon v-if="stashAction === Action.AutoK" :icon="page_select_icon"
-                            style="width: 12px; height: 12px;fill: var(--theme-color-anti)" />
+                            style="width: 12px; height: 12px; filter: invert(1);" />
                     </div>
                     <div style="display: flex; align-items: center;gap: 8px">
                         <SvgIcon :icon="tool_scale_icon"
-                            style="width: 14px; height: 14px; fill: var(--theme-color-anti)" />
+                            style="width: 14px; height: 14px;" />
                         <span>{{ t('home.scale') }}</span>
                     </div>
                 </div>
@@ -162,7 +162,7 @@ onUnmounted(() => {
     align-items: center;
     height: 100%;
 
-    >svg {
+    >img {
         transform: translateX(-1px);
         width: 12px;
         height: 12px;
@@ -171,7 +171,7 @@ onUnmounted(() => {
 }
 
 .tool-auto-menu-trigger:hover {
-    >svg {
+    >img {
         transform: translate(-1px, 2px);
     }
 }

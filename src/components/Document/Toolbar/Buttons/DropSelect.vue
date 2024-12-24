@@ -26,6 +26,26 @@ const handleBoolean = (e: MouseEvent) => {
 }
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import white_select_icon from '@/assets/icons/svg/white-select.svg';
+
+import union_icon from '@/assets/icons/svg/union.svg'
+import subtract_icon from '@/assets/icons/svg/subtract.svg'
+import intersection_icon from '@/assets/icons/svg/intersection.svg'
+import difference_icon from '@/assets/icons/svg/difference.svg'
+
+function boolIcon() {
+    switch (props.select) {
+        case 'union':
+            return union_icon
+        case 'subtract':
+            return subtract_icon
+        case 'intersection':
+            return intersection_icon
+        case 'difference':
+            return difference_icon
+        default:
+            return union_icon
+    }
+}
 </script>
 <template>
   <!-- cursor -->
@@ -36,7 +56,7 @@ import white_select_icon from '@/assets/icons/svg/white-select.svg';
               <SvgIcon :icon="white_select_icon" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"/>
           </div>
         <div class="svg-container">
-          <SvgIcon :icon="select"/>
+          <SvgIcon :icon="boolIcon()"/>
         </div>
         <div class="select">{{ t(`home.${props.lg}`) }}</div>
       </div>
@@ -50,7 +70,7 @@ import white_select_icon from '@/assets/icons/svg/white-select.svg';
               <SvgIcon :icon="white_select_icon" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden' }"/>
           </div>
         <div class="svg-container">
-          <SvgIcon :icon="select"/>
+          <SvgIcon :icon="boolIcon()"/>
         </div>
         <div class="select">{{ t(`bool.${props.lg}`) }}</div>
       </div>

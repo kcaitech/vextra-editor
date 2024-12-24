@@ -224,7 +224,7 @@ import cutout_icon from '@/assets/icons/svg/cutout.svg';
     align-items: center;
     height: 100%;
 
-    >svg {
+    >img {
       width: 12px;
       height: 12px;
       transition: 0.2s;
@@ -232,7 +232,7 @@ import cutout_icon from '@/assets/icons/svg/cutout.svg';
   }
 
   .tool-frame-menu-trigger:hover {
-    >svg {
+    >img {
       transform: translateY(2px);
     }
   }
@@ -280,7 +280,7 @@ import cutout_icon from '@/assets/icons/svg/cutout.svg';
       display: flex;
       align-items: center;
 
-      >svg {
+      >img {
         width: 12px;
         height: 12px;
       }
@@ -291,7 +291,7 @@ import cutout_icon from '@/assets/icons/svg/cutout.svg';
       align-items: center;
       justify-content: space-between;
 
-      >svg {
+      >img {
         width: 14px;
         height: 14px;
       }

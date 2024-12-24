@@ -524,14 +524,14 @@ import more_for_radius_icon from "@/assets/icons/svg/more-for-radius.svg";
         border: 1px solid #F0F0F0;
         padding: 9px;
 
-        >svg {
+        >img {
             transition: 0.3s;
             color: #808080;
-            width: 14px;
-            height: 14px;
+            width: 13px;
+            height: 13px;
         }
 
-        >svg.active {
+        >img.active {
             color: #FFFFFF;
         }
     }

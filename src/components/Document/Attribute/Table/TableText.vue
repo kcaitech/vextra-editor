@@ -1411,7 +1411,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
         margin-left: -12px;
         border-radius: var(--default-radius);
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
@@ -1432,7 +1432,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
             justify-content: space-between;
             align-items: center;
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 overflow: visible !important;
@@ -1545,7 +1545,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
                         align-items: center;
                         justify-content: center;
 
-                        >svg {
+                        >img {
                             width: 12px;
                             height: 12px;
                         }
@@ -1587,7 +1587,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
                     width: 26px;
                     height: 32px;
 
-                    >svg {
+                    >img {
                         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                         width: 14px;
                         height: 14px;
@@ -1773,7 +1773,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
                     border-radius: var(--default-radius);
                     transition: .2s;
 
-                    >svg {
+                    >img {
                         width: 16px;
                         height: 16px;
                     }
@@ -1807,7 +1807,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
             margin-left: 5px;
             border-radius: var(--default-radius);
 
-            >svg {
+            >img {
                 height: 16px;
                 width: 16px;
             }
@@ -1834,7 +1834,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
     margin-right: 8px;
     box-sizing: border-box;
 
-    >svg {
+    >img {
         width: 12px;
         height: 12px;
     }

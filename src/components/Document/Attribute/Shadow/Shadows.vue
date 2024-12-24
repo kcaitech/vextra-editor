@@ -236,7 +236,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > svg {
+        > img {
             width: 16px;
             height: 16px;
         }
@@ -275,7 +275,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
                 border-radius: 4px;
                 margin-right: 5px;
 
-                > svg {
+                > img {
                     width: 60%;
                     height: 60%;
                 }
@@ -310,7 +310,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
                 border-radius: var(--default-radius);
                 transition: .2s;
 
-                > svg {
+                > img {
                     width: 16px;
                     height: 16px;
                 }

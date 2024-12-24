@@ -56,7 +56,7 @@ import select_icon from "@/assets/icons/svg/select.svg";
     justify-content: center;
     align-items: center;
 
-    svg {
+    img {
         width: 60%;
         height: 60%;
     }

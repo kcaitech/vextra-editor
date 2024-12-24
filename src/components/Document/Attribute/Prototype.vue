@@ -1595,7 +1595,7 @@ onUnmounted(() => {
                 }
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
             }
@@ -1695,7 +1695,7 @@ onUnmounted(() => {
                 width: 10px;
                 height: 10px;
 
-                svg {
+                img {
                     width: 100%;
                     height: 100%;
                 }
@@ -1730,7 +1730,7 @@ onUnmounted(() => {
                     overflow: hidden;
                     display: flex;
 
-                    svg {
+                    img {
                         margin: auto;
                         width: 12px;
                         height: 12px;
@@ -1752,7 +1752,7 @@ onUnmounted(() => {
                     width: 14px;
                     height: 14px;
 
-                    svg {
+                    img {
                         width: 100%;
                         height: 100%;
                         color: #333333;
@@ -1768,7 +1768,7 @@ onUnmounted(() => {
                 height: 28px;
                 border-radius: var(--default-radius);
 
-                svg {
+                img {
                     width: 16px;
                     height: 16px;
                     margin: auto;
@@ -1830,7 +1830,7 @@ onUnmounted(() => {
                         overflow: hidden;
 
 
-                        svg {
+                        img {
                             outline: none;
                             max-width: 14px;
                             height: 14px;
@@ -2038,7 +2038,7 @@ onUnmounted(() => {
                                 box-sizing: border-box;
                                 transition: all 0.3s;
 
-                                svg {
+                                img {
                                     width: 16px;
                                     height: 16px;
                                 }
@@ -2067,7 +2067,7 @@ onUnmounted(() => {
     border-radius: 4px;
     margin-right: 5px;
 
-    >svg {
+    >img {
         width: 60%;
         height: 60%;
     }

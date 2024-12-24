@@ -1080,13 +1080,13 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            >img {
                 color: #808080;
-                width: 14px;
-                height: 14px;
+                width: 13px;
+                height: 13px;
             }
 
-            >svg.active {
+            >img.active {
                 color: #FFFFFF;
             }
         }
@@ -1112,10 +1112,10 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            >img {
                 transition: 0.3s;
-                width: 14px;
-                height: 14px;
+                width: 13px;
+                height: 13px;
                 color: #808080;
             }
         }
@@ -1129,7 +1129,7 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
             height: 32px;
             border-radius: var(--default-radius);
 
-            >svg {
+            >img {
                 width: 12px;
                 height: 12px;
             }
@@ -1154,9 +1154,9 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
                 padding: 9px 14px;
                 box-sizing: border-box;
 
-                >svg {
+                >img {
                     color: var(--coco-grey);
-                    width: 14px;
+                    width: 12px;
                     height: 14px;
                 }
             }
@@ -1175,7 +1175,7 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
                 height: 32px;
                 border-radius: var(--default-radius);
 
-                >svg {
+                >img {
                     color: var(--coco-grey);
                     width: 40%;
                     height: 40%;
@@ -1200,14 +1200,14 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            >img {
                 transition: 0.3s;
                 color: #808080;
-                width: 14px;
-                height: 14px;
+                width: 13px;
+                height: 13px;
             }
 
-            >svg.active {
+            >img.active {
                 color: #FFFFFF;
             }
         }

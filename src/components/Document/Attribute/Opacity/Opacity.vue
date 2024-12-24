@@ -433,7 +433,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
             box-sizing: border-box;
         }
 
-        >svg {
+        >img {
             width: 10px;
             height: 10px;
         }
@@ -478,7 +478,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
                 align-items: center;
                 justify-content: center;
 
-                >svg {
+                >img {
                     width: 13px;
                     height: 13px;
                 }

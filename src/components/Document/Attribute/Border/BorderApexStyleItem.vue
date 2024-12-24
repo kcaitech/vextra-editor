@@ -75,7 +75,7 @@ const iconMap2:{[key: string]: string} = {
     align-items: center;
     justify-content: space-between;
 
-    >svg {
+    >img {
         width: 36px;
         height: 32px;
     }
@@ -93,8 +93,9 @@ const iconMap2:{[key: string]: string} = {
 .border-front-style-item-container:hover {
     background-color: var(--active-color);
 
-    >svg {
-        fill: #FFFFFF;
+    >img {
+        // fill: #FFFFFF;
+        filter: invert(1);
     }
 }
 </style>

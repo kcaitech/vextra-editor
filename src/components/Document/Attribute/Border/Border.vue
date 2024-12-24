@@ -1151,7 +1151,7 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
@@ -1204,7 +1204,7 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
                     border-radius: 4px;
                     margin-right: 5px;
 
-                    >svg {
+                    >img {
                         width: 60%;
                         height: 60%;
                     }
@@ -1279,7 +1279,7 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
                     transition: 0.2s;
                     border-radius: var(--default-radius);
 
-                    >svg {
+                    >img {
                         width: 16px;
                         height: 16px;
                     }
@@ -1318,9 +1318,10 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
                     gap: 8px;
                     overflow: hidden;
 
-                    >svg {
+                    >img {
                         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
-                        flex: 0 0 16px;
+                        // flex: 0 0 16px;
+                        width: 16px;
                         height: 16px;
                     }
 

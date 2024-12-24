@@ -97,6 +97,7 @@ function keydown(event: KeyboardEvent) {
     align-items: center;
 
     width: 88px;
+    min-width: 88px;
     height: 32px;
     padding: 0 8px;
     border: 1px solid transparent;
@@ -104,7 +105,7 @@ function keydown(event: KeyboardEvent) {
     background-color: var(--input-background);
     border-radius: var(--default-radius);
 
-    >svg {
+    >img {
         flex: 0 0 12px;
         height: 12px;
         display: block;

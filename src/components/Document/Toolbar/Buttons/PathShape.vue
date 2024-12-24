@@ -346,7 +346,7 @@ import picture_icon from "@/assets/icons/svg/picture.svg";
         align-items: center;
         height: 100%;
 
-        >svg {
+        >img {
             width: 12px;
             height: 12px;
             transition: 0.2s;
@@ -354,7 +354,7 @@ import picture_icon from "@/assets/icons/svg/picture.svg";
     }
 
     .tool-pathshape-menu-trigger:hover {
-        >svg {
+        >img {
             transform: translateY(2px);
         }
     }
@@ -403,7 +403,7 @@ import picture_icon from "@/assets/icons/svg/picture.svg";
             display: flex;
             align-items: center;
 
-            >svg {
+            >img {
                 width: 12px;
                 height: 12px;
             }
@@ -414,7 +414,7 @@ import picture_icon from "@/assets/icons/svg/picture.svg";
             align-items: center;
             justify-content: space-between;
 
-            >svg {
+            >img {
                 width: 14px;
                 height: 14px;
             }

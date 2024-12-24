@@ -203,7 +203,7 @@ import select_icon from '@/assets/icons/svg/select.svg';
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > svg {
+        > img {
             width: 16px;
             height: 16px;
         }
@@ -242,7 +242,7 @@ import select_icon from '@/assets/icons/svg/select.svg';
                 border-radius: 4px;
                 margin-right: 5px;
 
-                > svg {
+                > img {
                     width: 60%;
                     height: 60%;
                 }
@@ -277,7 +277,7 @@ import select_icon from '@/assets/icons/svg/select.svg';
                 border-radius: var(--default-radius);
                 transition: .2s;
 
-                > svg {
+                > img {
                     width: 16px;
                     height: 16px;
                 }
