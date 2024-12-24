@@ -93,9 +93,9 @@ const pageWatcher = (...args: any) => {
         rootReferHandler.render();
 
         if (args.includes('length', -1)) {
-            props.context.tool.referSelection.updateSelectionForDelete(props.page.id);
+            props.context.tool.referSelection?.updateSelectionForDelete(props.page.id);
         } else if (args.includes('offset', -1)) {
-            props.context.tool.referSelection.updateSelectedSelection(props.page.id);
+            props.context.tool.referSelection?.updateSelectedSelection(props.page.id);
         }
     }
 }
@@ -105,7 +105,7 @@ function workspaceWatcher(t: number | string) {
         scaleRenderer.render();
         rootReferHandler.render();
         referUnderContainerRenderer.updateByMatrix();
-        props.context.tool.referSelection.updateSelectedSelection(selected.value.env.id);
+        props.context.tool.referSelection?.updateSelectedSelection(selected.value.env.id);
         referLineSelection.resetHovered();
     }
 }

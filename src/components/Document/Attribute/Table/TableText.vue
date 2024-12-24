@@ -1163,6 +1163,23 @@ onUnmounted(() => {
     })
 
 })
+
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import down_icon from '@/assets/icons/svg/down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import word_space_icon from '@/assets/icons/svg/word-space.svg';
+import row_height_icon from '@/assets/icons/svg/row-height.svg';
+import text_left_icon from '@/assets/icons/svg/text-left.svg';
+import text_center_icon from '@/assets/icons/svg/text-center.svg';
+import text_right_icon from '@/assets/icons/svg/text-right.svg';
+import text_justify_icon from '@/assets/icons/svg/text-justify.svg';
+import add_icon from '@/assets/icons/svg/add.svg';
+import align_top_icon from '@/assets/icons/svg/align-top.svg';
+import align_middle_icon from '@/assets/icons/svg/align-middle.svg';
+import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
+
 </script>
 
 <template>
@@ -1177,7 +1194,7 @@ onUnmounted(() => {
                 <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ fontName }}</span>
                     <div class="down">
-                        <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
+                        <SvgIcon :icon="down_icon" style="width: 12px;height: 12px"/>
                     </div>
                 </div>
                 <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
@@ -1194,7 +1211,7 @@ onUnmounted(() => {
                             @focus="selectSizeValue" @input="handleSize" @blur="setTextSize"
                             @click="(e) => click(e, is_size_select)">
                         <div class="down" @click="onShowSize">
-                            <svg-icon icon-class="down"></svg-icon>
+                            <SvgIcon :icon="down_icon"/>
                         </div>
                     </div>
                     <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
@@ -1202,8 +1219,8 @@ onUnmounted(() => {
                         <div v-for="(item, i) in textSizes" :key="i" @click="selectTextSize(item)"
                             @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
                             <div class="icon">
-                                <svg-icon v-if="sizeSelectIndex === i"
-                                    :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
+                                <SvgIcon v-if="sizeSelectIndex === i"
+                                    :icon="sizeHoverIndex === i ? white_select_icon : page_select_icon"/>
                             </div>
                         </div>
                     </div>
@@ -1212,7 +1229,7 @@ onUnmounted(() => {
             <div class="text-middle">
                 <div class="interval jointly-text" style="margin-right: 8px;">
                     <div @mousedown="(e) => onMouseDown(e, 'row-height')">
-                        <svg-icon icon-class="word-space"></svg-icon>
+                        <SvgIcon :icon="word_space_icon"/>
                     </div>
                     <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="setRowHeight"
                         @input="handleSize" @click="(e) => click(e, is_row_height_select)"
@@ -1220,7 +1237,7 @@ onUnmounted(() => {
                 </div>
                 <div class="interval jointly-text" style="padding-right: 0;">
                     <div @mousedown="(e) => onMouseDown(e, 'char-space')">
-                        <svg-icon icon-class="row-height"></svg-icon>
+                        <SvgIcon :icon="row_height_icon"/>
                     </div>
                     <input type="text" v-model="wordSpace" ref="charSpacing" class="input" @change="setWordSpace"
                         @input="handleSize" @click="(e) => click(e, is_char_space_select)"
@@ -1232,25 +1249,25 @@ onUnmounted(() => {
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'left' }"
                         @click="onSelectLevel(TextHorAlign.Left)">
                         <Tooltip :content="t('attr.align_left')" :offset="15">
-                            <svg-icon icon-class="text-left"></svg-icon>
+                            <SvgIcon :icon="text_left_icon"/>
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'centered' }"
                         @click="onSelectLevel(TextHorAlign.Centered)">
                         <Tooltip :content="t('attr.align_center')" :offset="15">
-                            <svg-icon icon-class="text-center"></svg-icon>
+                            <SvgIcon :icon="text_center_icon"/>
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'right' }"
                         @click="onSelectLevel(TextHorAlign.Right)">
                         <Tooltip :content="t('attr.align_right')" :offset="15">
-                            <svg-icon icon-class="text-right"></svg-icon>
+                            <SvgIcon :icon="text_right_icon"/>
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'natural' }"
                         @click="onSelectLevel(TextHorAlign.Natural)">
                         <Tooltip :content="t('attr.align_the_sides')" :offset="15">
-                            <svg-icon icon-class="text-justify"></svg-icon>
+                            <SvgIcon :icon="text_justify_icon"/>
                         </Tooltip>
                     </i>
                 </div>
@@ -1260,19 +1277,19 @@ onUnmounted(() => {
                     <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'top' }"
                         @click="onSelectVertical(TextVerAlign.Top)">
                         <Tooltip :content="t('attr.align_top')" :offset="15">
-                            <svg-icon icon-class="align-top"></svg-icon>
+                            <SvgIcon :icon="align_top_icon"/>
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'middle' }"
                         @click="onSelectVertical(TextVerAlign.Middle)">
                         <Tooltip :content="t('attr.align_middle')" :offset="15">
-                            <svg-icon icon-class="align-middle"></svg-icon>
+                            <SvgIcon :icon="align_middle_icon"/>
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'bottom' }"
                         @click="onSelectVertical(TextVerAlign.Bottom)">
                         <Tooltip :content="t('attr.align_bottom')" :offset="15">
-                            <svg-icon icon-class="align-bottom"></svg-icon>
+                            <SvgIcon :icon="align_bottom_icon"/>
                         </Tooltip>
                     </i>
                 </div>
@@ -1311,7 +1328,7 @@ onUnmounted(() => {
                         }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
@@ -1323,7 +1340,7 @@ onUnmounted(() => {
         }}
                     </div>
                     <div class="add" @click="addTextColor">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                 </div>
             </div>
@@ -1344,7 +1361,7 @@ onUnmounted(() => {
                         @click="(e) => click(e, is_higligh_alpha_select)" @blur="is_higligh_alpha_select = false" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
-                    <svg-icon class="svg" icon-class="delete"></svg-icon>
+                    <SvgIcon class="svg" :icon="delete"/>
                 </div>
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
@@ -1352,7 +1369,7 @@ onUnmounted(() => {
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="add" @click="addHighlight">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
@@ -1363,7 +1380,7 @@ onUnmounted(() => {
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                 </div>
             </div>
@@ -1394,7 +1411,7 @@ onUnmounted(() => {
         margin-left: -12px;
         border-radius: var(--default-radius);
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
@@ -1415,7 +1432,7 @@ onUnmounted(() => {
             justify-content: space-between;
             align-items: center;
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 overflow: visible !important;
@@ -1528,7 +1545,7 @@ onUnmounted(() => {
                         align-items: center;
                         justify-content: center;
 
-                        >svg {
+                        >img {
                             width: 12px;
                             height: 12px;
                         }
@@ -1570,7 +1587,7 @@ onUnmounted(() => {
                     width: 26px;
                     height: 32px;
 
-                    >svg {
+                    >img {
                         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                         width: 14px;
                         height: 14px;
@@ -1756,7 +1773,7 @@ onUnmounted(() => {
                     border-radius: var(--default-radius);
                     transition: .2s;
 
-                    >svg {
+                    >img {
                         width: 16px;
                         height: 16px;
                     }
@@ -1790,7 +1807,7 @@ onUnmounted(() => {
             margin-left: 5px;
             border-radius: var(--default-radius);
 
-            >svg {
+            >img {
                 height: 16px;
                 width: 16px;
             }
@@ -1817,7 +1834,7 @@ onUnmounted(() => {
     margin-right: 8px;
     box-sizing: border-box;
 
-    >svg {
+    >img {
         width: 12px;
         height: 12px;
     }

@@ -2,10 +2,12 @@ export class FilePicker {
     private _onpick: (v: File) => void;
     private _accept: string;
     private _el: HTMLInputElement | undefined;
+
     constructor(accept: string, onpick: (v: File) => void) {
         this._onpick = onpick;
         this._accept = accept;
     }
+
     private getEl() {
         if (!this._el) {
             this._el = document.createElement('input');
@@ -27,6 +29,8 @@ export class FilePicker {
 
     invoke() {
         this.getEl().click();
+        const __el = this.getEl() as HTMLInputElement;
+        if (__el && __el.value) __el.value = ''
     }
 
     unmount() {

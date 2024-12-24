@@ -204,17 +204,50 @@ const mousedown = (e: MouseEvent) => {
     selectedChild();
 }
 
+import layer_image_icon from '@/assets/icons/svg/layer-image.svg';
+import layer_arrow_icon from '@/assets/icons/svg/layer-arrow.svg'
+import layer_artboard_icon from '@/assets/icons/svg/layer-artboard.svg';
+import layer_contact_icon from '@/assets/icons/svg/layer-contact.svg';
+import layer_cutout_icon from '@/assets/icons/svg/layer-cutout.svg';
+import layer_group_icon from '@/assets/icons/svg/layer-group.svg';
+import layer_line_icon from '@/assets/icons/svg/layer-line.svg';
+import layer_oval_icon from '@/assets/icons/svg/layer-oval.svg';
+import layer_rectangle_icon from '@/assets/icons/svg/layer-rectangle.svg';
+import layer_symbol_ref_icon from '@/assets/icons/svg/layer-symbol-ref.svg';
+import layer_symbol_union_icon from '@/assets/icons/svg/layer-symbol-union.svg';
+import layer_symbol_icon from '@/assets/icons/svg/layer-symbol.svg';
+import layer_table_icon from '@/assets/icons/svg/layer-table.svg';
+import layer_text_icon from '@/assets/icons/svg/layer-text.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
+const icons: {[key: string]: string} = {}
+icons[ShapeType.Text] = layer_text_icon;
+icons[ShapeType.Rectangle] = layer_rectangle_icon;
+icons[ShapeType.Oval] = layer_oval_icon;
+icons[ShapeType.Line] = layer_line_icon;
+icons[ShapeType.Group] = layer_group_icon;
+icons[ShapeType.Path] = layer_arrow_icon;
+icons[ShapeType.Symbol] = layer_symbol_icon;
+icons[ShapeType.SymbolRef] = layer_symbol_ref_icon;
+icons[ShapeType.SymbolUnion] = layer_symbol_union_icon;
+icons[ShapeType.Symbol] = layer_symbol_icon;
+icons[ShapeType.Table] = layer_table_icon;
+icons[ShapeType.Artboard] = layer_artboard_icon;
+icons[ShapeType.Contact] = layer_contact_icon;
+icons[ShapeType.Cutout] = layer_cutout_icon;
+icons[ShapeType.Image] = layer_image_icon;
 
 function icon_class() {
     const shape = props.data.shape;
     if (shape.type === ShapeType.Symbol) {
         if (shape instanceof SymbolUnionShape) {
-            return 'layer-symbol-union';
+            return layer_symbol_union_icon;
         } else {
-            return 'layer-component';
+            return layer_symbol_icon
         }
     } else {
-        return `layer-${shape.type}`;
+        return icons[shape.type];
     }
 }
 
@@ -326,6 +359,12 @@ onUnmounted(() => {
     props.data.context.selection.unwatch(selectedWatcher);
     stop()
 })
+
+import lock_open_icon from '@/assets/icons/svg/lock-open.svg';
+import lock_lock_icon from '@/assets/icons/svg/lock-lock.svg';
+import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
+import eye_closed_icon from '@/assets/icons/svg/eye-closed.svg';
+import locate_icon from '@/assets/icons/svg/locate.svg';
 </script>
 
 <template>
@@ -334,7 +373,7 @@ onUnmounted(() => {
         <div class="item-warp">
             <div class="container-svg" @dblclick="toggleContainer"
                 :class="{ color: !is_component(), stroke: data.shape.type === ShapeType.Oval && is_component(), no_stroke: !is_component() && data.shape.type === ShapeType.Oval }">
-                <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
+                <SvgIcon class="svg" :icon="icon_class()"/>
             </div>
             <div class="text" :class="{ container: true, selected: false }"
                 :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
@@ -345,17 +384,17 @@ onUnmounted(() => {
                     :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                     <div class="tool_lock tool" :class="{ 'visible': lock_status }"
                         @click="(e: MouseEvent) => setLock(e)" v-if="isEdit && !isLable">
-                        <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
-                        <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
+                        <SvgIcon v-if="lock_status === 0" class="svg-open" :icon="lock_open_icon"/>
+                        <SvgIcon v-else-if="lock_status === 1" class="svg" :icon="lock_lock_icon"/>
                         <div class="dot" v-else-if="lock_status === 2"></div>
                     </div>
                     <div class="tool_lock tool" @click="toggleContainer">
-                        <svg-icon class="svg-open" icon-class="locate"></svg-icon>
+                        <SvgIcon class="svg-open" :icon="locate_icon"/>
                     </div>
                     <div class="tool_eye tool" :class="{ 'visible': visible_status }"
                         @click="(e: MouseEvent) => setVisible(e)" v-if="isEdit && !isLable">
-                        <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
-                        <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
+                        <SvgIcon v-if="visible_status === 0" class="svg" :icon="eye_open_icon"/>
+                        <SvgIcon v-else-if="visible_status === 1" class="svg" :icon="eye_closed_icon"/>
                         <div class="dot" v-else-if="visible_status === 2"></div>
                     </div>
                 </div>

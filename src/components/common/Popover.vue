@@ -105,6 +105,10 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
 })
+
+import close_icon from "@/assets/icons/svg/close.svg";
+import SvgIcon from './SvgIcon.vue';
+
 </script>
 
 <template>
@@ -117,7 +121,7 @@ onUnmounted(() => {
             <div class="header">
                 <span class="title">{{ props.title }}</span>
                 <div @click="popoverClose" class="close">
-                    <svg-icon icon-class="close"></svg-icon>
+                    <SvgIcon :icon="close_icon"/>
                 </div>
             </div>
             <div class="body">

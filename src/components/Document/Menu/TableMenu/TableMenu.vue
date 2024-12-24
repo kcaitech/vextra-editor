@@ -122,7 +122,9 @@ const deleteTable = () => {
 function closeLayerSubMenu() {
     isDeleteColumn.value = false;
 }
-
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import down_icon from '@/assets/icons/svg/down.svg';
+import white_down_icon from '@/assets/icons/svg/white-down.svg';
 </script>
 <template>
 <div class="line" v-if="items.has(MenuItemType.DeleteCol) && items.has(MenuItemType.OnlyText)"></div>
@@ -131,7 +133,7 @@ function closeLayerSubMenu() {
      @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'delete')" @mouseleave="isDeleteColumn = false">
     <span>{{ t('table.del_column') }}</span>
     <div class="layer-icon">
-        <svg-icon :icon-class="isDeleteColumn ? 'white-down' : 'down'"></svg-icon>
+        <SvgIcon :icon="isDeleteColumn ? white_down_icon : down_icon"/>
     </div>
     <div class="context_menu" v-if="isDeleteColumn"
          :style="{ top: layerSubMenuPosition.y + 'px', right: layerSubMenuPosition.x + 'px' }">
@@ -154,7 +156,7 @@ function closeLayerSubMenu() {
      @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'split')" @mouseleave="isSplitCell = false">
     <span>{{ t('table.split_cell') }}</span>
     <div class="layer-icon">
-        <svg-icon :icon-class="isSplitCell ? 'white-down' : 'down'"></svg-icon>
+        <SvgIcon :icon="isSplitCell ? white_down_icon : down_icon"/>
     </div>
     <div class="context_menu" v-if="isSplitCell"
          :style="{ top: layerSubMenuPosition.y + 'px', right: layerSubMenuPosition.x + 'px' }">

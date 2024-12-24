@@ -21,7 +21,17 @@ import { DocumentProps } from "./openapi";
 import { IContext } from "@/openapi";
 import { importDocumentFromMDD } from "@/io";
 
+import '@/style/constant.scss'
+import '@/style/app.scss'
+export {i18n_messages as i18n} from '@/i18n';
+
 export * from "./openapi";
+
+export const DocumentVue = _DocumentVue
+export const MobileDocumentVue = _MobileDocumentVue
+export const PreviewVue = _PreviewVue
+
+export const StaticShape = _StaticShape
 
 const t = (i18n as any).global.t;
 
@@ -85,9 +95,3 @@ export async function openDocument(props: DocumentProps) {
 
     return new Context(data, cooprepo, props) as IContext;
 }
-
-export const DocumentVue = _DocumentVue
-export const MobileDocumentVue = _MobileDocumentVue
-export const PreviewVue = _PreviewVue
-
-export const StaticShape = _StaticShape

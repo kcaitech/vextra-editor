@@ -51,6 +51,8 @@ function updateProgress(x: number) {
     }
   }
 }
+import gear_icon from '@/assets/icons/svg/gear.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 
 <template>
@@ -59,7 +61,7 @@ function updateProgress(x: number) {
       :title="t('attr.corner_smoothing')" class="popover">
       <template #trigger>
         <div class="trigger" @click="showMenu">
-          <svg-icon icon-class="gear"></svg-icon>
+          <SvgIcon :icon="gear_icon"/>
         </div>
       </template>
       <template #body>

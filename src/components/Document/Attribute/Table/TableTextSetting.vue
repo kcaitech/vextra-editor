@@ -303,6 +303,15 @@ onUnmounted(() => {
   props.context.workspace.unwatch(workspace_wather);
   shapeWatch();
 })
+
+import gear_icon from '@/assets/icons/svg/gear.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import text_no_list_icon from '@/assets/icons/svg/text-no-list.svg';
+import text_underline_icon from '@/assets/icons/svg/text-underline.svg';
+import text_deleteline_icon from '@/assets/icons/svg/text-deleteline.svg';
+import text_uppercase_icon from '@/assets/icons/svg/text-uppercase.svg';
+import text_lowercase_icon from '@/assets/icons/svg/text-lowercase.svg';
+import text_titlecase_icon from '@/assets/icons/svg/text-titlecase.svg';
 </script>
 
 <template>
@@ -312,7 +321,7 @@ onUnmounted(() => {
       <template #trigger>
         <div class="trigger" @click="showMenu">
           <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
-            <svg-icon icon-class="gear"></svg-icon>
+            <SvgIcon :icon="gear_icon"/>
           </Tooltip>
         </div>
       </template>
@@ -332,12 +341,12 @@ onUnmounted(() => {
             <div class="underline jointly-text">
               <i :class="{ 'jointly-text': true, selected_bgc: !isUnderline }" @click="onUnderlint">
                 <Tooltip :content="t('attr.none_list')" :offset="15">
-                  <svg-icon icon-class="text-no-list"></svg-icon>
+                  <SvgIcon :icon="text_no_list_icon"/>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, selected_bgc: isUnderline }" @click="onUnderlint">
                 <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
-                  <svg-icon icon-class="text-underline"></svg-icon>
+                  <SvgIcon :icon="text_underline_icon"/>
                 </Tooltip>
               </i>
             </div>
@@ -347,12 +356,12 @@ onUnmounted(() => {
             <div class="underline jointly-text">
               <i :class="{ 'jointly-text': true, selected_bgc: !isDeleteline }" @click="onDeleteline">
                 <Tooltip :content="t('attr.none_list')" :offset="15">
-                  <svg-icon icon-class="text-no-list"></svg-icon>
+                  <SvgIcon :icon="text_no_list_icon"/>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, selected_bgc: isDeleteline }" @click="onDeleteline">
                 <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                  <svg-icon icon-class="text-deleteline"></svg-icon>
+                  <SvgIcon :icon="text_deleteline_icon"/>
                 </Tooltip>
               </i>
             </div>
@@ -363,25 +372,25 @@ onUnmounted(() => {
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'none' }"
                 @click="onSelectCase(TextTransformType.None)">
                 <Tooltip :content="t('attr.as_typed')" :offset="15">
-                  <svg-icon icon-class="text-no-list"></svg-icon>
+                    <SvgIcon :icon="text_no_list_icon"/>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'uppercase' }"
                 @click="onSelectCase(TextTransformType.Uppercase)">
                 <Tooltip :content="t('attr.uppercase')" :offset="15">
-                  <svg-icon icon-class="text-uppercase" style="width: 17px;height: 14px"></svg-icon>
+                  <SvgIcon :icon="text_uppercase_icon" style="width: 17px;height: 14px"/>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'lowercase' }"
                 @click="onSelectCase(TextTransformType.Lowercase)">
                 <Tooltip :content="t('attr.lowercase')" :offset="15">
-                  <svg-icon icon-class="text-lowercase" style="width: 14px;height: 14px"></svg-icon>
+                  <SvgIcon :icon="text_lowercase_icon" style="width: 14px;height: 14px"/>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'uppercase-first' }"
                 @click="onSelectCase(TextTransformType.UppercaseFirst)">
                 <Tooltip :content="t('attr.titlecase')" :offset="15">
-                  <svg-icon icon-class="text-titlecase" style="width: 15px;height: 14px"></svg-icon>
+                  <SvgIcon :icon="text_titlecase_icon" style="width: 15px;height: 14px"/>
                 </Tooltip>
               </i>
             </div>

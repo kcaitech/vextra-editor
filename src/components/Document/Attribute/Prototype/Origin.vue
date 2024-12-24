@@ -3,10 +3,10 @@
         <div class="title" @click.stop=createOrigin>
             <div class="text" :class="{ active: prototypestart }">{{ t('prototype.origin_title') }}</div>
             <div v-if="!prototypestart" class="add">
-                <svg-icon icon-class="add"></svg-icon>
+                <SvgIcon :icon="add_icon"/>
             </div>
             <div v-else class="delete" @click.stop=deleteOrigin>
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <div v-if="!prototypestart" class="default">{{ t('prototype.origin_tips') }}</div>
@@ -26,7 +26,9 @@ import { Selection } from '@/context/selection';
 import { ShapeView, PrototypeStartingPoint, PageView, SymbolRefView } from "@kcdesign/data"
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 type Prototypestart = {
     name: string,
@@ -155,7 +157,7 @@ onMounted(() => {
             }
         }
 
-        svg {
+        img {
             width: 16px;
             height: 16px;
         }

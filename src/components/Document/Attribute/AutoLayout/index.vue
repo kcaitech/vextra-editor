@@ -387,6 +387,15 @@ onUnmounted(() => {
         watchedShapes.delete(k);
     })
 });
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import ver_arrow_icon from '@/assets/icons/svg/ver-arrow.svg';
+import hor_arrow_icon from '@/assets/icons/svg/hor-arrow.svg';
+import wrap_arrow_icon from '@/assets/icons/svg/wrap-arrow.svg';
+import white_padding_button_icon from '@/assets/icons/svg/white-padding-button.svg';
+import border_all_icon from '@/assets/icons/svg/border-all.svg';
 </script>
 
 <template>
@@ -394,10 +403,10 @@ onUnmounted(() => {
         <TypeHeader :title="t('autolayout.auto_layout')" class="mt-24" @click="autoLayout" :active="!isActive">
             <template #tool>
                 <div v-if="isActive" class="add" @click.stop="autoLayout">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
                 <div v-else class="add" @click.stop="deleteAutoLayout">
-                    <svg-icon icon-class="delete"></svg-icon>
+                    <SvgIcon :icon="delete_icon"/>
                 </div>
             </template>
         </TypeHeader>
@@ -407,19 +416,19 @@ onUnmounted(() => {
                     <div :class="{ active: autoLayoutDate.stackMode === StackMode.Vertical }"
                         @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Vertical)">
                         <Tooltip :content="t(`autolayout.ver`)">
-                            <svg-icon icon-class="ver-arrow"></svg-icon>
+                            <SvgIcon :icon="ver_arrow_icon"/>
                         </Tooltip>
                     </div>
                     <div @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Horizontal)"
                         :class="{ active: autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap }">
                         <Tooltip :content="t(`autolayout.hor`)">
-                            <svg-icon icon-class="hor-arrow"></svg-icon>
+                            <SvgIcon :icon="hor_arrow_icon"/>
                         </Tooltip>
                     </div>
                     <div :class="{ active: !autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap }"
                         @click="changeLayoutMode(StackWrap.Wrap, StackMode.Horizontal)">
                         <Tooltip :content="t(`autolayout.wrap`)">
-                            <svg-icon icon-class="wrap-arrow"></svg-icon>
+                            <SvgIcon :icon="wrap_arrow_icon"/>
                         </Tooltip>
                     </div>
                 </div>
@@ -486,7 +495,7 @@ onUnmounted(() => {
             <div class="container-right">
                 <Tooltip :content="t(`autolayout.${!unfold ? 'unfold' : 'fold'}`)">
                     <div :class="{ 'padding-active': unfold }" @click="unfold = !unfold">
-                        <svg-icon :icon-class="unfold ? 'white-padding-button' : 'border-all'"></svg-icon>
+                        <SvgIcon :icon="unfold ? white_padding_button_icon : border_all_icon"/>
                     </div>
                 </Tooltip>
             </div>

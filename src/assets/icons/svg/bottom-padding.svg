@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml" data-v-46cf0610="" data-v-a9142392="" width="12"
+    height="12" viewBox="10 10 12 12" version="1.1" preserveAspectRatio="xMinYMin meet"
+    overflow="visible" style="background-color: transparent;">
+    <g style="transform:matrix(1,0,0,1,10,10);">
+        <g clip-path="url(#clippath-artboard-4414)">
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+                overflow="hidden" width="12" height="12" viewBox="0 0 12 12">
+                <clipPath id="clippath-artboard-4414">
+                    <path d="M 0 0 l 12 0 l 0 12 l -12 0 z" clip-rule="evenodd" />
+                </clipPath>
+                <g style="transform:matrix(1,0,0,1,1,11);">
+                    <path
+                        d="M -4.815246323738515e-14 -7.993605777301127e-15 L 9.999999999551969 0.00009465550719589544"
+                        fill="none" stroke="rgb(140,140,140)" stroke-linejoin="miter"
+                        stroke-width="1.2" opacity="1" />
+                </g>
+                <g style="transform:matrix(1,0,0,1,3.5,3.5);">
+                    <path d="M 0 0 L 5 0 L 5 5 L 0 5 L 0 0 Z" fill="none"
+                        stroke="rgba(140,140,140,1)" stroke-linejoin="miter" stroke-width="1.2" />
+                </g>
+            </svg>
+        </g>
+    </g>
+</svg>

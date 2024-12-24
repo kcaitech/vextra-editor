@@ -50,4 +50,6 @@ export interface IContext extends IWatchable {
     get documentInfo(): { name: string };
 
     rename(name: string): void;
+
+    setCustomLoading(show: boolean): void;
 }

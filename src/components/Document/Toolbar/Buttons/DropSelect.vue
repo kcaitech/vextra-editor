@@ -24,7 +24,28 @@ const handleBoolean = (e: MouseEvent) => {
   e.stopPropagation()
   emit('selectBool',props.select, props.bool!)
 }
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
 
+import union_icon from '@/assets/icons/svg/union.svg'
+import subtract_icon from '@/assets/icons/svg/subtract.svg'
+import intersection_icon from '@/assets/icons/svg/intersection.svg'
+import difference_icon from '@/assets/icons/svg/difference.svg'
+
+function boolIcon() {
+    switch (props.select) {
+        case 'union':
+            return union_icon
+        case 'subtract':
+            return subtract_icon
+        case 'intersection':
+            return intersection_icon
+        case 'difference':
+            return difference_icon
+        default:
+            return union_icon
+    }
+}
 </script>
 <template>
   <!-- cursor -->
@@ -32,10 +53,10 @@ const handleBoolean = (e: MouseEvent) => {
       <div style="display: flex; align-items: center;">
 <!--        <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>-->
           <div class="choose">
-              <svg-icon icon-class="white-select" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"></svg-icon>
+              <SvgIcon :icon="white_select_icon" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"/>
           </div>
         <div class="svg-container">
-          <svg-icon :icon-class="select"></svg-icon>
+          <SvgIcon :icon="boolIcon()"/>
         </div>
         <div class="select">{{ t(`home.${props.lg}`) }}</div>
       </div>
@@ -46,10 +67,10 @@ const handleBoolean = (e: MouseEvent) => {
       <div style="display: flex; align-items: center;">
 <!--        <div class="choose" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden'  }"></div>-->
           <div class="choose">
-              <svg-icon icon-class="white-select" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden' }"></svg-icon>
+              <SvgIcon :icon="white_select_icon" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden' }"/>
           </div>
         <div class="svg-container">
-          <svg-icon :icon-class="select"></svg-icon>
+          <SvgIcon :icon="boolIcon()"/>
         </div>
         <div class="select">{{ t(`bool.${props.lg}`) }}</div>
       </div>
@@ -103,7 +124,7 @@ const handleBoolean = (e: MouseEvent) => {
         margin-left: 8px;
         margin-right: 8px;
 
-    svg {
+        img {
       width: 100%;
       height: 100%;
     }

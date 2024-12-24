@@ -4,6 +4,7 @@ import {} from 'vue';
 import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 const { t } = useI18n()
 const props = defineProps<{
     active: boolean,
@@ -13,13 +14,14 @@ const emit = defineEmits<{
 }>();
 function select(action: string) {    
     emit('select', action);
-} 
+}
+import pattern_rectangle_icon from '@/assets/icons/svg/pattern-rectangle.svg';
 </script>
 <template>
   <Tooltip :content="`${t('home.rect')} &nbsp;&nbsp; R`">
     <ToolButton ref="button" @click="() => {select(Action.AddRect)}" :selected="props.active">
       <div class="svg-container">
-        <svg-icon icon-class="pattern-rectangle"></svg-icon>
+        <SvgIcon :icon="pattern_rectangle_icon"/>
       </div>
     </ToolButton>
   </Tooltip>
@@ -31,7 +33,7 @@ function select(action: string) {
   display: flex;
   justify-content: center;
   align-items: center;
-  > svg {
+  > img {
     width: 18px;
     height: 18px;
   }

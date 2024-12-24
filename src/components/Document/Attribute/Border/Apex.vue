@@ -9,6 +9,7 @@ import { Context } from '@/context';
 import { hidden_selection } from '@/utils/content';
 import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_Apex, get_actions_border_endpoint, get_actions_border_exchange } from '@/utils/shape_style';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context
     shapes: ShapeView[]
@@ -193,6 +194,8 @@ onUnmounted(() => {
     stop3();
     stop4();
 });
+
+import exchange_icon from '@/assets/icons/svg/exchange.svg';
 </script>
 <template>
     <div class="apex-select-wrap" v-if="!shaow_apex">
@@ -206,7 +209,7 @@ onUnmounted(() => {
         </div>
 
         <div class="change" @click="exchange">
-            <svg-icon icon-class="exchange"></svg-icon>
+            <SvgIcon :icon="exchange_icon"/>
         </div>
     </div>
     <div class="apex-select-wrap" v-if="shaow_apex">

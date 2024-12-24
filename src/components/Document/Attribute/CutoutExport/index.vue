@@ -28,6 +28,7 @@ import {
 } from '@/utils/shape_style';
 import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getSvgImageData } from '@/utils/image';
 import PageCard from "@/components/common/PageCard.vue";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 
@@ -507,6 +508,9 @@ onUnmounted(() => {
     page_unwatcher();
 });
 
+import export_menu_icon from "@/assets/icons/svg/export-menu.svg"
+import add_icon from "@/assets/icons/svg/add.svg"
+
 </script>
 
 <template>
@@ -516,10 +520,10 @@ onUnmounted(() => {
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall" :style="{ backgroundColor: isPreinstall ? '#EBEBEB' : '' }"
                     @click.stop="showPreinstall">
-                    <svg-icon icon-class="export-menu"></svg-icon>
+                    <SvgIcon :icon="export_menu_icon"/>
                 </div>
                 <div class="cutout-icon" @click.stop="preinstall('default')">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
                 </PreinstallSelect>

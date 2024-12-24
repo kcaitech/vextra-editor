@@ -5,6 +5,7 @@ import { useFrame, useCutout } from "@/components/Document/Creator/execute";
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Action, Tool } from '@/context/tool';
 import { XY } from "@/context/selection";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface Props {
   context: Context;
@@ -25,11 +26,11 @@ const popoverXY = ref<XY>({ x: 0, y: 0 });
 const pattern = computed<string>(() => {
   switch (currentTool.value) {
     case Action.AddFrame:
-      return 'frame';
+      return frame_icon;
     case Action.AddCutout:
-      return 'cutout';
+      return cutout_icon;
     default:
-      return 'frame';
+      return frame_icon;
   }
 });
 
@@ -127,6 +128,10 @@ onUnmounted(() => {
   stop();
   document.removeEventListener('click', blur);
 })
+import white_down_icon from '@/assets/icons/svg/white-down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import frame_icon from '@/assets/icons/svg/frame.svg';
+import cutout_icon from '@/assets/icons/svg/cutout.svg';
 
 </script>
 
@@ -135,10 +140,10 @@ onUnmounted(() => {
     <div :class="{ 'frame-button': true, 'frame-button-selected': selected, active: popover }" @mouseenter.stop="enter"
       @mouseleave.stop="leave">
       <div class="svg-container" @click="shot">
-        <svg-icon :icon-class="pattern"/>
+        <SvgIcon :icon="pattern"/>
       </div>
         <div class="tool-frame-menu-trigger" @click="showMenu">
-            <svg-icon icon-class="white-down"/>
+            <SvgIcon :icon="white_down_icon"/>
       </div>
     </div>
   </el-tooltip>
@@ -147,10 +152,10 @@ onUnmounted(() => {
     <!--容器-->
     <div class="item" @click="() => { useFrame(context);popover = false; }">
       <div v-if="currentTool === Action.AddFrame" class="check">
-        <svg-icon icon-class="white-select"></svg-icon>
+        <SvgIcon :icon="white_select_icon"/>
       </div>
       <div class="desc">
-        <svg-icon icon-class="frame"></svg-icon>
+        <SvgIcon :icon="frame_icon"/>
         <span>{{ t('shape.artboard') }}</span>
       </div>
       <div class="shortKey">F</div>
@@ -158,10 +163,10 @@ onUnmounted(() => {
     <!--切图-->
     <div class="item" @click="() => { useCutout(context);popover = false;  }">
       <div v-if="currentTool === Action.AddCutout" class="check">
-        <svg-icon icon-class="white-select"></svg-icon>
+        <SvgIcon :icon="white_select_icon"/>
       </div>
       <div class="desc">
-        <svg-icon icon-class="cutout"></svg-icon>
+        <SvgIcon :icon="cutout_icon"/>
         <span>{{ t('cutoutExport.cutout') }}</span>
       </div>
       <div class="shortKey">S</div>
@@ -183,7 +188,7 @@ onUnmounted(() => {
   padding: 6px 6px 6px 6px;
   box-sizing: border-box;
 
-  >svg {
+  >img {
     width: 18px;
     height: 18px;
   }
@@ -206,7 +211,7 @@ onUnmounted(() => {
     flex-direction: row-reverse;
     height: 100%;
 
-    >svg {
+    >img {
       width: 18px;
       height: 18px;
     }
@@ -219,7 +224,7 @@ onUnmounted(() => {
     align-items: center;
     height: 100%;
 
-    >svg {
+    >img {
       width: 12px;
       height: 12px;
       transition: 0.2s;
@@ -227,7 +232,7 @@ onUnmounted(() => {
   }
 
   .tool-frame-menu-trigger:hover {
-    >svg {
+    >img {
       transform: translateY(2px);
     }
   }
@@ -275,7 +280,7 @@ onUnmounted(() => {
       display: flex;
       align-items: center;
 
-      >svg {
+      >img {
         width: 12px;
         height: 12px;
       }
@@ -286,7 +291,7 @@ onUnmounted(() => {
       align-items: center;
       justify-content: space-between;
 
-      >svg {
+      >img {
         width: 14px;
         height: 14px;
       }

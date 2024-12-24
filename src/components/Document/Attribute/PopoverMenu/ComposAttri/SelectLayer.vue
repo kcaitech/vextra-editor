@@ -110,6 +110,11 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener('mouseup', handleClickOutside);
 })
+
+import close_icon from '@/assets/icons/svg/close.svg';
+import triangle_icon from '@/assets/icons/svg/triangle-icon.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 
 <template>
@@ -121,7 +126,7 @@ onUnmounted(() => {
                 }}</span>
         <div class="close">
             <div class="toggle_list" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"/>
             </div>
         </div>
     </div>
@@ -133,8 +138,8 @@ onUnmounted(() => {
                 <template v-for="(item, i) in selectList" :key="i">
                     <div class="collapse-title" @click="toggle(i)" v-if="selectList.length > 1" :reflush="reflush">
                         <div class="shrink">
-                            <svg-icon icon-class="triangle-icon"
-                                      :style="{ transform: `rotate(${!unfold.has(i) ? '-90deg' : '0deg'})` }"></svg-icon>
+                            <SvgIcon :icon="triangle_icon"
+                                      :style="{ transform: `rotate(${!unfold.has(i) ? '-90deg' : '0deg'})` }"/>
                         </div>
                         <span>{{ item.state }}</span>
                     </div>

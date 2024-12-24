@@ -86,6 +86,9 @@ onUnmounted(() => {
     stop1();
     stop2();
 });
+
+import right_icon from '@/assets/icons/svg/right.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 <template>
 <div class="editor-layout-wrapper">
@@ -106,7 +109,7 @@ onUnmounted(() => {
                  @mouseleave="mouseleave('left')"
                  @mousedown.stop="() => context.layout.left()"
             >
-                <svg-icon icon-class="right" :style="layout.left ? 'transform: rotate(180deg);': ''"/>
+                <SvgIcon :icon="right_icon" :style="layout.left ? 'transform: rotate(180deg);': ''"/>
             </div>
             <slot name="center"/>
             <div v-if="layout.rightTrigger" class="trigger right-d"
@@ -115,7 +118,7 @@ onUnmounted(() => {
                  @mouseleave="mouseleave('right')"
                  @mousedown.stop="() => context.layout.right()"
             >
-                <svg-icon icon-class="right" :style="layout.right ? '': 'transform: rotate(180deg);'"/>
+                <SvgIcon :icon="right_icon" :style="layout.right ? '': 'transform: rotate(180deg);'"/>
             </div>
         </div>
         <div v-if="layout.right" class="right"

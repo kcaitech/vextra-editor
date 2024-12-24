@@ -338,20 +338,29 @@ onUnmounted(() => {
         path_shape.unwatch(__update);
     }
 })
+
+import x_icon from "@/assets/icons/svg/X.svg";
+import y_icon from "@/assets/icons/svg/Y.svg";
+import radius_icon from "@/assets/icons/svg/radius.svg";
+import straight_icon from "@/assets/icons/svg/straight.svg";
+import mirrored_icon from "@/assets/icons/svg/mirrored.svg";
+import asymmetric_icon from "@/assets/icons/svg/asymmetric.svg";
+import disconnected_icon from "@/assets/icons/svg/disconnected.svg";
+
 </script>
 <template>
     <div class="table">
         <div class="tr">
-            <MossInput icon="X" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
+            <MossInput :icon="x_icon" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
                 @dragstart="dragstart" @dragging="draggingX" @dragend="dragend">
             </MossInput>
-            <MossInput icon="Y" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
+            <MossInput :icon="y_icon" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
                 @dragstart="dragstart" @dragging="draggingY" @dragend="dragend">
             </MossInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <div class="tr">
-            <MossInput icon="radius" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
+            <MossInput :icon="radius_icon" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
                 @dragstart="dragstart" @dragging="draggingR" @dragend="dragend">
             </MossInput>
         </div>
@@ -360,25 +369,25 @@ onUnmounted(() => {
                 <Tooltip :content="t('attr.right_angle')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Straight)"
                         :class="{ item: true, active: curve_mode === CurveMode.Straight }">
-                        <svg-icon icon-class="straight"></svg-icon>
+                        <SvgIcon :icon="straight_icon"/>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.completely_symmetrical')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Mirrored)"
                         :class="{ item: true, active: curve_mode === CurveMode.Mirrored }">
-                        <svg-icon icon-class="mirrored"></svg-icon>
+                        <SvgIcon :icon="mirrored_icon"/>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.asymmetric')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Asymmetric)"
                         :class="{ item: true, active: curve_mode === CurveMode.Asymmetric }">
-                        <svg-icon icon-class="asymmetric"></svg-icon>
+                        <SvgIcon :icon="asymmetric_icon"/>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.angular_symmetry')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Disconnected)"
                         :class="{ item: true, active: curve_mode === CurveMode.Disconnected }">
-                        <svg-icon icon-class="disconnected"></svg-icon>
+                        <SvgIcon :icon="disconnected_icon"/>
                     </div>
                 </Tooltip>
             </div>

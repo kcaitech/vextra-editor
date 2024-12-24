@@ -15,12 +15,14 @@ const emit = defineEmits<{
 function select(action: string) {
     emit('select', action);
 }
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import pattern_line_icon from '@/assets/icons/svg/pattern-line.svg';
 </script>
 <template>
 <Tooltip :content="`${t('shape.line')} &nbsp;&nbsp; L`">
     <ToolButton ref="button" @click="() => {select(Action.AddLine)}" :selected="props.active">
         <div class="svg-container">
-            <svg-icon icon-class="pattern-line"></svg-icon>
+            <SvgIcon :icon="pattern_line_icon"/>
         </div>
     </ToolButton>
 </Tooltip>
@@ -34,7 +36,7 @@ function select(action: string) {
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

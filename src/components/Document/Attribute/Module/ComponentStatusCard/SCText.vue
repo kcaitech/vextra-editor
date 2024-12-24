@@ -85,6 +85,11 @@ const get_text = () => {
     default_value.value = props.variable.value.getText(0, Infinity).slice(0, -1);
 }
 
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import layer_text_icon from '@/assets/icons/svg/layer-text.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
 </script>
 <template>
     <div v-if="props.variable.type === VariableType.Text" class="module_attr_item" ref="card_ref">
@@ -92,7 +97,7 @@ const get_text = () => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="layer-text"></svg-icon>
+                        <SvgIcon :icon="layer_text_icon"/>
                     </div>
                     <div class="name">
                         <span style="width: 35%;">{{ props.variable.name }}</span>
@@ -101,7 +106,7 @@ const get_text = () => {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px"

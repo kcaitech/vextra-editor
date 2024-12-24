@@ -46,7 +46,9 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    "src/**/*.worker.ts"
+    "src/**/*.worker.ts",
+    "client/**/*.ts",
+    "client/**/*.vue"
   ],
   "exclude": [
     "node_modules"

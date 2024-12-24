@@ -31,7 +31,7 @@ export class ReferUnderContainerRenderer {
         const ctx = this.m_context;
         const referSelection = ctx.tool.referSelection;
 
-        if ((args && args.includes('guides') && args.includes('length', -1))) {
+        if (referSelection && (args && args.includes('guides') && args.includes('length', -1))) {
             referSelection.updateSelectionForDelete(id);
             return;
         }
@@ -65,7 +65,7 @@ export class ReferUnderContainerRenderer {
         //     return;
         // }
 
-        referSelection.updateSelectedSelection(id);
+        referSelection?.updateSelectedSelection(id);
     }
 
     /**

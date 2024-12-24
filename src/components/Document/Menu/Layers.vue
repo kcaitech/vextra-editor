@@ -2,6 +2,7 @@
 import { Shape, ShapeView } from "@kcdesign/data";
 import { computed, ref } from 'vue';
 import { Context } from '@/context'
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 interface Props {
     context: Context,
@@ -29,14 +30,17 @@ function mouseout() {
     props.context.selection.unHoverShape();
     hoverItem.value = '';
 }
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+
 </script>
 <template>
 <div class="items-wrap">
     <div class="item" v-for="shape in props.layers" :key="shape.id" @click="select(shape)"
          @mouseenter="() => mouseenter(shape)" @mouseleave="mouseout">
         <div>
-            <svg-icon :icon-class="hoverItem === shape.id ? 'white-select' : 'page-select'"
-                      v-if="selectedShapes.find(i => i.id === shape.id)"></svg-icon>
+            <SvgIcon :icon="hoverItem === shape.id ? white_select_icon : page_select_icon"
+                      v-if="selectedShapes.find(i => i.id === shape.id)"/>
         </div>
         <span :style="{ marginLeft: selectedShapes ? '8px' : '20px' }">{{ shape.name }}</span>
     </div>

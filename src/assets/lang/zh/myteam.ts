@@ -44,7 +44,7 @@ export const Createteam = {
     confirm: '确定',
     cancel: '取消',
 
-    joinprojecttipsA: '申请加入项目',
+    joinprojecttipsA: '申请加入项目：',
     joinprojecttipsB: '加入项目后，可访问该项目中的所有文件、资源',
     joinprojecttipsC: '已发送申请，',
     joinprojecttipsC1: '即将进入应用首页，待审批通过后，可查看该项目内容',

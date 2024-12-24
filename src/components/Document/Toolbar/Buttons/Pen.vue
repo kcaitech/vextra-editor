@@ -42,16 +42,20 @@ function onMenuBlur() {
     clearTimeout(timer)
   }, 100)
 }
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import pen_icon from '@/assets/icons/svg/pen.svg';
+import white_down_icon from '@/assets/icons/svg/white-down.svg';
+
 </script>
 
 <template>
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible"></div>
   <ToolButton ref="button">
     <div class="svg-container" title="Pen">
-      <svg-icon icon-class="pen"></svg-icon>
+      <SvgIcon :icon="pen_icon"/>
     </div>
     <div class="menu" @click="showMenu">
-      <svg-icon icon-class="white-down"></svg-icon>
+      <SvgIcon :icon="white_down_icon"/>
     </div>
   </ToolButton>
 </template>
@@ -64,7 +68,7 @@ function onMenuBlur() {
   justify-content: center;
   align-items: center;
   color: #ffffff;
-  > svg {
+  > img {
     width: 18px;
     height: 18px;
   }

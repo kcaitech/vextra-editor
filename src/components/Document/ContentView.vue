@@ -334,7 +334,7 @@ function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
         down = true;
         setMousedownXY(e);
-        props.context.tool.referSelection.resetSelected();
+        props.context.tool.referSelection?.resetSelected();
         document.addEventListener("mousemove", select);
         document.addEventListener("mouseup", up);
     } else if (e.button === 2) { // 右键按下，右键菜单处理

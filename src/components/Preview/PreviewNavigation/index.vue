@@ -6,6 +6,7 @@ import Sash from "@/components/common/Sash.vue";
 import { PageView } from '@kcdesign/data';
 import ShapeList from "./PreviewShapeList.vue";
 import { Navi } from "@/context/navigate";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const props = defineProps<{ context: Context, page: PageView, leftTriggleVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 const i_height = 119;
@@ -67,6 +68,9 @@ onUnmounted(() => {
     observer.disconnect();
     props.context.navi.unwatch(navi_watcher);
 })
+
+import left_icon from '@/assets/icons/svg/left.svg';
+import right_icon from '@/assets/icons/svg/right.svg';
 </script>
 
 <template>
@@ -82,8 +86,8 @@ onUnmounted(() => {
         </div>
         <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
             :style="{ opacity: showLeft ? 1 : 0.6 }">
-            <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
-            <svg-icon v-else class="svg" icon-class="right"></svg-icon>
+            <SvgIcon v-if="showLeft" class="svg" :icon="left_icon"/>
+            <SvgIcon v-else class="svg" :icon="right_icon"/>
         </div>
     </div>
 </template>

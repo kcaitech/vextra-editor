@@ -176,6 +176,12 @@ onUnmounted(() => {
     watchedShapes.forEach(i => i.unwatch(watcher));
     watchedShapes.clear();
 });
+
+import add_icon from '@/assets/icons/svg/add.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 
 <template>
@@ -183,7 +189,7 @@ onUnmounted(() => {
     <TypeHeader :title="t('shadow.shadow_stting')" class="mt-24" @click="first" :active="!!shadows.length">
         <template #tool>
             <div class="add" @click.stop="addShadow">
-                <svg-icon icon-class="add"></svg-icon>
+                <SvgIcon :icon="add_icon"/>
             </div>
         </template>
     </TypeHeader>
@@ -193,7 +199,7 @@ onUnmounted(() => {
     <div class="shadows-container" v-else-if="!mixed && shadows.length">
         <div class="shadow" v-for="(s, idx) in shadows" :key="s.id">
             <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
+                <SvgIcon v-if="s.shadow.isEnabled" :icon="select_icon"/>
             </div>
             <div class="shadow_posi">
                 <ShadowPositionItem :context="context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
@@ -204,7 +210,7 @@ onUnmounted(() => {
                               :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
             </div>
             <div class="delete" @click="deleteFill(idx)">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
     </div>
@@ -230,7 +236,7 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > svg {
+        > img {
             width: 16px;
             height: 16px;
         }
@@ -269,7 +275,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                > svg {
+                > img {
                     width: 60%;
                     height: 60%;
                 }
@@ -304,7 +310,7 @@ onUnmounted(() => {
                 border-radius: var(--default-radius);
                 transition: .2s;
 
-                > svg {
+                > img {
                     width: 16px;
                     height: 16px;
                 }

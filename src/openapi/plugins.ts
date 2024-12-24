@@ -48,8 +48,17 @@ export type PluginLocate =
 
 export interface IPlugin {
     get locate(): PluginLocate,
+    /**
+     * default end
+     */
     readonly align?: 'begin' | 'end',
+    /**
+     * pass to component
+     */
     get params(): any,
+    /**
+     * vue component
+     */
     get component(): any
 }
 

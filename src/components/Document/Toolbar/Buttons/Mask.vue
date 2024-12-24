@@ -34,6 +34,10 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(statusUpdater);
 });
+
+import pattern_mask_icon from '@/assets/icons/svg/pattern-mask.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 
 <template>
@@ -52,7 +56,7 @@ onUnmounted(() => {
         @click="mask"
     >
         <div class="svg-container" :style="{opacity: disabled ? 1 : 0.4}">
-            <svg-icon icon-class="pattern-mask"/>
+            <SvgIcon :icon="pattern_mask_icon"/>
         </div>
     </ToolButton>
 </el-tooltip>
@@ -68,7 +72,7 @@ onUnmounted(() => {
 
     transition: 0.1s;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

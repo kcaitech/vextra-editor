@@ -69,7 +69,7 @@ export class ReferLineHandler extends TransformHandler {
 
             // 默认在page下建立新参考线
             this.m_index = this.api.create(this.m_axis, offset);
-            this.context.tool.referSelection.modifyHoveredIndex(this.page, this.m_index, this.m_axis);
+            this.context.tool.referSelection?.modifyHoveredIndex(this.page, this.m_index, this.m_axis);
         }
 
         this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
@@ -279,7 +279,7 @@ export class ReferLineHandler extends TransformHandler {
         this.m_current_env = result.env;
         this.m_index = result.index;
         // console.log('__migrate__', result.env.name, result.index);
-        this.context.tool.referSelection.modifyHoveredIndex(result.env, result.index, this.m_axis);
+        this.context.tool.referSelection?.modifyHoveredIndex(result.env, result.index, this.m_axis);
 
         this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
     }

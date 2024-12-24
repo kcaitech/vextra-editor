@@ -15,13 +15,15 @@ const emit = defineEmits<{
 function select(action: string) {
     emit('select', action);
 }
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import clip_tool_icon from '@/assets/icons/svg/clip-tool.svg';
 </script>
 <template>
     <Tooltip :content="t('shape.clip')">
         <ToolButton ref="button" @click="() => {select(Action.PathClip)}" :selected="props.active" :width="32" :height="32"
                     style="width: 32px !important">
             <div class="svg-container">
-                <svg-icon icon-class="clip-tool"></svg-icon>
+                <SvgIcon :icon="clip_tool_icon"/>
             </div>
         </ToolButton>
     </Tooltip>
@@ -35,7 +37,7 @@ function select(action: string) {
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }
