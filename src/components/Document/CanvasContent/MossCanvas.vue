@@ -40,13 +40,13 @@ function register() {
 
 onMounted(() => {
     register();
-    props.context.setOnLoaded(() => {
+    // props.context.setOnLoaded(() => {
         const dpr = Math.ceil(window.devicePixelRatio || 1);
         props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
         props.params.data.m_ctx.setReLayout(props.params.data);
         props.params.data.m_ctx.setDirty(props.params.data);
         props.params.data.render();
-    })
+    // })
 
     // dev config
     document.addEventListener("keydown", (e) => {
