@@ -1191,7 +1191,7 @@ const positoSelected = () => {
         width: 100%;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 5px;
 
         &:nth-child(n+2) {
             margin-top: 6px;
@@ -1310,7 +1310,7 @@ const positoSelected = () => {
         display: flex;
         align-items: center;
         height: 32px;
-        gap: 6px;
+        gap: 5px;
         margin-left: 19px;
 
         >.select {

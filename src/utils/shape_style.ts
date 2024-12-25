@@ -335,8 +335,10 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
         if (len > 0 && styleborders.cornerType !== border.cornerType) {
             border.cornerType = 'mixed';
         }
-        if (len > 0 && styleborders.borderStyle !== border.borderStyle) {
-            border.borderStyle = 'mixed';
+        if (len > 0 && typeof border.borderStyle !== 'string' &&
+            styleborders.borderStyle.gap !== border.borderStyle.gap &&
+            styleborders.borderStyle.length !== border.borderStyle.length) {
+            border.borderStyle = 'mixed'; 
         }
         const sideStr = getDideStr(styleborders.sideSetting, border.sideSetting);
         if (len > 0 && !sideStr) {
@@ -373,7 +375,6 @@ const getDideStr = (side: BorderSideSetting, v: BorderSideSetting | string) => {
     if (typeof v === 'string') return false;
     const str = [
         side.sideType,
-
         side.thicknessTop,
         side.thicknessRight,
         side.thicknessBottom,

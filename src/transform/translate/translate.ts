@@ -932,6 +932,7 @@ export class TranslateHandler extends TransformHandler {
     _tidyUp() {
         if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
             const algin = this.context.selection.tidyUpAlgin;
+            if (this.m_adjusted_shape_rows.length === 0) this.m_adjusted_shape_rows = [...this.m_shape_rows];
             (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, algin, this.tidy_up_start);
         }
     }
