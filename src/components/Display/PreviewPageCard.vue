@@ -84,11 +84,14 @@ const setInnerTransform = (shapes: ShapeView[]) => {
     if (!shapes.length) return;
 
     const innerTrans = props.context.preview.innerTransform;
+    const fixedTrans = props.context.preview.fixedTransform;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shape instanceof ArtboradView) {
             const transform = innerTrans.get(shape.id) || new TransformRaw();
+            const fixed_transform = fixedTrans.get(shape.id) || new TransformRaw();
             shape.initInnerTransform(transform);
+            shape.setFixedTransform(fixed_transform);
         }
         const children = shape.childs || [];
         if (shape.type === ShapeType.Table) {
