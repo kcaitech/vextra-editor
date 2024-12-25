@@ -821,7 +821,8 @@ async function onMouseDown(e: MouseEvent) {
     const table = props.context.tableSelection;
     pointX.value = e.clientX
     pointY.value = e.clientY
-    if (borderThickness.value && isNaN(Number(borderThickness.value))) return;
+    
+    if (borderThickness.value && isNaN(Number(borderThickness.value.value))) return;
 
     const el = e.target as HTMLElement
     if (!document.pointerLockElement) {
@@ -873,8 +874,8 @@ function onMouseMove(e: MouseEvent) {
     if (!page || shapes.length < 1) return;
     const shape = shapes[0];
     const table = props.context.tableSelection;
-    if (borderThickness.value && typeof borderData.value.sideSetting === 'number') {
-        let thickness = (getSideThickness(borderData.value.sideSetting) || 0) + e.movementX;
+    if (borderThickness.value && typeof borderData.value.sideSetting !== 'string') {
+        let thickness = (getSideThickness(borderData.value.sideSetting as BorderSideSetting) || 0) + e.movementX;
         if (thickness > 300) thickness = 300;
         if (shapes.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
             bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness)
