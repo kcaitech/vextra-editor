@@ -956,7 +956,7 @@ export class PathEditor extends TransformHandler {
 
         const name = `${this.context.workspace.t('shape.path')} ${count}`;
 
-        const previousPathStyle = this.path.previousPathStyle?.borders.length ? this.path.previousPathStyle : undefined;
+        const previousPathStyle = this.path.previousPathStyle?.borders.strokePaints.length ? this.path.previousPathStyle : undefined;
 
         const _vec = (this.asyncApiCaller as PathModifier).createVec(name, frame, env as GroupShapeView, previousPathStyle);
 

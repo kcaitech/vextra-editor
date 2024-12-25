@@ -1,5 +1,6 @@
 import {
     BatchAction,
+    BatchAction2,
     Border,
     BorderSideSetting, PageView,
     Shape,
@@ -80,24 +81,24 @@ export const getSideInfo = (border: Border, type: SideType) => {
     }
 }
 
-export function get_actions_border_side_info(shapes: ShapeView[], index: number, info: BorderSideSetting) {
-    const actions: BatchAction[] = [];
+export function get_actions_border_side_info(shapes: ShapeView[], info: BorderSideSetting) {
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = info;
         const data = new BorderSideSetting(sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
-        actions.push({ target: (shapes[i]), index, value: data });
+        actions.push({ target: (shapes[i]), value: data });
     }
     return actions;
 }
 
-export function get_borders_side_thickness(shapes: ShapeView[], index: number) {
-    const styleborders = shapes[0].getBorders() || [];
-    const b = styleborders[index].sideSetting;
+export function get_borders_side_thickness(shapes: ShapeView[]) {
+    const styleborders = shapes[0].getBorders();
+    const b = styleborders.sideSetting;
     let side: (number | false)[] = [b.thicknessTop, b.thicknessRight, b.thicknessBottom, b.thicknessLeft];
     for (let i = 1; i < shapes.length; i++) {
         const borders = shapes[i].getBorders() || [];
-        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders[index].sideSetting;
+        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders.sideSetting;
         if (b.thicknessTop !== thicknessTop) side[0] = false;
         if (b.thicknessRight !== thicknessRight) side[1] = false;
         if (b.thicknessBottom !== thicknessBottom) side[2] = false;

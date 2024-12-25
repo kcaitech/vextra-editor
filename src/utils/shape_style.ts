@@ -37,7 +37,9 @@ import {
     Point2D,
     ImageScaleMode,
     PaintFilter,
-    PatternTransform
+    PatternTransform,
+    StrokePaint,
+    BorderSideSetting
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 
@@ -46,9 +48,15 @@ interface FillItem {
     fill: Fill
 }
 
-interface BorderItem {
-    id: number,
-    border: Border
+interface StrokePaintItem {
+    id: number
+    strokePaint: StrokePaint
+}
+export interface BorderData {
+    position: BorderPosition | string
+    cornerType: CornerType | string
+    borderStyle: BorderStyle | string
+    sideSetting: BorderSideSetting | string
 }
 
 interface ShadowItem {
@@ -268,77 +276,126 @@ export function get_actions_fill_delete(shapes: ShapeView[], index: number) {
 }
 
 // borders
-export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mixed' {
-    if (shapes.length === 0) return [];
-    const borders: BorderItem[] = [];
+const initBorder = {
+    position: BorderPosition.Center,
+    cornerType: CornerType.Miter,
+    borderStyle: new BorderStyle(0, 0),
+    sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
+}
+export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderData, stroke_paints: StrokePaintItem[] | 'mixed' } {
+    if (shapes.length === 0) return { border: initBorder, stroke_paints: [] };
+    const strokePaints: StrokePaintItem[] = [];
+
     const shape = shapes[0];
-    const styleborders = shape.getBorders() || [];
+    let styleborders1 = shape.getBorders();
+    let s = 0;
+    while (!styleborders1.strokePaints && s < shapes.length) {
+        styleborders1 = shapes[s].getBorders();
+        s++;
+    }
     const compare_str: string[] = [];
     const has_g_str: string[] = [];
-    for (let i = 0, len = styleborders.length; i < len; i++) {
-        const border = styleborders[i];
-        const b = { id: i, border };
-        borders.push(b);
+    const border: BorderData = {
+        position: styleborders1.position,
+        cornerType: styleborders1.cornerType,
+        borderStyle: styleborders1.borderStyle,
+        sideSetting: styleborders1.sideSetting
+    }
+    for (let i = 0, len = styleborders1.strokePaints.length; i < len; i++) {
+        const strokePaint = styleborders1.strokePaints[i];
+        const b = { id: i, strokePaint };
+        strokePaints.push(b);
         const str = [
-            border.isEnabled,
-            border.color.red,
-            border.color.green,
-            border.color.blue,
-            border.color.alpha,
-            border.borderStyle.gap,
-            border.borderStyle.length,
-            border.thickness,
-            border.position,
-            border.fillType
+            strokePaint.isEnabled,
+            strokePaint.color.red,
+            strokePaint.color.green,
+            strokePaint.color.blue,
+            strokePaint.color.alpha,
+            strokePaint.fillType
         ].join('-');
-        if (border.gradient) {
-            const g_str = get_gradient_str(border.gradient);
+        if (strokePaint.gradient) {
+            const g_str = get_gradient_str(strokePaint.gradient);
             has_g_str.push(g_str);
         } else {
             has_g_str.push('undefined');
         }
         compare_str.push(str);
     }
+    const result: any = { border, stroke_paints: strokePaints };
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shapes[i].type === ShapeType.Cutout) continue;
         const styleborders = shape.getBorders();
-        const len = styleborders.length;
-        if (len !== borders.length) return 'mixed';
-        const s_bs = styleborders;
+        const len = styleborders.strokePaints.length;
+        const s_bs = styleborders.strokePaints;
+
+        if (len > 0 && styleborders.position !== border.position) {
+            border.position = 'mixed';
+        }
+        if (len > 0 && styleborders.cornerType !== border.cornerType) {
+            border.cornerType = 'mixed';
+        }
+        if (len > 0 && styleborders.borderStyle !== border.borderStyle) {
+            border.borderStyle = 'mixed';
+        }
+        const sideStr = getDideStr(styleborders.sideSetting, border.sideSetting);
+        if (len > 0 && !sideStr) {
+            border.sideSetting = 'mixed';
+        }
+        if (len !== strokePaints.length) {
+            result.stroke_paints = 'mixed';
+            continue;
+        };
         for (let j = 0; j < len; j++) {
-            const border = s_bs[j];
+            const styleborder = s_bs[j];
             const str = [
-                border.isEnabled,
-                border.color.red,
-                border.color.green,
-                border.color.blue,
-                border.color.alpha,
-                border.borderStyle.gap,
-                border.borderStyle.length,
-                border.thickness,
-                border.position,
-                border.fillType
+                styleborder.isEnabled,
+                styleborder.color.red,
+                styleborder.color.green,
+                styleborder.color.blue,
+                styleborder.color.alpha,
+                styleborder.fillType
             ].join('-');
-            if (str !== compare_str[j]) return 'mixed';
-            if (border.fillType === FillType.SolidColor) continue;
-            if (border.gradient) {
-                if (has_g_str[j] !== get_gradient_str(border.gradient)) return 'mixed';
+            if (str !== compare_str[j]) return { border, stroke_paints: 'mixed' };
+            if (styleborder.fillType === FillType.SolidColor) continue;
+            if (styleborder.gradient) {
+                if (has_g_str[j] !== get_gradient_str(styleborder.gradient)) return { border, stroke_paints: 'mixed' };
             } else {
-                if (has_g_str[j] !== 'undefined') return 'mixed';
+                if (has_g_str[j] !== 'undefined') return { border, stroke_paints: 'mixed' };
             }
         }
     }
-    return borders;
+    result.border = border;
+    return result;
 }
 
-export function get_actions_add_boder(shapes: ShapeView[], border: Border) {
+const getDideStr = (side: BorderSideSetting, v: BorderSideSetting | string) => {
+    if (typeof v === 'string') return false;
+    const str = [
+        side.sideType,
+
+        side.thicknessTop,
+        side.thicknessRight,
+        side.thicknessBottom,
+        side.thicknessLeft
+    ].join('-');
+    const str2 = [
+        v.sideType,
+        v.thicknessTop,
+        v.thicknessRight,
+        v.thicknessBottom,
+        v.thicknessLeft
+    ].join('-');
+    return str === str2;
+}
+
+export function get_actions_add_boder(shapes: ShapeView[], strokePaint: StrokePaint) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        const { isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting } = border;
-        const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting);
-        actions.push({ target: (shapes[i]), value: new_border });
+        const { isEnabled, fillType, color } = strokePaint;
+        const newStrokePaint = new StrokePaint(new BasicArray(0), v4(), isEnabled, fillType, color);
+        actions.push({ target: (shapes[i]), value: newStrokePaint });
     }
     return actions;
 }
@@ -354,26 +411,26 @@ export function get_actions_border_color(shapes: ShapeView[], index: number, col
 
 export function get_actions_border_unify(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
-    let borders: Border[] = [];
+    let borders: Border | undefined;
     let s = 0;
-    while (borders.length < 1 && s < shapes.length) {
+    while (!borders && s < shapes.length) {
         borders = shapes[s]?.getBorders();
         s++;
     }
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
-        const new_borders: Border[] = [];
-        for (let i = 0; i < borders.length; i++) {
-            const border = borders[i];
-            const { isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting } = border;
-            const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting);
-            if (border.gradient) {
-                const _g = cloneGradient(border.gradient);
-                new_border.gradient = _g;
+        const newStrokePaints: StrokePaint[] = [];
+        for (let i = 0; i < borders!.strokePaints.length; i++) {
+            const strokePaint = borders!.strokePaints[i];
+            const { isEnabled, fillType, color } = strokePaint;
+            const newStrokePaint = new StrokePaint(new BasicArray(0), v4(), isEnabled, fillType, color);
+            if (strokePaint.gradient) {
+                const _g = cloneGradient(strokePaint.gradient);
+                newStrokePaint.gradient = _g;
             }
-            new_borders.push(new_border);
+            newStrokePaints.push(newStrokePaint);
         }
-        actions.push({ target: (shapes[i]), value: new_borders });
+        actions.push({ target: (shapes[i]), value: newStrokePaints });
     }
     return actions;
 }
@@ -396,11 +453,11 @@ export function get_actions_border_delete(shapes: ShapeView[], index: number) {
     return actions;
 }
 
-export function get_actions_border_thickness(shapes: ShapeView[], index: number, thickness: number) {
-    const actions: BatchAction[] = [];
+export function get_actions_border_thickness(shapes: ShapeView[], thickness: number) {
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: (shapes[i]), index, value: thickness });
+        actions.push({ target: (shapes[i]), value: thickness });
     }
     return actions;
 }
@@ -414,24 +471,24 @@ export function get_actions_border_position(shapes: ShapeView[], index: number, 
     return actions;
 }
 
-export function get_actions_border_style(shapes: ShapeView[], index: number, style: 'dash' | 'solid') {
-    const actions: BatchAction[] = [];
+export function get_actions_border_style(shapes: ShapeView[], style: 'dash' | 'solid') {
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const bs = new BorderStyle(0, 0);
         if (style === 'dash') {
             bs.gap = 10, bs.length = 10;
         }
-        actions.push({ target: (shapes[i]), index, value: bs });
+        actions.push({ target: (shapes[i]), value: bs });
     }
     return actions;
 }
 
-export function get_actions_border(shapes: ShapeView[], index: number, value: any) {
-    const actions: BatchAction[] = [];
+export function get_actions_border(shapes: ShapeView[], value: any) {
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: (shapes[i]), index, value: value });
+        actions.push({ target: (shapes[i]), value: value });
     }
     return actions;
 }
@@ -754,18 +811,14 @@ export function get_actions_export_format_file_format(shapes: ShapeView[], index
 }
 
 
-export function get_borders_corner(shapes: ShapeView[], index: number): false | CornerType {
+export function get_borders_corner(shapes: ShapeView[]): false | CornerType {
     const shape = shapes[0];
-    const styleborders = shape.getBorders() || [];
-    if (!styleborders.length) return false;
-    const corner = styleborders[index].cornerType;
+    const styleborders = shape.getBorders();
+    if (!styleborders.strokePaints.length) return false;
+    const corner = styleborders.cornerType;
     const mixed = shapes.every(shape => {
-        const borders = shape.getBorders() || [];
-        if (borders[index]) {
-            return borders[index].cornerType === corner;
-        } else {
-            return false;
-        }
+        const borders = shape.getBorders();
+        return borders.cornerType === corner;
     });
     if (mixed) {
         return corner;
@@ -774,14 +827,14 @@ export function get_borders_corner(shapes: ShapeView[], index: number): false | 
     }
 }
 
-export function get_borders_side(shapes: ShapeView[], index: number): false | SideType {
+export function get_borders_side(shapes: ShapeView[]): false | SideType {
     const shape = shapes[0];
-    const styleborders = shape.getBorders() || [];
-    if (!styleborders.length) return false;
-    const side = styleborders[index].sideSetting.sideType;
+    const styleborders = shape.getBorders();
+    if (!styleborders.strokePaints.length) return false;
+    const side = styleborders.sideSetting.sideType;
     const mixed = shapes.every(shape => {
-        const borders = shape.getBorders() || [];
-        return borders[index].sideSetting.sideType === side;
+        const borders = shape.getBorders();
+        return borders.sideSetting.sideType === side;
     });
     if (mixed) {
         return side;

@@ -406,20 +406,6 @@ export function is_shape_in_selected(selected: ShapeView[], shape: ShapeView) {
     return false;
 }
 
-function get_max_thickness_border(shape: ShapeView) {
-    let max_thickness = 0;
-    const borders = shape.getBorders();
-    if (borders.length) {
-        for (let i = 0, l = borders.length; i < l; i++) {
-            const t = borders[i].thickness;
-            if (t > max_thickness) {
-                max_thickness = t;
-            }
-        }
-    }
-    return max_thickness;
-}
-
 /**
  * @description 图形检索规则以及实现 2
  * @param { Context } context
