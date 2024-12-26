@@ -283,6 +283,10 @@ function stylelib_watcher(t: number | string) {
 
 }
 
+watch(() => props.maskid, () => {
+    update();
+})
+
 onMounted(() => {
     update();
     props.context.data.watch(stylelib_watcher)

@@ -15,10 +15,18 @@ const { t } = useI18n();
 
 interface Props {
     context: Context
-    blur: Blur
+    blur: Blur | undefined
     shapes: ShapeView[]
+    entry?: string
 }
 
+interface Emits {
+    (e: 'setBlurSaturation', value: number): void
+    (e: 'keyDownSaturation', fn: LinearApi, value: number): void
+    (e: 'dragBlurSaturation', fn: BlurHandler, value: number): void
+}
+
+const emits = defineEmits<Emits>();
 const props = defineProps<Props>();
 const popover = ref();
 const blurValue = ref(0);
@@ -53,7 +61,11 @@ const onMouseMove = (e: MouseEvent) => {
         if (!blurModifyHandler.asyncApiCaller) {
             blurModifyHandler.createApiCaller();
         }
-        blurModifyHandler.executeSaturation(blurValue.value);
+        if (props.entry === 'style') {
+            emits('dragBlurSaturation', blurModifyHandler, blurValue.value);
+        } else {
+            blurModifyHandler.executeSaturation(blurValue.value);
+        }
     }
 }
 const onMouseUP = () => {
@@ -70,7 +82,11 @@ function down(e: MouseEvent) {
     if (!blurModifyHandler.asyncApiCaller) {
         blurModifyHandler.createApiCaller();
     }
-    blurModifyHandler.executeSaturation(blurValue.value);
+    if (props.entry === 'style') {
+        emits('dragBlurSaturation', blurModifyHandler, blurValue.value);
+    } else {
+        blurModifyHandler.executeSaturation(blurValue.value);
+    }
 }
 
 function mouseup() {
@@ -107,18 +123,23 @@ function changeBlurInput(e: Event) {
     is_select.value = false;
     let value = Number((e.target as HTMLInputElement).value);
     if (isNaN(value)) {
-        (e.target as HTMLInputElement).value = `${props.blur.saturation}`;
+        (e.target as HTMLInputElement).value = `${props.blur?.saturation}`;
         return;
     }
     if (value < 0) value = 0;
     if (value > 200) value = 200;
     blurValue.value = value;
-    const actions = get_actions_blur_modify(props.shapes, value);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapeBlurSaturation(actions);
+    if (props.entry === 'style') {
+        emits('setBlurSaturation', value);
+    } else {
+        const actions = get_actions_blur_modify(props.shapes, value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapeBlurSaturation(actions);
+        }
     }
+
     update();
     hidden_selection(props.context);
 }
@@ -133,10 +154,14 @@ const text_keyboard = (e: KeyboardEvent, val: string | number) => {
         if (isNaN(value)) return;
         value = value <= 0 ? 0 : value <= 200 ? value : 200
         blurValue.value = value
-        const actions = get_actions_blur_modify(props.shapes, value);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            linearApi.modifyShapeBlurSaturation(actions)
+        if (props.entry === 'style') {
+            emits('keyDownSaturation', linearApi, value);
+        } else {
+            const actions = get_actions_blur_modify(props.shapes, value);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                linearApi.modifyShapeBlurSaturation(actions)
+            }
         }
         e.preventDefault();
     }
@@ -150,6 +175,7 @@ const update = () => {
 }
 
 watchEffect(() => {
+    if (!props.blur) return;
     blurValue.value = props.blur.saturation;
     update();
 })
@@ -161,7 +187,7 @@ watchEffect(() => {
             :title="`${t('blur.blur_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
-                    <svg-icon icon-class="gear"/>
+                    <svg-icon icon-class="gear" />
                 </div>
             </template>
             <template #body>
@@ -174,9 +200,8 @@ watchEffect(() => {
                                 <div ref="progressBtn" class="progress-button" @mousedown.stop="onMouseDown"></div>
                             </div>
                         </div>
-                        <input type="text" ref="blurInput" class="input-text" :value="blurValue"
-                            @click="clickBlurInput" @change="changeBlurInput"
-                            @keydown="e => text_keyboard(e, blurValue)" />
+                        <input type="text" ref="blurInput" class="input-text" :value="blurValue" @click="clickBlurInput"
+                            @change="changeBlurInput" @keydown="e => text_keyboard(e, blurValue)" />
                     </div>
                 </div>
             </template>

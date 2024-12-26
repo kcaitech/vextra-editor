@@ -1,6 +1,8 @@
 import { Context } from "@/context";
 import {
     BasicArray,
+    Blur,
+    BlurMask,
     Border,
     Color,
     ColVector3D,
@@ -27,6 +29,7 @@ export interface Mask {
     sheet: string;
     fills?: BasicArray<Fill>;
     shadows?: BasicArray<Shadow>
+    blur?: Blur;
 }
 
 export interface Lib {
@@ -71,6 +74,17 @@ export class FillRenderer {
         this.m_list.push(titleCtx);
     }
 
+    private getblurwmask(v: BlurMask) {
+        const titleCtx: Mask = {
+            id: v.id,
+            name: v.name,
+            description: v.description,
+            sheet: v.sheet,
+            blur: v.blur
+        };
+        this.m_list.push(titleCtx);
+    }
+
 
     currentTarget(mask: string) {
         return this.m_list.find(f => f.id === mask)
@@ -96,6 +110,11 @@ export class FillRenderer {
             if (type === 'shadow') {
                 if (s instanceof ShadowMask) {
                     this.getshadowmask(s)
+                }
+            }
+            if (type === 'blur') {
+                if (s instanceof BlurMask) {
+                    this.getblurwmask(s)
                 }
             }
         })

@@ -1,23 +1,30 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { ShapeView, ShapeType, Blur, Point2D, BlurType, BasicArray } from "@kcdesign/data";
+import { ShapeView, ShapeType, Blur, Point2D, BlurType, BasicArray, BlurMask } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import {
     get_actions_add_blur,
+    get_actions_add_mask,
     get_actions_blur_delete,
     get_actions_blur_enabled,
+    get_actions_blur_mask,
     get_actions_blur_unify,
     get_blur
 } from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
 import BlurDetail from "./BlurDetail.vue";
 import BlurTypeSelect from "./BlurTypeSelect.vue";
+import BlurStyle from '@/components/Document/Attribute/StyleLibrary/BlurStyle.vue';
+import { v4 } from 'uuid';
+import { getShapesForStyle } from '@/utils/style';
 
 type Props = {
     context: Context
     shapes: ShapeView[]
+    selectionChange: number;
+    trigger: any[];
 }
 
 const props = defineProps<Props>();
@@ -26,6 +33,11 @@ const watchedShapes = new Map();
 const blurInfo = ref<Blur>();
 const mixed = ref<boolean>(false);
 const reflush = ref<number>(0);
+const mask = ref<boolean>(false)
+const Top = ref<number>(0)
+const Left = ref<number>(0)
+const showblur = ref<boolean>(false)
+const blurMask = ref<BlurMask>()
 
 function watchShapes() {
     const needWatchShapes = new Map();
@@ -66,15 +78,32 @@ function watchShapes() {
 
 function updateData() {
     mixed.value = false;
+    mask.value = false;
     blurInfo.value = undefined;
     const len = props.shapes.length;
     if (len === 1) {
         const shape = props.shapes[0];
+        if (shape.style.blursMask) {
+            const id = props.shapes[0].style.blursMask
+            if (!id) return
+            const libs = props.shapes[0].style.getStylesMgr()
+            blurMask.value = libs?.getSync(id) as BlurMask
+            blurInfo.value = blurMask.value.blur
+            return mask.value = true
+        }
         blurInfo.value = shape.blur;
     } else if (len > 1) {
         const blur = get_blur(props.shapes);
         if (blur === 'mixed') {
             mixed.value = true;
+        } else if (blur === 'mask') {
+            const id = props.shapes[0].style.blursMask
+            if (!id) return
+            const libs = props.shapes[0].style.getStylesMgr();
+            const blur = libs?.getSync(id) as BlurMask;
+            blurMask.value = blur;
+            blurInfo.value = blur.blur;
+            mask.value = true
         } else {
             blurInfo.value = blur;
         }
@@ -89,12 +118,20 @@ function watcher(...args: any[]) {
 function addBlur(): void {
     const len = props.shapes.length;
     if (len < 1) return;
-    const blur = new Blur(new BasicArray(),true, new Point2D(0, 0), 10, BlurType.Gaussian);
+    const blur = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
     const page = props.context.selection.selectedPage!;
+    const mask = props.shapes.some(s => s.style.blursMask !== undefined)
+    const editor = props.context.editor4Page(page);
     if (mixed.value) {
-        const actions = get_actions_blur_unify(props.shapes);
-        if (actions) {
-            const editor = props.context.editor4Page(page);
+        if (mask) {
+            const s = props.shapes.findLast(i => i.style.blursMask !== undefined)
+            console.log(s);
+            
+            const id = s?.style.blursMask as string
+            const actions = get_actions_add_mask(props.shapes, id);
+            editor.shapesSetBlurMask(actions);
+        } else {
+            const actions = get_actions_blur_unify(props.shapes);
             editor.shapesBlurUnify(actions);
         }
     } else {
@@ -133,50 +170,142 @@ function toggleVisible() {
     hidden_selection(props.context);
 }
 
+const delblurmask = () => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_blur_mask(shapes)
+    const editor = props.context.editor4Page(page);
+    editor.shapesDelBlurMask(actions);
+
+}
+
+const delstyleblur = () => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_blur_mask(shapes)
+    const editor = props.context.editor4Page(page);
+    editor.shapesDelStyleBlur(actions);
+}
+
+const openBlurPanel = (e: MouseEvent) => {
+    let el = e.target as HTMLElement;
+    while (el.className !== 'blur-panel') {
+        if (el.parentElement) {
+            el = el.parentElement;
+        }
+    }
+    const { top, left } = el.getBoundingClientRect();
+    Top.value = top;
+    Left.value = left - 250;
+    showblur.value = !showblur.value
+    props.context.escstack.save(v4(), close);
+    if (showblur.value) {
+        document.addEventListener('click', checktargetlist)
+    } else {
+        document.removeEventListener('click', checktargetlist)
+    }
+}
+
+function close() {
+    const is_achieve_expected_results = showblur.value;
+    showblur.value = false;
+    document.removeEventListener('click', checktargetlist)
+    return is_achieve_expected_results;
+}
+
 function update_by_shapes() {
     watchShapes();
     updateData();
 }
 
+function checktargetlist(e: MouseEvent) {
+    const muen = document.querySelector('.blur-style')
+    const muen2 = document.querySelector('.shadow-container')
+    if (!muen) return;
+    if (!muen2) return;
+    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
+        showblur.value = false
+        document.removeEventListener('click', checktargetlist)
+    }
+}
+
+const closepanel = () => {
+    props.context.escstack.execute()
+    showblur.value = false
+    document.removeEventListener('click', checktargetlist)
+}
+
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
-onMounted(update_by_shapes);
+const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
+const stop3 = watch(() => props.trigger, v => {
+    // 监听选区图层变化
+    if (v.length > 0 && (v.includes('layout') || v.includes('blur'))) updateData();
+});
+onMounted(() => {
+    update_by_shapes();
+});
 onUnmounted(() => {
     stop();
+    stop2();
+    stop3();
     watchedShapes.forEach(i => i.unwatch(watcher));
     watchedShapes.clear();
 });
 </script>
 
 <template>
-<div class="blur-panel">
-    <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="!!blurInfo">
-        <template #tool>
-            <div class="add" @click.stop="addBlur" v-if="!blurInfo || mixed">
-                <svg-icon icon-class="add"/>
-            </div>
-        </template>
-    </TypeHeader>
-    <div class="tips-wrap" v-if="mixed">
-        <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
-    </div>
-    <div class="blur-container" v-else-if="!mixed && blurInfo">
-        <div class="blur">
-            <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
-                <svg-icon v-if="blurInfo.isEnabled" icon-class="select" />
-            </div>
-            <div class="blur_posi">
-                <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" />
-            </div>
-            <div class="detail">
-                <BlurDetail :context="context" :blur="blurInfo" :shapes="shapes" />
-            </div>
-            <div class="delete" @click="deleteBlur">
-                <svg-icon icon-class="delete" />
+    <div class="blur-panel">
+        <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="!!blurInfo">
+            <template v-if="!mask" #tool>
+                <div v-if="!mixed" class="blur-style" @click="openBlurPanel($event)">
+                    <svg-icon icon-class="styles"></svg-icon>
+                </div>
+                <div class="add" @click.stop="addBlur" v-if="!blurInfo || mixed">
+                    <svg-icon icon-class="add" />
+                </div>
+            </template>
+        </TypeHeader>
+        <div class="tips-wrap" v-if="mixed && !mask">
+            <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
+        </div>
+        <div class="blur-container" v-if="!mixed && blurInfo && !mask">
+            <div class="blur">
+                <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
+                    <svg-icon v-if="blurInfo.isEnabled" icon-class="select" />
+                </div>
+                <div class="blur_posi">
+                    <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" :reflush="reflush" />
+                </div>
+                <div class="detail">
+                    <BlurDetail :context="context" :blur="blurInfo" :shapes="shapes" :reflush="reflush" />
+                </div>
+                <div class="delete" @click="deleteBlur">
+                    <svg-icon icon-class="delete" />
+                </div>
             </div>
         </div>
+        <div class="shadowmask" v-if="mask">
+            <div class="info">
+                <div class="left" @click.stop="">
+                    <div class="effect">
+                    </div>
+                    <div class="name">{{ blurMask?.name }}</div>
+                </div>
+                <div class="unbind" @click.stop="delblurmask">
+                    <svg-icon icon-class="unbind"></svg-icon>
+                </div>
+            </div>
+            <div class="delete-style">
+                <svg-icon icon-class="delete" @click.stop="delstyleblur"></svg-icon>
+            </div>
+        </div>
+        <BlurStyle v-if="showblur" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
+            @close="closepanel">
+        </BlurStyle>
     </div>
-</div>
 </template>
 
 <style scoped lang="scss">
@@ -188,7 +317,8 @@ onUnmounted(() => {
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
-    .add {
+    .add,
+    .blur-style {
         width: 28px;
         height: 28px;
         display: flex;
@@ -198,10 +328,19 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
+    }
+
+    .blur-style svg {
+        padding: 2px;
+        box-sizing: border-box;
+    }
+
+    .blur-style:hover {
+        background-color: #F5F5F5;
     }
 
     .add:hover {
@@ -237,7 +376,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                > svg {
+                >svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -272,7 +411,7 @@ onUnmounted(() => {
                 border-radius: var(--default-radius);
                 transition: .2s;
 
-                > svg {
+                >svg {
                     width: 16px;
                     height: 16px;
                 }
@@ -290,6 +429,87 @@ onUnmounted(() => {
             .delete:hover {
                 background-color: #F5F5F5;
             }
+        }
+    }
+
+    .shadowmask {
+        display: flex;
+        height: 32px;
+        border-radius: 6px;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        gap: 8px;
+
+        .info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+            overflow: hidden;
+            background-color: #f4f5f5;
+            height: 100%;
+
+            .left {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                background-color: #F5F5F5;
+                height: 100%;
+
+                &:hover {
+                    background-color: #e5e5e5;
+                }
+
+                .effect {
+                    width: 16px;
+                    height: 16px;
+                    background-color: #fff;
+                    border: 1px solid #000000e5;
+                    border-radius: 3px;
+                    overflow: hidden;
+                    margin: 0 8px;
+                }
+            }
+
+            .unbind {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 32px;
+
+                >svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+
+            .unbind:hover {
+                background-color: #e5e5e5;
+            }
+        }
+
+
+        .delete-style {
+            flex: 0 0 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--default-radius);
+            overflow: hidden;
+
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .delete-style:hover {
+            background-color: #F5F5F5;
         }
     }
 
