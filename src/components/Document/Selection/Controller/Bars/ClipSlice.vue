@@ -106,6 +106,7 @@ onMounted(() => {
     init_shape();
     update();
     watch_at_once();
+    props.context.path.setContactStatus(false);
 })
 onUnmounted(() => {
     break_watch();

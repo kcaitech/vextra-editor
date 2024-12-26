@@ -1,7 +1,14 @@
+import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
+import { DomCtx } from "@/components/Document/Content/vdom/domctx";
+import { ShapeDom } from "@/components/Document/Content/vdom/shape";
+import { SymbolDom } from "@/components/Document/Content/vdom/symbol";
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { getFrameList, viewBox } from "@/utils/preview";
 import {
+    Color,
+    EL,
+    Fill,
     Matrix,
     PrototypeActions,
     PrototypeConnectionType,
@@ -14,6 +21,7 @@ import {
     ShapeView,
     SymbolRefView
 } from '@kcdesign/data';
+import { nextTick } from "vue";
 
 export interface EventIndex {
     click: number,
@@ -27,6 +35,7 @@ export interface EventIndex {
 export class ProtoAction {
     private m_context: Context
     private m_shapes: ShapeView[] = [];
+    private m_matrix: Matrix = new Matrix();
 
     constructor(context: Context) {
         this.m_context = context;
@@ -34,6 +43,7 @@ export class ProtoAction {
 
     executeActionx(action: PrototypeActions, matrix: Matrix, id?: string) {
         const page = this.m_context.selection.selectedPage;
+        this.m_matrix = matrix;
         this.m_shapes = getFrameList(page!);
         if (action.connectionType === PrototypeConnectionType.INTERNALNODE && action.navigationType === PrototypeNavigationType.NAVIGATE) {
             this.actionSkipPage(action);
@@ -85,7 +95,145 @@ export class ProtoAction {
                 this.m_context.selection.selectShape(shape);
             }, time * 1000);
             this.m_context.preview.addSetTimeout(timer);
+        } else if (action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
+            // 智能动画
+            const animate = this.smartAmimateTransition(action);
+            const amimate_shape = this.m_context.preview.supernatantShapes[0] || select_shape;
+            this.executeSmartShape(amimate_shape, shape, animate)
+            const timer = setTimeout(() => {
+                this.m_context.selection.selectShape(shape);
+            }, time * 1000)
+            this.m_context.preview.addSetTimeout(timer);
         }
+    }
+
+    getShapeAllChilds(shape: ShapeView) {
+        function flattenShapes(shapes: ShapeView[]): ShapeView[] {
+            return shapes.reduce((result: any[], item: ShapeView) => {
+                result = result.concat(item);
+                if (item.childs) {
+                    const childs = (item).childs;
+                    if (Array.isArray(childs)) {
+                        result = result.concat(flattenShapes(childs));
+                    }
+                }
+                return result;
+            }, []);
+        }
+        return [shape, ...flattenShapes(shape.childs)];
+    }
+
+    executeSmartShape(exe_shape: ShapeView, shape: ShapeView, animate: string) {
+        const processed = new Set();
+        const exe_shapes = this.getShapeAllChilds(exe_shape);
+        const shapes = this.getShapeAllChilds(shape);
+        const nameMap: Map<string, ShapeView> = new Map();
+        shapes.forEach(s => {
+            if (!nameMap.has(s.name)) nameMap.set(s.name, s);
+        });
+        const exe_el = (exe_shape as ShapeDom).el;
+        const scaleEl: Map<string, { x: number, y: number }> = new Map();
+        let pm0 = 1; let pm3 = 1;
+        exe_shapes.forEach(s => {
+            const el = (s as ShapeDom).el;
+            const _s = s.id === exe_shape.id ? shape : nameMap.get(s.name);
+            if (_s && el) {
+                // 需要执行的动画 大小，位置，颜色
+                const frame = _s.boundingBox();
+                const cur_frame = s.boundingBox();
+                const m0 = frame.width / cur_frame.width;
+                const m3 = frame.height / cur_frame.height;
+                if (s.id === exe_shape.id) {// 最外层容器缩放大小
+                    pm0 = m0; pm3 = m3;
+                }
+                el.style['transition'] = animate;
+                const fills = _s.getFills();
+                const colors = this.getColors(fills);
+                const color = this.blendMultipleRGBA(colors);
+                if (color) { // 颜色动画
+                    const fillsEl = document.querySelectorAll(`.fill-${s.id.replace(/\//g, '-')}`);
+                    fillsEl && fillsEl.forEach((element) => {
+                        (element as any).style['transition'] = animate;
+                        element.setAttribute('fill', "rgb(" + color.red + "," + color.green + "," + color.blue + ")")
+                        element.setAttribute('fill-opacity', `${color.alpha}`);
+                    });
+                }
+                const styleTransform = el.style.transform;
+                if (styleTransform && styleTransform.startsWith('matrix')) {
+                    const matrixValues = s.transform.toArray();
+                    scaleEl.set(s.id, { x: m0, y: m3 });
+                    if (s.id !== exe_shape.id) { // 不是最外层容器// 移动的位置
+                        matrixValues[4] = frame.x;
+                        matrixValues[5] = frame.y;
+                        const scale = scaleEl.get(s.parent?.id || '');
+                        if (scale) { // 抵消父级缩放
+                            matrixValues[0] /= scale.x;
+                            matrixValues[3] /= scale.y;
+                            matrixValues[4] /= scale.x;
+                            matrixValues[5] /= scale.y;
+                        }
+                    }
+                    // 大小变化
+                    matrixValues[0] *= m0;
+                    matrixValues[3] *= m3;
+                    const newMatrix = `matrix(${matrixValues.join(',')})`;
+                    el.style.transform = newMatrix;
+                }
+                nameMap.delete(s.name);
+            } else { // 需要执行的动画 透明度
+                if (el) {
+                    el.style['transition'] = animate;
+                    el.style['opacity'] = '0'
+                }
+            }
+            processed.add(s.name);
+        })
+        const p_box = viewBox(this.m_matrix, shape);
+        shapes.forEach((item) => {
+            const el = (item as ShapeDom).el;
+            if (!processed.has(item.name) && item.id !== shape.id && el) { // 需要执行的动画 透明度
+                const box = viewBox(this.m_matrix, item);
+                const styleTransform = el.style.transform;
+                el.style['opacity'] = '0'
+                el.style['transition'] = '';
+                if (styleTransform && styleTransform.startsWith('matrix')) {
+                    const matrixValues = item.transform.toArray();
+                    matrixValues[0] /= pm0;
+                    matrixValues[3] /= pm3;
+                    matrixValues[4] = box.left - p_box.left;
+                    matrixValues[5] = box.top - p_box.top;
+                    matrixValues[4] /= pm0;
+                    matrixValues[5] /= pm3;
+                    const newMatrix = `matrix(${matrixValues.join(',')})`;
+                    el.style.transform = newMatrix;
+                }
+                el.style['transition'] = animate;
+                exe_el?.appendChild(el as any)
+                setTimeout(() => {
+                    el.style['opacity'] = '1'; // 过渡到完全不透明
+                }, 0);
+            }
+        });
+    }
+    getColors(fills: Fill[]) {
+        const colors = [];
+        for (let index = fills.length - 1; index >= 0; index--) {
+            const fill = fills[index];
+            colors.push(fill.color);
+            if (fill.color.alpha === 1) break;
+        }
+        return colors;
+    }
+    blendMultipleRGBA(colors: Color[]) {
+        return colors.reduce((result: Color, color: Color) => {
+            const { alpha: a1, red: r1, green: g1, blue: b1 } = result;
+            const { alpha: a2, red: r2, green: g2, blue: b2 } = color;
+            const resultAlpha = 1 - (1 - a1) * (1 - a2);
+            const resultR = (r1 * a1 + r2 * a2 * (1 - a1)) / resultAlpha;
+            const resultG = (g1 * a1 + g2 * a2 * (1 - a1)) / resultAlpha;
+            const resultB = (b1 * a1 + b2 * a2 * (1 - a1)) / resultAlpha;
+            return new Color(resultAlpha, resultR, resultG, resultB);
+        }, new Color(0, 0, 0, 0))
     }
 
     // 返回上一级
@@ -103,6 +251,16 @@ export class ProtoAction {
                 const timer = setTimeout(() => {
                     this.m_context.selection.selectShape(shape);
                 }, time * 1000);
+                this.m_context.preview.addSetTimeout(timer);
+            } else if (action.action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
+                // 智能动画
+                const select_shape = this.m_context.selection.selectedShapes[0];
+                const animate = this.smartAmimateTransition(action.action);
+                const amimate_shape = this.m_context.preview.supernatantShapes[0] || select_shape;
+                this.executeSmartShape(amimate_shape, shape, animate)
+                const timer = setTimeout(() => {
+                    this.m_context.selection.selectShape(shape);
+                }, time * 1000)
                 this.m_context.preview.addSetTimeout(timer);
             } else {
                 this.m_context.preview.resetInteractionAction(action.action, shape?.id);
@@ -171,6 +329,22 @@ export class ProtoAction {
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             this.m_context.preview.notify(Preview.SWAP_REF_STAT);
             this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH);
+        } else if (action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
+            // 智能动画
+            const sym = this.m_context.data.symbolsMgr.get(action.targetNodeID);
+            if (!sym) return;
+            const domCtx = new DomCtx();
+            initComsMap(domCtx.comsMap);
+            const view = new SymbolDom(domCtx, { data: sym });
+            view.layout();
+            view.render();
+            const animate = this.smartAmimateTransition(action);
+            this.executeSmartShape(down_shape, view, animate)
+            const timer = setTimeout(() => {
+                this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+                this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH);
+            }, time * 1000)
+            this.m_context.preview.addSetTimeout(timer);
         } else {
             // 执行动画
             this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH, action, shape);
@@ -221,6 +395,12 @@ export class ProtoAction {
         let refIdArray = Array.from(map.entries());
         let jsonString = JSON.stringify(refIdArray);
         this.m_context.sessionStorage.set(key, jsonString);
+    }
+
+    smartAmimateTransition(action: PrototypeActions) {
+        const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
+        const time = action.transitionDuration ?? 0.3;
+        return `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
     }
 }
 

@@ -1,9 +1,15 @@
 import {
     adapt2Shape,
     AsyncCreator,
+    BasicArray,
     Blur,
+    Border,
+    BorderPosition,
+    BorderSideSetting,
+    BorderStyle,
     ColVector3D,
     ContactShape,
+    CornerType,
     CurvePoint,
     Document,
     export_shape,
@@ -20,6 +26,7 @@ import {
     ShapeFrame,
     ShapeType,
     ShapeView,
+    StrokePaint,
     TableCellType,
     Text,
     TextShape,
@@ -38,7 +45,7 @@ import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
 import { WorkSpace } from "@/context/workspace";
-import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
+import { BorderData, get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 import { flattenShapes } from "@/utils/cutout";
 import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
@@ -261,7 +268,7 @@ export class Clipboard {
             const selected = this.context.selection.selectedShapes;
             const flatten = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
             const fills = get_fills(flatten);
-            const borders = get_borders(flatten);
+            const { border, stroke_paints } = get_borders(flatten);
             const shadows = get_shadows(selected);
             const blur = get_blur(selected);
 
@@ -271,9 +278,14 @@ export class Clipboard {
             const text = getText(selected);
 
             const data: any = {};
-            if (fills !== "mixed" && fills !== 'mask') data['fills'] = fills.map(i => exportFill(i.fill));
-            if (borders !== "mixed") data['borders'] = borders.map(i => exportBorder(i.border));
-            if (shadows !== "mixed" && shadows !== 'mask') data['shadows'] = shadows.map(i => exportShadow(i.shadow));
+            if (fills !== "mixed" && fills!=='mask') data['fills'] = fills.map(i => exportFill(i.fill));
+            if (typeof stroke_paints !== 'string' && !this.borderIsString(border)) {
+                const paints = new BasicArray<StrokePaint>();
+                (stroke_paints).forEach(i => paints.push(i.strokePaint));
+                const b = new Border(border.position as BorderPosition, border.borderStyle as BorderStyle, border.cornerType as CornerType, border.sideSetting as BorderSideSetting, paints);
+                data['borders'] = exportBorder(b);
+            }
+            if (shadows !== "mixed" && shadows!=='mask') data['shadows'] = shadows.map(i => exportShadow(i.shadow));
             if (blur instanceof Blur) data['blur'] = exportBlur(blur);
             if (radius) data['radius'] = radius;
             if (contextSetting) data['contextSetting'] = contextSetting;
@@ -292,6 +304,12 @@ export class Clipboard {
             console.log('write_properties error:', e);
             return false;
         }
+    }
+    borderIsString(border: BorderData) {
+        Object.values(border).forEach(value => {
+            if (typeof value === 'string') return true;
+        });
+        return false;
     }
 
     async paste_properties(event?: ClipboardEvent) {

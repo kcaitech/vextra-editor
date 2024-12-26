@@ -11,7 +11,7 @@ export type BoundingLike = {
 }
 
 export function getVisibleBoundingByMatrix(shape: ShapeView, matrix: Matrix): BoundingLike {
-    const frame = shape.visibleFrame;
+    const frame = shape.borderPathBox ?? shape.visibleFrame;
     return XYsBounding([
         { x: frame.x, y: frame.y },
         { x: frame.x + frame.width, y: frame.y },

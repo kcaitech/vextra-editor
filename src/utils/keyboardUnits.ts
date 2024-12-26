@@ -772,13 +772,13 @@ keydownHandler['Backslash'] = function (event: KeyboardEvent, context: Context) 
 keydownHandler['Backspace'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (!permIsEdit(context)) return;
-    deleteUnits(context);
+    deleteUnits(context, event.shiftKey);
 }
 
 keydownHandler['Delete'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (!permIsEdit(context)) return;
-    deleteUnits(context);
+    deleteUnits(context, event.shiftKey);
 }
 
 keydownHandler['BracketRight'] = function (event: KeyboardEvent, context: Context) {

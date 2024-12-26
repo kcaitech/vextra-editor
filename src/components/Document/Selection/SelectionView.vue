@@ -11,7 +11,7 @@ import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
 import { is_shape_in_selected } from "@/utils/scout";
 import ShapeSize from "./ShapeSize.vue";
-import LableLine from "../Assist/LableLine.vue";
+import LabelLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
@@ -19,6 +19,7 @@ import gapAssist from "@/components/Document/Assist/gapAssist.vue";
 import AutoLayoutChildEdit from "./Controller/AutoLayoutController/AutoLayoutChildEdit.vue"
 import InsertBar from "@/components/Document/Selection/Controller/InsertBar.vue";
 import TidyUpOutline from "./TidyUpOutline.vue";
+import { debounce } from "lodash";
 
 export interface Point {
     x: number
@@ -60,6 +61,7 @@ const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
 const theme = ref<SelectionTheme>(SelectionTheme.Normal);
 const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normal);
 const updateTrigger = ref<number>(0);
+const borderPath = ref<string>("");
 
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -136,7 +138,7 @@ function selectionWatcher(t: string | number) { // selection的部分动作可�
         watchShapes();
     }
     if (t === Selection.SHOW_INTERVAL) {
-        lableLineStatus();
+        labelLineStatus();
     }
 }
 
@@ -145,7 +147,7 @@ function tool_watcher(t: number) {
         // matrix.reset(props.params.matrix);
         createController();
         watchShapes();
-        lableLineStatus();
+        labelLineStatus();
     }
 }
 
@@ -175,11 +177,13 @@ function modify_tracing_class(shape: ShapeView) {
 function createShapeTracing() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
     tracing.value = false;
+    borderPath.value = "";
 
     if (!hoveredShape) return;
 
     if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) {
         tracing.value = false;
+        borderPath.value = "";
     } else {
         const m = hoveredShape.matrix2Root();
         m.multiAtLeft(props.params.matrix);
@@ -190,6 +194,11 @@ function createShapeTracing() {
         const h = bottom - y;
         tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
         tracing.value = true;
+        if (hoveredShape.borderPath) {
+            const path = hoveredShape.borderPath.clone();
+            path.transform(m);
+            borderPath.value = path.toString();
+        }
         modify_tracing_class(hoveredShape);
     }
 }
@@ -214,11 +223,11 @@ function createController() {
 }
 
 /**
- * @description 创建控件
+ * @description 图层被损坏的情况下，被动更新控件
  */
-function createController2() {
+function _createController2() {
     const selection: ShapeView[] = [];
-    let temp = props.context.selection.selectedShapes;
+    const temp = props.context.selection.selectedShapes;
     let adjust = false;
     for (let i = 0; i < temp.length; i++) {
         const shape = temp[i];
@@ -240,9 +249,10 @@ function createController2() {
     modify_controller_type(selection);
     modify_rotate(selection);
     modify_theme(selection);
-    // tracing.value = false;
     controller.value = true;
 }
+
+const createController2 = debounce(_createController2, 60);
 
 function modify_controller_frame(shapes: ShapeView[]) {
     if (shapes.length === 1) {
@@ -390,12 +400,12 @@ function window_blur() {
 }
 
 //标注线
-const isLableLine = ref(false);
-const lableLineStatus = () => {
-    const isLable = props.context.tool.isLable;
+const isLabelLine = ref(false);
+const labelLineStatus = () => {
+    const label = props.context.tool.isLable;
     const interval = props.context.selection.is_interval;
 
-    isLableLine.value = isLable || interval;
+    isLabelLine.value = label || interval;
 }
 
 function page_watcher() {
@@ -437,11 +447,10 @@ onUnmounted(() => {
      :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
      style="transform: translate(0px, 0px); position: absolute;">
     <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
-          @mousedown="(e: MouseEvent) => pathMousedown(e)">
-    </path>
+          @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
     <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
-          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-    </path>
+          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
+    <path v-if="borderPath" :d="borderPath" fill="transparent" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
 </svg>
 <TidyUpOutline :context="props.context" :controller-frame="controllerFrame"/>
 
@@ -457,8 +466,8 @@ onUnmounted(() => {
 <Assist :context="props.context" :controller-frame="controllerFrame"/>
 <gapAssist :context="props.context"/>
 <!-- 标注线 -->
-<LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
-           :update-trigger="updateTrigger"></LableLine>
+<LabelLine v-if="isLabelLine" :context="props.context" :matrix="props.params.matrix"
+           :update-trigger="updateTrigger"></LabelLine>
 <!-- 选中大小 -->
 <ShapeSize :context="props.context" :controller-frame="controllerFrame"/>
 </template>

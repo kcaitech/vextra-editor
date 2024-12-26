@@ -145,6 +145,7 @@ onUnmounted(() => {
         background-color: #FFFFFF;
         border-radius: 8px;
         border: 1px solid #F0F0F0;
+        z-index: 999;
 
         >.header {
             width: 100%;

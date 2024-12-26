@@ -44,9 +44,11 @@ export class Preview extends WatchableObject {
     private m_navi_shape_list: ShapeView[] = [];
     private m_setTimeouts: Set<any> = new Set();
     private m_delaySetTimeouts: Map<string, any> = new Map();
-    private m_arboard_inner_transform: Map<string, TransformRaw> = new Map();
+    private m_arboard_inner_transform: Map<string, TransformRaw | undefined> = new Map();
+    private m_arboard_fixed_transform: Map<string, TransformRaw | undefined> = new Map();
     private m_inner_scroll: ShapeView | undefined;
     private m_save_last_shape: ShapeView | undefined;
+    private m_supernatant_shapes: ShapeView[] = [];
 
     constructor(context: Context) {
         super();
@@ -186,6 +188,13 @@ export class Preview extends WatchableObject {
         return this.m_supernatant_open;
     }
 
+    setSupernatantShapes(s?: ShapeView[]) {
+        this.m_supernatant_shapes = s || [];
+    }
+    get supernatantShapes() {
+        return this.m_supernatant_shapes;
+    }
+
     setSwapAction(action?: PrototypeActions) {
         if (action) {
             this.m_swap_action.add(action);
@@ -249,7 +258,7 @@ export class Preview extends WatchableObject {
         this.m_delaySetTimeouts.clear();
     }
 
-    setInnerTransform(key: string, value: TransformRaw) {
+    setInnerTransform(key: string, value: TransformRaw | undefined) {
         this.m_arboard_inner_transform.set(key, value);
     }
 
@@ -257,11 +266,19 @@ export class Preview extends WatchableObject {
         return this.m_arboard_inner_transform;
     }
 
-    clearInnerTransform() {
-        this.m_arboard_inner_transform.clear();
+    setFixedTransform(key: string, value: TransformRaw | undefined) {
+        this.m_arboard_fixed_transform.set(key, value);
     }
 
-    saveLastHoverShape(shape: ShapeView | undefined) {        
+    get fixedTransform() {
+        return this.m_arboard_fixed_transform;
+    }
+    clearInnerTransform() {
+        this.m_arboard_inner_transform.clear();
+        this.m_arboard_fixed_transform.clear();
+    }
+
+    saveLastHoverShape(shape: ShapeView | undefined) {
         this.m_save_last_shape = shape;
     }
 

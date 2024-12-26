@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, ArtboradView, BasicArray, Border, Fill, Page, sessionRefIdKey, Shadow, Shape, ShapeType,
-    ShapeView, Style,
+    adapt2Shape, ArtboradView, BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Fill, Page, sessionRefIdKey, Shadow, Shape, ShapeType,
+    ShapeView, SideType, StrokePaint, Style,
     TransformRaw
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from "vue";
@@ -39,9 +39,11 @@ function assemble() {
         shapes = adapt2Shape(shapes as any);
     }
 
-    const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
-    const style = new Style(borders, fills, new BasicArray<Shadow>());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+    const style = new Style(fills, new BasicArray<Shadow>(), border);
     const trans = new TransformRaw();
     const page = new Page(
         new BasicArray<number>(),
@@ -82,11 +84,14 @@ const setInnerTransform = (shapes: ShapeView[]) => {
     if (!shapes.length) return;
 
     const innerTrans = props.context.preview.innerTransform;
+    const fixedTrans = props.context.preview.fixedTransform;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shape instanceof ArtboradView) {
             const transform = innerTrans.get(shape.id) || new TransformRaw();
+            const fixed_transform = fixedTrans.get(shape.id) || new TransformRaw();
             shape.initInnerTransform(transform);
+            shape.setFixedTransform(fixed_transform);
         }
         const children = shape.childs || [];
         if (shape.type === ShapeType.Table) {

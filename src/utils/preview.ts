@@ -233,13 +233,23 @@ export function getPreviewMatrix(shape: ShapeView) {
     let s = shape;
     while (p && p.type !== ShapeType.Page) {
         const offset = (p as ArtboradView).innerTransform;
+        const fixed_offset = (p as ArtboradView).fixedTransform;
         if (offset) {
             m.multiAtLeft(offset.toMatrix());
             if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME) {
                 m.trans(-offset.translateX, -offset.translateY);
+                if (fixed_offset && (fixed_offset.translateY < 0 || fixed_offset.translateX < 0)) {
+                    m.trans(fixed_offset.translateX < 0 ? -fixed_offset.translateX : 0, fixed_offset.translateY < 0 ? -fixed_offset.translateY : 0);
+                }
             } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS) {
                 if (s._p_frame.y + offset.translateY < 0) {
                     m.trans(0, -(s._p_frame.y + offset.translateY));
+                    if (fixed_offset && fixed_offset.translateY < 0) {
+                        m.trans(0, -fixed_offset.translateY);
+                    }
+                } else if (fixed_offset && fixed_offset.translateY < -(s._p_frame.y + offset.translateY)) {
+                    const viewTrans = (s._p_frame.y + offset.translateY) + fixed_offset.translateY
+                    m.trans(0, -viewTrans);
                 }
             }
         }
@@ -417,7 +427,7 @@ export const getAtrboardInnerOffset = (atrboard: ArtboradView) => {
     return { top: -offsetT, right: size.width - offsetR, bottom: size.height - offsetB, left: -offsetL }
 }
 
-export const scrollAtrboard = (atrboard: ArtboradView, trans: { x: number, y: number }) => {
+export const scrollAtrboard = (context: Context, atrboard: ArtboradView, trans: { x: number, y: number }) => {
     const offset = getAtrboardInnerOffset(atrboard);
     const transform = atrboard.innerTransform || new TransformRaw();
     const tx = transform.translateX;
@@ -467,5 +477,6 @@ export const scrollAtrboard = (atrboard: ArtboradView, trans: { x: number, y: nu
             is_scrollx = true;
         }
     }
+    context.preview.setInnerTransform(atrboard.id, atrboard.innerTransform)
     return { x: is_scrollx, y: is_scrolly };
 }

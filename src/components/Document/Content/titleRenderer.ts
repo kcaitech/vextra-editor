@@ -11,6 +11,7 @@ import {
 import { isShapeOut } from "@/utils/assist";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { markRaw } from "vue";
+import { debounce } from "lodash";
 
 export interface TitleAttri {
     id: string;
@@ -29,11 +30,12 @@ export interface TitleAttri {
 export class TitleRenderer {
     private readonly m_context: Context;
     private readonly m_title_list: TitleAttri[];
+    private active_set: Set<string>;
 
     constructor(context: Context, titleList: TitleAttri[]) {
         this.m_context = context;
-
         this.m_title_list = titleList;
+        this.active_set = new Set();
     }
 
     // 已监听的Container对象
@@ -49,13 +51,11 @@ export class TitleRenderer {
             name: shape.name,
             width: 56,
             shape,
-            active: false,
+            active: this.active_set.has(shape.id),
             transform: '',
             isSymbol: shape instanceof SymbolView
         };
-
         this.modifyTransformStr(titleCtx);
-
         this.m_title_list.push(titleCtx);
     }
 
@@ -215,7 +215,6 @@ export class TitleRenderer {
                 distance: 20,
             });
 
-
         titleCtx.width = Math.hypot(xAxis[1].x - xAxis[0].x, xAxis[1].y - xAxis[0].y);
 
         if (titleCtx.width < 24) {
@@ -229,21 +228,33 @@ export class TitleRenderer {
     }
 
     private updateContainerTitle(id: string, args: any[]) {
-        if (!args?.includes('layout')) {
-            return;
-        }
+        if (!args?.includes('layout')) return;
 
         const titleCtx = this.m_title_list.find(t => t.id === id);
-        if (!titleCtx) {
-            return;
-        }
+        if (!titleCtx) return;
 
         this.modifyTransformStr(titleCtx);
     }
 
+    private __updateActive() {
+        this.active_set.clear();
+        const selected = [...this.m_context.selection.selectedShapes];
+        if (this.m_context.selection.hoveredShape) selected.push(this.m_context.selection.hoveredShape);
+        const set = new Set(selected.map(i => i.id));
+        const title = new Map<string, TitleAttri>();
+        this.m_title_list.forEach(t => title.set(t.shape.id, t));
+        this.underRootContainerMap.forEach(t => {
+            const __t = title.get(t.id);
+            if (!__t) return;
+            __t.active = set.has(t.id);
+            __t.active && this.active_set.add(t.id);
+        })
+    }
+
+    updateActive = debounce(this.__updateActive, 60);
+
     fullUpdate() {
         this.m_title_list.length = 0;
-
         this.underRootContainerMap.forEach((shape) => {
             this.generate(shape);
         });
@@ -307,7 +318,6 @@ export class TitleRenderer {
         this.watcherUninstallerMap.forEach((stopFunc) => {
             stopFunc();
         })
-
         this.watcherUninstallerMap.clear();
     }
 }

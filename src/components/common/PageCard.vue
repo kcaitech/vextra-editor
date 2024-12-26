@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, BasicArray, Border, Fill, Page, Shadow, Shape, ShapeType,
-    ShapeView, Style,
+    adapt2Shape, BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Fill, Page, Shadow, Shape, ShapeType,
+    ShapeView, SideType, StrokePaint, Style,
     TransformRaw
 } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref, watch } from "vue";
@@ -41,9 +41,11 @@ function assemble() {
         shapes = shapes.map((s) => adapt2Shape(s as any));
     }
 
-    const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
-    const style = new Style(borders, fills, new BasicArray<Shadow>());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+    const style = new Style(fills, new BasicArray<Shadow>(), border);
 
     const page = new Page(
         new BasicArray<number>(),
@@ -87,7 +89,7 @@ defineExpose({ pageSvg });
 
 <template>
     <svg ref="pageSvg" :width="width" :height="height" :viewBox="viewBox"
-         :style="{ 'background-color': backgroundColor }"></svg>
+        :style="{ 'background-color': backgroundColor }"></svg>
 </template>
 
 <style scoped lang="scss">

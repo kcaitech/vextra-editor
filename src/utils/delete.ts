@@ -4,7 +4,7 @@ import { PathShapeView, ShapeView, TableCellType, TableView } from "@kcdesign/da
 import { ReferLineHandler } from "@/components/Document/Rule/refer";
 import { PathClipper } from "@/path/clipper";
 
-export function deleteUnits(context: Context) {
+export function deleteUnits(context: Context, shift = false) {
     // 删除参考线
     if (context.user.isRuleVisible && context.tool.referSelection?.selected?.valid) {
         const { env, index, axis } = context.tool.referSelection.selected;
@@ -19,7 +19,7 @@ export function deleteUnits(context: Context) {
     // 删除路径节点
     const path_edit_mode = context.workspace.is_path_edit_mode;
     if (path_edit_mode) {
-        delete_for_path_edit(context);
+        delete_for_path_edit(context, shift);
         return;
     }
 
@@ -45,11 +45,11 @@ export function deleteUnits(context: Context) {
     delete_shapes(context, selected);
 }
 
-function delete_for_path_edit(context: Context) {
+function delete_for_path_edit(context: Context, keepClosed = false) {
     const path_shape = context.selection.pathshape;
     if (!path_shape) return;
 
-    const result = new PathClipper(context, path_shape as PathShapeView).clip();
+    const result = new PathClipper(context, path_shape as PathShapeView).clip(keepClosed);
     if (result === 0) {
         context.workspace.setPathEditMode(false);
         context.path._reset();

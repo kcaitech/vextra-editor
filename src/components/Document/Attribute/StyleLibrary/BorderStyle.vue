@@ -85,7 +85,7 @@ import {
     ShapeType,
     ShapeView,
     SideType,
-    Stop, SymbolView,
+    Stop, StrokePaint, SymbolView,
     TableView
 } from "@kcdesign/data";
 import { Context } from '@/context';
@@ -130,8 +130,11 @@ const showtype = (t: string) => {
 
 const color = new Color(1, 0, 0, 0);
 const borderStyle = new BorderStyle(0, 0);
-const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 2, 0, 4);
-const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
+const side = new BorderSideSetting(SideType.Normal, 1, 2, 0, 4);
+const strokePaints = new BasicArray<StrokePaint>();
+    const strokePaint = new StrokePaint( new BasicArray<number>(0), v4(),true, FillType.SolidColor, color);
+        strokePaints.push(strokePaint);
+const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
 
 const test = [
     { type: 'location', styles: [{ name: '33', content: [border] }, { name: '2', content: [border] }] },

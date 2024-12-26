@@ -13,7 +13,7 @@ import {
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { flattenShapes } from '@/utils/cutout';
-import { get_actions_border, get_borders_side } from '@/utils/shape_style';
+import { BorderData, get_actions_border, get_borders_side } from '@/utils/shape_style';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';
 import { useI18n } from 'vue-i18n';
@@ -26,8 +26,6 @@ const { t } = useI18n();
 
 interface Props {
   context: Context
-  border: Border
-  index: number
   reflush_side: number
 }
 
@@ -45,7 +43,7 @@ const update_side = () => {
   const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group && can_custom.includes(s.type) && !s.data.haveEdit);
   if (!s.length) return;
   shapes.value = s;
-  const action = get_borders_side(s, props.index);
+  const action = get_borders_side(s);
   if (action) {
     select_side.value = action;
   } else {
@@ -59,10 +57,10 @@ const setSideType = (type: SideType) => {
   select_side.value = type;
   const page = props.context.selection.selectedPage;
   if (!page) return;
-  const border = shapes.value[0].style.borders[props.index];
+  const border = shapes.value[0].style.borders;
   const data = getSideInfo(border, type)
   if (!data) return;
-  const actions = get_actions_border_side_info(shapes.value, props.index, data);
+  const actions = get_actions_border_side_info(shapes.value, data);
   if (actions && actions.length) {
     const editor = props.context.editor4Page(page);
     editor.setShapesBorderSide(actions);
@@ -83,7 +81,7 @@ const setSideThickness = (thickness: number, type: SideType) => {
   if (!shapes.value) return;
   const page = props.context.selection.selectedPage;
   if (!page) return;
-  const actions = get_actions_border(shapes.value, props.index, thickness);
+  const actions = get_actions_border(shapes.value, thickness);
   if (actions && actions.length) {
     const editor = props.context.editor4Page(page);
     switch (type) {
@@ -112,7 +110,7 @@ function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType
     value = value + (e.code === 'ArrowUp' ? 1 : -1)
     if (isNaN(value)) return;
     value = value <= 0 ? 0 : value <= 300 ? value : 300
-    const actions = get_actions_border(shapes.value, props.index, value);
+    const actions = get_actions_border(shapes.value, value);
     if (actions && actions.length) {
       switch (type) {
         case SideType.Top:
@@ -137,7 +135,7 @@ function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType
 
 function selection_wather(t?: any) {
 
-  
+
   if (t === Selection.CHANGE_SHAPE) {
     update_side();
   }
@@ -149,7 +147,7 @@ watch(() => props.reflush_side, () => {
 
 const getSideThickness = () => {
   if (!shapes.value) return;
-  const side = get_borders_side_thickness(shapes.value, props.index)
+  const side = get_borders_side_thickness(shapes.value)
   thickness_top.value = typeof side[0] === 'number' ? format_value(side[0]) : t('attr.more_value');
   thickness_right.value = typeof side[1] === 'number' ? format_value(side[1]) : t('attr.more_value');
   thickness_bottom.value = typeof side[2] === 'number' ? format_value(side[2]) : t('attr.more_value');
@@ -202,7 +200,7 @@ const dragging = (e: MouseEvent, thickness: number | string) => {
     val = 300;
   }
   if (borderthickness_editor) {
-    borderthickness_editor.execute(val, props.index);
+    borderthickness_editor.execute(val);
   }
   getSideThickness();
 }

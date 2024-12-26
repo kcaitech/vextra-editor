@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CurvePoint, Matrix, PathShapeView } from '@kcdesign/data';
+import { CurvePoint, Matrix, PathSegment, PathShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -12,6 +12,7 @@ import { PathEditor } from "@/path/pathEdit";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
 import { roundBy } from "@/path/common";
+import { PathHitChecker } from "@/path/hit";
 
 type Props = {
     context: Context
@@ -631,23 +632,40 @@ function down(e: MouseEvent) {
             pathModifier = new PathEditor(props.context, e);
             pathModifier.createApiCaller();
             pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1, { ...preXY.value });
+            const m = new Matrix(shape.matrix2Root());
+            m.preScale(shape.frame.width, shape.frame.height);
+            m.multiAtLeft(props.context.workspace.matrix);
+            const hit = new PathHitChecker(props.context, m);
+            const hitRes = hit.check(shape.segments as PathSegment[], preXY.value);
+            if (hitRes && hitRes.segmentIndex !== lastPoint.segment) {
+                const {isCurve, segmentIndex, index, t} = hitRes;
+                const apex: { xy: XY, t?: number } = {xy: m.inverseCoord(preXY.value)};
+                if (isCurve && t) apex["t"] = t;
+                if (!pathModifier.addPoint(segmentIndex, index + 1, apex)) return;
+                props.context.path.adjust_points(segmentIndex, index + 1);
+            }
             asyncEnvMount();
-
             e.stopPropagation();
         }
     } else {
         pathModifier = new PathEditor(props.context, e);
         pathModifier.createApiCaller();
-        const addRes = pathModifier.addSegmentForPen(preXY.value);
-
-        if (!addRes) return;
-
+        if (!pathModifier.addSegmentForPen(preXY.value)) return;
+        const m = new Matrix(shape.matrix2Root());
+        m.preScale(shape.frame.width, shape.frame.height);
+        m.multiAtLeft(props.context.workspace.matrix);
+        const hit = new PathHitChecker(props.context, m);
+        const hitRes = hit.check(shape.segments as PathSegment[], preXY.value);
+        if (hitRes) {
+            const {isCurve, segmentIndex, index, t} = hitRes;
+            const apex: { xy: XY, t?: number } = {xy: m.inverseCoord(preXY.value)};
+            if (isCurve && t) apex["t"] = t;
+            if (!pathModifier.addPoint(segmentIndex, index + 1, apex)) return;
+            props.context.path.adjust_points(segmentIndex, index + 1);
+        }
         props.context.path.setContactStatus(true);
-
         setDisContactTrigger(props.context.path);
-
         asyncEnvMount();
-
         e.stopPropagation();
     }
 }

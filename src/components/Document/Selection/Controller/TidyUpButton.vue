@@ -532,6 +532,7 @@ const selectedMove = (e: MouseEvent) => {
             // }
             const shapes = props.context.selection.selectedTidyUpShapes;
             const selected = props.context.selection.selectedShapes;
+            
             transporter = new TranslateHandler(props.context, e, selected, [...shapes]);
         }
     }
