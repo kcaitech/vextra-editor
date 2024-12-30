@@ -203,7 +203,7 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
         flex: 0 0 12px;
         height: 12px;
 
-        >svg {
+        >img {
             width: 12px;
             height: 12px;
             display: block;
@@ -224,7 +224,7 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
         align-items: center;
         justify-content: center;
 
-        svg {
+        img {
             flex: 0 0 12px;
             height: 12px;
             display: block;
@@ -289,7 +289,7 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
                 justify-content: center;
             }
 
-            svg {
+            img {
                 width: 12px;
                 height: 12px;
             }

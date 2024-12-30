@@ -481,7 +481,7 @@ import horizontal_constraint_icon from '@/assets/icons/svg/horizontal-constraint
                             align-items: center;
                             justify-content: center;
 
-                            > svg {
+                            > img {
                                 width: 60%;
                                 height: 60%;
                             }
