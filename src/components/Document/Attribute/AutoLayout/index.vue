@@ -396,6 +396,19 @@ import hor_arrow_icon from '@/assets/icons/svg/hor-arrow.svg';
 import wrap_arrow_icon from '@/assets/icons/svg/wrap-arrow.svg';
 import white_padding_button_icon from '@/assets/icons/svg/white-padding-button.svg';
 import border_all_icon from '@/assets/icons/svg/border-all.svg';
+import hor_space_icon from '@/assets/icons/svg/hor-space.svg';
+import ver_space_icon from '@/assets/icons/svg/ver-space.svg';
+import left_padding_icon from '@/assets/icons/svg/left-padding.svg';
+import right_padding_icon from '@/assets/icons/svg/right-padding.svg';
+import hor_padding_icon from '@/assets/icons/svg/hor-padding.svg';
+import ver_padding_icon from '@/assets/icons/svg/ver-padding.svg';
+import top_padding_icon from '@/assets/icons/svg/top-padding.svg';
+import bottom_padding_icon from '@/assets/icons/svg/bottom-padding.svg';
+import layout_auto_icon from '@/assets/icons/svg/layout-auto.svg';
+import layout_fixed_icon from '@/assets/icons/svg/layout-fixed.svg';
+import layout_ver_fixed_icon from '@/assets/icons/svg/layout-ver-fixed.svg';
+import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
+
 </script>
 
 <template>
@@ -433,7 +446,7 @@ import border_all_icon from '@/assets/icons/svg/border-all.svg';
                     </div>
                 </div>
                 <div class="hor" v-if="autoLayoutDate.stackMode !== StackMode.Vertical">
-                    <AutoLayoutInput icon="hor-space" :isMenu="true" :show="horSpaceMenu" name="hor_gap"
+                    <AutoLayoutInput :icon="hor_space_icon" :isMenu="true" :show="horSpaceMenu" name="hor_gap"
                         :draggable="autoLayoutDate.stackHorizontalGapSizing === StackSizing.Auto"
                         :item="autoLayoutDate.stackSpacing"
                         :value="autoLayoutDate.stackHorizontalGapSizing === StackSizing.Auto ? t(`autolayout.${StackSizing.Auto}`) : autoLayoutDate.stackSpacing"
@@ -443,7 +456,7 @@ import border_all_icon from '@/assets/icons/svg/border-all.svg';
                 </div>
                 <div class="ver"
                     v-if="!autoLayoutDate.stackWrap || autoLayoutDate.stackMode === StackMode.Vertical || autoLayoutDate.stackWrap === StackWrap.Wrap">
-                    <AutoLayoutInput icon="ver-space" :isMenu="true" :show="verSpaceMenu" name="ver_gap"
+                    <AutoLayoutInput :icon="ver_space_icon" :isMenu="true" :show="verSpaceMenu" name="ver_gap"
                         :draggable="autoLayoutDate.stackVerticalGapSizing === StackSizing.Auto"
                         :item="autoLayoutDate.stackCounterSpacing"
                         :value="autoLayoutDate.stackVerticalGapSizing === StackSizing.Auto ? t(`autolayout.${StackSizing.Auto}`) : autoLayoutDate.stackCounterSpacing"
@@ -469,25 +482,25 @@ import border_all_icon from '@/assets/icons/svg/border-all.svg';
         </div>
         <div class="layout-padding" :class="{ disabled: isDisable }" v-if="!isActive && autoLayoutDate">
             <div class="container-input">
-                <AutoLayoutInput :icon="unfold ? 'left-padding' : 'hor-padding'"
+                <AutoLayoutInput :icon="unfold ? left_padding_icon : hor_padding_icon"
                     :name="unfold ? 'left_padding' : 'hor_padding'"
                     :value="unfold ? autoLayoutDate.stackHorizontalPadding : paddingValue(autoLayoutDate.stackHorizontalPadding, autoLayoutDate.stackPaddingRight)"
                     @change="(v) => changePadding(v, unfold ? 'left' : 'hor')" @dragstart="dragstart"
                     @dragging="(e) => draggingPadding(e, unfold ? 'left' : 'hor')" @dragend="dragend">
                 </AutoLayoutInput>
-                <AutoLayoutInput v-if="unfold" icon="right-padding" :value="autoLayoutDate.stackPaddingRight"
+                <AutoLayoutInput v-if="unfold" :icon=right_padding_icon :value="autoLayoutDate.stackPaddingRight"
                     name="right_padding" @change="(v) => changePadding(v, 'right')" @dragstart="dragstart"
                     @dragging="(e) => draggingPadding(e, 'right')" @dragend="dragend">
                 </AutoLayoutInput>
             </div>
             <div class="container-input">
-                <AutoLayoutInput :icon="unfold ? 'top-padding' : 'ver-padding'"
+                <AutoLayoutInput :icon="unfold ? top_padding_icon : ver_padding_icon"
                     :name="unfold ? 'top_padding' : 'ver_padding'"
                     :value="unfold ? autoLayoutDate.stackVerticalPadding : paddingValue(autoLayoutDate.stackVerticalPadding, autoLayoutDate.stackPaddingBottom)"
                     @change="(v) => changePadding(v, unfold ? 'top' : 'ver')" @dragstart="dragstart"
                     @dragging="(e) => draggingPadding(e, unfold ? 'top' : 'ver')" @dragend="dragend">
                 </AutoLayoutInput>
-                <AutoLayoutInput v-if="unfold" icon="bottom-padding" :value="autoLayoutDate.stackPaddingBottom"
+                <AutoLayoutInput v-if="unfold" :icon="bottom_padding_icon" :value="autoLayoutDate.stackPaddingBottom"
                     name="bottom_padding" @change="(v) => changePadding(v, 'bottom')" @dragstart="dragstart"
                     @dragging="(e) => draggingPadding(e, 'bottom')" @dragend="dragend">
                 </AutoLayoutInput>
@@ -504,14 +517,14 @@ import border_all_icon from '@/assets/icons/svg/border-all.svg';
             <div class="title">{{ t('autolayout.layout_area_size') }}</div>
             <div class="area-options">
                 <AutoLayoutInput
-                    :icon="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? 'layout-auto' : 'layout-fixed'"
+                    :icon="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? layout_auto_icon : layout_fixed_icon"
                     :name="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? 'hor_resizing' : 'hor_fixed'"
                     :isMenu="true" :show="horSizingMenu" :disabled="true" :item="t(`autolayout.${StackSizing.Fixed}`)"
                     :value="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? t(`autolayout.adapt`) : t(`autolayout.${StackSizing.Fixed}`)"
                     @changeItem="(v) => changeSizing(v, 'hor')" @shwoMenu="shwoHorSizingMenu">
                 </AutoLayoutInput>
                 <AutoLayoutInput
-                    :icon="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? 'layout-ver-fixed' : 'layout-ver-auto'"
+                    :icon="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? layout_ver_fixed_icon : layout_ver_auto_icon"
                     :name="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? 'ver_fixed' : 'ver_resizing'"
                     :isMenu="true" :show="verSizingMenu" :disabled="true" :item="t(`autolayout.${StackSizing.Fixed}`)"
                     :value="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? t(`autolayout.${StackSizing.Fixed}`) : t(`autolayout.adapt`)"
