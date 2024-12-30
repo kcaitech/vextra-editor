@@ -3,6 +3,7 @@ import ToolButton from '../Buttons/ToolButton.vue';
 import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n()
 const props = defineProps<{
