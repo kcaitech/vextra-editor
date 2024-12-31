@@ -1,6 +1,7 @@
 import { Context } from "@/context";
 import {
     ColVector3D,
+    makeShapeTransform2By1,
     ShapeView,
     Transform,
 } from "@kcdesign/data"
@@ -30,11 +31,11 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
         shapes.push(shape);
 
-        const t = shape.transform2.clone();
+        const t = makeShapeTransform2By1(shape.transform);
 
         let parent2root = TC.get(parent.id);
         if (!parent2root) {
-            parent2root = parent.transform2FromRoot.clone();
+            parent2root = makeShapeTransform2By1(parent.matrix2Root());
             TC.set(parent.id, parent2root);
         }
 
@@ -63,7 +64,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
     const selectionTransform = multi
         ? new Transform().setTranslate(ColVector3D.FromXY(left, top))
-        : shape1th.transform2FromRoot.clone();
+        : makeShapeTransform2By1(shape1th.matrix2Root());
 
     const selectionTransformInverse = selectionTransform.getInverse();
 
@@ -72,8 +73,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
         for (const shape of shapes) {
             STLIS.push({
                 shape,
-                transform: shape.transform2
-                    .clone()
+                transform: makeShapeTransform2By1(shape.transform)
                     .addTransform(TC.get(shape.parent!.id)!)
                     .addTransform(selectionTransformInverse)
             });

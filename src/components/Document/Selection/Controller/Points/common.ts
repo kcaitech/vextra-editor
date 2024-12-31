@@ -20,7 +20,7 @@ interface Dot {
 }
 
 export function getRotationFromTransform(shape: ShapeView) {
-    return shape.transform2FromRoot.decomposeEuler().z * 180 / Math.PI;
+    return shape.matrix2Root().decomposeEuler().z * 180 / Math.PI;
 }
 
 export function getTransformForPart() {
@@ -229,7 +229,7 @@ export function get_transform(shape: ShapeView) {
         isFlippedVertical: false,
     };
 
-    result.rotate = shape.transform2FromRoot.decomposeEuler().z * 180 / Math.PI;
+    result.rotate = shape.matrix2Root().decomposeEuler().z * 180 / Math.PI;
 
     return result
 }

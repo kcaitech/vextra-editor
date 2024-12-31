@@ -65,7 +65,7 @@ export class LineHandler extends TransformHandler {
         this.assist.set_trans_target([this.lineShape]);
 
         const frame = this.lineShape.frame;
-        this.matrix = new Matrix(this.lineShape.matrix2Root());
+        this.matrix = (this.lineShape.matrix2Root()).toMatrix();
         this.matrix.preScale(frame.width, frame.height);
 
         this.inverse = new Matrix(this.matrix.inverse);

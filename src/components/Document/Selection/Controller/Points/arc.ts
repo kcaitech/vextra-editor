@@ -1,4 +1,4 @@
-import { AsyncApiCaller, PathShapeView, OvalModifier, Matrix } from "@kcdesign/data";
+import { AsyncApiCaller, PathShapeView, OvalModifier, Matrix, TransformRaw } from "@kcdesign/data";
 import { Context } from '@/context';
 
 export interface Dot {
@@ -56,11 +56,11 @@ export class ArcFreeModifier {
         const oval = this.m_oval;
 
         let xy = this.context.workspace.getContentXY(event);
-        let matrix = new Matrix();
+        let matrix = new TransformRaw();
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
         matrix.multiAtLeft(this.context.workspace.matrix);
-        matrix = new Matrix(matrix.inverse);
+        matrix = (matrix.inverse);
 
         xy = matrix.computeCoord3(xy);
 
@@ -146,12 +146,12 @@ export class ArcFreeModifier {
         const start = oval.startingAngle ?? 0;
         let xy = this.context.workspace.getContentXY(event);
 
-        let matrix = new Matrix();
+        let matrix = new TransformRaw();
         start && matrix.rotate(start, 0.5, 0.5);
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
         matrix.multiAtLeft(this.context.workspace.matrix);
-        matrix = new Matrix(matrix.inverse);
+        matrix = (matrix.inverse);
         xy = matrix.computeCoord3(xy);
 
         let __end = Math.atan2(xy.y - 0.5, xy.x - 0.5);
@@ -177,12 +177,12 @@ export class ArcFreeModifier {
         const start = oval.startingAngle ?? 0;
         let xy = this.context.workspace.getContentXY(event);
 
-        let matrix = new Matrix();
+        let matrix = new TransformRaw();
         start && matrix.rotate(start, 0.5, 0.5);
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
         matrix.multiAtLeft(this.context.workspace.matrix);
-        matrix = new Matrix(matrix.inverse);
+        matrix = (matrix.inverse);
         xy = matrix.computeCoord3(xy);
 
         let __end = Math.atan2(xy.y - 0.5, xy.x - 0.5);

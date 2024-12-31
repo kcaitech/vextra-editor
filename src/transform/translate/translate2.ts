@@ -2,7 +2,8 @@ import { BoundHandler } from "@/transform/handler";
 import {
     ArtboradView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
     ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
-    adapt2Shape, layoutShapesOrder, makeShapeTransform1By2, PathShapeView
+    adapt2Shape, layoutShapesOrder, makeShapeTransform1By2, PathShapeView,
+    makeShapeTransform2By1
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -102,7 +103,7 @@ class EnvRadar {
     private __get_matrix(view: ShapeView) {
         let matrix = this.__root_envs.get(view)!;
         if (!matrix) {
-            matrix = new Matrix(view.matrix2Root().inverse);
+            matrix = (view.matrix2Root().inverse.toMatrix());
             this.__root_envs.set(view, matrix);
         }
         return matrix;
@@ -340,11 +341,11 @@ class SelModel {
 
             let p2r = cache.get(parent)!;
             if (!p2r) {
-                p2r = parent.transform2FromRoot.clone();
+                p2r = makeShapeTransform2By1(parent.matrix2Root());
                 cache.set(parent, p2r);
             }
 
-            const transform = shape.transform2.clone();
+            const transform = makeShapeTransform2By1(shape.transform);
             transform.addTransform(p2r);
 
             original.set(shape.id, {
@@ -996,7 +997,7 @@ class Inserter {
     pre() {
         const env = this.layoutEnv!;
         const living = this.translate.living;
-        const matrix = new Matrix(env.matrix2Root().inverse);
+        const matrix = (env.matrix2Root().inverse);
         const { x, y } = matrix.computeCoord3(living);
         const mode = this.layout!.stackMode || StackMode.Horizontal;
 
@@ -1114,7 +1115,7 @@ export class Translate2 extends BoundHandler {
             const parent = shape.parent!;
             let PI = cache.get(parent)!;
             if (!PI) {
-                PI = parent.transform2FromRoot.getInverse();
+                PI = makeShapeTransform2By1(parent.matrix2Root().getInverse());
                 cache.set(parent, PI);
             }
             const __t = model.getBaseTransform(shape)

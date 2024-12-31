@@ -93,17 +93,15 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                     pcloneSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
                 } else {
                     const matrix = el.style.transform;
-                    const m = shape.transform2FromRoot;
+                    const m = shape.matrix2Root();
                     const size = shape.outerFrame;
-                    m.translateX(-m.m03);
-                    m.translateY(-m.m13);
-                    const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+                    m.trans(-m.m02, -m.m12);
+                    const box = XYsBounding(m.transform([
                         ColVector3D.FromXY(size.x - left, size.y - top),
                         ColVector3D.FromXY(size.width + right, size.y - top),
                         ColVector3D.FromXY(size.width + right, size.height + bottom),
                         ColVector3D.FromXY(size.x - left, size.height + bottom),
-                    ]);
-                    const box = XYsBounding([lt, rt, rb, lb]);
+                    ]));
                     // 解析 matrix 值
                     let values = matrix.match(/matrix.*\((.+)\)/)![1].split(', ');
                     // 转换为数字并修改值（这里假设你要修改缩放值）
@@ -191,17 +189,15 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                     cloneSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
                 } else {
                     const matrix = el.style.transform;
-                    const m = shape.transform2FromRoot;
+                    const m = shape.matrix2Root();
                     const size = shape.frame;
-                    m.translateX(-m.m03);
-                    m.translateY(-m.m13);
-                    const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+                    m.trans(-m.m02, -m.m12);
+                    const box = XYsBounding(m.transform([
                         ColVector3D.FromXY(size.x - left, size.y - top),
                         ColVector3D.FromXY(size.width + right, size.y - top),
                         ColVector3D.FromXY(size.width + right, size.height + bottom),
                         ColVector3D.FromXY(size.x - left, size.height + bottom),
-                    ]);
-                    const box = XYsBounding([lt, rt, rb, lb]);
+                    ]));
                     // 解析 matrix 值
                     let values = matrix.match(/matrix.*\((.+)\)/)![1].split(', ');
                     // 转换为数字并修改值（这里假设你要修改缩放值）

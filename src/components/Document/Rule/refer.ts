@@ -198,7 +198,7 @@ export class ReferLineHandler extends TransformHandler {
                 offset = __root_xy.y;
             }
         } else {
-            const m = new Matrix(currentEnv.matrix2Root().inverse);
+            const m = (currentEnv.matrix2Root().inverse);
 
             if (axis === GuideAxis.X) {
                 offset = m.computeCoord3(__root_xy).x;
@@ -253,7 +253,7 @@ export class ReferLineHandler extends TransformHandler {
             if (env.parent?.id !== this.page.id || !env.isNoTransform()) return;
 
             if (_o_env.id === this.page.id) {  // 页面迁容器
-                const m = new Matrix(env.matrix2Root().inverse);
+                const m = (env.matrix2Root().inverse);
 
                 if (guide.axis === GuideAxis.X) {
                     targetOffset = m.computeCoord2(guide.offset, 0).x;
@@ -262,7 +262,7 @@ export class ReferLineHandler extends TransformHandler {
                 }
             } else { // 容器迁容器
                 const m1 = _o_env.matrix2Root();
-                const m2 = new Matrix(env.matrix2Root().inverse);
+                const m2 = (env.matrix2Root().inverse);
 
                 if (guide.axis === GuideAxis.X) {
                     let _temp = m1.computeCoord2(guide.offset, 0).x;

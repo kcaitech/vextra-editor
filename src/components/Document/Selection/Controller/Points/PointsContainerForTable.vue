@@ -49,7 +49,7 @@ function update() {
 
 function update_transform() {
     const shape = props.shape;
-    const m = shape.transform2FromRoot;
+    const m = makeShapeTransform2By1(shape.matrix2Root());
     const mClient = makeShapeTransform2By1(props.context.workspace.matrix as unknown as TransformRaw);
     m.addTransform(mClient);
 
@@ -229,7 +229,7 @@ function point_mouseleave() {
 function setCursor() {
     const shape = props.shape;
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix as unknown as TransformRaw);
-    const fromRoot = shape.transform2FromRoot;
+    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
 
     const fromClient = fromRoot.addTransform(clientMatrix);
     const {x, y, width, height} = shape.frame;

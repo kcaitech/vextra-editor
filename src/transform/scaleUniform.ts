@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import { ColVector3D, Matrix, Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit } from "@kcdesign/data";
+import { ColVector3D, makeShapeTransform2By1, Matrix, Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit } from "@kcdesign/data";
 import { AnchorType } from "@/components/Document/Attribute/Scale/index";
 
 type Box = {
@@ -188,7 +188,7 @@ export class ScaleUniformer extends TransformHandler {
         let m = shape.matrix2Parent();
         let _m = parent2rootMatrixCache.get(parent.id)!;
         if (!_m) {
-            _m = parent.matrix2Root();
+            _m = (parent.matrix2Root().toMatrix());
             parent2rootMatrixCache.set(parent.id, _m);
         }
 
@@ -257,9 +257,9 @@ export class ScaleUniformer extends TransformHandler {
             bases.set(shape.id, f);
 
             if (!cache.has(shape.parent!)) {
-                const transform = shape.parent!.transform2FromRoot.clone();
-                cache.set(shape.parent!, transform);
-                inverseCache.set(shape.parent!, transform.getInverse());
+                const transform = shape.parent!.matrix2Root();
+                cache.set(shape.parent!, makeShapeTransform2By1(transform));
+                inverseCache.set(shape.parent!, makeShapeTransform2By1(transform.getInverse()));
             }
         }
 
@@ -280,12 +280,12 @@ export class ScaleUniformer extends TransformHandler {
 
         this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(alpha.transform2FromRoot);
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(makeShapeTransform2By1(alpha.matrix2Root()));
 
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;
 
-        this.shapeTransformListInSelection = shapes.map((shape, i) => shape.transform2.clone()
+        this.shapeTransformListInSelection = shapes.map((shape, i) => makeShapeTransform2By1(shape.transform)
             .addTransform(cache.get(shape.parent!)!)
             .addTransform(selectionInverse))
 

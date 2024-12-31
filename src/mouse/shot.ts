@@ -37,7 +37,7 @@ export class Shot {
         const m = env.matrix2Root();
         m.multiAtLeft(this.context.workspace.matrix);
         m.trans(-root.x, -root.y);
-        this.transform = new Matrix(m.inverse);
+        this.transform = (m.inverse.toMatrix());
     }
 
     get env() {

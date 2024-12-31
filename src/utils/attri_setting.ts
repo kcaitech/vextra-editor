@@ -123,7 +123,7 @@ export function get_rotate_for_straight(shape: PathShapeView) {
     const points = shape.segments[0].points;
     const p1 = points[0];
     const p2 = points[1];
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
     const lt = m.computeCoord2(p1.x, p1.y);
     const rb = m.computeCoord2(p2.x, p2.y);

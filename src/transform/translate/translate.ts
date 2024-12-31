@@ -304,7 +304,7 @@ export class TranslateHandler extends TransformHandler {
             if (!parent) continue;
             const { x, y, width, height } = shape.frame;
             if (!matrixParent2rootCache.has(parent.id)) {
-                matrixParent2rootCache.set(parent.id, parent.transform2FromRoot)
+                matrixParent2rootCache.set(parent.id, makeShapeTransform2By1(parent.matrix2Root()))
             }
 
             const m = makeShapeTransform2By1(shape.transform).clone();
@@ -595,7 +595,7 @@ export class TranslateHandler extends TransformHandler {
 
             let PI = PIC.get(parent.id);
             if (!PI) {
-                const __p = parent.transform2FromRoot.getInverse();
+                const __p = makeShapeTransform2By1(parent.matrix2Root().getInverse());
 
                 PIC.set(parent.id, __p);
                 PI = __p;
@@ -656,7 +656,7 @@ export class TranslateHandler extends TransformHandler {
         if (!layoutEnv) return;
         const ctx = this.context;
         const living = this.livingPoint;
-        const xy = layoutEnv.transform2FromRoot.getInverse().transform(ColVector3D.FromXY(living.x, living.y)).col0;
+        const xy = layoutEnv.matrix2Root().getInverse().transform(ColVector3D.FromXY(living.x, living.y));
         const layoutGrid = this.layoutForInsert;
         if (!layoutGrid) return;
         for (let i = 0; i < layoutGrid.row.length; i++) {

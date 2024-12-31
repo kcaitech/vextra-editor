@@ -198,7 +198,7 @@ export class Clipboard {
 
             origin_transform_map[`${shape.id}`] = shape.transform.clone();
 
-            position_map.set(shape.id, makeShapeTransform1By2(shape.transform2FromRoot) as TransformRaw);
+            position_map.set(shape.id, (shape.matrix2Root()));
 
             if (shape instanceof ContactShape) {
                 points_map.set(shape.id, shape.getPoints());
@@ -1294,7 +1294,7 @@ export function adjust_content_xy(context: Context, m: { width: number, height: 
     }
 
     const page = context.selection.selectedPage!;
-    const __m = new Matrix(page.matrix2Root());
+    const __m = (page.matrix2Root());
     __m.multiAtLeft(matrix);
     const page_center = __m.inverseCoord(root.center);
     return { x: page_center.x - m.width / 2, y: page_center.y - m.height / 2 };
@@ -1451,8 +1451,8 @@ function get_env_by_xy(context: Context, xy: XY) {
             continue;
         }
 
-        const t = s.transform2FromRoot.decomposeTranslate();
-        if (Math.abs(t.x - xy.x) < 0.001 && Math.abs(t.y - xy.y) < 0.01) continue;
+        const t = s.matrix2Root()
+        if (Math.abs(t.translateX - xy.x) < 0.001 && Math.abs(t.translateY - xy.y) < 0.01) continue;
 
         return s;
     }
@@ -1588,10 +1588,10 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             // console.log('将粘贴到ROOT下，并原位粘贴');
             // 没有逃离屏幕可视区域，原位粘贴
             for (const shape of source) {
-                const t = makeShapeTransform2By1(shape.transform);
-                t.addTransform(env.transform2FromRoot.getInverse());
+                const t = (shape.transform.clone());
+                t.multi(env.matrix2Root().getInverse());
 
-                shape.transform = makeShapeTransform1By2(t) as TransformRaw;
+                shape.transform = (t);
             }
         } else {
             // 逃离了屏幕可视区域，尝试居中
@@ -1629,37 +1629,30 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             const dx = centerAfterScale.x - (right + left) / 2;
             const dy = centerAfterScale.y - (bottom + top) / 2;
 
-            const selectionTransform = new Transform()
-                .setTranslate(ColVector3D.FromXY(dx, dy));
+            const selectionTransform = new TransformRaw().trans(dx, dy);
 
             // at last 调整选区内每个图层的位置
             for (const shape of source) {
-                const t = makeShapeTransform2By1(shape.transform)
+                const t = (shape.transform)
                     .clone()
-                    .addTransform(selectionTransform)
-                    .addTransform(env.transform2FromRoot.getInverse());
+                    .multi(selectionTransform)
+                    .multi(env.matrix2Root().getInverse());
 
-                shape.transform = makeShapeTransform1By2(t) as TransformRaw;
+                shape.transform = (t);
             }
         }
     } else { // 将粘贴在指定的容器下
         // console.log('计划在对等位将目标选区粘贴在目标容器中，若脱离则调整对应轴至居中');
         const { x: envX, y: envY, width: envWidth, height: envHeight } = env.frame;
 
-        const env2root = env.transform2FromRoot;
-        const {
-            col0: envLT,
-            col1: envRT,
-            col2: envRB,
-            col3: envLB
-        } = env2root.transform([
+        const env2root = env.matrix2Root();
+        const envBound = XYsBounding(env2root.transform([
             ColVector3D.FromXY(envX, envY),
             ColVector3D.FromXY(envX + envWidth, envY),
             ColVector3D.FromXY(envX + envWidth, envY + envHeight),
             ColVector3D.FromXY(envX, envY + envHeight),
-        ]);
+        ]));
 
-        const envBound = XYsBounding([envLT, envRT, envRB, envLB]);
         const envBoundWidth = envBound.right - envBound.left;
         const envBoundHeight = envBound.bottom - envBound.top;
 
@@ -1696,16 +1689,15 @@ function fixToXY(context: Context, source: Shape[], xy: XY) {
     const bounding = sourceBounding(source);
     const dx = xy.x - bounding.left;
     const dy = xy.y - bounding.top;
-    const selectionTransform = new Transform()
-        .setTranslate(ColVector3D.FromXY(dx, dy));
+    const selectionTransform = new TransformRaw().trans(dx, dy);
 
     for (const shape of source) {
-        const t = makeShapeTransform2By1(shape.transform)
+        const t = (shape.transform)
             .clone()
-            .addTransform(selectionTransform)
-            .addTransform(env.transform2FromRoot.getInverse());
+            .multi(selectionTransform)
+            .multi(env.matrix2Root().getInverse());
 
-        shape.transform = makeShapeTransform1By2(t) as TransformRaw;
+        shape.transform = (t);
     }
 
     return env;

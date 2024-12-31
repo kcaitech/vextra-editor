@@ -149,7 +149,7 @@ const getPosition = (shape: ShapeView) => {
     if (shape.type === ShapeType.Cutout) {
         if (p_artboard) {
             const __frame = shape._p_frame;
-            const _f = shape.parent!.transform2.transform(ColVector3D.FromXY(__frame.x, __frame.y)).col0;
+            const _f = shape.parent!.transform.transform(ColVector3D.FromXY(__frame.x, __frame.y));
             xy.value.x = _f.x;
             xy.value.y = _f.y;
             width.value = shape.frame.width;

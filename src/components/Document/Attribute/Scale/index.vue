@@ -13,7 +13,7 @@ import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
-import { ColVector3D, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
+import { ColVector3D, makeShapeTransform2By1, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
 import { ScaleUniformer } from "@/transform/scaleUniform";
 
 const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();
@@ -37,17 +37,16 @@ function __get_box() {
     const points: XY[] = [];
     for (const shape of selected) {
         const frame = shape.frame;
-        const transform = shape.transform2FromRoot;
+        const transform = shape.matrix2Root();
         const right = frame.x + frame.width;
         const bottom = frame.y + frame.height;
 
-        const { col0, col1, col2, col3 } = transform.transform([
+        points.push(...transform.transform([
             ColVector3D.FromXY(frame.x, frame.y),
             ColVector3D.FromXY(right, frame.y),
             ColVector3D.FromXY(right, bottom),
             ColVector3D.FromXY(frame.x, bottom),
-        ]);
-        points.push(col0, col1, col2, col3);
+        ]));
     }
     return XYsBounding(points);
 }
@@ -107,14 +106,14 @@ function __change_size(ratio: number) {
     for (const shape of selected) {
         const parent = shape.parent!;
         if (cache.has(parent)) continue;
-        cache.set(parent, parent.transform2FromRoot);
+        cache.set(parent, makeShapeTransform2By1(parent.matrix2Root()));
     }
 
     const selectionTransform = new Transform().setTranslate(ColVector3D.FromXY(box.left, box.top));
     const inverse = selectionTransform.getInverse();
 
     for (const shape of selected) {
-        const transform = shape.transform2.clone().addTransform(cache.get(shape.parent!)!);
+        const transform = makeShapeTransform2By1(shape.transform).addTransform(cache.get(shape.parent!)!);
         transform.addTransform(inverse);
         units.push({ shape, transform });
     }
@@ -127,7 +126,7 @@ function __change_size(ratio: number) {
     for (const shape of selected) {
         const parent = shape.parent!;
         if (parentsTransform.has(parent)) continue;
-        const t = parent.transform2FromRoot.clone();
+        const t = makeShapeTransform2By1(parent.matrix2Root());
         parentsTransform.set(parent, t.getInverse());
     }
 

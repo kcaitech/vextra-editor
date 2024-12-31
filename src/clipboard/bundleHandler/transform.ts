@@ -47,20 +47,14 @@ export class ClipboardTransformHandler {
     private __fit_to_env(source: Shape[], env: GroupShapeView, originTransform: any) {
         const { x: envX, y: envY, width: envWidth, height: envHeight } = env.frame;
 
-        const env2root = env.transform2FromRoot;
-        const {
-            col0: envLT,
-            col1: envRT,
-            col2: envRB,
-            col3: envLB
-        } = env2root.transform([
+        const env2root = env.matrix2Root();
+        const envBound = XYsBounding(env2root.transform([
             ColVector3D.FromXY(envX, envY),
             ColVector3D.FromXY(envX + envWidth, envY),
             ColVector3D.FromXY(envX + envWidth, envY + envHeight),
             ColVector3D.FromXY(envX, envY + envHeight),
-        ]);
+        ]));
 
-        const envBound = XYsBounding([envLT, envRT, envRB, envLB]);
         const envBoundWidth = envBound.right - envBound.left;
         const envBoundHeight = envBound.bottom - envBound.top;
 
@@ -196,13 +190,13 @@ export class ClipboardTransformHandler {
         const matrix = workspace.matrix;
         const center = matrix.inverseCoord(root.center);
         const start = { x: center.x - width / 2, y: center.y - height / 2 };
-        const inverse1 = new Transform().setTranslate(ColVector3D.FromXY(start.x - box.left, start.y - box.top));
-        const inverse2 = context.selection.selectedPage!.transform2FromRoot.getInverse();
+        // const inverse1 = new Transform().setTranslate(ColVector3D.FromXY(start.x - box.left, start.y - box.top));
+        const inverse2 = context.selection.selectedPage!.matrix2Root().getInverse();
         for (const shape of shapes) {
-            const transform = makeShapeTransform2By1(shape.transform);
-            transform.addTransform(inverse1);
-            transform.addTransform(inverse2);
-            shape.transform = makeShapeTransform1By2(transform);
+            const transform = (shape.transform).clone();
+            transform.trans(start.x - box.left, start.y - box.top)
+            transform.multi(inverse2);
+            shape.transform = transform
         }
         const parent = adapt2Shape(context.selection.selectedPage!) as GroupShape;
         return shapes.map(shape => ({ parent, shape }));
@@ -233,7 +227,7 @@ export class ClipboardTransformHandler {
         return shapes.map(shape => {
             const box = this.sourceBounding([shape]);
             const parent = getParent(shape, context.selection.getLayers({ x: box.left, y: box.top })) as GroupShapeView;
-            shape.transform = makeShapeTransform1By2(makeShapeTransform2By1(shape.transform).addTransform(parent.transform2FromRoot.getInverse()));
+            shape.transform = (shape.transform).clone().multi(parent.matrix2Root().getInverse());
             return { shape, parent: adapt2Shape(parent) as GroupShape }
         });
     }

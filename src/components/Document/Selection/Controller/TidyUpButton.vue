@@ -336,7 +336,7 @@ const mousemove = (e: MouseEvent) => {
         const selected = props.context.selection.selectedShapes;
         const parent = selected[0].parent!
         const matrix2Root = parent.matrix2Root();
-        const m = new Matrix(matrix2Root.inverse);
+        const m = (matrix2Root.inverse);
         const downXy = m.computeCoord(downClientXY);
         const moveXy = m.computeCoord2(e.clientX, e.clientY);
         const scale = props.context.workspace.matrix.m00;
