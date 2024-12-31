@@ -125,6 +125,8 @@ export class ProtoAction {
 
     executeSmartShape(exe_shape: ShapeView, shape: ShapeView, animate: string) {
         const processed = new Set();
+        console.log(exe_shape.name, shape.name);
+
         const exe_shapes = this.getShapeAllChilds(exe_shape);
         const shapes = this.getShapeAllChilds(shape);
         const nameMap: Map<string, ShapeView> = new Map();
@@ -200,8 +202,8 @@ export class ProtoAction {
                     const matrixValues = item.transform.toArray();
                     matrixValues[0] /= pm0;
                     matrixValues[3] /= pm3;
-                    matrixValues[4] = box.left - p_box.left;
-                    matrixValues[5] = box.top - p_box.top;
+                    matrixValues[4] = (box.left - p_box.left) / this.m_matrix.m00;
+                    matrixValues[5] = (box.top - p_box.top) / this.m_matrix.m00;
                     matrixValues[4] /= pm0;
                     matrixValues[5] /= pm3;
                     const newMatrix = `matrix(${matrixValues.join(',')})`;
@@ -210,7 +212,7 @@ export class ProtoAction {
                 el.style['transition'] = animate;
                 exe_el?.appendChild(el as any)
                 setTimeout(() => {
-                    el.style['opacity'] = '1'; // 过渡到完全不透明
+                    el.style['opacity'] = '1'; // 过渡到 完全不透明
                 }, 0);
             }
         });
