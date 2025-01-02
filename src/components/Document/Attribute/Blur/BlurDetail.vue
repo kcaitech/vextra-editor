@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { nextTick, ref } from 'vue';
+import { nextTick, reactive, ref } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
 import { Blur, LinearApi, ShapeView } from '@kcdesign/data';
@@ -18,6 +18,7 @@ interface Props {
     blur: Blur | undefined
     shapes: ShapeView[]
     entry?: string
+    isMask?: boolean
 }
 
 interface Emits {
@@ -30,6 +31,9 @@ const emits = defineEmits<Emits>();
 const props = defineProps<Props>();
 const popover = ref();
 const blurValue = ref(0);
+const Detail = reactive({
+    value: blurValue
+})
 let blurModifyHandler: BlurHandler | undefined = undefined;
 function showMenu() {
     props.context.menu.notify(Menu.SHUTDOWN_MENU);
@@ -40,6 +44,9 @@ const linearApi = new LinearApi(props.context.coopRepo, props.context.data, prop
 const progressBar = ref<HTMLDivElement>()
 const progress = ref<HTMLDivElement>()
 const progressBtn = ref<HTMLDivElement>()
+
+defineExpose({ Detail })
+
 let isDragging = false
 const onMouseDown = (e: MouseEvent) => {
     isDragging = true;
@@ -55,6 +62,7 @@ const onMouseDown = (e: MouseEvent) => {
 const onMouseMove = (e: MouseEvent) => {
     if (isDragging) {
         updateProgress(e.clientX);
+        if (props.isMask) return;
         if (!blurModifyHandler) {
             return
         }
@@ -78,6 +86,7 @@ const onMouseUP = () => {
 }
 
 function down(e: MouseEvent) {
+    if (props.isMask) return;
     blurModifyHandler = new BlurHandler(props.context, e);
     if (!blurModifyHandler.asyncApiCaller) {
         blurModifyHandler.createApiCaller();
@@ -129,6 +138,7 @@ function changeBlurInput(e: Event) {
     if (value < 0) value = 0;
     if (value > 200) value = 200;
     blurValue.value = value;
+    if (props.isMask) return;
     if (props.entry === 'style') {
         emits('setBlurSaturation', value);
     } else {
@@ -154,6 +164,7 @@ const text_keyboard = (e: KeyboardEvent, val: string | number) => {
         if (isNaN(value)) return;
         value = value <= 0 ? 0 : value <= 200 ? value : 200
         blurValue.value = value
+        if (props.isMask) return;
         if (props.entry === 'style') {
             emits('keyDownSaturation', linearApi, value);
         } else {
@@ -182,7 +193,7 @@ watchEffect(() => {
 </script>
 
 <template>
-    <div class="blur-detail-container" @mousedown.stop>
+    <div class="blur-detail-container">
         <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
             :title="`${t('blur.blur_setting')}`">
             <template #trigger>

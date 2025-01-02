@@ -1,5 +1,5 @@
 <template>
-    <div class="container" @wheel.stop>
+    <div class="color-container" @wheel.stop>
         <div class="search">
             <div class="icon">
                 <svg-icon icon-class="search"></svg-icon>
@@ -223,7 +223,7 @@ onUnmounted(() => {
 
 </script>
 <style lang="scss" scoped>
-.container {
+.color-container {
     margin-bottom: 8px;
 }
 

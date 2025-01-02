@@ -1,5 +1,5 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">创建边框样式</div>
             <div class="close" @click.stop="emits('close')">
@@ -16,12 +16,12 @@
                 <input type="text" id="des" v-model="des">
             </div>
         </div>
-        <div class="border" v-if="borders.length">
+        <div class="border">
             <div class="type">
                 <div class="title">位置</div>
                 <Select class="select" :context="props.context" :shapes="props.shapes" :source="positonOptionsSource"
-                    :selected="positonOptionsSource.find(i => i.data.value === borders[0].border.position)?.data"
-                    @select="positionSelect" :index="borders.length - 1"></Select>
+                    :selected="positonOptionsSource.find(i => i.data.value ===borderData.position)?.data"
+                    @select="positionSelect"></Select>
             </div>
             <div class="thickness">
                 <div class="title">粗细</div>
@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShapeType, Border, TableCellView, PathShapeView } from '@kcdesign/data';
+import { ShapeView, BorderPosition, ShapeType, SideType, TableCellView, PathShapeView,StrokePaint,CornerType,BorderStyle,BorderSideSetting } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
@@ -45,10 +45,17 @@ import { get_actions_border_position, get_borders } from '@/utils/shape_style';
 import { Selection } from "@/context/selection";
 import { getShapesForStyle } from '@/utils/style';
 
-interface BorderItem {
+interface StrokePaintItem {
     id: number
-    border: Border
+    strokePaint: StrokePaint
 }
+interface BorderData {
+    position: BorderPosition | string
+    cornerType: CornerType | string
+    borderStyle: BorderStyle | string
+    sideSetting: BorderSideSetting | string,
+}
+
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
@@ -62,6 +69,17 @@ const emits = defineEmits<{
 
 const { t } = useI18n();
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
+    const initBorder = {
+    position: BorderPosition.Center,
+    cornerType: CornerType.Miter,
+    borderStyle: new BorderStyle(0, 0),
+    sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
+}
+    const borderData = ref<BorderData>({ ...initBorder })
+const data: { strokePaints: StrokePaintItem[] } = reactive({
+    strokePaints: [],
+});
+const { strokePaints } = data;
 const watchedShapes = new Map();
 const positonOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
@@ -73,8 +91,7 @@ const reflush_apex = ref(0);
 const show_apex = ref<boolean>(false);
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-const data: { borders: BorderItem[] } = reactive({ borders: [] });
-const { borders } = data;
+const hasStroke = ref(false);
 const thickness = ref<string>('')
 const oldvalue = ref<string>('')
 const name = ref<string>('name')
@@ -97,8 +114,6 @@ const setThickness = () => {
 }
 
 function positionSelect(selected: SelectItem, id: number | undefined) {
-    console.log(selected.value, id);
-
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
@@ -154,9 +169,11 @@ function watcher(...args: any[]) {
 function updateData() {
     mixed.value = false;
     mixed_cell.value = false;
+    hasStroke.value = false;
     const selecteds = props.context.selection.selectedShapes;
     if (selecteds.length < 1) return;
-    borders.length = 0;
+    strokePaints.length = 0;
+    borderData.value = initBorder;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -173,28 +190,34 @@ function updateData() {
             cells.push(is_edting)
         }
         if (cells.length > 0) {
-            const _bs = get_borders(cells);
-            if (_bs === 'mixed') {
+            const { border, stroke_paints } = get_borders(cells);
+            if (stroke_paints === 'mixed') {
                 mixed_cell.value = true;
+                hasStroke.value = true;
             } else {
-                if (_bs.length > 0 && might_is_mixed) {
+                if (stroke_paints.length > 0 && might_is_mixed) {
                     mixed_cell.value = true;
+                    hasStroke.value = true;
                 } else {
-                    borders.push(..._bs.reverse());
+                    strokePaints.push(...stroke_paints.reverse());
+                    if (stroke_paints.length) hasStroke.value = true;
                 }
             }
+            borderData.value = border;
         }
     } else {
         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-        const _bs = get_borders(shapes);
-        if (_bs === 'mixed') {
+        const { border, stroke_paints } = get_borders(shapes);
+        if (stroke_paints === 'mixed') {
             mixed.value = true;
+            hasStroke.value = true;
         } else {
-            borders.push(..._bs.reverse());
+            strokePaints.push(...stroke_paints.reverse());
+            if (stroke_paints.length) hasStroke.value = true;
         }
+        borderData.value = border;
     }
-    if (!borders.length) return;
-    const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders[0].border.sideSetting
+    const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } =borderData.value.sideSetting as BorderSideSetting;
     thickness.value = `${thicknessTop},${thicknessRight},${thicknessBottom},${thicknessLeft}`;
     oldvalue.value = thickness.value;
     reflush_side.value++

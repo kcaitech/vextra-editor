@@ -85,7 +85,8 @@ function watchShapes() {
 function updateData() {
     shadows.length = 0;
     mixed.value = false;
-    mask.value = false
+    mask.value = false;
+    shadow.value = undefined;
     const len = props.shapes.length;
     if (len === 1) {
         const shape = props.shapes[0];
@@ -155,7 +156,7 @@ function addShadow(): void {
 }
 
 function first() {
-    if (shadows.length === 0 && !mixed.value) addShadow();
+    if (shadows.length === 0 && !mixed.value && !mask.value) addShadow();
 }
 
 function deleteFill(idx: number) {
@@ -210,12 +211,9 @@ const openEffectPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     showshadow.value = !showshadow.value
+    document.addEventListener('click', checktargetlist)
     props.context.escstack.save(v4(), close);
-    if (showshadow.value) {
-        document.addEventListener('click', checktargetlist)
-    } else {
-        document.removeEventListener('click', checktargetlist)
-    }
+
 }
 
 function close() {
@@ -226,14 +224,11 @@ function close() {
 }
 
 function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelector('.shadow-style')
-    const muen2 = document.querySelector('.shadow-container')
-    if (!muen) return;
-    if (!muen2) return;
-    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
-        showshadow.value = false
-        document.removeEventListener('click', checktargetlist)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.shadow-container') &&
+        !e.target.closest('.shadow-style') &&
+        !e.target.closest('.shadow-left') &&
+        close();
 }
 
 const closepanel = () => {
@@ -316,7 +311,7 @@ onUnmounted(() => {
         </div>
         <div class="shadowmask" v-if="mask">
             <div class="info">
-                <div class="left" @click.stop="">
+                <div class="shadow-left" @click="openEffectPanel($event)">
                     <div class="effect" :style="{
                         boxShadow: `
                         ${shadow?.shadows[0].position.includes('in') ? 'inset' : ''} 
@@ -333,12 +328,12 @@ onUnmounted(() => {
                     <svg-icon icon-class="unbind"></svg-icon>
                 </div>
             </div>
-            <div class="delete-style">
-                <svg-icon icon-class="delete" @click.stop="delstyleshadow"></svg-icon>
+            <div class="delete-style" @click="delstyleshadow">
+                <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>
         <EffectStyle v-if="showshadow" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closepanel"></EffectStyle>
+            @close="closepanel" :id="shadow?.id"></EffectStyle>
     </div>
 </template>
 
@@ -485,7 +480,7 @@ onUnmounted(() => {
             background-color: #f4f5f5;
             height: 100%;
 
-            .left {
+            .shadow-left {
                 flex: 1;
                 display: flex;
                 align-items: center;

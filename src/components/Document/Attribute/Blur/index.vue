@@ -80,6 +80,7 @@ function updateData() {
     mixed.value = false;
     mask.value = false;
     blurInfo.value = undefined;
+    blurMask.value = undefined;
     const len = props.shapes.length;
     if (len === 1) {
         const shape = props.shapes[0];
@@ -126,7 +127,7 @@ function addBlur(): void {
         if (mask) {
             const s = props.shapes.findLast(i => i.style.blursMask !== undefined)
             console.log(s);
-            
+
             const id = s?.style.blursMask as string
             const actions = get_actions_add_mask(props.shapes, id);
             editor.shapesSetBlurMask(actions);
@@ -189,7 +190,7 @@ const delstyleblur = () => {
     editor.shapesDelStyleBlur(actions);
 }
 
-const openBlurPanel = (e: MouseEvent) => {
+const openBlurPanel = (e: MouseEvent, id?: string) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'blur-panel') {
         if (el.parentElement) {
@@ -200,12 +201,8 @@ const openBlurPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     showblur.value = !showblur.value
+    document.addEventListener('click', checktargetlist)
     props.context.escstack.save(v4(), close);
-    if (showblur.value) {
-        document.addEventListener('click', checktargetlist)
-    } else {
-        document.removeEventListener('click', checktargetlist)
-    }
 }
 
 function close() {
@@ -221,14 +218,11 @@ function update_by_shapes() {
 }
 
 function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelector('.blur-style')
-    const muen2 = document.querySelector('.shadow-container')
-    if (!muen) return;
-    if (!muen2) return;
-    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
-        showblur.value = false
-        document.removeEventListener('click', checktargetlist)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.shadow-container') &&
+        !e.target.closest('.blur-style') &&
+        !e.target.closest('.blur-left') &&
+        close();
 }
 
 const closepanel = () => {
@@ -289,21 +283,21 @@ onUnmounted(() => {
         </div>
         <div class="shadowmask" v-if="mask">
             <div class="info">
-                <div class="left" @click.stop="">
+                <div class="blur-left" @click="openBlurPanel($event)">
                     <div class="effect">
                     </div>
                     <div class="name">{{ blurMask?.name }}</div>
                 </div>
-                <div class="unbind" @click.stop="delblurmask">
+                <div class="unbind" @click="delblurmask">
                     <svg-icon icon-class="unbind"></svg-icon>
                 </div>
             </div>
-            <div class="delete-style">
-                <svg-icon icon-class="delete" @click.stop="delstyleblur"></svg-icon>
+            <div class="delete-style" @click="delstyleblur">
+                <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>
         <BlurStyle v-if="showblur" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closepanel">
+            @close="closepanel" :id="blurMask?.id">
         </BlurStyle>
     </div>
 </template>
@@ -451,7 +445,7 @@ onUnmounted(() => {
             background-color: #f4f5f5;
             height: 100%;
 
-            .left {
+            .blur-left {
                 flex: 1;
                 display: flex;
                 align-items: center;

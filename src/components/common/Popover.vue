@@ -37,7 +37,7 @@ function show() {
     popoverVisible.value = true;
     props.context.menu.isPopoverExisted = true;
     container.value.focus();
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
     props.context.escstack.save(v4(), popoverClose);
 
     nextTick(locate);
@@ -122,7 +122,7 @@ onUnmounted(() => {
         }">
             <div class="header">
                 <span class="title">{{ props.title }}</span>
-                <div @click="popoverClose" class="close">
+                <div @click.stop="popoverClose" class="close">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>

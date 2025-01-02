@@ -58,6 +58,7 @@ import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
 import { ImgFrame } from '@/context/atrribute';
 import ColorStyle from '@/components/Document/Attribute/StyleLibrary/ColorStyle.vue';
 import EditorColorStyle from '@/components/Document/Attribute/StyleLibrary/EditorColorStyle.vue';
+import { watchEffect } from 'vue';
 
 interface FillItem {
     id: number,
@@ -202,6 +203,7 @@ const DOT_SIZE = 12;
 const HALF_DOT_SIZE = DOT_SIZE / 2;
 const HUE_WIDTH = 250;
 const HUE_HEIGHT = 200;
+const custom = ref<string>('custom')
 
 const DOT_SIZE_CSS = `${DOT_SIZE}px`;
 const HUE_WIDTH_CSS = `${HUE_WIDTH}px`;
@@ -1333,15 +1335,15 @@ watch(() => picker_visible.value, (v) => {
     }
 })
 
-watch(() => props.open, () => {
-    if (props.open) {
-        custom.value = 'style'
-    }
-    picker_visible.value = props.open
-    if (picker_visible.value) {
-        props.context.menu.setupColorPicker(blockId)
-    }
-})
+// watchEffect(() => {
+//     if (props.open) {
+//         custom.value = 'style'
+//     }
+//     picker_visible.value = props.open
+//     if (picker_visible.value) {
+//         props.context.menu.setupColorPicker(blockId)
+//     }
+// })
 
 const observer = new ResizeObserver(locate);
 let isDragging = false
@@ -1398,7 +1400,7 @@ watch(() => props.imageUrl, (v) => {
     image_url.value = v;
 }, { immediate: true })
 
-const custom = ref<string>('custom')
+
 
 onMounted(() => {
     if (document.body) observer.observe(document.body);

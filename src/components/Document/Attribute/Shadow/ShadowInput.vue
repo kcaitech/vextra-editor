@@ -24,11 +24,6 @@ const selectValue = () => {
     isActived.value = true
 }
 
-watch(()=>props.shadowV,()=>{
-    console.log('更新了');
-    
-})
-
 const onChange = () => {
     if (input.value) {
         let value = input.value.value;

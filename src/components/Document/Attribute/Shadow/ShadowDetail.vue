@@ -21,7 +21,7 @@ import { Menu } from "@/context/menu";
 import { LockMouse } from "@/transform/lockMouse";
 import { format_value } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
-
+import { FillRenderer, EditorAtt } from "../StyleLibrary/fillRenderer";
 const { t } = useI18n();
 
 interface Props {
@@ -32,6 +32,8 @@ interface Props {
     length: number
     shapes: ShapeView[]
     entry?: string
+    isMask?: boolean
+    editor?: EditorAtt
 }
 
 interface Emits {
@@ -66,6 +68,11 @@ const keydownval = ref<boolean>(false);
 const setOffsetX = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
+    if (props.isMask && props.editor) {
+        props.editor.OffsetX(props.idx, value)
+        return
+    }
+
     if (props.entry === 'style') {
         emits('setOffsetX', value);
     } else if (len === 1) {
@@ -97,6 +104,10 @@ function keydownOffsetX(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        if (props.isMask && props.editor) {
+            props.editor.OffsetX(props.idx, value)
+            return
+        }
         if (props.entry === 'style') {
             emits('keydownoffsetX', value);
         } else if (len === 1) {
@@ -118,6 +129,10 @@ function keydownOffsetX(e: KeyboardEvent, val: string | number) {
 const setOffsetY = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
+    if (props.isMask && props.editor) {
+        props.editor.OffsetY(props.idx, value)
+        return
+    }
     if (props.entry === 'style') {
         emits('setOffsetY', value);
     } else if (len === 1) {
@@ -144,6 +159,10 @@ function keydownOffsetY(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        if (props.isMask && props.editor) {
+            props.editor.OffsetY(props.idx, value)
+            return
+        }
         if (props.entry === 'style') {
             emits('keydownoffsetY', value);
         } else if (len === 1) {
@@ -165,6 +184,10 @@ function keydownOffsetY(e: KeyboardEvent, val: string | number) {
 const setBlurRadius = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
+    if (props.isMask && props.editor) {
+        props.editor.setBlurRadius(props.idx, value)
+        return
+    }
     if (props.entry === 'style') {
         emits('setBlurRadius', value);
     } else if (len === 1) {
@@ -191,6 +214,10 @@ function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= 0 ? 0 : value <= 200 ? value : 200;
+        if (props.isMask && props.editor) {
+            props.editor.setBlurRadius(props.idx, value)
+            return
+        }
         if (props.entry === 'style') {
             emits('keydownBlurRadius', value as number);
         } else if (len === 1) {
@@ -212,6 +239,10 @@ function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
 const setSpread = (value: number) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
+    if (props.isMask && props.editor) {
+        props.editor.setSpread(props.idx, value)
+        return
+    }
     if (props.entry === 'style') {
         emits('setSpread', value);
     } else if (len === 1) {
@@ -238,6 +269,10 @@ function keydownSpread(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        if (props.isMask && props.editor) {
+            props.editor.setSpread(props.idx, value)
+            return
+        }
         if (props.entry === 'style') {
             emits('keydownSpread', value as number);
         } else if (len === 1) {
@@ -267,6 +302,11 @@ function setColor(clr: string, alpha: number) {
     const b = Number.parseInt(res[3], 16);
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
+    if (props.isMask && props.editor) {
+        const color = new Color(alpha, r, g, b)
+        props.editor.setColor(props.idx, color)
+        return
+    }
     if (props.entry === 'style') {
         const color = new Color(alpha, r, g, b);
         if (keydownval.value) {
@@ -379,6 +419,10 @@ function keydownAlpha(event: KeyboardEvent, val: string | number) {
 function getColorFromPicker(color: Color) {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
+    if (props.isMask && props.editor) {
+        props.editor.setColor(props.idx, color)
+        return
+    }
     if (props.entry === 'style') {
         emits('pickerColor', color);
     } else if (len === 1) {
@@ -531,7 +575,7 @@ function draggingX(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
     let val = props.shadow.offsetX + e.movementX;
     const _idx = props.length - props.idx - 1;
-    
+
     val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
 
     if (!lockMouseHandler) {
@@ -541,7 +585,7 @@ function draggingX(e: MouseEvent) {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-
+    // if (props.isMask) return attributes.x = val;
     if (props.entry === 'style') {
         emits('dragoffsetX', lockMouseHandler, val);
     } else {
@@ -565,6 +609,7 @@ function draggingY(e: MouseEvent) {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
+    // if (props.isMask) return attributes.y = val;
     if (props.entry === 'style') {
         emits('dragoffsetY', lockMouseHandler, val);
     } else {
@@ -579,7 +624,7 @@ function draggingB(e: MouseEvent) {
     const _idx = props.length - props.idx - 1;
 
     val = val < 0 ? 0 : val > 200 ? 200 : val;
-  
+
     if (!lockMouseHandler) {
         return
     }
@@ -587,6 +632,7 @@ function draggingB(e: MouseEvent) {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
+    // if (props.isMask) return attributes.b = val;
     if (props.entry === 'style') {
         emits('dragBlurRadius', lockMouseHandler, val);
     } else {
@@ -609,6 +655,7 @@ function draggingS(e: MouseEvent) {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
+    // if (props.isMask) return attributes.s = val;
     if (props.entry === 'style') {
         emits('dragSpread', lockMouseHandler, val);
     } else {
@@ -624,11 +671,6 @@ function dragEnd() {
     lockMouseHandler = undefined;
     document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
-
-watch(() => props.shadow, () => {
-    console.log('更新了', props.shadow);
-
-}, { deep: true });
 
 function extend(base: number) {
     return Number(format_value(base));
@@ -647,7 +689,7 @@ function extend(base: number) {
 </script>
 
 <template>
-    <div class="border-detail-container" @mousedown.stop>
+    <div class="border-detail-container">
         <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
             :title="`${t('shadow.shadow_setting')}`">
             <template #trigger>

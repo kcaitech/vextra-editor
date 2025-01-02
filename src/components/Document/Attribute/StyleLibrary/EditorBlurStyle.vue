@@ -1,5 +1,5 @@
 <template>
-    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">编辑模糊样式</div>
             <div class="close" @click.stop="emits('close')">
@@ -28,14 +28,12 @@
             <div v-if="blurInfo" class="effect-list">
                 <div class="item">
                     <div class="show">
-                        <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
+                        <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click.stop="toggleVisible()">
                             <svg-icon v-if="blurInfo.isEnabled" icon-class="select"></svg-icon>
                         </div>
                     </div>
-                    <Select class="select" :context="props.context" :shapes="props.shapes"
-                        :source="positonOptionsSource"
-                        :selected="positonOptionsSource.find(i => i.data.value === blurInfo?.type)?.data"
-                        @select="(value) => positionSelect(value)"></Select>
+                    <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" :entry="'style'"
+                        :reflush="reflush" @select="positionSelect" />
                     <BlurDetail :context="props.context" :blur="blurInfo" :shapes="props.shapes" :entry="'style'"
                         @set-blur-saturation="setBlurSaturation" @key-down-saturation="keyDownSaturation"
                         @drag-blur-saturation="dragBlurSaturation" />
@@ -58,6 +56,7 @@ import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
 import { computed } from 'vue';
 import BlurDetail from "../Blur/BlurDetail.vue";
+import BlurTypeSelect from "../Blur/BlurTypeSelect.vue";
 import { FillRenderer } from './fillRenderer';
 import { BlurHandler } from '@/transform/blur';
 
@@ -111,18 +110,22 @@ function setBlurSaturation(value: number) {
     editor.modifyBlurMaskBlurSaturation(mask.sheet, mask.id, value)
 }
 
-function positionSelect(selected: SelectItem) {
+function positionSelect(type: BlurType) {
     if (!props.maskid) return
     const mask = props.reder.currentTarget(props.maskid) as BlurMask
     const editor = props.context.editor4Doc()
-    editor.modifyBlurMaskBlurType(mask.sheet, mask.id, selected.value as BlurType)
+    editor.modifyBlurMaskBlurType(mask.sheet, mask.id, type)
 }
 
 const toggleVisible = () => {
+   
+    
     const mask = props.reder.currentTarget(props.maskid) as BlurMask
     const editor = props.context.editor4Doc()
     if (!props.maskid) return
     const value = !mask.blur.isEnabled;
+
+    console.log('111111',mask,value,editor);
     editor.modifyBlurMaskBlurEnabled(mask.sheet, mask.id, value)
 
 }

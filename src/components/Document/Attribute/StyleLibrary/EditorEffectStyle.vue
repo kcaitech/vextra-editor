@@ -1,5 +1,5 @@
 <template>
-    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">编辑特效样式</div>
             <div class="close" @click.stop="emits('close')">

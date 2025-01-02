@@ -1,6 +1,5 @@
 <template>
-    <div class="border-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop
-        @mousedown.stop>
+    <div class="border-container" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">边框样式</div>
             <div class="tool">
@@ -196,7 +195,7 @@ const closeEditorPanel = () => {
     document.removeEventListener('click', checkeditorpanel)
     return exe_result
 }
-let timer2: any
+
 const NewPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'border-container') {
@@ -208,26 +207,8 @@ const NewPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     newpanel.value = !newpanel.value
-    if (editorpanel.value) editorpanel.value = false
-    if (newpanel.value) {
-        if (timer2) clearTimeout(timer2)
-        timer2 = setTimeout(() => {
-            document.addEventListener('click', checknewpanel)
-            clearTimeout(timer2)
-        }, 0);
-        props.context.escstack.save(v4(), closeNewPanel)
-    } else {
-        document.removeEventListener('click', checknewpanel)
-    }
-}
-
-function checknewpanel(e: MouseEvent) {
-    const muen = document.querySelector('.new-style')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        newpanel.value = false
-        document.removeEventListener('click', checknewpanel)
-    }
+    document.addEventListener('click', checknewpanel)
+    props.context.escstack.save(v4(), closeNewPanel)
 }
 
 const closeNewPanel = () => {
@@ -235,6 +216,13 @@ const closeNewPanel = () => {
     newpanel.value = false
     document.removeEventListener('click', checknewpanel)
     return exe_result
+}
+
+function checknewpanel(e: MouseEvent) {
+    e.target instanceof Element &&
+        !e.target.closest('.new-style') &&
+        !e.target.closest('.newstyle') &&
+        closeNewPanel();
 }
 
 

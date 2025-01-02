@@ -740,9 +740,29 @@ const positionpanel = (e: MouseEvent) => {
         }
     }
     const { top, left } = el.getBoundingClientRect();
+    console.log(el.getBoundingClientRect());
+    
     styleTop.value = top;
     styleLeft.value = left - 250;
     openstyle.value = !openstyle.value
+    console.log(openstyle.value);
+    
+    document.addEventListener('click', checktargetlist)
+    props.context.escstack.save(v4(), close);
+}
+
+function checktargetlist(e: MouseEvent) {
+    e.target instanceof Element &&
+        !e.target.closest('.popover') &&
+        !e.target.closest('.style') &&
+        close();
+}
+
+function close() {
+    const is_achieve_expected_results = openstyle.value;
+    openstyle.value = false;
+    document.removeEventListener('click', checktargetlist)
+    return is_achieve_expected_results;
 }
 
 const initpanel = () => {
@@ -798,7 +818,7 @@ onUnmounted(() => {
     <div class="fill-panel">
         <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first" :active="!!fills.length">
             <template #tool>
-                <div v-if="!mask && !mixed" class="style" @click.stop="positionpanel($event)">
+                <div v-if="!mask && !mixed" class="style" @click="positionpanel($event)">
                     <svg-icon icon-class="styles"></svg-icon>
                 </div>
                 <div v-if="!mask" class="add" @click.stop="addFill">

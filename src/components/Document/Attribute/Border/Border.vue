@@ -788,12 +788,8 @@ const EditPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     showborder.value = !showborder.value
+    document.addEventListener('click', checktargetlist)
     props.context.escstack.save(v4(), close);
-    if (showborder.value) {
-        document.addEventListener('click', checktargetlist)
-    } else {
-        document.removeEventListener('click', checktargetlist)
-    }
 }
 
 function close() {
@@ -804,14 +800,11 @@ function close() {
 }
 
 function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelector('.border-style')
-    const muen2 = document.querySelector('.border-container')
-    if (!muen) return;
-    if (!muen2) return;
-    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
-        showborder.value = false
-        document.removeEventListener('click', checktargetlist)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.border-container') &&
+        !e.target.closest('.border-style') &&
+        !e.target.closest('.shadow-left') &&
+        close();
 }
 
 // hooks
@@ -1052,8 +1045,11 @@ const positoSelected = () => {
 
 <template>
     <div class="border-panel">
-        <TypeHeader :title="t('attr.stroke')" class="mt-24" @click.stop="first" :active="hasStroke">
+        <TypeHeader :title="t('attr.stroke')" class="mt-24" @click="first" :active="hasStroke">
             <template #tool>
+                <div class="border-style" @click="EditPanel($event)">
+                    <svg-icon icon-class="styles"></svg-icon>
+                </div>
                 <div class="add" @click.stop="addBorder" v-if="!hasStroke">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
