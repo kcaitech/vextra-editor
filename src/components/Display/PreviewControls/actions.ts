@@ -106,7 +106,6 @@ export class ProtoAction {
             this.m_context.preview.addSetTimeout(timer);
         }
     }
-
     getShapeAllChilds(shape: ShapeView) {
         function flattenShapes(shapes: ShapeView[]): ShapeView[] {
             return shapes.reduce((result: any[], item: ShapeView) => {
@@ -125,8 +124,6 @@ export class ProtoAction {
 
     executeSmartShape(exe_shape: ShapeView, shape: ShapeView, animate: string) {
         const processed = new Set();
-        console.log(exe_shape.name, shape.name);
-
         const exe_shapes = this.getShapeAllChilds(exe_shape);
         const shapes = this.getShapeAllChilds(shape);
         const nameMap: Map<string, ShapeView> = new Map();

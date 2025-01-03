@@ -7,13 +7,14 @@ import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Tool } from "@/context/tool";
 import Lable from './Lable/index.vue';
+import { Menu } from "@/context/menu";
 const { t } = useI18n();
 
 interface Props {
     context: Context
 }
 
-type Tab = "Design" |"Prototype"| "Inspect";
+type Tab = "Design" | "Prototype";
 
 const props = defineProps<Props>();
 const controllerRef = ref<HTMLElement>();
@@ -45,7 +46,6 @@ function init() {
         }
     }
 }
-
 function updateUnderlinePosition() {
     underlinePosition.value = 0;
     underlineWidth.value = 0;
@@ -71,19 +71,30 @@ const tool_watcher = (t: number) => {
         isLable.value = props.context.tool.isLable;
     }
 }
+const menu_watcher = (t: number) => {
+    if (t === Menu.TOGGLE_PROTOTYPE) {
+        if (currentTab.value === 'Design') {
+            toggle('Prototype');
+        } else {
+            toggle('Design');
+        }
+    }
+}
 
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
+    props.context.menu.watch(menu_watcher);
     init();
     updateUnderlinePosition();
 })
 onUnmounted(() => {
-    props.context.tool.unwatch(tool_watcher)
+    props.context.tool.unwatch(tool_watcher);
+    props.context.menu.unwatch(menu_watcher);
 })
 </script>
 
 <template>
-<div class="tab-container" v-if="isLable || !context.readonly">
+    <div class="tab-container" v-if="isLable || !context.readonly">
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
@@ -96,13 +107,13 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="body">
-                <Design :context="props.context" v-if="currentTab === 'Design'"/>
-                <Prototype :context="props.context" v-if="currentTab === 'Prototype'"/>
-                <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"/>
+                <Design :context="props.context" v-if="currentTab === 'Design'" />
+                <Prototype :context="props.context" v-if="currentTab === 'Prototype'" />
+                <!-- <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"/> -->
             </div>
         </template>
         <div class="tab-lable" v-else>
-            <Lable :context="context"/>
+            <Lable :context="context" />
         </div>
     </div>
 </template>

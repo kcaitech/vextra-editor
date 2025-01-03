@@ -328,7 +328,6 @@ const event = new Map([
     [PrototypeEvents.AFTERTIMEOUT, t('prototype.trigger_delay')],
 ])
 
-
 const actions: SelectSource[] = genOptions([
     [PrototypeConnectionType.NONE, t('prototype.action_none')],
     [PrototypeConnectionType.INTERNALNODE, t('prototype.action_nav'), 'jump-page', PrototypeNavigationType.NAVIGATE],
@@ -340,8 +339,6 @@ const actions: SelectSource[] = genOptions([
     [PrototypeConnectionType.CLOSE, t('prototype.action_close'), 'close-float-layer'],
     [PrototypeConnectionType.INTERNALNODE, t('prototype.action_swap'), 'change-float-layer', PrototypeNavigationType.SWAP],
 ])
-
-
 
 const icon = new Map([
     [PrototypeConnectionType.INTERNALNODE, 'jump-page'],
@@ -385,8 +382,6 @@ const easingFn = new Map([
     [PrototypeEasingType.INOUTBACKCUBIC, [0.7, -0.4, 0.4, 1.4]],
     [PrototypeEasingType.CUSTOMCUBIC, [0, 0, 1, 1]]
 ]);
-
-
 
 const animations = new Map([
     [PrototypeTransitionType.INSTANTTRANSITION, t('prototype.animation_instant')],
