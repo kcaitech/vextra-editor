@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { TransformHandler } from "@/transform/handler";
-import { ArtboradView, GuideAxis, Matrix, ReferHandleApiCaller, ShapeView } from "@kcdesign/data";
+import { ArtboardView, GuideAxis, Matrix, ReferHandleApiCaller, ShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { isShapeOut } from "@/utils/assist";
 
@@ -171,7 +171,7 @@ export class ReferLineHandler extends TransformHandler {
         }
 
         const index = this.m_index;
-        const currentEnv = this.m_current_env as ArtboradView;
+        const currentEnv = this.m_current_env as ArtboardView;
 
         // console.log('currentEnv&index', currentEnv.name, index);
 
@@ -218,7 +218,7 @@ export class ReferLineHandler extends TransformHandler {
         }
 
         const index = this.m_index;
-        const currentEnv = this.m_current_env as unknown as ArtboradView;
+        const currentEnv = this.m_current_env as unknown as ArtboardView;
 
 
         const gui = currentEnv?.guides?.[index];
@@ -234,7 +234,7 @@ export class ReferLineHandler extends TransformHandler {
     private migrate() {
         const env = this.envSearch();
 
-        const _o_env = this.m_current_env as unknown as ArtboradView;
+        const _o_env = this.m_current_env as unknown as ArtboardView;
 
         if (env.id === _o_env.id) return;
 

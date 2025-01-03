@@ -1,4 +1,4 @@
-import { ArtboradView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboardView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { formatNumber, ReferUnit } from "@/components/Document/Rule/refer";
 import { scout } from "@/utils/scout";
@@ -219,13 +219,13 @@ export class ReferLineSelection {
         // 顺手关一下
         this.m_hovered_guide.valid = false;
 
-        const env = selected.env as unknown as ArtboradView;
+        const env = selected.env as unknown as ArtboardView;
 
         if (env.id !== envId) {
             return;
         }
 
-        const gui = (env as ArtboradView)?.guides?.[selected.index];
+        const gui = (env as ArtboardView)?.guides?.[selected.index];
         if (!gui) {
             return;
         }
@@ -326,13 +326,13 @@ export class ReferLineSelection {
             return;
         }
 
-        const env = hovered.env as unknown as ArtboradView;
+        const env = hovered.env as unknown as ArtboardView;
 
         if (env.id !== envId) {
             return;
         }
 
-        const gui = (env as ArtboradView)?.guides?.[hovered.index];
+        const gui = (env as ArtboardView)?.guides?.[hovered.index];
         if (!gui) {
             return;
         }
@@ -440,7 +440,7 @@ export class ReferLineSelection {
             return;
         }
 
-        const env = selected.env as unknown as ArtboradView;
+        const env = selected.env as unknown as ArtboardView;
 
         if (env.id !== envId) {
             return;
@@ -458,7 +458,7 @@ export class ReferLineSelection {
             return;
         }
 
-        const env = hovered.env as ArtboradView;
+        const env = hovered.env as ArtboardView;
 
         if (env.id !== envId) {
             return;

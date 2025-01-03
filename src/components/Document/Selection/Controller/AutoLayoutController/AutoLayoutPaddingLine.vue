@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection, SelectionTheme, XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
-import { ArtboradView, ColVector3D, CurvePoint, Matrix, Matrix2, PaddingDir, PolygonShapeView, ShapeFrame, StackSize, StackSizing, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboardView, ColVector3D, CurvePoint, Matrix, Matrix2, PaddingDir, PolygonShapeView, ShapeFrame, StackSize, StackSizing, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { fixedZero, XYsBounding } from '@/utils/common';
 import { getTransformCol } from '@/utils/content';
@@ -67,7 +67,7 @@ function getPaddingPosition() {
     paddingBox.value = [];
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length || shapes.length > 1) return;
-    const shape = shapes[0] as ArtboradView;
+    const shape = shapes[0] as ArtboardView;
     const { x, y, width, height } = shape.frame;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
@@ -141,7 +141,7 @@ function mousemove(e: MouseEvent) {
         downXY.x = e.clientX;
         downXY.y = e.clientY;
     } else {
-        const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+        const shape = props.context.selection.selectedShapes[0] as ArtboardView;
         const autoLayout = shape.autoLayout;
         if (!autoLayout) return;
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
@@ -162,7 +162,7 @@ const updatePadding = (e: MouseEvent) => {
     if (!autoLayoutModifyHandler || paddingIndex.value < 0) return;
     cursor_down.value = true;
     const shape = props.context.selection.selectedShapes[0];
-    const autoInfo = (shape as ArtboradView).autoLayout!;
+    const autoInfo = (shape as ArtboardView).autoLayout!;
     const matrix2Root = shape.matrix2Root();
     const m = (matrix2Root.inverse);
     const downXy = m.computeCoord(downClientXY);
@@ -249,7 +249,7 @@ function setCursor(index: number) {
             deg += 90;
         }
         const shape = props.context.selection.selectedShapes[0];
-        const autoInfo = (shape as ArtboradView).autoLayout!;
+        const autoInfo = (shape as ArtboardView).autoLayout!;
         if (index === 2 && autoInfo.stackCounterSizing !== StackSizing.Fixed) {
             deg = 0;
         }
@@ -275,7 +275,7 @@ function forceSetCursor(index: number) {
             deg += 90;
         }
         const shape = props.context.selection.selectedShapes[0];
-        const autoInfo = (shape as ArtboradView).autoLayout!;
+        const autoInfo = (shape as ArtboardView).autoLayout!;
         if (index === 2 && autoInfo.stackCounterSizing !== StackSizing.Fixed) {
             deg = 0;
         }

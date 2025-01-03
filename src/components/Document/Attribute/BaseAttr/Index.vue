@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ArtboradView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlgin } from '@kcdesign/data';
+import { ArtboardView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlgin } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -506,7 +506,7 @@ function all_disable() {
 
 const autoLayoutDisable = () => {
     const shapes = props.context.selection.selectedShapes;
-    const every = shapes.every(item => item.parent && (item.parent as ArtboradView).autoLayout);
+    const every = shapes.every(item => item.parent && (item.parent as ArtboardView).autoLayout);
     if (every) {
         model_disable_state.x = true, model_disable_state.y = true;
     }

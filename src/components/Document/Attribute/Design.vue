@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { ArtboradView, ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
+import { ArtboardView, ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -150,7 +150,7 @@ function _selection_change() {
     }
     if (constraintShow.value) {
         const isAuto = selectedShapes.some(s => {
-            return s.parent && (s.parent as ArtboradView).autoLayout;
+            return s.parent && (s.parent as ArtboardView).autoLayout;
         });
         if (isAuto) constraintShow.value = false;
     }
@@ -185,7 +185,7 @@ function _modify_constraint_show() {
         s => is_constrainted(s)
     );
     const isAuto = props.context.selection.selectedShapes.some(s => {
-        return s.parent && (s.parent as ArtboradView).autoLayout;
+        return s.parent && (s.parent as ArtboardView).autoLayout;
     });
     if (isAuto) constraintShow.value = false;
 }

@@ -1,4 +1,4 @@
-import { Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2, TransformRaw, Transform, ArtboradView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape } from "@kcdesign/data";
+import { Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2, TransformRaw, Transform, ArtboardView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
@@ -130,7 +130,7 @@ export class ClipboardTransformHandler {
     /**
      * @description 提供适应指定容器的图层插入参数
      */
-    fitEnvs(context: Context, envs: (ArtboradView | SymbolView | GroupShapeView)[], data: SourceBundle): InsertAction[] {
+    fitEnvs(context: Context, envs: (ArtboardView | SymbolView | GroupShapeView)[], data: SourceBundle): InsertAction[] {
         const page = adapt2Shape(context.selection.selectedPage!) as Page;
         const ids = new Set(data.originIds);
         for (const env of envs) {

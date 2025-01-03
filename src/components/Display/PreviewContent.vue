@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import {
-    ArtboradView,
+    ArtboardView,
     Matrix,
     OverlayBackgroundInteraction,
     OverlayBackgroundType,
@@ -319,7 +319,7 @@ const initMatrix = () => {
         is_overlay.value = false;
     }
 }
-let artboard: ArtboradView;
+let artboard: ArtboardView;
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
@@ -334,7 +334,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
         if (!hover_shape) {
             viewUpdater.trans(e);
         } else {
-            artboard = hover_shape as ArtboradView;
+            artboard = hover_shape as ArtboardView;
             const scale = viewUpdater.v_matrix.m00;
             let stepx = Math.abs(e.deltaX) > 50 ? (50 * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
             let stepy = Math.abs(e.deltaY) > 50 ? (50 * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
@@ -346,13 +346,13 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
             let p_x = hover_shape.parent;
             p_x = getScrollShape(p_x);
             while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                scroll.x = scrollAtrboard(p_x as ArtboradView, { x: -stepx / scale, y: 0 }).x;
+                scroll.x = scrollAtrboard(p_x as ArtboardView, { x: -stepx / scale, y: 0 }).x;
                 p_x = p_x.parent;
             }
             let p_y = hover_shape.parent;
             p_y = getScrollShape(p_y);
             while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: -stepy / scale }).y;
+                scroll.y = scrollAtrboard(p_y as ArtboardView, { x: 0, y: -stepy / scale }).y;
                 p_y = p_y.parent;
             }
             viewUpdater.trans(e, scroll);
@@ -430,19 +430,19 @@ function onMouseMove(e: MouseEvent) {
             let dy = e.clientY - downXY.y;
             const diff = Math.hypot(dx, dy);
             if (diff > 4) {
-                artboard = hover_shape as ArtboradView;
+                artboard = hover_shape as ArtboardView;
                 const scale = viewUpdater.v_matrix.m00;
                 let scroll = scrollAtrboard(artboard, { x: e.movementX / scale, y: e.movementY / scale });
                 let p_x = hover_shape.parent;
                 p_x = getScrollShape(p_x);
                 while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                    scroll.x = scrollAtrboard(p_x as ArtboradView, { x: e.movementX / scale, y: 0 }).x;
+                    scroll.x = scrollAtrboard(p_x as ArtboardView, { x: e.movementX / scale, y: 0 }).x;
                     p_x = p_x.parent;
                 }
                 let p_y = hover_shape.parent;
                 p_y = getScrollShape(p_y);
                 while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                    scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: e.movementY / scale }).y;
+                    scroll.y = scrollAtrboard(p_y as ArtboardView, { x: 0, y: e.movementY / scale }).y;
                     p_y = p_y.parent;
                 }
                 pageViewDragging(e, scroll);

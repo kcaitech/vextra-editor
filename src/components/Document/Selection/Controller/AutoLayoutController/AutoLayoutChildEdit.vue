@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
 import {
-    ArtboradView,
+    ArtboardView,
     BorderPosition,
     ColVector3D,
     makeShapeTransform2By1,
@@ -81,9 +81,9 @@ const updateDottedPath = (downXY: XY) => {
 function hoverDottedPaths() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
     if (!hoveredShape) return;
-    if (!(hoveredShape as ArtboradView).autoLayout) return;
+    if (!(hoveredShape as ArtboardView).autoLayout) return;
     if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) return;
-    const bordersTakeSpace = (hoveredShape as ArtboradView).autoLayout?.bordersTakeSpace;
+    const bordersTakeSpace = (hoveredShape as ArtboardView).autoLayout?.bordersTakeSpace;
     const childs = hoveredShape.childs;
     for (let i = 0; i < childs.length; i++) {
         const child = childs[i];
@@ -151,7 +151,7 @@ function selectDottedPaths() {
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) return;
     const parent = shapes[0].parent;
-    if (!parent || !(parent as ArtboradView).autoLayout) return;
+    if (!parent || !(parent as ArtboardView).autoLayout) return;
     const every = shapes.every(item => item.parent?.id === parent.id);
     if (!every) return;
     const points: { x: number, y: number }[] = [];
@@ -174,7 +174,7 @@ function selectDottedPaths() {
     ];
     const borPath = genRectPath(framePoint);
     dottedPaths.value.push({ path: borPath, shape: undefined });
-    const bordersTakeSpace = (parent as ArtboradView).autoLayout?.bordersTakeSpace;
+    const bordersTakeSpace = (parent as ArtboardView).autoLayout?.bordersTakeSpace;
     getMovePath(shapes, bordersTakeSpace);
 }
 

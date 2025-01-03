@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
-import { ArtboradView, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboardView, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 import layer_image_icon from '@/assets/icons/svg/layer-image.svg';
@@ -34,6 +34,7 @@ icons[ShapeType.SymbolRef] = layer_symbol_ref_icon;
 icons[ShapeType.SymbolUnion] = layer_symbol_union_icon;
 icons[ShapeType.Symbol] = layer_symbol_icon;
 icons[ShapeType.Table] = layer_table_icon;
+icons[ShapeType.Table2] = layer_table_icon;
 icons[ShapeType.Artboard] = layer_artboard_icon;
 icons[ShapeType.Contact] = layer_contact_icon;
 icons[ShapeType.Cutout] = layer_cutout_icon;
@@ -55,7 +56,7 @@ function updateIconClass() {
     const s = props.shape;
     if (s.data.mask) return icon_class.value = layer_mask_icon;
     if (s.isImageFill) return icon_class.value = layer_image_icon;
-    const auto_layout = s.type === ShapeType.Artboard && !!(s as ArtboradView).autoLayout;
+    const auto_layout = s.type === ShapeType.Artboard && !!(s as ArtboardView).autoLayout;
     if(auto_layout) return icon_class.value = layer_auto_box_icon;
     else return icon_class.value = icons[s.type]
 }

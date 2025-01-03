@@ -238,7 +238,7 @@ import Target from "./Prototype/Target.vue";
 import CustomBezier from "./Prototype/CustomBezier.vue"
 import {
     PrototypeStartingPoint,
-    ArtboradView,
+    ArtboardView,
     PrototypeInterAction,
     PrototypeActions,
     PrototypeConnectionType,
@@ -928,7 +928,7 @@ const setExtraScrollOffsetX = (id: string, old: number) => {
     if (isNaN(Number(val))) {
         indentx.value![0].value = old.toString()
     } else {
-        e.setPrototypeExtraScrollOffsetX(shape as ArtboradView, id, Number(val))
+        e.setPrototypeExtraScrollOffsetX(shape as ArtboardView, id, Number(val))
         updateData()
     }
     indentx.value![0].blur()
@@ -943,7 +943,7 @@ const setExtraScrollOffsetY = (id: string, old: number) => {
     if (isNaN(Number(val))) {
         indenty.value![0].value = old.toString()
     } else {
-        e.setPrototypeExtraScrollOffsetY(shape as ArtboradView, id, Number(val))
+        e.setPrototypeExtraScrollOffsetY(shape as ArtboardView, id, Number(val))
         updateData()
     }
     indenty.value![0].blur()
@@ -960,20 +960,20 @@ const setOverlayBackgroundAppearance = (data: T, id: string) => {
     const shape = shapes.find(i => i.id === id)
     if (!shape) return
     if (data.state) {
-        if (!(shape as ArtboradView).overlayBackgroundAppearance) {
-            e.setOverlayBackgroundAppearance(shape as ArtboradView)
+        if (!(shape as ArtboardView).overlayBackgroundAppearance) {
+            e.setOverlayBackgroundAppearance(shape as ArtboardView)
         } else {
             if (data.color) {
                 const value = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, data.color)
-                e.setOverlayBackgroundAppearance(shape as ArtboradView, value)
+                e.setOverlayBackgroundAppearance(shape as ArtboardView, value)
             } else {
-                const value = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, (shape as ArtboradView).overlayBackgroundAppearance!.backgroundColor)
-                e.setOverlayBackgroundAppearance(shape as ArtboradView, value)
+                const value = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, (shape as ArtboardView).overlayBackgroundAppearance!.backgroundColor)
+                e.setOverlayBackgroundAppearance(shape as ArtboardView, value)
             }
         }
     } else {
-        const value = new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, (shape as ArtboradView).overlayBackgroundAppearance!.backgroundColor)
-        e.setOverlayBackgroundAppearance(shape as ArtboradView, value)
+        const value = new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, (shape as ArtboardView).overlayBackgroundAppearance!.backgroundColor)
+        e.setOverlayBackgroundAppearance(shape as ArtboardView, value)
     }
     // updateData()
 }
@@ -988,9 +988,9 @@ const setOverlayBackgroundInteraction = (state: boolean, id: string) => {
     const shape = shapes.find(i => i.id === id)
     if (!shape) return
     if (!state) {
-        e.setOverlayBackgroundInteraction(shape as ArtboradView, OverlayBackgroundInteraction.NONE)
+        e.setOverlayBackgroundInteraction(shape as ArtboardView, OverlayBackgroundInteraction.NONE)
     } else {
-        e.setOverlayBackgroundInteraction(shape as ArtboradView, OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE)
+        e.setOverlayBackgroundInteraction(shape as ArtboardView, OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE)
     }
     updateData()
 
@@ -1005,7 +1005,7 @@ const setOverlayPositionType = (data: OverlayPositionType, id: string) => {
     if (!shapes) return;
     const shape = shapes.find(i => i.id === id)
     if (!shape) return
-    e.setOverlayPositionType(shape as ArtboradView, data)
+    e.setOverlayPositionType(shape as ArtboardView, data)
     updateData()
 }
 
@@ -1017,10 +1017,10 @@ const setOverlayPositionMargin = (data: M, id: string) => {
     if (!shapes) return;
     const shape = shapes.find(i => i.id === id)
     if (!shape) return
-    if (data.type === 'TOP') e.setOverlayPositionTypeMarginTop(shape as ArtboradView, data.val)
-    if (data.type === 'BOTTOM') e.setOverlayPositionTypeMarginBottom(shape as ArtboradView, data.val)
-    if (data.type === 'LEFT') e.setOverlayPositionTypeMarginLeft(shape as ArtboradView, data.val)
-    if (data.type === 'RIGHT') e.setOverlayPositionTypeMarginRight(shape as ArtboradView, data.val)
+    if (data.type === 'TOP') e.setOverlayPositionTypeMarginTop(shape as ArtboardView, data.val)
+    if (data.type === 'BOTTOM') e.setOverlayPositionTypeMarginBottom(shape as ArtboardView, data.val)
+    if (data.type === 'LEFT') e.setOverlayPositionTypeMarginLeft(shape as ArtboardView, data.val)
+    if (data.type === 'RIGHT') e.setOverlayPositionTypeMarginRight(shape as ArtboardView, data.val)
     updateData()
 }
 

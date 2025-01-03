@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ArtboradView, PrototypeInterAction, PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboardView, PrototypeInterAction, PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

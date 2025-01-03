@@ -1,4 +1,4 @@
-import { ArtboradView, GroupShapeView, GuideAxis, PathShapeView, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { ArtboardView, GroupShapeView, GuideAxis, PathShapeView, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
@@ -240,13 +240,13 @@ export class Assist extends WatchableObject {
         this.m_shape_inner = [];
         this.m_shape_inner.push(...finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
         if (this.m_context.user.isRuleVisible) this.collectGuides();
-        // console.log('__COLLECT_TARGET__', target.name, (target as ArtboradView).guides?.length);
+        // console.log('__COLLECT_TARGET__', target.name, (target as ArtboardView).guides?.length);
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
     }
 
     collectGuides() {
-        const guideTarget = this.getFixedContainer() as ArtboradView;
+        const guideTarget = this.getFixedContainer() as ArtboardView;
 
         this.m_fixed_target = guideTarget;
 
@@ -711,7 +711,7 @@ export class Assist extends WatchableObject {
     }
 
     alignXY2Inner(view: ShapeView, point: XY) {
-        const innerShape = (view as ArtboradView).childs;
+        const innerShape = (view as ArtboardView).childs;
         if (!innerShape.length) return;
 
         const pointGroup: Map<string, PointGroup1> = new Map();

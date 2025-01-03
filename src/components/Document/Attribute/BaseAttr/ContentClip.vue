@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
-import { ArtboradView, ShapeType } from "@kcdesign/data";
+import { ArtboardView, ShapeType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
@@ -12,8 +12,8 @@ const status = ref<number>(0) // 0 不裁； 1 全裁； 2 混合；
 function updateStatus() {
     status.value = 0;
     const selected = props.context.selection.selectedShapes.filter(i => i.type === ShapeType.Artboard || i.type === ShapeType.Symbol || i.type === ShapeType.SymbolRef);
-    const existClip = selected.some(i => !(i as ArtboradView).frameMaskDisabled);
-    const existUnClip = selected.some(i => (i as ArtboradView).frameMaskDisabled);
+    const existClip = selected.some(i => !(i as ArtboardView).frameMaskDisabled);
+    const existUnClip = selected.some(i => (i as ArtboardView).frameMaskDisabled);
     status.value = existClip ? existUnClip ? 2 : 1 : 0;
 }
 

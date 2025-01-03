@@ -3,7 +3,6 @@ import { ViewType, ShapeType } from "@kcdesign/data";
 import { ArtboradDom } from "./artboard";
 import { ContactLineDom } from "./contactline";
 import { GroupShapeDom } from "./groupshape";
-import { ImageShapeDom } from "./imageshape";
 import { LineDom } from "./line";
 import { PathShapeDom } from "./pathshape";
 import { PathShapeDom2 } from "./pathshape2";
@@ -17,21 +16,10 @@ import { RectShapeDom } from "./rect";
 import { BoolShapeDom } from "./boolshape";
 import { StarShapeDom } from "./star";
 import { PolygonShapeDom } from "./polygon";
-// interface DataView {
-//     id: string;
-// }
-// type VarsContainer = (SymbolRefShape | SymbolShape)[];
-// interface PropsType {
-//     data: Shape;
-//     transx?: RenderTransform;
-//     varsContainer?: VarsContainer;
-// }
-// interface ComType {
-//     new(ctx: DViewCtx, props: PropsType): DataView;
-// }
+import { Table2Dom } from "./table2";
+
 
 export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
-    
     comsMap.set(ShapeType.Artboard, ArtboradDom);
     comsMap.set(ShapeType.Group, GroupShapeDom);
     comsMap.set(ShapeType.Image, RectShapeDom);
@@ -45,6 +33,7 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.SymbolRef, SymbolRefDom);
     comsMap.set(ShapeType.Line, LineDom);
     comsMap.set(ShapeType.Table, TableDom);
+    comsMap.set(ShapeType.Table2, Table2Dom);
     comsMap.set(ShapeType.Contact, ContactLineDom);
     comsMap.set(ShapeType.TableCell, TableCellDom as any as ViewType);
     comsMap.set(ShapeType.Cutout, CutoutShapeDom);

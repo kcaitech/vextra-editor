@@ -1,7 +1,7 @@
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
 import {
-    ArtboradView,
+    ArtboardView,
     Matrix,
     PageView,
     PrototypeEvents,
@@ -232,7 +232,7 @@ export function getPreviewMatrix(shape: ShapeView) {
     let p = shape.parent;
     let s = shape;
     while (p && p.type !== ShapeType.Page) {
-        const offset = (p as ArtboradView).innerTransform;
+        const offset = (p as ArtboardView).innerTransform;
         if (offset) {
             m.multiAtLeft(offset.toMatrix());
             if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME) {
@@ -398,7 +398,7 @@ export const getFlowShapes = (context: Context, id: string, flows: Map<string, s
     return flowShape;
 }
 
-export const getAtrboardInnerOffset = (atrboard: ArtboradView) => {
+export const getAtrboardInnerOffset = (atrboard: ArtboardView) => {
     const size = atrboard.size;
     let offsetT = 0;
     let offsetL = 0;
@@ -417,7 +417,7 @@ export const getAtrboardInnerOffset = (atrboard: ArtboradView) => {
     return { top: -offsetT, right: size.width - offsetR, bottom: size.height - offsetB, left: -offsetL }
 }
 
-export const scrollAtrboard = (atrboard: ArtboradView, trans: { x: number, y: number }) => {
+export const scrollAtrboard = (atrboard: ArtboardView, trans: { x: number, y: number }) => {
     const offset = getAtrboardInnerOffset(atrboard);
     const transform = atrboard.innerTransform || new TransformRaw();
     const tx = transform.translateX;
