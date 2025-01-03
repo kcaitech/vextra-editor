@@ -19,7 +19,7 @@ import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
 import { IContext } from "@/openapi";
-import { importDocumentFromMDD } from "@/IO";
+import { importDocumentFromMDD } from "@/io";
 
 export * from "./openapi";
 

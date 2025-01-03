@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
-import { exportDocument } from "@/IO";
+import { exportDocument } from "@/io";
 
 const { t } = useI18n();
 
