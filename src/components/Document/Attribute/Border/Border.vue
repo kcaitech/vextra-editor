@@ -15,7 +15,8 @@ import {
     PathShapeView,
     TableView,
     LinearApi,
-    StrokePaint
+    StrokePaint,
+    BorderMask
 } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
@@ -103,9 +104,9 @@ const reflush_apex = ref(0);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
 const hasStroke = ref(false);
-
+const isMask = ref<boolean>(false)
 const showborder = ref<boolean>(false)
-
+const bordermask = ref<BorderMask>()
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
@@ -160,6 +161,7 @@ function updateData() {
     mixed.value = false;
     mixed_cell.value = false;
     hasStroke.value = false;
+    isMask.value = false;
     const selecteds = props.context.selection.selectedShapes;
     if (selecteds.length < 1) return;
     strokePaints.length = 0;
@@ -196,7 +198,13 @@ function updateData() {
             borderData.value = border;
         }
     } else {
+
         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+        if (shapes.length === 1 && shapes[0].style.bordersMask) {
+            const libs = shapes[0].style.getStylesMgr()
+            bordermask.value = libs?.getSync(shapes[0].style.bordersMask) as BorderMask
+            isMask.value = true;
+        }
         const { border, stroke_paints } = get_borders(shapes);
         if (stroke_paints === 'mixed') {
             mixed.value = true;
@@ -836,7 +844,7 @@ function positionSelect(selected: SelectItem, id: number | undefined) {
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
-    const shapes = getShapesForStyle(selecteds);
+    const shapes = getShapesForStyle(selecteds).filter(s => s.type !== ShapeType.Line);
     const actions = get_actions_border_position(shapes, id!, selected.value as BorderPosition);
     if (actions && actions.length) {
         const editor = props.context.editor4Page(page);
@@ -1059,8 +1067,8 @@ const positoSelected = () => {
             </template>
         </TypeHeader>
         <div class="borders-container" v-if="hasStroke">
-            <div class="bottom">
-                <div style=" flex: calc(50% - 20px);"
+            <div v-if="!isMask" class="bottom">
+                <div class="test" style=" flex: calc(50% - 20px);"
                     :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
                     <Select class="select" :context="props.context" :shapes="props.shapes"
                         :source="positonOptionsSource" :selected="positoSelected()" @select="positionSelect" :index="0"
@@ -1074,10 +1082,31 @@ const positoSelected = () => {
                         @blur="strokeBlur" @click="strokeClick" @focus="selectBorderThicknes()"
                         @keydown="e => keydownThickness(e, thickness_value())">
                 </div>
-                <BorderDetail :context="props.context" :shapes="props.shapes" :border="(borderData as BorderData)"
-                    :reflush_side="reflush_side">
-                </BorderDetail>
             </div>
+            <div class="shadowmask" v-if="isMask && bordermask">
+                <div class="info">
+                    <div class="shadow-left" @click="EditPanel($event)">
+                        <div class="border" :style="{
+                            borderTop: bordermask.border.sideSetting.thicknessTop < 3 ? bordermask.border.sideSetting.thicknessTop : 3 + 'px',
+                            borderRight: bordermask.border.sideSetting.thicknessRight < 3 ? bordermask.border.sideSetting.thicknessRight : 3 + 'px',
+                            borderBottom: bordermask.border.sideSetting.thicknessBottom < 3 ? bordermask.border.sideSetting.thicknessBottom : 3 + 'px',
+                            borderLeft: bordermask.border.sideSetting.thicknessLeft < 3 ? bordermask.border.sideSetting.thicknessLeft : 3 + 'px',
+                            borderColor: 'black',
+                            borderStyle: 'solid'
+                        }">
+
+                        </div>
+                        <div class="name">{{ bordermask.name }}</div>
+
+                    </div>
+                    <div class="unbind" @click.stop="">
+                        <svg-icon icon-class="unbind"></svg-icon>
+                    </div>
+                </div>
+            </div>
+            <BorderDetail :context="props.context" :shapes="props.shapes" :border="(borderData as BorderData)"
+                :reflush_side="reflush_side">
+            </BorderDetail>
         </div>
         <Apex v-if="show_apex && hasStroke" :context="props.context" :shapes="props.shapes" :view="apex_view"
             :trigger="props.trigger" :reflush_apex="reflush_apex">
@@ -1243,6 +1272,68 @@ const positoSelected = () => {
 
     .borders-container {
         padding: 6px 0;
+
+        .shadowmask {
+            display: flex;
+            height: 32px;
+            border-radius: 6px;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            gap: 8px;
+
+            .info {
+                flex: 1;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 6px;
+                overflow: hidden;
+                background-color: #f4f5f5;
+                height: 100%;
+
+                .shadow-left {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    background-color: #F5F5F5;
+                    height: 100%;
+
+                    &:hover {
+                        background-color: #e5e5e5;
+                    }
+
+                    .border {
+                        margin: 0 8px;
+                        width: 16px;
+                        height: 16px;
+                        background-color: #e5e5e5;
+                        overflow: hidden;
+                        box-sizing: border-box;
+                    }
+
+                }
+
+                .unbind {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 28px;
+                    height: 32px;
+
+                    >svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+
+                .unbind:hover {
+                    background-color: #e5e5e5;
+                }
+            }
+
+
+        }
 
     }
 
@@ -1418,6 +1509,8 @@ const positoSelected = () => {
             }
 
         }
+
+
     }
 }
 </style>

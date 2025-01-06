@@ -18,6 +18,7 @@ import {
     ShapeView, SymbolView,
     Transform,
     ShadowPosition,
+    BorderMask,
 } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
 import { cursorAngle } from "@/components/Document/Selection/common";
@@ -120,6 +121,9 @@ export class FillRenderer {
             }
             if (type === 'blur') {
                 newSheet.variables = s.variables.filter(v => v instanceof BlurMask); // 只保留 BlurMask 实例
+            }
+            if(type==='border'){
+                newSheet.variables = s.variables.filter(v => v instanceof BorderMask); // 只保留 Border 实例
             }
             return newSheet;
         });

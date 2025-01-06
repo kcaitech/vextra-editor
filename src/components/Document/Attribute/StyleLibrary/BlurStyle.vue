@@ -69,7 +69,7 @@
 import { BlurMask, ShapeView } from "@kcdesign/data";
 import { v4 } from 'uuid';
 import { Context } from '@/context';
-import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EditorBlurStyle from './EditorBlurStyle.vue';
 import NewBlurStyle from './NewBlurStyle.vue';

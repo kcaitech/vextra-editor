@@ -20,7 +20,7 @@
             <div class="type">
                 <div class="title">位置</div>
                 <Select class="select" :context="props.context" :shapes="props.shapes" :source="positonOptionsSource"
-                    :selected="positonOptionsSource.find(i => i.data.value ===borderData.position)?.data"
+                    :selected="positonOptionsSource.find(i => i.data.value === borderData.position)?.data"
                     @select="positionSelect"></Select>
             </div>
             <div class="thickness">
@@ -28,14 +28,14 @@
                 <input type="text" v-model="thickness" @change="setThickness">
             </div>
         </div>
-        <div class="create-bnt" @click.stop="emits('close')">创建样式</div>
+        <div class="create-bnt" @click.stop="Newborder">创建样式</div>
     </div>
 
 </template>
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShapeType, SideType, TableCellView, PathShapeView,StrokePaint,CornerType,BorderStyle,BorderSideSetting } from '@kcdesign/data';
+import { ShapeView, BorderPosition, ShapeType, SideType, TableCellView, PathShapeView, StrokePaint, CornerType, BorderStyle, BorderSideSetting, BorderMaskType, BorderMask, BasicArray } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
@@ -44,6 +44,7 @@ import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_position, get_borders } from '@/utils/shape_style';
 import { Selection } from "@/context/selection";
 import { getShapesForStyle } from '@/utils/style';
+import { v4 } from 'uuid';
 
 interface StrokePaintItem {
     id: number
@@ -69,13 +70,13 @@ const emits = defineEmits<{
 
 const { t } = useI18n();
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
-    const initBorder = {
+const initBorder = {
     position: BorderPosition.Center,
     cornerType: CornerType.Miter,
     borderStyle: new BorderStyle(0, 0),
     sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
 }
-    const borderData = ref<BorderData>({ ...initBorder })
+const borderData = ref<BorderData>({ ...initBorder })
 const data: { strokePaints: StrokePaintItem[] } = reactive({
     strokePaints: [],
 });
@@ -92,6 +93,7 @@ const show_apex = ref<boolean>(false);
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
 const hasStroke = ref(false);
+const positonvalue = ref<BorderPosition>(BorderPosition.Center)
 const thickness = ref<string>('')
 const oldvalue = ref<string>('')
 const name = ref<string>('name')
@@ -114,6 +116,7 @@ const setThickness = () => {
 }
 
 function positionSelect(selected: SelectItem, id: number | undefined) {
+    positonvalue.value = selected.value as BorderPosition;
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
@@ -123,6 +126,21 @@ function positionSelect(selected: SelectItem, id: number | undefined) {
         const editor = props.context.editor4Page(page);
         editor.setShapesBorderPosition(actions);
     }
+}
+
+const Newborder = () => {
+    const editor = props.context.editor4Doc()
+    if (!thickness.value && !positonvalue.value) return
+    const value = thickness.value.split(', ').map(i => Number(i))
+    const side = new BorderSideSetting(SideType.Normal, value[0], value[3], value[2], value[1])
+    const border = new BorderMaskType(positonvalue.value, side)
+    const style = new BorderMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, border)
+    const page = props.context.selection.selectedPage!
+    const selected = props.context.selection.selectedShapes;
+    const shapes = getShapesForStyle(selected);
+    editor.insertStyleLib(style, page, shapes);
+    emits('close')
+    props.context.escstack.execute()
 }
 
 function watchShapes() {
@@ -217,8 +235,8 @@ function updateData() {
         }
         borderData.value = border;
     }
-    const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } =borderData.value.sideSetting as BorderSideSetting;
-    thickness.value = `${thicknessTop},${thicknessRight},${thicknessBottom},${thicknessLeft}`;
+    const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borderData.value.sideSetting as BorderSideSetting;
+    thickness.value =[thicknessTop,thicknessRight,thicknessBottom,thicknessLeft].join(', ');
     oldvalue.value = thickness.value;
     reflush_side.value++
 }

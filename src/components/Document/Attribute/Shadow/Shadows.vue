@@ -19,7 +19,6 @@ import {
 import { hidden_selection } from '@/utils/content';
 import EffectStyle from '@/components/Document/Attribute/StyleLibrary/EffectStyle.vue';
 import { getShapesForStyle } from '@/utils/style';
-import { el } from 'element-plus/es/locale';
 
 interface ShadowItem {
     id: number,

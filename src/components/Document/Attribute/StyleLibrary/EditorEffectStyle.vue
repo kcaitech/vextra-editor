@@ -96,8 +96,6 @@ const { t } = useI18n();
 const positonOptionsSource: SelectSource[] = genOptions([
     [ShadowPosition.Inner, t(`shadow.inner`)],
     [ShadowPosition.Outer, t(`shadow.outer`)],
-    [BlurType.Gaussian, t(`blur.gaussian`)],
-    [BlurType.Background, t(`blur.background`)]
 ]);
 const effectname = ref<HTMLInputElement>()
 const effectdes = ref<HTMLInputElement>()

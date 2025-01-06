@@ -97,8 +97,6 @@ const mixed = ref<boolean>(false);
 const positonOptionsSource: SelectSource[] = genOptions([
     [ShadowPosition.Inner, t(`shadow.inner`)],
     [ShadowPosition.Outer, t(`shadow.outer`)],
-    // [BlurType.Gaussian, t(`blur.gaussian`)],
-    // [BlurType.Background, t(`blur.background`)]
 ]);
 const watchedShapes2 = new Map();
 const reflush = ref<number>(0);
