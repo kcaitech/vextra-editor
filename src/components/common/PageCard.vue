@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import {
     adapt2Shape, BasicArray, Border, Fill, Page, Shadow, Shape, ShapeType,
-    ShapeView, Style,
-    TransformRaw
+    ShapeView, Style, TransformRaw
 } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
