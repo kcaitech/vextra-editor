@@ -72,7 +72,7 @@ function finder_points() {
     if (!path_shape || path_shape.pathType !== PathType.Editable) return;
 
     if (!reusableMatrix) {
-        reusableMatrix = path_shape.matrix2Root();
+        reusableMatrix = path_shape.matrix2Root().toMatrix();
         reusableMatrix.preScale(path_shape.frame.width, path_shape.frame.height);
     }
 
@@ -106,7 +106,7 @@ function remove_points() {
     if (!selected_points.size || !path_shape || path_shape.pathType !== PathType.Editable) return;
 
     if (!reusableMatrix) {
-        reusableMatrix = path_shape.matrix2Root();
+        reusableMatrix = path_shape.matrix2Root().toMatrix();
         reusableMatrix.preScale(path_shape.frame.width, path_shape.frame.height);
     }
 

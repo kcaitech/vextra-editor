@@ -104,18 +104,17 @@ export class ImageLoader {
         if (targetXY) {
             const dx = targetXY.x;
             const dy = targetXY.y;
-            const selectionTransform = new Transform()
-                .setTranslate(ColVector3D.FromXY(dx, dy));
+            const selectionTransform = new TransformRaw().trans(dx, dy);
 
             env = context.selection.getClosestContainer(targetXY) as GroupShapeView;
 
             for (let i = 0; i < transforms.length; i++) {
                 const transform = transforms[i];
-                const t = makeShapeTransform2By1(transform)
+                const t = (transform)
                     .clone()
-                    .addTransform(selectionTransform)
-                    .addTransform(env.transform2FromRoot.getInverse())
-                transforms[i] = makeShapeTransform1By2(t) as TransformRaw;
+                    .multi(selectionTransform)
+                    .multi(env.matrix2Root().getInverse())
+                transforms[i] = t;
             }
         } else {
             const { width, height } = context.workspace.root;
@@ -199,11 +198,11 @@ export class ImageLoader {
         const selection = context.selection;
         const env = this.__fixTransform(transforms, area, targetXY);
         const page = selection.selectedPage!;
-        const getInPage = page.transform2FromRoot.getInverse();
+        const getInPage = page.matrix2Root().getInverse();
         for (let i = 0; i < transforms.length; i++) {
-            const t = makeShapeTransform2By1(transforms[i]);
-            t.addTransform(getInPage);
-            transforms[i] = makeShapeTransform1By2(t);
+            const t = (transforms[i].clone());
+            t.multi(getInPage);
+            transforms[i] = (t);
         }
         const __packs = transforms.map((v, i) => ({ pack: packages[i], transform: v, targetEnv: env }));
         const editor = context.editor4Page(page);

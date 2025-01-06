@@ -126,6 +126,12 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.color.unwatch(colorWatcher);
 })
+
+import SvgIcon from '../SvgIcon.vue';
+import down_icon from "@/assets/icons/svg/down.svg"
+import rotate90_icon from "@/assets/icons/svg/rotate90.svg"
+import choose_icon from "@/assets/icons/svg/choose.svg"
+
 </script>
 
 <template>
@@ -134,7 +140,7 @@ onUnmounted(() => {
             <div class="mode" ref="mode" @click.stop="showMenu">
                 <div class="option">{{ t(`pattern.${activeItem || ImageScaleMode.Fill}`) }}</div>
                 <div class="down">
-                    <svg-icon icon-class="down"></svg-icon>
+                    <SvgIcon :icon="down_icon"/>
                 </div>
             </div>
             <div class="scale" v-if="activeItem === ImageScaleMode.Tile">
@@ -143,7 +149,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="rotate" @click="changeRotate">
-            <svg-icon icon-class="rotate90"></svg-icon>
+            <SvgIcon :icon="rotate90_icon"/>
         </div>
     </div>
     <div class="overlay" @mousedown.stop @click.stop="handleClick" v-if="isMenu">
@@ -151,28 +157,28 @@ onUnmounted(() => {
             <div class="item" @mouseenter="hoverItem = ImageScaleMode.Fill" @click="setScaleMode(ImageScaleMode.Fill)"
                 :class="{ active: hoverItem === ImageScaleMode.Fill }">
                 <div class="choose">
-                    <svg-icon icon-class="choose" v-if="activeItem === ImageScaleMode.Fill"></svg-icon>
+                    <SvgIcon :icon="choose_icon" v-if="activeItem === ImageScaleMode.Fill"/>
                 </div>
                 <span>{{ t(`pattern.${ImageScaleMode.Fill}`) }}</span>
             </div>
             <div class="item" @mouseenter="hoverItem = ImageScaleMode.Fit" @click="setScaleMode(ImageScaleMode.Fit)"
                 :class="{ active: hoverItem === ImageScaleMode.Fit }">
                 <div class="choose">
-                    <svg-icon icon-class="choose" v-if="activeItem === ImageScaleMode.Fit"></svg-icon>
+                    <SvgIcon :icon="choose_icon" v-if="activeItem === ImageScaleMode.Fit"/>
                 </div>
                 <span>{{ t(`pattern.${ImageScaleMode.Fit}`) }}</span>
             </div>
             <div class="item" @mouseenter="hoverItem = ImageScaleMode.Stretch"
                 @click="setScaleMode(ImageScaleMode.Stretch)" :class="{ active: hoverItem === ImageScaleMode.Stretch }">
                 <div class="choose">
-                    <svg-icon icon-class="choose" v-if="activeItem === ImageScaleMode.Stretch"></svg-icon>
+                    <SvgIcon :icon="choose_icon" v-if="activeItem === ImageScaleMode.Stretch"/>
                 </div>
                 <span>{{ t(`pattern.${ImageScaleMode.Stretch}`) }}</span>
             </div>
             <div class="item" @mouseenter="hoverItem = ImageScaleMode.Tile" @click="setScaleMode(ImageScaleMode.Tile)"
                 :class="{ active: hoverItem === ImageScaleMode.Tile }">
                 <div class="choose">
-                    <svg-icon icon-class="choose" v-if="activeItem === ImageScaleMode.Tile"></svg-icon>
+                    <SvgIcon :icon="choose_icon" v-if="activeItem === ImageScaleMode.Tile"/>
                 </div>
                 <span>{{ t(`pattern.${ImageScaleMode.Tile}`) }}</span>
             </div>

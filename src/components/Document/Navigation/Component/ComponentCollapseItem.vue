@@ -32,12 +32,14 @@ function init() {
     fold.value = !props.status_set.has(props.data.id);
 }
 onMounted(init);
+
+import triangle_icon from '@/assets/icons/svg/triangle-icon.svg';
 </script>
 <template>
     <div v-if="props.data.isFolder" class="component-lib-collapse" @click.stop="toggle">
         <div class="component-lib-collapse-title">
             <div class="fold">
-                <svg-icon icon-class="triangle-icon" :style="{ transform: `rotate(${fold ? '-90deg' : '0deg'})` }"></svg-icon>
+                <SvgIcon :icon="triangle_icon" :style="{ transform: `rotate(${fold ? '-90deg' : '0deg'})` }"/>
             </div>
             <!-- <div class="triangle">
                 <div :class="fold ? 'triangle-right' : 'triangle-down'"></div>

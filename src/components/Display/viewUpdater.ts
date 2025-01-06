@@ -164,7 +164,7 @@ export class ViewUpdater {
         }
 
         const frame = shape._p_frame;
-        const m = new Matrix(shape.matrix2Parent());
+        const m = (shape.matrix2Parent());
         m.trans(-frame.x, -frame.y);
 
         if (toClient) {

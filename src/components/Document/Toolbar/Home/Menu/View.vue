@@ -41,7 +41,7 @@ function close() {
     emit('close');
 }
 
-
+import arrowhead_icon from '@/assets/icons/svg/arrowhead.svg';
 </script>
 <template>
 
@@ -49,7 +49,7 @@ function close() {
         {{ t('fileMenu.view') }}
         <div class="childMenu">
             <!--                    <div class="triangle"></div>-->
-            <svg-icon icon-class="arrowhead"></svg-icon>
+            <SvgIcon :icon="arrowhead_icon"/>
             <ViewSubMenu v-if="childMenuVisible" :context="props.context" :x="childMenuPosition.x"
                 :y="childMenuPosition.y" :width="180" :site="site" @close="close"></ViewSubMenu>
         </div>

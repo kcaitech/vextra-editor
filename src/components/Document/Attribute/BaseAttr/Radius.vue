@@ -459,29 +459,34 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
 })
+
+import radius_icon from "@/assets/icons/svg/radius.svg";
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import white_for_radius_icon from "@/assets/icons/svg/white-for-radius.svg";
+import more_for_radius_icon from "@/assets/icons/svg/more-for-radius.svg";
 </script>
 <template>
     <div class="tr">
-        <MossInput icon="radius" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
+        <MossInput :icon="radius_icon" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
             @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT" @dragend="dragend"
             @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup">
         </MossInput>
         <div class="space" v-if="!rect"></div>
-        <MossInput v-if="rect" class="r-90" icon="radius" :draggable="radius.rt !== mixed" :value="radius.rt"
+        <MossInput v-if="rect" class="r-90" :icon="radius_icon" :draggable="radius.rt !== mixed" :value="radius.rt"
             :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT"
             @dragend="dragend" @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup"></MossInput>
         <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
             <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
-                <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
-                    :class="{ 'active': rect }"></svg-icon>
+                <SvgIcon :icon="rect ? white_for_radius_icon : more_for_radius_icon"
+                    :class="{ 'active': rect }"/>
             </div>
         </Tooltip>
     </div>
     <div class="tr" v-if="rect">
-        <MossInput class="r-270" icon="radius" :draggable="radius.lb !== mixed" :value="radius.lb"
+        <MossInput class="r-270" :icon="radius_icon" :draggable="radius.lb !== mixed" :value="radius.lb"
             :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart" @dragging="draggingLB"
             @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"></MossInput>
-        <MossInput class="r-180" icon="radius" :draggable="radius.rb !== mixed" :value="radius.rb"
+        <MossInput class="r-180" :icon="radius_icon" :draggable="radius.rb !== mixed" :value="radius.rb"
             :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart" @dragging="draggingRB"
             @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"></MossInput>
         <div style="width: 32px;height: 32px;"></div>
@@ -519,14 +524,14 @@ onUnmounted(() => {
         border: 1px solid #F0F0F0;
         padding: 9px;
 
-        >svg {
+        >img {
             transition: 0.3s;
             color: #808080;
-            width: 14px;
-            height: 14px;
+            width: 13px;
+            height: 13px;
         }
 
-        >svg.active {
+        >img.active {
             color: #FFFFFF;
         }
     }

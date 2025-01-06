@@ -201,6 +201,13 @@ onMounted(() => {
 onUnmounted(() => {
     props.shape.unwatch(variable_watcher);
 })
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import add_icon from "@/assets/icons/svg/add.svg"
+import comp_state_icon from "@/assets/icons/svg/comp-state.svg"
+import eye_open_icon from "@/assets/icons/svg/eye-open.svg"
+import lozenge_icon from "@/assets/icons/svg/lozenge.svg"
+import text_icon from "@/assets/icons/svg/text.svg"
+
 </script>
 
 <template>
@@ -209,30 +216,30 @@ onUnmounted(() => {
         <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="!!variables.length">
             <template #tool>
                 <div class="add-comps" @click.stop="selectCompsType" :class="{ 'clicked': compsType }">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"/>
                     <div class="selectType" v-if="compsType" ref="selectComps" @click.stop>
                         <div class="type-title">{{ t('compos.delect_attr_type') }}</div>
                         <div class="status" @click="addModuleState">
                             <div>
-                                <svg-icon icon-class="comp-state"></svg-icon>
+                                <SvgIcon :icon="comp_state_icon"/>
                             </div>
                             <span>{{ t('compos.compos_state') }}</span>
                         </div>
                         <div class="status" @click="layerIsShow">
                             <div>
-                                <svg-icon icon-class="eye-open"></svg-icon>
+                                <SvgIcon :icon="eye_open_icon"/>
                             </div>
                             <span>{{ t('compos.display_state') }}</span>
                         </div>
                         <div class="status" @click="examplesToggle">
                             <div>
-                                <svg-icon icon-class="lozenge"></svg-icon>
+                                <SvgIcon :icon="lozenge_icon"/>
                             </div>
                             <span>{{ t('compos.instance_toggle') }}</span>
                         </div>
                         <div class="status" @click="addTextDialog">
                             <div>
-                                <svg-icon icon-class="text"></svg-icon>
+                                <SvgIcon :icon="text_icon"/>
                             </div>
                             <span>{{ t('compos.text_content') }}</span>
                         </div>

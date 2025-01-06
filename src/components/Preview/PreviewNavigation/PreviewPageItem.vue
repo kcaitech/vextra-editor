@@ -24,7 +24,8 @@ function onMouseDown(e: MouseEvent) {
         });
     }
 }
-
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
 </script>
 
 <template>
@@ -32,7 +33,7 @@ function onMouseDown(e: MouseEvent) {
         :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected }"
         @mousedown="onMouseDown">
         <div class="ph">
-            <svg-icon v-if="props.data.selected" icon-class="page-select"></svg-icon>
+            <SvgIcon v-if="props.data.selected" :icon="page_select_icon"/>
         </div>
         <div class="item zero-symbol">
             <div class="title" :class="{ selected: props.data.selected }">{{ props.data.name }}</div>

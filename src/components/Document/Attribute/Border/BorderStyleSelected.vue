@@ -7,7 +7,7 @@ const props = defineProps<{
 
 <template>
     <div class="item-container">
-        <svg-icon :icon-class="props.data?.value || ''"></svg-icon>
+        <svg-icon :icon-class="props.data?.value || ''"/>
         <span>{{ props.data?.content }}</span>
     </div>
 </template>

@@ -211,6 +211,13 @@ onUnmounted(() => {
     document.removeEventListener('click', closeResetMenu)
 
 })
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import relevance_icon from '@/assets/icons/svg/relevance.svg';
+import comp_state_icon from "@/assets/icons/svg/comp-state.svg"
+import gray_symbol_ref_icon from "@/assets/icons/svg/gray-symbol-ref.svg"
+import delete_icon from "@/assets/icons/svg/delete.svg"
+
 </script>
 
 <template>
@@ -219,10 +226,10 @@ onUnmounted(() => {
             <template #tool>
                 <div class="edit-comps">
                     <div class="rele_svg" @click="layerIsShow" v-if="!is_bind">
-                        <svg-icon icon-class="relevance"></svg-icon>
+                        <SvgIcon :icon="relevance_icon"/>
                     </div>
                     <div class="edit_svg" @click.stop="editComps">
-                        <svg-icon icon-class="comp-state"></svg-icon>
+                        <SvgIcon :icon="comp_state_icon"/>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset">
                         <el-icon>
@@ -245,7 +252,7 @@ onUnmounted(() => {
             <div class="module_item_left" @click="edit_instance">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="gray-symbol-ref"></svg-icon>
+                        <SvgIcon :icon="gray_symbol_ref_icon"/>
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind?.name }}</span>
@@ -254,7 +261,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"

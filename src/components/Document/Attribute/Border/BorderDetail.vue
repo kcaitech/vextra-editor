@@ -19,6 +19,7 @@ import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { Menu } from "@/context/menu";
 import BorderSideSelected from './BorderSideSelected.vue';
 import { can_custom } from "./index"
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface Props {
     context: Context
@@ -138,6 +139,12 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
 })
+
+import select_more_icon from '@/assets/icons/svg/select-more.svg';
+import corner_miter_icon from '@/assets/icons/svg/corner-miter.svg';
+import corner_bevel_icon from '@/assets/icons/svg/corner-bevel.svg';
+import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
+
 </script>
 
 <template>
@@ -147,7 +154,7 @@ onUnmounted(() => {
             <template #trigger>
                 <div class="trigger">
                     <div class="bg" :class="{ actived: props.context.menu.isPopoverExisted }" @click="showMenu">
-                        <svg-icon icon-class="select-more"></svg-icon>
+                        <SvgIcon :icon="select_more_icon"/>
                     </div>
                 </div>
             </template>
@@ -166,15 +173,15 @@ onUnmounted(() => {
                         <div class="corner-select">
                             <div class="miter" :class="{ selected: selected === CornerType.Miter }"
                                 @click="setCornerType(CornerType.Miter)" style="margin-right: 5px;">
-                                <svg-icon icon-class="corner-miter"></svg-icon>
+                                <SvgIcon :icon="corner_miter_icon"/>
                             </div>
                             <div class="bevel" :class="{ selected: selected === CornerType.Bevel }"
                                 @click="setCornerType(CornerType.Bevel)">
-                                <svg-icon icon-class="corner-bevel"></svg-icon>
+                                <SvgIcon :icon="corner_bevel_icon"/>
                             </div>
                             <div class="round" :class="{ selected: selected === CornerType.Round }"
                                 @click="setCornerType(CornerType.Round)" style="margin-left: 5px;">
-                                <svg-icon icon-class="corner-round"></svg-icon>
+                                <SvgIcon :icon="corner_round_icon"/>
                             </div>
                         </div>
                     </div>
@@ -210,7 +217,7 @@ onUnmounted(() => {
                 justify-content: center;
                 border-radius: var(--default-radius);
 
-                >svg {
+                >img {
                     width: 16px;
                     height: 16px;
                 }
@@ -260,7 +267,7 @@ onUnmounted(() => {
                     display: flex;
                     align-items: center;
 
-                    >svg {
+                    >img {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
@@ -295,7 +302,7 @@ onUnmounted(() => {
                         justify-content: space-around;
                         border-radius: 4px;
 
-                        >svg {
+                        >img {
                             width: 12px;
                             height: 12px;
                         }
@@ -353,7 +360,7 @@ onUnmounted(() => {
                     border-radius: 4px;
                     height: 28px;
 
-                    >svg {
+                    >img {
                         width: 16px;
                         height: 16px;
                     }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SvgIcon from '@/components/common/SvgIcon.vue';
 import { ref, watch } from 'vue';
 
 const props = defineProps<{
@@ -109,19 +110,37 @@ const getinput_value = () => {
         return true;
     }
 }
+
+import down_icon from '@/assets/icons/svg/down.svg';
+
+import border_all_icon from '@/assets/icons/svg/border-all.svg';
+import border_bottom_icon from '@/assets/icons/svg/border-bottom.svg';
+import border_custom_icon from '@/assets/icons/svg/border-custom.svg';
+import border_left_icon from '@/assets/icons/svg/border-left.svg';
+import border_right_icon from '@/assets/icons/svg/border-right.svg';
+import border_top_icon from '@/assets/icons/svg/border-top.svg';
+
+const border_icons:{[key: string]: string} = {
+    'border-all': border_all_icon,
+    'border-bottom': border_bottom_icon,
+    'border-custom': border_custom_icon,
+    'border-left': border_left_icon,
+    'border-right': border_right_icon,
+    'border-top': border_top_icon,
+}
 </script>
 
 <template>
     <div class="input-container" :class="{ actived: isActived }">
         <div class="icon" :class="{ cursor_pointer: getinput_value() }" ref="icon" @mousedown="onMouseDown">
-            <svg-icon :icon-class="`border-${ticon}`"></svg-icon>
+            <SvgIcon :icon="border_icons[ticon]"/>
         </div>
         <input ref="input" :value="props.shadowV" @focus="selectValue" @change="onChange" @blur="blur2" @click="click"
             @keydown="e => emits('keydown', e, props.shadowV)">
         <div class="adjust" :class="{ active: isActived }">
-            <svg-icon icon-class="down" style="transform: rotate(180deg);" :style="{ cursor: 'pointer' }"
-                @click="augment"></svg-icon>
-            <svg-icon icon-class="down" :style="{ cursor: 'pointer' }" @click="decrease"></svg-icon>
+            <SvgIcon :icon="down_icon" style="transform: rotate(180deg);" :style="{ cursor: 'pointer' }"
+                @click="augment"/>
+            <SvgIcon :icon="down_icon" :style="{ cursor: 'pointer' }" @click="decrease"/>
         </div>
     </div>
 </template>

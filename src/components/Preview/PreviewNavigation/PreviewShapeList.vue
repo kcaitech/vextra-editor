@@ -10,6 +10,7 @@ import { Navi } from "@/context/navigate";
 import { ElMessage } from "element-plus";
 import { Selection } from "@/context/selection";
 import { getFlowInfo, getFlowPathShapes, getFlowShapes } from "@/utils/preview";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 type List = InstanceType<typeof ListView>;
 
@@ -322,7 +323,11 @@ onUnmounted(() => {
     props.context.navi.unwatch(navi_watcher);
     stopWatch();
 });
-
+import down_icon from '@/assets/icons/svg/down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import close_x_icon from '@/assets/icons/svg/close-x.svg';
 </script>
 
 <template>
@@ -332,14 +337,14 @@ onUnmounted(() => {
             <div class="flow-options" @click.stop="showMenu">
                 <span class="options" v-if="flow_index === 0">{{ t('preview.all') }}</span>
                 <span class="options" v-else>{{ flow_options[flow_index] }}</span>
-                <svg-icon icon-class="down"></svg-icon>
+                <SvgIcon :icon="down_icon"/>
                 <div class="flow-menu" v-if="isMenu" :style="{ top: -4 - (flow_index * 32) + 'px' }">
                     <div class="items" v-for="(item, index) in flow_options" :key="index"
                         @click.stop="toggleFlow(index)" @mouseenter="activeItem = index"
                         :class="{ 'active-item': activeItem === index }">
                         <div class="icon">
-                            <svg-icon v-if="flow_index === index"
-                                :icon-class="activeItem === index ? 'white-select' : 'page-select'"></svg-icon>
+                            <SvgIcon v-if="flow_index === index"
+                                :icon="activeItem === index ? white_select_icon : page_select_icon"/>
                         </div>
                         <div class="text" v-if="index === 0">{{ t('preview.all') }}</div>
                         <div class="text" v-else>{{ item }}</div>
@@ -350,14 +355,14 @@ onUnmounted(() => {
         <div class="header" @click.stop>
             <div class="search" ref="search_wrap">
                 <div class="tool-container" @click="preto_search">
-                    <svg-icon icon-class="search"></svg-icon>
+                    <SvgIcon :icon="search_icon"/>
                 </div>
                 <input ref="search_el" type="text" id="xpxp" v-model="keywords"
                     :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="preto_search"
                     @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close"
                     :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
-                    <svg-icon icon-class="close-x"></svg-icon>
+                    <SvgIcon :icon="close_x_icon"/>
                 </div>
                 <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
                     :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">

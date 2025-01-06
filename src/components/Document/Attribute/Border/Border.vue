@@ -53,6 +53,7 @@ import {
 } from '@/utils/shape_style'
 import { getSideThickness } from "./index"
 import { sortValue } from '../BaseAttr/oval';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface StrokePaintItem {
     id: number
@@ -821,7 +822,7 @@ async function onMouseDown(e: MouseEvent) {
     const table = props.context.tableSelection;
     pointX.value = e.clientX
     pointY.value = e.clientY
-    
+
     if (borderThickness.value && isNaN(Number(borderThickness.value.value))) return;
 
     const el = e.target as HTMLElement
@@ -1000,6 +1001,10 @@ const positoSelected = () => {
     }
     return positonOptionsSource.find(i => i.data.value === borderData.value.position)?.data
 }
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import thickness_icon from '@/assets/icons/svg/thickness.svg';
 </script>
 
 <template>
@@ -1007,10 +1012,10 @@ const positoSelected = () => {
         <TypeHeader :title="t('attr.stroke')" class="mt-24" @click.stop="first" :active="hasStroke">
             <template #tool>
                 <div class="add" @click.stop="addBorder" v-if="!hasStroke">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon" />
                 </div>
                 <div class="add" @click.stop="deleteBorders" v-else>
-                    <svg-icon icon-class="delete"></svg-icon>
+                    <SvgIcon :icon="delete_icon" />
                 </div>
             </template>
         </TypeHeader>
@@ -1023,9 +1028,9 @@ const positoSelected = () => {
                         :mixed="borderData.position === 'mixed'"></Select>
                 </div>
                 <div class="thickness-container" style=" flex: calc(50% - 20px);" :class="{ actived: isActived }">
-                    <svg-icon icon-class="thickness"
+                    <SvgIcon :icon="thickness_icon"
                         :class="{ cursor_pointer: typeof borderData.sideSetting === 'string' }"
-                        @mousedown.stop="onMouseDown($event)"></svg-icon>
+                        @mousedown.stop="onMouseDown($event)" />
                     <input ref="borderThickness" type="text" :value="thickness_value()" @change="setThickness($event)"
                         @blur="strokeBlur" @click="strokeClick" @focus="selectBorderThicknes()"
                         @keydown="e => keydownThickness(e, thickness_value())">
@@ -1042,7 +1047,7 @@ const positoSelected = () => {
         <TypeHeader :title="t('attr.stroke_color')" class="mt-24" :active="hasStroke" v-if="hasStroke">
             <template #tool>
                 <div class="add" @click.stop="addBorder">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </template>
         </TypeHeader>
@@ -1056,7 +1061,7 @@ const positoSelected = () => {
             <div class="border" v-for="(b, idx) in strokePaints" :key="b.id">
                 <div class="top">
                     <div :class="b.strokePaint.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                        <svg-icon v-if="b.strokePaint.isEnabled" icon-class="select"></svg-icon>
+                        <SvgIcon v-if="b.strokePaint.isEnabled" :icon="select_icon" />
                     </div>
                     <div class="color">
                         <ColorPicker :color="b.strokePaint.color" :context="props.context" :auto_to_right_line="true"
@@ -1086,7 +1091,7 @@ const positoSelected = () => {
                             @keydown="(e) => keydownAlpha(e, b.strokePaint, idx, filterAlpha(b.strokePaint))" />
                     </div>
                     <div class="delete" @click="deleteBorder(idx)">
-                        <svg-icon icon-class="delete"></svg-icon>
+                        <SvgIcon :icon="delete_icon" />
                     </div>
                 </div>
             </div>
@@ -1159,7 +1164,7 @@ const positoSelected = () => {
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
@@ -1216,7 +1221,7 @@ const positoSelected = () => {
             border-radius: 4px;
             margin-right: 5px;
 
-            >svg {
+            >img {
                 width: 60%;
                 height: 60%;
             }
@@ -1291,7 +1296,7 @@ const positoSelected = () => {
             transition: 0.2s;
             border-radius: var(--default-radius);
 
-            >svg {
+            >img {
                 width: 16px;
                 height: 16px;
             }
@@ -1299,7 +1304,6 @@ const positoSelected = () => {
 
         .delete:hover {
             background-color: #F5F5F5;
-            ;
         }
 
         //}

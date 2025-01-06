@@ -4,19 +4,19 @@
         <div class="targetname" @click.stop="showtargerlist = !showtargerlist">
             <span :style="{ color: targetname ? '#000' : '#c8c8c8' }">{{ targetname || t('prototype.destination_select')
                 }}</span>
-            <div class="svg-wrap"><svg-icon icon-class="down"></svg-icon></div>
+            <div class="svg-wrap"><SvgIcon :icon="down_icon"/></div>
         </div>
         <div class="search-container" v-if="showtargerlist">
             <div class="header-search">
-                <svg-icon icon-class="search"></svg-icon>
+                <SvgIcon :icon="search_icon"/>
                 <input v-focus type="text" :placeholder="t('prototype.destination_search')" v-model="searchvlue">
             </div>
             <div class="item-list">
                 <div class="item" v-for="shape in search ?? DomList" :key="shape.id"
                     @click.stop="setTargetNode(shape.id)" @mouseover="curHoverValueIndex = shape.id"
                     @mouseleave="curHoverValueIndex = ''">
-                    <svg-icon :style="{ visibility: targetid === shape.id ? 'visible' : 'hidden' }"
-                        :icon-class="curHoverValueIndex === shape.id ? 'white-select' : 'page-select'"></svg-icon>
+                    <SvgIcon :style="{ visibility: targetid === shape.id ? 'visible' : 'hidden' }"
+                        :icon="curHoverValueIndex === shape.id ? white_select_icon : page_select_icon"/>
                     <span v-html="highlightedName(shape.name)"></span>
                 </div>
                 <div v-if="!DomList.length && !searchvlue" class="no-data">
@@ -36,6 +36,12 @@ import { Context } from '@/context';
 import { ArtboardView, PrototypeInterAction, PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+
+import down_icon from '@/assets/icons/svg/down.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
     context: Context

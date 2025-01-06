@@ -289,8 +289,8 @@ export class PathEditor extends TransformHandler {
         const frame = this.shape.frame;
         m.preScale(frame.width, frame.height);
 
-        this.baseMatrix = m;
-        this.baseMatrixInverse = new Matrix(m.inverse);
+        this.baseMatrix = m.toMatrix();
+        this.baseMatrixInverse = (m.inverse).toMatrix();
 
         this.getBaseData();
 
@@ -938,7 +938,7 @@ export class PathEditor extends TransformHandler {
         const env = this.context.selection.getClosestContainer(this.livingPoint);
         const frame = new ShapeFrame(0, 0, 1, 1);
 
-        const m = new Matrix(env.matrix2Root().inverse);
+        const m = (env.matrix2Root().inverse);
 
         const __xy = m.computeCoord3(this.livingPoint);
         if (this.context.user.isPixelAlignMent) {

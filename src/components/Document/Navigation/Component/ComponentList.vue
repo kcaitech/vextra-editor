@@ -42,6 +42,10 @@ function _searching() {
 }
 
 const searching = debounce(_searching, 300);
+
+import search_icon from '@/assets/icons/svg/search.svg';
+import source_icon from '@/assets/icons/svg/source.svg';
+import list_icon from '@/assets/icons/svg/list.svg';
 </script>
 
 <template>
@@ -50,15 +54,15 @@ const searching = debounce(_searching, 300);
             <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')"
                       @input="searching">
                 <template v-slot:prefix>
-                    <svg-icon icon-class="search" style="width: 12px;height: 12px"></svg-icon>
+                    <SvgIcon :icon="search_icon" style="width: 12px;height: 12px"/>
                 </template>
             </el-input>
             <Tooltip :content="`${t('compos.toggle_list_style')}`">
                 <div class="toggle_list">
-                    <svg-icon v-if="card_type === 'alpha'" icon-class="source"
-                              @click.stop="() => set_card_type('beta')"></svg-icon>
-                    <svg-icon v-if="card_type === 'beta'" icon-class="list"
-                              @click.stop="() => set_card_type('alpha')"></svg-icon>
+                    <SvgIcon v-if="card_type === 'alpha'" :icon="source_icon"
+                              @click.stop="() => set_card_type('beta')"/>
+                    <SvgIcon v-if="card_type === 'beta'" :icon="list_icon"
+                              @click.stop="() => set_card_type('alpha')"/>
                 </div>
             </Tooltip>
         </div>

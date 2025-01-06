@@ -28,7 +28,7 @@ function update() {
   focus_shape.value = shape;
   if (!shape) return;
   const m2p = shape.matrix2Root();
-  matrix.reset(m2p);
+  matrix.reset(m2p.toMatrix());
   matrix.multiAtLeft(props.params.matrix);
   if (!submatrix.equals(matrix)) {
     submatrix.reset(matrix);

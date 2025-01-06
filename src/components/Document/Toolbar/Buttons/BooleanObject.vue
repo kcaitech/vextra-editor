@@ -7,6 +7,7 @@ import DropSelect from "./DropSelect.vue"
 import { BoolOp, BoolShapeView, ShapeType, ShapeView } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'
 import { message } from '@/utils/message';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n()
 const props = defineProps<{ context: Context, disabled: boolean }>();
@@ -163,6 +164,26 @@ onUnmounted(() => {
     document.removeEventListener('click', onMenuBlur);
     stop2();
 })
+import white_down_icon from '@/assets/icons/svg/white-down.svg'
+import union_icon from '@/assets/icons/svg/union.svg'
+import subtract_icon from '@/assets/icons/svg/subtract.svg'
+import intersection_icon from '@/assets/icons/svg/intersection.svg'
+import difference_icon from '@/assets/icons/svg/difference.svg'
+
+function boolIcon() {
+    switch (selectBool.value) {
+        case 'union':
+            return union_icon
+        case 'subtract':
+            return subtract_icon
+        case 'intersection':
+            return intersection_icon
+        case 'difference':
+            return difference_icon
+        default:
+            return union_icon
+    }
+}
 
 </script>
 
@@ -180,10 +201,10 @@ onUnmounted(() => {
             :style="{ opacity: disabled ? 0.4 : 1, pointerEvents: disabled ? 'none' : 'auto' }" :selected="false"
             @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
             <div class="svg-container" :class="{ active: state }" @click="changeBool">
-                <svg-icon :icon-class="selectBool"/>
+                <SvgIcon :icon="boolIcon()"/>
             </div>
             <div class="menu" @click="showMenu">
-                <svg-icon icon-class="white-down"/>
+                <SvgIcon :icon="white_down_icon"/>
             </div>
         </ToolButton>
     </el-tooltip>
@@ -201,7 +222,7 @@ onUnmounted(() => {
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 
-    >svg {
+    >img {
         width: 18px;
         height: 18px;
     }

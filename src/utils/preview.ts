@@ -15,9 +15,9 @@ import {
 } from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
-import { Scout } from './scout';
 import { XYsBounding } from './common';
 import { EventIndex } from "@/components/Display/PreviewControls/actions";
+import { IScout } from '@/openapi';
 
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
@@ -162,7 +162,7 @@ export const selectedShape = (ctx: Context, page: PageView, t: Function) => {
     ctx.selection.selectShape(list[0]);
 }
 
-export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], hot: PageXY, isAction = false): ShapeView | undefined {
+export function finderShape(matrix: Matrix, scout: IScout, scope: ShapeView[], hot: PageXY, isAction = false): ShapeView | undefined {
     let result: ShapeView | undefined = undefined;
     for (let i = scope.length - 1; i > -1; i--) {
         const item = scope[i];

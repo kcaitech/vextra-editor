@@ -1,3 +1,13 @@
+:root[data-system=mac]{
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+}
+
+:root[data-system=win]{
+    --font-weight-regular: 400;
+    --font-weight-medium: 600;
+}
+
 :root {
     // position
     --default-padding: 16px;
@@ -9,7 +19,7 @@
     --default-input-height: 30px;
 
     // font
-    --font-family: BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, PingFang SC, Microsoft Yahei, Hiragino Sans GB, sans-serif, apple color emoji, Noto Color Emoji, segoe ui emoji, segoe ui symbol;
+    --font-family:Inter,Apple System,"SF Pro SC","SF Pro Display","Helvetica Neue","Arial","PingFang SC","Hiragino Sans GB","STHeiti","Microsoft YaHei","Microsoft JhengHei","Source Han Sans SC","Noto Sans CJK SC","Source Han Sans CN",sans-serif;
     --font-default-bold: 500;
     --font-default-fontsize: 12px;
 

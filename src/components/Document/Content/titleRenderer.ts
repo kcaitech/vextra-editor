@@ -77,7 +77,7 @@ export class TitleRenderer {
 
         const { x, y, width, height } = shape.frame;
 
-        const fromRoot = shape.transform2FromRoot;
+        const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
         const clientMatrix = makeShapeTransform2By1(this.m_context.workspace.matrix);
 
         const fromClient = fromRoot.clone()

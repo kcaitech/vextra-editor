@@ -52,4 +52,6 @@ export interface IContext extends IWatchable {
     rename(name: string): void;
     
     nextTick(page: PageView, cb: () => void): void;
+
+    setCustomLoading(show: boolean): void;
 }

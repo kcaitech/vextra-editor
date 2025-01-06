@@ -148,7 +148,7 @@ export class BundleHandler {
         const SH = new SpaceHandler(context);
         const env = SH.getEnvByArea(area);
         const matrix = env.matrix2Root();
-        const inverse = makeShapeTransform2By1(new Matrix(matrix.inverse));
+        const inverse = makeShapeTransform2By1((matrix.inverse));
 
         for (let i = 0; i < transforms.length; i++) {
             const t = makeShapeTransform2By1(transforms[i]);
@@ -303,7 +303,7 @@ export class BundleHandler {
             const SH = new SpaceHandler(context);
             const env = SH.getEnvByArea(area);
             const matrix = env.matrix2Root();
-            const inverse = makeShapeTransform2By1(new Matrix(matrix.inverse));
+            const inverse = makeShapeTransform2By1((matrix.inverse));
             const t = makeShapeTransform2By1(__shape.transform);
             t.addTransform(offset);
             t.addTransform(inverse);

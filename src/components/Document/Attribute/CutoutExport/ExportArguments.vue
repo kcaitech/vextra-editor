@@ -8,6 +8,7 @@ import { FormatItems } from './index.vue';
 import { useI18n } from 'vue-i18n';
 import { get_actions_export_format_name, get_actions_export_format_scale } from '@/utils/shape_style';
 import { compareArrays } from '@/utils/cutout'
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 
@@ -239,6 +240,9 @@ watchEffect(() => {
         name.value = props.argus.format.name;
     }
 })
+
+import down_icon from '@/assets/icons/svg/down.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
 </script>
 
 <template>
@@ -248,7 +252,7 @@ watchEffect(() => {
                 <input :value="sizeValue" ref="scaleInput" @change="changeScale" @focus="selectScale" @click="clickSize"
                     @input="handleScaleInput" @keyup="scaleInputBlur" @blur="is_size_select = false">
                 <div class="export_down-icon size" @click.stop="showCutoutSizeMenu">
-                    <svg-icon icon-class="down"></svg-icon>
+                    <SvgIcon :icon="down_icon"/>
                 </div>
                 <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="sizeMenuItems" :width="60"
                     :selectValue="sizeValue" @close="showCutoutSize = false" @select="selectSize">
@@ -259,7 +263,7 @@ watchEffect(() => {
                     @focus="selectName" :value="name" @change="changeName" @input="handleNameInput"
                     @click="clickPresuffix" @keyup="nameInputBlur" @blur="is_presuffix_select = false">
                 <div class="export_down-icon presuffix" @click.stop="showCutoutPerfixMenu">
-                    <svg-icon icon-class="down"></svg-icon>
+                    <SvgIcon :icon="down_icon"/>
                 </div>
                 <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="perMenuItems" :width="70"
                     :selectValue="perfixValue" :i18n="true" @close="showCutoutPerfix = false" @select="selectPerfix">
@@ -268,7 +272,7 @@ watchEffect(() => {
             <div class="cutout_format_input cutout_export_input" ref="cutout_format_input">
                 <div class="span" @click.stop="showCutoutFormatMenu">{{ formatValue }}</div>
                 <div class="export_down-icon format-i" @click.stop="showCutoutFormatMenu">
-                    <svg-icon icon-class="down"></svg-icon>
+                    <SvgIcon :icon="down_icon"/>
                 </div>
                 <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="formatMenuItems" :width="60"
                     :selectValue="formatValue" @close="showCutoutFormat = false" @select="selectFormat"></ArgsSelect>
@@ -276,7 +280,7 @@ watchEffect(() => {
         </div>
         <div class="delete" @click="deleteItem">
             <!-- :class="{ opacity: props.shapes.length === 1 && props.shapes[0].type === ShapeType.Cutout }"> -->
-            <svg-icon icon-class="delete"></svg-icon>
+            <SvgIcon :icon="delete_icon"/>
         </div>
     </div>
 </template>

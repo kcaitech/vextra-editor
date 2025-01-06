@@ -79,6 +79,11 @@ function save_layer_show(type: VariableType, name: string) {
 function _delete() {
     delete_variable(props.context, props.variable);
 }
+
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
 </script>
 <template>
     <div class="module_attr_item" ref="card_ref">
@@ -86,7 +91,7 @@ function _delete() {
             <div class="module_item_left" @click="edit_visible">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="eye-open"></svg-icon>
+                        <SvgIcon :icon="eye_open_icon"/>
                     </div>
                     <div class="name">
                         <span style="width: 35%;">{{ props.variable.name }}</span>
@@ -95,7 +100,7 @@ function _delete() {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <CompLayerShow :context="props.context" v-if="iseditLayerShow" @close-dialog="iseditLayerShow = false" right="250px"

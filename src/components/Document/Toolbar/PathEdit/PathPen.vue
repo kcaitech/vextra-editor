@@ -3,6 +3,7 @@ import ToolButton from '../Buttons/ToolButton.vue';
 import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -15,12 +16,14 @@ const emit = defineEmits<{
 function select(action: string) {
     emit('select', action);
 }
+
+import pattern_pen_icon from '@/assets/icons/svg/pattern-pen.svg';
 </script>
 <template>
 <Tooltip :content="t('shape.pen')">
     <ToolButton ref="button" @click="() => {select(Action.Pen)}" :selected="props.active" :width="32" :height="32">
         <div class="svg-container">
-            <svg-icon icon-class="pattern-pen"/>
+            <SvgIcon :icon="pattern_pen_icon"/>
         </div>
     </ToolButton>
 </Tooltip>
@@ -34,7 +37,7 @@ function select(action: string) {
     align-items: center;
     color: #ffffff;
 
-    > svg {
+    > img {
         width: 18px;
         height: 18px;
     }

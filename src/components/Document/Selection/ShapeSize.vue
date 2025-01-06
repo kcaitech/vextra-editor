@@ -37,7 +37,7 @@ const getShapePositionSize = () => {
         shapeSize.value.h = framePoint[2].y;
         m.multiAtLeft(matrix);
         framePoint = framePoint.map(p => m.computeCoord(p.x, p.y));
-        let anchor = modify_anchor(shapes[0], m);
+        let anchor = modify_anchor(shapes[0], m.toMatrix());
         origin.x = anchor.x;
         origin.y = anchor.y + 6;
         trans.value.x = 0;

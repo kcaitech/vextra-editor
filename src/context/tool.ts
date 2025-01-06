@@ -219,7 +219,7 @@ export class Tool extends WatchableObject {
     }
 
     get referSelection() {
-        return this.m_refer_selection!;
+        return this.m_refer_selection;
     }
 
     private m_refer_finer: ((xy: XY) => boolean) | undefined;

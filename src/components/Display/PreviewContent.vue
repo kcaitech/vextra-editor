@@ -1002,6 +1002,11 @@ onUnmounted(() => {
         dom.dom.unbind();
     }
 })
+
+import SvgIcon from '../common/SvgIcon.vue';
+import left_arrow_icon from "@/assets/icons/svg/left-arrow.svg"
+import right_arrow_icon from "@/assets/icons/svg/right-arrow.svg"
+
 </script>
 
 <template>
@@ -1022,12 +1027,12 @@ onUnmounted(() => {
         <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox" @mousedown.stop>
             <div class="toggle" v-if="showToggle && listLength && previewMode">
                 <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-                    <svg-icon icon-class="left-arrow"></svg-icon>
+                    <SvgIcon :icon="left_arrow_icon"/>
                 </div>
                 <div class="page">{{ curPage }} / {{ listLength }}</div>
                 <div class="next" @click.stop="togglePage(1)" @mouseup.stop
                     :class="{ disable: listLength === curPage }">
-                    <svg-icon icon-class="right-arrow" />
+                    <SvgIcon :icon="right_arrow_icon" />
                 </div>
             </div>
         </div>

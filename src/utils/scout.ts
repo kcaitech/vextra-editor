@@ -7,7 +7,7 @@ import { IScout as Scout } from "@/openapi";
 import { getVisibleBoundingByMatrix } from "@/space";
 import { EnvChain } from "@/mouse/envchain";
 
-export { IScout as Scout } from "@/openapi";
+// export { IScout as Scout } from "@/openapi";
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -26,7 +26,7 @@ export function scout(context: Context): Scout {
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
     function isPointInShape(shape: ShapeView, point: PageXY): boolean {
-        const matrix = shape.matrix2Root();
+        const matrix = shape.matrix2Root().toMatrix();
 
         // 先判断包围盒
         const box = getVisibleBoundingByMatrix(shape, matrix);
@@ -148,7 +148,7 @@ function getPathOnPageStringCustomOffset(shape: ShapeView, s: number): string { 
     const m = new Matrix();
     m.preScale(scalex * f.width, scaley * f.height);
     m.trans(-offset / 2, -offset / 2);
-    m.multiAtLeft(shape.matrix2Root());
+    m.multiAtLeft(shape.matrix2Root().toMatrix());
     return getBoxPath(m);
 }
 

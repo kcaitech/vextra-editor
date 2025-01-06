@@ -154,6 +154,12 @@ onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
     if (shape.value) shape.value.unwatch(layer_watcher);
 })
+
+import relevance_icon from '@/assets/icons/svg/relevance.svg';
+import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
 </script>
 <template>
 <div style="position: relative; box-sizing: border-box" ref="atrrdialog">
@@ -161,7 +167,7 @@ onUnmounted(() => {
         <template #tool>
             <div class="edit-comps">
                 <div class="edit_svg" @click="layerIsShow" v-if="!is_bind" :class="{ 'clicked': isLayerShow }">
-                    <svg-icon icon-class="relevance"></svg-icon>
+                    <SvgIcon :icon="relevance_icon"/>
                 </div>
             </div>
         </template>
@@ -170,7 +176,7 @@ onUnmounted(() => {
         <div class="module_item_left" @click="edit_visible">
             <div class="module_name-2">
                 <div style="width: 30px;" class="svg">
-                    <svg-icon icon-class="eye-open"></svg-icon>
+                    <SvgIcon :icon="eye_open_icon"/>
                 </div>
                 <div class="name">
                     <span style="width: 40%;">{{ is_bind.name }}</span>
@@ -179,7 +185,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="delete" @click="_delete">
-            <svg-icon icon-class="delete"></svg-icon>
+            <SvgIcon :icon="delete_icon"/>
         </div>
     </div>
     <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"

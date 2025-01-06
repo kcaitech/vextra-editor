@@ -29,6 +29,8 @@ onUnmounted(() => {
     stop();
     stop2();
 })
+
+import select_icon from "@/assets/icons/svg/select.svg";
 </script>
 <template>
     <div style="display: flex; align-items: center; gap: 6px;" @click="modify">
@@ -36,7 +38,7 @@ onUnmounted(() => {
             'background-color': status ? 'var(--active-color)' : 'transparent',
             'border': status ? 'none' : '1px solid #EBEBEB'
         }">
-            <svg-icon v-if="status=== 1" icon-class="select"/>
+            <SvgIcon v-if="status=== 1" :icon="select_icon"/>
             <div v-else-if="status=== 2"/>
         </div>
         <span>{{ t('attr.clip') }}</span>
@@ -54,7 +56,7 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
 
-    svg {
+    img {
         width: 60%;
         height: 60%;
     }

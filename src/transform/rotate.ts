@@ -172,7 +172,7 @@ export class RotateHandler extends BoundHandler {
 
             let m2 = matrixParent2rootCache.get(parent.id)!;
             if (!m2) {
-                m2 = parent.matrix2Root();
+                m2 = (parent.matrix2Root()).toMatrix();
                 matrixParent2rootCache.set(parent.id, m2);
             }
 
@@ -260,7 +260,7 @@ export class RotateHandler extends BoundHandler {
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(alpha.transform2FromRoot); // todo 考虑让 transform2FromRoot 为问题因素
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(makeShapeTransform2By1(alpha.matrix2Root())); // todo 考虑让 transform2FromRoot 为问题因素
 
         this.selectionTransformInverse = this.selectionTransform.getInverse();
         this.selectionSize = multi ? {
@@ -274,14 +274,14 @@ export class RotateHandler extends BoundHandler {
 
         for (const shape of shapes) {
             if (!this.transformCache.has(shape.parent!)) {
-                this.transformCache.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
+                this.transformCache.set(shape.parent!, makeShapeTransform2By1(shape.parent!.matrix2Root()));
             }
         }
         // this.shapeTransformListInSelection = multi ? shapes.map((shape, i) => shape.transform2.clone() // 在Parent坐标系下
         //     .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
         //     .addTransform(this.selectionTransform.getInverse())     // 在选区坐标系下
         // ) : [new Transform()];
-        this.shapeTransformListInSelection = shapes.map((shape, i) => shape.transform2.clone()
+        this.shapeTransformListInSelection = shapes.map((shape, i) => makeShapeTransform2By1(shape.transform)
             .addTransform(this.transformCache.get(shape.parent!)!)
             .addTransform(this.selectionTransform.getInverse())
         );

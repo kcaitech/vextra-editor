@@ -169,6 +169,10 @@ onUnmounted(() => {
     shape = undefined;
   }
 })
+
+import gear_icon from '@/assets/icons/svg/gear.svg';
+import side_button_icon from '@/assets/icons/svg/side-button.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 
 <template>
@@ -177,7 +181,7 @@ onUnmounted(() => {
       :context="props.context">
       <template #trigger>
         <div class="trigger">
-          <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+          <SvgIcon :icon="gear_icon" @click="showMenu"/>
         </div>
       </template>
       <template #body>
@@ -194,16 +198,16 @@ onUnmounted(() => {
           </div>
           <div class="control">
             <div class="top" :style="{ color: status('top') }" @click="setConstrain('top')">
-              <svg-icon icon-class="side-button"></svg-icon>
+              <SvgIcon :icon="side_button_icon"/>
             </div>
             <div class="right" :style="{ color: status('right') }" @click="setConstrain('right')">
-              <svg-icon icon-class="side-button"></svg-icon>
+              <SvgIcon :icon="side_button_icon"/>
             </div>
             <div class="bottom" :style="{ color: status('bottom') }" @click="setConstrain('bottom')">
-              <svg-icon icon-class="side-button"></svg-icon>
+              <SvgIcon :icon="side_button_icon"/>
             </div>
             <div class="left" :style="{ color: status('left') }" @click="setConstrain('left')">
-              <svg-icon icon-class="side-button"></svg-icon>
+              <SvgIcon :icon="side_button_icon"/>
             </div>
             <div class="height" @click="setConstrain('height')" :style="{ backgroundColor: status('height') }" />
             <div class="width" @click="setConstrain('width')" :style="{ backgroundColor: status('width') }" />

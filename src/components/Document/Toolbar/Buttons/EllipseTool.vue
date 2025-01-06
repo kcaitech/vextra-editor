@@ -4,6 +4,7 @@ import {} from 'vue';
 import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 const { t } = useI18n()
 const props = defineProps<{
     active: boolean,
@@ -14,12 +15,13 @@ const emit = defineEmits<{
 function select(action: string) {    
     emit('select', action);
 }
+import pattern_ellipse_icon from '@/assets/icons/svg/pattern-ellipse.svg';
 </script>
 <template>
   <Tooltip :content="`${t('shape.oval')} &nbsp;&nbsp; O`">
     <ToolButton ref="button" @click="() => {select(Action.AddEllipse)}" :selected="props.active">
       <div class="svg-container">
-        <svg-icon icon-class="pattern-ellipse"></svg-icon>
+        <SvgIcon :icon="pattern_ellipse_icon"/>
       </div>
     </ToolButton>
   </Tooltip>
@@ -32,7 +34,7 @@ function select(action: string) {
   justify-content: center;
   align-items: center;
   color: #ffffff;
-  > svg {
+  > img {
     width: 18px;
     height: 18px;
   }

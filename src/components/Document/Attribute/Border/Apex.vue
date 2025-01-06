@@ -12,6 +12,7 @@ import { get_actions_border_Apex, get_actions_border_endpoint, get_actions_borde
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
+import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context
     shapes: ShapeView[]
@@ -196,6 +197,8 @@ onUnmounted(() => {
     stop3();
     stop4();
 });
+
+import exchange_icon from '@/assets/icons/svg/exchange.svg';
 </script>
 <template>
     <div class="apex-select-wrap" v-if="!shaow_apex">
@@ -209,7 +212,7 @@ onUnmounted(() => {
         </div>
 
         <div class="change" @click="exchange">
-            <svg-icon icon-class="exchange"></svg-icon>
+            <SvgIcon :icon="exchange_icon"/>
         </div>
     </div>
     <div class="apex-select-wrap" v-if="shaow_apex">

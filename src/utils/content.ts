@@ -856,16 +856,15 @@ export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
     for (let i = 0; i < shapes.length; i++) {
         const item = shapes[i];
         const { x, y, width, height } = item.frame;
-        const m = item.transform2FromRoot; // 图层到Root；
-        const clientTransform = makeShapeTransform2By1(matrix);
-        m.addTransform(clientTransform); // root 到 client
-        const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+        const m = item.matrix2Root(); // 图层到Root；
+        const clientTransform = (matrix);
+        m.multi(clientTransform); // root 到 client
+        points.push(...m.transform([
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY(x + width, y),
             ColVector3D.FromXY(x + width, y + height),
             ColVector3D.FromXY(x, y + height),
-        ]);
-        points.push(lt, rt, rb, lb);
+        ]));
     }
     const box = XYsBounding(points);
     const width = box.right - box.left;
@@ -977,7 +976,7 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
         }
         return page;
     })();
-    const m = new Matrix(container.matrix2Root().inverse);
+    const m = (container.matrix2Root().inverse);
     position = m.computeCoord3(position);
     const editor = context.editor4Page(page);
     const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);

@@ -99,7 +99,7 @@ function updateDotLayout() {
     const { x, y, width, height } = shape.frame;
 
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
-    const fromRoot = shape.transform2FromRoot;
+    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
 
     const fromClient = fromRoot.addTransform(clientMatrix);
 

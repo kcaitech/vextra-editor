@@ -61,6 +61,12 @@ onMounted(() => {
     }
 
 })
+
+import close_icon from '@/assets/icons/svg/close.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import resource_icon from '@/assets/icons/svg/resource-icon.svg';
+import text_bulleted_list_icon from '@/assets/icons/svg/text-bulleted-list.svg';
+
 </script>
 
 <template>
@@ -68,21 +74,21 @@ onMounted(() => {
         <div class="header">
             <span class="title">{{ t('compos.compos') }}</span>
             <div class="close" @click.stop="close">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"/>
             </div>
         </div>
         <div class="search_togger">
             <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" @input="searching">
                 <template v-slot:prefix>
-                    <svg-icon icon-class="search" style="width: 12px;height: 12px"></svg-icon>
+                    <SvgIcon :icon="search_icon" style="width: 12px;height: 12px"/>
                 </template>
             </el-input>
             <Tooltip :content="`${t('compos.toggle_list_style')}`">
                 <div class="toggle_list">
-                    <svg-icon v-if="card_type === 'alpha'" icon-class="resource-icon"
-                              @click.stop="() => set_card_type('beta')"></svg-icon>
-                    <svg-icon v-if="card_type === 'beta'" icon-class="text-bulleted-list"
-                              @click.stop="() => set_card_type('alpha')"></svg-icon>
+                    <SvgIcon v-if="card_type === 'alpha'" :icon="resource_icon"
+                              @click.stop="() => set_card_type('beta')"/>
+                    <SvgIcon v-if="card_type === 'beta'" :icon="text_bulleted_list_icon"
+                              @click.stop="() => set_card_type('alpha')"/>
                 </div>
             </Tooltip>
         </div>

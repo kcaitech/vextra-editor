@@ -73,6 +73,9 @@ const onMouseleave = () => {
   clearTimeout(timer);
   visible.value = false;
 }
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import pattern_table_icon from '@/assets/icons/svg/pattern-table.svg';
 </script>
 
 <template>
@@ -85,7 +88,7 @@ const onMouseleave = () => {
     <ToolButton ref="button" :selected="props.params.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
       style="width: 32px">
       <div class="svg-table" @click="showTable">
-        <svg-icon icon-class="pattern-table"></svg-icon>
+        <SvgIcon :icon="pattern_table_icon"/>
       </div>
     </ToolButton>
   </el-tooltip>

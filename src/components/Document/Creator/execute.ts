@@ -12,6 +12,7 @@ import {
     FillType,
     GeneratorParams,
     GroupShapeView,
+    makeShapeTransform2By1,
     Matrix,
     ShapeFrame,
     ShapeType,
@@ -524,7 +525,7 @@ export class CreatorExecute extends TransformHandler {
 
         let m = this.shape.matrix2Root();
         m.preScale(1, 1);
-        m = new Matrix(m.inverse);
+        m = (m.inverse);
 
         (this.asyncApiCaller as CreatorApiCaller).contactTo(m.computeCoord3(this.livingPoint), to);
     }
@@ -542,7 +543,7 @@ export class CreatorExecute extends TransformHandler {
 
         let m = this.shape.matrix2Root();
         m.preScale(1, 1);
-        m = new Matrix(m.inverse);
+        m = (m.inverse);
 
         (this.asyncApiCaller as CreatorApiCaller).contactTo(m.computeCoord3(this.livingPoint));
 
@@ -609,10 +610,10 @@ export class CreatorExecute extends TransformHandler {
         } else {
             const _start = { x: this.fixedPoint.x, y: this.fixedPoint.y + 0.5 };
 
-            let m = new Matrix(this.shape.matrix2Root());
+            let m = (this.shape.matrix2Root());
             m.preScale(this.frame.width, this.frame.height); // 可有可无
 
-            m = new Matrix(m.inverse);
+            m = (m.inverse);
 
             const living = { ...this.livingPoint };
             if (this.alignPixel) {
@@ -776,7 +777,7 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private getTargetTransform(env: ShapeView, frame: ShapeFrame) {
-        const envFromRoot = env.transform2FromRoot.clone();
+        const envFromRoot = makeShapeTransform2By1(env.matrix2Root());
 
         const selectionTransform = new Transform()
             .setTranslate(ColVector3D.FromXY(frame.x, frame.y));

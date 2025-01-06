@@ -37,6 +37,15 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
     props.context.selection.notify(Selection.CHANGE_TEXT);
     emit('textAlginVer', svg)
 }
+
+import text_left_icon from '@/assets/icons/svg/text-left.svg';
+import text_center_icon from '@/assets/icons/svg/text-center.svg';
+import text_right_icon from '@/assets/icons/svg/text-right.svg';
+import text_justify_icon from '@/assets/icons/svg/text-justify.svg';
+import align_top_icon from '@/assets/icons/svg/align-top.svg';
+import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
+import align_middle_icon from '@/assets/icons/svg/align-middle.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 
 <template>
@@ -45,25 +54,25 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-left' }"
                 @click.stop="onSelectLevel(TextHorAlign.Left, 'text-left')">
                 <Tooltip :content="t('attr.align_left')" :offset="15">
-                    <svg-icon icon-class="text-left"></svg-icon>
+                    <SvgIcon :icon="text_left_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-center' }"
                 @click.stop="onSelectLevel(TextHorAlign.Centered, 'text-center')">
                 <Tooltip :content="t('attr.align_center')" :offset="15">
-                    <svg-icon icon-class="text-center"></svg-icon>
+                    <SvgIcon :icon="text_center_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-right' }"
                 @click.stop="onSelectLevel(TextHorAlign.Right, 'text-right')">
                 <Tooltip :content="t('attr.align_right')" :offset="15">
-                    <svg-icon icon-class="text-right"></svg-icon>
+                    <SvgIcon :icon="text_right_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-justify' }"
                 @click.stop="onSelectLevel(TextHorAlign.Natural, 'text-justify')">
                 <Tooltip :content="t('attr.align_the_sides')" :offset="15">
-                    <svg-icon icon-class="text-justify"></svg-icon>
+                    <SvgIcon :icon="text_justify_icon"/>
                 </Tooltip>
             </i>
         </div>
@@ -71,19 +80,19 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-top' }"
                 @click.stop="onSelectVertical(TextVerAlign.Top, 'align-top')">
                 <Tooltip :content="t('attr.align_top')" :offset="15">
-                    <svg-icon icon-class="align-top"></svg-icon>
+                    <SvgIcon :icon="align_top_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-middle' }"
                 @click.stop="onSelectVertical(TextVerAlign.Middle, 'align-middle')">
                 <Tooltip :content="t('attr.align_middle')" :offset="15">
-                    <svg-icon icon-class="align-middle"></svg-icon>
+                    <SvgIcon :icon="align_middle_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-bottom' }"
                 @click.stop="onSelectVertical(TextVerAlign.Bottom, 'align-bottom')">
                 <Tooltip :content="t('attr.align_bottom')" :offset="15">
-                    <svg-icon icon-class="align-bottom"></svg-icon>
+                    <SvgIcon :icon="align_bottom_icon"/>
                 </Tooltip>
             </i>
         </div>

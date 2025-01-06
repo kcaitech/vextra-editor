@@ -4,7 +4,7 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { getTextIndexAndLen, get_add_gradient_color, get_gradient, isSelectText, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, Shape, ShapeType, ShapeView, Stop, TableCell, TableView, TextShapeView, adapt2Shape, cloneGradient } from '@kcdesign/data';
+import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, Shape, ShapeType, ShapeView, Stop, TableCell, TableView, TextShapeView, TransformRaw, adapt2Shape, cloneGradient } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -157,7 +157,7 @@ const dot_mousemove = (e: MouseEvent) => {
     if (!gradient) return;
     if (isDragging && gradientEditor) {
         startPosition.x = x, startPosition.y = y;
-        const matrix = new Matrix();
+        const matrix = new TransformRaw();
         let frame = shape.frame;
         if (shape.type === ShapeType.Table) {
             const tableSelection = props.context.tableSelection;
@@ -181,7 +181,7 @@ const dot_mousemove = (e: MouseEvent) => {
         matrix.preScale(frame.width, frame.height);
         matrix.multiAtLeft(shape.matrix2Root());
         matrix.multiAtLeft(props.context.workspace.matrix);
-        const m = new Matrix(matrix.inverse);
+        const m = (matrix.inverse);
         const posi = m.computeCoord(x, y);
         if (dot_type === 'from') {
             gradientEditor.execute_from(posi);
