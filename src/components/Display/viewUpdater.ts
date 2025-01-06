@@ -186,11 +186,9 @@ export class ViewUpdater {
     private __update(...args: any[]) {
         (this.m_page_card as any)?.repaint() // 执行PreviewPageCard内部重绘函数
         if (args.includes('frame') || args.includes('rotation') || args.includes('transform') || args.includes('layout')) {
-            console.log(this.v_matrix.toString());
             const save_m = this.matrix.clone();
             this.modifyTransform();
             this.setAttri(save_m);
-            console.log(this.v_matrix.toString(), 11111111);
         }
     }
 
