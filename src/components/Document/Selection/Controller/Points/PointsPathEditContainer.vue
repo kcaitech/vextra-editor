@@ -309,13 +309,12 @@ function workspaceWatcher(t: number | string) {
 
 onMounted(() => {
     shape = props.context.selection.pathshape!;
-    if (!shape) return console.log('wrong shape');
+    if (!shape) return console.error('wrong shape');
     shape.watch(update);
     update();
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
     props.context.workspace.watch(workspaceWatcher);
-    props.context.path.setContactStatus(false);
 })
 
 onUnmounted(() => {
