@@ -6,7 +6,7 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import {
     adapt2Shape,
-    ArtboradView,
+    ArtboardView,
     PageView,
     Shape,
     ShapeDirList2 as ShapeDirList,
@@ -261,7 +261,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
                 contextMenuItems.value.delete(MenuItemType.Mask);
             }
 
-            const s = selected[0] as ArtboradView;
+            const s = selected[0] as ArtboardView;
             if (s.autoLayout) {
                 contextMenuItems.value.add(MenuItemType.UnAutoLayout);
             } else {
