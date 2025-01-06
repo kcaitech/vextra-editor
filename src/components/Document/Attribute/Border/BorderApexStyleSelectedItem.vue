@@ -6,18 +6,9 @@ import { computed } from 'vue'
 const props = defineProps<{
     data: SelectItem | null
 }>();
-const isEnd = computed(() => {
-    return props.data?.content.startsWith('end');
+const isEnd = computed<boolean>(() => {
+    return !!props.data?.content.startsWith('end');
 })
-
-
-// Line = "line",
-//     FilledArrow = "filled-arrow",
-//     OpenArrow = "open-arrow",
-//     FilledCircle = "filled-circle",
-//     FilledSquare = "filled-square",
-//     Round = "round",
-//     Square = "square"
 
 import line_icon from '@/assets/icons/svg/line.svg';
 import filled_arrow_icon from '@/assets/icons/svg/filled-arrow.svg';
@@ -35,15 +26,12 @@ const iconMap:{[key: string]: string} = {
     [MarkerType.Round]: round_icon,
     [MarkerType.Square]: square_icon,
 }
-
 </script>
-
 <template>
     <div class="item-container">
-        <svg-icon :class="{ isEnd }" :icon="iconMap[props.data?.value || '']"/>
+        <svg-icon :class="{ isEnd }" :icon="iconMap[props.data?.value ?? MarkerType.Line]"/>
     </div>
 </template>
-
 <style scoped lang="scss">
 .item-container {
     width: 100%;
