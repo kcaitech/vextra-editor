@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Context} from '@/context';
-import {ArtboradView, ShapeType, ShapeView} from '@kcdesign/data';
+import {ArtboardView, ShapeType, ShapeView} from '@kcdesign/data';
 import {PositionAdjust} from "@kcdesign/data";
 import {onMounted, onUnmounted, watch} from 'vue';
 import {
@@ -199,12 +199,12 @@ function _modify_model_disable() {
       model_enable.o = true;
       model_enable.hv = true;
     }
-    if ((first as ArtboradView).autoLayout || (first_p as ArtboradView).autoLayout) {
+    if ((first as ArtboardView).autoLayout || (first_p as ArtboardView).autoLayout) {
       reset_model();
     }
     return;
   }
-  const some = selected.some(s => (s as ArtboradView).autoLayout || (s.parent as ArtboradView).autoLayout);
+  const some = selected.some(s => (s as ArtboardView).autoLayout || (s.parent as ArtboardView).autoLayout);
   if (some) {
     return reset_model();
   }

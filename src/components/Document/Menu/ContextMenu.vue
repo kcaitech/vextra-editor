@@ -18,7 +18,7 @@ import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
 import {
-    ArtboradView,
+    ArtboardView,
     ShapeType,
     ShapeView,
     SymbolRefView,
@@ -310,7 +310,7 @@ function dissolution_container() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.dissolution_artboard(artboards as ArtboradView[]);
+        const shapes = editor.dissolution_artboard(artboards as ArtboardView[]);
         if (shapes) {
             const selectShapes = [...saveSelectShape, ...shapes]
             props.context.nextTick(page, () => {

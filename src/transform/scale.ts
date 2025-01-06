@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { BoundHandler, FrameLike } from "./handler";
 import {
     ColVector3D, CtrlElementType, Matrix, Scaler, ShapeSize, ShapeView, SymbolView, Transform, UniformScaleUnit,
-    ArtboradView, GroupShapeView, SymbolRefView
+    ArtboardView, GroupShapeView, SymbolRefView
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
@@ -67,7 +67,7 @@ export class ScaleHandler extends BoundHandler {
 
         this.uniformScaleMode = context.tool.action === Action.AutoK;
         if (selected.length === 1
-            && (selected[0] instanceof ArtboradView || selected[0] instanceof SymbolView || selected[0] instanceof SymbolRefView)
+            && (selected[0] instanceof ArtboardView || selected[0] instanceof SymbolView || selected[0] instanceof SymbolRefView)
             && !!selected[0].childs.length
         ) this.collectSpark(selected[0]);
 

@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
-import { adapt2Shape, ArtboradView, AutoLayout, PaddingDir, Shape, ShapeType, ShapeView, StackMode, StackSizing, StackWrap, SymbolRefView, SymbolView } from '@kcdesign/data';
+import { adapt2Shape, ArtboardView, AutoLayout, PaddingDir, Shape, ShapeType, ShapeView, StackMode, StackSizing, StackWrap, SymbolRefView, SymbolView } from '@kcdesign/data';
 import { computeString, getName } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import AutoLayoutInput from "./AutoLayoutInput.vue"
@@ -67,7 +67,7 @@ const update = () => {
 const updateData = () => {
     const selection = props.context.selection.selectedShapes;
     if (selection.length !== 1) return;
-    const shape = selection[0] as ArtboradView;
+    const shape = selection[0] as ArtboardView;
     if (!shape.autoLayout) return;
     autoLayoutDate.value = shape.autoLayout;
     isDisable.value = shape instanceof SymbolRefView;
@@ -121,7 +121,7 @@ const changeVorSpace = (value: string) => {
     let space: number = Number.parseFloat(value);
     if (isNaN(space)) return;
 
-    const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const editor = props.context.editor4Shape(shape);
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
@@ -227,7 +227,7 @@ function draggingHorSpace(e: MouseEvent) {
     if (!autoLayoutModifyHandler.asyncApiCaller) {
         autoLayoutModifyHandler.createApiCaller();
     }
-    const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
     let space = e.movementX;
@@ -245,7 +245,7 @@ function draggingVerSpace(e: MouseEvent) {
     if (!autoLayoutModifyHandler.asyncApiCaller) {
         autoLayoutModifyHandler.createApiCaller();
     }
-    const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
     let space = e.movementX;
@@ -266,7 +266,7 @@ function draggingPadding(e: MouseEvent, dir: PaddingDir) {
     if (!autoLayoutModifyHandler.asyncApiCaller) {
         autoLayoutModifyHandler.createApiCaller();
     }
-    const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
     let padding = e.movementX;
@@ -355,7 +355,7 @@ const isLayout = () => {
     if (shapes.length > 1) {
         isActive.value = true;
     } else {
-        const shape = (shapes[0] as ArtboradView)
+        const shape = (shapes[0] as ArtboardView)
         if (!shape.autoLayout) {
             isActive.value = true;
         } else {

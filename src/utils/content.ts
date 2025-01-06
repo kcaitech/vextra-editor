@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { ClientXY, PageXY, Selection, XY } from "@/context/selection";
 import {
-    adapt2Shape, ArtboradView,
+    adapt2Shape, ArtboardView,
     AsyncCreator,
     BoolShapeView,
     Color,
@@ -971,7 +971,7 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
     const scout = context.selection.scout;
     const container = (() => {
         for (const shape of shapes) {
-            if (shape.isVirtualShape || !shape.isVisible || !(shape instanceof ArtboradView || shape instanceof SymbolView)) continue;
+            if (shape.isVirtualShape || !shape.isVisible || !(shape instanceof ArtboardView || shape instanceof SymbolView)) continue;
             if ((shape instanceof SymbolView && (is_circular_ref2((symbol instanceof ShapeView) ? adapt2Shape(symbol) : symbol, shape.id) || shape.isSymbolUnionShape))) continue;
             if (isTarget(scout, shape, position)) return shape;
         }

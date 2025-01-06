@@ -8,7 +8,7 @@ import {
     PrototypeTransitionType,
     ShapeView,
     makeShapeTransform2By1,
-    ArtboradView
+    ArtboardView
 } from '@kcdesign/data';
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
@@ -1222,7 +1222,7 @@ export class ViewUpdater {
             }, time * 1000);
             this.m_context.preview.addSetTimeout(timer);
         } else {
-            const inner_shape = this.getScrollArtboard(shape, is_inner.id) as ArtboradView;
+            const inner_shape = this.getScrollArtboard(shape, is_inner.id) as ArtboardView;
             if (action.transitionType === PrototypeTransitionType.SCROLLANIMATE) {
                 const el = document.getElementById(`${inner_shape.id}`);
                 if (el) {
@@ -1234,7 +1234,7 @@ export class ViewUpdater {
                     }, time * 1000);
                 }
             }
-            const trans = (inner_shape as ArtboradView).innerTransform;
+            const trans = (inner_shape as ArtboardView).innerTransform;
             let stepx = this.m_context.preview.artboardScrollOffset.x - (trans?.translateX || 0);
             let stepy = this.m_context.preview.artboardScrollOffset.y - (trans?.translateY || 0);
             scrollAtrboard(this.m_context, inner_shape, { x: stepx, y: stepy });

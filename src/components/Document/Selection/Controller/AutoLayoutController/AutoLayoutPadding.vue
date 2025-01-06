@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { ArtboradView, ColVector3D, Matrix, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboardView, ColVector3D, Matrix, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 type Box = {
@@ -39,7 +39,7 @@ function getPaddingPosition() {
     paddingBox.value = [];
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length || shapes.length > 1) return;
-    const shape = shapes[0] as ArtboradView;
+    const shape = shapes[0] as ArtboardView;
     const { x, y, width, height } = shape.frame;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;

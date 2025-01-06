@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import {
-    ArtboradView,
+    ArtboardView,
     Matrix,
     OverlayBackgroundInteraction,
     OverlayBackgroundType,
@@ -330,7 +330,7 @@ const initMatrix = () => {
         is_overlay.value = false;
     }
 }
-let artboard: ArtboradView;
+let artboard: ArtboardView;
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
@@ -347,7 +347,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
             viewUpdater.trans(e);
             setFixedTransform();
         } else {
-            artboard = hover_shape as ArtboradView;
+            artboard = hover_shape as ArtboardView;
             const scale = viewUpdater.v_matrix.m00;
             let stepx = Math.abs(e.deltaX) > 50 ? (50 * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
             let stepy = Math.abs(e.deltaY) > 50 ? (50 * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
@@ -359,13 +359,13 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
             let p_x = hover_shape.parent;
             p_x = getScrollShape(p_x);
             while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                scroll.x = scrollAtrboard(props.context, p_x as ArtboradView, { x: -stepx / scale, y: 0 }).x;
+                scroll.x = scrollAtrboard(props.context, p_x as ArtboardView, { x: -stepx / scale, y: 0 }).x;
                 p_x = p_x.parent;
             }
             let p_y = hover_shape.parent;
             p_y = getScrollShape(p_y);
             while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                scroll.y = scrollAtrboard(props.context, p_y as ArtboradView, { x: 0, y: -stepy / scale }).y;
+                scroll.y = scrollAtrboard(props.context, p_y as ArtboardView, { x: 0, y: -stepy / scale }).y;
                 p_y = p_y.parent;
             }
             viewUpdater.trans(e, scroll);
@@ -444,19 +444,19 @@ function onMouseMove(e: MouseEvent) {
             let dy = e.clientY - downXY.y;
             const diff = Math.hypot(dx, dy);
             if (diff > 4) {
-                artboard = hover_shape as ArtboradView;
+                artboard = hover_shape as ArtboardView;
                 const scale = viewUpdater.v_matrix.m00;
                 let scroll = scrollAtrboard(props.context, artboard, { x: e.movementX / scale, y: e.movementY / scale });
                 let p_x = hover_shape.parent;
                 p_x = getScrollShape(p_x);
                 while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                    scroll.x = scrollAtrboard(props.context, p_x as ArtboradView, { x: e.movementX / scale, y: 0 }).x;
+                    scroll.x = scrollAtrboard(props.context, p_x as ArtboardView, { x: e.movementX / scale, y: 0 }).x;
                     p_x = p_x.parent;
                 }
                 let p_y = hover_shape.parent;
                 p_y = getScrollShape(p_y);
                 while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                    scroll.y = scrollAtrboard(props.context, p_y as ArtboradView, { x: 0, y: e.movementY / scale }).y;
+                    scroll.y = scrollAtrboard(props.context, p_y as ArtboardView, { x: 0, y: e.movementY / scale }).y;
                     p_y = p_y.parent;
                 }
                 pageViewDragging(e, scroll);
@@ -688,7 +688,7 @@ function search2(e: MouseEvent) {
 // 吸顶固定和固定的视图偏移值
 const setFixedTransform = () => {
     const scale = viewUpdater.v_matrix.m00;
-    const selectShape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const selectShape = props.context.selection.selectedShapes[0] as ArtboardView;
     const select_box = viewBox(viewUpdater.v_matrix, selectShape);
     const t1 = select_box.top / scale;
     const l1 = select_box.left / scale;
@@ -704,7 +704,7 @@ const setFixedTransform = () => {
             const transform2 = new TransformRaw();
             transform2.trans(l2, t2);
             props.context.preview.setFixedTransform(s.id, transform2);
-            (s as ArtboradView).setFixedTransform(transform2);
+            (s as ArtboardView).setFixedTransform(transform2);
         })
     }
 }

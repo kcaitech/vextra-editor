@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import {
-    ArtboradView,
+    ArtboardView,
     AsyncTransfer,
     GroupShape,
     ShapeView,
@@ -101,13 +101,13 @@ export function record_origin_xy_env(shapes: ShapeView[]) {
 }
 
 export const getAutoLayoutShapes = (shapes: ShapeView[]) => {
-    const parents: ArtboradView[] = [];
+    const parents: ArtboardView[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const parent = shape.parent;
-        if (parent && (parent as ArtboradView).autoLayout) {
+        if (parent && (parent as ArtboardView).autoLayout) {
             const hasP = parents.some(item => item.id === parent.id);
-            if (!hasP) parents.push(parent as ArtboradView);
+            if (!hasP) parents.push(parent as ArtboardView);
         }
     }
     return parents;
