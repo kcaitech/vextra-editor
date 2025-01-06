@@ -307,6 +307,10 @@ function workspaceWatcher(t: number | string) {
     }
 }
 
+function resetContactStatus() {
+    props.context.tool.action === Action.AutoV && props.context.path.setContactStatus(false);
+}
+
 onMounted(() => {
     shape = props.context.selection.pathshape!;
     if (!shape) return console.error('wrong shape');
@@ -315,6 +319,7 @@ onMounted(() => {
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
     props.context.workspace.watch(workspaceWatcher);
+    resetContactStatus();
 })
 
 onUnmounted(() => {
