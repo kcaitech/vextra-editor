@@ -127,15 +127,16 @@ function updateComps() {
 
         comps.push({ component: VertLine })
         comps.push(
-            {
-                component: Table,
-                params: {
-                    get active() {
-                        return selected.value === Action.AddTable
-                    },
-                    select,
-                }
-            },
+            // 先屏蔽掉表格
+            // {
+            //     component: Table,
+            //     params: {
+            //         get active() {
+            //             return selected.value === Action.AddTable
+            //         },
+            //         select,
+            //     }
+            // },
             {
                 component: Contact,
                 params: {
