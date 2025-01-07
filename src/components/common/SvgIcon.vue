@@ -5,9 +5,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 const props = defineProps<{ icon: string, className?: string }>();
-// const iconName = computed(() => {
-//     return `#icon-${props.iconClass}`
-// })
 const svgClass = computed(() => {
     if (props.className) {
         return 'svg-icon ' + props.className
@@ -16,5 +13,3 @@ const svgClass = computed(() => {
     }
 })
 </script>
-
-<style scoped></style>

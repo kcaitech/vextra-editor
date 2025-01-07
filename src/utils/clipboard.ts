@@ -1710,12 +1710,9 @@ function fixToXY(context: Context, source: Shape[], xy: XY) {
     const selectionTransform = new TransformRaw().trans(dx, dy);
 
     for (const shape of source) {
-        const t = (shape.transform)
-            .clone()
+        shape.transform = TransformRaw.from(shape.transform)
             .multi(selectionTransform)
             .multi(env.matrix2Root().getInverse());
-
-        shape.transform = (t);
     }
 
     return env;

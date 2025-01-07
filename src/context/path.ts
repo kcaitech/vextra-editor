@@ -388,9 +388,7 @@ export class Path extends WatchableObject {
     setContactStatus(v: boolean) {
         this.contacting = v;
 
-        if (!v) {
-            new PathEditor(this.m_context).sortSegment();
-        }
+        !v && new PathEditor(this.m_context).sortSegment();
 
         this.notify(Path.CONTACT_STATUS_CHANGE);
     }

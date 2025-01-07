@@ -65,7 +65,7 @@ export async function importDocumentFromMDD(filePack: File, repo: Repository) {
         if (name.startsWith('images')) type = 'arraybuffer';
         let content: string | Uint8Array | ArrayBuffer = await file.async(type);
         if (type === "arraybuffer") {
-            content = new Uint8Array(content as Uint8Array);
+            content = new Uint8Array(content as ArrayBuffer);
         }
         if (name.startsWith('pages')) name = name.replace('.json', '');
         __doc[name.replace(/images\/|pages\//, '')] = content;
