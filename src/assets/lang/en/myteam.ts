@@ -44,7 +44,7 @@ export const Createteam = {
     confirm: 'confirm',
     cancel: 'cancel',
 
-    joinprojecttipsA: 'Apply for a project',
+    joinprojecttipsA: 'Apply for a project:',
     joinprojecttipsB: 'After you join a project, you can access all files and resources in the project',
     joinprojecttipsC: 'Application has been sent,',
     joinprojecttipsC1: 'You are about to enter the home page of the application. After approval, you can view the contents of the project',

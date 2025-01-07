@@ -3,7 +3,7 @@
         <div class="header">
             <div class="title">创建边框样式</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -45,6 +45,19 @@ import { get_actions_border_position, get_borders } from '@/utils/shape_style';
 import { Selection } from "@/context/selection";
 import { getShapesForStyle } from '@/utils/style';
 import { v4 } from 'uuid';
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface StrokePaintItem {
     id: number
@@ -132,7 +145,7 @@ const Newborder = () => {
     const editor = props.context.editor4Doc()
     if (!thickness.value && !positonvalue.value) return
     const value = thickness.value.split(', ').map(i => Number(i))
-    const side = new BorderSideSetting(SideType.Normal, value[0], value[3], value[2], value[1])
+    const side = new BorderSideSetting(SideType.Custom, value[0], value[3], value[2], value[1])
     const border = new BorderMaskType(positonvalue.value, side)
     const style = new BorderMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, border)
     const page = props.context.selection.selectedPage!
@@ -309,7 +322,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;

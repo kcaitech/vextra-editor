@@ -3,7 +3,7 @@
         <div class="header">
             <div class="title">编辑特效样式</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -22,14 +22,14 @@
             <div class="create-effect">
                 <div class="title">特效</div>
                 <div class="add" @click.stop="addshadow">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
             </div>
             <div class="effect-list">
                 <div class="item" v-for="(s, index) in shadows" :key="s.id">
                     <div class="show">
                         <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click.stop="toggleVisible(index)">
-                            <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
+                            <SvgIcon v-if="s.shadow.isEnabled" :icon="select_icon"></SvgIcon>
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
@@ -52,7 +52,7 @@
                         >
                     </ShadowDetail>
                     <div class="delete" :class="{ disable }" @click.stop="deleteShadow(index)">
-                        <svg-icon icon-class="delete"></svg-icon>
+                        <SvgIcon :icon="delete_icon"></SvgIcon>
                     </div>
                 </div>
             </div>
@@ -73,6 +73,18 @@ import ShadowDetail from '../Shadow/ShadowDetail.vue'
 import { FillRenderer } from './fillRenderer';
 import { v4 } from 'uuid';
 import { LockMouse } from '@/transform/lockMouse';
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface ShadowItem {
     id: number,
@@ -332,7 +344,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
@@ -399,7 +411,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                svg {
+                img {
                     width: 16px;
                     height: 16px;
                     margin: auto;
@@ -436,7 +448,7 @@ onUnmounted(() => {
                         align-items: center;
                         border-radius: 4px;
 
-                        >svg {
+                        >img {
                             width: 60%;
                             height: 60%;
                         }
@@ -472,7 +484,7 @@ onUnmounted(() => {
                         background-color: #F5F5F5;
                     }
 
-                    svg {
+                    img {
                         width: 16px;
                         height: 16px;
                         margin: auto;

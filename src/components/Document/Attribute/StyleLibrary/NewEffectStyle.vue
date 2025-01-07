@@ -3,7 +3,7 @@
         <div class="header">
             <div class="title">创建特效样式</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -21,14 +21,14 @@
             <div class="create-effect">
                 <div class="title">特效</div>
                 <div class="add" @click="addShadow">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
             </div>
             <div class="effect-list">
                 <div class="item" v-for="(s, index) in shadows" :key="s.id">
                     <div class="show">
                         <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click.stop="toggleVisible(index)">
-                            <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
+                            <SvgIcon v-if="s.shadow.isEnabled" :icon="select_icon"></SvgIcon>
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
@@ -39,8 +39,8 @@
                         :length="shadows.length" :shapes="props.shapes" :reflush="reflush" :isMask="isMask"
                         :editor="editor">
                     </ShadowDetail>
-                    <div class="delete" :class="{ disable }">
-                        <svg-icon icon-class="delete"></svg-icon>
+                    <div class="delete" :class="{ disable }" @click.stop="deleteFill(index)">
+                        <SvgIcon :icon="delete_icon"></SvgIcon>
                     </div>
                 </div>
             </div>
@@ -59,6 +59,7 @@ import { format_value, genOptions } from '@/utils/common';
 import ShadowDetail from '../Shadow/ShadowDetail.vue'
 import {
     get_actions_add_shadow,
+    get_actions_shadow_delete,
     get_actions_shadow_enabled,
     get_actions_shadow_position,
     get_actions_shadow_unify,
@@ -69,7 +70,18 @@ import { v4 } from 'uuid';
 import { hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 import { FillRenderer, EditorAtt } from "./fillRenderer";
-
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface ShadowItem {
     id: number,
@@ -197,6 +209,23 @@ function addShadow(): void {
                 const editor = props.context.editor4Page(page);
                 editor.shapesAddShadow(actions);
             }
+        }
+    }
+    hidden_selection(props.context);
+}
+
+function deleteFill(idx: number) {
+    const _idx = shadows.length - idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.deleteShadow(_idx)
+    } else if (len > 1) {
+        const actions = get_actions_shadow_delete(props.shapes, _idx);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.shapesDeleteShadow(actions);
         }
     }
     hidden_selection(props.context);
@@ -345,7 +374,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
@@ -412,7 +441,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                svg {
+                img {
                     width: 16px;
                     height: 16px;
                     margin: auto;
@@ -449,7 +478,7 @@ onUnmounted(() => {
                         align-items: center;
                         border-radius: 4px;
 
-                        >svg {
+                        >img {
                             width: 60%;
                             height: 60%;
                         }
@@ -485,7 +514,7 @@ onUnmounted(() => {
                         background-color: #F5F5F5;
                     }
 
-                    svg {
+                    img {
                         width: 16px;
                         height: 16px;
                         margin: auto;

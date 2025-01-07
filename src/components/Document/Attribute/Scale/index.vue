@@ -13,7 +13,7 @@ import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
-import { ColVector3D, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
+import { ColVector3D, makeShapeTransform2By1, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
 import { ScaleUniformer } from "@/transform/scaleUniform";
 
 const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();
@@ -37,17 +37,16 @@ function __get_box() {
     const points: XY[] = [];
     for (const shape of selected) {
         const frame = shape.frame;
-        const transform = shape.transform2FromRoot;
+        const transform = shape.matrix2Root();
         const right = frame.x + frame.width;
         const bottom = frame.y + frame.height;
 
-        const { col0, col1, col2, col3 } = transform.transform([
+        points.push(...transform.transform([
             ColVector3D.FromXY(frame.x, frame.y),
             ColVector3D.FromXY(right, frame.y),
             ColVector3D.FromXY(right, bottom),
             ColVector3D.FromXY(frame.x, bottom),
-        ]);
-        points.push(col0, col1, col2, col3);
+        ]));
     }
     return XYsBounding(points);
 }
@@ -107,14 +106,14 @@ function __change_size(ratio: number) {
     for (const shape of selected) {
         const parent = shape.parent!;
         if (cache.has(parent)) continue;
-        cache.set(parent, parent.transform2FromRoot);
+        cache.set(parent, makeShapeTransform2By1(parent.matrix2Root()));
     }
 
     const selectionTransform = new Transform().setTranslate(ColVector3D.FromXY(box.left, box.top));
     const inverse = selectionTransform.getInverse();
 
     for (const shape of selected) {
-        const transform = shape.transform2.clone().addTransform(cache.get(shape.parent!)!);
+        const transform = makeShapeTransform2By1(shape.transform).addTransform(cache.get(shape.parent!)!);
         transform.addTransform(inverse);
         units.push({ shape, transform });
     }
@@ -127,7 +126,7 @@ function __change_size(ratio: number) {
     for (const shape of selected) {
         const parent = shape.parent!;
         if (parentsTransform.has(parent)) continue;
-        const t = parent.transform2FromRoot.clone();
+        const t = makeShapeTransform2By1(parent.matrix2Root());
         parentsTransform.set(parent, t.getInverse());
     }
 
@@ -336,29 +335,36 @@ onUnmounted(() => {
     stop();
     stop2();
 });
+
+import w_icon from "@/assets/icons/svg/W.svg";
+import h_icon from "@/assets/icons/svg/H.svg";
+import scale_simple_icon from "@/assets/icons/svg/scale-simple.svg";
+import down_icon from "@/assets/icons/svg/down.svg";
+import page_select_icon from "@/assets/icons/svg/page-select.svg";
+
 </script>
 <template>
 <div class="scale-panel">
     <TypeHeader :title="t('attr.scale')" class="mt-24" :active="true"/>
     <div class="content">
         <div class="tr">
-            <MossInput icon="W" :value="format(w)" @change="changeW" draggable
+            <MossInput :icon="w_icon" :value="format(w)" @change="changeW" draggable
                            @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"/>
-            <MossInput icon="H" :value="format(h)" @change="changeH" draggable
+            <MossInput :icon="h_icon" :value="format(h)" @change="changeH" draggable
                            @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"/>
         </div>
         <div style="display: flex; gap: 13px;margin-bottom: 8px;">
             <div style="position: relative">
-                <MossInput icon="scale-simple" :value="`${format(k)}x`" @change="changeK"
+                <MossInput :icon="scale_simple_icon" :value="`${format(k)}x`" @change="changeK"
                                draggable @dragstart="dragstart" @dragging="draggingK" @dragend="dragend2"/>
                 <div class="options" id="scale-popover-0903">
                     <div class="trigger" @click.stop="emitTrigger">
-                        <svg-icon icon-class="down" style="width: 12px; height: 12px"/>
+                        <SvgIcon :icon="down_icon" style="width: 12px; height: 12px"/>
                     </div>
                     <div v-if="optionsVisible" ref="popover" class="popover">
                         <div v-for="i in presetOptions" :key="i" class="option" @click="() => select(i)">
                             <span>{{ i }}</span>
-                            <svg-icon v-if="(k+'x') ===i" icon-class="page-select"/>
+                            <SvgIcon v-if="(k+'x') ===i" :icon="page_select_icon"/>
                         </div>
                     </div>
                 </div>

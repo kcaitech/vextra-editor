@@ -28,7 +28,6 @@ import {
 import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
-import { Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
 import { ISelection, SelectionEvents } from "@/openapi/selection";
@@ -36,6 +35,7 @@ import { skipUserSelectShapes } from "@/utils/content";
 import { DocSelectionData } from "./user";
 import { initpal } from "@/components/common/initpal";
 import { EnvChainGenerator } from "@/mouse/envchain";
+import { IScout } from "@/openapi";
 
 export interface XY {
     x: number,
@@ -130,7 +130,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.chainGenerator = new EnvChainGenerator();
     }
 
-    get scout(): Scout {
+    get scout(): IScout {
         return this.m_context.toolbox.scout;
     }
 

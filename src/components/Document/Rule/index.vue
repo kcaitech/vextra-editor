@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { ArtboradView, GuideAxis, PageView, ShapeView } from '@kcdesign/data';
+import { ArtboardView, GuideAxis, PageView, ShapeView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
@@ -93,9 +93,9 @@ const pageWatcher = (...args: any) => {
         rootReferHandler.render();
 
         if (args.includes('length', -1)) {
-            props.context.tool.referSelection.updateSelectionForDelete(props.page.id);
+            props.context.tool.referSelection?.updateSelectionForDelete(props.page.id);
         } else if (args.includes('offset', -1)) {
-            props.context.tool.referSelection.updateSelectedSelection(props.page.id);
+            props.context.tool.referSelection?.updateSelectedSelection(props.page.id);
         }
     }
 }
@@ -105,7 +105,7 @@ function workspaceWatcher(t: number | string) {
         scaleRenderer.render();
         rootReferHandler.render();
         referUnderContainerRenderer.updateByMatrix();
-        props.context.tool.referSelection.updateSelectedSelection(selected.value.env.id);
+        props.context.tool.referSelection?.updateSelectedSelection(selected.value.env.id);
         referLineSelection.resetHovered();
     }
 }
@@ -278,7 +278,7 @@ function downHover(event: MouseEvent) {
 
     const { axis, env, index } = hovered.value;
 
-    referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboradView, index);
+    referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboardView, index);
 
     document.addEventListener('mousemove', modifyOffset);
     document.addEventListener('mouseup', upCommon);
@@ -302,7 +302,7 @@ function downSelect(event: MouseEvent) {
 
     const { axis, env, index } = selected.value;
 
-    referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboradView, index);
+    referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboardView, index);
 
     hovered.value.valid = false;
 
@@ -396,7 +396,7 @@ function modifyOffsetByKeyboard(del: number) {
     const { env, index, axis } = selected.value;
 
     if (!referLineHandler) {
-        referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboradView, index);
+        referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboardView, index);
     }
 
     referLineHandler.modifyOffsetByKeyboard(del);

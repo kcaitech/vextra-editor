@@ -1,6 +1,6 @@
 import {
     adapt2Shape,
-    ArtboradView,
+    ArtboardView,
     BatchAction2,
     ContextSettings,
     export_text,
@@ -39,7 +39,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
         let x = value;
         let dx = 0;
         const box = get_box(shape);
-        if ((parent as ArtboradView).autoLayout) continue;
+        if ((parent as ArtboardView).autoLayout) continue;
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
             dx = value - m.computeCoord2(box.x, 0).x;
@@ -63,7 +63,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
         let y = value;
         let dy = 0;
         const box = get_box(shape);
-        if ((parent as ArtboradView).autoLayout) continue;
+        if ((parent as ArtboardView).autoLayout) continue;
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
             dy = value - m.computeCoord2(0, box.y).y;
@@ -123,7 +123,7 @@ export function get_rotate_for_straight(shape: PathShapeView) {
     const points = shape.segments[0].points;
     const p1 = points[0];
     const p2 = points[1];
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
     const lt = m.computeCoord2(p1.x, p1.y);
     const rb = m.computeCoord2(p2.x, p2.y);
@@ -386,7 +386,7 @@ export function getRadiusForCopy(shapes: ShapeView[]) {
     return first;
 
     function __get(shape: ShapeView): [number, number, number, number] | undefined {
-        if (shape instanceof ArtboradView || shape instanceof SymbolView || shape instanceof SymbolRefView) {
+        if (shape instanceof ArtboardView || shape instanceof SymbolView || shape instanceof SymbolRefView) {
             const corner = shape.cornerRadius;
             if (!corner) return;
             return [corner.lt, corner.rt, corner.rb, corner.lb];

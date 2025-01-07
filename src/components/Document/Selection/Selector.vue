@@ -28,7 +28,7 @@ function select() {
     const selection = props.context.selection;
     const page = selection.selectedPage!;
     const m = new Matrix(props.context.workspace.matrix.inverse);
-    m.multiAtLeft(page.matrix2Root().inverse);
+    m.multiAtLeft(page.matrix2Root().inverse.toMatrix());
 
     const p1: XY = m.computeCoord2(left, top);
     const p3: XY = m.computeCoord2(left + width, top + height);

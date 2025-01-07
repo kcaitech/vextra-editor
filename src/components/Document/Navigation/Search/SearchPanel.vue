@@ -313,6 +313,9 @@ onUnmounted(() => {
     stop1();
     stop2();
 })
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import down_icon from "@/assets/icons/svg/down.svg"
 </script>
 <template>
     <div class="result-wrap">
@@ -323,8 +326,8 @@ onUnmounted(() => {
                     <div class="keywords">“{{ props.keywords }}</div>
                     <div class="end">”</div>
                     <div class="shrink" @click.stop="toggle1" v-if="valid_result_by_shape">
-                        <svg-icon icon-class="down"
-                                  :style="{ transform: fold1 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                        <SvgIcon :icon="down_icon"
+                                  :style="{ transform: fold1 ? 'rotate(-90deg)' : 'rotate(0deg)' }"/>
                     </div>
                 </div>
                 <div class="result-count" v-if="valid_result_by_shape">
@@ -352,8 +355,8 @@ onUnmounted(() => {
                     <div class="keywords">“{{ props.keywords }}</div>
                     <div class="end">”</div>
                     <div class="shrink" @click.stop="toggle2" v-if="valid_result_by_content">
-                        <svg-icon icon-class="down"
-                                  :style="{ transform: fold2 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                        <SvgIcon :icon="down_icon"
+                                  :style="{ transform: fold2 ? 'rotate(-90deg)' : 'rotate(0deg)' }"/>
                     </div>
                 </div>
                 <div class="result-count" v-if="valid_result_by_content">

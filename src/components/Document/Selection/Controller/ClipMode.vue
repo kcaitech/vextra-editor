@@ -29,7 +29,7 @@ function modify_matrix() {
     if (!shape) {
         return;
     }
-    matrix.value = shape.matrix2Root();
+    matrix.value = shape.matrix2Root().toMatrix();
     matrix.value.multiAtLeft(props.context.workspace.matrix);
 }
 

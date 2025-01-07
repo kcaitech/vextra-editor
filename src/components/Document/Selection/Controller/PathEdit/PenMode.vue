@@ -28,7 +28,7 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 function modify_matrix() {
     const path_shape = props.context.selection.pathshape;
     if (!path_shape) return;
-    matrix.value = path_shape.matrix2Root();
+    matrix.value = path_shape.matrix2Root().toMatrix();
     matrix.value.multiAtLeft(props.context.workspace.matrix);
 }
 

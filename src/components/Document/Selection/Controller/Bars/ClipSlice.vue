@@ -53,7 +53,7 @@ function confirm_shape() {
 }
 
 function init_matrix() {
-    matrix.reset(shape.matrix2Root());
+    matrix.reset(shape.matrix2Root().toMatrix());
     matrix.multiAtLeft(props.context.workspace.matrix);
 }
 

@@ -5,6 +5,7 @@ import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { string_by_sys } from "@/utils/common";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 const { t } = useI18n()
 interface Props {
     context: Context,
@@ -16,14 +17,14 @@ function select() {
     props.context.tool.notify(Tool.COMPONENT);
 }
 
-
+import resource_icon from '@/assets/icons/svg/resource.svg';
 </script>
 
 <template>
     <Tooltip :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)">
         <ToolButton ref="button" @click="select">
             <div class="svg-component">
-                <svg-icon icon-class="resource"></svg-icon>
+                <SvgIcon :icon="resource_icon"/>
             </div>
         </ToolButton>
     </Tooltip>

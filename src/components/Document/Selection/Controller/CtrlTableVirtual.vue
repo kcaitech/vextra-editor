@@ -51,7 +51,7 @@ let layout: TableLayout;
 let submatrix_inverse: Matrix;
 function update() {
     const m2p = props.shape.matrix2Root();
-    matrix.reset(m2p);
+    matrix.reset(m2p.toMatrix());
     matrix.multiAtLeft(props.matrix); // table -> 屏幕
     if (!submatrix.equals(matrix)) submatrix.reset(matrix);
     const frame = props.shape.frame;

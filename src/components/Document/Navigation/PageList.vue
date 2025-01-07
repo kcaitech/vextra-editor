@@ -322,6 +322,10 @@ onUnmounted(() => {
     props.context.navi.unwatch(navi_watcher);
     props.context.tool.unwatch(tool_watcher);
 });
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import add_icon from '@/assets/icons/svg/add.svg';
+import down_icon from '@/assets/icons/svg/down.svg';
 </script>
 
 <template>
@@ -331,12 +335,12 @@ onUnmounted(() => {
         <div class="btn">
             <Tooltip v-if="!context.readonly && !isLable" :content="t('navi.add_page')">
                 <div class="add" @click.stop="addPage">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </Tooltip>
             <div class="shrink" @click="toggle">
-                <svg-icon icon-class="down"
-                          :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                <SvgIcon :icon="down_icon"
+                          :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"/>
             </div>
         </div>
     </div>

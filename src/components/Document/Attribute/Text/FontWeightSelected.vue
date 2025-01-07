@@ -102,6 +102,12 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.workspace.unwatch(watcher_workspace);
 })
+
+import down_icon from '@/assets/icons/svg/down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 
 <template>
@@ -111,14 +117,14 @@ onUnmounted(() => {
             <span v-if="weightMixed">{{ t('attr.more_value') }}</span>
             <span v-else>{{ selected }}</span>
             <div class="down">
-                <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
+                <SvgIcon :icon="down_icon" style="width: 12px;height: 12px"/>
             </div>
         </div>
         <div class="font_weight_select" v-if="isSelectList" :style="{ top: -top * 32 - 8 + 'px' }">
             <div class="font_weight_item" v-for="(item, index) in fontWeight" :key="index"
                 @mouseenter="() => hovered = index" :class="{ active: hovered === index }" @click="selectItem(item)">
                 <div class="icon" v-if="selected === item">
-                    <svg-icon :icon-class="hovered === index ? 'white-select' : 'page-select'"></svg-icon>
+                    <SvgIcon :icon="hovered === index ? white_select_icon : page_select_icon"/>
                 </div>
                 <div class="icon" v-else></div>
                 <span> {{ item }} </span>

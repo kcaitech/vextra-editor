@@ -15,4 +15,7 @@ export * from "./miniprogram"
 export * from "./product"
 export * from "./pattern"
 export * from "./kchome"
-
+export * from "./prototype"
+export * from "./publish"
+export * from "./io"
+export * from "./layout"

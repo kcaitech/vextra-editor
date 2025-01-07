@@ -4,26 +4,26 @@
             <div class="title">模糊样式</div>
             <div class="tool">
                 <div class="newstyle" @click="NewPanel($event)">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
                 <div class="close" @click="emits('close')">
-                    <svg-icon icon-class="close"></svg-icon>
+                    <SvgIcon :icon="close_icon"></SvgIcon>
                 </div>
             </div>
         </div>
         <div class="search">
             <div class="icon">
-                <svg-icon icon-class="search"></svg-icon>
+                <SvgIcon :icon="search_icon"></SvgIcon>
             </div>
             <div class="filter" @click="FilterPanel">
-                <svg-icon icon-class="arrow"></svg-icon>
+                <SvgIcon :icon="arrow_icon"></SvgIcon>
             </div>
             <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
                 @keydown.esc="props.context.escstack.execute()">
             <div v-if="filterpanel" class="filter-list">
                 <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="Changefilter(item[1])">
                     <div class="choose" :style="{ visibility: filterval === item[1] ? 'visible' : 'hidden' }">
-                        <svg-icon icon-class="choose"></svg-icon>
+                        <SvgIcon :icon="choose_icon"></SvgIcon>
                     </div>
                     <span> {{ item[1] }}</span>
                 </div>
@@ -33,8 +33,9 @@
             <div class="content">
                 <div class="style-item" v-for="sheet in showdata" :key="sheet.id">
                     <div class="type" @click="showtype(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
-                        <svg-icon
-                            :icon-class="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? 'triangle-down' : 'triangle-right'"></svg-icon>
+                        <SvgIcon
+                            :icon="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon">
+                        </SvgIcon>
                         <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
                     <template v-if="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
@@ -48,7 +49,7 @@
                                 <div class="name">{{ mask.name }}</div>
                             </div>
                             <div class="editor" style="visibility: hidden;" @click="EditPanel($event, mask.id)">
-                                <svg-icon icon-class="export-menu"></svg-icon>
+                                <SvgIcon :icon="editor_icon"></SvgIcon>
                             </div>
                         </div>
                     </template>
@@ -77,6 +78,19 @@ import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { FillRenderer, Mask } from "./fillRenderer";
 import { getShapesForStyle } from "@/utils/style";
 import { get_actions_add_mask } from "@/utils/shape_style";
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
     context: Context;
@@ -304,7 +318,7 @@ onUnmounted(() => {
                 background-color: #f5f5f5;
             }
 
-            >svg {
+            >img {
                 outline: none;
                 width: 16px;
                 height: 16px;
@@ -324,7 +338,7 @@ onUnmounted(() => {
                 background-color: #f5f5f5;
             }
 
-            >svg {
+            >img {
                 outline: none;
                 width: 16px;
                 height: 16px;
@@ -357,11 +371,17 @@ onUnmounted(() => {
         width: 18px;
         height: 32px;
 
-        svg {
+        img {
             height: 100%;
             width: 14px;
             transition: all 0.2s ease-in;
         }
+    }
+
+    .filter img{
+        rotate: -90deg;
+        padding: 1px;
+        box-sizing: border-box;
     }
 
     .filter:hover {
@@ -413,7 +433,7 @@ onUnmounted(() => {
                 width: 32px;
                 height: 32px;
 
-                svg {
+                img {
                     width: 12px;
                     height: 12px;
                 }
@@ -531,7 +551,7 @@ onUnmounted(() => {
             background-color: #e5e5e5;
         }
 
-        svg {
+        img {
             outline: none;
             margin: auto;
             width: 16px;

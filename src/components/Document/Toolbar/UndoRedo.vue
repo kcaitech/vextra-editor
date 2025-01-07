@@ -51,15 +51,20 @@ function redoClick() {
         props.repo.redo();
     }
 }
+
+import undo_icon from "@/assets/icons/svg/undo.svg";
+import redo_icon from "@/assets/icons/svg/redo.svg";
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
 </script>
 
 <template>
     <div class="undoredo" :reflush="reflush">
         <ToolButton :onclick="undoClick" :valid="undoValid()" :selected="false">
-            <svg-icon icon-class="undo"></svg-icon>
+            <SvgIcon :icon="undo_icon"/>
         </ToolButton>
         <ToolButton :onclick="redoClick" :valid="redoValid()" :selected="false">
-            <svg-icon icon-class="redo"></svg-icon>
+            <SvgIcon :icon="redo_icon"/>
         </ToolButton>
     </div>
 </template>

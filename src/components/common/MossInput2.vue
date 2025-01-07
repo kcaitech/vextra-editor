@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { ref, watch } from "vue";
+import SvgIcon from "./SvgIcon.vue";
 
 type Props = {
-    lt?:boolean;
+    lt?: boolean;
     icon: string;
     icon2: string;
     value: string | number;
@@ -91,8 +92,6 @@ function keydown(event: KeyboardEvent) {
 }
 
 watch(() => props.position, (v) => {
-    console.log(v);
-
     RadiusActive.value = v
 })
 
@@ -100,10 +99,10 @@ watch(() => props.position, (v) => {
 
 <template>
     <div :class="{ 'moss-input': true, disabled, active }" @click.stop="focus">
-        <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down" />
+        <SvgIcon :icon="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down" />
         <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown" />
         <div class="icon" @click.stop="click">
-            <svg-icon :icon-class="icon2"></svg-icon>
+            <SvgIcon :icon="icon2" />
         </div>
     </div>
 </template>
@@ -122,7 +121,7 @@ watch(() => props.position, (v) => {
     background-color: var(--input-background);
     border-radius: var(--default-radius);
 
-    >svg {
+    >img {
         flex: 0 0 12px;
         height: 12px;
         display: block;
@@ -141,13 +140,13 @@ watch(() => props.position, (v) => {
         border-radius: 4px;
         visibility: hidden;
 
-        svg {
+        img {
             width: 12px;
             height: 12px;
         }
     }
 
-    .icon svg {
+    .icon img {
         padding: 1px;
         box-sizing: border-box;
     }

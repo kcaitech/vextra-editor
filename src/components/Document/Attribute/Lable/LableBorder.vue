@@ -202,6 +202,8 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.menu.unwatch(menu_watcher);
 })
+
+import down_icon from "@/assets/icons/svg/down.svg"
 </script>
 
 <template>
@@ -210,7 +212,7 @@ onUnmounted(() => {
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ fillMenuItems[fill_i] }}</span>
-                    <svg-icon icon-class="down"></svg-icon>
+                    <SvgIcon :icon="down_icon"/>
                     <LableDropMenu v-if="selsectedShow" :context="context" :Items="fillMenuItems" :choose="fill_i"
                         @close="close" @listMenuStatus="listMenuStatus"></LableDropMenu>
                 </div>

@@ -6,7 +6,7 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import {
     adapt2Shape,
-    ArtboradView,
+    ArtboardView,
     PageView,
     Shape,
     ShapeDirList2 as ShapeDirList,
@@ -261,7 +261,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
                 contextMenuItems.value.delete(MenuItemType.Mask);
             }
 
-            const s = selected[0] as ArtboradView;
+            const s = selected[0] as ArtboardView;
             if (s.autoLayout) {
                 contextMenuItems.value.add(MenuItemType.UnAutoLayout);
             } else {
@@ -486,6 +486,12 @@ onUnmounted(() => {
     stopWatch();
     if (shapeDirList) shapeDirList.unwatch(notifySourceChange);
 });
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import search_icon from '@/assets/icons/svg/search.svg';
+import down_icon from '@/assets/icons/svg/down.svg';
+import close_x_icon from '@/assets/icons/svg/close-x.svg';
+import delete_type_icon from '@/assets/icons/svg/delete-type.svg';
 </script>
 
 <template>
@@ -493,17 +499,17 @@ onUnmounted(() => {
     <div class="header" @click.stop="reset_selection">
         <div class="search" ref="search_wrap">
             <div class="tool-container" @click="pre_search">
-                <svg-icon icon-class="search"></svg-icon>
+                <SvgIcon :icon="search_icon"/>
             </div>
             <div class="menu-f" @click="show_types">
-                <svg-icon icon-class="down"></svg-icon>
+                <SvgIcon :icon="down_icon"/>
             </div>
             <input ref="search_el" type="text" v-model="keywords"
                    :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="pre_search"
                    @change="search" @input="input" @focus="input_focus">
             <div @click="clear_text" class="close"
                  :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
-                <svg-icon icon-class="close-x"></svg-icon>
+                <SvgIcon :icon="close_x_icon"/>
             </div>
             <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
                  :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
@@ -520,13 +526,13 @@ onUnmounted(() => {
                 <div class="block">
                     <div class="content">{{ t(`shape.${item}`) }}</div>
                     <div class="close" @click.stop="(e) => update_types(item, false, e.shiftKey)">
-                        <svg-icon icon-class="close-x"></svg-icon>
+                        <SvgIcon :icon="close_x_icon"/>
                     </div>
                 </div>
             </div>
             <div class="block-wrap" v-if="includes_type.length > 1" @click="reset_types">
                 <div class="block reset">
-                    <svg-icon icon-class="delete-type"></svg-icon>
+                    <SvgIcon :icon="delete_type_icon"/>
                 </div>
             </div>
         </div>

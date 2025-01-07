@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, ArtboradView, BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Fill, Page, sessionRefIdKey, Shadow, Shape, ShapeType,
+    adapt2Shape, ArtboardView, BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Fill, Page, sessionRefIdKey, Shadow, Shape, ShapeType,
     ShapeView, SideType, StrokePaint, Style,
     TransformRaw
 } from '@kcdesign/data';
@@ -87,7 +87,7 @@ const setInnerTransform = (shapes: ShapeView[]) => {
     const fixedTrans = props.context.preview.fixedTransform;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if (shape instanceof ArtboradView) {
+        if (shape instanceof ArtboardView) {
             const transform = innerTrans.get(shape.id) || new TransformRaw();
             const fixed_transform = fixedTrans.get(shape.id) || new TransformRaw();
             shape.initInnerTransform(transform);

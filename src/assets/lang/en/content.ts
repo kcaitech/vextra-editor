@@ -6,7 +6,7 @@ export const shape: any = {
     oval: 'Oval',
     rect: 'Rect',
     path: 'Vector',
-    artboard: 'Artboard',
+    artboard: 'Frame',
     arrow: 'Arrow',
     text: 'text',
     image: 'image',

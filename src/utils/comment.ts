@@ -1,14 +1,15 @@
 import { Context } from "@/context";
-import { canBeTarget, isTarget, finder_group, Scout } from "./scout";
+import { canBeTarget, isTarget, finder_group } from "./scout";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { IScout } from "@/openapi";
 export function searchCommentShape(context: Context, position: PageXY) {
     const scout = context.selection.scout;
     const selected = context.selection.selectedShapes[0];
     const scoped = context.selection.selectedPage?.childs;
     return finder(scout!, scoped || [], position, selected);
 }
-export function finder(scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, init?: ShapeView[]): ShapeView[] {
+export function finder(scout: IScout, g: ShapeView[], position: PageXY, selected: ShapeView, init?: ShapeView[]): ShapeView[] {
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) { 
         if (canBeTarget(g[i])) {

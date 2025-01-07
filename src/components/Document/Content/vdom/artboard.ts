@@ -1,8 +1,8 @@
-import { ArtboradView, EL } from "@kcdesign/data";
+import { ArtboardView, EL } from "@kcdesign/data";
 import { NodeType, optiRender, optiSetDirty, OptiType } from "./optinode";
 
 // const MAX_NODE_SUPPORT = 50; // 小于这个的不转成image了
-export class ArtboradDom extends (ArtboradView) {
+export class ArtboradDom extends (ArtboardView) {
 
     // 检查显示区域
     // 1. 太小时显示成image

@@ -2,7 +2,9 @@ import { Context } from "@/context";
 import { BoundHandler, FrameLike } from "./handler";
 import {
     ColVector3D, CtrlElementType, Matrix, Scaler, ShapeSize, ShapeView, SymbolView, Transform, UniformScaleUnit,
-    ArtboradView, GroupShapeView, SymbolRefView
+    ArtboardView, GroupShapeView, SymbolRefView,
+    makeShapeTransform2By1,
+    TransformRaw
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
@@ -67,7 +69,7 @@ export class ScaleHandler extends BoundHandler {
 
         this.uniformScaleMode = context.tool.action === Action.AutoK;
         if (selected.length === 1
-            && (selected[0] instanceof ArtboradView || selected[0] instanceof SymbolView || selected[0] instanceof SymbolRefView)
+            && (selected[0] instanceof ArtboardView || selected[0] instanceof SymbolView || selected[0] instanceof SymbolRefView)
             && !!selected[0].childs.length
         ) this.collectSpark(selected[0]);
 
@@ -128,7 +130,7 @@ export class ScaleHandler extends BoundHandler {
         }
     }
 
-    private box2root(shape: ShapeView, parent2rootMatrixCache: Map<string, Matrix>) {
+    private box2root(shape: ShapeView, parent2rootMatrixCache: Map<string, TransformRaw>) {
         const parent = shape.parent!;
 
         const frame = shape.frame;
@@ -221,7 +223,7 @@ export class ScaleHandler extends BoundHandler {
             bases.set(shape.id, f);
 
             if (!cache.has(shape.parent!)) {
-                const transform = shape.parent!.transform2FromRoot.clone();
+                const transform = makeShapeTransform2By1(shape.parent!.matrix2Root());
                 cache.set(shape.parent!, transform);
                 inverseCache.set(shape.parent!, transform.getInverse());
             }
@@ -245,12 +247,12 @@ export class ScaleHandler extends BoundHandler {
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(alpha.transform2FromRoot);
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(makeShapeTransform2By1(alpha.matrix2Root()));
 
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;
 
-        this.shapeTransformListInSelection = shapes.map((shape) => shape.transform2.clone()  // 在Parent坐标系下
+        this.shapeTransformListInSelection = shapes.map((shape) => makeShapeTransform2By1(shape.transform)  // 在Parent坐标系下
             .addTransform(cache.get(shape.parent!)!)  // 在Root坐标系下
             .addTransform(selectionInverse))  // 在选区坐标系下
 

@@ -1,7 +1,7 @@
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
 import {
-    ArtboradView,
+    ArtboardView,
     Matrix,
     PageView,
     PrototypeEvents,
@@ -15,9 +15,9 @@ import {
 } from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
-import { Scout } from './scout';
 import { XYsBounding } from './common';
 import { EventIndex } from "@/components/Display/PreviewControls/actions";
+import { IScout } from '@/openapi';
 
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
@@ -162,7 +162,7 @@ export const selectedShape = (ctx: Context, page: PageView, t: Function) => {
     ctx.selection.selectShape(list[0]);
 }
 
-export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], hot: PageXY, isAction = false): ShapeView | undefined {
+export function finderShape(matrix: Matrix, scout: IScout, scope: ShapeView[], hot: PageXY, isAction = false): ShapeView | undefined {
     let result: ShapeView | undefined = undefined;
     for (let i = scope.length - 1; i > -1; i--) {
         const item = scope[i];
@@ -232,8 +232,8 @@ export function getPreviewMatrix(shape: ShapeView) {
     let p = shape.parent;
     let s = shape;
     while (p && p.type !== ShapeType.Page) {
-        const offset = (p as ArtboradView).innerTransform;
-        const fixed_offset = (p as ArtboradView).fixedTransform;
+        const offset = (p as ArtboardView).innerTransform;
+        const fixed_offset = (p as ArtboardView).fixedTransform;
         if (offset) {
             m.multiAtLeft(offset.toMatrix());
             if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME) {
@@ -408,7 +408,7 @@ export const getFlowShapes = (context: Context, id: string, flows: Map<string, s
     return flowShape;
 }
 
-export const getAtrboardInnerOffset = (atrboard: ArtboradView) => {
+export const getAtrboardInnerOffset = (atrboard: ArtboardView) => {
     const size = atrboard.size;
     let offsetT = 0;
     let offsetL = 0;
@@ -427,7 +427,7 @@ export const getAtrboardInnerOffset = (atrboard: ArtboradView) => {
     return { top: -offsetT, right: size.width - offsetR, bottom: size.height - offsetB, left: -offsetL }
 }
 
-export const scrollAtrboard = (context: Context, atrboard: ArtboradView, trans: { x: number, y: number }) => {
+export const scrollAtrboard = (context:Context, atrboard: ArtboardView, trans: { x: number, y: number }) => {
     const offset = getAtrboardInnerOffset(atrboard);
     const transform = atrboard.innerTransform || new TransformRaw();
     const tx = transform.translateX;

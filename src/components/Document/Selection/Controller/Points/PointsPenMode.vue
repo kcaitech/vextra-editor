@@ -346,10 +346,10 @@ function window_blur() {
 }
 
 function init_matrix() {
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.multiAtLeft(props.context.workspace.matrix);
 
-    return m;
+    return m.toMatrix();
 }
 
 function path_watcher(type: number) {
@@ -388,7 +388,7 @@ function fixXYByShift(e: MouseEvent) {
     const _previous = getLastPoint();
     if (!_previous) return;
 
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
     m.multiAtLeft(props.context.workspace.matrix);
 
@@ -603,7 +603,7 @@ function modifyLivingPath() {
     const previous = getLastPoint();
     if (!previous) return;
 
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
     m.multiAtLeft(props.context.workspace.matrix);
 
@@ -632,10 +632,10 @@ function down(e: MouseEvent) {
             pathModifier = new PathEditor(props.context, e);
             pathModifier.createApiCaller();
             pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1, { ...preXY.value });
-            const m = new Matrix(shape.matrix2Root());
+            const m = (shape.matrix2Root());
             m.preScale(shape.frame.width, shape.frame.height);
             m.multiAtLeft(props.context.workspace.matrix);
-            const hit = new PathHitChecker(props.context, m);
+            const hit = new PathHitChecker(props.context, m.toMatrix());
             const hitRes = hit.check(shape.segments as PathSegment[], preXY.value);
             if (hitRes && hitRes.segmentIndex !== lastPoint.segment) {
                 const {isCurve, segmentIndex, index, t} = hitRes;
@@ -651,10 +651,10 @@ function down(e: MouseEvent) {
         pathModifier = new PathEditor(props.context, e);
         pathModifier.createApiCaller();
         if (!pathModifier.addSegmentForPen(preXY.value)) return;
-        const m = new Matrix(shape.matrix2Root());
+        const m = (shape.matrix2Root());
         m.preScale(shape.frame.width, shape.frame.height);
         m.multiAtLeft(props.context.workspace.matrix);
-        const hit = new PathHitChecker(props.context, m);
+        const hit = new PathHitChecker(props.context, m.toMatrix());
         const hitRes = hit.check(shape.segments as PathSegment[], preXY.value);
         if (hitRes) {
             const {isCurve, segmentIndex, index, t} = hitRes;
@@ -699,7 +699,7 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
         if (!previous) return;
     }
 
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
     m.multiAtLeft(props.context.workspace.matrix);
 

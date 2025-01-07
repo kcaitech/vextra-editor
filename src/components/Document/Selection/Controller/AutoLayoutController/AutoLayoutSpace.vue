@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection, XY } from '@/context/selection';
-import { ArtboradView, BorderPosition, ColVector3D, CtrlElementType, Matrix, PaddingDir, Shape, ShapeView, StackMode, StackSizing, adapt2Shape, getHorizontalAngle, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboardView, BorderPosition, ColVector3D, CtrlElementType, Matrix, PaddingDir, Shape, ShapeView, StackMode, StackSizing, adapt2Shape, getHorizontalAngle, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
@@ -67,7 +67,7 @@ function getVerSpacePosition() {
     verSpaceLine.value = [];
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length || shapes.length > 1) return;
-    const shape = shapes[0] as ArtboradView;
+    const shape = shapes[0] as ArtboardView;
     const { x, y, width, height } = shape.frame;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
@@ -123,7 +123,7 @@ function getHorSpacePosition() {
     horSpaceLine.value = [];
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length || shapes.length > 1) return;
-    const shape = shapes[0] as ArtboradView;
+    const shape = shapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
     const matrix2 = new Matrix(props.context.workspace.matrix);
@@ -240,7 +240,7 @@ let spacing = 0;
 function mousemove(e: MouseEvent) {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
-    const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
     if (isDragging) {
@@ -252,7 +252,7 @@ function mousemove(e: MouseEvent) {
         }
 
         const matrix2Root = shape.matrix2Root();
-        const m = new Matrix(matrix2Root.inverse);
+        const m = (matrix2Root.inverse);
         const downXy = m.computeCoord(downClientXY);
         const moveXy = m.computeCoord2(e.clientX, e.clientY);
         const scale = props.context.workspace.matrix.m00;

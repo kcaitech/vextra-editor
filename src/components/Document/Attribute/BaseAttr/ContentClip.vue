@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
-import { ArtboradView, ShapeType } from "@kcdesign/data";
+import { ArtboardView, ShapeType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
@@ -12,8 +12,8 @@ const status = ref<number>(0) // 0 不裁； 1 全裁； 2 混合；
 function updateStatus() {
     status.value = 0;
     const selected = props.context.selection.selectedShapes.filter(i => i.type === ShapeType.Artboard || i.type === ShapeType.Symbol || i.type === ShapeType.SymbolRef);
-    const existClip = selected.some(i => !(i as ArtboradView).frameMaskDisabled);
-    const existUnClip = selected.some(i => (i as ArtboradView).frameMaskDisabled);
+    const existClip = selected.some(i => !(i as ArtboardView).frameMaskDisabled);
+    const existUnClip = selected.some(i => (i as ArtboardView).frameMaskDisabled);
     status.value = existClip ? existUnClip ? 2 : 1 : 0;
 }
 
@@ -29,6 +29,8 @@ onUnmounted(() => {
     stop();
     stop2();
 })
+
+import select_icon from "@/assets/icons/svg/select.svg";
 </script>
 <template>
     <div style="display: flex; align-items: center; gap: 6px;" @click="modify">
@@ -36,7 +38,7 @@ onUnmounted(() => {
             'background-color': status ? 'var(--active-color)' : 'transparent',
             'border': status ? 'none' : '1px solid #EBEBEB'
         }">
-            <svg-icon v-if="status=== 1" icon-class="select"/>
+            <SvgIcon v-if="status=== 1" :icon="select_icon"/>
             <div v-else-if="status=== 2"/>
         </div>
         <span>{{ t('attr.clip') }}</span>
@@ -54,7 +56,7 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
 
-    svg {
+    img {
         width: 60%;
         height: 60%;
     }

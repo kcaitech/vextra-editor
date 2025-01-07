@@ -1,8 +1,9 @@
 import { BoundHandler } from "@/transform/handler";
 import {
-    ArtboradView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
+    ArtboardView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
     ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
-    adapt2Shape, layoutShapesOrder, makeShapeTransform1By2, PathShapeView
+    adapt2Shape, layoutShapesOrder, makeShapeTransform1By2, PathShapeView,
+    makeShapeTransform2By1
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -96,13 +97,13 @@ class EnvRadar {
     }
 
     private __can_not_land(view: ShapeView) {
-        return !!(view as ArtboradView).autoLayout || this.target === view;
+        return !!(view as ArtboardView).autoLayout || this.target === view;
     }
 
     private __get_matrix(view: ShapeView) {
         let matrix = this.__root_envs.get(view)!;
         if (!matrix) {
-            matrix = new Matrix(view.matrix2Root().inverse);
+            matrix = (view.matrix2Root().inverse.toMatrix());
             this.__root_envs.set(view, matrix);
         }
         return matrix;
@@ -117,7 +118,7 @@ class EnvRadar {
             const result: EnvLeaf[] = [];
             for (let i = views.length - 1; i > -1; i--) {
                 const view = views[i];
-                if (!(view instanceof ArtboradView || view instanceof SymbolView)) continue;
+                if (!(view instanceof ArtboardView || view instanceof SymbolView)) continue;
                 result.push({ view, children: collect(view.childs) });
             }
             return result;
@@ -234,7 +235,7 @@ class EnvRadar {
         const frame = env.frame;
         if (x >= frame.x && x <= frame.x + frame.width && y >= frame.y && y <= frame.y + frame.height) return;
 
-        const target = this.placement! as (ArtboradView | PageView);
+        const target = this.placement! as (ArtboardView | PageView);
 
         this.__init_original();
 
@@ -340,11 +341,11 @@ class SelModel {
 
             let p2r = cache.get(parent)!;
             if (!p2r) {
-                p2r = parent.transform2FromRoot.clone();
+                p2r = makeShapeTransform2By1(parent.matrix2Root());
                 cache.set(parent, p2r);
             }
 
-            const transform = shape.transform2.clone();
+            const transform = makeShapeTransform2By1(shape.transform);
             transform.addTransform(p2r);
 
             original.set(shape.id, {
@@ -611,7 +612,7 @@ class SelManager {
         for (const view of shapes) parents.add(view.parent!);
         if (parents.size > 1) {
             parents.forEach(g => {
-                if ((g as ArtboradView).autoLayout) this.fixed = true;
+                if ((g as ArtboardView).autoLayout) this.fixed = true;
             });
         }
 
@@ -701,7 +702,7 @@ class Jumper {
     private readonly translate: Translate2;
     private context: Context;
 
-    private __env: ArtboradView | SymbolView | undefined;
+    private __env: ArtboardView | SymbolView | undefined;
 
     constructor(translate: Translate2, context: Context) {
         this.translate = translate;
@@ -712,7 +713,7 @@ class Jumper {
 
     init() {
         const translate = this.translate;
-        this.__env = translate.radar.placement as ArtboradView;
+        this.__env = translate.radar.placement as ArtboardView;
         translate.style.slidifyEnv(this.__env);
         this.inited = true;
     }
@@ -867,7 +868,7 @@ class Inserter {
     translate: Translate2;
     context: Context;
 
-    layoutEnv: ArtboradView | SymbolView | undefined;
+    layoutEnv: ArtboardView | SymbolView | undefined;
     layout: AutoLayout | undefined;
     placement: Grid | undefined;
 
@@ -878,7 +879,7 @@ class Inserter {
 
     rows: Row[] = [];
 
-    set env(container: ArtboradView | SymbolView | undefined) {
+    set env(container: ArtboardView | SymbolView | undefined) {
         if (!container) {
             this.layoutEnv = undefined;
             this.layout = undefined;
@@ -989,7 +990,7 @@ class Inserter {
     pre() {
         const env = this.layoutEnv!;
         const living = this.translate.living;
-        const matrix = new Matrix(env.matrix2Root().inverse);
+        const matrix = (env.matrix2Root().inverse);
         const { x, y } = matrix.computeCoord3(living);
         const mode = this.layout!.stackMode || StackMode.Horizontal;
 
@@ -1071,7 +1072,7 @@ export class Translate2 extends BoundHandler {
 
         this.__mode = TranslateMode.Linear;
         for (const view of views) {
-            if ((view.parent as ArtboradView).autoLayout) {
+            if ((view.parent as ArtboardView).autoLayout) {
                 this.__mode = TranslateMode.Flex;
                 break;
             }
@@ -1107,7 +1108,7 @@ export class Translate2 extends BoundHandler {
             const parent = shape.parent!;
             let PI = cache.get(parent)!;
             if (!PI) {
-                PI = parent.transform2FromRoot.getInverse();
+                PI = makeShapeTransform2By1(parent.matrix2Root().getInverse());
                 cache.set(parent, PI);
             }
             const __t = model.getBaseTransform(shape)
@@ -1220,7 +1221,7 @@ export class Translate2 extends BoundHandler {
         if (this.__mode === TranslateMode.Prev) {
             const radar = this.radar;
             this.style.alphaSel(this.selManager.shapes);
-            this.context.selection.hoverShape(this.inserter.env = radar.placement as ArtboradView);
+            this.context.selection.hoverShape(this.inserter.env = radar.placement as ArtboardView);
         }
 
         if (this.__last_mode === TranslateMode.Linear) {
@@ -1253,14 +1254,14 @@ export class Translate2 extends BoundHandler {
 
         // 根据环境在Linear、Prev之间自动切换
         const current = this.mode;
-        if ((radar.placement as ArtboradView).autoLayout) {
+        if ((radar.placement as ArtboardView).autoLayout) {
             if (current === TranslateMode.Linear) {
                 if (radar.placement !== radar.target) {
                     this.mode = TranslateMode.Prev;
                     radar.suspend();
                 }
             } else if (current === TranslateMode.Prev) { // 更新[预插入env]
-                this.inserter.env = radar.placement as ArtboradView;
+                this.inserter.env = radar.placement as ArtboardView;
             }
         } else {
             if (current === TranslateMode.Prev) {

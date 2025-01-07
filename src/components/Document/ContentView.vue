@@ -4,7 +4,7 @@ import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { ArtboradView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboardView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY, XY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -255,7 +255,7 @@ function contextMenuMount(e: MouseEvent) {
                     contextMenuItems.value.add(MenuItemType.AutoLayout);
                     contextMenuItems.value.add(MenuItemType.Flatten);
                 } else {
-                    const shape = _shapes[0] as ArtboradView;
+                    const shape = _shapes[0] as ArtboardView;
                     if (shape.autoLayout) {
                         contextMenuItems.value.add(MenuItemType.UnAutoLayout);
                     } else {
@@ -333,7 +333,7 @@ function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
         down = true;
         setMousedownXY(e);
-        props.context.tool.referSelection.resetSelected();
+        props.context.tool.referSelection?.resetSelected();
         document.addEventListener("mousemove", select);
         document.addEventListener("mouseup", up);
     } else if (e.button === 2) { // 右键按下，右键菜单处理

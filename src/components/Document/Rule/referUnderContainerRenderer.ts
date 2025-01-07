@@ -1,5 +1,5 @@
 import { genPath, ReferUnit } from "@/components/Document/Rule/refer";
-import { ArtboradView, GuideAxis, PageView, ShapeView } from "@kcdesign/data";
+import { ArtboardView, GuideAxis, PageView, ShapeView } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
@@ -31,7 +31,7 @@ export class ReferUnderContainerRenderer {
         const ctx = this.m_context;
         const referSelection = ctx.tool.referSelection;
 
-        if ((args && args.includes('guides') && args.includes('length', -1))) {
+        if (referSelection && (args && args.includes('guides') && args.includes('length', -1))) {
             referSelection.updateSelectionForDelete(id);
             return;
         }
@@ -65,7 +65,7 @@ export class ReferUnderContainerRenderer {
         //     return;
         // }
 
-        referSelection.updateSelectedSelection(id);
+        referSelection?.updateSelectedSelection(id);
     }
 
     /**
@@ -96,7 +96,7 @@ export class ReferUnderContainerRenderer {
         const frame = shape.frame;
         const root = ctx.workspace.root;
 
-        const guides = (shape as ArtboradView).guides || [];
+        const guides = (shape as ArtboardView).guides || [];
         for (let i = 0; i < guides.length; i++) {
             const guide = guides[i];
 

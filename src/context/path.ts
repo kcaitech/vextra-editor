@@ -289,10 +289,10 @@ export class Path extends WatchableObject {
         const path_shape = this.m_context.selection.pathshape;
         if (!path_shape) return new Matrix();
         const f = path_shape.frame;
-        const m = new Matrix(path_shape.matrix2Root());
+        const m = (path_shape.matrix2Root());
         m.multiAtLeft(this.m_context.workspace.matrix);
         m.preScale(f.width, f.height);
-        return m;
+        return m.toMatrix();
     }
 
     clear_highlight() {

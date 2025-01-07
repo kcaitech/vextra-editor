@@ -198,13 +198,18 @@ watch(() => props.action, render);
 onMounted(() => {
     render()
 })
+
+import down_icon from "@/assets/icons/svg/down.svg"
+import white_select_icon from "@/assets/icons/svg/white-select.svg"
+import page_select_icon from "@/assets/icons/svg/page-select.svg"
+
 </script>
 
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
             <div class="icon-img" v-if="curValue?.icon">
-                <svg-icon :icon-class="curValue?.icon"></svg-icon>
+                <SvgIcon :icon="curValue?.icon"/>
             </div>
             <div v-if="!props.valueView || mixed" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{
                 curValue?.content }}
@@ -213,7 +218,7 @@ onMounted(() => {
                 <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
             </div>
             <div class="svg-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">
-                <svg-icon icon-class="down"></svg-icon>
+                <SvgIcon :icon="down_icon"/>
             </div>
         </div>
 
@@ -241,9 +246,9 @@ onMounted(() => {
                     opacity: props.iscontainer ? 1 : 0.4
                 } : {}" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
                     @mouseleave="curHoverValueIndex = -1">
-                    <svg-icon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
-                        :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
-                    <svg-icon v-if="c.data.icon" class="icon" :icon-class="c.data.icon!"></svg-icon>
+                    <SvgIcon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
+                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon"/>
+                    <SvgIcon v-if="c.data.icon" class="icon" :icon="c.data.icon!"/>
                     <div class="content-wrap"> {{ c.data.content }}</div>
                 </div>
             </div>
@@ -253,9 +258,9 @@ onMounted(() => {
                     opacity: (arr.includes(c.data.content)) ? 1 : 0.4
                 }" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
                     @mouseleave="curHoverValueIndex = -1">
-                    <svg-icon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
-                        :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
-                    <svg-icon v-if="c.data.icon" class="icon" :icon-class="c.data.icon!"></svg-icon>
+                    <SvgIcon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
+                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon"/>
+                    <SvgIcon v-if="c.data.icon" class="icon" :icon="c.data.icon!"/>
                     <div class="content-wrap"> {{ c.data.content }}</div>
 
                 </div>
@@ -264,8 +269,8 @@ onMounted(() => {
                 <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)"
                     @mouseover="curHoverValueIndex = idx" @mouseleave="curHoverValueIndex = -1">
                     <div class="content-wrap"> {{ c.data.content }}</div>
-                    <svg-icon v-if="idx === curValueIndex"
-                        :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
+                    <SvgIcon v-if="idx === curValueIndex"
+                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon"/>
                 </div>
             </div>
         </div>
@@ -299,7 +304,7 @@ onMounted(() => {
             overflow: hidden;
             display: flex;
 
-            svg {
+            img {
                 margin: auto;
                 width: 12px;
                 height: 12px;
@@ -321,7 +326,7 @@ onMounted(() => {
             display: flex;
             align-items: center;
 
-            >svg {
+            >img {
                 width: 100%;
                 height: 12px;
                 transition: 0.3s;
@@ -330,7 +335,7 @@ onMounted(() => {
         }
 
         >.svg-wrap:hover {
-            >svg {
+            >img {
                 transform: translateY(2px);
             }
         }

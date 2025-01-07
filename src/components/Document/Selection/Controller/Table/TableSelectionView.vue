@@ -86,7 +86,7 @@ function update_triangle() {
 
         const f = grid.get(cell.index.row, cell.index.col).frame;
 
-        const trans = shape.transform2FromRoot;
+        const trans = makeShapeTransform2By1(shape.matrix2Root());
         const mClient = makeShapeTransform2By1(props.context.workspace.matrix);
 
         const __t = new Transform()

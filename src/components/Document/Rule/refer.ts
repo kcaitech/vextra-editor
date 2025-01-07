@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { TransformHandler } from "@/transform/handler";
-import { ArtboradView, GuideAxis, Matrix, ReferHandleApiCaller, ShapeView } from "@kcdesign/data";
+import { ArtboardView, GuideAxis, Matrix, ReferHandleApiCaller, ShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { isShapeOut } from "@/utils/assist";
 
@@ -69,7 +69,7 @@ export class ReferLineHandler extends TransformHandler {
 
             // 默认在page下建立新参考线
             this.m_index = this.api.create(this.m_axis, offset);
-            this.context.tool.referSelection.modifyHoveredIndex(this.page, this.m_index, this.m_axis);
+            this.context.tool.referSelection?.modifyHoveredIndex(this.page, this.m_index, this.m_axis);
         }
 
         this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
@@ -171,7 +171,7 @@ export class ReferLineHandler extends TransformHandler {
         }
 
         const index = this.m_index;
-        const currentEnv = this.m_current_env as ArtboradView;
+        const currentEnv = this.m_current_env as ArtboardView;
 
         // console.log('currentEnv&index', currentEnv.name, index);
 
@@ -198,7 +198,7 @@ export class ReferLineHandler extends TransformHandler {
                 offset = __root_xy.y;
             }
         } else {
-            const m = new Matrix(currentEnv.matrix2Root().inverse);
+            const m = (currentEnv.matrix2Root().inverse);
 
             if (axis === GuideAxis.X) {
                 offset = m.computeCoord3(__root_xy).x;
@@ -218,7 +218,7 @@ export class ReferLineHandler extends TransformHandler {
         }
 
         const index = this.m_index;
-        const currentEnv = this.m_current_env as unknown as ArtboradView;
+        const currentEnv = this.m_current_env as unknown as ArtboardView;
 
 
         const gui = currentEnv?.guides?.[index];
@@ -234,7 +234,7 @@ export class ReferLineHandler extends TransformHandler {
     private migrate() {
         const env = this.envSearch();
 
-        const _o_env = this.m_current_env as unknown as ArtboradView;
+        const _o_env = this.m_current_env as unknown as ArtboardView;
 
         if (env.id === _o_env.id) return;
 
@@ -253,7 +253,7 @@ export class ReferLineHandler extends TransformHandler {
             if (env.parent?.id !== this.page.id || !env.isNoTransform()) return;
 
             if (_o_env.id === this.page.id) {  // 页面迁容器
-                const m = new Matrix(env.matrix2Root().inverse);
+                const m = (env.matrix2Root().inverse);
 
                 if (guide.axis === GuideAxis.X) {
                     targetOffset = m.computeCoord2(guide.offset, 0).x;
@@ -262,7 +262,7 @@ export class ReferLineHandler extends TransformHandler {
                 }
             } else { // 容器迁容器
                 const m1 = _o_env.matrix2Root();
-                const m2 = new Matrix(env.matrix2Root().inverse);
+                const m2 = (env.matrix2Root().inverse);
 
                 if (guide.axis === GuideAxis.X) {
                     let _temp = m1.computeCoord2(guide.offset, 0).x;
@@ -279,7 +279,7 @@ export class ReferLineHandler extends TransformHandler {
         this.m_current_env = result.env;
         this.m_index = result.index;
         // console.log('__migrate__', result.env.name, result.index);
-        this.context.tool.referSelection.modifyHoveredIndex(result.env, result.index, this.m_axis);
+        this.context.tool.referSelection?.modifyHoveredIndex(result.env, result.index, this.m_axis);
 
         this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
     }

@@ -1,26 +1,27 @@
 <template>
-    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">编辑边框样式</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input v-focus type="text" id="name" @keydown.esc="props.context.escstack.execute()">
+                <input v-focus type="text" id="name" @keydown.esc="props.context.escstack.execute()"
+                    v-model="stylename">
             </div>
             <div class="des">
                 <label for="des">描述</label>
-                <input type="text" id="des">
+                <input type="text" id="des" v-model="description">
             </div>
         </div>
         <div class="border">
             <div class="type">
                 <div class="title">位置</div>
                 <Select class="select" :context="props.context" :shapes="props.shapes" :source="positonOptionsSource"
-                    :selected="positonOptionsSource.find(i => i.data.value === props.border?.position)?.data"
+                    :selected="positonOptionsSource.find(i => i.data.value === border?.position)?.data"
                     @select="positionSelect"></Select>
             </div>
             <div class="thickness">
@@ -34,17 +35,32 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, Border } from '@kcdesign/data';
-import { onMounted, ref } from 'vue';
+import { ShapeView, BorderPosition, Border, BorderMask, BorderMaskType } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
+import { FillRenderer } from './fillRenderer';
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
     top: number;
     left: number
-    border: Border | undefined
+    maskid: string
+    reder: FillRenderer
 }>();
 
 const emits = defineEmits<{
@@ -60,32 +76,63 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 const thickness = ref<string>('')
 const oldvalue = ref<string>('')
+const border = ref<BorderMaskType>()
+const stylename = ref<string>('')
+const description = ref<string>('')
+const reflush = ref<number>(0)
+
 
 function positionSelect(selected: SelectItem, id: number | undefined) {
 
 }
 
 const setThickness = () => {
-    thickness.value = thickness.value.replace(/，/g, ',').replace(/\s+/g, '').split(',').slice(0, 4).join(', ');
-    const b = thickness.value.split(',').every(i => isNaN(Number(i)) === false)
+    let arrs = thickness.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
+    const b = arrs.every(i => isNaN(Number(i)) === false)
     if (!b) return thickness.value = oldvalue.value;
-    let arr = thickness.value.split(',')
-    if (arr.length === 1) {
-        thickness.value = arr.concat(...arr, ...arr, ...arr).toString()
+    if (arrs.length === 1) {
+        arrs = arrs.concat(...arrs, ...arrs, ...arrs)
     }
-    if (arr.length === 2) {
-        thickness.value = arr.concat(arr[0], arr[1]).toString()
+    if (arrs.length === 2) {
+        arrs = arrs.concat(arrs[0], arrs[1])
     }
-    if (arr.length === 3) {
-        thickness.value = arr.concat(arr[1]).toString()
+    if (arrs.length === 3) {
+        arrs = arrs.concat(arrs[1])
     }
-    thickness.value = thickness.value.replaceAll(' ', '').replaceAll('.', '').replaceAll(',', ', ')
+    thickness.value = arrs.join(', ')
+}
+
+const update = () => {
+    border.value = undefined;
+    if (props.reder && props.maskid) {
+        const mask = props.reder.currentTarget(props.maskid) as BorderMask;
+        stylename.value = mask.name ?? '模糊样式';
+        description.value = mask.description ?? '';
+        border.value = mask.border;
+        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = border.value.sideSetting;
+        thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
+    }
+
+    reflush.value++;
+}
+
+watch(() => props.maskid, () => {
+    update();
+})
+
+function stylelib_watcher(t: number | string) {
+    if (t === 'stylelib') {
+        update();
+    }
 }
 
 onMounted(() => {
-    if (!props.border) return
-    const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = props.border.sideSetting;
-    thickness.value = `${thicknessTop},${thicknessRight},${thicknessBottom},${thicknessLeft}`;
+    update();
+    props.context.data.watch(stylelib_watcher)
+})
+
+onUnmounted(() => {
+    props.context.data.unwatch(stylelib_watcher)
 })
 
 </script>
@@ -120,7 +167,7 @@ onMounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;

@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Matrix, ShapeView, ArtboradView, SymbolView, GroupShapeView, XYsBounding, Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D } from "@kcdesign/data";
+import { Matrix, ShapeView, ArtboardView, SymbolView, GroupShapeView, XYsBounding, Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 
@@ -91,7 +91,7 @@ export class SpaceHandler {
         for (let i = scope.length - 1; i > -1; i--) {
             const view = scope[i];
 
-            if (!(view instanceof ArtboradView || view instanceof SymbolView)) continue;
+            if (!(view instanceof ArtboardView || view instanceof SymbolView)) continue;
 
             if (!view.childs.length) {
                 if (this.__include(view, lt, rb)) return view;

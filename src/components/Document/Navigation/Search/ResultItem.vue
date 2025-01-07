@@ -312,6 +312,16 @@ onUnmounted(() => {
     props.data.context.selection.unwatch(selectedWatcher);
     stop()
 })
+
+
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import lock_open_icon from '@/assets/icons/svg/lock-open.svg';
+import lock_lock_icon from '@/assets/icons/svg/lock-lock.svg';
+import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
+import eye_closed_icon from '@/assets/icons/svg/eye-closed.svg';
+import locate_icon from '@/assets/icons/svg/locate.svg';
+
+
 </script>
 
 <template>
@@ -331,17 +341,17 @@ onUnmounted(() => {
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
                     v-if="!props.data.context.readonly && !isLable">
-                    <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
-                    <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
+                    <SvgIcon v-if="lock_status === 0" class="svg-open" :icon="lock_open_icon"/>
+                    <SvgIcon v-else-if="lock_status === 1" class="svg" :icon="lock_lock_icon"/>
                     <div class="dot" v-else-if="lock_status === 2"></div>
                 </div>
                 <div class="tool_lock tool" @click="toggleContainer">
-                    <svg-icon class="svg-open" icon-class="locate"></svg-icon>
+                    <SvgIcon class="svg-open" :icon="locate_icon"/>
                 </div>
                 <div class="tool_eye tool" :class="{ 'visible': visible_status }"
                     @click="(e: MouseEvent) => setVisible(e)" v-if="!props.data.context.readonly && !isLable">
-                    <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
-                    <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
+                    <SvgIcon v-if="visible_status === 0" class="svg" :icon="eye_open_icon"/>
+                    <SvgIcon v-else-if="visible_status === 1" class="svg" :icon="eye_closed_icon"/>
                     <div class="dot" v-else-if="visible_status === 2"></div>
                 </div>
             </div>

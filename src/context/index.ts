@@ -43,7 +43,7 @@ import { PluginsMgr } from "./pluginsmgr";
 import { events } from "./events";
 import { IContext } from "@/openapi";
 import { EscStack } from "./escstack";
-import { scout, Scout } from "@/utils/scout";
+import { scout } from "@/utils/scout";
 import { Preview } from "./preview";
 import { MossClipboard } from "@/clipboard";
 import { EditorLayout } from "@/components/Document/Layout/editorlayout";
@@ -81,9 +81,9 @@ export class RepoWraper {
         throw new Error("Not implemented")
     }
 
-    setOnLoaded(onLoaded: () => void) {
-        this.m_repo.setOnLoaded(onLoaded);
-    }
+    // setOnLoaded(onLoaded: () => void) {
+    //     this.m_repo.setOnLoaded(onLoaded);
+    // }
 
     // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
     //     return this.m_repo.onCommit(...args)
@@ -96,7 +96,7 @@ export class RepoWraper {
 
 class ToolBox implements IToolBox {
 
-    _scout: Scout | undefined;
+    _scout: IScout | undefined;
     _event = new EventEmitter()
     _context: Context;
 
@@ -426,7 +426,20 @@ export class Context extends WatchableObject implements IContext {
         return this.m_layout;
     }
 
-    setOnLoaded(onLoaded: () => void) {
-        this.m_repo.setOnLoaded(onLoaded);
+    // setOnLoaded(onLoaded: () => void) {
+    //     this.m_repo.setOnLoaded(onLoaded);
+    // }
+
+    private m_custom_loading = false;
+    private m_custom_loading_watcher: (show: boolean) => void = () => { };
+    setCustomLoading(show: boolean): void {
+        this.m_custom_loading = show;
+        this.m_custom_loading_watcher(show)
+    }
+    watchCustomLoading(cb: (show: boolean) => void) {
+        this.m_custom_loading_watcher = (cb);
+    }
+    get customLoading() {
+        return this.m_custom_loading;
     }
 }

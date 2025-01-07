@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SvgIcon from '@/components/common/SvgIcon.vue';
 import { Context } from '@/context';
 import { hidden_selection } from '@/utils/content';
 import { get_actions_blur_modify } from '@/utils/shape_style';
@@ -74,13 +75,14 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
 })
+import down_icon from '@/assets/icons/svg/down.svg';
 </script>
 
 <template>
     <div class="blur-position">
         <div class="context" @click="showMenu">{{ t(`blur.${blur.type}`) }}</div>
         <div class="down" @click="showMenu" :class="{ 'active-down': isMenu }">
-            <svg-icon icon-class="down" />
+            <SvgIcon :icon="down_icon"></SvgIcon>
         </div>
         <div class="select_menu" ref="menu" v-if="isMenu">
             <div ref="items" v-for="(item, index) in blurOptions" :key="index" class="item" @click.stop="toggleType(item)"

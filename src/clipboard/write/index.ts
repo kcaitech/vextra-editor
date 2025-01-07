@@ -126,7 +126,7 @@ export class MossWriter {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
                 origin_transform_map[`${shape.id}`] = shape.transform.clone();
-                position_map.set(shape.id, makeShapeTransform1By2(shape.transform2FromRoot) as TransformRaw);
+                position_map.set(shape.id, (shape.matrix2Root()));
                 if (shape instanceof ContactLineView) points_map.set(shape.id, shape.getPoints());
             }
             const { shapes: _shapes, ctx } = export_shape(shapes.map((s => adapt2Shape(s))));

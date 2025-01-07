@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch } from "vue";
 import { Context } from "@/context";
-import { ArtboradView, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboardView, ShapeType, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -193,15 +193,15 @@ onUnmounted(() => {
     <path
         :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
         fill="transparent"/>
-    <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
+    <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
                        :paddingIndex="paddingIndex"/>
     <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
                    :theme="theme"/>
     <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
                      :c-frame="props.controllerFrame" :theme="theme"/>
-    <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
+    <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
                      :controllerFrame="controllerFrame"/>
-    <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
+    <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
                            @hoverPaddint="hoverPaddingIndex"/>
     <AddState v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union" :context="props.context"
               :shape="props.shape" :c-frame="props.controllerFrame" :symbol-type="symbol_type"/>

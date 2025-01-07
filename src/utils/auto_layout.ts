@@ -1,12 +1,12 @@
 import { Context } from "@/context";
-import { ArtboradView, ShapeType } from "@kcdesign/data";
+import { ArtboardView, ShapeType } from "@kcdesign/data";
 import { compare_layer_3, filter_for_group1 } from "./group_ungroup";
 import { getName } from "./content";
 
 
 export const autoLayoutFn = (context: Context, t: Function) => {
     const selectShapes = context.selection.selectedShapes;
-    if (selectShapes.length === 1 && (selectShapes[0] as ArtboradView).autoLayout) return;
+    if (selectShapes.length === 1 && (selectShapes[0] as ArtboardView).autoLayout) return;
     let shapes
     const page = context.selection.selectedPage;
     if (!page) return;

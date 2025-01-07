@@ -47,6 +47,10 @@ onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
     document.removeEventListener('mouseup', handleCloseMenu);
 });
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
 </script>
 
 <template>
@@ -57,7 +61,7 @@ onUnmounted(() => {
             @click="selectItem(index)">
             <div class="text">{{ i18n ? t(`cutoutExport.${item}`) : item }}</div>
             <div class="icon">
-                <svg-icon v-if="selectValue === item" :icon-class="selectHoverItem === item ? 'white-select': 'page-select'"></svg-icon>
+                <SvgIcon v-if="selectValue === item" :icon="selectHoverItem === item ? white_select_icon: page_select_icon"/>
             </div>
         </div>
     </div>

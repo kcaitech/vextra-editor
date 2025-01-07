@@ -27,7 +27,7 @@ import { message } from "./message";
 import { permIsEdit } from "./permission";
 import { Menu } from "@/context/menu";
 import { hexToX } from "@/components/common/ColorPicker/utils";
-import { ArtboradView, Color, ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
+import { ArtboardView, Color, ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
 import { Attribute } from "@/context/atrribute";
 import {
     useArrow,
@@ -871,7 +871,7 @@ function modifyLivingGroupForLabel(context: Context) {
         const parents: Set<ShapeView> = new Set();
         for (const view of context.selection.selectedShapes) {
             const parent = view.parent!;
-            if ((parent instanceof ArtboradView || parent instanceof SymbolView) && parent.parent?.type === ShapeType.Page) {
+            if ((parent instanceof ArtboardView || parent instanceof SymbolView) && parent.parent?.type === ShapeType.Page) {
                 parents.add(parent);
             }
         }

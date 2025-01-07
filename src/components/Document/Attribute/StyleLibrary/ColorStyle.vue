@@ -2,37 +2,39 @@
     <div class="color-container" @wheel.stop>
         <div class="search">
             <div class="icon">
-                <svg-icon icon-class="search"></svg-icon>
+                <SvgIcon :icon="search_icon"></SvgIcon>
             </div>
             <div class="filter" @click.stop="showfilter = !showfilter">
-                <svg-icon icon-class="arrow"></svg-icon>
+                <SvgIcon :icon="arrow_icon"></SvgIcon>
             </div>
             <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
-                @input="fillRenderer.searchstyle(filterval, searchval)">
+                @keydown.esc="props.context.escstack.execute()">
             <div v-if="showfilter" class="filter-list">
-                <div class="list-item" @click.stop="Changefilter('全部')">
-                    <span>全部</span>
-                </div>
-                <div class="list-item" @click.stop="Changefilter('其他')">
-                    <span>其他</span>
-                </div>
-                <div class="list-item" v-for="(s, index) in sheets" :key="index" @click.stop="Changefilter(s.name)">
-                    <span> {{ s.name }}</span>
+                <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="Changefilter(item[1])">
+                    <div class="choose" :style="{ visibility: filterval === item[1] ? 'visible' : 'hidden' }">
+                        <SvgIcon :icon="choose_icon"></SvgIcon>
+                    </div>
+                    <span> {{ item[1] }}</span>
                 </div>
             </div>
         </div>
         <el-scrollbar>
             <div class="content">
-                <div class="style-item" v-for="s in sheets" :key="s.id">
-                    <div class="type" @click.stop="showtype(s.name)">
-                        <svg-icon :icon-class="showtypes.has(s.name) ? 'triangle-down' : 'triangle-right'"></svg-icon>
-                        <span>{{ s.name }}</span>
+                <div class="style-item" v-for="sheet in showdata" :key="sheet.id">
+                    <div class="type" @click="showtype(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <SvgIcon
+                            :icon="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon">
+                        </SvgIcon>
+                        <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
-                    <template v-if="showtypes.has(s.name)">
-                        <div class="styles" v-for="f in fillList" :key="f.id" @click="addfillmask(f.id)">
+                    <template v-if="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <div class="styles"
+                            :class="{ 'active': showeditor && Mask_ID === mask.id, 'target': mask.id === props.id }"
+                            v-for="mask in (sheet.variables as FillMask[])" :key="mask.id"
+                            @click="addfillmask(mask.id)">
                             <div class="left">
                                 <div class="color">
-                                    <div class="containerfill" v-for="fill in f.fills" :key="fill.id">
+                                    <div class="containerfill" v-for="fill in mask.fills" :key="fill.id">
                                         <img v-if="fill.fillType === FillType.Pattern" :src="getImageUrl(fill as Fill)"
                                             alt="" :style="{ opacity: fill.contextSettings?.opacity }">
                                         <div class="gradient" v-if="fill.fillType === FillType.Gradient"
@@ -40,16 +42,15 @@
                                         </div>
                                         <div v-if="fill.fillType === FillType.SolidColor" class="main"
                                             :style="{ backgroundColor: `rgb(${fill.color.red},${fill.color.green},${fill.color.blue})`, opacity: fill.color.alpha }">
-                                            <div v-if="f.fills?.length == 1" class="mask"
+                                            <div v-if="mask.fills?.length == 1" class="mask"
                                                 :style="{ opacity: 1 - fill.color.alpha }"></div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="name">{{ f.name }}</div>
+                                <div class="name">{{ mask.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;"
-                                @click.stop="EditPanel($event, f as FillMask)">
-                                <svg-icon icon-class="export-menu"></svg-icon>
+                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event, mask.id,mask)">
+                                <SvgIcon :icon="editor_icon"></SvgIcon>
                             </div>
                         </div>
                     </template>
@@ -59,7 +60,7 @@
             </div>
         </el-scrollbar>
         <EditorColorStyle v-if="showeditor" :type="'editor'" :top="Top" :left="Left"
-            :shapes="props.context.selection.selectedShapes" :context="props.context" :maskid :style="styles"
+            :shapes="props.context.selection.selectedShapes" :context="props.context" :maskid="Mask_ID" :style="styles"
             @close="showeditor = !showeditor" :reder="fillRenderer"></EditorColorStyle>
     </div>
 
@@ -87,6 +88,19 @@ import { getShapesForStyle } from "@/utils/style";
 import { Mask, FillRenderer } from "./fillRenderer";
 import { block_style_generator } from "../../../common/ColorPicker/utils"
 import { get_actions_add_mask } from "@/utils/shape_style";
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 
 interface FillItem {
@@ -97,6 +111,7 @@ const props = defineProps<{
     fills?: FillItem[];
     context: Context;
     shapes: ShapeView[];
+    id?: string;
 }>();
 
 
@@ -107,23 +122,41 @@ const showtypes = ref(new Set<string>())
 const showeditor = ref<boolean>(false)
 const Top = ref<number>(0)
 const Left = ref<number>(0)
-
-const sheets = reactive<StyleSheet[]>([])
+const Mask_ID = ref<string>('')
 const search = ref<HTMLInputElement>()
 const styles = ref<FillMask>()
-const count = ref<number>(0);
-const filterlib = reactive<StyleSheet[]>([])
-
-
+const listfilter = new Map()
+const sheets = reactive<StyleSheet[]>([])
+const showdata = reactive<StyleSheet[]>([])
 const fillList = reactive<Mask[]>([]);
-const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[],fillList as Mask[]);
+const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], fillList as Mask[]);
 
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
-    console.log(showtypes.value);
-
 }
 
+watchEffect(() => {
+    listfilter.set('all', '全部样式')
+    sheets.forEach(s => {
+        if (s.id === props.context.data.id) {
+            listfilter.set(s.name, '此文件样式')
+        } else {
+            listfilter.set(s.name, s.name)
+        }
+    })
+    listfilter.forEach((v) => showtypes.value.add(v))
+})
+
+watchEffect(() => {
+    showdata.length = 0;
+    const arr = sheets.filter(s => s.name.includes(filterval.value === '全部样式' ? "" : filterval.value === '此文件样式' ? "新文件" : filterval.value))
+    const new_arr = arr.map(s => {
+        let newSheet: StyleSheet = { ...s }
+        newSheet.variables = s.variables.filter(v => (v as FillMask).name.includes(searchval.value))
+        return newSheet
+    })
+    showdata.push(...new_arr.filter(s => s.variables.length !== 0))
+})
 
 const Changefilter = (v: string) => {
     filterval.value = v;
@@ -131,27 +164,6 @@ const Changefilter = (v: string) => {
     showtypes.value.add(v)
     fillRenderer.searchstyle(filterval.value, searchval.value)
 }
-
-// const data = computed(() => {
-//     const result: StyleSheet[] = [];
-//     sheets.forEach(obj => {
-//         // 过滤对象中的数组，找出包含特定值的数组
-//         const arraysContainingTarget = obj.variables.filter(array =>
-//             array.name.includes(searchval.value)
-//         );
-//         // 如果有匹配的数组，添加到结果中
-//         // if (arraysContainingTarget.length > 0) {
-//         //     result.push({
-//         //         ...obj, // 复制对象
-//         //         variables: arraysContainingTarget // 替换values为过滤后的数组
-//         //     });
-//         // }
-//     });
-//     return result;
-// })
-
-
-
 
 const style = computed(() => {
     return (c: Color, g: Gradient, t: FillType) => block_style_generator(c, g, t)
@@ -176,12 +188,8 @@ const addfillmask = (id: string) => {
     editor.shapesSetFillMask(actions);
 }
 
-
-
-
 const maskid = ref<string>('')
-const EditPanel = (e: MouseEvent, style: FillMask) => {
-    styles.value = style
+const EditPanel = (e: MouseEvent, id: string,mask:FillMask) => {
     let el = e.target as HTMLElement;
     while (el.parentElement?.className !== 'style-item') {
         if (el.parentElement) {
@@ -191,13 +199,10 @@ const EditPanel = (e: MouseEvent, style: FillMask) => {
     const { top, left } = el.getBoundingClientRect();
     Top.value = top;
     Left.value = left - 12 - 250 - 2;
-    showeditor.value = !showeditor.value
+    Mask_ID.value === id ? showeditor.value = !showeditor.value : showeditor.value = true;
+    Mask_ID.value = id;
+    styles.value=mask;
 }
-
-watchEffect(() => {
-    sheets.forEach(i => showtypes.value.add(i.name))
-    console.log(showtypes.value);
-})
 
 function inputBlur(e: KeyboardEvent) {
     if (e.code === 'Escape') {
@@ -248,10 +253,16 @@ onUnmounted(() => {
         width: 18px;
         height: 32px;
 
-        svg {
+        img {
             height: 100%;
             width: 14px;
         }
+    }
+
+    .filter img {
+        rotate: -90deg;
+        padding: 1px;
+        box-sizing: border-box;
     }
 
     input {
@@ -289,6 +300,19 @@ onUnmounted(() => {
             border-radius: 6px;
             box-sizing: border-box;
 
+            .choose {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+
+                img {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+
             &:hover {
                 background-color: #F5F5F5;
             }
@@ -317,7 +341,7 @@ onUnmounted(() => {
         }
     }
 
-    .style-item .type svg {
+    .style-item .type img {
         width: 14px;
         height: 14px;
     }
@@ -410,7 +434,7 @@ onUnmounted(() => {
             background-color: #e5e5e5;
         }
 
-        svg {
+        img {
             outline: none;
             margin: auto;
             width: 16px;
@@ -424,6 +448,18 @@ onUnmounted(() => {
 
     .data-null {
         margin: auto;
+    }
+}
+
+.active {
+    background-color: #f5f5f5;
+}
+
+.target {
+    background-color: rgba(24, 120, 245, 0.2) !important;
+
+    .editor:hover {
+        background-color: rgba(24, 120, 245, 0.3) !important;
     }
 }
 </style>

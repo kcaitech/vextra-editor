@@ -117,6 +117,8 @@ function updateData() {
             shadows.push(..._shadows.reverse());
         }
     }
+    console.log(mask.value);
+    
     reflush.value++;
 }
 
@@ -216,6 +218,8 @@ const openEffectPanel = (e: MouseEvent) => {
 }
 
 function close() {
+    console.log('1111111111111111111111');
+    
     const is_achieve_expected_results = showshadow.value;
     showshadow.value = false;
     document.removeEventListener('click', checktargetlist)
@@ -273,6 +277,14 @@ onUnmounted(() => {
     watchedShapes.forEach(i => i.unwatch(watcher));
     watchedShapes.clear();
 });
+
+import add_icon from '@/assets/icons/svg/add.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 
 <template>
@@ -280,10 +292,10 @@ onUnmounted(() => {
         <TypeHeader :title="t('shadow.shadow_stting')" class="mt-24" @click="first" :active="!!shadows.length">
             <template v-if="!mask" #tool>
                 <div v-if="!mixed" class="shadow-style" @click="openEffectPanel($event)">
-                    <svg-icon icon-class="styles"></svg-icon>
+                    <SvgIcon :icon="style_icon"></SvgIcon>
                 </div>
                 <div class="add" @click="addShadow">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
             </template>
         </TypeHeader>
@@ -293,7 +305,7 @@ onUnmounted(() => {
         <div class="shadows-container" v-if="!mixed && shadows.length && !mask">
             <div class="shadow" v-for="(s, idx) in shadows" :key="s.shadow.id">
                 <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                    <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
+                    <SvgIcon v-if="s.shadow.isEnabled" :icon="select_icon"></SvgIcon>
                 </div>
                 <div class="shadow_posi">
                     <ShadowPositionItem :context="context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
@@ -304,7 +316,7 @@ onUnmounted(() => {
                         :length="shadows.length" :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
                 </div>
                 <div class="delete" @click="deleteFill(idx)">
-                    <svg-icon icon-class="delete"></svg-icon>
+                    <SvgIcon :icon="delete_icon"></SvgIcon>
                 </div>
             </div>
         </div>
@@ -324,11 +336,11 @@ onUnmounted(() => {
                     <div class="name">{{ shadow?.name }}</div>
                 </div>
                 <div class="unbind" @click.stop="delshadowmask">
-                    <svg-icon icon-class="unbind"></svg-icon>
+                    <SvgIcon :icon="unbind_icon"></SvgIcon>
                 </div>
             </div>
             <div class="delete-style" @click="delstyleshadow">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"></SvgIcon>
             </div>
         </div>
         <EffectStyle v-if="showshadow" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
@@ -356,13 +368,13 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
     }
 
-    .shadow-style svg {
+    .shadow-style img {
         padding: 2px;
         box-sizing: border-box;
     }
@@ -404,7 +416,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                >svg {
+                >img {
                     width: 60%;
                     height: 60%;
                 }
@@ -508,7 +520,7 @@ onUnmounted(() => {
                 width: 28px;
                 height: 32px;
 
-                >svg {
+                >img {
                     width: 16px;
                     height: 16px;
                 }
@@ -530,7 +542,7 @@ onUnmounted(() => {
             border-radius: var(--default-radius);
             overflow: hidden;
 
-            >svg {
+            >img {
                 width: 16px;
                 height: 16px;
             }

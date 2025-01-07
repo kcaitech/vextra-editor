@@ -10,7 +10,7 @@ import { hidden_selection } from '@/utils/content';
 import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_Apex, get_actions_border_endpoint, get_actions_border_exchange } from '@/utils/shape_style';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface Props {
     context: Context
@@ -19,6 +19,7 @@ interface Props {
     trigger: any[]
     reflush_apex: number
 }
+const { t } = useI18n();
 const props = defineProps<Props>();
 const borderFrontStyle = ref<SelectItem>({ value: MarkerType.Line, content: MarkerType.Line });
 const borderFrontStyleOptionsSource: SelectSource[] = genOptions([
@@ -196,6 +197,8 @@ onUnmounted(() => {
     stop3();
     stop4();
 });
+
+import exchange_icon from '@/assets/icons/svg/exchange.svg';
 </script>
 <template>
     <div class="apex-select-wrap" v-if="!shaow_apex">
@@ -209,7 +212,7 @@ onUnmounted(() => {
         </div>
 
         <div class="change" @click="exchange">
-            <svg-icon icon-class="exchange"></svg-icon>
+            <SvgIcon :icon="exchange_icon" />
         </div>
     </div>
     <div class="apex-select-wrap" v-if="shaow_apex">
@@ -230,25 +233,24 @@ onUnmounted(() => {
     padding-top: 2px;
     padding-bottom: 6px;
     justify-content: space-between;
-    gap: 6px;
+    gap: 8px;
 
     .select-wrap {
         display: flex;
         align-items: center;
-        width: calc(100% - 59px);
+        width: calc(100% - 19px);
         height: 100%;
         gap: 6px;
-        margin-left: 19px;
 
         .select {
-            flex: 0 0 50%;
+            flex: 1 1 calc(50% - 20px);
             height: 32px;
         }
     }
 
     .change {
         display: flex;
-        width: 28px;
+        min-width: 28px;
         height: 28px;
         align-items: center;
         justify-content: center;
@@ -256,7 +258,7 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         // margin-left: 4px;
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
@@ -272,7 +274,7 @@ onUnmounted(() => {
         align-items: center;
         flex: 1;
         height: 100%;
-        margin-left: 19px;        
+        margin-left: 19px;
         box-sizing: border-box;
 
         .select {

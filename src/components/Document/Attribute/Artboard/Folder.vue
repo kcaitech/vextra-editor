@@ -17,11 +17,12 @@ interface Emits {
 defineProps<Props>();
 const emits = defineEmits<Emits>();
 
+import right_icon from '@/assets/icons/svg/right.svg';
 </script>
 <template>
     <div class="container">
         <div class="title" @click="() => {emits('toggle')}">
-            <svg-icon icon-class="right" :class="extend ? 'extend' :'fold'"></svg-icon>
+            <SvgIcon :icon="right_icon" :class="extend ? 'extend' :'fold'"/>
             <div class="name">{{ title }}</div>
         </div>
         <div v-if="extend" class="list-container">

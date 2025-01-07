@@ -8,6 +8,7 @@ import Tooltip from "@/components/common/Tooltip.vue";
 import { LockedPointer } from "@/components/Document/Attribute/LockedPointer/lockedpointer";
 import { LockMouse } from "@/transform/lockMouse";
 import { useI18n } from "vue-i18n";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const t = useI18n().t;
 
@@ -212,12 +213,13 @@ onMounted(() => {
     }, true);
     ovalData.__update();
 });
+import oval_start_icon from "@/assets/icons/svg/oval-start.svg"
 </script>
 <template>
     <form ref="form" :class="{'oval-arc-options-wrapper': true, disabled: options.disabled}">
         <div class="start">
             <Tooltip :content="t('attr.startingAngle')">
-                <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
+                <SvgIcon :icon="oval_start_icon" @mousedown="__downStart"/>
             </Tooltip>
             <input type="text" :value="options.start"
                    @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>

@@ -19,6 +19,7 @@ import {
     Transform,
     ShadowPosition,
     BorderMask,
+    BorderMaskType,
 } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
 import { cursorAngle } from "@/components/Document/Selection/common";
@@ -35,6 +36,7 @@ export interface Mask {
     fills?: BasicArray<Fill>;
     shadows?: BasicArray<Shadow>
     blur?: Blur;
+    border?:BorderMaskType
 }
 
 export interface Lib {
@@ -84,13 +86,24 @@ export class FillRenderer {
         this.m_list.push(titleCtx);
     }
 
-    private getblurwmask(v: BlurMask) {
+    private getblurmask(v: BlurMask) {
         const titleCtx: Mask = {
             id: v.id,
             name: v.name,
             description: v.description,
             sheet: v.sheet,
             blur: v.blur
+        };
+        this.m_list.push(titleCtx);
+    }
+
+    private getbordermask(v:BorderMask){
+        const titleCtx: Mask = {
+            id: v.id,
+            name: v.name,
+            description: v.description,
+            sheet: v.sheet,
+            border: v.border
         };
         this.m_list.push(titleCtx);
     }
@@ -144,7 +157,12 @@ export class FillRenderer {
             }
             if (type === 'blur') {
                 if (s instanceof BlurMask) {
-                    this.getblurwmask(s)
+                    this.getblurmask(s)
+                }
+            }
+            if(type==='border'){
+                if (s instanceof BorderMask) {
+                    this.getbordermask(s)
                 }
             }
         })

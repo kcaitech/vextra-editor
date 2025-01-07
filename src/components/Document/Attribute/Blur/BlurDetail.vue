@@ -10,6 +10,7 @@ import { get_actions_blur_modify } from '@/utils/shape_style';
 import { watchEffect } from 'vue';
 import { BlurHandler } from '@/transform/blur';
 import { sortValue } from '../BaseAttr/oval';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 
@@ -190,6 +191,7 @@ watchEffect(() => {
     blurValue.value = props.blur.saturation;
     update();
 })
+import gear_icon from '@/assets/icons/svg/gear.svg';
 </script>
 
 <template>
@@ -198,7 +200,7 @@ watchEffect(() => {
             :title="`${t('blur.blur_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
-                    <svg-icon icon-class="gear" />
+                    <SvgIcon :icon="gear_icon"/>
                 </div>
             </template>
             <template #body>
@@ -234,7 +236,7 @@ watchEffect(() => {
             align-items: center;
             border-radius: var(--default-radius);
 
-            >svg {
+            >img {
                 width: 16px;
                 height: 16px;
             }

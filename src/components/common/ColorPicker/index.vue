@@ -1335,15 +1335,15 @@ watch(() => picker_visible.value, (v) => {
     }
 })
 
-// watchEffect(() => {
-//     if (props.open) {
-//         custom.value = 'style'
-//     }
-//     picker_visible.value = props.open
-//     if (picker_visible.value) {
-//         props.context.menu.setupColorPicker(blockId)
-//     }
-// })
+watchEffect(() => {
+    if (props.open) {
+        custom.value = 'style'
+    }
+    picker_visible.value = props.open
+    if (picker_visible.value) {
+        props.context.menu.setupColorPicker(blockId)
+    }
+})
 
 const observer = new ResizeObserver(locate);
 let isDragging = false
@@ -1422,6 +1422,14 @@ onUnmounted(() => {
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 })
+
+import SvgIcon from "@/components/common/SvgIcon.vue"
+import close_icon from "@/assets/icons/svg/close.svg"
+import exchange_icon from "@/assets/icons/svg/exchange.svg"
+import rotate90_icon from "@/assets/icons/svg/rotate90.svg"
+import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg"
+import add_icon from "@/assets/icons/svg/add.svg"
+
 </script>
 
 <template>
@@ -1441,10 +1449,10 @@ onUnmounted(() => {
                 </div>
                 <div class="right">
                     <div v-if="!props.entrance" class="newstyle" @click.stop="EditorStyle = !EditorStyle">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                     <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
-                        <svg-icon icon-class="close"></svg-icon>
+                        <SvgIcon :icon="close_icon"/>
                     </div>
                 </div>
             </div>
@@ -1467,12 +1475,12 @@ onUnmounted(() => {
                     </div>
                     <div class="reverse" @click="reverse">
                         <Tooltip :content="t('color.reverse')">
-                            <svg-icon icon-class="exchange"></svg-icon>
+                            <SvgIcon :icon="exchange_icon"/>
                         </Tooltip>
                     </div>
                     <div class="rotate" @click="rotate">
                         <Tooltip :content="t('color.rotate')">
-                            <svg-icon icon-class="rotate90"></svg-icon>
+                            <SvgIcon :icon="rotate90_icon"/>
                         </Tooltip>
                     </div>
                 </div>
@@ -1492,7 +1500,7 @@ onUnmounted(() => {
                     </div>
                     <div class="controller">
                         <div class="eyedropper">
-                            <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
+                            <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper"/>
                         </div>
                         <div class="sliders-container" ref="sliders">
                             <!-- &lt;!&ndash; 色相 &ndash;&gt; -->
@@ -1689,7 +1697,7 @@ onUnmounted(() => {
                         background-color: #f5f5f5;
                     }
 
-                    >svg {
+                    >img {
                         outline: none;
                         width: 16px;
                         height: 16px;
@@ -1709,7 +1717,7 @@ onUnmounted(() => {
                         background-color: #f5f5f5;
                     }
 
-                    >svg {
+                    >img {
                         outline: none;
                         width: 16px;
                         height: 16px;

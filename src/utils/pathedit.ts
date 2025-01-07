@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView } from "@kcdesign/data";
+import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView, TransformRaw } from "@kcdesign/data";
 import { Action } from "@/context/tool";
 
 export type Segment = {
@@ -22,7 +22,7 @@ export function get_parent_points(context: Context, range?: Map<number, number[]
 
     const parent = path_shape.parent!;
 
-    let m: Matrix;
+    let m: TransformRaw;
 
     if (parent.type === ShapeType.Page) {
         m = path_shape.matrix2Root();
@@ -108,7 +108,7 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
     const parent = path_shape.parent!;
 
     if (parent.type === ShapeType.Page) {
-        const _m = new Matrix(parent.matrix2Root().inverse);
+        const _m = (parent.matrix2Root().inverse);
         let _p = { x: 0, y: 0 };
 
         _p[key] = val;
@@ -119,7 +119,7 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
     }
 
     const f = path_shape.frame;
-    const m = new Matrix(path_shape.matrix2Parent());
+    const m = (path_shape.matrix2Parent());
     m.preScale(f.width, f.height);
 
     const actions: { x: number, y: number, segment: number, index: number }[] = [];

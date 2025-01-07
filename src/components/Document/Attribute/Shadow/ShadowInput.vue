@@ -127,6 +127,10 @@ function click() {
     el.select();
     is_select.value = true;
 }
+
+import down_icon from '@/assets/icons/svg/down.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 
 <template>
@@ -144,10 +148,10 @@ function click() {
             :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click"
             @keydown="e=>emits('keyDown',e,props.shadowV)">
         <div class="adjust" :class="{ active: isActived }">
-            <svg-icon icon-class="down" style="transform: rotate(180deg);"
-                :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>
-            <svg-icon icon-class="down" :style="{ cursor: props.disabled ? 'default' : 'pointer' }"
-                @click="decrease"></svg-icon>
+            <SvgIcon :icon="down_icon" style="transform: rotate(180deg);"
+                :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"/>
+            <SvgIcon :icon="down_icon" :style="{ cursor: props.disabled ? 'default' : 'pointer' }"
+                @click="decrease"/>
         </div>
     </div>
 </template>

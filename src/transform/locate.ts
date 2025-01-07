@@ -24,19 +24,17 @@ export function locateShape(context: Context, shape: ShapeView, __root?: LocateR
     const root = __root ?? context.workspace.root; // 定位场景；
     const client = __clientMatrix ?? context.workspace.matrix;
 
-    const m = shape.transform2FromRoot; // 图层到Root；
-    const clientTransform = makeShapeTransform2By1(client);
-    m.addTransform(clientTransform); // root 到 client
+    const m = shape.matrix2Root(); // 图层到Root；
+    const clientTransform = (client);
+    m.multi(clientTransform); // root 到 client
 
     const { x, y, width, height } = shape.frame;
-    const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+    const box = XYsBounding(m.transform([
         ColVector3D.FromXY(x, y),
         ColVector3D.FromXY(x + width, y),
         ColVector3D.FromXY(x + width, y + height),
         ColVector3D.FromXY(x, y + height),
-    ]);
-
-    const box = XYsBounding([lt, rt, rb, lb]);
+    ]));
 
     const centerClient = { // 场景中点
         x: (root.right - root.x) / 2,

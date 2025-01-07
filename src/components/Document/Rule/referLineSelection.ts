@@ -1,9 +1,10 @@
-import { ArtboradView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboardView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { formatNumber, ReferUnit } from "@/components/Document/Rule/refer";
-import { scout, Scout } from "@/utils/scout";
+import { scout } from "@/utils/scout";
 import { XY } from "@/context/selection";
 import { cloneDeep } from "lodash";
+import { IScout } from "@/openapi";
 
 export enum LineTheme {
     Normal = "#ff4400",
@@ -33,7 +34,7 @@ export interface ActiveGuide {
 }
 
 export class ReferLineSelection {
-    private readonly m_scout: Scout;
+    private readonly m_scout: IScout;
     private readonly m_context: Context;
     private readonly m_line_units: ReferUnit[];
     private readonly m_root_units: ReferUnit;
@@ -218,13 +219,13 @@ export class ReferLineSelection {
         // 顺手关一下
         this.m_hovered_guide.valid = false;
 
-        const env = selected.env as unknown as ArtboradView;
+        const env = selected.env as unknown as ArtboardView;
 
         if (env.id !== envId) {
             return;
         }
 
-        const gui = (env as ArtboradView)?.guides?.[selected.index];
+        const gui = (env as ArtboardView)?.guides?.[selected.index];
         if (!gui) {
             return;
         }
@@ -325,13 +326,13 @@ export class ReferLineSelection {
             return;
         }
 
-        const env = hovered.env as unknown as ArtboradView;
+        const env = hovered.env as unknown as ArtboardView;
 
         if (env.id !== envId) {
             return;
         }
 
-        const gui = (env as ArtboradView)?.guides?.[hovered.index];
+        const gui = (env as ArtboardView)?.guides?.[hovered.index];
         if (!gui) {
             return;
         }
@@ -439,7 +440,7 @@ export class ReferLineSelection {
             return;
         }
 
-        const env = selected.env as unknown as ArtboradView;
+        const env = selected.env as unknown as ArtboardView;
 
         if (env.id !== envId) {
             return;
@@ -457,7 +458,7 @@ export class ReferLineSelection {
             return;
         }
 
-        const env = hovered.env as ArtboradView;
+        const env = hovered.env as ArtboardView;
 
         if (env.id !== envId) {
             return;
