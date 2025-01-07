@@ -7,7 +7,7 @@ import { nextTick, onMounted, onUnmounted, onUpdated, ref } from "vue";
 import { StatusValueItem, get_tag_value } from "@/utils/symbol";
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
-import { SymbolShape } from "@kcdesign/data";
+import { SymbolShape, SymbolView } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -22,6 +22,7 @@ const revalueInput = ref();
 const top = ref<number>(0);
 const statusValue = ref();
 const menuIndex = ref();
+const edit_symbol = ref<SymbolView>();
 const onRevalue = (e: MouseEvent) => {
     e.stopPropagation();
     if (e.target instanceof Element && e.target.closest('.status-icon-down')) return;
@@ -38,6 +39,7 @@ const selectText = () => {
     nextTick(() => {
         if (revalueInput.value) {
             revalueInput.value.select();
+            edit_symbol.value = props.context.selection.symbolstate;
         }
     })
 }
@@ -47,23 +49,19 @@ const closeValueInput = () => {
 }
 function input_blur(e: InputEvent) {
     const v = (e.target as HTMLInputElement).value;
-    save_change(v);
+    if (v !== statusValue.value) save_change(v);
     closeValueInput();
 }
 const onEditAttrValue = (e: KeyboardEvent) => {
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        const v = (e.target as HTMLInputElement).value;
-        save_change(v);
-        closeValueInput();
-    }
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') (e.target as HTMLInputElement).blur();
 }
-const selectoption = ref(false);
+const selectOption = ref(false);
 const showMenu = (e: MouseEvent) => {
-    if (selectoption.value) {
-        return selectoption.value = false;
+    if (selectOption.value) {
+        return selectOption.value = false;
     }
     props.context.menu.notify(Menu.CLOSE_COMP_MENU);
-    selectoption.value = true;
+    selectOption.value = true;
     nextTick(locate);
 }
 function locate() {
@@ -74,14 +72,10 @@ function locate() {
     }
 }
 
-const getVattagValue = () => {
+const getVarTagValue = () => {
     const shape = props.context.selection.symbolstate;
-    if (!shape) {
-        return;
-    }
-
+    if (!shape) return;
     let val = get_tag_value(shape, props.data.variable);
-
     if (val === SymbolShape.Default_State) {
         val = t('compos.dlt');
     }
@@ -89,17 +83,17 @@ const getVattagValue = () => {
     statusValue.value = val;
     menuIndex.value = props.data.values.findIndex(v => v === val);
 }
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
-        getVattagValue();
-        if (selectoption.value) {
-            selectoption.value = false;
+        getVarTagValue();
+        if (selectOption.value) {
+            selectOption.value = false;
         }
     }
 }
 
 
-function selcet(index: number) {
+function select(index: number) {
     if (index === props.data.values.length - 1) {
         editAttrValue.value = true;
         attrValueInput.value = '新的值';
@@ -111,11 +105,11 @@ function selcet(index: number) {
         const val = props.data.values[index];
         save_change(val);
     }
-    selectoption.value = false;
+    selectOption.value = false;
 }
 
 function save_change(v: string) {
-    const state = props.context.selection.symbolstate;
+    const state = edit_symbol.value || props.context.selection.symbolstate;
     if (!v || !state) return;
     const editor = props.context.editor4Shape(state);
     if (v === t('compos.dlt')) {
@@ -124,10 +118,10 @@ function save_change(v: string) {
     editor.modifyStateSymTagValue(props.data.variable.id, v);
 }
 onUpdated(() => {
-    getVattagValue();
+    getVarTagValue();
 })
 onMounted(() => {
-    getVattagValue();
+    getVarTagValue();
     props.context.selection.watch(selected_watcher);
 })
 onUnmounted(() => {
@@ -143,19 +137,17 @@ onUnmounted(() => {
                     <div class="input">
                         <span>{{ statusValue }}</span>
                         <el-icon @click.stop="showMenu" class="status-icon-down">
-                            <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                            <ArrowDown/>
                         </el-icon>
                     </div>
-                    <SelectMenu v-if="selectoption" :top="top" width="100%" :menuItems="data.values" :context="context"
-                        :menuIndex="menuIndex" @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
+                    <SelectMenu v-if="selectOption" :top="top" width="100%" :menuItems="data.values" :context="context"
+                                :menuIndex="menuIndex" @close="selectOption = false" @selectIndex="select"></SelectMenu>
                 </div>
                 <div class="module_input" v-if="editAttrValue">
                     <el-input v-model="attrValueInput" ref="revalueInput" @blur="input_blur" @focus="selectText"
                         @keydown.stop="onEditAttrValue" />
                 </div>
             </div>
-            <!-- <div class="delete"></div> -->
         </div>
     </div>
 </template>
@@ -163,7 +155,7 @@ onUnmounted(() => {
 .module_state_item {
     display: flex;
     flex-direction: column;
-    min-height: 44px;
+    margin-top: 6px;
 
     .module_con {
         display: flex;
@@ -174,7 +166,6 @@ onUnmounted(() => {
     .state_item {
         display: flex;
         align-items: center;
-        // width: calc(100% - 22px);
         width: 100%;
 
         .state_name {
@@ -214,9 +205,9 @@ onUnmounted(() => {
 
             .input {
                 width: 100%;
-                height: 30px;
+                height: 32px;
                 border-radius: 4px;
-                padding-left: 11px;
+                padding-left: 9px;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
@@ -227,12 +218,12 @@ onUnmounted(() => {
                 }
 
                 .status-icon-down {
-                    width: 19px;
-                    height: 26px;
+                    width: 24px;
+                    height: 24px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin-right: 3px;
+                    margin-right: 4px;
                     border-radius: 4px;
 
                     >svg {
@@ -251,10 +242,10 @@ onUnmounted(() => {
     .module_input {
         display: flex;
         align-items: center;
-        padding-left: 10px;
+        padding-left: 9px;
         box-sizing: border-box;
         width: calc(100% - 58px);
-        height: 30px;
+        height: 32px;
 
         .el-input {
             font-size: var(--font-default-fontsize);

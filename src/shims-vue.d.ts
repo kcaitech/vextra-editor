@@ -12,7 +12,22 @@ declare module '*.md' {
   const content: string;
   export default content;
 }
-declare module "*/dom-to-image.js";
+
+declare interface Window {
+  wx: any,
+}
+
 // 声明静态资源作为模块
 declare module "*.png";
 declare module "*.svg";
+
+
+declare module 'pathkit-wasm' {
+  function PathKitInit(wasm: any): Promise<any>;
+  export default PathKitInit
+}
+
+declare module "*.wasm?arraybuffer&base64" {
+  const content: ArrayBuffer
+  export default content
+}

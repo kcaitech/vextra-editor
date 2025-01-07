@@ -10,7 +10,9 @@ export const cutoutExport: any = {
     preview: 'Preview',
     default: 'Default',
     ios_presets: 'iOS presets',
-    android_presets:'Android presets'
+    android_presets:'Android presets',
+    export_cutout: 'Export cutout',
+    repeat: 'Same name as other slices'
 }
 
 

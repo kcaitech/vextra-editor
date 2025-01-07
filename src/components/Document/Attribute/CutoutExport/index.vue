@@ -1,23 +1,43 @@
 <script setup lang="ts">
-import { BasicArray, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, reactive, nextTick, watch } from 'vue';
+import {
+    BasicArray,
+    ExportFileFormat,
+    ExportFormat,
+    ExportFormatNameingScheme,
+    ExportOptions,
+    ExportVisibleScaleType,
+    Shape,
+    ShapeType,
+    ShapeView
+} from '@kcdesign/data';
+import { ref, onMounted, onUnmounted, reactive, nextTick, watch, toRaw } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
-import Preview from './Preview.vue';
+import Preview from './CutPreview.vue';
 import ExportArguments from './ExportArguments.vue';
 import { v4 } from 'uuid';
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
-import comsMap from '@/components/Document/Content/comsmap';
-import { get_actions_add_export_format, get_actions_export_format_delete, get_actions_export_format_file_format, get_actions_export_format_perfix, get_actions_export_format_scale, get_actions_export_format_unify, get_export_formats } from '@/utils/shape_style';
+import {
+    get_actions_add_export_format,
+    get_actions_export_format_delete,
+    get_actions_export_format_file_format,
+    get_actions_export_format_perfix,
+    get_actions_export_format_unify,
+    get_export_formats
+} from '@/utils/shape_style';
 import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getSvgImageData } from '@/utils/image';
+import PageCard from "@/components/common/PageCard.vue";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
+
 interface Props {
     context: Context
     shapes: ShapeView[]
     trigger: any[]
 }
+
 interface SvgFormat {
     id: string
     width: number
@@ -27,10 +47,14 @@ interface SvgFormat {
     background: string
     shapes: Shape[]
 }
+
+type PCard = InstanceType<typeof PageCard>
+
 export interface FormatItems {
     id: number,
     format: ExportFormat
 }
+
 const props = defineProps<Props>();
 const isPreinstall = ref(false);
 
@@ -47,7 +71,9 @@ const canvas_bg = ref(false);
 const previewUnfold = ref(false);
 const preview = ref();
 
-let renderSvgs = ref<SvgFormat[]>([]);
+const pageCard = ref<PCard[]>();
+
+let renderSvgs: SvgFormat[] = reactive([]);
 
 function update(args: any[]) {
     if (args.includes('exportOptions') || args.includes('variables')) {
@@ -58,19 +84,20 @@ function update(args: any[]) {
             if (preview.value) {
                 const selected = props.context.selection.selectedShapes;
                 preview.value.getShapesSvg(selected);
-                renderSvgs.value = preview.value.renderSvgs;
+                renderSvgs = toRaw(preview.value.renderSvgs);
             }
         })
         reflush.value++;
     }
 }
+
 function updateData() {
     preinstallArgus.length = 0;
     mixed.value = false;
     exportOption.value = undefined;
     const selected = props.context.selection.selectedShapes;
     const len = selected.length;
-    renderSvgs.value = [];
+    renderSvgs = [];
     if (len === 1) {
         const shape = selected[0];
         const options = shape.exportOptions;
@@ -112,18 +139,17 @@ function updateData() {
             }
         }
     }
-    nextTick(() => {
-        if (preview.value) {
-            preview.value.getShapesSvg(selected);
-            renderSvgs.value = preview.value.renderSvgs;
-        }
-    })
     reflush.value++;
 }
 
 const showPreinstall = () => {
     if (isPreinstall.value) return isPreinstall.value = false;
     isPreinstall.value = true;
+    props.context.escstack.save('showPreinstall', () => {
+        const achieve = isPreinstall.value;
+        isPreinstall.value = false;
+        return achieve;
+    })
 }
 
 const preinstall = (v: string) => {
@@ -238,6 +264,7 @@ const addIos = (len: number) => {
         }
     }
 }
+
 function first() {
     if (preinstallArgus.length === 0 && !mixed.value) preinstall('default');
 }
@@ -295,7 +322,6 @@ const deleteArgus = (idx: number) => {
     const len = selected.length;
     if (len === 1) {
         const shape = selected[0];
-        if (shape.type === ShapeType.Cutout && preinstallArgus.length === 1) return;
         const editor = props.context.editor4Shape(shape);
         editor.deleteExportFormat(_idx);
     } else if (len > 1) {
@@ -360,75 +386,90 @@ const exportFill = () => {
     const selected = props.context.selection.selectedShapes;
     if (preview.value) {
         preview.value.getShapesSvg(selected);
-        renderSvgs.value = preview.value.renderSvgs;
+        renderSvgs = toRaw(preview.value.renderSvgs);
+        reflush.value++;
     }
-    nextTick(() => {
-        for (let i = 0; i < selected.length; i++) {
-            if (selected.length === 0) break;
-            const shape = selected[i];
-            if (previewSvgs.value) {
-                const svg = previewSvgs.value[i];
-                shape.exportOptions!.exportFormats.forEach((format, idx) => {
-                    const id = shape.id + format.id;
-                    const { width, height } = svg.viewBox.baseVal
-                    svg.setAttribute("width", `${width * format.scale}`);
-                    svg.setAttribute("height", `${height * format.scale}`);
-                    if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
-                        getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
-                    } else if (format.fileFormat === ExportFileFormat.Svg) {
-                        getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
-                    }
-                });
-            }
-        }
+    nextTick(async () => {
         if (selected.length === 0) {
-            exportPageImage();
+            await Promise.resolve(exportPageImage());
         }
-        setTimeout(() => {
-            const page = props.context.selection.selectedPage;
-            if (!page) return;
-            const shape = selected.length > 0 ? selected[0] : page;
-            const options = shape.exportOptions;
-            const formats = options!.exportFormats;
-            if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
-                const id = shape.id + formats[0].id;
-                const url = pngImageUrls.get(id);
-                if (url) {
-                    let fileName;
-                    if (formats[0].namingScheme === ExportFormatNameingScheme.Prefix) {
-                        fileName = formats[0].name + shape.name;
-                    } else {
-                        fileName = shape.name + formats[0].name;
-                    }
-                    exportSingleImage(url, formats[0].fileFormat, fileName);
+        else {
+            await Promise.resolve(getExportUrl());
+        }
+        const page = props.context.selection.selectedPage;
+        if (!page) return;
+        const shape = selected.length > 0 ? selected[0] : page;
+        const options = shape.exportOptions;
+        const formats = options!.exportFormats;
+        if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
+            const id = shape.id + formats[0].id;
+            const url = pngImageUrls.get(id);
+            if (url) {
+                let fileName;
+                if (formats[0].namingScheme === ExportFormatNameingScheme.Prefix) {
+                    fileName = formats[0].name + shape.name;
+                } else {
+                    fileName = shape.name + formats[0].name;
                 }
-            } else {
-                const shapes = selected.length > 0 ? selected : [page];
-                const imageUrls = getExportFillUrl(shapes, pngImageUrls);
-                downloadImages(imageUrls);
+                exportSingleImage(url, formats[0].fileFormat, fileName);
             }
-        }, 100)
+        } else {
+            const shapes = selected.length > 0 ? selected : [page];
+            const imageUrls = getExportFillUrl(shapes, pngImageUrls);
+            downloadImages(imageUrls);
+        }
     })
 }
 
-const exportPageImage = () => {
+const getExportUrl = async () => {
+    const selected = props.context.selection.selectedShapes;
+    const promises: Array<Promise<void>> = [];
+    for (let i = 0; i < selected.length; i++) {
+        if (selected.length === 0) break;
+        const shape = selected[i];
+        if (pageCard.value) {
+            const svg = pageCard.value[i].pageSvg!;
+            (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
+                const id = shape.id + format.id;
+                const { width, height } = svg.viewBox.baseVal
+                svg.setAttribute("width", `${width * format.scale}`);
+                svg.setAttribute("height", `${height * format.scale}`);
+                let promise: Promise<void> = Promise.resolve();
+                const isTrim = shape.type === ShapeType.Line || shape.type === ShapeType.Star || shape.type === ShapeType.Polygon
+                if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
+                    promise = getPngImageData(svg, shape.exportOptions!.trimTransparent || isTrim, id, format, pngImageUrls, shape);
+                } else if (format.fileFormat === ExportFileFormat.Svg) {
+                    promise = getSvgImageData(svg, shape.exportOptions!.trimTransparent || isTrim, id, format, pngImageUrls, shape);
+                }
+                promises.push(promise);
+            });
+        }
+    }
+    await Promise.all(promises);
+}
+
+const exportPageImage = async () => {
     const page = props.context.selection.selectedPage;
     if (!page || !page.exportOptions) return;
-    const options = page.exportOptions;
-    if (previewSvgs.value) {
-        const svg = previewSvgs.value[0];
+    const options = page.exportOptions as ExportOptions;
+    const promises: Array<Promise<void>> = [];
+    if (pageCard.value) {
+        const svg = pageCard.value[0].pageSvg!;
         options.exportFormats.forEach((format, idx) => {
             const id = page.id + format.id;
             const { width, height } = svg.viewBox.baseVal
             svg.setAttribute("width", `${width * format.scale}`);
             svg.setAttribute("height", `${height * format.scale}`);
+            let promise: Promise<void> = Promise.resolve();
             if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
-                getPngImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
+                promise = getPngImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
             } else if (format.fileFormat === ExportFileFormat.Svg) {
-                getSvgImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
+                promise = getSvgImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
             }
+            promises.push(promise);
         });
     }
+    await Promise.all(promises);
 }
 
 
@@ -436,23 +477,39 @@ function update_by_shapes() {
     updateData();
     showCheckbox();
 }
-function selection_watcher(t: number) {
+
+let page = props.context.selection.selectedPage!;
+page.watch(updateData);
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
-    if (t === Selection.CHANGE_PAGE) update_by_shapes();
+    if (t === Selection.CHANGE_PAGE) {
+        update_by_shapes();
+        page.unwatch(updateData);
+        page = props.context.selection.selectedPage!;
+        page.watch(updateData);
+    }
 }
+
 const stop = watch(() => props.trigger, (v) => {
     update(v);
 })
+
+const page_unwatcher = () => {
+    page.unwatch(updateData);
+}
 // hooks
 onMounted(() => {
     update_by_shapes();
-    showCheckbox();
     props.context.selection.watch(selection_watcher);
 });
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     stop();
+    page_unwatcher();
 });
+
+import export_menu_icon from "@/assets/icons/svg/export-menu.svg"
+import add_icon from "@/assets/icons/svg/add.svg"
 
 </script>
 
@@ -463,9 +520,11 @@ onUnmounted(() => {
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall" :style="{ backgroundColor: isPreinstall ? '#EBEBEB' : '' }"
                     @click.stop="showPreinstall">
-                    <svg-icon icon-class="export-menu"></svg-icon>
+                    <SvgIcon :icon="export_menu_icon"/>
                 </div>
-                <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon></div>
+                <div class="cutout-icon" @click.stop="preinstall('default')">
+                    <SvgIcon :icon="add_icon"/>
+                </div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
                 </PreinstallSelect>
             </div>
@@ -481,11 +540,11 @@ onUnmounted(() => {
                     @change-format="changeFormat" @delete="deleteArgus">
                 </ExportArguments>
             </div>
-            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
+            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption && preinstallArgus.length > 0">
                 <el-checkbox :model-value="trim_bg" @change="trimBackground"
                     :label="t('cutoutExport.trim_transparent_pixels')" />
             </div>
-            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
+            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption && preinstallArgus.length > 0">
                 <el-checkbox :model-value="canvas_bg" @change="canvasBackground"
                     :label="t('cutoutExport.canvas_background_color')" />
             </div>
@@ -497,16 +556,19 @@ onUnmounted(() => {
                 :trim_bg="trim_bg">
             </Preview>
         </div>
-        <div class="exportsvg">
+        <div class="exportsvg" :reflush="reflush">
             <template v-for="(svg) in renderSvgs" :key="svg.id">
-                <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-                    preserveAspectRatio="xMinYMin meet" :width="svg.width" :height="svg.height"
-                    :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"
-                    :style="{ 'background-color': svg.background }">
-                    <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  svg.shapes "
-                        :key="c.id" :data="c" />
-                </svg>
+                <!--                <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"-->
+                <!--                     xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"-->
+                <!--                     preserveAspectRatio="xMinYMin meet" :width="svg.width" :height="svg.height"-->
+                <!--                     :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"-->
+                <!--                     :style="{ 'background-color': svg.background }">-->
+                <!--                    <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  svg.shapes "-->
+                <!--                               :key="c.id" :data="c"/>-->
+                <!--                </svg>-->
+                <PageCard ref="pageCard" :background-color="svg.background"
+                    :view-box="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`" :shapes="svg.shapes" :width="svg.width"
+                    :height="svg.height"></PageCard>
             </template>
         </div>
     </div>
@@ -518,7 +580,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -571,7 +633,7 @@ onUnmounted(() => {
 
     .argus {
         width: 100%;
-        margin: 3px 0;
+        padding: 6px 0;
     }
 
     .canvas-bgc {

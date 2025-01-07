@@ -1,17 +1,16 @@
 <script setup lang='ts'>
-import {watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed} from 'vue';
-import {Selection, SelectionTheme} from '@/context/selection';
-import {Matrix, ShapeView, TextShapeView} from '@kcdesign/data';
-import {TextShape} from '@kcdesign/data';
-import {Shape} from "@kcdesign/data";
-import {Context} from '@/context';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { Selection, SelectionTheme } from '@/context/selection';
+import { Matrix, ShapeView, TextShapeView } from '@kcdesign/data';
+import { Context } from '@/context';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
-import {genRectPath} from '../common';
-import {useController} from '../Controller/controller';
-import {Point} from "../SelectionView.vue";
-import {WorkSpace} from '@/context/workspace';
+import { genRectPath } from '../common';
+import { useController } from '../Controller/controller';
+import { Point } from "../SelectionView.vue";
+import { WorkSpace } from '@/context/workspace';
 import ShapesStrokeContainer from "@/components/Document/Selection/Controller/ShapeStroke/ShapesStrokeContainer.vue";
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     context: Context
@@ -41,9 +40,9 @@ const visible = ref<boolean>(true);
 const input = ref<ProtoInput>();
 
 function update() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    // if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const m2p = props.shape.matrix2Root();
-    matrix.reset(m2p);
+    matrix.reset(m2p.toMatrix());
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const frame = props.shape.frame;
@@ -90,7 +89,7 @@ function be_editor(index?: number) {
     const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
-    props.context.cursor.setType('scan', 0);
+    props.context.cursor.setType(CursorType.Text, 0);
     if (index !== undefined) {
         downIndex = {index, before: true};
         selection.setCursor(index, true);
@@ -107,7 +106,7 @@ function onMouseDown(e: MouseEvent) {
             }
             editing.value = true;
             workspace.contentEdit(editing.value);
-            props.context.cursor.setType('scan', 0);
+            props.context.cursor.setType(CursorType.Text, 0);
         }
         if (!editing.value) return;
         const selection = props.context.textSelection;
@@ -167,7 +166,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 function mouseenter() {
-    if (editing.value) props.context.cursor.setType('scan', 0);
+    if (editing.value) props.context.cursor.setType(CursorType.Text, 0);
 }
 
 function mouseleave() {

@@ -20,13 +20,12 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY], selectedShape
         const shape = childs[ids];
         if (selectedShapes.get(shape.id) || !shape.isVisible) continue;
         const m = childs[ids].matrix2Root();
-        const { width, height } = shape.frame;
-        const max_border = getShapeBorderMax(shape) * 6;
+        const { width, height, x, y } = shape.outerFrame;
         const { left, top, right, bottom } = getShadowMax(shape);
-        const _x = - (left + max_border);
-        const _y = - (top + max_border);
-        const _w = (left + max_border) + (right + max_border);
-        const _h = (top + max_border) + (bottom + max_border);
+        const _x = x - left;
+        const _y = y - top;
+        const _w = left + right;
+        const _h = top + bottom;
         const ps: XY[] = [{ x: _x, y: _y }, { x: width + _w, y: _y }, { x: width + _w, y: height + _h }, { x: _x, y: height + _h }, { x: _x, y: _y }];
         for (let i = 0; i < 5; i++) {
             const p = ps[i];
@@ -41,22 +40,6 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY], selectedShape
 
 function private_set(key: string, value: ShapeView, selectedShapes: Map<string, ShapeView>) {
     selectedShapes.set(key, value);
-}
-
-export const getShapeBorderMax = (shape: ShapeView) => {
-    const borders = shape.getBorders();
-    if (!borders.length) return 0;
-    const max_b = [0];
-    for (let i = 0; i < borders.length; i++) {
-        const border = borders[i];
-        if (border.position === BorderPosition.Outer) {
-            max_b.push(border.thickness / 2);
-        } else if (border.position === BorderPosition.Inner) {
-            continue;
-        }
-        max_b.push(border.thickness);
-    }
-    return Math.max(...max_b);
 }
 
 export const getShadowMax = (shape: ShapeView) => {
@@ -107,11 +90,8 @@ export const parentIsArtboard = (shape: ShapeView) => {
     let result: ShapeView | undefined = undefined;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        if (p.type === ShapeType.Artboard) {
-            result = p;
-            break;
-        }
-        p = p.parent;
+        result = p;
+        break;
     }
     return result;
 }
@@ -119,8 +99,8 @@ export const parentIsArtboard = (shape: ShapeView) => {
 export const getPageBounds = (page: PageView) => {
     const childs = page.childs as ShapeView[];
     const { x, y, width, height } = page.frame;
-    if (!childs) return { x, y, width, height };
-    const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape));
+    if (!(childs.length > 0)) return { x, y, width, height };
+    const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group));
     const page_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(page_bounds_points);
     const min_p = getMinPoint(page_bounds_points);
@@ -132,41 +112,20 @@ export const getPageBounds = (page: PageView) => {
     };
 }
 
-export const getShapeMaxBounds = (shape: Shape, x: number, y: number, width: number, height: number) => {
-    let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-    if (shape.isFlippedVertical) rotate = 360 - rotate;
-    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-    const radian = rotate * Math.PI / 180;
-    const sin = Math.sin(radian);
-    const cos = Math.cos(radian);
-    const newx = Math.abs(x * cos) + Math.abs(y * sin);
-    const newy = Math.abs(x * sin) + Math.abs(y * cos);
-    const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
-    const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
-    return {
-        x: newx,
-        y: newy,
-        width: newWidth,
-        height: newHeight,
-        rotate: rotate
-    };
-}
-
-
-// 对图片上任意点(x,y)，绕一个坐标点(rx0,ry0)逆时针旋转a角度后的新的坐标设为(x0, y0)，公式：
-// x0= (x - rx0)*cos(a) - (y - ry0)*sin(a) + rx0 ;    y0= (x - rx0)*sin(a) + (y - ry0)*cos(a) + ry0 ;
 export const getGroupChildBounds = (shape: ShapeView) => {
     const childs = shape.childs as ShapeView[];
     const { x, y, width, height } = shape.frame;
     if (!childs) return { x, y, width, height };
-    const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape));
+    const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group));
     const group_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
+    const m = shape.matrix2Root();
+    const xy = m.computeCoord2(x, y);
+    
     return {
-        x: min_p.x,
-        y: min_p.y,
+        x: xy.x + min_p.x,
+        y: xy.y + min_p.y,
         width: max_p.x - min_p.x,
         height: max_p.y - min_p.y
     }
@@ -176,53 +135,25 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
     const bounds_points = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const max_border = getShapeBorderMax(shape);
         const { left, top, right, bottom } = getShadowMax(shape);
-        const l = (left + max_border);
-        const t = (top + max_border);
-        const r = (left + max_border) + (right + max_border);
-        const b = (top + max_border) + (bottom + max_border);
-        let frame = shape.frame;
-        const cx = (frame.x + frame.width - frame.x + 1) / 2 + frame.x;
-        const cy = (frame.y + frame.height - frame.y + 1) / 2 + frame.y;
-        let rotate = shape.rotation || 0;
-        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-        if (shape.isFlippedVertical) rotate = 360 - rotate;
-        rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+        const frame = shape._p_outerFrame;
         const points = [];
-        const p1 = getRotatePoint(frame.x - l, frame.y - t, rotate, cx, cy);
-        const p2 = getRotatePoint(frame.x + frame.width + r, frame.y - t, rotate, cx, cy);
-        const p3 = getRotatePoint(frame.x + frame.width + r, frame.y + frame.height + b, rotate, cx, cy);
-        const p4 = getRotatePoint(frame.x - l, frame.y + frame.height + b, rotate, cx, cy);
+        const width = frame.width + left + right;
+        const height = frame.height + top + bottom;
+        const p1 = { x: frame.x - left, y: frame.y - top }
+        const p2 = { x: frame.x + width, y: frame.y - top }
+        const p3 = { x: frame.x + width, y: frame.y + height }
+        const p4 = { x: frame.x - left, y: frame.y + height }
         points.push(p1, p2, p3, p4);
         let max_point = getMaxPoint(points);
         let min_point = getMinPoint(points);
-        let p = shape.parent;
-        if (p && p.type !== ShapeType.Page) {
-            while (p) {
-                if (p.type === ShapeType.Page) {
-                    break;
-                }
-                if (!p) break;
-                const p_farme = p.frame;
-                max_point = {
-                    x: max_point.x + p_farme.x,
-                    y: max_point.y + p_farme.y
-                }
-                min_point = {
-                    x: min_point.x + p_farme.x,
-                    y: min_point.y + p_farme.y
-                }
-                p = p.parent;
-            }
-        }
         bounds_points.push(max_point, min_point);
     }
     return bounds_points;
 }
 export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
     return shapes.reduce((result: any, item: ShapeView) => {
-        if (item.type === ShapeType.Group && !(item as GroupShapeView).data.isBoolOpShape) {
+        if (item.type === ShapeType.Group) {
             const childs = (item).childs as ShapeView[];
             if (Array.isArray(childs)) {
                 result = result.concat(flattenShapes(childs));
@@ -232,19 +163,9 @@ export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
     }, []);
 }
 
-// 一个点沿着另一个点旋转后的位置
-const getRotatePoint = (x: number, y: number, rotate: number, cx: number, cy: number) => {
-    const radian = rotate * Math.PI / 180;
-    const sin = Math.sin(radian);
-    const cos = Math.cos(radian);
-    const x0 = (x - cx) * cos - (y - cy) * sin + cx
-    const y0 = (x - cx) * sin + (y - cy) * cos + cy
-    return { x: x0, y: y0 }
-}
-
 const getMaxPoint = (points: { x: number, y: number }[]) => {
-    let max_x = 0;
-    let max_y = 0;
+    let max_x = points[0].x;
+    let max_y = points[0].y;
     for (let i = 0; i < points.length; i++) {
         const point = points[i];
         if (point.x > max_x) max_x = point.x;

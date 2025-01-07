@@ -1,1 +1,0 @@
-type getTokenFuncAsync = () => Promise<string>

@@ -22,6 +22,9 @@ const trans = ref({ x: 0, y: 0 });
 const rotate = ref(0);
 const isSizeBox = ref(false);
 const getShapePositionSize = () => {
+    if (!props.context.tool.isLable) {
+        return;
+    }
     const shapes = props.context.selection.selectedShapes;
     const matrix = props.context.workspace.matrix;
     trans.value.x = 0;
@@ -34,7 +37,7 @@ const getShapePositionSize = () => {
         shapeSize.value.h = framePoint[2].y;
         m.multiAtLeft(matrix);
         framePoint = framePoint.map(p => m.computeCoord(p.x, p.y));
-        let anchor = modify_anchor(shapes[0], m);
+        let anchor = modify_anchor(shapes[0], m.toMatrix());
         origin.x = anchor.x;
         origin.y = anchor.y + 6;
         trans.value.x = 0;
@@ -66,18 +69,18 @@ const getShapePositionSize = () => {
 }
 function pre_modify_anchor(shape: ShapeView) {
     let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = rotate + 270;
-    if (shape.isFlippedVertical) {
-        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
-    }
+    // if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    // if (shape.isFlippedVertical) {
+    //     rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    // }
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     return rotate;
 }
 
 function modify_rotate(shape: ShapeView) {
     let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-    if (shape.isFlippedVertical) rotate = 360 - rotate;
+    // if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+    // if (shape.isFlippedVertical) rotate = 360 - rotate;
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     if (rotate >= 0 && rotate < 45) {
     } else if (rotate >= 45 && rotate < 135) {
@@ -97,44 +100,44 @@ function modify_anchor(shape: ShapeView, m2r: Matrix) {
     let anchor = { x: 0, y: 0 };
     if (rotate >= 0 && rotate < 45) {
         anchor = m2r.computeCoord2(frame.width / 2, frame.height);
-        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width, frame.height / 2);
-        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width, frame.height / 2);
-        }
+        // if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        // } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        // }
     } else if (rotate >= 45 && rotate < 135) {
         anchor = m2r.computeCoord2(frame.width, frame.height / 2);
-        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width / 2, 0);
-        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width / 2, 0);
-        }
+        // if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(frame.width / 2, 0);
+        // } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(frame.width / 2, 0);
+        // }
     } else if (rotate >= 135 && rotate < 225) {
         anchor = m2r.computeCoord2(frame.width / 2, 0);
-        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(0, frame.height / 2);
-        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(0, frame.height / 2);
-        }
+        // if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(0, frame.height / 2);
+        // } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(0, frame.height / 2);
+        // }
     } else if (rotate >= 225 && rotate < 315) {
         anchor = m2r.computeCoord2(0, frame.height / 2);
-        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width / 2, frame.height);
-        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width / 2, frame.height);
-        }
+        // if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(frame.width / 2, frame.height);
+        // } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(frame.width / 2, frame.height);
+        // }
     } else if (rotate >= 315 && rotate <= 360) {
         anchor = m2r.computeCoord2(frame.width / 2, frame.height);
-        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width, frame.height / 2);
-        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width, frame.height / 2);
-        }
+        // if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        // } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        //     anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        // }
     }
     return anchor;
 }
 
-function selectionWatcher(t: number) {
+function selectionWatcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         watchShapes();
         getShapePositionSize();
@@ -143,7 +146,7 @@ function selectionWatcher(t: number) {
         size_box_show();
     }
 }
-const workspaceUpdate = (t: number) => {
+const workspaceUpdate = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         getShapePositionSize();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
@@ -155,6 +158,7 @@ const workspaceUpdate = (t: number) => {
 const tool_watcher = (t: number) => {
     if (t === Tool.LABLE_CHANGE) {
         size_box_show();
+        getShapePositionSize();
     }
 }
 const watchedShapes = new Map();

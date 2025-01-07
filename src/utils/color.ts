@@ -29,3 +29,7 @@ export function toHex(options: {
     }
     return "#" + toHex(options.red) + toHex(options.green) + toHex(options.blue);
 }
+
+export function getRandomColor() {
+    return '#' + Math.floor(Math.random()*16777215).toString(16);
+  }

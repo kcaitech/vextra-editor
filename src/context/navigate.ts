@@ -17,6 +17,9 @@ export class Navi extends WatchableObject {
     static MODULE_CHANGE = 10;
     static ITEM_DRAG = 11;
     static TO_SEARCH = 12;
+    static COMP_LIST_CHANGED = 13;
+    static LIST_FOLD = 14;
+    static RENAME = 15;
     private m_page_need_extend: boolean = false;
     private m_focus_text: TextSelection | undefined;
     private m_keywords: string = '';
@@ -92,6 +95,7 @@ export class Navi extends WatchableObject {
     }
 
     set_current_navi_module(v: "Shape" | "Comps" | "Resource" | "Comment") {
+        if(v == this.m_cur_module) return;
         this.m_cur_module = v;
         this.notify(Navi.MODULE_CHANGE);
     }

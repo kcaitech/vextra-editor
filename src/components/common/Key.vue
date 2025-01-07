@@ -1,30 +1,29 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
-interface Props {
-  code: string
-}
-const props = defineProps<Props>();
+
+const props = defineProps<{
+    code: string
+}>();
+
 const render_code = ref<string>(props.code);
+
 function is_mac() {
-  return /macintosh|mac os x/i.test(navigator.userAgent);
-}
-function init_code() {
-  if (is_mac()) {
-    let src = props.code;
-    src = src.replace(/ctrl|Ctrl/g, "⌘");
-    src = src.replace(/shift|Shift/g, "⇧");
-    src = src.replace(/alt|Alt/g, "⌥");
-    render_code.value = src;
-  }
+    return /macintosh|mac os x/i.test(navigator.userAgent);
 }
 
-onMounted(() => {
-  init_code();
-})
+function init_code() {
+    if (!is_mac()) return;
+    let src = props.code;
+
+    render_code.value = src
+        .replace(/ctrl|Ctrl/g, "⌘")
+        .replace(/shift|Shift/g, "⇧")
+        .replace(/alt|Alt/g, "⌥");
+}
+
+onMounted(init_code);
 </script>
 
 <template>
-  <span>
-    {{ render_code }}
-  </span>
+<span>{{ render_code }}</span>
 </template>

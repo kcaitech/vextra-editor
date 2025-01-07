@@ -1,24 +1,34 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
-import { Comment } from "./comment";
+// import { Comment } from "./comment";
+import { ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
+import { XY } from "@/context/selection";
+import { ContextEvents } from "@/openapi";
+import { AnchorType } from "@/components/Document/Attribute/Scale/index";
 
-export enum Action {
-    Auto = 'auto',
-    AutoV = 'drag',
-    AutoK = 'scale',
-    AddRect = 'add-rect',
-    AddLine = 'add-line',
-    AddEllipse = 'add-ellipse',
-    AddArrow = 'add-arrow',
-    AddFrame = 'add-frame',
-    AddText = 'add-text',
-    AddComment = 'add-comment',
-    AddImage = 'add-image',
-    AddTable = 'table',
-    AddContact = 'add-contact',
-    AddCutout = 'add-cutout',
-    Curve = 'curve',
-    PathClip = 'path-clip'
+const _uuid = '-E9BB37D8-8853-D650-4EF1-ACCF4E2D4BE5'
+
+export const Action = {
+    Auto: 'auto' + _uuid,
+    AutoV: 'drag' + _uuid,
+    AutoK: 'scale' + _uuid,
+    AddRect: 'add-rect' + _uuid,
+    AddLine: 'add-line' + _uuid,
+    AddEllipse: 'add-ellipse' + _uuid,
+    AddArrow: 'add-arrow' + _uuid,
+    AddFrame: 'add-frame' + _uuid,
+    AddText: 'add-text' + _uuid,
+    AddImage: 'add-image' + _uuid,
+    AddTable: 'table' + _uuid,
+    AddContact: 'add-contact' + _uuid,
+    AddCutout: 'add-cutout' + _uuid,
+    Curve: 'curve' + _uuid,
+    PathClip: 'path-clip' + _uuid,
+    Pen: 'add-vector' + _uuid,
+    Pencil: 'add-free-path' + _uuid,
+    Polygon: 'add-polygon' + _uuid,
+    Star: 'add-star' + _uuid,
+    Export: 'export' + _uuid,
 }
 
 const A2R = new Map([
@@ -33,16 +43,28 @@ const A2R = new Map([
     [Action.AddTable, ShapeType.Table],
     [Action.AddContact, ShapeType.Contact],
     [Action.AddCutout, ShapeType.Cutout],
+    [Action.Polygon, ShapeType.Polygon],
+    [Action.Star, ShapeType.Star],
 ]);
 
-export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
+export const ResultByAction = (action: string): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
+
+export interface Block {
+    dataStart: number; // 刻度值
+    dataEnd: number;
+
+    offsetStart: number; // 客户端视图偏移值
+    offsetEnd: number;
+
+    hidden?: boolean; // 隐藏间距小的端点
+}
 
 export class Tool extends WatchableObject {
     static CHANGE_ACTION = 1;
     static GROUP = 2;
     static UNGROUP = 3;
     static COMPS = 4;
-    static TITILE_VISIBLE = 5;
+    static TITLE_VISIBLE = 5;
     static INSERT_FRAME = 6;
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
@@ -50,7 +72,15 @@ export class Tool extends WatchableObject {
     static NEW_FILE = 9;
     static COMPONENT = 10;
     static SELECT_IMAGE = 11;
-    private m_current_action: Action = Action.AutoV;
+    static BLOCKS_CHANGE = 12;
+    static CUTOUT_VISIBLE = 13;
+    static RULE_RENDER = 14;
+    static RULE_RENDER_SIM = 15;
+    static HOVER_REFER_CHANGE = 16;
+    static REFER_FOCUS_CHANGE = 17;
+    static RULE_CLEAR = 18;
+    static SCALE_ANCHOR_CHANGE = 19;
+    private m_current_action: string = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
@@ -59,6 +89,7 @@ export class Tool extends WatchableObject {
     private m_contact_apex: ShapeView | undefined;
     private m_contact_from: boolean = false;
     private m_lable_status: boolean = false;
+    private m_cutout_visible = true;
 
     constructor(context: Context) {
         super();
@@ -69,155 +100,43 @@ export class Tool extends WatchableObject {
         return this.m_current_action;
     }
 
-    keyhandle(e: KeyboardEvent) {
-        const { target, code, shiftKey, ctrlKey, metaKey, altKey } = e;
-        if (target instanceof HTMLInputElement) return;
-        if (code === 'KeyR') {
-            if (!(ctrlKey || shiftKey)) e.preventDefault();
-            this.keydown_r(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyV') {
-            e.preventDefault();
-            this.keydown_v(ctrlKey, metaKey);
-        } else if (code === 'KeyL') {
-            this.keydown_l(shiftKey);
-        } else if (code === 'KeyK') {
-            this.keydown_k(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyO') {
-            e.preventDefault();
-            this.keydown_o(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyC') {
-            e.preventDefault();
-            this.keydown_c(ctrlKey, metaKey, shiftKey)
-        } else if (code === 'KeyG') {
-            e.preventDefault();
-            this.keydown_g(ctrlKey, metaKey, shiftKey, altKey);
-        } else if (code === 'KeyT') {
-            e.preventDefault();
-            this.keydown_t(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyF') {
-            e.preventDefault();
-            this.keydown_f(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyX') {
-            e.preventDefault();
-            this.keydown_x(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyS') {
-            e.preventDefault();
-            this.keydown_s(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyI') {
-            e.preventDefault();
-            this.keydown_i(ctrlKey, metaKey, shiftKey);
-        }
-    }
-
-    setAction(action: Action) {
-        this.m_current_action = action;
-        if (action.startsWith('add')) {
-            this.m_context.menu.menuMount();
-
-            this.m_context.esctask.save('tool-action', this.reset.bind(this));
-
-            if (action === Action.AddComment) {
-                if (this.m_context.workspace.documentPerm === 1) {
-                    return;
-                }
-
-                this.m_context.comment.commentInput(false);
-                this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
-                this.m_context.cursor.setType('comment', 0);
-            } else {
-                this.m_context.cursor.setType('cross', 0);
-            }
-
-        } else {
-            this.m_context.cursor.reset();
-        }
+    setAction(uuid: string) {
+        this.m_current_action = uuid;
+        // 各功能各自控制
+        // if (uuid.startsWith('add')) {
+        //     this.m_context.menu.menuMount();
+        //     this.m_context.escstack.save('tool-action', this.reset.bind(this));
+        //     // if (action === Action.AddComment) {
+        //     //     if (this.m_context.workspace.documentPerm === 1) {
+        //     //         return;
+        //     //     }
+        //     //     this.m_context.comment.commentInput(false);
+        //     //     this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
+        //     //     this.m_context.cursor.setType('comment', 0);
+        //     // } else if (uuid === Action.Pen) {
+        //         this.m_context.cursor.setType('pen', 0);
+        //     } else {
+        //         this.m_context.cursor.setType('cross', 0);
+        //     }
+        // } else {
+        //     this.m_context.cursor.reset();
+        // }
 
         this.notify(Tool.CHANGE_ACTION);
+        this.m_context.notify(ContextEvents.action_change)
     }
 
     reset() {
         let exe_result: boolean = false;
-        if (this.m_current_action.startsWith('add')) {
+        const action = this.m_current_action;
+        if (action !== Action.AutoV && action !== Action.AutoK) {
             exe_result = true;
         }
         this.m_current_action = Action.AutoV;
         this.m_context.cursor.reset();
         this.notify(Tool.CHANGE_ACTION);
+        this.m_context.notify(ContextEvents.action_change)
         return exe_result;
-    }
-
-    keydown_r(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (ctrl || shift || meta) return;
-        this.setAction(Action.AddRect);
-    }
-
-    keydown_v(ctrlKey: boolean, metaKey: boolean) {
-        if (ctrlKey || metaKey) return;
-        this.setAction(Action.AutoV);
-    }
-
-    keydown_l(shiftKey: boolean) {
-        this.setAction(shiftKey ? Action.AddArrow : Action.AddLine);
-    }
-
-    keydown_k(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (!(ctrl || meta || shift)) {
-            this.setAction(Action.AutoK);
-        }
-    }
-
-    keydown_o(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (ctrl || shift || meta) return;
-        this.setAction(Action.AddEllipse);
-    }
-
-    keydown_f(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (ctrl || shift || meta) return;
-        this.setAction(Action.AddFrame);
-    }
-
-    keydown_t(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (ctrl || shift || meta) return;
-        this.setAction(Action.AddText);
-    }
-
-    keydown_c(ctrl: boolean, meta: boolean, shift: boolean) {
-        if (ctrl || meta || shift) return;
-        this.setAction(Action.AddComment);
-    }
-
-    keydown_g(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
-        if ((ctrl || meta) && !shift) { // 编组
-            if (alt) {
-                this.notify(Tool.GROUP, alt);
-            } else {
-                this.notify(Tool.GROUP);
-            }
-        } else if ((ctrl || meta) && shift) {
-            this.notify(Tool.UNGROUP);
-        }
-    }
-
-    keydown_n(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
-        if ((ctrl || meta) && !shift && !alt) {
-            this.notify(Tool.NEW_FILE);
-        }
-    }
-
-    keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
-        // todo
-        if (shift) {
-            this.notify(Tool.COMPONENT);
-        }
-    }
-
-    keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
-        if (ctrl || meta || shift) return;
-        this.setAction(Action.AddContact);
-    }
-    keydown_s(ctrl: boolean, meta: boolean, shift: boolean) {
-        if (ctrl || meta || shift) return;
-        this.setAction(Action.AddCutout);
     }
 
     get isShowTitle() {
@@ -226,7 +145,16 @@ export class Tool extends WatchableObject {
 
     setTitleVisible(val: boolean) {
         this.m_show_title = val;
-        this.notify(Tool.TITILE_VISIBLE);
+        this.notify(Tool.TITLE_VISIBLE);
+    }
+
+    get isCutoutVisible() {
+        return this.m_cutout_visible;
+    }
+
+    setCutoutVisible(v: boolean) {
+        this.m_cutout_visible = v;
+        this.notify(Tool.CUTOUT_VISIBLE);
     }
 
     get frameSize(): { size: { width: number, height: number }, name: string } {
@@ -260,7 +188,7 @@ export class Tool extends WatchableObject {
     }
 
     resetContactApex() {
-        const needNotify = this.m_contact_apex ? true : false;
+        const needNotify = !!this.m_contact_apex;
         this.m_contact_apex = undefined;
         if (needNotify) {
             this.notify(Tool.CHANGE_CONTACT_APEX);
@@ -282,5 +210,36 @@ export class Tool extends WatchableObject {
     setLableSwitch(v: boolean) {
         this.m_lable_status = v;
         this.notify(Tool.LABLE_CHANGE);
+    }
+
+    private m_refer_selection: ReferLineSelection | undefined;
+
+    setReferSelection(rs: ReferLineSelection | undefined) {
+        this.m_refer_selection = rs;
+    }
+
+    get referSelection() {
+        return this.m_refer_selection;
+    }
+
+    private m_refer_finer: ((xy: XY) => boolean) | undefined;
+
+    setReferFiner(func: (xy: XY) => boolean) {
+        this.m_refer_finer = func;
+    }
+
+    get referFinder() {
+        return this.m_refer_finer
+    }
+
+    private m_scale_anchor: AnchorType = AnchorType.Center;
+
+    setScaleAnchor(t: AnchorType) {
+        this.m_scale_anchor = t;
+        this.notify(Tool.SCALE_ANCHOR_CHANGE);
+    }
+
+    get scaleAnchor() {
+        return this.m_scale_anchor;
     }
 }

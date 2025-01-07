@@ -19,7 +19,7 @@ const props = defineProps<{
 <style scoped lang="scss">
 .header-container {
     width: 100%;
-    min-height: 44px;
+    min-height: 28px;
     box-sizing: border-box;
     position: relative;
     display: flex;

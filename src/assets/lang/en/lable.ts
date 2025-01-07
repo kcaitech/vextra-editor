@@ -21,7 +21,7 @@ export const lable = {
     raduis: 'raduis',
     opacity: 'opacity',
     select_multiple_layers: 'Already select multiple layers',
-    development_platform:'Development platform',
+    development_platform: 'Development platform',
     applet_of_WeChat: 'Applet of WeChat',
     pixel: 'pixel',
     copied: 'copied',

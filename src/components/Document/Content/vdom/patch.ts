@@ -1,16 +1,21 @@
-import { EL, ShapeView } from "@kcdesign/data";
+import { EL } from "@kcdesign/data";
 import _ from "lodash";
+
 const xmlns = "http://www.w3.org/2000/svg";
 const xlink = "http://www.w3.org/1999/xlink";
 const xhtml = "http://www.w3.org/1999/xhtml";
 
+const htmlelement: { [key: string]: 1 } = {
+    'div': 1,
+    'canvas': 1,
+}
+
 export function createElement(tag: string): HTMLElement | SVGElement {
-    // if (tag === "foreignObject") return document.createElement("foreignObject");
-    if (tag === "div") return document.createElement("div");
+    if (htmlelement[tag]) return document.createElement(tag);
     return document.createElementNS(xmlns, tag);
 }
 
-export function setAttribute(el: HTMLElement | SVGElement, key: string, value: string | { [key: string]: string }) {
+export function setAttribute(el: HTMLElement | SVGElement, key: string, value: (string | number) | { [key: string]: (string | number) }) {
     if (typeof value === 'object') {
         // parse value
         const attr = value as { [key: string]: string };
@@ -22,6 +27,7 @@ export function setAttribute(el: HTMLElement | SVGElement, key: string, value: s
 
         value = style;
     }
+    if (typeof value === 'number') value = String(value);
     if (key === "xlink:href" || key === "href") {
         el.setAttributeNS(xlink, key, value);
     } else {
@@ -29,7 +35,9 @@ export function setAttribute(el: HTMLElement | SVGElement, key: string, value: s
     }
 }
 
-export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: { [key: string]: string | { [key: string]: string } }, oldattrs: { [key: string]: string | { [key: string]: string } } = {}) {
+export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: {
+    [key: string]: (string | number) | { [key: string]: (string | number) }
+}, oldattrs: { [key: string]: (string | number) | { [key: string]: (string | number) } } = {}) {
     const tkeys = Object.keys(attrs);
     const okeys = Object.keys(oldattrs);
     for (let i = 0; i < tkeys.length; i++) {
@@ -48,6 +56,7 @@ export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: { [key: s
     }
 }
 
+
 function inner_elpatch(tar: EL, old: EL | undefined) {
     let _old = old as EL & { el?: HTMLElement | SVGElement } | undefined;
     const _tar = tar as EL & { el?: HTMLElement | SVGElement };
@@ -62,14 +71,12 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
     if (!_tar.el) {
         if (_old && _old.el && _old.eltag === _tar.eltag) { // 也是要判断下的
             _tar.el = _old.el;
-        }
-        else {
+        } else {
             _tar.el = createElement(_tar.eltag);
             if (!_tar.el) throw new Error("can not create element: " + _tar.eltag);
             _old = undefined;
         }
-    }
-    else if (_tar.el.tagName !== _tar.eltag) {
+    } else if (_tar.el.tagName !== _tar.eltag) {
         const el = createElement(_tar.eltag);
         if (!el) throw new Error("can not create element: " + _tar.eltag);
         // if (_tar.el.parentNode) {
@@ -77,6 +84,8 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
         // }
         _tar.el = el;
         _old = undefined;
+    } else {
+        // todo 脱离文档更新？
     }
 
     // attr
@@ -85,7 +94,7 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
     // string
     if (!Array.isArray(_tar.elchilds)) {
         if (!_old || _old.elchilds !== _tar.elchilds) {
-            _tar.el.innerHTML = _tar.elchilds;
+            _tar.el.innerHTML = (_tar.elchilds);
         }
         return;
     }
@@ -110,19 +119,18 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
             const ochild = _old && getResue(tchild, _old, i) as (EL & { el?: HTMLElement | SVGElement }) | undefined;
             inner_elpatch(tchild, ochild); // 由view节点自己patch
         }
-        if (!tchild.el) {
+        if (!tchild.el) { // 子对象渲染完后，parent也需要渲染
             // 是可能的
             // throw new Error("something wrong");
-            continue;
+            tchild.el = createElement('g');
+            // continue;
         }
         const childNodes = _tar.el.childNodes;
         if (childNodes[idx] === tchild.el) {
             //
-        }
-        else if (childNodes[idx]) {
+        } else if (childNodes[idx]) {
             _tar.el.insertBefore(tchild.el, childNodes[idx]);
-        }
-        else {
+        } else {
             _tar.el.appendChild(tchild.el);
         }
         ++idx;
@@ -140,22 +148,41 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
 }
 
 export function elpatch(tar: EL, old: EL | undefined) {
-    inner_elpatch(tar, old);
-
     const _old = old as EL & { el?: HTMLElement | SVGElement } | undefined;
     const _tar = tar as EL & { el?: HTMLElement | SVGElement };
+    
+    // todo 待验证是否有用
+    // let _tar_el: HTMLElement | SVGElement | undefined;
+    // if (_tar.el) {
+    //     _tar_el = _tar.el;
+    //     _tar_el.style.display = 'none'
+    // }
+
+    // let _old_el: HTMLElement | SVGElement | undefined;
+    // if (_old?.el) {
+    //     _old_el = _old.el;
+    //     _old_el.style.display = 'none'
+    // }
+
+    inner_elpatch(tar, old);
+
     if (!_tar.el?.parentNode && _old?.el?.parentNode) { // 未加入到dom
         const newel = _tar.el;
         const oldel = _old?.el!;
         const p = oldel?.parentNode!;
         if (newel === oldel) {
             // nothing
-        }
-        else if (newel) {
+        } else if (newel) {
             p.replaceChild(newel, oldel);
-        }
-        else {
+        } else {
             p.removeChild(oldel);
         }
     }
+
+    // if (_tar_el) {
+    //     _tar_el.style.display = ''
+    // }
+    // if (_old_el) {
+    //     _old_el.style.display = ''
+    // }
 }

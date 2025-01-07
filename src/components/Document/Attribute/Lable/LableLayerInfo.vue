@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import LableType from './LableType.vue'
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import { get_height, get_rotation, get_width, get_xy } from '@/utils/attri_setting';
-import { GroupShapeView, RectShapeView, PathShapeView, PathShapeView2, ShapeType, ShapeView, TextShapeView } from '@kcdesign/data';
+import { ShapeView } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
 import LableTootip from './LableTootip.vue';
 import { useI18n } from 'vue-i18n'
@@ -17,13 +17,13 @@ const name = ref('');
 const xy = ref({ x: 0, y: 0 });
 const size = ref({ w: 0, h: 0 });
 const rotate = ref(0);
-const radius = ref<{ lt: number, rt: number, rb: number, lb: number }>({ lt: 0, rt: 0, rb: 0, lb: 0 });
+let radius = reactive<{ lt: number, rt: number, rb: number, lb: number }>({ lt: 0, rt: 0, rb: 0, lb: 0 });
 const watchedShapes = new Map();
 const unit = ['pt', 'px', 'dp', 'rpx'];
 const copy_text = ref(false);
 
 const _visible = ref();
-const platfrom = ref(props.context.menu.isPlatfrom);
+const platfrom = ref(props.context.menu.isPlatform);
 const multiple = ref(props.context.menu.isMulriple);
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
@@ -54,21 +54,19 @@ const getShapeInfo = () => {
 }
 
 const getRadius = (shape: ShapeView) => {
-    if (shape.type === ShapeType.Rectangle) {
-        const { lb, lt, rb, rt } = (shape as RectShapeView).getRectRadius();
-        radius.value.lb = lb * multiple.value;
-        radius.value.lt = lt * multiple.value;
-        radius.value.rb = rb * multiple.value;
-        radius.value.rt = rt * multiple.value;
-    } else if (shape instanceof GroupShapeView ||
-        shape instanceof PathShapeView ||
-        shape instanceof PathShapeView2 ||
-        shape instanceof TextShapeView) {
-        const fixedRadius = shape.fixedRadius ?? 0;
-        radius.value.lt = fixedRadius * multiple.value;
-        radius.value.lb = fixedRadius * multiple.value;
-        radius.value.rt = fixedRadius * multiple.value;
-        radius.value.rb = fixedRadius * multiple.value;
+    const r = shape.radius;
+    if (r.length === 4) {
+        radius.lt = r[0] * multiple.value;
+        radius.rt = r[1] * multiple.value;
+        radius.rb = r[2] * multiple.value;
+        radius.lb = r[3] * multiple.value;
+    } else {
+        const mixed = r.every((v: number) => v === r[0]);
+        if(!mixed) return radius = { lt: 0, rt: 0, rb: 0, lb: 0 };
+        radius.lt = r[0] * multiple.value;
+        radius.rt = r[0] * multiple.value;
+        radius.rb = r[0] * multiple.value;
+        radius.lb = r[0] * multiple.value;
     }
 }
 function selection_wather(t: any) {
@@ -116,8 +114,8 @@ const copyLable = async (e: MouseEvent, v: string) => {
 }
 
 const menu_watcher = (t: number) => {
-    if (t === Menu.LABLE_PLATFROM_CHANGE) {
-        platfrom.value = props.context.menu.isPlatfrom;
+    if (t === Menu.LABLE_PLATFORM_CHANGE) {
+        platfrom.value = props.context.menu.isPlatform;
         getShapeInfo();
     }
     if (t === Menu.LABLE_MULRIPLE) {
@@ -146,7 +144,7 @@ onUnmounted(() => {
                 <div class="row">
                     <span class="named">{{ t('lable.name') }}</span>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'name'">
-                        <div><span class="name" @click="(e) => copyLable(e, 'name')"
+                        <div><span class="name hovered" @click="(e) => copyLable(e, 'name')"
                                 style="cursor: pointer;font-weight: 500;"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ name }}</span></div>
                     </LableTootip>
@@ -154,21 +152,22 @@ onUnmounted(() => {
                 <div class="row">
                     <span class="named">{{ t('lable.posi') }}</span>
                     <div style="display: flex;">
-                        <span style="display: block; width: 50%;"><span class="name"
-                                style="color: #8C8C8C; margin-right: 5px;font-weight: 500;">X</span>
+                        <span style="display: flex; width: 50%; align-items: center;"><span class="name"
+                                style="color: #8C8C8C; font-weight: 500;width: 14px">X</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'x'">
-                                <span @click="(e) => copyLable(e, 'x')" style="cursor: pointer;font-weight: 500;"
+                                <span @click="(e) => copyLable(e, 'x')" style="cursor: pointer;font-weight: 500;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">
                                     {{ xy.x }}{{ unit[platfrom] }}
                                 </span>
                             </LableTootip>
                         </span>
-                        <span style="display: block; width: 50%;"><span class="name"
-                                style="color: #8C8C8C; margin-right: 5px;font-weight: 500;">Y</span>
+                        <span style="display: flex; width: 50%; align-items: center;"><span class="name"
+                                style="color: #8C8C8C; font-weight: 500;width: 14px">Y</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'y'">
-                                <span @click="(e) => copyLable(e, 'y')" style="cursor: pointer;font-weight: 500;"
-                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ xy.y }}{{ unit[platfrom]
-                                    }}</span>
+                                <span @click="(e) => copyLable(e, 'y')" style="cursor: pointer;font-weight: 500;" class="hovered"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ xy.y }}{{
+            unit[platfrom]
+        }}</span>
                             </LableTootip>
                         </span>
                     </div>
@@ -176,19 +175,19 @@ onUnmounted(() => {
                 <div class="row">
                     <span class="named">{{ t('lable.size') }}</span>
                     <div style="display: flex;">
-                        <span style="display: block; width: 50%;"><span class="name"
-                                style="color: #8C8C8C; margin-right: 5px;font-weight: 500;">W</span>
+                        <span style="display: flex; width: 50%; align-items: center;"><span class="name"
+                                style="color: #8C8C8C; font-weight: 500; width: 14px; font-size: 10px;">W</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'w'">
-                                <span @click="(e) => copyLable(e, 'w')" style="cursor: pointer;font-weight: 500;"
+                                <span @click="(e) => copyLable(e, 'w')" style="cursor: pointer;font-weight: 500;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">
                                     {{ size.w }}{{ unit[platfrom] }}
                                 </span>
                             </LableTootip>
                         </span>
-                        <span style="display: block; width: 50%;"><span class="name"
-                                style="color: #8C8C8C; margin-right: 5px;font-weight: 500;">H</span>
+                        <span style="display: flex; width: 50%; align-items: center;"><span class="name"
+                                style="color: #8C8C8C; font-weight: 500;width: 14px">H</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'h'">
-                                <span @click="(e) => copyLable(e, 'h')" style="cursor: pointer;font-weight: 500;"
+                                <span @click="(e) => copyLable(e, 'h')" style="cursor: pointer;font-weight: 500;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">
                                     {{ size.h }}{{ unit[platfrom] }}
                                 </span>
@@ -199,7 +198,7 @@ onUnmounted(() => {
                 <div class="row" v-if="rotate > 0">
                     <span class="named">{{ t('lable.rotate') }}</span>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'rotate'">
-                        <div><span @click="(e) => copyLable(e, 'rotate')" style="cursor: pointer;font-weight: 500;"
+                        <div><span @click="(e) => copyLable(e, 'rotate')" style="cursor: pointer;font-weight: 500;" class="hovered"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ rotate }}deg</span></div>
                     </LableTootip>
                 </div>
@@ -210,10 +209,10 @@ onUnmounted(() => {
                 <div class="row" v-if="innerRaduis(radius, unit[platfrom], true)">
                     <span class="named">{{ t('lable.raduis') }}</span>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'radius'">
-                        <div><span class="name" @click="(e) => copyLable(e, 'radius')"
+                        <div><span class="name hovered" @click="(e) => copyLable(e, 'radius')"
                                 style="cursor: pointer;font-weight: 500;"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ innerRaduis(radius,
-                                    unit[platfrom]) }}</span></div>
+                                unit[platfrom]) }}</span></div>
                     </LableTootip>
                 </div>
             </template>
@@ -229,11 +228,15 @@ onUnmounted(() => {
 }
 
 .row {
+    height: 34px;
+    align-items: center;
     display: flex;
-    padding: 9px 0;
     color: #000;
 
     >div {
+        height: 100%;
+        display: flex;
+        align-items: center;
         width: calc(100% - 58px);
         flex: 1;
         overflow: hidden;
@@ -246,5 +249,13 @@ onUnmounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+.hovered {
+    padding: 3px;
+    border-radius: 4px;
+    &:hover {
+        border-radius: 2px;
+        background-color: #EBEBEB;
+    }
 }
 </style>

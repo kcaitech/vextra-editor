@@ -7,6 +7,7 @@ import { throttle } from '../../common';
 import { handleKeyEvent } from './keyhandler';
 import { WorkSpace } from '@/context/workspace';
 import { TextSelectionLite } from "@/context/textselectionlite";
+import { permIsEdit } from '@/utils/permission';
 
 type SelectionLike = TextSelectionLite;
 
@@ -14,7 +15,7 @@ interface Props {
     shape: TextShapeView | TableCellView
     context: Context
     matrix: number[]
-    mainNotify: number
+    mainNotify: number | string
     selection: SelectionLike
     root?: { x: number, y: number }
 }
@@ -66,6 +67,7 @@ function _updateInputPos() {
     }
     const locatepoints = props.shape.locateCursor(index, cursorAtBefore);
     if (!locatepoints) return;
+
     const cursor = locatepoints.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y));
 
     if (cursor.length !== 2) return;
@@ -77,6 +79,7 @@ function _updateInputPos() {
     const root = props.root || props.context.workspace.root;
     inputpos.value.left = x + root.x;
     inputpos.value.top = y + root.y;
+
     inputel.value.focus();
 }
 
@@ -97,15 +100,12 @@ function copy_watcher(event: ClipboardEvent) {
 function cut_watcher(event: ClipboardEvent) {
     event.stopPropagation();
 
-    const write_result = props.context.workspace.clipboard.write(event);
-    if (!write_result) {
-        return;
-    }
+    if (!permIsEdit(props.context)) return;
+
+    if (!props.context.workspace.clipboard.write(event)) return;
 
     const text_shape = props.context.selection.textshape;
-    if (!text_shape) {
-        return;
-    }
+    if (!text_shape) return;
 
     const selection = props.context.textSelection;
     const start = selection.cursorStart;
@@ -113,22 +113,31 @@ function cut_watcher(event: ClipboardEvent) {
     if (start === end) {
         return;
     }
-
+    
     const editor = props.context.editor4TextShape(text_shape);
     if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
         selection.setCursor(Math.min(start, end), false);
     }
-
-
 }
 
 function paste_watcher(event: ClipboardEvent) {
     event.stopPropagation();
     event.preventDefault();
+    if (!permIsEdit(props.context)) {
+        return;
+    }
     props.context.workspace.clipboard.paste_text(event);
 }
 
+
 onMounted(() => {
+    // 自动聚集
+    document.addEventListener('keydown', function (event) {
+        if (document.activeElement?.tagName !== 'INPUT' && props.context.textSelection.cursorStart > -1) {
+            attention();
+            oninput(event);
+        }
+    }, true)
     props.shape.watch(updateInputPos)
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspaceWatcher);
@@ -153,6 +162,7 @@ onUnmounted(() => {
         inputel.value.addEventListener('paste', paste_watcher);
     }
 })
+
 
 function committext() {
     if (!inputel.value) return;
@@ -215,7 +225,7 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        props.selection.setCursor(composingStartIndex + text.length, true);
+        props.selection.setCursor(composingStartIndex + text.length, text.length > 0);
     }
     inputel.value.value = ''
 }

@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1" width="18" height="18" viewBox="0 0 18 18"><defs><clipPath id="master_svg0_945_9841"><rect x="0" y="0" width="18" height="18" rx="0"/></clipPath></defs><g clip-path="url(#master_svg0_945_9841)"><g><path d="M1.92219,16.0778Q2.24436726,16.4,2.7,16.4L15.3,16.4Q15.7557,16.4,16.0778,16.0778Q16.4,15.7557,16.4,15.3L16.4,2.7Q16.4,2.24436729,16.0778,1.92219Q15.7557,1.6,15.3,1.6L2.7,1.6Q2.24436552,1.6,1.922183,1.922183Q1.6,2.24436547,1.6,2.7L1.6,15.3Q1.6,15.7557,1.92219,16.0778ZM2.9,15.1L15.1,15.1L15.1,2.9L2.9,2.9L2.9,15.1Z" fill-rule="evenodd" fill="#FFFFFF" fill-opacity="1"/></g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none"
+    version="1.1" width="18" height="18" viewBox="0 0 18 18">
+    <defs>
+        <clipPath id="master_svg0_945_9841">
+            <rect x="0" y="0" width="18" height="18" rx="0" />
+        </clipPath>
+    </defs>
+    <g clip-path="url(#master_svg0_945_9841)">
+        <g>
+            <path
+                d="M1.92219,16.0778Q2.24436726,16.4,2.7,16.4L15.3,16.4Q15.7557,16.4,16.0778,16.0778Q16.4,15.7557,16.4,15.3L16.4,2.7Q16.4,2.24436729,16.0778,1.92219Q15.7557,1.6,15.3,1.6L2.7,1.6Q2.24436552,1.6,1.922183,1.922183Q1.6,2.24436547,1.6,2.7L1.6,15.3Q1.6,15.7557,1.92219,16.0778ZM2.9,15.1L15.1,15.1L15.1,2.9L2.9,2.9L2.9,15.1Z"
+                fill-rule="evenodd" fill="#FFFFFF" fill-opacity="1" />
+        </g>
+    </g>
+</svg>

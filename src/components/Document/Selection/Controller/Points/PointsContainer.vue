@@ -1,256 +1,292 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
-import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
-import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
-import { get_transform, modify_rotate_before_set, update_dot } from './common';
+import {
+    ColVector3D,
+    CtrlElementType,
+    makeMatrixByTransform2,
+    makeShapeTransform2By1,
+    ShapeView,
+    Transform, XYsBounding
+} from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { SelectionTheme, XY } from '@/context/selection';
+import { forbidden_to_modify_frame } from '@/utils/common';
 import { Point } from "../../SelectionView.vue";
-import { Action } from '@/context/tool';
+import { ScaleHandler } from "@/transform/scale";
+import { WorkSpace } from "@/context/workspace";
+import { RotateHandler } from "@/transform/rotate";
+import { dbl_action } from "@/utils/mouse_interactive";
+import { startEdit } from "@/path/pathEdit";
+import { CursorType } from "@/utils/cursor2";
+import { cursorAngle } from "@/components/Document/Selection/common";
+import { Action } from "@/context/tool";
+import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 interface Props {
-    matrix: number[]
-    context: Context
-    shape: ShapeView
-    axle: { x: number, y: number }
-    cFrame: Point[]
-    theme: SelectionTheme
+    context: Context;
+    shape: ShapeView;
+    axle: { x: number, y: number };
+    cFrame: Point[];
+    theme: SelectionTheme;
 }
 
-interface Dot {
-    point: { x: number, y: number }
-    extra: { x: number, y: number }
-    r: { p: string, transform: string }
-    type: CtrlElementType
-    type2: CtrlElementType
+interface Emits {
+    (e: 'dblclick', event: MouseEvent): void;
+}
+
+interface MainDot {
+    transform: string;
+    type: CtrlElementType;
+}
+
+interface AssistDot {
+    transform: string;
+    type: CtrlElementType;
+    type2: CtrlElementType;
 }
 
 const props = defineProps<Props>();
-const matrix = new Matrix();
-const submatrix = new Matrix();
-const data: { dots: Dot[] } = reactive({ dots: [] });
-const { dots } = data;
-let startPosition: ClientXY = { x: 0, y: 0 };
-let isDragging = false;
-let asyncBaseAction: AsyncBaseAction | undefined = undefined;
-let stickedX: boolean = false;
-let stickedY: boolean = false;
-let sticked_x_v: number = 0;
-let sticked_y_v: number = 0;
+const emits = defineEmits<Emits>();
 
-const dragActiveDis = 3;
+const data: {
+    dots: MainDot[],
+    subDots: AssistDot[]
+} = reactive({
+    dots: [],
+    subDots: []
+});
+
+const { dots, subDots } = data;
+let isDragging = false;
+
+const dragActiveDis = 4;
+const assist = ref<boolean>(false);
+
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 
 let need_reset_cursor_after_transform = true;
 
+let scaler: ScaleHandler | undefined = undefined;
+let rotator: RotateHandler | undefined = undefined;
+
+let downXY: XY = { x: 0, y: 0 };
+
+
 function update() {
-    matrix.reset(props.matrix);
-    update_dot_path();
+    updateDotLayout();
 }
 
-function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
+function updateByShape(...args: any[]) {
+    if (!args.includes('layout')) return;
+    updateDotLayout();
+}
 
+const rotateCtx: {
+    mlt: Transform;
+    mrt: Transform;
+    mrb: Transform;
+    mlb: Transform;
+} = {
+    mlt: new Transform(),
+    mrt: new Transform(),
+    mrb: new Transform(),
+    mlb: new Transform()
+}
+
+function updateDotLayout() {
     dots.length = 0;
-    const frame = props.shape.frame;
-    let lt = matrix.computeCoord2(0, 0);
-    let rt = matrix.computeCoord2(frame.width, 0);
-    let rb = matrix.computeCoord2(frame.width, frame.height);
-    let lb = matrix.computeCoord2(0, frame.height);
+    const shape = props.shape;
+    const { x, y, width, height } = shape.frame;
 
-    dots.push(...update_dot([lt, rt, rb, lb], props.shape));
+    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
+    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
+
+    const fromClient = fromRoot.addTransform(clientMatrix);
+
+    const ltTransform = new Transform()
+        .rotateZ({ angle: Math.PI })
+        .setTranslate(ColVector3D.FromXY(x, y))
+        .addTransform(fromClient)
+        .clearScaleSize();
+
+    const rtTransform = new Transform()
+        .rotateZ({ angle: -0.5 * Math.PI })
+        .setTranslate(ColVector3D.FromXY(x + width, y))
+        .addTransform(fromClient)
+        .clearScaleSize();
+
+    const rbTransform = new Transform()
+        .setTranslate(ColVector3D.FromXY(x + width, y + height))
+        .addTransform(fromClient)
+        .clearScaleSize();
+
+    const lbTransform = new Transform()
+        .rotateZ({ angle: 0.5 * Math.PI })
+        .setTranslate(ColVector3D.FromXY(x, y + height))
+        .addTransform(fromClient)
+        .clearScaleSize();
+
+    dots.push(
+        {
+            type: CtrlElementType.RectLT,
+            transform: makeMatrixByTransform2(ltTransform.clearSkew()).toString(), // 随时准备换回去
+        },
+        {
+            type: CtrlElementType.RectRT,
+            transform: makeMatrixByTransform2(rtTransform.clearSkew()).toString(),
+        },
+        {
+            type: CtrlElementType.RectRB,
+            transform: makeMatrixByTransform2(rbTransform.clearSkew()).toString(),
+        },
+        {
+            type: CtrlElementType.RectLB,
+            transform: makeMatrixByTransform2(lbTransform.clearSkew()).toString(),
+        }
+    )
+
+    subDots.length = 0;
+    const { col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB } = fromClient.clone()
+        .clearTranslate()
+        .clearScaleSize()
+        .transform([
+            ColVector3D.FromXY(-1, -1),
+            ColVector3D.FromXY(1, -1),
+            ColVector3D.FromXY(1, 1),
+            ColVector3D.FromXY(-1, 1)
+        ]);
+
+    const xVector = ColVector3D.FromXY(1, 0);
+
+    const theta1 = cursorAngle(xVector, vecLT);
+    const theta2 = cursorAngle(xVector, vecRT);
+    const theta3 = cursorAngle(xVector, vecRB);
+    const theta4 = cursorAngle(xVector, vecLB);
+
+    const cols = fromClient.transform([
+        ColVector3D.FromXY(x, y),
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x + width, y + height),
+        ColVector3D.FromXY(x, y + height),
+        ColVector3D.FromXY(x + width / 2, y + height / 2),
+    ]);
+
+    const { col0, col1, col2, col3 } = cols;
+
+
+    const box = XYsBounding([{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, {
+        x: col3.x,
+        y: col3.y
+    }]);
+    assist.value = !((box.right - box.left < 24) || (box.bottom - box.top < 24));
+
+    const assistLT = new Transform()
+        .setRotateZ(theta1)
+        .setTranslate(col0);
+    rotateCtx.mlt = assistLT;
+
+    const assistRT = new Transform()
+        .setRotateZ(theta2)
+        .setTranslate(col1);
+    rotateCtx.mrt = assistRT;
+
+    const assistRB = new Transform()
+        .setRotateZ(theta3)
+        .setTranslate(col2);
+    rotateCtx.mrb = assistRB;
+
+    const assistLB = new Transform()
+        .setRotateZ(theta4)
+        .setTranslate(col3);
+    rotateCtx.mlb = assistLB;
+
+    subDots.push(
+        {
+            type: CtrlElementType.RectLT,
+            type2: CtrlElementType.RectLTR,
+            transform: makeMatrixByTransform2(assistLT).toString()
+        },
+        {
+            type: CtrlElementType.RectRT,
+            type2: CtrlElementType.RectRTR,
+            transform: makeMatrixByTransform2(assistRT).toString()
+        },
+        {
+            type: CtrlElementType.RectRB,
+            type2: CtrlElementType.RectRBR,
+            transform: makeMatrixByTransform2(assistRB).toString()
+        },
+        {
+            type: CtrlElementType.RectLB,
+            type2: CtrlElementType.RectLBR,
+            transform: makeMatrixByTransform2(assistLB).toString()
+        }
+    )
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0 || scaler || rotator) return;
 
     event.stopPropagation();
 
-    if (forbidden_to_modify_frame(props.shape)) {
-        return;
+    if (dbl_action()) {
+        emits('dblclick', event);
+        return startEdit(props.context);
     }
 
-    set_status_on_down();
+    if (forbidden_to_modify_frame(props.shape)) return;
 
-    startPosition = props.context.workspace.getContentXY(event);
     cur_ctrl_type = ele;
+
+    if (cur_ctrl_type.endsWith('rotate')) {
+        rotator = new RotateHandler(props.context, event, props.context.selection.selectedShapes);
+    } else {
+        scaler = new ScaleHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
+    }
+
+    downXY = event;
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
 
 function point_mousemove(event: MouseEvent) {
-    const workspace = props.context.workspace;
-    const mouseOnClient: ClientXY = workspace.getContentXY(event);
-
-    const { x: sx, y: sy } = startPosition;
-    const { x: mx, y: my } = mouseOnClient;
-
-    if (isDragging && asyncBaseAction) {
+    if (isDragging) {
         if (cur_ctrl_type.endsWith('rotate')) {
-            let deg = 0;
-            const { x: ax, y: ay } = props.axle;
-
-            deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-            if (props.shape.isFlippedHorizontal) {
-                deg = -deg;
-            }
-            if (props.shape.isFlippedVertical) {
-                deg = -deg;
-            }
-
-            asyncBaseAction.executeRotate(deg);
-
             setCursor(cur_ctrl_type, true);
+            rotator?.execute(event);
         } else {
-            const p1: PageXY = submatrix.computeCoord3(startPosition);
-            let p2: PageXY = submatrix.computeCoord3(mouseOnClient);
-
-            const action = props.context.tool.action;
-            if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
-                p2 = get_t(cur_ctrl_type, p1, p2);
-                asyncBaseAction.executeScale(cur_ctrl_type, p2);
-            } else {
-                scale(asyncBaseAction, p2);
-            }
+            scaler?.execute(event);
         }
 
-        startPosition = { ...mouseOnClient };
-    } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        set_status_before_action();
-
-        submatrix.reset(workspace.matrix.inverse);
-
-        asyncBaseAction = props.context.editor
-            .controller()
-            .asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!);
-
+    } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
+        cur_ctrl_type.endsWith('rotate') ? rotator?.createApiCaller() : scaler?.createApiCaller();
     }
 }
 
 function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
-
+    if (event.button !== 0) return;
     clear_status();
 }
 
-function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
-    if (cct === CtrlElementType.RectLT) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord(pre_delta.x, pre_delta.x * (1 / r));
-    } else if (cct === CtrlElementType.RectRT) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord(f.width + pre_delta.x, -pre_delta.x * (1 / r));
-    } else if (cct === CtrlElementType.RectRB) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
-    } else if (cct === CtrlElementType.RectLB) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord(pre_delta.x, f.height - pre_delta.x * (1 / r));
-    } else return p2
-}
-
-let pre_target_x: number, pre_target_y: number;
-
-function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
-    const stickness = props.context.assist.stickness;
-    const target = props.context.assist.point_match(p2);
-    if (!target) return asyncBaseAction.executeScale(cur_ctrl_type, p2);
-    if (stickedX) {
-        if (Math.abs(p2.x - sticked_x_v) >= stickness) {
-            stickedX = false
-        } else {
-            if (pre_target_x === target.x) {
-                p2.x = sticked_x_v;
-            } else if (target.sticked_by_x) {
-                modify_fix_x(p2, target.x);
-            }
-        }
-    } else if (target.sticked_by_x) {
-        modify_fix_x(p2, target.x);
-    }
-    if (stickedY) {
-        if (Math.abs(p2.y - sticked_y_v) >= stickness) {
-            stickedY = false;
-        } else {
-            if (pre_target_y === target.x) {
-                p2.y = sticked_y_v;
-            } else if (target.sticked_by_y) {
-                modify_fix_y(p2, target.y);
-            }
-        }
-    } else if (target.sticked_by_y) {
-        modify_fix_y(p2, target.y);
-    }
-    asyncBaseAction.executeScale(cur_ctrl_type, p2);
-}
-
-function modify_fix_x(p2: PageXY, fix: number) {
-    p2.x = fix;
-    sticked_x_v = fix;
-    stickedX = true;
-    pre_target_x = fix;
-}
-
-function modify_fix_y(p2: PageXY, fix: number) {
-    p2.y = fix;
-    sticked_y_v = fix;
-    stickedY = true;
-    pre_target_y = fix;
-}
 
 function setCursor(t: CtrlElementType, active = false) {
     const cursor = props.context.cursor;
-    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
-
+    const action = props.context.tool.action;
     // type
-    const type = t.endsWith('rotate') ? 'rotate' : 'scale';
+    const type = t.endsWith('rotate') ? CursorType.Rotate : action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
 
     // rotate
-    let deg = rotate;
-    if (t === CtrlElementType.RectLT) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectRT) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectRB) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectLB) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectLTR) {
-        deg = modify_rotate_before_set(deg + 225, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectRTR) {
-        deg = modify_rotate_before_set(deg + 315, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectRBR) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectLBR) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
+    let deg = 0;
+    if (t === CtrlElementType.RectLT || t === CtrlElementType.RectLTR) {
+        deg = rotateCtx.mlt.decomposeEuler().z * 180 / Math.PI;
+    } else if (t === CtrlElementType.RectRT || t === CtrlElementType.RectRTR) {
+        deg = rotateCtx.mrt.decomposeEuler().z * 180 / Math.PI;
+    } else if (t === CtrlElementType.RectRB || t === CtrlElementType.RectRBR) {
+        deg = rotateCtx.mrb.decomposeEuler().z * 180 / Math.PI;
+    } else if (t === CtrlElementType.RectLB || t === CtrlElementType.RectLBR) {
+        deg = rotateCtx.mlb.decomposeEuler().z * 180 / Math.PI;
     }
 
     active
@@ -268,44 +304,16 @@ function point_mouseleave() {
     props.context.cursor.reset();
 }
 
-function set_status_on_down() {
-    props.context.menu.menuMount();
-
-    props.context.cursor.cursor_freeze(true);
-
-    props.context.workspace.setCtrl('controller');
-}
-
-function set_status_before_action() {
-    const workspace = props.context.workspace;
-
-    cur_ctrl_type
-        .endsWith('rotate')
-        ? workspace.rotating(true)
-        : workspace.scaling(true);
-
-    props.context.assist.set_trans_target([props.shape]);
-}
-
 function clear_status() {
-    if (isDragging) {
-        props.context.assist.reset();
-        isDragging = false;
-    }
+    isDragging = false;
 
-    if (asyncBaseAction) {
-        asyncBaseAction = asyncBaseAction.close();
-    }
+    scaler?.fulfil();
+    scaler = undefined;
 
-    const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.rotating(false);
-    workspace.setCtrl('page');
+    rotator?.fulfil();
+    rotator = undefined;
 
-    props.context.cursor.cursor_freeze(false);
-    if (need_reset_cursor_after_transform) {
-        props.context.cursor.reset();
-    }
+    if (need_reset_cursor_after_transform) props.context.cursor.reset();
 
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
@@ -315,44 +323,83 @@ function window_blur() {
     clear_status();
 }
 
-watch(() => props.matrix, update);
+function workspaceWatcher(t: number | string) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.SELECTION_VIEW_UPDATE) update();
+
+}
+
 watch(() => props.shape, (value, old) => {
-    old.unwatch(update);
-    value.watch(update);
+    old.unwatch(updateByShape);
+    value.watch(updateByShape);
     update();
 })
 onMounted(() => {
-    props.shape.watch(update);
+    props.context.workspace.watch(workspaceWatcher);
+    props.shape.watch(updateByShape);
     window.addEventListener('blur', window_blur);
     update();
 })
 onUnmounted(() => {
-    props.shape.unwatch(update);
+    props.context.workspace.unwatch(workspaceWatcher);
+    props.shape.unwatch(updateByShape);
     window.removeEventListener('blur', window_blur);
 })
 </script>
 <template>
-    <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-        <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-            @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
-        </path>
-
-        <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
-            @mouseleave="point_mouseleave">
-            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
-            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
-        </g>
-    </g>
+<g
+    v-for="(p, i) in subDots"
+    :key="i"
+    :style="`transform: ${p.transform};`"
+>
+    <path
+        class="r-path"
+        d="M-3 0 l12.6 -12.6 a18 18 0 0 1 0 25.2 z"
+        @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+        @mouseenter="() => point_mouseenter(p.type2)"
+        @mouseleave="point_mouseleave"
+    />
+    <circle
+        v-if="assist"
+        class="assist-rect"
+        cx="0"
+        cy="0"
+        r="7"
+        @mousedown.stop="(e) => point_mousedown(e, p.type)"
+        @mouseenter="() => point_mouseenter(p.type)"
+        @mouseleave="point_mouseleave"
+    />
+    <path
+        v-else
+        class="assist-rect"
+        d="M-3 0 l7.88 -7.88 a12.5 12.5 0 0 1 0 15.76 z"
+        @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+        @mouseenter="() => point_mouseenter(p.type2)"
+        @mouseleave="point_mouseleave"
+    />
+</g>
+<rect v-for="(p, i) in dots"
+      class="main-rect"
+      :key="i"
+      :stroke="theme"
+      :style="`transform: ${p.transform};`"
+      x="-3.5"
+      y="-3.5"
+      rx="2"
+      @mousedown.stop="(e) => point_mousedown(e, p.type)"
+      @mouseenter="() => point_mouseenter(p.type)"
+      @mouseleave="point_mouseleave"
+/>
 </template>
 <style lang='scss' scoped>
 .r-path {
     fill: transparent;
+    //fill: rgba(255, 0, 0, 0.6);
     stroke: none;
 }
 
 .main-rect {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     fill: #ffffff;
 }
 
@@ -361,5 +408,6 @@ onUnmounted(() => {
     height: 14px;
     stroke: transparent;
     fill: transparent;
+    //fill: rgba(0, 255, 0, 0.6);
 }
 </style>

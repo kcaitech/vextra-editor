@@ -2,7 +2,7 @@
 import { Context } from "@/context";
 import { AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name } from "@/utils/symbol";
 import { nextTick, ref } from "vue";
-import { SymbolShape, Variable, VariableType } from "@kcdesign/data";
+import { SymbolShape, SymbolView, Variable, VariableType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 
 interface Props {
@@ -17,10 +17,12 @@ const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
 const isWarnRepeat = ref(false);
 const isWarnNull = ref(false);
+const edit_symbol = ref<SymbolView>();
 const { t } = useI18n();
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
+    edit_symbol.value = props.context.selection.symbolshape;
 }
 
 function closeInput() {
@@ -46,7 +48,7 @@ const blur = () => {
 
 const validate = () => {
     const len = attrInput.value.trim().length > 0;
-    const shape = props.context.selection.symbolshape;
+    const shape = edit_symbol.value || props.context.selection.symbolshape;
     if (!shape) return false;
     if (attrInput.value === props.variable.name) return closeInput();
     const repeat = is_valid_name(shape, attrInput.value, VariableType.Status);
@@ -76,7 +78,7 @@ function rename() {
 }
 
 function save_name(v: string) {
-    const shape = props.context.selection.symbolshape;
+    const shape = edit_symbol.value || props.context.selection.symbolshape;
     if (!shape) return;
     const editor = props.context.editor4Shape(shape);
     editor.modifyVariableName(props.variable, v);
@@ -88,6 +90,12 @@ function _delete() {
     if (!is_status_allow_to_delete(sym)) return;
     delete_variable(props.context, props.variable);
 }
+
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import comp_state_icon from '@/assets/icons/svg/comp-state.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
 </script>
 <template>
     <div class="module_attr_item">
@@ -98,7 +106,7 @@ function _delete() {
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>
                 <div class="module_name">
-                    <svg-icon icon-class="comp-state"></svg-icon>
+                    <SvgIcon :icon="comp_state_icon"/>
                 </div>
                 <div class="name_i" :title="props.item.values.toString()">
                     <span style="width:35%;">{{ props.variable.name }}</span>
@@ -106,7 +114,7 @@ function _delete() {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
@@ -118,14 +126,14 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    //margin-bottom: 5px;
+    margin-top: 8px;
     width: 100%;
 
     .attr_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 38px;
+        height: 32px;
         box-sizing: border-box;
     }
 
@@ -236,13 +244,12 @@ function _delete() {
         width: 28px;
         height: 28px;
         border-radius: var(--default-radius);
+        transition: .2s;
 
         >svg {
             width: 16px;
             height: 16px;
         }
-
-        transition: .2s;
     }
 
     .delete:hover {

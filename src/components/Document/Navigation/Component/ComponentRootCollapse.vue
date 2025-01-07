@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import ComponentCollapseItem from './ComponentCollapseItem.vue';
 import { Context } from '@/context';
 import { SymbolListItem } from '@/utils/symbol';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface Props {
     context: Context
@@ -34,13 +35,14 @@ function change_status(id: string) {
 onMounted(() => {
     if (props.extend) toggle();
 })
+import down_icon from '@/assets/icons/svg/down.svg';
 </script>
 <template>
     <div class="component-lib-collapse" @click="toggle">
         <div class="component-lib-collapse-title">
             <span>{{ props.title }}</span>
             <div class="shrink">
-                <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                <SvgIcon :icon="down_icon" :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"/>
             </div>
         </div>
         <div class="component-lib-collapse-content" v-show="!fold" @click.stop>

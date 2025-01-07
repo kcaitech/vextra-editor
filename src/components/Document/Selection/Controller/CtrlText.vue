@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY, Selection, SelectionTheme } from '@/context/selection';
 import { Matrix, TextShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
@@ -12,6 +12,7 @@ import { WorkSpace } from '@/context/workspace';
 import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from '@/utils/common';
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     context: Context
@@ -48,9 +49,9 @@ const height = computed(() => {
 let downIndex: { index: number, before: boolean };
 
 function update() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    // if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const m2p = props.shape.matrix2Root();
-    matrix.reset(m2p);
+    matrix.reset(m2p.toMatrix());
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const frame = props.shape.frame;
@@ -91,7 +92,7 @@ function onMouseDown(e: MouseEvent) {
             }
             editing.value = true;
             workspace.contentEdit(editing.value);
-            props.context.cursor.setType('scan', 0);
+            props.context.cursor.setType(CursorType.Text, 0);
         }
         if (!editing.value) return;
         e.stopPropagation();
@@ -107,6 +108,26 @@ function onMouseDown(e: MouseEvent) {
         if (!(e.target as Element).closest('#text-selection')) {
             e.stopPropagation();
         }
+    }
+}
+
+function dblFromPart(e: MouseEvent) {
+    if (e.button === 0 && !editing.value) {
+        const workspace = props.context.workspace;
+        if (props.context.navi.focusText) {
+            props.context.navi.set_focus_text();
+        }
+        editing.value = true;
+        workspace.contentEdit(editing.value);
+        props.context.cursor.setType(CursorType.Text, 0);
+        const selection = props.context.textSelection;
+        workspace.setCtrl('controller');
+        const root = workspace.root
+        matrix.reset(props.matrix);
+        const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
+        downIndex = selection.locateText(xy.x, xy.y);
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
     }
 }
 
@@ -154,6 +175,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 let hidden_holder: any = null;
+
 function modify_selection_hidden() {
     if (hidden_holder) {
         clearTimeout(hidden_holder);
@@ -167,13 +189,15 @@ function modify_selection_hidden() {
 
     selection_hidden.value = true;
 }
+
 function reset_hidden() {
     selection_hidden.value = false;
     clearTimeout(hidden_holder);
     hidden_holder = null;
 }
+
 function mouseenter() {
-    if (editing.value) props.context.cursor.setType('scan', 0);
+    if (editing.value) props.context.cursor.setType(CursorType.Text, 0);
 }
 
 function mouseleave() {
@@ -189,7 +213,7 @@ function be_editor(index?: number) {
     const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
-    props.context.cursor.setType('scan', 0);
+    props.context.cursor.setType(CursorType.Text, 0);
     if (index !== undefined) {
         downIndex = { index, before: true };
         selection.setCursor(index, true);
@@ -220,7 +244,7 @@ function selectionWatcher(...args: any[]) {
 
 function check_status() {
     if (props.context.selection.isNewShapeSelection) {
-        be_editor();
+        be_editor(0);
         props.context.selection.setSelectionNewShapeStatus(false);
     }
 }
@@ -257,24 +281,28 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-        :viewBox=genViewBox(bounds) :width="width" :height="height"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" @mousedown="onMouseDown" overflow="visible"
-        @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ hidden: selection_hidden }">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+         data-area="controller"
+         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+         :viewBox=genViewBox(bounds) :width="width" :height="height"
+         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" @mousedown="onMouseDown"
+         overflow="visible"
+         @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ hidden: selection_hidden }">
         <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
-            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)">
+                    :main-notify="Selection.CHANGE_TEXT"
+                    :selection="props.context.selection.getTextSelection(props.shape)">
         </SelectView>
         <path v-if="editing" :d="boundrectPath" fill="none" :stroke="theme" stroke-dasharray="2,2"></path>
-        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame" :theme="theme">
+        <BarsContainer v-if="!editing" :context="props.context" :shape="props.shape"
+                       :c-frame="props.controllerFrame" :theme="theme" @dblclick="dblFromPart">
         </BarsContainer>
-        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame" :axle="axle" :theme="theme">
+        <PointsContainer v-if="!editing" :context="props.context" :shape="props.shape"
+                         :c-frame="props.controllerFrame" :axle="axle" :theme="theme" @dblclick="dblFromPart">
         </PointsContainer>
     </svg>
     <TextInput ref="input" :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
-        :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
+               :main-notify="Selection.CHANGE_TEXT"
+               :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
 </template>
 <style lang='scss' scoped>
 .hidden {

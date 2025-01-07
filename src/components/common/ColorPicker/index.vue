@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, TableCell, TableCellView, TableView, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import {
+    AsyncGradientEditor,
+    Color,
+    FillType,
+    Gradient,
+    GradientType,
+    ImageScaleMode,
+    PaintFilter,
+    ShapeType,
+    TableView,
+    TextShapeView,
+} from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
-import { WorkSpace } from '@/context/workspace';
-import { ClientXY, Selection } from '@/context/selection';
+import { ClientXY } from '@/context/selection';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
 import {
@@ -24,7 +34,7 @@ import {
     gradient_channel_generator,
     StopEl,
     stops_generator,
-    hexToX,
+    hexToX, RGB2SB,
 } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
@@ -33,21 +43,35 @@ import { Menu } from "@/context/menu";
 import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
-import { GradientFrom, getTextIndexAndLen, get_add_gradient_color, isSelectText } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
+import {
+    GradientFrom,
+    getTextIndexAndLen,
+    get_add_gradient_color,
+    isSelectText
+} from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
+import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
+import { ImgFrame } from '@/context/atrribute';
 
 interface Props {
     context: Context
     color: Color
+
     locat?: { index: number, type: GradientFrom }
     fillType?: FillType
     gradient?: Gradient
     late?: number
     top?: number
-    auto_to_right_line?: boolean;
+    auto_to_right_line?: boolean
     cell?: boolean
+    op?: boolean
+    imageScaleMode?: ImageScaleMode
+    scale?: number
+    imageUrl?: string
+    imageOriginFrame?: { width: number, height: number }
+    paintFilter?: PaintFilter
 }
 
 interface Data {
@@ -59,13 +83,26 @@ interface Data {
 
 interface Emits {
     (e: 'change', color: Color): void;
+
     (e: 'choosecolor', color: number[]): void;
+
     (e: 'gradient-reverse'): void;
+
     (e: 'gradient-rotate'): void;
+
     (e: 'gradient-add-stop', position: number, color: Color, id: string): void;
-    (e: 'gradient-type', type: GradientType | 'solid'): void;
+
+    (e: 'gradient-type', type: GradientType, fill: FillType): void;
+
     (e: 'gradient-color-change', color: Color, index: number): void;
+
     (e: 'gradient-stop-delete', index: number): void;
+
+    (e: 'changeMode', mode: ImageScaleMode): void;
+    (e: 'setImageRef', ref: string, origin: ImgFrame, imageMgr: any): void;
+    (e: 'changeRotate'): void;
+    (e: 'changeScale', scale: number): void;
+    (e: 'closeMode'): void;
 }
 
 export interface HRGB { // 色相
@@ -99,12 +136,6 @@ interface Indicator {
     x: number
 }
 
-interface LineAttribute {
-    length: 196,
-    begin: number,
-    end: number
-}
-
 interface DotPosition {
     left: number
     top: number
@@ -117,30 +148,24 @@ interface Bounding {
     bottom: number
 }
 
-const INDICATOR_WIDTH = 13;
-const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
-const DOT_WIDTH = 12;
-const HUE_WIDTH = 250;
-const HUE_HEIGHT = 200;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
 const { t } = useI18n();
-const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
+const modelOptions: SelectSource[] = genOptions([['Hex', 'Hex'], ['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const saturationEL = ref<HTMLElement>();
 const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
 const typicalColor = ref<Color[]>(typical);
 const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
-const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
 const recent = ref<Color[]>([]);
 const document_colors = ref<{ times: number, color: Color }[]>([]);
 let inputTarget: HTMLInputElement;
 let handleIndex = 0;
-const mousedownPositon: ClientXY = { x: 0, y: 0 };
+const downXY: ClientXY = { x: 0, y: 0 };
 let isDrag: boolean = false;
-const reflush = ref<number>(1);
-const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
+const model = ref<SelectItem>({ value: 'Hex', content: 'Hex' });
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
 const popoverEl = ref<HTMLDivElement>();
@@ -150,56 +175,98 @@ const picker_visible = ref<boolean>(false);
 const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
 const need_update_recent = ref<boolean>(false);
 const gradient_channel_style = ref<any>({});
-const gradient_type = ref<GradientType | 'solid'>();
+const gradient_type = ref<GradientType>();
+const fill_type = ref<FillType>(FillType.SolidColor);
+const stop_els = ref<StopEl[]>([]);
+const imageScale = ref<number>();
+const scaleMode = ref<ImageScaleMode>();
+
+const LINE_LENGTH = 196;
+const DOT_SIZE = 12;
+const HALF_DOT_SIZE = DOT_SIZE / 2;
+const HUE_WIDTH = 250;
+const HUE_HEIGHT = 200;
+
+const DOT_SIZE_CSS = `${DOT_SIZE}px`;
+const HUE_WIDTH_CSS = `${HUE_WIDTH}px`;
+const HUE_HEIGHT_CSS = `${HUE_HEIGHT}px`;
+const LINE_LENGTH_CSS = `${LINE_LENGTH}px`;
+
 const data = reactive<Data>({
     rgba: { R: 255, G: 0, B: 0, alpha: 1 },
     hueIndicatorAttr: { x: 0 },
-    alphaIndicatorAttr: { x: lineAttribute.length - INDICATOR_WIDTH },
-    dotPosition: { left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2 }
+    alphaIndicatorAttr: { x: LINE_LENGTH - DOT_SIZE },
+    dotPosition: { left: HUE_WIDTH - DOT_SIZE / 2, top: -DOT_SIZE / 2 }
 })
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
-const stop_els = ref<StopEl[]>([]);
+
+// 色相
+const hue = computed<number>(() => {
+    return Math.floor((hueIndicatorAttr.x / (LINE_LENGTH - DOT_SIZE)) * 360);
+})
+
+// 饱和度
+const saturation = computed<number>(() => {
+    return (dotPosition.left + HALF_DOT_SIZE) / HUE_WIDTH;
+})
+
+// 亮度
+const brightness = computed<number>(() => {
+    return (1 - (dotPosition.top + HALF_DOT_SIZE) / HUE_HEIGHT);
+})
+
 const h_rgb = computed<HRGB>(() => {
     const color = new Color(1, rgba.R, rgba.G, rgba.B);
-    return getHRGB(RGB2H(color, hueIndicatorAttr.x / (lineAttribute.length - INDICATOR_WIDTH)));
+    return getHRGB(RGB2H(color, hue.value));
 })
+
 const hsba = computed<HSBA>(() => {
     const { R, G, B, alpha } = rgba;
     const { h, s, b } = RGB2HSB(new Color(alpha, R, G, B));
     return { H: h, S: s, V: b, alpha };
 })
+
 const hsla = computed<HSLA>(() => {
     const { R, G, B, alpha } = rgba;
     const { h, s, l } = RGB2HSL(new Color(alpha, R, G, B));
     return { H: h, S: s, L: l, alpha };
 })
+
 const labels = computed(() => {
     return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
-const values = computed<number[]>(() => {
-    if (reflush.value) {
-        if (model.value.value === 'RGB') {
-            return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
-        } else if (model.value.value === 'HSB') {
-            return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
-        } else if (model.value.value === 'HSL') {
-            return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
-        } else {
-            return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
-        }
+
+const values = computed<(number | string)[]>(() => {
+    if (model.value.value === 'RGB') {
+        return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
+    } else if (model.value.value === 'HSB') {
+        return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
+    } else if (model.value.value === 'HSL') {
+        return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
+    } else if (model.value.value === 'Hex') {
+        return [((1 << 24) + (rgba.R << 16) + (rgba.G << 8) + rgba.B).toString(16).slice(1).toUpperCase(), Math.round(rgba.alpha * 100)]
     } else {
         return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
     }
 });
-const hue = computed<number>(() => {
-    return Math.floor(((hueIndicatorAttr.x) / (lineAttribute.length - INDICATOR_WIDTH)) * 360);
-})
-const saturation = computed<number>(() => {
-    return (dotPosition.left + DOT_WIDTH / 2) / HUE_WIDTH;
-})
-const brightness = computed<number>(() => {
-    return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
-})
+
+let sleep = false;
+let sleepTime = 600;
+let bed: any = null;
+
+function passive() {
+    if (bed) {
+        clearTimeout(bed);
+    }
+
+    bed = setTimeout(() => {
+        sleep = false;
+        clearTimeout(sleepTime);
+        bed = null;
+    }, sleepTime);
+
+    sleep = true;
+}
 
 /**
  * @description 调色板定位
@@ -218,6 +285,7 @@ function locate() {
     if (cur_t > 0) {
         p_top = p_el.top;
     } else {
+        // p_top = p_el.top - Math.abs(cur_t - 10 - (props.fillType && props.fillType === FillType.SolidColor ? 38 : 0));
         p_top = p_el.top - Math.abs(cur_t - 10);
     }
     if (p_top - 40 < 0) {
@@ -230,11 +298,14 @@ function locate() {
     }
     const doc_height = document.documentElement.clientHeight;
     const { height, y } = el.getBoundingClientRect();
+
+    //避免工具栏遮挡调色板
     if (doc_height - y < height + 10) {
-        el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
+        el.style.top = ((parseInt(el.style.top) - ((height + 20) - (doc_height - y))) < 46 ? 56 : parseInt(el.style.top) - ((height + 20) - (doc_height - y))) + 'px'
     }
-    if (props.fillType && props.fillType === FillType.SolidColor) {
-        el.style.top = parseInt(el.style.top) - 38 + 'px';
+    //从表单快捷入口调起调色板时固定top
+    if (props.cell) {
+        el.style.top = 40 + 'px';
     }
     if (props.late) {
         el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
@@ -245,6 +316,9 @@ function locate() {
     }
 }
 
+/**
+ * @description 退出调色板
+ */
 function quit(e: MouseEvent) {
     const need_quit = props.fillType === FillType.Gradient && props.gradient
         ? e.target instanceof Element && !e.target.closest('.color-block') && !e.target.closest('#content')
@@ -254,50 +328,59 @@ function quit(e: MouseEvent) {
         props.context.color.select_stop(undefined);
         blockUnmount();
         document.removeEventListener('mousedown', quit);
+        props.context.color.setImageScale(undefined);
+        props.context.color.setImageScaleMode(undefined);
     }
 }
 
 function setMousedownPosition(e: MouseEvent) {
-    mousedownPositon.x = e.clientX;
-    mousedownPositon.y = e.clientY;
+    downXY.x = e.clientX;
+    downXY.y = e.clientY;
 }
 
 function is_drag(e: MouseEvent) {
-    return Math.hypot(e.clientX - mousedownPositon.x, e.clientY - mousedownPositon.y) > 9;
+    return Math.hypot(e.clientX - downXY.x, e.clientY - downXY.y) > 4;
 }
 
 // 设置色相
 function setHueIndicatorPosition(e: MouseEvent) {
     if (sliders.value) {
         setMousedownPosition(e);
-        const { x, right } = sliders.value.getBoundingClientRect();
-        lineAttribute.begin = x;
-        lineAttribute.end = right;
-        let placement = e.x - lineAttribute.begin;
-        if (placement < HALF_INDICATOR_WIDTH) {
-            placement = HALF_INDICATOR_WIDTH;
-        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        const x = sliders.value.getBoundingClientRect().x;
+        let placement = e.x - x;
+
+        if (placement < HALF_DOT_SIZE) {
+            placement = HALF_DOT_SIZE;
+        } else if (placement > LINE_LENGTH - HALF_DOT_SIZE) {
+            placement = LINE_LENGTH - HALF_DOT_SIZE;
         }
-        hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+
+        hueIndicatorAttr.x = placement - HALF_DOT_SIZE;
+
         setRGB(hueIndicatorAttr.x);
+
         document.addEventListener('mousemove', mousemove4Hue);
         document.addEventListener('mouseup', mouseup);
+
         need_update_recent.value = true;
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+
+        passive();
     }
 }
 
 function mousemove4Hue(e: MouseEvent) {
     if (isDrag) {
-        let placement = e.x - lineAttribute.begin;
-        if (placement < HALF_INDICATOR_WIDTH) {
-            placement = HALF_INDICATOR_WIDTH;
-        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        const x = sliders.value!.getBoundingClientRect().x;
+        let placement = e.x - x;
+        if (placement < HALF_DOT_SIZE) {
+            placement = HALF_DOT_SIZE;
+        } else if (placement > LINE_LENGTH - HALF_DOT_SIZE) {
+            placement = LINE_LENGTH - HALF_DOT_SIZE;
         }
-        hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+        hueIndicatorAttr.x = placement - HALF_DOT_SIZE;
         setRGB(hueIndicatorAttr.x);
+
+        passive();
     } else {
         isDrag = is_drag(e);
     }
@@ -311,16 +394,20 @@ function wheel(e: WheelEvent) {
         // todo
     } else {
         const delta = deltaY > 0 ? wheel_step : -wheel_step;
-        const critical_len = lineAttribute.length - INDICATOR_WIDTH
+        const critical_len = LINE_LENGTH - DOT_SIZE
         if (delta > 0) {
-            const val = (hueIndicatorAttr.x + delta) > critical_len ? hueIndicatorAttr.x + delta - critical_len : hueIndicatorAttr.x + delta;
-            hueIndicatorAttr.x = val;
+            hueIndicatorAttr.x = (hueIndicatorAttr.x + delta) > critical_len
+                ? hueIndicatorAttr.x + delta - critical_len
+                : hueIndicatorAttr.x + delta;
             setRGB(hueIndicatorAttr.x);
         } else {
-            const val = (hueIndicatorAttr.x + delta) < 0 ? hueIndicatorAttr.x + delta + critical_len : hueIndicatorAttr.x + delta;
-            hueIndicatorAttr.x = val;
+            hueIndicatorAttr.x = (hueIndicatorAttr.x + delta) < 0
+                ? hueIndicatorAttr.x + delta + critical_len
+                : hueIndicatorAttr.x + delta;
             setRGB(hueIndicatorAttr.x);
         }
+
+        passive();
     }
 }
 
@@ -328,34 +415,45 @@ function wheel(e: WheelEvent) {
 function setAlphaIndicatorPosition(e: MouseEvent) {
     if (sliders.value) {
         setMousedownPosition(e);
-        const { x, right } = sliders.value.getBoundingClientRect();
-        lineAttribute.begin = x;
-        lineAttribute.end = right;
-        let placement = e.x - lineAttribute.begin;
-        if (placement < HALF_INDICATOR_WIDTH) {
-            placement = HALF_INDICATOR_WIDTH;
-        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+
+        const x = sliders.value.getBoundingClientRect().x;
+        let placement = e.x - x;
+
+        if (placement < HALF_DOT_SIZE) {
+            placement = HALF_DOT_SIZE;
+        } else if (placement > LINE_LENGTH - HALF_DOT_SIZE) {
+            placement = LINE_LENGTH - HALF_DOT_SIZE;
         }
-        alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+
+        alphaIndicatorAttr.x = placement - HALF_DOT_SIZE;
+
         setAlpha(alphaIndicatorAttr.x);
+
         document.addEventListener('mousemove', mousemove4Alpha);
         document.addEventListener('mouseup', mouseup);
+
         need_update_recent.value = true;
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+
+        passive();
     }
 }
 
 function mousemove4Alpha(e: MouseEvent) {
     if (isDrag) {
-        let placement = e.x - lineAttribute.begin;
-        if (placement < HALF_INDICATOR_WIDTH) {
-            placement = HALF_INDICATOR_WIDTH;
-        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        const x = sliders.value!.getBoundingClientRect().x;
+        let placement = e.x - x;
+
+        if (placement < HALF_DOT_SIZE) {
+            placement = HALF_DOT_SIZE;
+        } else if (placement > LINE_LENGTH - HALF_DOT_SIZE) {
+            placement = LINE_LENGTH - HALF_DOT_SIZE;
         }
-        alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+
+        alphaIndicatorAttr.x = placement - HALF_DOT_SIZE;
+
         setAlpha(alphaIndicatorAttr.x);
+
+        passive();
     } else {
         isDrag = is_drag(e);
     }
@@ -378,7 +476,8 @@ function setDotPosition(e: MouseEvent) {
         changeColor(color);
         document.addEventListener('mousemove', mousemove4Dot);
         document.addEventListener('mouseup', mouseup);
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+
+        passive();
     }
 }
 
@@ -386,26 +485,29 @@ function mousemove4Dot(e: MouseEvent) {
     if (isDrag) {
         const { x, y } = e;
         const { x: saturationX, y: saturationY, right, bottom } = saturationELBounding;
-        if (x >= saturationX && y <= bottom && x <= right && y >= saturationY) {
-            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-        } else if (x < saturationX && y <= bottom && y >= saturationY) {
-            dotPosition.left = -(DOT_WIDTH / 2);
-            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-        } else if (x > right && y <= bottom && y >= saturationY) {
-            dotPosition.left = HUE_WIDTH - (DOT_WIDTH / 2);
-            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-        } else if (y < saturationY && x >= saturationX && x <= right) {
-            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-            dotPosition.top = -(DOT_WIDTH / 2);
-        } else if (y > bottom && x >= saturationX && x <= right) {
-            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-            dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
+
+        if (x >= saturationX && x <= right) {
+            dotPosition.left = x - saturationX - DOT_SIZE / 2;
+        } else if (x < saturationX) {
+            dotPosition.left = -(DOT_SIZE / 2);
+        } else {
+            dotPosition.left = HUE_WIDTH - (DOT_SIZE / 2);
         }
+
+        if (y >= saturationY && y <= bottom) {
+            dotPosition.top = y - saturationY - DOT_SIZE / 2;
+        } else if (y < saturationY) {
+            dotPosition.top = -(DOT_SIZE / 2);
+        } else {
+            dotPosition.top = HUE_HEIGHT - (DOT_SIZE / 2)
+        }
+
         const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
         const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
         update_rgb(R, G, B);
         changeColor(color);
+
+        passive();
     } else {
         isDrag = is_drag(e);
     }
@@ -413,7 +515,7 @@ function mousemove4Dot(e: MouseEvent) {
 
 // set color
 function setRGB(indicator: number) {
-    const h = (indicator / (lineAttribute.length - INDICATOR_WIDTH)) * 360;
+    const h = (indicator / (LINE_LENGTH - DOT_SIZE)) * 360;
     const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
     const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
     changeColor(color);
@@ -422,34 +524,36 @@ function setRGB(indicator: number) {
 }
 
 function setAlpha(indicator: number) {
-    rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
+    rgba.alpha = Number((indicator / (LINE_LENGTH - DOT_SIZE)).toFixed(2));
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
     changeColor(color);
     need_update_recent.value = true;
 }
 
 function setColor(color: Color) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     rgba.R = color.red;
     rgba.G = color.green;
     rgba.B = color.blue;
     rgba.alpha = color.alpha;
     changeColor(color);
+    update_hue_indicator_position(color);
     update_dot_indicator_position(color);
     update_alpha_indicator(color);
     need_update_recent.value = true;
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 
 const changeColor = (color: Color) => {
-    if (gradient_type.value === 'solid' || !props.fillType) {
+    if (fill_type.value === FillType.SolidColor || !props.fillType) {
         emit('change', color);
     } else {
         if (!props.gradient) return;
         let id = props.context.color.selected_stop;
         const _id = props.gradient.stops[0].id;
-        if (id === undefined) id = _id;
-        const index = props.gradient.stops.findIndex(v => v.id === id);
+        let index = props.gradient.stops.findIndex(v => v.id === id);
+        if (id === undefined || index === -1) {
+            id = _id;
+            index = 0
+        }
         emit('gradient-color-change', color, index);
         nextTick(() => {
             update_gradient(props.gradient);
@@ -464,7 +568,6 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove4Hue);
     document.removeEventListener('mouseup', mouseup)
     need_update_recent.value = true;
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     isDrag = false;
 }
 
@@ -489,6 +592,7 @@ function systemEyeDropper() {
         rgba.B = rgb[2];
         const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
         changeColor(c);
+        update_hue_indicator_position(c);
         update_dot_indicator_position(c);
     }).catch((e: any) => {
         console.log("failed:", e);
@@ -512,6 +616,7 @@ function eyeDropperInit(): Eyedropper {
                 rgba.B = rgb[2];
                 const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
                 changeColor(c);
+                update_hue_indicator_position(c);
                 update_dot_indicator_position(c);
             }
         }
@@ -522,10 +627,10 @@ function switchModel(item: SelectItem) {
     model.value = item;
 }
 
-function inputClick(e: MouseEvent, hidx: number) {
+function inputClick(e: MouseEvent, idx: number) {
     const target = e.target as HTMLInputElement;
     inputTarget = target;
-    handleIndex = hidx;
+    handleIndex = idx;
     target.select();
     target.addEventListener('keydown', keyboardWatcher);
 }
@@ -533,45 +638,91 @@ function inputClick(e: MouseEvent, hidx: number) {
 function keyboardWatcher(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         enter();
+
+        passive();
     } else if (e.code === 'ArrowUp') {
         let v: string | number = inputTarget.value;
-        v = Number(v);
-        let _v = v + 1;
-        const valid = validate(model.value.value as any, handleIndex, _v);
-        if (valid) {
-            props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+        if (model.value.value === "Hex") {
             if (handleIndex === 0) {
-                rgba.R = Number(v) + 1;
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v) + 1;
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v) + 1;
+                v = v.toString();
+                const valid = validate(model.value.value as any, handleIndex, v);
+                if (valid) {
+                    let color = v.replace(/^#/, '');
+                    if (color.length === 3) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(1), color.charAt(1), color.charAt(2), color.charAt(2)].join('');
+                    } else if (color.length === 1) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0)].join('');
+                    }
+                    let r = parseInt(color.substring(0, 2), 16);
+                    let g = parseInt(color.substring(2, 4), 16);
+                    let b = parseInt(color.substring(4, 6), 16);
+                    rgba.R = Math.min(255, r++);
+                    rgba.G = Math.min(255, g++);
+                    rgba.B = Math.min(255, b++);
+                }
             }
-            const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-            changeColor(color);
-            update_dot_indicator_position(color);
-            need_update_recent.value = true;
-            props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+        } else {
+            v = Number(v);
+            let _v = v + 1;
+            const valid = validate(model.value.value as any, handleIndex, _v);
+            if (valid) {
+                if (handleIndex === 0) {
+                    rgba.R = Number(v) + 1;
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v) + 1;
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v) + 1;
+                }
+                const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
+                changeColor(color);
+                update_hue_indicator_position(color);
+                update_dot_indicator_position(color);
+                need_update_recent.value = true;
+
+                passive();
+            }
         }
     } else if (e.code === 'ArrowDown') {
         let v: string | number = inputTarget.value;
-        v = Number(v);
-        let _v = v - 1;
-        const valid = validate(model.value.value as any, handleIndex, _v);
-        if (valid) {
-            props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+        if (model.value.value === "Hex") {
             if (handleIndex === 0) {
-                rgba.R = Number(v) - 1;
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v) - 1;
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v) - 1;
+                v = v.toString();
+                const valid = validate(model.value.value as any, handleIndex, v);
+                if (valid) {
+                    let color = v.replace(/^#/, '');
+                    if (color.length === 3) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(1), color.charAt(1), color.charAt(2), color.charAt(2)].join('');
+                    } else if (color.length === 1) {
+                        color = [color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0), color.charAt(0)].join('');
+                    }
+                    let r = parseInt(color.substring(0, 2), 16);
+                    let g = parseInt(color.substring(2, 4), 16);
+                    let b = parseInt(color.substring(4, 6), 16);
+                    rgba.R = Math.max(0, r--);
+                    rgba.G = Math.max(0, g--);
+                    rgba.B = Math.max(0, b--);
+                }
             }
-            const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-            changeColor(color);
-            update_dot_indicator_position(color);
-            need_update_recent.value = true;
-            props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+        } else {
+            v = Number(v);
+            let _v = v - 1;
+            const valid = validate(model.value.value as any, handleIndex, _v);
+            if (valid) {
+                if (handleIndex === 0) {
+                    rgba.R = Number(v) - 1;
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v) - 1;
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v) - 1;
+                }
+                const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
+                changeColor(color);
+                update_dot_indicator_position(color);
+                update_hue_indicator_position(color);
+                need_update_recent.value = true;
+
+                passive();
+            }
         }
     }
 }
@@ -579,101 +730,146 @@ function keyboardWatcher(e: KeyboardEvent) {
 // 输入框输入
 function enter() {
     let v: string | number = inputTarget.value;
-    const valid = validate(model.value.value as any, handleIndex, Number(v));
-    if (valid) {
-        if (model.value.value === 'RGB') {
-            v = Math.floor(Number(v));
-            if (handleIndex === 0) {
-                rgba.R = Number(v);
-            } else if (handleIndex === 1) {
-                rgba.G = Number(v);
-            } else if (handleIndex === 2) {
-                rgba.B = Number(v);
-            } else if (handleIndex === 3) {
-                rgba.alpha = Number(v) / 100;
+    if (model.value.value === 'Hex') {
+        if (handleIndex === 0) {
+            const valid = validate(model.value.value as any, handleIndex, v.toString());
+            if (valid) {
+                let c = v.toString().replace(/^#/, '');
+                if (c.length === 3) {
+                    c = [c.charAt(0), c.charAt(0), c.charAt(1), c.charAt(1), c.charAt(2), c.charAt(2)].join('');
+                } else if (c.length === 1) {
+                    c = [c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0), c.charAt(0)].join('');
+                }
+                let r = parseInt(c.substring(0, 2), 16);
+                let g = parseInt(c.substring(2, 4), 16);
+                let b = parseInt(c.substring(4, 6), 16);
+                rgba.R = r;
+                rgba.G = g;
+                rgba.B = b;
+                const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+                changeColor(color);
+                update_dot_indicator_position(color);
+                update_hue_indicator_position(color);
+                update_alpha_indicator(color);
+                need_update_recent.value = true;
             }
-        } else if (model.value.value === 'HSB') {
-            const { H, S, V, alpha } = hsba.value;
-            const n = { H: H * 360, S, V, alpha };
-            if (handleIndex === 0) {
-                n.H = Number(v);
-            } else if (handleIndex === 1) {
-                n.S = Number(v) / 100;
-            } else if (handleIndex === 2) {
-                n.V = Number(v) / 100;
-            } else if (handleIndex === 3) {
-                n.alpha = Number(v) / 100;
-            }
-            const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
-            rgba.R = rgb_form_n.R;
-            rgba.G = rgb_form_n.G;
-            rgba.B = rgb_form_n.B;
-            rgba.alpha = n.alpha;
-        } else if (model.value.value === 'HSL') {
-            const { H, S, L, alpha } = hsla.value;
-            const n = { h: H, s: S, l: L, alpha };
-            if (handleIndex === 0) {
-                n.h = Number(v);
-            } else if (handleIndex === 1) {
-                n.s = Number(v) / 100;
-            } else if (handleIndex === 2) {
-                n.l = Number(v) / 100;
-            } else if (handleIndex === 3) {
-                n.alpha = Number(v) / 100;
-            }
-            const rgb_form_n = HSL2RGB(n);
-            rgba.R = rgb_form_n.R;
-            rgba.G = rgb_form_n.G;
-            rgba.B = rgb_form_n.B;
-            rgba.alpha = n.alpha;
+        } else {
+            rgba.alpha = Math.max(0, Math.min(100, Number(v))) / 100;
+            const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+            changeColor(color);
+            update_dot_indicator_position(color);
+            update_hue_indicator_position(color);
+            update_alpha_indicator(color);
+            need_update_recent.value = true;
         }
-        const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
-        changeColor(color);
-        update_dot_indicator_position(color);
-        update_alpha_indicator(color);
-        need_update_recent.value = true;
     } else {
-        reflush.value++;
+        const valid = validate(model.value.value as any, handleIndex, Number(v));
+        if (valid) {
+            if (model.value.value === 'RGB') {
+                v = Math.floor(Number(v));
+                if (handleIndex === 0) {
+                    rgba.R = Number(v);
+                } else if (handleIndex === 1) {
+                    rgba.G = Number(v);
+                } else if (handleIndex === 2) {
+                    rgba.B = Number(v);
+                } else if (handleIndex === 3) {
+                    rgba.alpha = Number(v) / 100;
+                }
+            } else if (model.value.value === 'HSB') {
+                const { H, S, V, alpha } = hsba.value;
+                const n = { H: H * 360, S, V, alpha };
+                if (handleIndex === 0) {
+                    n.H = Number(v);
+                } else if (handleIndex === 1) {
+                    n.S = Number(v) / 100;
+                } else if (handleIndex === 2) {
+                    n.V = Number(v) / 100;
+                } else if (handleIndex === 3) {
+                    n.alpha = Number(v) / 100;
+                }
+                const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
+                rgba.R = rgb_form_n.R;
+                rgba.G = rgb_form_n.G;
+                rgba.B = rgb_form_n.B;
+                rgba.alpha = n.alpha;
+            } else if (model.value.value === 'HSL') {
+                const { H, S, L, alpha } = hsla.value;
+                const n = { h: H, s: S, l: L, alpha };
+                if (handleIndex === 0) {
+                    n.h = Number(v);
+                } else if (handleIndex === 1) {
+                    n.s = Number(v) / 100;
+                } else if (handleIndex === 2) {
+                    n.l = Number(v) / 100;
+                } else if (handleIndex === 3) {
+                    n.alpha = Number(v) / 100;
+                }
+                const rgb_form_n = HSL2RGB(n);
+                rgba.R = rgb_form_n.R;
+                rgba.G = rgb_form_n.G;
+                rgba.B = rgb_form_n.B;
+                rgba.alpha = n.alpha;
+            }
+            const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+            changeColor(color);
+            update_dot_indicator_position(color);
+            update_hue_indicator_position(color);
+            update_alpha_indicator(color);
+            need_update_recent.value = true;
+        }
     }
     inputTarget.removeEventListener('keydown', keyboardWatcher);
     inputTarget.blur();
 }
+
 function triggle() {
     const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit) {
+    const exist = menu.isColorPickerMount;
+    if (exist) {
         menu.removeColorPicker();
-        if (exsit !== blockId) {
+        if (exist !== blockId) {
             colorPickerMount();
         }
     } else {
         colorPickerMount();
     }
 }
+
 /**
  * @description 打开调色板
  */
 function colorPickerMount() {
     picker_visible.value = true;
     props.context.menu.setupColorPicker(blockId);
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
-    update();
+
+    if (props.locat) {
+        props.context.color.gradinet_locat(props.locat);
+    }
+
+    init();
+
     init_document_colors();
+
     switch_editor_mode();
-    document.addEventListener('mousedown', quit);
+
     get_gradient_type();
-    if (props.locat && props.gradient && props.fillType === FillType.Gradient) props.context.color.switch_editor_mode(true, props.gradient);
+
+    switch_tile();
+
+    document.addEventListener('mousedown', quit);
+
     nextTick(locate);
 }
+
 function blockUnmount() {
     const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit === blockId) {
-        menu.clearColorPickerId();
-    }
+    const e = menu.isColorPickerMount;
+    if (e === blockId) menu.clearColorPickerId();
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 }
+
 /**
  * @description 移除调色板
  */
@@ -687,16 +883,26 @@ function removeCurColorPicker() {
     props.context.color.switch_editor_mode(false);
     picker_visible.value = false;
     props.context.color.select_stop(undefined);
-    props.context.color.clear_locat();
+    props.context.color.setImageScale(undefined);
+    props.context.color.setImageScaleMode(undefined);
 }
+
 function switch_editor_mode() {
-    if (!(picker_visible.value && props.gradient && props.fillType === FillType.Gradient)) {
-        return;
+    if (props.locat && props.gradient && props.fillType === FillType.Gradient) {
+        props.context.color.switch_editor_mode(true, props.gradient);
     }
-    props.context.color.switch_editor_mode(true, props.gradient);
 }
+
+function switch_tile() {
+    if (props.imageScaleMode === ImageScaleMode.Tile) {
+        props.context.color.setImageScale(props.scale);
+        props.context.color.setImageScaleMode(ImageScaleMode.Tile);
+        props.context.color.setImageOriginFrame(props.imageOriginFrame);
+    }
+}
+
 // init
-function init_rescent() {
+function init_recent() {
     let r = localStorage.getItem(key_storage);
     r = JSON.parse(r || '[]');
     if (!r || !r.length) {
@@ -707,24 +913,36 @@ function init_rescent() {
         recent.value.push(parseColorFormStorage(r[i]));
     }
 }
+
 function init_document_colors() {
     document_colors.value = getColorsFromDoc(props.context);
 }
-// update
-function update(color = props.color) {
-    init_rescent();
+
+// init
+function init(color = props.color) {
+    init_recent();
     const { red, green, blue, alpha } = color;
     rgba.alpha = alpha;
     update_rgb(red, green, blue);
     update_dot_indicator_position(color);
+    update_hue_indicator_position(color);
     update_alpha_indicator(color);
     update_gradient(props.gradient);
 }
-function update_rgb(R: number, G: number, B: number) {
-    rgba.R = R;
-    rgba.G = G;
-    rgba.B = B;
+
+function update(color = props.color) {
+    if (sleep) {
+        return;
+    }
+    const { red, green, blue, alpha } = color;
+    rgba.alpha = alpha;
+    update_rgb(red, green, blue);
+    update_dot_indicator_position(color);
+    update_hue_indicator_position(color, hue.value);
+    update_alpha_indicator(color);
+    get_gradient_type();
 }
+
 function update_recent_color() {
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G,), Math.round(rgba.B));
     let nVal = updateRecently(color) || JSON.stringify([]);
@@ -736,18 +954,36 @@ function update_recent_color() {
         }
     }
 }
-function update_dot_indicator_position(color: Color) {
-    const { h, s, b } = RGB2HSB(color);
-    dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
-    dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_WIDTH / 2);
 
-    let hueIndicator = (lineAttribute.length * h) - (INDICATOR_WIDTH / 2);
+function update_rgb(R: number, G: number, B: number) {
+    rgba.R = R;
+    rgba.G = G;
+    rgba.B = B;
+}
+
+function update_alpha_indicator(color: Color) {
+    const { alpha } = color;
+    alphaIndicatorAttr.x = (LINE_LENGTH - DOT_SIZE) * alpha;
+}
+
+function update_dot_indicator_position(color: Color) {
+    const { s, b } = RGB2SB(color);
+    dotPosition.left = HUE_WIDTH * s - (DOT_SIZE / 2);
+    dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_SIZE / 2);
+}
+
+function update_hue_indicator_position(color: Color, sub?: number) {
+    const h = RGB2H(color, sub);
+    let hueIndicator = (LINE_LENGTH - DOT_SIZE) * (h / 360);
+
     if (hueIndicator < 0) {
         hueIndicator = 0;
     }
-    if (hueIndicator > (lineAttribute.length - INDICATOR_WIDTH)) {
-        hueIndicator = lineAttribute.length - INDICATOR_WIDTH;
+
+    if (hueIndicator > (LINE_LENGTH - DOT_SIZE)) {
+        hueIndicator = LINE_LENGTH - DOT_SIZE;
     }
+
     hueIndicatorAttr.x = hueIndicator;
 }
 
@@ -761,25 +997,30 @@ function update_gradient(gradient: Gradient | undefined) {
     update_stops(id);
     props.context.color.notify(ColorCtx.GRADIENT_UPDATE);
 }
+
 const gradient_line = ref<HTMLDivElement>();
+
 //更新渐变颜色画板
 function update_stops(selected: string | undefined) {
+    if (sleep) return;
     stop_els.value.length = 0;
     if (!props.gradient || props.fillType !== FillType.Gradient) {
         return;
     }
     let index = props.gradient.stops.findIndex((v) => v.id === selected);
-    if (selected === undefined) index = 0;
+    if (selected === undefined || index === -1) index = 0;
     stop_els.value = stops_generator(props.gradient, 152, index); // 条条的宽度 减去 一个圆的宽度
     const c = stop_els.value[index]?.stop.color;
     if (!c) {
         return;
     }
-    update_rgb(c.red, c.green, c.blue);
     rgba.alpha = c.alpha;
+    update_rgb(c.red, c.green, c.blue);
     update_dot_indicator_position(c as Color);
+    update_hue_indicator_position(c as Color);
     update_alpha_indicator(c as Color);
 }
+
 //新增渐变节点
 function _gradient_channel_down(e: MouseEvent) {
     const target = e.target as HTMLInputElement;
@@ -793,6 +1034,7 @@ function _gradient_channel_down(e: MouseEvent) {
         props.context.color.select_stop(stop.id);
     })
 }
+
 function delete_gradient_stop() {
     if (stop_els.value.length <= 1) return;
     let id = props.context.color.selected_stop;
@@ -809,10 +1051,12 @@ function delete_gradient_stop() {
         update_gradient(props.gradient!);
     })
 }
+
 // 选中渐变节点
 let stop_start_position: ClientXY = { x: 0, y: 0 };
 let gradientEditor: AsyncGradientEditor | undefined;
 const stop_id = ref<string>('');
+
 function _stop_down(e: MouseEvent, index: number, id: string) {
     e.stopPropagation();
     props.context.color.select_stop(id);
@@ -839,12 +1083,13 @@ function move_stop_position(e: MouseEvent) {
         gradient_channel_style.value = gradient_channel_generator(props.gradient!);
         stop_els.value[index].left = stop_p * 152 + 16;
         gradientEditor.execute_stop_position(stop_p, stop_id.value);
+        passive();
     } else {
         if (Math.hypot(dx, dy) > 3) {
             isDrag = true;
             const selected = props.context.selection.selectedShapes;
             const page = props.context.selection.selectedPage;
-            const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+            const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
             const locat = props.locat;
             if (locat.type !== 'table_text' && locat.type !== 'text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes, page!, locat.index, locat.type);
@@ -867,7 +1112,12 @@ function move_stop_position(e: MouseEvent) {
                         if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
                             gradientEditor = editor.asyncSetTextGradient(props.gradient);
                         } else {
-                            gradientEditor = editor.asyncSetTextGradient(props.gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
+                            gradientEditor = editor.asyncSetTextGradient(props.gradient, {
+                                rowStart: tableSelection.tableRowStart,
+                                rowEnd: tableSelection.tableRowEnd,
+                                colStart: tableSelection.tableColStart,
+                                colEnd: tableSelection.tableColEnd
+                            });
                         }
                     }
                 } else {
@@ -880,6 +1130,8 @@ function move_stop_position(e: MouseEvent) {
                     }
                 }
             }
+
+            passive();
         }
     }
 }
@@ -894,34 +1146,47 @@ const stop_mouseup = () => {
     document.removeEventListener('mouseup', stop_mouseup);
 }
 
-function color_type_change(val: GradientType | 'solid') {
-    if (gradient_type.value === val) {
-        set_gradient(val);
+function color_type_change(val: GradientType, type: FillType) {
+    if (gradient_type.value === val && fill_type.value === type) {
+        set_gradient(val, type);
         return;
     }
-    emit('gradient-type', val);
-    update_gradient_type(val);
+    emit('gradient-type', val, type);
+    update_gradient_type(val, type);
     nextTick(() => {
-        set_gradient(val);
+        set_gradient(val, type);
         if (props.locat) props.context.color.gradinet_locat(props.locat);
-        update();
+        init();
         locate();
+        if (type === FillType.Pattern) {
+            props.context.color.setImageOriginFrame(props.imageOriginFrame);
+        }
     })
 }
-const set_gradient = (val: GradientType | 'solid') => {
-    if (val === 'solid') {
+
+const set_gradient = (val: GradientType, fillType: FillType) => {
+    if (fillType !== FillType.Gradient) {
         props.context.color.set_gradient_type(undefined);
         props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
+        props.context.color.setImageScale(undefined);
+        props.context.color.setImageScaleMode(undefined);
+        if (fillType === FillType.Pattern) {
+            props.context.color.setImageScale(props.scale);
+            props.context.color.setImageScaleMode(props.imageScaleMode);
+        }
     } else {
         props.context.color.set_gradient_type(val);
-        if (props.locat) props.context.color.switch_editor_mode(true, props.gradient);
+        setTimeout(() => {
+            if (props.locat) props.context.color.switch_editor_mode(true, props.gradient);
+        }, 100)
     }
     if (props.locat) props.context.color.gradinet_locat(props.locat);
 }
+
 // 切换渐变类型
-function update_gradient_type(type: GradientType | 'solid') {
-    if (type === 'solid') {
+function update_gradient_type(type: GradientType, fill: FillType) {
+    if (fill !== FillType.Gradient) {
         props.context.color.select_stop(undefined);
     } else {
         let id = props.context.color.selected_stop;
@@ -930,25 +1195,44 @@ function update_gradient_type(type: GradientType | 'solid') {
     }
     nextTick(() => {
         gradient_type.value = type;
+        fill_type.value = fill;
     })
 }
+
 // 获取渐变类型
 const get_gradient_type = () => {
     if (props.fillType === FillType.Gradient) {
+        fill_type.value = FillType.Gradient;
         gradient_type.value = props.gradient?.gradientType;
         props.context.color.set_gradient_type(gradient_type.value);
         let id = props.context.color.selected_stop;
         if (id === undefined) id = props.gradient?.stops[0].id;
         props.context.color.select_stop(id);
-    } else if (props.fillType === FillType.SolidColor) {
-        gradient_type.value = 'solid';
+        props.context.color.setImageScale(undefined);
+        props.context.color.setImageScaleMode(undefined);
+    } else {
         props.context.color.select_stop(undefined);
         props.context.color.set_gradient_type(undefined);
-        props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
+        if (props.fillType === FillType.SolidColor) {
+            fill_type.value = FillType.SolidColor;
+            props.context.color.clear_locat();
+            props.context.color.setImageScale(undefined);
+            props.context.color.setImageScaleMode(undefined);
+        } else if (props.fillType === FillType.Pattern) {
+            fill_type.value = FillType.Pattern;
+            imageScale.value = props.scale;
+            scaleMode.value = props.imageScaleMode;
+            props.context.color.setImageScale(props.scale);
+            props.context.color.setImageOriginFrame(props.imageOriginFrame);
+        }
     }
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
+
+    if (props.locat) {
+        props.context.color.gradinet_locat(props.locat);
+    }
 }
+
 // 渐变翻转
 function reverse() {
     emit('gradient-reverse');
@@ -956,6 +1240,7 @@ function reverse() {
         update_gradient(props.gradient!);
     })
 }
+
 // 渐变选中90度
 function rotate() {
     emit('gradient-rotate');
@@ -964,29 +1249,30 @@ function rotate() {
     })
 }
 
-function update_alpha_indicator(color: Color) {
-    const { alpha } = color;
-    alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
-}
-
 function menu_watcher(t: any, id: string) {
     if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
         removeCurColorPicker();
+    } else if (t === Menu.SHUTDOWN_MENU) {
+        removeCurColorPicker();
     }
 }
+
 function color_watch(t: number) {
     if (t === ColorCtx.CHANGE_STOP && props.gradient) {
+        gradient_channel_style.value = gradient_channel_generator(props.gradient);
         update_stops(props.context.color.selected_stop);
     } else if (t === ColorCtx.STOP_DELETE) {
         delete_gradient_stop();
     }
 }
+
 function window_blur() {
     isDrag = false;
 }
+
 const is_gradient_selected = () => {
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     if (shapes.length === 1) {
         if (shapes[0].type === ShapeType.Table && props.locat && props.locat.type !== 'table_text') {
             const t = props.context.tableSelection;
@@ -994,7 +1280,7 @@ const is_gradient_selected = () => {
                 return false;
             }
         }
-        return shapes[0].type === ShapeType.Contact ? false : true;
+        return shapes[0].type !== ShapeType.Contact;
     } else {
         let ret = false;
         shapes.forEach((s) => {
@@ -1013,9 +1299,14 @@ watch(() => props.color, () => watch_picker(), { deep: true })
 const watch_picker = () => {
     if (picker_visible.value) {
         update();
-        get_gradient_type();
     }
 }
+
+watch(() => picker_visible.value, (v) => {
+    if (!v) {
+        emit('closeMode');
+    }
+})
 
 const observer = new ResizeObserver(locate);
 let isDragging = false
@@ -1023,6 +1314,7 @@ let elpx: any
 let elpy: any
 let mx: any
 let my: any
+
 function startDrag(e: MouseEvent) {
     if (!props.cell) return
     isDragging = true
@@ -1030,10 +1322,12 @@ function startDrag(e: MouseEvent) {
     //父元素的页面位置
     elpx = elp.getBoundingClientRect().left
     elpy = elp.getBoundingClientRect().top
+
     //鼠标相对于盒子的坐标
     mx = e.offsetX
     my = e.offsetY
     document.addEventListener('mousemove', onDrag)
+
 }
 
 function onDrag(e: MouseEvent) {
@@ -1046,17 +1340,35 @@ function onDrag(e: MouseEvent) {
     }
 }
 
+const changeScaleMode = (mode: ImageScaleMode) => {
+    emit('changeMode', mode);
+    nextTick(() => {
+        get_gradient_type();
+        if (mode === ImageScaleMode.Tile) {
+            props.context.color.setImageOriginFrame(props.imageOriginFrame);
+        }
+    })
+}
+
+const setImageRef = (urlRef: string, origin: ImgFrame, imageMgr: any) => {
+    emit('setImageRef', urlRef, origin, imageMgr);
+}
+
 function stopDrag(e: MouseEvent) {
     isDragging = false
     document.removeEventListener('mousemove', onDrag)
 }
+const image_url = ref(props.imageUrl);
+watch(() => props.imageUrl, (v) => {
+    image_url.value = v;
+}, { immediate: true })
 
 onMounted(() => {
     if (document.body) observer.observe(document.body);
     props.context.menu.watch(menu_watcher);
     props.context.color.watch(color_watch);
     window.addEventListener('blur', window_blur);
-    update();
+    init();
 })
 
 onUnmounted(() => {
@@ -1071,27 +1383,35 @@ onUnmounted(() => {
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 })
+
+import SvgIcon from "@/components/common/SvgIcon.vue"
+import close_icon from "@/assets/icons/svg/close.svg"
+import exchange_icon from "@/assets/icons/svg/exchange.svg"
+import rotate90_icon from "@/assets/icons/svg/rotate90.svg"
+import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg"
+
 </script>
 
 <template>
     <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
+        <img v-if="fillType === FillType.Pattern" :src="image_url" alt="">
         <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
-            <div class="header">
+            <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
                 <div class="color-type-desc">
                     <div class="color-type">{{ t(`attr.fill`) }}</div>
-                    <!-- <svg-icon icon-class="down"></svg-icon> -->
                 </div>
-                <div @click="removeCurColorPicker" class="close">
-                    <svg-icon icon-class="close"></svg-icon>
+                <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
+                    <SvgIcon :icon="close_icon"/>
                 </div>
             </div>
             <div class="color_type_container" v-if="fillType && is_gradient_selected()">
-                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change" :angular="angular">
+                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"
+                    :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">
                 </ColorType>
             </div>
             <!-- 渐变工具 -->
-            <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient && is_gradient_selected()"
+            <div v-if="fill_type === FillType.Gradient && fillType === FillType.Gradient && is_gradient_selected()"
                 class="gradient-container">
                 <div class="line-container">
                     <div class="line" ref="gradient_line" :style="gradient_channel_style"
@@ -1103,86 +1423,103 @@ onUnmounted(() => {
                 </div>
                 <div class="reverse" @click="reverse">
                     <Tooltip :content="t('color.reverse')">
-                        <svg-icon icon-class="exchange"></svg-icon>
+                        <SvgIcon :icon="exchange_icon"/>
                     </Tooltip>
                 </div>
                 <div class="rotate" @click="rotate">
                     <Tooltip :content="t('color.rotate')">
-                        <svg-icon icon-class="rotate90"></svg-icon>
+                        <SvgIcon :icon="rotate90_icon"/>
                     </Tooltip>
                 </div>
             </div>
             <!-- 饱和度 -->
-            <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-                :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
-                <div class="white"></div>
-                <div class="black"></div>
-                <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
-            </div>
-            <!-- 常用色 -->
-            <div class="typical-container">
-                <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-                    :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
-            </div>
-            <div class="controller">
-                <div class="eyedropper">
-                    <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
+            <template v-if="fillType !== FillType.Pattern">
+                <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
+                    :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                    <div class="white"></div>
+                    <div class="black"></div>
+                    <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
                 </div>
-                <div class="sliders-container" ref="sliders">
-                    <!-- 色相 -->
-                    <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
-                        <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }"></div>
+                <!-- &lt;!&ndash; 常用色 &ndash;&gt; -->
+                <div class="typical-container">
+                    <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
+                        :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
                     </div>
-                    <!-- 透明度 -->
-                    <div class="alpha-bacground">
-                        <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-                            :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
-                            <div class="alphaIndicator" ref="alphaIndicator" :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                </div>
+                <div class="controller">
+                    <div class="eyedropper">
+                        <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper"/>
+                    </div>
+                    <div class="sliders-container" ref="sliders">
+                        <!-- &lt;!&ndash; 色相 &ndash;&gt; -->
+                        <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
+                            <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }">
+                            </div>
+                        </div>
+                        <!-- &lt;!&ndash; 透明度 &ndash;&gt; -->
+                        <div class="alpha-bacground">
+                            <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
+                                :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                                <div class="alphaIndicator" ref="alphaIndicator"
+                                    :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- model & values -->
-            <div class="input-container">
-                <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>
-                <div class="values">
-                    <div class="wrap">
-                        <div class="value">
-                            <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                    @click="(e) => inputClick(e, idx)" />
+                <!-- &lt;!&ndash; model & values &ndash;&gt; -->
+                <div class="input-container">
+                    <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"/>
+                    <div class="values">
+                        <div class="wrap">
+                            <div v-if="values.length === 4" class="value">
+                                <div v-for="(i, idx) in values" :key="idx" class="item">
+                                    <input :value="i" @click="(e) => inputClick(e, idx)"/>
+                                </div>
+                            </div>
+                            <div v-else class="value">
+                                <div class="item" style="height: 100%;width: 112.5px;">
+                                    <input spellcheck="false" :value="values[0]" @click="(e) => inputClick(e, 0)"
+                                           style="text-align: left;padding-left: 8px;"/>
+                                </div>
+                                <div class="item">
+                                    <input :value="values[1]" @click="(e) => inputClick(e, 1)"/>
+                                </div>
+                            </div>
+                            <div class="label">
+                                <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
                             </div>
                         </div>
-                        <div class="label">
-                            <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
+                    </div>
+                </div>
+                <!-- &lt;!&ndash; 最近使用 &ndash;&gt; -->
+                <div class="recently-container" v-if="recent.length">
+                    <div class="inner">
+                        <div class="header">{{ t('color.recently') }}</div>
+                        <div class="typical-container">
+                            <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
+                                :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- 最近使用 -->
-            <div class="recently-container" v-if="recent.length">
-                <div class="inner">
-                    <div class="header">{{ t('color.recently') }}</div>
-                    <div class="typical-container">
-                        <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-                            :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                <!-- &lt;!&ndash; 文档使用 &ndash;&gt; -->
+                <div class="dc-container" v-if="document_colors.length">
+                    <div class="inner">
+                        <div class="header">{{ t('color.documentc') }}</div>
+                        <div class="documentc-container" @wheel.stop>
+                            <div class="block" v-for="(c, idx) in document_colors" :key="idx"
+                                @click="() => setColor(c.color as any)"
+                                :title="t('color.times').replace('xx', c.times.toString())"
+                                :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- 文档使用 -->
-            <div class="dc-container" v-if="document_colors.length">
-                <div class="inner">
-                    <div class="header">{{ t('color.documentc') }}</div>
-                    <div class="documentc-container" @wheel.stop>
-                        <div class="block" v-for="(c, idx) in document_colors" :key="idx"
-                            @click="() => setColor(c.color as any)"
-                            :title="t('color.times').replace('xx', c.times.toString())"
-                            :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </template>
+            <PatternFill :context="context" v-else :scale="imageScale" :imageScaleMode="scaleMode" :image="image_url"
+                :paintFilter="paintFilter" @changeMode="changeScaleMode" @setImageRef="setImageRef"
+                @changeRotate="emit('changeRotate')" @changeScale="(s) => emit('changeScale', s)" />
         </div>
     </div>
 </template>
@@ -1190,26 +1527,34 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .color-block {
     position: relative;
-    // z-index: 99;
     width: 16px;
     height: 16px;
     border-radius: 3px;
     font-weight: 500;
     font-size: var(--font-default-fontsize);
     opacity: 1;
-    border: 1px solid #bcbcbc;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
     flex: 0 0 16px;
+    background-color: var(--theme-color-anti);
+
+    img {
+        border-radius: 3px;
+        width: 16px;
+        height: 16px;
+        object-fit: contain;
+    }
 
     .popover {
         position: fixed;
-        width: 250px;
         background-color: #ffffff;
-        box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
         border-radius: 8px;
         border: 1px solid #F0F0F0;
         overflow: hidden;
         z-index: 99;
+
+        width: v-bind('HUE_WIDTH_CSS');
 
         >.header {
             width: 100%;
@@ -1220,14 +1565,11 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 8px;
             box-sizing: border-box;
-            border-width: 0px 0px 1px 0px;
+            border-width: 0 0 1px 0;
             border-style: solid;
             border-color: #F5F5F5;
             padding: 14px 12px;
-            display: flex;
-            justify-content: space-between;
 
             >.color-type-desc {
                 display: flex;
@@ -1362,10 +1704,11 @@ onUnmounted(() => {
 
         >.saturation {
             width: 100%;
-            height: 200px;
             position: relative;
             cursor: pointer;
             overflow: hidden;
+
+            height: v-bind('HUE_HEIGHT_CSS');
 
             >.white {
                 position: absolute;
@@ -1382,12 +1725,13 @@ onUnmounted(() => {
             }
 
             >.dot {
-                width: 8px;
-                height: 8px;
+                width: v-bind('DOT_SIZE_CSS');
+                height: v-bind('DOT_SIZE_CSS');
                 border-radius: 50%;
                 border: 2px solid #fff;
                 position: absolute;
                 box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                box-sizing: border-box;
             }
         }
 
@@ -1399,14 +1743,12 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
             padding: 12px 6px;
-            padding-bottom: 6px;
             box-sizing: border-box;
 
             >.block {
-                margin: 0 3px;
+                margin: 0 3px 6px 3px;
                 width: 16px;
                 height: 16px;
-                margin-bottom: 6px;
                 border-radius: 3px;
                 border: 1px solid rgba(0, 0, 0, 0.1);
                 cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
@@ -1425,7 +1767,7 @@ onUnmounted(() => {
             justify-content: space-around;
 
             >.sliders-container {
-                width: 196px;
+                width: v-bind('LINE_LENGTH_CSS');
                 height: 32px;
 
                 >.hue {
@@ -1438,12 +1780,13 @@ onUnmounted(() => {
 
                     >.hueIndicator {
                         top: -2px;
-                        width: 8px;
-                        height: 8px;
+                        width: v-bind('DOT_SIZE_CSS');
+                        height: v-bind('DOT_SIZE_CSS');
                         border-radius: 50%;
                         border: 2px solid #fff;
                         position: absolute;
                         box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                        box-sizing: border-box;
                     }
                 }
 
@@ -1465,12 +1808,13 @@ onUnmounted(() => {
 
                         >.alphaIndicator {
                             top: -2px;
-                            width: 8px;
-                            height: 8px;
+                            width: v-bind('DOT_SIZE_CSS');
+                            height: v-bind('DOT_SIZE_CSS');
                             border-radius: 50%;
                             border: 2px solid #fff;
                             position: absolute;
                             box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                            box-sizing: border-box;
                         }
                     }
 
@@ -1494,15 +1838,11 @@ onUnmounted(() => {
                     cursor: pointer;
                 }
             }
-
-            //.eyedropper:hover {
-            //    background-color: var(--grey-dark);
-            //}
         }
 
         .input-container {
             width: 100%;
-            height: 80px;
+            height: fit-content;
             display: flex;
             flex-direction: row;
             align-items: flex-start;
@@ -1559,6 +1899,7 @@ onUnmounted(() => {
                         height: 24px;
                         display: flex;
                         align-items: center;
+                        justify-content: space-between;
                         padding: 5px;
                         box-sizing: border-box;
 
@@ -1640,7 +1981,7 @@ onUnmounted(() => {
                 width: 100%;
 
                 .header {
-                    width: 48px;
+                    // width: 48px;
                     height: 14px;
                     font-family: HarmonyOS Sans;
                     font-size: 12px;
@@ -1664,7 +2005,7 @@ onUnmounted(() => {
                     }
 
                     &::-webkit-scrollbar-track {
-                        background-color: none;
+                        background-color: transparent;
                     }
 
                     &::-webkit-scrollbar-thumb {
@@ -1673,11 +2014,11 @@ onUnmounted(() => {
                     }
 
                     &::-webkit-scrollbar-thumb:hover {
-                        background-color: none;
+                        background-color: transparent;
                     }
 
                     &::-webkit-scrollbar-thumb:active {
-                        background-color: none;
+                        background-color: transparent;
                     }
 
                     >.block {

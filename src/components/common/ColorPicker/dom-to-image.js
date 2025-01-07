@@ -1,5 +1,5 @@
-(function (global) {
-  'use strict';
+// (function (global) {
+//   'use strict';
 
   var util = newUtil();
   var inliner = newInliner();
@@ -29,10 +29,12 @@
       }
   };
 
-  if (typeof module !== 'undefined')
-      module.exports = domtoimage;
-  else
-      global.domtoimage = domtoimage;
+  export default domtoimage
+
+//   if (typeof module !== 'undefined')
+//       module.exports = domtoimage;
+//   else
+//       global.domtoimage = domtoimage;
 
 
   /**
@@ -766,4 +768,4 @@
           }
       }
   }
-})(this);
+// })(this);

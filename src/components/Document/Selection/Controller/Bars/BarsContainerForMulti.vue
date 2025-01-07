@@ -1,29 +1,29 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncMultiAction, CtrlElementType, Matrix, adapt2Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { CtrlElementType } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
-import { Action } from '@/context/tool';
-import { WorkSpace } from '@/context/workspace';
-import { shapes_organize } from '@/utils/common';
+import { ScaleHandler } from '@/transform/scale';
+import { CursorType } from "@/utils/cursor2";
+import { Action } from "@/context/tool";
+
 interface Props {
-    matrix: number[]
-    context: Context
-    frame: Point[]
+    context: Context;
+    frame: Point[];
 }
+
 interface Bar {
-    path: string
-    type: CtrlElementType
+    path: string;
+    type: CtrlElementType;
 }
+
 const props = defineProps<Props>();
-const matrix = new Matrix();
-const submatrix = new Matrix();
-const data: { bars: Bar[] } = reactive({ bars: [] });
-const { bars } = data;
+const { bars, assistPaths } = reactive<{ bars: Bar[], assistPaths: Bar[] }>({ bars: [], assistPaths: [] });
+const assist = ref<boolean>(false);
+
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
-let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 const dragActiveDis = 3;
 const types = [
@@ -33,37 +33,45 @@ const types = [
     CtrlElementType.RectLeft
 ];
 let need_reset_cursor_after_transform = true;
+let scaler: ScaleHandler | undefined = undefined;
 
 function update() {
-    matrix.reset(props.matrix);
-    update_dot_path();
+    props.context.workspace.shouldSelectionViewUpdate && render();
 }
-function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
 
+function render() {
     bars.length = 0;
-    const apex = props.frame.map(p => { return { x: p.x, y: p.y } });
+    assistPaths.length = 0;
+
+    const apex = props.frame.map(p => ({ x: p.x, y: p.y }));
     apex.push(apex[0]);
-    for (let i = 0; i < apex.length - 1; i++) {
-        const p = get_bar_path(apex[i], apex[i + 1]);
-        bars.push({ path: p, type: types[i] });
+    for (let i = 0; i < apex.length - 1; i++) bars.push({
+        path: get_bar_path(apex[i], apex[i + 1]),
+        type: types[i]
+    });
+    const height = Math.hypot(apex[0].x - apex[3].x, apex[0].y - apex[3].y);
+    const width = Math.hypot(apex[0].x - apex[1].x, apex[0].y - apex[1].y);
+    assist.value = !(width < 24 || height < 24);
+    if (!assist.value) {
+        const [lt, rt, rb, lb] = props.frame;
+        const apexMini = [
+            { x: lt.x - 2.5, y: lt.y - 2.5 },
+            { x: rt.x + 2.5, y: rt.y - 2.5 },
+            { x: rb.x + 2.5, y: rb.y + 2.5 },
+            { x: lb.x - 2.5, y: lb.y + 2.5 }
+        ]
+        apexMini.push(apexMini[0]);
+        for (let i = 0; i < apexMini.length - 1; i++) assistPaths.push({
+            path: get_bar_path(apexMini[i], apexMini[i + 1]),
+            type: types[i]
+        });
     }
 }
-function passive_update() {
-    matrix.reset(props.matrix);
-    bars.length = 0;
-    const apex = props.frame.map(p => { return { x: p.x, y: p.y } });
-    apex.push(apex[0]);
-    for (let i = 0; i < apex.length - 1; i++) {
-        const p = get_bar_path(apex[i], apex[i + 1]);
-        bars.push({ path: p, type: types[i] });
-    }
-}
+
 function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }): string {
     return `M ${s.x} ${s.y} L ${e.x} ${e.y} z`;
 }
+
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
@@ -72,46 +80,29 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     event.stopPropagation();
 
+    if (scaler) {
+        return;
+    }
+
     cur_ctrl_type = ele;
 
-    set_status_on_down();
+    startPosition = { x: event.x, y: event.y };
 
-    startPosition = props.context.workspace.getContentXY(event)
+    scaler = new ScaleHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
 
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
+
 function bar_mousemove(event: MouseEvent) {
-    const workspace = props.context.workspace;
-
-    const { x: sx, y: sy } = startPosition;
-    const { x: mx, y: my } = workspace.getContentXY(event);
-
-    if (isDragging && asyncMultiAction) {
-        (event.shiftKey || props.context.tool.action === Action.AutoK)
-            ? er_scale(asyncMultiAction, sx, sy, mx, my)
-            : irregular_scale(asyncMultiAction, sx, sy, mx, my);
-
-        props.context.nextTick(props.context.selection.selectedPage!, () => {
-            workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
-        })
-
-        startPosition = { x: mx, y: my };
-    } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        const selection = props.context.selection
-        const shapes = shapes_organize(selection.selectedShapes);
-
-        asyncMultiAction = props.context.editor
-            .controller()
-            .asyncMultiEditor(shapes.map(s => adapt2Shape(s)), selection.selectedPage!);
-
-        submatrix.reset(workspace.matrix.inverse);
-
-        set_status_before_action();
-
+    if (isDragging) {
+        scaler?.execute(event);
+    } else if (Math.hypot(event.x - startPosition.x, event.y - startPosition.y) > dragActiveDis) {
+        scaler?.createApiCaller();
         isDragging = true;
     }
 }
+
 function bar_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
@@ -119,34 +110,13 @@ function bar_mouseup(event: MouseEvent) {
 
     clear_status();
 }
-function set_status_on_down() {
-    props.context.menu.menuMount();
-
-    props.context.cursor.cursor_freeze(true);
-
-    props.context.workspace.setCtrl('controller');
-}
-function set_status_before_action() {
-    const workspace = props.context.workspace;
-    workspace.scaling(true);
-    workspace.setSelectionViewUpdater(false);
-}
 
 function clear_status() {
-    const workspace = props.context.workspace;
-    if (isDragging) {
-        if (asyncMultiAction) {
-            asyncMultiAction.close();
-            asyncMultiAction = undefined;
-        }
+    isDragging = false;
 
-        workspace.setSelectionViewUpdater(true);
-        isDragging = false;
-    }
-    workspace.scaling(false);
-    workspace.setCtrl('page');
+    scaler?.fulfil();
+    scaler = undefined;
 
-    props.context.cursor.cursor_freeze(false);
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }
@@ -154,121 +124,37 @@ function clear_status() {
     document.removeEventListener('mousemove', bar_mousemove);
     document.removeEventListener('mouseup', bar_mouseup);
 }
-function er_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
-    if (cur_ctrl_type === CtrlElementType.RectTop) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_h = f_rb.y - f_lt.y;
-        const o_w = f_rb.x - f_lt.x;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const transy = e.y - s.y;
-        const _h = o_h - transy;
-        if (_h < 0) cur_ctrl_type = CtrlElementType.RectBottom;
-        const scale = _h / o_h;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + ((1 - scale) * o_w) / 2, y: f_lt.y + transy }, scale, scale);
-    } else if (cur_ctrl_type === CtrlElementType.RectRight) {
-        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_lt = props.frame[0];
-        const f_rb = props.frame[2];
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const transx = mx - sx;
-        const _w = o_w + transx;
-        if (_w < 0) cur_ctrl_type = CtrlElementType.RectLeft;
-        const scale = _w / o_w;
-        asyncMultiAction.executeScale(origin, { x: origin.x, y: origin.y + ((1 - scale) * o_h) / 2 }, scale, scale);
-    } else if (cur_ctrl_type === CtrlElementType.RectBottom) {
-        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_lt = props.frame[0];
-        const f_rb = props.frame[2];
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const transy = my - sy;
-        const _h = o_h + transy;
-        if (_h < 0) cur_ctrl_type = CtrlElementType.RectTop;
-        const scale = _h / o_h;
-        asyncMultiAction.executeScale(origin, { x: origin.x + ((1 - scale) * o_w) / 2, y: origin.y }, scale, scale);
-    } else if (cur_ctrl_type === CtrlElementType.RectLeft) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const transx = e.x - s.x;
-        const _w = o_w - transx;
-        if (_w < 0) cur_ctrl_type = CtrlElementType.RectRight;
-        const scale = _w / o_w;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + ((1 - scale) * o_w), y: f_lt.y + ((1 - scale) * o_h) / 2 }, scale, scale);
-    }
-}
-function irregular_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
-    if (cur_ctrl_type === CtrlElementType.RectTop) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_h = f_rb.y - f_lt.y;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const transy = e.y - s.y;
-        const _h = o_h - transy;
-        if (_h < 0) cur_ctrl_type = CtrlElementType.RectBottom;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + transy }, 1, _h / o_h);
-    } else if (cur_ctrl_type === CtrlElementType.RectRight) {
-        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_lt = props.frame[0];
-        const f_rb = props.frame[2];
-        const o_w = f_rb.x - f_lt.x;
-        const transx = mx - sx;
-        const _w = o_w + transx;
-        if (_w < 0) cur_ctrl_type = CtrlElementType.RectLeft;
-        asyncMultiAction.executeScale(origin, origin, _w / o_w, 1);
-    } else if (cur_ctrl_type === CtrlElementType.RectBottom) {
-        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_lt = props.frame[0];
-        const f_rb = props.frame[2];
-        const o_h = f_rb.y - f_lt.y;
-        const transy = my - sy;
-        const _h = o_h + transy;
-        if (_h < 0) cur_ctrl_type = CtrlElementType.RectTop;
-        asyncMultiAction.executeScale(origin, origin, 1, _h / o_h);
-    } else if (cur_ctrl_type === CtrlElementType.RectLeft) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_w = f_rb.x - f_lt.x;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const transx = e.x - s.x;
-        const _w = o_w - transx;
-        if (_w < 0) cur_ctrl_type = CtrlElementType.RectRight;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + transx, y: f_lt.y }, _w / o_w, 1);
-    }
-}
+
 function setCursor(t: CtrlElementType) {
-    if (t === CtrlElementType.RectTop) props.context.cursor.setType('scale', 90);
-    else if (t === CtrlElementType.RectRight) props.context.cursor.setType('scale', 0);
-    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType('scale', 90);
-    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale', 0);
+    const action = props.context.tool.action;
+    const type = action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
+    if (t === CtrlElementType.RectTop) {
+        props.context.cursor.setType(type, 90);
+    } else if (t === CtrlElementType.RectRight) {
+        props.context.cursor.setType(type, 0);
+    } else if (t === CtrlElementType.RectBottom) {
+        props.context.cursor.setType(type, 90);
+    } else if (t === CtrlElementType.RectLeft) {
+        props.context.cursor.setType(type, 0);
+    }
 }
+
 function bar_mouseenter(type: CtrlElementType) {
     need_reset_cursor_after_transform = false;
     setCursor(type);
 }
+
 function bar_mouseleave() {
     need_reset_cursor_after_transform = true;
     props.context.cursor.reset();
 }
+
 function window_blur() {
     clear_status();
 }
-function frame_watcher() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        passive_update();
-    }
-}
 
-watch(() => props.frame, frame_watcher);
-watch(() => props.matrix, update);
+watch(() => props.frame, render);
+
 onMounted(() => {
     update();
     window.addEventListener('blur', window_blur);
@@ -278,13 +164,19 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g v-for="(b, i) in bars" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
-        @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
-        <path :d="b.path" class="main-path">
-        </path>
-        <path :d="b.path" class="assist-path">
-        </path>
-    </g>
+<g v-for="(b, i) in bars" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+   @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
+    <path v-if="assist" :d="b.path" class="assist-path"/>
+    <path :d="b.path" class="main-path"/>
+</g>
+<g v-if="!assist">
+    <path v-for="(b, i) in assistPaths"
+          class="assist-path-2"
+          :key="i"
+          @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+          @mouseenter="() => bar_mouseenter(b.type)"
+          @mouseleave="bar_mouseleave" :d="b.path"/>
+</g>
 </template>
 <style lang='scss' scoped>
 .main-path {
@@ -295,6 +187,14 @@ onUnmounted(() => {
 .assist-path {
     fill: none;
     stroke: transparent;
+    //stroke: blue;
     stroke-width: 10px;
+}
+
+.assist-path-2 {
+    fill: none;
+    stroke-width: 5px;
+    stroke: transparent;
+    //stroke: rgba(255, 0, 0, 0.3);
 }
 </style>

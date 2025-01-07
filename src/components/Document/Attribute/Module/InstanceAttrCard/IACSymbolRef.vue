@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { get_vari_value_for_ref, is_circular_ref2, RefAttriListItem } from "@/utils/symbol";
 import { onMounted, onUnmounted, onUpdated, ref, watch } from "vue";
 import { Context } from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
-import { OverrideType, Shape } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
 import { Component } from "@/context/component";
 import { message } from "@/utils/message";
 import { ArrowDown } from '@element-plus/icons-vue'
 import { useI18n } from "vue-i18n";
+import { v4 } from "uuid";
 
 
 interface Props {
@@ -32,9 +33,16 @@ const compsDialog = () => {
         comps_posi.value.y = el.y;
     }
     showCompsDialog.value = true;
+    props.context.escstack.save(v4(), de_symbol_is_show);
 }
 const closeDialog = () => {
     showCompsDialog.value = false;
+}
+
+function de_symbol_is_show() {
+    const is_achieve_expected_results = showCompsDialog.value;
+    showCompsDialog.value = false;
+    return is_achieve_expected_results;
 }
 
 // function select(index: number) {
@@ -50,12 +58,12 @@ function get_value() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
     const id = get_vari_value_for_ref(symref, props.data.variable);
-    vari_value.value = props.context.data.symbolsMgr.getSync(id)?.name || 'Error';
+    vari_value.value = props.context.data.getSymbolSync(id)?.name || 'Error';
     if (vari_value.value) vari_instance_from.value = id;
 }
 
 function component_watcher(type: number, val: Shape) {
-    if (type !== Component.SELECTED_VAL) {
+    if (type !== Component.SELECTED_VAL || !showCompsDialog.value) {
         return;
     }
 
@@ -64,7 +72,7 @@ function component_watcher(type: number, val: Shape) {
         return;
     }
 
-    const sym = props.context.data.symbolsMgr.getSync(val.id);
+    const sym = props.context.data.getSymbolSync(val.id);
     if (!sym) {
         message("info", t('compos.invalid_compos'));
         return;
@@ -76,7 +84,8 @@ function component_watcher(type: number, val: Shape) {
         return;
     }
 
-    modify_vari_value_for_ref(props.context, props.data.variable, val.id);
+    const editor = props.context.editor4Shape(symbolref);
+    editor.modifySymbolRefVariable(props.data.variable, val.id);
     closeDialog();
 }
 
@@ -118,7 +127,7 @@ onUnmounted(() => {
     position: relative;
     display: flex;
     align-items: center;
-    height: 44px;
+    margin-bottom: 8px;
 
     .state_item {
         display: flex;
@@ -148,7 +157,7 @@ onUnmounted(() => {
             flex: 0 0 126px;
             height: 32px;
             border-radius: 6px;
-            padding: 9px 12px;
+            padding: 9px 9px;
             box-sizing: border-box;
 
             >div {

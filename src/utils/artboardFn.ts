@@ -1,21 +1,36 @@
 import { XY, PageXY } from '@/context/selection';
-import { Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard, ShapeView, GroupShapeView } from '@kcdesign/data';
+import {
+    Matrix,
+    ShapeFrame,
+    Shape,
+    ShapeType,
+    GroupShape,
+    Artboard,
+    ShapeView,
+    GroupShapeView,
+    Color,
+    Fill,
+    BasicArray,
+    FillType
+} from '@kcdesign/data';
 import { isTarget, isTarget2 } from './common';
 import { Context } from '@/context';
 import { Action, Tool } from '@/context/tool';
 import { compare_layer_3 } from './group_ungroup';
 import { WorkSpace } from '@/context/workspace';
+import { v4 } from 'uuid';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
 // 直到没有🍌为止，得到最后的XY;
 
-export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: ShapeFrame): PageXY {
+export function landFinderOnPage(context: Context, frame: ShapeFrame): PageXY {
     const shapes: ShapeView[] = context.selection.selectedPage?.childs || [];
     const { width, height } = frame;
+    const matrix = context.workspace.matrix;
     let center = context.workspace.root.center;
-    center = pageMatrix.inverseCoord(center.x, center.y);
-    const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point
+    center = matrix.inverseCoord(center.x, center.y);
+    const start = { x: center.x - width / 2, y: center.y - height / 2 };
     const offset = 40;
     let pure: boolean = false;
     let max = 0;
@@ -31,24 +46,21 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
         ];
 
         for (let i = 0; i < shapes.length; i++) {
-            const m = shapes[i].matrix2Root();
-            const { width: w, height: h } = shapes[i].frame;
-            const ps: XY[] = [
-                { x: 0, y: 0 },
-                { x: w, y: 0 },
-                { x: w, y: h },
-                { x: 0, y: h },
-                { x: 0, y: 0 },
-            ].map(p => m.computeCoord2(p.x, p.y));
-            if (isTarget(selectorPoints, ps) || isTarget(ps as [XY, XY, XY, XY, XY], selectorPoints)) pure = false; // 存在🍌
+            if (isTarget2(selectorPoints, shapes[i])) pure = false; // 存在🍌
         }
-        !pure && (start.x += offset); // 挪一下，再找。
+        !pure && (start.x += offset);
         max++;
     }
     if (max === 100000) {
         throw new Error('overflow');
     }
-    return start; // 找到了空白区域的起点
+
+    if (context.user.isPixelAlignMent) {
+        start.x = Math.ceil(start.x);
+        start.y = Math.ceil(start.y);
+    }
+
+    return start;
 }
 
 // 使容器滚动到可视区域
@@ -68,7 +80,7 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
         context.tool.setTitleVisible(false);
         const pageViewEl = workspace.pageView;
         if (pageViewEl) {
-            pageViewEl.classList.add('transition-400');
+            // pageViewEl.classList.add('transition-400');
             const m = new Matrix(workspace.matrix);
             m.trans(transX, transY);
             const root = workspace.root;
@@ -83,12 +95,14 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
                 m.trans(root.width / 2, root.height / 2);
             }
             workspace.matrix.reset(m);
-            const timer = setTimeout(() => {
-                selection.selectShape(shape);
-                context.tool.setTitleVisible(true);
-                pageViewEl.classList.remove('transition-400');
-                clearTimeout(timer);
-            }, 400);
+            selection.selectShape(shape);
+            context.tool.setTitleVisible(true);
+            // const timer = setTimeout(() => {
+            //     selection.selectShape(shape);
+            //     context.tool.setTitleVisible(true);
+            //     pageViewEl.classList.remove('transition-400');
+            //     clearTimeout(timer);
+            // }, 400);
         } else {
             workspace.matrix.trans(transX, transY);
         }
@@ -97,20 +111,23 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
 }
 
 export function insertFrameTemplate(context: Context) {
-    const selection = context.selection, workspace = context.workspace, tool = context.tool;
+    const selection = context.selection;
+    const workspace = context.workspace;
+    const tool = context.tool;
+
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];
-    const type = ShapeType.Artboard;
     const parent = selection.selectedPage;
     if (parent) {
         const editor = context.editor4Page(parent);
         const tf = tool.frameSize
-        const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
-        const { x, y } = landFinderOnPage(matrix, context, frame);
-        frame.x = x, frame.y = y;
-        // let artboard: Shape | false = editor.createArtboard(tf.name, frame);
-        let artboard: Shape | false = editor.create(ShapeType.Artboard, tf.name, frame);
-        artboard = editor.insert(parent.data, shapes.length, artboard);
+        const { x, y } = landFinderOnPage(context, frame);
+        frame.x = x;
+        frame.y = y;
+        const fillColor = new Color(1, 255, 255, 255);
+        const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, fillColor);
+        let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill);
+        artboard = editor.insert(parent.data, shapes.length, artboard, true);
         context.nextTick(parent, () => {
             if (artboard) {
                 const view = parent.shapes.get(artboard.id);
@@ -118,7 +135,8 @@ export function insertFrameTemplate(context: Context) {
             }
         })
     }
-    context.tool.setAction(Action.AutoV);
+    tool.setAction(Action.AutoV);
+    context.cursor.reset();
 }
 
 export function collect(context: Context): ShapeView[] {
@@ -128,12 +146,14 @@ export function collect(context: Context): ShapeView[] {
     if (page && artboard && artboard.type === ShapeType.Artboard) {
         const m2r = artboard.matrix2Root();
         const frame = artboard.frame;
+        const r = frame.x + frame.width;
+        const b = frame.y + frame.height;
         const ps = [
-            { x: 0, y: 0 },
-            { x: frame.width, y: 0 },
-            { x: frame.width, y: frame.height },
-            { x: 0, y: frame.height },
-            { x: 0, y: 0 }
+            { x: frame.x, y: frame.y },
+            { x: r, y: frame.y },
+            { x: r, y: b },
+            { x: frame.x, y: b },
+            { x: frame.x, y: frame.y }
         ].map(p => m2r.computeCoord(p.x, p.y));
 
         const scope = (((artboard.parent || page) as ShapeView).childs || [])
@@ -148,7 +168,7 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY]) {
     const selectedShapes: Map<string, ShapeView> = new Map();
     while (ids < childs.length) {
         const shape = childs[ids];
-        if (shape.isLocked() || !shape.isVisible()) {
+        if (shape.isLocked || !shape.isVisible) {
             ids++;
             continue;
         }

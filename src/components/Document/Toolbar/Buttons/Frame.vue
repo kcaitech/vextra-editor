@@ -1,231 +1,309 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
-import ToolButton from '../ToolButton.vue';
 import { useI18n } from 'vue-i18n';
-import FrameChild from './FrameChild.vue'
-import { Action } from "@/context/tool";
-import Tooltip from '@/components/common/Tooltip.vue';
 import { Context } from '@/context';
+import { useFrame, useCutout } from "@/components/Document/Creator/execute";
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { Action, Tool } from '@/context/tool';
+import { XY } from "@/context/selection";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
-type Button = InstanceType<typeof ToolButton>
 interface Props {
-    context: Context;
-    active: boolean;
+  context: Context;
+  params: {
+    active: boolean,
+  }
 }
-interface Emits {
-    (e: "select", action: Action): void;
-}
-
-const frames = ['frame.phone', 'frame.tablet', 'frame.deskdop', 'frame.presentation', 'frame.watch', 'frame.paper', 'frame.social_media']
-
-const framesChild = [
-    [['iPhone 14', '390 × 844'], ['iPhone 14 Pro', '393 × 852']],
-    [['Surface Pro 8', '1440 × 960'], ['iPad mini 8.3', '744 × 1133']],
-    [['MacBook Air', '1280 × 832'], ['Desktop', '1440 × 1024']],
-    [['Slide 16:9', '1920 × 1080'], ['Slide 4:3', '1024 × 768']],
-    [['Apple Watch 41mm', '176 × 215'], ['Apple Watch 45mm', '198 × 242']],
-    [['A4', '595 × 842'], ['A5', '420 × 595']],
-    [['Twitter post', '1200 × 675'], ['Twitter header', '1500 × 500']]
-]
-
 const { t } = useI18n();
 const props = defineProps<Props>();
-const emits = defineEmits<Emits>();
-const popoverVisible = ref<boolean>(false);
-const popover = ref<HTMLDivElement>();
-const button = ref<Button>();
-const frame = ref<HTMLDivElement>();
-const hoverIndex = ref<number>(-1);
+
+const currentTool = ref<string>(Action.AddFrame);
+const popover = ref<boolean>(false);
+const tipsVisible = ref<boolean>(false);
+const selected = ref<boolean>(false);
+const popoverXY = ref<XY>({ x: 0, y: 0 });
+
+// 当前工具Icon
+const pattern = computed<string>(() => {
+  switch (currentTool.value) {
+    case Action.AddFrame:
+      return frame_icon;
+    case Action.AddCutout:
+      return cutout_icon;
+    default:
+      return frame_icon;
+  }
+});
+
+// 当前工具Tips
+const tips = computed<string>(() => {
+  const defaultFrame = `${t('shape.artboard')}\u00a0\u00a0\u00a0\u00a0F`;
+  switch (currentTool.value) {
+    case Action.AddFrame:
+      return defaultFrame;
+    case Action.AddCutout:
+      return `${t('cutoutExport.cutout')}\u00a0\u00a0\u00a0\u00a0S`;
+    default:
+      return defaultFrame;
+  }
+});
+
+let timer: any = null;
+function enter() {
+  if (timer) {
+    clearTimeout(timer);
+  }
+  timer = setTimeout(() => {
+    tipsVisible.value = true;
+    clearTimeout(timer);
+    timer = null;
+  }, 600);
+}
+
+function leave() {
+  clearTimeout(timer);
+  tipsVisible.value = false;
+}
+
+function shot() {
+  switch (currentTool.value) {
+    case Action.AddFrame:
+      return useFrame(props.context);
+    case Action.AddCutout:
+      return useCutout(props.context);
+    default:
+      return useFrame(props.context);
+  }
+}
 
 function showMenu(e: MouseEvent) {
-    if (popoverVisible.value) {
-        return popoverVisible.value = false;
+  props.context.menu.menuMount()
+  const el = (e.target as Element)!.closest('.frame-button') as HTMLDivElement;
+  if (!el) return;
+  if (popover.value) {
+    popover.value = false;
+    return;
+  }
+
+  popover.value = true;
+  tipsVisible.value = false;
+
+  popoverXY.value.x = el.offsetLeft;
+  popoverXY.value.y = 45;
+}
+
+function toolWatcher(t: number) {
+  if (t === Tool.CHANGE_ACTION) {
+    const action = props.context.tool.action;
+    selected.value = action === Action.AddFrame
+      || action === Action.AddCutout
+    if (selected.value) {
+      currentTool.value = action;
     }
+  }
+}
 
-    if (button.value?.toolButtonEl) {
-        const el = button.value?.toolButtonEl;
-        popoverVisible.value = true;
-        nextTick(() => {
-            if (popover.value) {
-                popover.value.style.left = el.offsetLeft + 'px';
-                popover.value.style.top = el.offsetHeight + 13 + 'px';
-            }
-        })
-        document.addEventListener('click', onMenuBlur);
+function blur(e: MouseEvent) {
+  if (!(e.target as Element).closest('.popover-frame-tool, .tool-frame-menu-trigger')) popover.value = false;
+}
+
+const stop = watch(() => popover.value, (v) => {
+    if (v) {
+        props.context.escstack.save('frame-menu', () => {
+            const achieve = popover.value;
+            popover.value = false;
+            return achieve;
+        });
+        document.addEventListener('click', blur);
+    } else {
+        document.removeEventListener('click', blur);
     }
+})
 
-    emits('select', Action.AutoV);
-}
 
-function onMenuBlur(e: MouseEvent) {
-    if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.menu-f')) {
-        var timer = setTimeout(() => {
-            popoverVisible.value = false;
-            clearTimeout(timer)
-            document.removeEventListener('click', onMenuBlur);
-        }, 10)
-    }
-}
+onMounted(() => {
+  props.context.tool.watch(toolWatcher);
+});
+onUnmounted(() => {
+  props.context.tool.unwatch(toolWatcher);
+  stop();
+  document.removeEventListener('click', blur);
+})
+import white_down_icon from '@/assets/icons/svg/white-down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import frame_icon from '@/assets/icons/svg/frame.svg';
+import cutout_icon from '@/assets/icons/svg/cutout.svg';
 
-const left = ref(0)
-const showChildFrame = (i: number) => {
-    hoverIndex.value = i
-    if (popover.value) {
-        left.value = popover.value.offsetWidth + 6
-    }
-}
-
-const closeChildFrame = () => {
-    hoverIndex.value = -1
-}
-const closeFrame = () => {
-    popoverVisible.value = false;
-    hoverIndex.value = -1
-}
-const customFrame = () => {
-    emits('select', Action.AddFrame);
-    popoverVisible.value = false;
-}
 </script>
 
 <template>
-    <ToolButton ref="button" :selected="props.active">
-        <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" :offset="10">
-            <div class="svg-container" @click="() => { emits('select', Action.AddFrame) }">
-                <svg-icon icon-class="frame"></svg-icon>
-            </div>
-        </Tooltip>
-        <div class="menu-f" @click="showMenu">
-            <svg-icon icon-class="white-down"></svg-icon>
-        </div>
-    </ToolButton>
-    <div ref="popover" class="popover-f" tabindex="-1" v-if="popoverVisible">
-        <div>
-            <span @click="customFrame">{{ t('frame.custom') }}</span>
-        </div>
-        <div ref="frame" v-for="(item, i) in frames" :key="i" style="position: relative;">
-            <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
-                <span>{{ t(`${item}`) }}</span>
-                <div class="triangle"></div>
-                <div class="bridge"></div>
-<!--                <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-8" :left="left"-->
-<!--                    :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>-->
-<!--                <div class="triangle"></div>-->
-                <svg-icon icon-class="arrowhead"></svg-icon>
-                <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-1" :left="left"
-                            :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>
-            </div>
-        </div>
+  <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
+    <div :class="{ 'frame-button': true, 'frame-button-selected': selected, active: popover }" @mouseenter.stop="enter"
+      @mouseleave.stop="leave">
+      <div class="svg-container" @click="shot">
+        <SvgIcon :icon="pattern"/>
+      </div>
+        <div class="tool-frame-menu-trigger" @click="showMenu">
+            <SvgIcon :icon="white_down_icon"/>
+      </div>
     </div>
+  </el-tooltip>
+
+  <div v-if="popover" class="popover-frame-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
+    <!--容器-->
+    <div class="item" @click="() => { useFrame(context);popover = false; }">
+      <div v-if="currentTool === Action.AddFrame" class="check">
+        <SvgIcon :icon="white_select_icon"/>
+      </div>
+      <div class="desc">
+        <SvgIcon :icon="frame_icon"/>
+        <span>{{ t('shape.artboard') }}</span>
+      </div>
+      <div class="shortKey">F</div>
+    </div>
+    <!--切图-->
+    <div class="item" @click="() => { useCutout(context);popover = false;  }">
+      <div v-if="currentTool === Action.AddCutout" class="check">
+        <SvgIcon :icon="white_select_icon"/>
+      </div>
+      <div class="desc">
+        <SvgIcon :icon="cutout_icon"/>
+        <span>{{ t('cutoutExport.cutout') }}</span>
+      </div>
+      <div class="shortKey">S</div>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">
-.svg-container {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: 4px;
-    padding: 6px 6px 6px 6px;
-    box-sizing: border-box;
-
-    >svg {
-        width: 18px;
-        height: 18px;
-    }
+.active {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-.menu-f {
-    width: 20px;
-    height: 32px;
+.svg-container {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 6px 6px 6px;
+  box-sizing: border-box;
+
+  >img {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.frame-button {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  color: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 48px;
+  height: 32px;
+
+  .svg-container {
     display: flex;
-    //padding-right: 4px;
-    //margin-right: 2px;
+    align-items: center;
+    flex: 10;
+    flex-direction: row-reverse;
+    height: 100%;
+
+    >img {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .tool-frame-menu-trigger {
+    flex: 9;
+    display: flex;
     justify-content: center;
     align-items: center;
-    color: #ffffff;
-    transition: 0.3s;
-    padding: 10px 8px 10px 0;
-    box-sizing: border-box;
+    height: 100%;
 
-    >svg {
+    >img {
+      width: 12px;
+      height: 12px;
+      transition: 0.2s;
+    }
+  }
+
+  .tool-frame-menu-trigger:hover {
+    >img {
+      transform: translateY(2px);
+    }
+  }
+}
+
+.frame-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.frame-button-selected {
+  background-color: var(--active-color) !important;
+}
+
+
+.popover-frame-tool {
+  width: 158px;
+
+  position: absolute;
+  padding: 6px 0;
+  box-sizing: border-box;
+    background-color: var(--theme-color);
+  color: var(--theme-color-anti);
+
+  border-radius: 4px;
+
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
+
+  .item {
+    width: 100%;
+    height: 32px;
+
+    position: relative;
+    box-sizing: border-box;
+    padding: 8px 12px 8px 32px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-default-fontsize);
+
+    .check {
+      position: absolute;
+      left: 8px;
+
+      display: flex;
+      align-items: center;
+
+      >img {
         width: 12px;
         height: 12px;
+      }
     }
-}
 
-.menu-f:hover {
-    transform: translateY(2px);
-}
+    .desc {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-.popover-f {
-    position: absolute;
-    color: #ffffff;
-    z-index: 999;
-    width: 136px;
-    height: auto;
-    font-size: var(--font-default-fontsize);
-    background-color: #262626;
-    border-radius: 4px;
-    outline: none;
-    padding: 4px 0;
-    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+      >img {
+        width: 14px;
+        height: 14px;
+      }
 
-    > div {
-
-        > span {
-            padding: 9px 0 9px 28px;
-            height: 32px;
-            width: 100%;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-
-            &:hover {
-                background-color: #434343;
-            }
-        }
-
-        .frame {
-            position: relative;
-            width: 100%;
-            box-sizing: border-box;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 9px 0 9px 28px;
-
-            &:hover {
-                background-color: #434343;
-            }
-
-            //.triangle {
-            //    width: 0;
-            //    height: 0;
-            //    padding: 0;
-            //    border-top: 5px solid transparent;
-            //    border-bottom: 5px solid transparent;
-            //    border-left: 10px solid var(--theme-color-anti);
-            //}
-            >svg {
-                height: 16px;
-                width: 16px;
-                margin-right: 8px;
-                //margin-left: 60px;
-                margin-top: 4px;
-            }
-
-            .bridge {
-                width: 100%;
-                height: 32px;
-                position: absolute;
-                left: 12px;
-                background-color: transparent;
-            }
-        }
-
+      >span {
+        margin-left: 8px;
+      }
     }
+  }
+
+  .item:hover {
+    background-color: var(--active-color);
+  }
 }
 </style>

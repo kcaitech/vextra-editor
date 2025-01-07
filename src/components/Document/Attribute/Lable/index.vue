@@ -23,11 +23,12 @@ const shapeType = ref();
 const reflush_by_selection = ref<number>(0);
 const reflush_trigger = ref<any[]>([]);
 const getShapeInfo = () => {
-    if (props.context.selection.selectedShapes.length === 1) {
-        shapes.value = new Array(...props.context.selection.selectedShapes);
+    const _shapes = props.context.selection.selectedShapes;
+    if (_shapes.length === 1) {
+        shapes.value = new Array(..._shapes);
         shapeType.value = shapes.value[0].type;
-    } else if (props.context.selection.selectedShapes.length > 1) {
-        shapes.value = new Array(...props.context.selection.selectedShapes);
+    } else if (_shapes.length > 1) {
+        shapes.value = new Array(..._shapes);
     } else {
         shapes.value = new Array();
     }
@@ -35,18 +36,16 @@ const getShapeInfo = () => {
 }
 
 function _selection_change() {
-
     getShapeInfo();
     reflush_by_selection.value++;
 }
 const selection_change = debounce(_selection_change, 160, { leading: true });
 
-function selection_watcher(t: number) {
-    if (t !== Selection.CHANGE_SHAPE || t !== Selection.CHANGE_PAGE) {
-        return;
+function selection_watcher(t: number | string) {
+    if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
+        selection_change();
+        watch_shapes();
     }
-    selection_change();
-    watch_shapes();
 }
 
 function update_by_shapes(...args: any[]) {
@@ -67,6 +66,7 @@ function watch_shapes() {
 }
 
 onMounted(() => {
+    watch_shapes();
     getShapeInfo();
     props.context.selection.watch(selection_watcher);
 })

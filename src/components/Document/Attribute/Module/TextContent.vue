@@ -4,16 +4,17 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { OverrideType, Variable, VariableType, Text, SymbolView } from '@kcdesign/data';
+import { OverrideType, Variable, VariableType, Text, SymbolView, ShapeType, ShapeView } from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
 import {
     create_var_by_type,
-    get_symbol_by_layer,
+    get_symbol_by_layer, get_x_type_option,
     is_bind_x_vari,
     modify_variable
 } from '@/utils/symbol';
 import { Selection } from '@/context/selection';
 import { message } from '@/utils/message';
+import { v4 } from 'uuid';
 
 interface Props {
     context: Context
@@ -35,8 +36,13 @@ const textDialog = () => {
     }
     getDialogPosi(atrrdialog.value);
     isTextShow.value = true
+    props.context.escstack.save(v4(), de_text_is_show);
 }
-
+function de_text_is_show() {
+    const is_achieve_expected_results = isTextShow.value;
+    isTextShow.value = false;
+    return is_achieve_expected_results;
+}
 const atrrdialog = ref<HTMLDivElement>();
 const dialog_posi = ref({ x: 0, y: 0 });
 const getDialogPosi = (div: HTMLDivElement | undefined) => {
@@ -56,11 +62,28 @@ const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
         get_text();
+
         const vari = is_bind_x_vari(shapes[0], OverrideType.Text);
+
         sym_layer.value = get_symbol_by_layer(shapes[0]);
+
+        let __sym = sym_layer.value!;
+        let union = sym_layer.value!;
+        if (!__sym) {
+            return;
+        }
+        if (__sym.parent?.type === ShapeType.SymbolUnion) {
+            union = __sym.parent! as SymbolView;
+        }
+
         selectId.value = [shapes[0].id];
+
         is_bind.value = vari;
         if (vari) {
+            const _temp: ShapeView[] = [];
+            get_x_type_option(union, __sym, vari.type, vari, _temp);
+            selectId.value = _temp.map(i => i.id);
+
             default_name.value = vari.name;
         } else {
             default_name.value = shapes[0].name;
@@ -73,6 +96,7 @@ function edit_text() {
     isBind();
     getDialogPosi(card_ref.value);
     isTextShow.value = true;
+    props.context.escstack.save(v4(), de_text_is_show);
 }
 
 function save_layer_show(type: VariableType, name: string) {
@@ -92,7 +116,7 @@ function save_layer_show(type: VariableType, name: string) {
     isTextShow.value = false;
 }
 
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         update();
         watchShapes();
@@ -183,15 +207,22 @@ onUnmounted(() => {
 const getValue = (value: Text | string | undefined) => {
     return value instanceof Text ? value.getText(0, Number.MAX_VALUE) : value;
 }
+
+import relevance_icon from '@/assets/icons/svg/relevance.svg';
+import text_icon from '@/assets/icons/svg/text.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
 </script>
 <template>
-    <div class="line" style="width: 240px;height: 1px;border-bottom: 1px solid #F0F0F0;margin-left: -8px;"></div>
-    <div style="position: relative; margin: 12px 0; box-sizing: border-box" ref="atrrdialog">
+    <div class="line" style="width: 240px;height: 1px;border-bottom: 1px solid #F0F0F0;margin: 12px 0;"></div>
+    <div style="position: relative; box-sizing: border-box" ref="atrrdialog">
         <TypeHeader :title="t('compos.text_content')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">
                     <div class="edit_svg" @click="textDialog" v-if="!is_bind" :class="{ 'clicked': isTextShow }">
-                        <svg-icon icon-class="relevance"></svg-icon>
+                        <SvgIcon :icon="relevance_icon"/>
                     </div>
                 </div>
             </template>
@@ -203,7 +234,7 @@ const getValue = (value: Text | string | undefined) => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="text"></svg-icon>
+                        <SvgIcon :icon="text_icon"/>
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind?.name }}</span>
@@ -212,7 +243,7 @@ const getValue = (value: Text | string | undefined) => {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px"
@@ -389,13 +420,12 @@ const getValue = (value: Text | string | undefined) => {
     width: 28px;
     height: 28px;
     border-radius: var(--default-radius);
+    transition: .2s;
 
     >svg {
         width: 16px;
         height: 16px;
     }
-
-    transition: .2s;
 }
 
 .delete:hover {

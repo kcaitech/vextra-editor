@@ -5,11 +5,18 @@ import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
-import { OverrideType, SymbolShape, SymbolView, Variable, VariableType } from '@kcdesign/data';
+import { OverrideType, ShapeType, ShapeView, SymbolView, Variable, VariableType } from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable } from '@/utils/symbol';
+import {
+    create_var_by_type,
+    get_symbol_by_layer,
+    get_x_type_option,
+    is_bind_x_vari,
+    modify_variable
+} from '@/utils/symbol';
 import { message } from '@/utils/message';
 import { Selection } from '@/context/selection';
+import { v4 } from 'uuid';
 
 const props = defineProps<{
     context: Context
@@ -21,8 +28,16 @@ const closeLayerShowPopup = () => {
 }
 const layerIsShow = () => {
     getDialogPosi(atrrdialog.value);
-    isLayerShow.value = true
+    isLayerShow.value = true;
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
+
+function de_layer_is_show() {
+    const is_achieve_expected_results = isLayerShow.value;
+    isLayerShow.value = false;
+    return is_achieve_expected_results;
+}
+
 const atrrdialog = ref<HTMLDivElement>();
 const card_ref = ref<HTMLDivElement>();
 const dialog_posi = ref({ x: 0, y: 0 });
@@ -40,26 +55,45 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
 function edit_visible() {
     getDialogPosi(card_ref.value);
     isLayerShow.value = true;
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
 
 const is_bind = ref<Variable>();
 const sym_layer = ref<SymbolView>();
-const shape = ref(props.context.selection.selectedShapes[0]);
+const shape = ref<ShapeView>();
+const dlt_value = ref<any>(true);
+
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
         const vari = is_bind_x_vari(shapes[0], OverrideType.Visible);
-        sym_layer.value = get_symbol_by_layer(shapes[0]);
+
+        sym_layer.value = get_symbol_by_layer(shapes[0])!;
+
+        let __sym = sym_layer.value!;
+        let union = sym_layer.value!;
+        if (!__sym) {
+            return;
+        }
+        if (__sym.parent?.type === ShapeType.SymbolUnion) {
+            union = __sym.parent! as SymbolView;
+        }
+
         selectId.value = [shapes[0].id];
+
         is_bind.value = vari;
         if (vari) {
+            const _temp: ShapeView[] = [];
+            get_x_type_option(union, __sym, vari.type, vari, _temp);
+            selectId.value = _temp.map(i => i.id);
+
+            dlt_value.value = vari.value;
             default_name.value = vari.name;
         } else {
             default_name.value = shapes[0].name;
         }
     }
 }
-const dlt_value = ref<any>(true);
 
 //默认值
 function dlt_change(v: number) {
@@ -83,20 +117,18 @@ function save_layer_show(type: VariableType, name: string) {
     isLayerShow.value = false;
 }
 
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
+        if (shape.value) shape.value.unwatch(layer_watcher);
+        shape.value = (props.context.selection.selectedShapes[0]);
+        if (shape.value) shape.value.watch(layer_watcher);
         isBind();
     }
 }
 
 function layer_watcher(args: any) {
-    if (args === 'variables' || args === 'map') isBind();
+    if (args === 'variables' || args === 'varbinds') isBind();
 }
-
-watch(() => shape.value, (v, o) => {
-    if (o) o.unwatch(layer_watcher);
-    v.watch(layer_watcher);
-}, { immediate: true })
 
 watch(() => sym_layer.value, (v, o) => {
     if (o) o.unwatch(layer_watcher);
@@ -113,57 +145,67 @@ function _delete() {
 }
 
 onMounted(() => {
-    shape.value.watch(layer_watcher);
+    shape.value = props.context.selection.selectedShapes[0];
+    if (shape.value) shape.value.watch(layer_watcher);
     props.context.selection.watch(selected_watcher);
     isBind();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
-    shape.value.unwatch(layer_watcher);
+    if (shape.value) shape.value.unwatch(layer_watcher);
 })
+
+import relevance_icon from '@/assets/icons/svg/relevance.svg';
+import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
 </script>
 <template>
-    <div style="position: relative; margin: 12px 0; box-sizing: border-box" ref="atrrdialog">
-        <TypeHeader :title="t('compos.layer_isShow')" class="mt-24" :active="true">
-            <template #tool>
-                <div class="edit-comps">
-                    <div class="edit_svg" @click="layerIsShow" v-if="!is_bind" :class="{ 'clicked': isLayerShow }">
-                        <svg-icon icon-class="relevance"></svg-icon>
-                    </div>
-                </div>
-            </template>
-        </TypeHeader>
-        <div class="attr_con" ref="card_ref" v-if="is_bind">
-            <div class="module_item_left" @click="edit_visible">
-                <div class="module_name-2">
-                    <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="eye-open"></svg-icon>
-                    </div>
-                    <div class="name">
-                        <span style="width: 40%;">{{ is_bind.name }}</span>
-                        <span style="width: 60%;"> {{ is_bind.value ? '显示' : '隐藏' }}</span>
-                    </div>
+<div style="position: relative; box-sizing: border-box" ref="atrrdialog">
+    <TypeHeader :title="t('compos.layer_isShow')" class="mt-24" :active="true">
+        <template #tool>
+            <div class="edit-comps">
+                <div class="edit_svg" @click="layerIsShow" v-if="!is_bind" :class="{ 'clicked': isLayerShow }">
+                    <SvgIcon :icon="relevance_icon"/>
                 </div>
             </div>
-            <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+        </template>
+    </TypeHeader>
+    <div class="attr_con" ref="card_ref" v-if="is_bind">
+        <div class="module_item_left" @click="edit_visible">
+            <div class="module_name-2">
+                <div style="width: 30px;" class="svg">
+                    <SvgIcon :icon="eye_open_icon"/>
+                </div>
+                <div class="name">
+                    <span style="width: 40%;">{{ is_bind.name }}</span>
+                    <span style="width: 60%;"> {{ dlt_value ? '显示' : '隐藏' }}</span>
+                </div>
             </div>
         </div>
-        <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
-            :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')" :dialog_posi="dialog_posi"
-            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show"
-            :symbol="sym_layer">
-            <template #layer>
-                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
-                    :context="props.context" :placeholder="t('compos.place_select_layer')" :selectId="selectId">
-                </SelectLayerInput>
-            </template>
-            <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value"
-                    :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
-            </template>
-        </CompLayerShow>
+        <div class="delete" @click="_delete">
+            <SvgIcon :icon="delete_icon"/>
+        </div>
     </div>
+    <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
+                   :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')"
+                   :dialog_posi="dialog_posi"
+                   :default_name="default_name" :variable="is_bind ? is_bind : undefined"
+                   @save-layer-show="save_layer_show"
+                   :symbol="sym_layer">
+        <template #layer>
+            <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
+                              :context="props.context" :placeholder="t('compos.place_select_layer')"
+                              :selectId="selectId">
+            </SelectLayerInput>
+        </template>
+        <template #default_value>
+            <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value"
+                                 :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
+        </template>
+    </CompLayerShow>
+</div>
 </template>
 <style lang="scss" scoped>
 .edit-comps {
@@ -180,7 +222,7 @@ onUnmounted(() => {
         justify-content: center;
         border-radius: var(--default-radius);
 
-        >svg {
+        > svg {
             width: 16px;
             height: 16px;
         }
@@ -197,6 +239,7 @@ onUnmounted(() => {
 
 .attr_con {
     display: flex;
+    margin-top: 6px;
     align-items: center;
     justify-content: space-between;
 }
@@ -209,12 +252,16 @@ onUnmounted(() => {
     width: calc(100% - 32px);
     height: 32px;
 
+    &:hover {
+        background-color: #EBEBEB;
+    }
+
     .module_name {
         display: flex;
         align-items: center;
         width: 84px;
 
-        >svg {
+        > svg {
             width: 14px;
             height: 14px;
         }
@@ -237,7 +284,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
             }
@@ -248,7 +295,7 @@ onUnmounted(() => {
             display: flex;
             max-width: 100%;
 
-            >span {
+            > span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -273,12 +320,15 @@ onUnmounted(() => {
     align-items: center;
     width: 28px;
     height: 28px;
+    transition: .2s;
 
-    >svg {
+    > svg {
         width: 16px;
         height: 16px;
     }
 
-    transition: .2s;
+    &:hover {
+        background-color: #F5F5F5;
+    }
 }
 </style>

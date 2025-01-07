@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Matrix, PageView, CutoutShapeView, CutoutShape } from '@kcdesign/data';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { Matrix, PageView, CutoutShapeView, CutoutShape, ShapeView, ShapeType } from '@kcdesign/data';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import renderCutout from './renderCutout.vue';
 import { Selection } from '@/context/selection';
+import { throttle } from 'lodash';
 
 const props = defineProps<{
     context: Context
@@ -11,14 +12,27 @@ const props = defineProps<{
     matrix: Matrix,
     transform: number[],
 }>()
-const cutoutShapes = ref<CutoutShape[]>([]);
+const cutoutShapes = ref<CutoutShapeView[]>([]);
+const reflush = ref(0);
 
-const getCutoutShape = () => {
+const _getCutoutShape = () => {
     const page = props.context.selection.selectedPage;
     if (page) {
-        cutoutShapes.value = Array.from(page.data.cutouts.values());
+        cutoutShapes.value = Array.from(page.cutoutList).filter(i => isVisible(i));
+        nextTick(() => {
+            reflush.value++;
+        })
+    }
+    function isVisible(cut: CutoutShapeView) {
+        let cs: ShapeView | undefined = cut;
+        while (cs) {
+            if (!cs.isVisible) return false;
+            cs = cs.parent;
+        }
+        return true;
     }
 }
+const getCutoutShape = throttle(_getCutoutShape, 200);
 const watcher = (...args: any[]) => {
     if (args.includes('shape-frame')) return;
     getCutoutShape();
@@ -28,16 +42,61 @@ const stopWatch = watch(() => props.data, (value, old) => {
     value.watch(watcher);
 })
 
-const selected_watcher = (t: number) => {
-    if (t === Selection.CHANGE_PAGE) {
+const selected_watcher = (t: number | string) => {
+    if (t === Selection.CHANGE_SHAPE) {
+        watch_shapes();
+        props.context.nextTick(props.data, () => {
+            _getCutoutShape();
+        })
         getCutoutShape();
-    } else if (t === Selection.CHANGE_SHAPE) {
-        getCutoutShape();
+    } else if (t === Selection.CHANGE_PAGE) {
+        _getCutoutShape();
     }
 }
 
+const update_by_shapes = (...args: any[]) => {
+    if (args.length === 1 && args[0] === 'isVisible') {
+        getCutoutShape();
+    }
+    reflush.value++;
+}
+
+const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+
+function watch_shapes() {
+    const map = new Map<string, ShapeView>();
+
+    const cutoutList = props.context.selection.selectedPage!.cutoutList;
+
+    for (const cut of cutoutList) {
+        map.set(cut.id, cut);
+
+        let p: ShapeView | undefined = cut;
+
+        while(p) {
+            map.set(p.id, p);
+            p = p.parent;
+        }
+    }
+
+    map.delete(props.context.selection.selectedPage!.id);
+
+    watchedShapes.forEach((v, k) => {
+        if (map.delete(k)) return;
+        v.unwatch(update_by_shapes);
+        watchedShapes.delete(k);
+    })
+
+    map.forEach((v) => {
+        v.watch(update_by_shapes);
+        watchedShapes.set(v.id, v)
+    });
+}
+
+
 onMounted(() => {
     watcher();
+    watch_shapes();
     props.data.watch(watcher);
     props.context.selection.watch(selected_watcher);
 })
@@ -51,7 +110,7 @@ onUnmounted(() => {
 
 <template>
     <component v-for="item in cutoutShapes" :key="item.id" :is="renderCutout" :context="context"
-        :data="(item as CutoutShape)" :matrix="matrix"></component>
+        :data="(item as CutoutShapeView)" :matrix="matrix" :reflush="reflush"></component>
 </template>
 
 <style lang="scss" scoped></style>

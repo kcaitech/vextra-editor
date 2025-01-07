@@ -1,24 +1,31 @@
 <script setup lang="ts">
-import ToolButton from '../ToolButton.vue';
-import { Action } from "@/context/tool";
+import ToolButton from './ToolButton.vue';
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import { Context } from '@/context';
+import { useText } from "@/components/Document/Creator/execute";
 const { t } = useI18n()
-const props = defineProps<{
-  active: boolean,
+
+defineProps<{
+  context: Context,
+  params: {
+    active: boolean,
+    select: (action: string) => void
+  }
 }>();
-const emit = defineEmits<{
-  (e: "select", action: Action): void;
-}>();
-function select(action: Action) {
-  emit('select', action);
-}
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import pattern_text_icon from '@/assets/icons/svg/pattern-text.svg';
 </script>
 <template>
   <Tooltip :content="`${t('attr.text')} &nbsp;&nbsp; T`">
-    <ToolButton ref="button" @click="() => { select(Action.AddText) }" :selected="props.active" style="width: 32px">
+    <ToolButton
+        ref="button"
+        @click="() => { useText(context); }"
+        :selected="params.active"
+        style="width: 32px"
+    >
       <div class="svg-container">
-        <svg-icon icon-class="pattern-text"></svg-icon>
+        <SvgIcon :icon="pattern_text_icon" />
       </div>
     </ToolButton>
   </Tooltip>
@@ -31,10 +38,10 @@ function select(action: Action) {
   justify-content: center;
   align-items: center;
   color: #ffffff;
-    padding: 6px 6px 6px 6px;
-    box-sizing: border-box;
+  padding: 6px 6px 6px 6px;
+  box-sizing: border-box;
 
-  >svg {
+  >img {
       width: 18px;
       height: 18px;
   }

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {Context} from '@/context';
+import { Context } from '@/context';
 import ComponentRootCollapse from './ComponentRootCollapse.vue';
-import {onMounted, onUnmounted, ref} from 'vue';
-import {debounce} from 'lodash';
-import {useI18n} from 'vue-i18n';
-import {Navi} from '@/context/navigate';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { debounce } from 'lodash';
+import { useI18n } from 'vue-i18n';
+import { Navi } from '@/context/navigate';
 import {
     SymbolListItem,
     list_layout,
@@ -13,7 +13,7 @@ import {
     init_status_set_by_symbol,
     clear_scroll_target
 } from '@/utils/symbol';
-import {Page} from "@kcdesign/data";
+import { Page } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 
 interface Props {
@@ -24,18 +24,18 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 const local_data = ref<SymbolListItem[]>([]);
 const status_set = ref<Set<string>>(new Set());
 
 function _list_loader() {
     if (props.context.navi.current_navi_module !== "Comps" && !props.isAttri) return;
     const pagelist = props.context.data.pagesList;
-    const list: {page: Page, desc: string}[] = [];
+    const list: { page: Page, desc: string }[] = [];
     for (let i = 0, len = pagelist.length; i < len; i++) {
         const desc = pagelist[i];
         const p = props.context.data.pagesMgr.getSync(pagelist[i].id);
-        if (p) list.push({page: p, desc: desc.name});
+        if (p) list.push({ page: p, desc: desc.name });
     }
     const data = classification_level_page(list);
     modify_parent(data as SymbolListItem[]);
@@ -50,7 +50,7 @@ function _list_loader() {
 const list_loader = debounce(_list_loader, 200);
 
 function navi_watch(t: number) {
-    if (t === Navi.MODULE_CHANGE) {
+    if (t === Navi.MODULE_CHANGE || t === Navi.COMP_LIST_CHANGED) {
         const curr_module = props.context.navi.current_navi_module;
         if (curr_module === "Comps") _list_loader();
     }
@@ -62,10 +62,10 @@ function update_status_set(id: string) {
 }
 
 function document_watcher(t: string) {
-    if (t === 'update-symbol-list') list_loader();
+    if (t === 'update-symbol-list') list_loader(); // todo 改用symbolMgr的监听
 }
 const select_watch = (t: number) => {
-    if(t === Selection.PAGE_RENAME) {
+    if (t === Selection.PAGE_RENAME) {
         _list_loader();
     }
 }
@@ -88,9 +88,8 @@ onUnmounted(() => {
 </script>
 <template>
     <ComponentRootCollapse :context="props.context" :extend="true" :container="props.container"
-                           :title="t('compos.lib_local')" :data="(local_data as SymbolListItem[])"
-                           :status_set="status_set"
-                           @change-status="update_status_set" :is-attri="props.isAttri" :card-type="props.cardType">
+        :title="t('compos.lib_local')" :data="(local_data as SymbolListItem[])" :status_set="status_set"
+        @change-status="update_status_set" :is-attri="props.isAttri" :card-type="props.cardType">
     </ComponentRootCollapse>
 </template>
 <style lang="scss" scoped></style>

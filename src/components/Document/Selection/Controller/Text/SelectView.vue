@@ -13,7 +13,7 @@ interface Props {
     shape: TextShapeView | TableCellView
     matrix: number[]
     context: Context
-    mainNotify: number
+    mainNotify: string | number
     selection: SelectionLike
 }
 const props = defineProps<Props>();
@@ -66,7 +66,7 @@ function _update() {
         // cursor
         const cursorAtBefore = text_selection.cursorAtBefore;
         const index = text_selection.cursorStart;
-        const cursor = props.shape.locateCursor(index, cursorAtBefore);
+        const cursor = props.shape.locateCursor(index, cursorAtBefore);        
         if (!cursor) {
             cursor_points = [];
             cursorPath.value = "";
@@ -76,10 +76,10 @@ function _update() {
         }
     }
 }
-function selectionWatcher(t: number) {
+function selectionWatcher(t: number | string) {
     if (t === props.mainNotify) {
         update();
-        cursor_tracking(cursor_points);
+        // cursor_tracking(cursor_points);  功能不完善，暂时关闭
     } else if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
         const text_selection = props.selection;
         text_selection.reset();
@@ -135,11 +135,13 @@ onUnmounted(() => {
     selection.unwatch(selectionWatcher);
 })
 </script>
+
 <template>
     <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#1878f5' stroke-width="2.5px" class="scan">
     </path>
     <path v-if="!isCursor" :d="selectPath" fill="#1878f5" fill-opacity="0.35" stroke='none'></path>
 </template>
+
 <style lang='scss' scoped>
 .scan {
     animation: scan 0.8s none infinite;

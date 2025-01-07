@@ -2,40 +2,33 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
+import Prototype from "@/components/Document/Attribute/Prototype.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
-import { Perm } from "@/context/workspace";
-import { Action, Tool } from "@/context/tool";
+import { Tool } from "@/context/tool";
 import Lable from './Lable/index.vue';
-import PageAttr from "@/components/Document/Attribute/PageAttr.vue";
 const { t } = useI18n();
 
 interface Props {
     context: Context
-    rightTriggleVisible: boolean
-    showRight: boolean
 }
-interface Emits {
-    (e: 'showAttrbute'): void
-}
-type Tab = "Design" | "Inspect";
+
+type Tab = "Design" |"Prototype"| "Inspect";
 
 const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
 const controllerRef = ref<HTMLElement>();
 const underlineWidth = ref(0);
 const underlinePosition = ref(0);
-const perm = ref(props.context.workspace.documentPerm);
 const currentTab = ref<Tab>("Design");
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('attr.design'),
         id: 'Design'
     },
-    // {
-    //     title: t('attr.inspect'),
-    //     id: 'Inspect'
-    // }
+    {
+        title: t('attr.prototype'),
+        id: 'Prototype'
+    }
 ];
 const isLable = ref(props.context.tool.isLable);
 
@@ -46,14 +39,11 @@ function toggle(id: Tab) {
 }
 function init() {
     if (currentTab.value === 'Design') {
-        const selected = props.context.selection.selectedShapes;
+        const selected = [...props.context.selection.selectedShapes];
         if (selected.length) {
             props.context.selection.rangeSelectShape(selected);
         }
     }
-}
-const showHiddenRight = () => {
-    emit('showAttrbute')
 }
 
 function updateUnderlinePosition() {
@@ -79,19 +69,9 @@ function updateUnderlinePosition() {
 const tool_watcher = (t: number) => {
     if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
-        if (isLable.value && !props.showRight) {
-            emit('showAttrbute');
-        }
     }
 }
-const stopMouseDown = (e: MouseEvent) => {
-    const action = props.context.tool.action;
-    const comment = props.context.comment;
 
-    if (action === Action.AddComment && !comment.isCommentInputMove) {
-        e.stopPropagation();
-    }
-}
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
     init();
@@ -103,11 +83,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="tab-container" @mouseup="stopMouseDown">
+<div class="tab-container" v-if="isLable || !context.readonly">
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
-                    :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
+                    :id="`tabs-id-${i.id}`" @click.stop="toggle(i.id)"
                     :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
                     {{ i.title }}
                 </div>
@@ -116,24 +96,13 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="body">
-                <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
-                <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
-                <template v-if="perm === Perm.isEdit">
-                    <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                        :style="{ opacity: showRight ? 1 : 0.6 }">
-                        <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
-                        <svg-icon v-else class="svg" icon-class="left"></svg-icon>
-                    </div>
-                </template>
+                <Design :context="props.context" v-if="currentTab === 'Design'"/>
+                <Prototype :context="props.context" v-if="currentTab === 'Prototype'"/>
+                <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"/>
             </div>
         </template>
         <div class="tab-lable" v-else>
-            <Lable :context="context"></Lable>
-            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                :style="{ opacity: showRight ? 1 : 0.6, transform:' translateY(50%)' }">
-                <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
-                <svg-icon v-else class="svg" icon-class="left"></svg-icon>
-            </div>
+            <Lable :context="context"/>
         </div>
     </div>
 </template>
@@ -142,6 +111,7 @@ onUnmounted(() => {
 .tab-container {
     position: relative;
     width: 100%;
+    height: 100%;
     border: 1px solid #EBEBEB;
 
     .controller {
@@ -157,13 +127,8 @@ onUnmounted(() => {
             color: #000000;
         }
 
-        //>.tab:hover {
-        //    color: var(--theme-color);
-        //}
-
         >.active {
             border-radius: 4px 4px 0 0;
-            //color: var(--theme-color);
             font-weight: 500;
         }
 
@@ -172,7 +137,6 @@ onUnmounted(() => {
             border-radius: 292px;
             position: absolute;
             bottom: 0;
-            // transition: left 0.3s ease-in-out;
             box-sizing: border-box;
             height: 2px;
             z-index: 1;
@@ -186,32 +150,6 @@ onUnmounted(() => {
         position: relative;
         flex: 1 1 auto;
         box-sizing: border-box;
-    }
-}
-
-.showHiddenR {
-    position: absolute;
-    left: -16px;
-    top: 0%;
-    transform: translateY(-50%);
-    z-index: 9;
-    cursor: pointer;
-    background-color: var(--theme-color-anti);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    //box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
-    width: 16px;
-    height: 44px;
-    border-radius: 8px 0px 0px 8px;
-    opacity: 1;
-    box-sizing: border-box;
-    border: 1px solid #F0F0F0;
-    padding: 14px 0;
-
-    >.svg {
-        width: 16px;
-        height: 16px;
     }
 }
 

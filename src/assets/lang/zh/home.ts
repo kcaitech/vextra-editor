@@ -1,8 +1,4 @@
-import { BorderPosition } from "@kcdesign/data"
-
-export const product = {
-    name: 'ProtoDesign'
-}
+import { BlendMode, BorderPosition, StackSizing } from "@kcdesign/data"
 
 export const system = {
     incorrect_input: '输入有误！',
@@ -14,6 +10,7 @@ export const system = {
     'paste_here': '粘贴在这里',
     'only_text': '只粘贴文本',
     copy: '复制',
+    copyAs: '复制/粘贴为',
     cut: '剪切',
     replace: '替换',
     failed: '操作失败',
@@ -31,23 +28,28 @@ export const system = {
     'fit_canvas': '适应画布',
     'show_many_cursor': '显示多人光标',
     'show_comment': '显示评论',
+    'show_cutout': '显示切图',
     'show_ruler': '显示标尺',
     'show_pixel_network': '显示像素网络',
     'hide_operation_interface': '隐藏操作界面',
     'creating_groups': '创建编组',
     'create_container': '创建容器',
+    'outline': '轮廓化',
+    'set_mask': '设为蒙版',
     'un_group': '取消编组',
+    'remove_mask': '取消蒙版',
     'create_component': '创建组件',
     'unbind_instance': '解绑实例',
     'reset_instance_roperties': '重置实例属性',
     'edit_component': '编辑组件',
+    'create_mask': '蒙版',
+    'mask_group': '蒙版组',
     'wx_login': '微信扫码登录',
     'login_read': '扫码表示已阅读并同意',
     'read_TOS': '服务协议',
     'read_Privacy': '隐私协议',
-    'product_name': 'ProtoDesign',
     'product_description': '一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
-    'login_footer': '© 2023 Kc.Design Inc.All rights reserved.',
+    'login_footer': '©2024 珠海市旷才科技有限公司',
     'placeholder': '搜索文件',
     'about': '关于',
     'help_manual': '帮助手册',
@@ -66,7 +68,16 @@ export const system = {
     sensitive_reminder: '含有敏感信息，请重新输入。',
     sensitive_reminder2: '含有敏感信息，无法分享。',
     sensitive_reminder3: '含有敏感信息，无法访问。',
-    pixel: '对齐像素'
+    pixel: '对齐像素',
+    grid: '像素网格',
+    rule: '显示标尺',
+    uploadMediaFail: '图片资源上传失败',
+    internet: '进入官网',
+    notfound: '抱歉，此页面不存在。',
+    gohome: '返回官网',
+    trynow: '立即体验',
+    updatetips: '版本已更新_',
+    timeout: '上传超时，请检查网络或将过大文件分割成多个文件'
 }
 
 export const home = {
@@ -151,11 +162,22 @@ export const home = {
     'distribute_v': '上下等距分布',
     people_are_visiting: '正在访问的人:',
     permissions: '权限:',
-    contact: '连接线'
+    contact: '连接线',
+    full: '进入全屏',
+    exit_full: '退出全屏',
+    not_preview_frame: '没有可演示的容器',
+    image_uploaded: '图片上传成功，一共xx张',
+    publish: '发布为网站',
+    downloadJs: '下载JS包',
+    homePage: '选择网站首页',
+    download: '开始下载',
+    downloading: '下载中',
+    downloaded: '下载完成',
+    no_board: '当前文档不存在可执行容器'
 }
 
 export const search = {
-    search_results: '未搜索到相关组件',
+    search_results: '未搜索到相关图层',
     search_history: '没有搜索记录',
     search_history_title: '历史记录',
     search_history_clear: '清除',
@@ -177,12 +199,13 @@ export const navi = {
 export const frame = {
     custom: '自定义',
     phone: '手机',
-    tablet: '平板',
+    pad: '平板',
     deskdop: '桌面',
     presentation: '预览',
     watch: '手表',
     paper: '纸张',
-    social_media: '社交媒体'
+    social_media: '社交媒体',
+    slide: '幻灯片'
 }
 
 export const fileMenu = {
@@ -206,7 +229,7 @@ export const attr: any = {
     prototype: '原型',
     inspect: '标注',
     constraints: '约束',
-    groupings: '相对位置及大小',
+    groupings: '约束',
     border: '边框',
     opacity: '不透明度',
     fill: '填充',
@@ -280,10 +303,12 @@ export const attr: any = {
     used_font: '已使用字体',
     no_font_is_currently_in_use: '当前无已使用字体',
     chinese_font: '中文字体',
+    font_missing: '本地字体缺失',
+    local_font: '本地字体',
     english_font: '英文字体',
     find_the_fonts: '查找不到相关字体',
     font_is_not: '本地不存在该字体，使用默认字体效果替代显示',
-    font_color: '字体色值',
+    font_color: '字体颜色',
     highlight_color: '高亮颜色',
     multiple_colors: '存在多种颜色值，点击+可统一设置',
     unfold: '展开',
@@ -300,11 +325,46 @@ export const attr: any = {
     completely_symmetrical: "完全对称",
     angular_symmetry: "不对称",
     asymmetric: "角度对称",
-    path: '路径'
+    path: '路径',
+    corner: '边角',
+    unilateral: '单边',
+    independentCorners: '展开圆角',
+    constrainProportions: '锁定比例',
+    frameSize: '容器尺寸',
+    outlineNameSuffix: '（边框）',
+    brightness: '亮度',
+    contrast: '对比度',
+    saturation: '饱和度',
+    temperature: '色温',
+    tint: '色调',
+    shadow: '阴影',
+    hue: '色相',
+    selected_picture: '选择图片',
+    tidy_up: '整理',
+    scale: "等比缩放",
+    scale_from_lt: "从左上角缩放",
+    scale_from_top: "从顶部缩放",
+    scale_from_rt: "从右上角缩放",
+    scale_from_right: "从右侧缩放",
+    scale_from_rb: "从右下角缩放",
+    scale_from_bottom: "从底部缩放",
+    scale_from_lb: "从左下角缩放",
+    scale_from_left: "从左侧缩放",
+    scale_from_center: "从中心缩放",
+    exit_scale: "退出等比缩放模式",
+    startingAngle: "开始",
+    sweep: "弧度",
+    ratio: "内径",
+    clip: "裁剪超出内容"
 }
 
 export const login = {
-    login_failure: '登录失效，请重新登录'
+    login_failure: '登录失效，请重新登录',
+    welcome: '欢迎登录使用',
+    name: '墨师设计',
+    describe: '在线协作专业产品设计软件',
+    miniprogram: '微信小程序',
+    scan_code: '微信扫一扫'
 }
 
 export const comment = {
@@ -320,40 +380,28 @@ export const comment = {
     show_resolved_comments: '显示已解决评论',
     comment_area: '评论区',
     input_comments: '输入评论',
+    reply_comment: '回复评论',
     check: '查看',
     a_few_reply: '条回复',
     month: '月',
     day: '日',
     no_comment: '当前无评论',
-    leave_a_comment: '点击任意位置留下你的评论',
     comments_hide: '评论已设置隐藏',
-    show_comments: '显示评论'
+    show_comments: '显示评论',
+    input_no_perm: '无评论权限'
 }
 export const clipboard = {
     'invalid_data': '该内容无法解析',
     'not_supported1': '当前浏览器不支持，请使用Ctrl C复制',
-    'not_supported2': '当前浏览器不支持，请使用Ctrl X剪切'
+    'not_supported2': '当前浏览器不支持，请使用Ctrl X剪切',
+    'copyAsPNGSuccess': '复制成功',
+    'copyAsPNGFailed': '复制失败',
+    'copyAsPNG': '复制PNG图片',
+    'copyStyle': '复制图层属性',
+    'pasteStyle': '粘贴图层属性'
+
 }
-export const opacity = {
-    normal: '正常',
-    become_dark: '变暗',
-    multiply: '正片叠底',
-    color_deepening: '颜色加深',
-    become_bright: '变亮',
-    filter: '滤色',
-    color_dodge: '颜色减淡',
-    superpose: '叠加',
-    soft_light: '柔光',
-    strong_light: '强光',
-    difference: '差值',
-    exclude: '排除',
-    hue: '色相',
-    saturation: '饱和度',
-    color: '颜色',
-    lightness: '明度',
-    darken: '加暗',
-    brighten: '提亮'
-}
+export const opacity: any = {}
 export const message = {
     doc_notopen: '网络异常，文档无法打开，请检查网络后重试。',
     list_for_failure: '网络异常，文件列表获取失败，请检查网络后重试。',
@@ -376,6 +424,105 @@ export const bool = {
     cohere: '路径拼合'
 }
 
+export const date = {
+    just_now: '刚刚',
+    s: '秒前',
+    minutes: '分钟前',
+    hour: '小时前',
+    today: '今天',
+    yesterday: '昨天',
+    day: '天'
+}
+
+export const preview: any = {
+    actual_size: '实际尺寸',
+    previous_page: '上一页',
+    next_page: '下一页',
+    first_page: '第一页',
+    preview: '预览',
+    open: '在设计模式中打开',
+    fill_screen: '充满屏幕',
+    fit_width: '适应宽度',
+    fit_screen: '适应屏幕',
+    all: '全部画布',
+    hot_zone: '显示热区域提示',
+    flow_describe: '流程描述'
+}
+
+export const userconfig = {
+    settings: '偏好设置',
+    movetips:'方向键移动对象',
+    keysdown:'方向键点击',
+    shift_keysdown:'Shift + 方向键点击',
+}
+
+export const autolayout: any = {
+    auto_layout: '自动布局',
+    auto_layout_settings: '自动布局设置',
+    included: '包含',
+    excluded: '不包含',
+    canvas_stack: '堆叠',
+    stack: '正向堆叠',
+    reverse_stack: '反向堆叠',
+    stroke: '描边',
+    add_auto_layout: '添加自动布局',
+    remove_auto_layout: '移除自动布局',
+    ver: '垂直',
+    hor: '水平',
+    wrap: '换行',
+    hor_gap: '水平间距',
+    ver_gap: '垂直间距',
+    hor_padding: '水平边距',
+    ver_padding: '垂直边距',
+    top_padding: '上边距',
+    right_padding: '右边距',
+    bottom_padding: '下边距',
+    left_padding: '左边距',
+    hor_fixed: '水平固定',
+    ver_fixed: '垂直固定',
+    hor_resizing: '水平调整',
+    ver_resizing: '垂直调整',
+    unfold: '展开',
+    fold: '收起',
+    settings: '自动布局设置',
+    lt_align: '左上对齐',
+    ct_align: '顶部居中对齐',
+    rt_align: '右上对齐',
+    lc_align: '左对齐',
+    center_align: '居中对齐',
+    rc_align: '右对齐',
+    lb_align: '左下对齐',
+    cb_align: '底部居中对齐',
+    rb_align: '右下对齐',
+    top_align: '顶部对齐',
+    bottom_align: '底部对齐',
+    layout_area_size: '布局区域大小:',
+    auto: '自动',
+    adapt: '适应'
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';
+
+opacity[BlendMode.Normal] = "正常";
+opacity[BlendMode.Darken] = "变暗";
+opacity[BlendMode.Multiply] = "正片叠底";
+opacity[BlendMode.ColorBurn] = "颜色加深";
+opacity[BlendMode.Lighten] = "变亮";
+opacity[BlendMode.Screen] = "滤色";
+opacity[BlendMode.ColorDodge] = "颜色减淡";
+opacity[BlendMode.Overlay] = "叠加";
+opacity[BlendMode.SoftLight] = "柔光";
+opacity[BlendMode.HardLight] = "强光";
+opacity[BlendMode.Difference] = "差值";
+opacity[BlendMode.Exclusion] = "排除";
+opacity[BlendMode.Hue] = "色相";
+opacity[BlendMode.Saturation] = "饱和度";
+opacity[BlendMode.Color] = "颜色";
+opacity[BlendMode.Luminosity] = "明度";
+opacity[BlendMode.PlusDarker] = "加暗";
+opacity[BlendMode.PlusLighter] = "提亮";
+
+autolayout[StackSizing.Auto] = "自动";
+autolayout[StackSizing.Fixed] = "固定";

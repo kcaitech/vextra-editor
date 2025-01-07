@@ -5,6 +5,7 @@ function isMobileDevice(): boolean {
         "iPhone",
         "iPad",
         "iPod",
+        "Macintosh",
         "BlackBerry",
         "Windows Phone",
     ];
@@ -13,6 +14,13 @@ function isMobileDevice(): boolean {
 
     for (const keyword of mobileKeywords) {
         if (userAgent.includes(keyword)) {
+            if (keyword === 'Macintosh') {
+                if (navigator.maxTouchPoints > 1) {
+                    return true
+                } else {
+                    return false
+                }
+            }
             return true;
         }
     }

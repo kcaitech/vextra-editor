@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none"
+    version="1.1" width="16" height="16" viewBox="0 0 16 16">
+    <g>
+        <g transform="matrix(0,-1,1,0,-10,16)">
+            <path d="M3,22.5L12.5,22.5L12.5,13L13.5,13L13.5,23.5L3,23.5L3,22.5Z" fill-rule="evenodd"
+                fill="#434343" fill-opacity="1" />
+        </g>
+        <g transform="matrix(0,-1,1,0,-10,16)">
+            <path d="M3,18L8,18L8,13L9,13L9,19L3,19L3,18Z" fill-rule="evenodd" fill="#434343"
+                fill-opacity="1" />
+        </g>
+        <g>
+            <ellipse cx="8.5" cy="7.5" rx="1.5" ry="1.5" fill="#434343" fill-opacity="1" />
+        </g>
+    </g>
+</svg>

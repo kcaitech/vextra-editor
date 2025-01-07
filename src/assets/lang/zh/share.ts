@@ -1,6 +1,6 @@
 export const share = {
     need_to_apply_for_confirmation: "需申请确认",
-    editable: "可编辑",
+    editable: "编辑",
     readOnly: "只读",
     remove: '移除',
     anyone_can_read_it: '任何人均可阅读',
@@ -20,7 +20,7 @@ export const share = {
     share_limit: '分享限制人数',
     founder: '创建者',
     document_permission: '文档权限',
-    reviewable: '可评论',
+    reviewable: '评论',
     no_document:'没有该文档',
 }
 
@@ -47,7 +47,7 @@ export const apply = {
     file_deleted: '文件已被删除，或创建者已关闭分享',
     authorization_failure: '授权失败',
     notification_message: '通知消息',
-    application_documents: '申请文档',
+    application_documents: '申请',
     have_agreed: '已同意',
     rejected: '已拒绝',
     no_message_received: '未收到任何消息',
@@ -57,7 +57,10 @@ export const apply = {
     project: '项目',
     team: '团队',
     team_apply: '加入团队申请',
-    fill: '文件',
+    file: '文件',
     apply_team: '申请加入团队：',
-    apply_project: '申请加入项目：'
+    apply_project: '申请加入项目：',
+    apply:'申请',
+    tips_team:'您申请加入团队',
+    tips_project:'您申请加入项目'
 }

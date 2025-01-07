@@ -22,7 +22,7 @@ function init_slice() {
     }
     if (slice.length > 1) {
         for (let i = 0, len = slice.length - 1; i < len; i++) {
-            slice[i] = { slice: slice[i] + ' / ', is_tail: false };
+            slice[i] = { slice: slice[i] + ` /`, is_tail: false };
         }
     }
     slice[slice.length - 1] = { slice: props.data.title, is_tail: true };
@@ -31,23 +31,29 @@ function init_slice() {
 onMounted(init_slice);
 </script>
 <template>
-    <div v-for="(slice, index) in title_slice" :key="index">
-        <span :class="slice.is_tail ? 'tail' : 'parent-node'">{{ slice.slice }}</span>
+    <div class="comp_title" >
+        <span :class="slice.is_tail ? 'tail' : 'parent-node'" v-for="(slice, index) in title_slice" :key="index">{{ slice.slice }}</span>
     </div>
 </template>
-<scoped lang="scss" scoped>
-div>span {
-    
-    white-space: pre;
+<style lang="scss" scoped>
+.comp_title {
+    display: flex;
+    align-items: center;
+    width: calc(100% - 14px);
 }
 
 .parent-node {
     color: #c0c0c0;
+    padding-right: 4px;
 }
 
 .tail {
+    flex: 1;
     font-size: 12px;
     line-height: 14px;
     color: #262626;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-</scoped>
+</style>

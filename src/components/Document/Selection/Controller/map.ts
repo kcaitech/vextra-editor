@@ -8,6 +8,8 @@ import CtrlContact from "./CtrlContact.vue";
 import CtrlComponentVue from "./CtrlComponent.vue";
 import CtrlVirtual from "./CtrlVirtual.vue";
 import CtrlTextVirtual from "./CtrlTextVirtual.vue";
+import CtrlTableVirtual from "./CtrlTableVirtual.vue";
+
 export enum ControllerType { // 控件类型
     Rect = 'rect',
     RectMulti = 'rect_multi',
@@ -18,7 +20,8 @@ export enum ControllerType { // 控件类型
     Contact = 'contact',
     Symbol = 'symbol',
     Virtual = 'virtual',
-    TextVirtual = 'text_virtual'
+    TextVirtual = 'text_virtual',
+    TableVirtual = 'table_virtual'
 }
 export const ctrlMap = new Map<ControllerType, any>([
     [ControllerType.Rect, CtrlRect],
@@ -31,4 +34,5 @@ export const ctrlMap = new Map<ControllerType, any>([
     [ControllerType.Symbol, CtrlComponentVue],
     [ControllerType.Virtual, CtrlVirtual],
     [ControllerType.TextVirtual, CtrlTextVirtual],
+    [ControllerType.TableVirtual, CtrlTableVirtual],
 ]);

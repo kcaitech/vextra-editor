@@ -32,13 +32,15 @@ function unhover() {
 function change(v: string) {
     emits('change', v);
 }
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 <template>
     <div class="container" @mouseleave="unhover">
         <div class="item" v-for="(item, index) in contents" :key="index" @mouseenter.stop="() => hover_item(item)"
             @click="() => change(item.id)">
             <div :class="checked(item.id) ? 'visibility' : 'hidden'">
-                <svg-icon icon-class="select"></svg-icon>
+                <SvgIcon :icon="select_icon"/>
             </div>
             <CardWrap :data="item" :container="props.container"></CardWrap>
         </div>

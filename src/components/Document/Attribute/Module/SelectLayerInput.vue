@@ -51,7 +51,7 @@ const showSelectLayer = (e: MouseEvent) => {
     }
 
     isselectLayer.value = true;
-    props.context.esctask.save(v4(), de_show_select_layer);
+    props.context.escstack.save(v4(), de_show_select_layer);
 }
 
 function de_show_select_layer() {
@@ -101,6 +101,9 @@ onMounted(() => {
     get_bind_layer_name();
     get_symbol_layer();
 });
+
+import down_icon from '@/assets/icons/svg/down.svg';
+
 </script>
 
 <template>
@@ -110,9 +113,9 @@ onMounted(() => {
             <div :class="{ input_lay: true, disabled, }" @click="showSelectLayer">
                 <span v-if="selectLayerName" class="value" style="color: black;">{{ selectLayerName }}</span>
                 <span v-else style="color: #BFBFBF">{{ placeholder }}</span>
-                <svg-icon icon-class="down" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">
+                <SvgIcon :icon="down_icon" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">
                     <ArrowDown />
-                </svg-icon>
+                </SvgIcon>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
                 :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>

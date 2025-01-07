@@ -2,10 +2,9 @@ import { Context } from "@/context";
 import { map_from_shapes, permIsEdit } from "./content";
 import { Action } from "@/context/tool";
 import { AsyncTransfer, GroupShape, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
-import { ClientXY, PageXY } from "@/context/selection";
+import { PageXY } from "@/context/selection";
 import { debounce } from "lodash";
 import { WorkSpace } from "@/context/workspace";
-import { Menu } from "@/context/menu";
 import { compare_layer_3 } from "./group_ungroup";
 import { get_symbolref_by_layer } from "./symbol";
 
@@ -66,10 +65,10 @@ export function d(s: { x: number, y: number }, e: { x: number, y: number }): num
     return d;
 }
 
-export function getDelta(s: Shape, p: PageXY) {
-    const f2r = s.frame2Root();
-    return { dx: p.x - f2r.x, dy: p.y - f2r.y };
-}
+// export function getDelta(s: ShapeView, p: PageXY) {
+//     const f2r = s.frame2Root();
+//     return { dx: p.x - f2r.x, dy: p.y - f2r.y };
+// }
 
 export function get_speed(e1: MouseEvent, e2: MouseEvent) {
     return Math.hypot(Math.abs(e2.clientX - e1.clientX), Math.abs(e2.clientY - e1.clientY));
@@ -107,6 +106,7 @@ export function get_direction(rotation: number) {
     else if (rotation >= 338 && rotation <= 360) return 0;
     else return 0;
 }
+
 export function gen_offset_map(shape: ShapeView, down: PageXY) {
     const m = shape.matrix2Root()
     const f = shape.frame;
@@ -122,19 +122,6 @@ export function gen_offset_map(shape: ShapeView, down: PageXY) {
         rt: { x: rt.x - down.x, y: rt.y - down.y },
         lb: { x: lb.x - down.x, y: lb.y - down.y }
     }
-}
-
-export function pre_translate(context: Context, shapes: ShapeView[]) {
-    context.selection.unHoverShape();
-    context.workspace.setSelectionViewUpdater(false);
-    context.workspace.translating(true);
-    context.assist.set_trans_target(shapes);
-    context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
-}
-export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
-    if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
-    else if (update_type === 2) startPosition.y = mousePosition.y;
-    else if (update_type === 1) startPosition.x = mousePosition.x;
 }
 
 export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: ShapeView[], shape: ShapeView) {
@@ -171,144 +158,18 @@ export function end_transalte(context: Context) {
     context.workspace.setCtrl('page');
     context.cursor.cursor_freeze(false);
 }
+
 export function check_status(context: Context) {
     context.menu.menuMount(); // 关闭可能已经打开的右键菜单
-    context.menu.notify(Menu.SHUTDOWN_POPOVER); // 关闭可能已经打开的弹窗
     const action = context.tool.action;
     return action === Action.AutoV || action === Action.AutoK;
 }
 
-/**
- * @description 整理选区，避免实例内部被控件修改
- * @param context
- * @param shapes
- * @returns
- */
-export function modify_shapes(context: Context, shapes: ShapeView[]) {
-    const shape_map = new Map<string, ShapeView>();
-    let is_change = false;
-
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
-        const symref = get_symbolref_by_layer(shape);
-        if (symref) {
-            shape_map.set(symref.id, symref);
-            is_change = true;
-        } else {
-            shape_map.set(shape.id, shape);
-        }
-    }
-
-    if (is_change) {
-        context.selection.rangeSelectShape(Array.from(shape_map.values()));
-    }
-
-    return context.selection.selectedShapes;
-}
-
-export class DirectionCalc {
-    static STEP = 1;
-    static FASTER = 10;
-    private m_up: boolean = false;
-    private m_down: boolean = false;
-    private m_left: boolean = false;
-    private m_right: boolean = false;
-    private m_faster: boolean = false;
-
-    is_catfish(code: string) {
-        return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code);
-    }
-
-    down(event: KeyboardEvent) {
-        switch (event.code) {
-            case 'ArrowUp':
-                this.m_up = true;
-                break;
-            case 'ArrowDown':
-                this.m_down = true;
-                break;
-            case 'ArrowLeft':
-                this.m_left = true;
-                break;
-            case 'ArrowRight':
-                this.m_right = true;
-                break;
-            default:
-                break;
-        }
-        if (event.shiftKey) {
-            this.m_faster = true;
-        }
-    }
-
-    up(event: KeyboardEvent) {
-        switch (event.code) {
-            case 'ArrowUp':
-                this.m_up = false;
-                break;
-            case 'ArrowDown':
-                this.m_down = false;
-                break;
-            case 'ArrowLeft':
-                this.m_left = false;
-                break;
-            case 'ArrowRight':
-                this.m_right = false;
-                break;
-            case 'ShiftLeft':
-                this.m_faster = false;
-                break;
-            case 'ShiftRight':
-                this.m_faster = false;
-                break;
-            default:
-                break;
-        }
-
-        return this.m_up || this.m_down || this.m_left || this.m_right;
-    }
-
-    reset() {
-        this.m_up = false;
-        this.m_down = false;
-        this.m_left = false;
-        this.m_right = false;
-        this.m_faster = false;
-    }
-
-    calc() {
-        let x = 0;
-        let y = 0;
-        if (this.m_up) {
-            y = y - DirectionCalc.STEP;
-        }
-
-        if (this.m_down) {
-            y = y + DirectionCalc.STEP;
-        }
-
-        if (this.m_left) {
-            x = x - DirectionCalc.STEP;
-        }
-
-        if (this.m_right) {
-            x = x + DirectionCalc.STEP;
-        }
-
-        if (this.m_faster) {
-            x *= DirectionCalc.FASTER;
-            y *= DirectionCalc.FASTER;
-        }
-
-        return { x, y };
-    }
-}
-
-export function is_symbol_class(shape: ShapeView) {
+export function is_symbol_class(shape: Shape | ShapeView) {
     return shape.isVirtualShape
         || [ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion].includes(shape.type)
-        || (function (shape: ShapeView) {
-            let p: ShapeView | undefined = shape;
+        || (function (shape: Shape | ShapeView) {
+            let p: Shape | ShapeView | undefined = shape;
             while (p) {
                 if (ShapeType.Symbol === p.type) {
                     return true;

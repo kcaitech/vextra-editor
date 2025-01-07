@@ -2,19 +2,24 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection, SelectionTheme } from "@/context/selection";
-import { Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
+import { CtrlElementType, Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
-import { CtrlElementType, WorkSpace } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
 import { is_shape_in_selected } from "@/utils/scout";
 import ShapeSize from "./ShapeSize.vue";
-import LableLine from "../Assist/LableLine.vue";
+import LabelLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
+import gapAssist from "@/components/Document/Assist/gapAssist.vue";
+import AutoLayoutChildEdit from "./Controller/AutoLayoutController/AutoLayoutChildEdit.vue"
+import InsertBar from "@/components/Document/Selection/Controller/InsertBar.vue";
+import TidyUpOutline from "./TidyUpOutline.vue";
+import { debounce } from "lodash";
 
 export interface Point {
     x: number
@@ -29,7 +34,9 @@ export interface Bar {
 
 interface Props {
     context: Context
-    matrix: Matrix
+    params: {
+        matrix: Matrix
+    }
 }
 
 interface PathView {
@@ -41,7 +48,7 @@ interface PathView {
 
 const props = defineProps<Props>();
 const controllerType = ref<ControllerType>(ControllerType.Rect);
-const matrix = new Matrix();
+// const matrix = new Matrix();
 const controllerFrame = ref<Point[]>([]);
 const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
@@ -51,8 +58,10 @@ const traceEle = ref<Element>();
 const tracingFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
 const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
-const theme = ref<SelectionTheme>(SelectionTheme.Normol);
-const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normol);
+const theme = ref<SelectionTheme>(SelectionTheme.Normal);
+const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normal);
+const updateTrigger = ref<number>(0);
+const borderPath = ref<string>("");
 
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -82,33 +91,38 @@ function watchShapes() { // 监听选区相关shape的变化
         }
     })
 }
+
 function shapesWatcher(...args: any) {
-    if (props.context.workspace.shouldSelectionViewUpdate && args.includes('layout')) {
-        update_by_shapes();
+    if (props.context.workspace.shouldSelectionViewUpdate) {
+        if (args.includes('layout')) {
+            update_by_shapes();
+            updateTrigger.value++;
+        } else if (args.includes('destroy')) {
+            createShapeTracing();
+            createController2()
+        }
     }
 }
 
 function update_by_shapes() {
-    matrix.reset(props.matrix);
     createShapeTracing();
     createController();
 }
 
 function update_by_matrix() {
-    matrix.reset(props.matrix);
     createShapeTracing();
     createController();
 }
 
 function workspace_watcher(t?: any) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) { // 由workspace主动触发更新，可跳过是否可以更新的检查
-        matrix.reset(props.matrix);
+        // matrix.reset(props.params.matrix);
         createShapeTracing();
         createController();
     }
 }
 
-function selectionWatcher(t: number) { // selection的部分动作可触发更新
+function selectionWatcher(t: string | number) { // selection的部分动作可触发更新
     if (t === Selection.CHANGE_PAGE) {
         watchedShapes.forEach(v => {
             v.unwatch(shapesWatcher)
@@ -117,26 +131,27 @@ function selectionWatcher(t: number) { // selection的部分动作可触发更�
         tracing.value = false;
         controller.value = false;
     } else if (t === Selection.CHANGE_SHAPE) {
-        matrix.reset(props.matrix);
         createController();
         watchShapes();
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
-        matrix.reset(props.matrix);
         createShapeTracing();
         watchShapes();
+    }
+    if (t === Selection.SHOW_INTERVAL) {
+        labelLineStatus();
     }
 }
 
 function tool_watcher(t: number) {
     if (t === Tool.LABLE_CHANGE) {
-        matrix.reset(props.matrix);
+        // matrix.reset(props.params.matrix);
         createController();
         watchShapes();
-        lableLineStatus();
+        labelLineStatus();
     }
 }
 
-function modfiy_tracing_class(shape: ShapeView) {
+function modify_tracing_class(shape: ShapeView) {
     tracing_class.thick_stroke = false;
     tracing_class.hollow_fill = false;
 
@@ -152,7 +167,7 @@ function modfiy_tracing_class(shape: ShapeView) {
     if (is_symbol_class(shape)) {
         tracingStroke.value = SelectionTheme.Symbol;
     } else {
-        tracingStroke.value = SelectionTheme.Normol;
+        tracingStroke.value = SelectionTheme.Normal;
     }
 }
 
@@ -162,16 +177,16 @@ function modfiy_tracing_class(shape: ShapeView) {
 function createShapeTracing() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
     tracing.value = false;
+    borderPath.value = "";
 
-    if (!hoveredShape) {
-        return;
-    }
+    if (!hoveredShape) return;
 
     if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) {
         tracing.value = false;
+        borderPath.value = "";
     } else {
         const m = hoveredShape.matrix2Root();
-        m.multiAtLeft(matrix);
+        m.multiAtLeft(props.params.matrix);
         const path = hoveredShape.getPath().clone();
         path.transform(m);
         const { x, y, right, bottom } = props.context.workspace.root;
@@ -179,8 +194,12 @@ function createShapeTracing() {
         const h = bottom - y;
         tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
         tracing.value = true;
-
-        modfiy_tracing_class(hoveredShape);
+        if (hoveredShape.borderPath) {
+            const path = hoveredShape.borderPath.clone();
+            path.transform(m);
+            borderPath.value = path.toString();
+        }
+        modify_tracing_class(hoveredShape);
     }
 }
 
@@ -198,15 +217,51 @@ function createController() {
     modify_controller_type(selection);
     modify_rotate(selection);
     modify_theme(selection);
-    tracing.value = false;
+    // tracing.value = false;
     controller.value = true;
     // console.log('控件绘制用时(ms):', Date.now() - s);
 }
+
+/**
+ * @description 图层被损坏的情况下，被动更新控件
+ */
+function _createController2() {
+    const selection: ShapeView[] = [];
+    const temp = props.context.selection.selectedShapes;
+    let adjust = false;
+    for (let i = 0; i < temp.length; i++) {
+        const shape = temp[i];
+        if (!shape || shape.m_isdistroyed) {
+            adjust = true;
+        } else {
+            selection.push(shape);
+        }
+    }
+    if (adjust) {
+        props.context.selection.rangeSelectShape(selection);
+        return;
+    }
+    if (!selection.length) {
+        controller.value = false;
+        return;
+    }
+    modify_controller_frame(selection);
+    modify_controller_type(selection);
+    modify_rotate(selection);
+    modify_theme(selection);
+    controller.value = true;
+}
+
+const createController2 = debounce(_createController2, 60);
+
 function modify_controller_frame(shapes: ShapeView[]) {
     if (shapes.length === 1) {
         const s = shapes[0], m = s.matrix2Root(), f = s.frame;
-        const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
-        m.multiAtLeft(matrix);
+        const points = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, {
+            x: f.x + f.width,
+            y: f.y + f.height
+        }, { x: f.x, y: f.y + f.height }];
+        m.multiAtLeft(props.params.matrix);
         for (let i = 0; i < 4; i++) {
             const p = points[i];
             points[i] = m.computeCoord3(p);
@@ -217,39 +272,40 @@ function modify_controller_frame(shapes: ShapeView[]) {
     const points: { x: number, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
-        if (s.type === ShapeType.Contact) continue;
+        // if (s.type === ShapeType.Contact) continue;
         const m = s.matrix2Root(), f = s.frame;
-        m.multiAtLeft(matrix);
-        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
-            x: 0,
-            y: f.height
-        }];
+        m.multiAtLeft(props.params.matrix);
+        const ps: { x: number, y: number }[] = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, {
+            x: f.x + f.width,
+            y: f.y + f.height
+        }, { x: f.x, y: f.y + f.height }];
         for (let j = 0; j < 4; j++) ps[j] = m.computeCoord3(ps[j]);
         points.push(...ps);
     }
+
     const b = XYsBounding(points);
-    controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, {
-        x: b.left,
-        y: b.bottom
-    }];
+    controllerFrame.value = [
+        { x: b.left, y: b.top },
+        { x: b.right, y: b.top },
+        { x: b.right, y: b.bottom },
+        { x: b.left, y: b.bottom }
+    ];
 }
+
 function for_virtual(shape: ShapeView) {
     if (shape.type === ShapeType.Text) {
         controllerType.value = ControllerType.TextVirtual;
+    } else if (shape.type === ShapeType.Table) {
+        controllerType.value = ControllerType.TableVirtual;
     } else {
         controllerType.value = ControllerType.Virtual;
     }
 }
+
 function for_path_shape(shape: PathShapeView) {
-    const points = shape.points;
-    const is_straight_1 = !points[0]?.hasFrom;
-    const is_straight_2 = !points[1]?.hasTo;
-    if (points.length === 2 && is_straight_1 && is_straight_2) {
-        controllerType.value = ControllerType.Line;
-    } else {
-        controllerType.value = ControllerType.Rect;
-    }
+    controllerType.value = shape.isStraight ? ControllerType.Line : ControllerType.Rect;
 }
+
 function modify_controller_type(shapes: ShapeView[],) {
     if (!permIsEdit(props.context) || props.context.tool.isLable) {
         controllerType.value = ControllerType.Readonly;
@@ -292,42 +348,30 @@ function modify_controller_type(shapes: ShapeView[],) {
 
     controllerType.value = ControllerType.RectMulti;
 }
+
 function modify_rotate(shapes: ShapeView[]) {
     if (shapes.length === 1) {
-        const shape = shapes[0];
-        if (shape instanceof PathShapeView) {
-            const points = shape.points;
-            const is_straight_1 = !points[0]?.hasFrom;
-            const is_straight_2 = !points[1]?.hasTo;
-            if (points.length === 2 && is_straight_1 && is_straight_2) {
-                rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[2]);
-                return;
-            }
-        }
         rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[1]);
+    } else {
+        rotate.value = 0;
     }
-    rotate.value = 0;
 }
+
 function modify_theme(shapes: ShapeView[]) {
-    theme.value = SelectionTheme.Normol;
+    theme.value = SelectionTheme.Normal;
     if (shapes.length !== 1) {
         return;
     }
-    if (is_symbol_class(shapes[0])) {
+    if (is_symbol_class(shapes[0] as any)) {
         theme.value = SelectionTheme.Symbol;
     }
 }
+
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
     const action = props.context.tool.action;
     const selection = props.context.selection;
 
-    if (!(action === Action.AutoV || action === Action.AutoK)) {
-        return;
-    }
-
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button !== 0 || (action !== Action.AutoV && action !== Action.AutoK)) return;
 
     e.stopPropagation();
 
@@ -336,9 +380,7 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     }
 
     const hoveredShape = selection.hoveredShape;
-    if (!hoveredShape) {
-        return;
-    }
+    if (!hoveredShape) return;
 
     if (e.shiftKey) {
         multi_select_shape(props.context, hoveredShape);
@@ -349,40 +391,21 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     }
 }
 
-function keyboard_down_watcher(e: KeyboardEvent) {
-    if (e.code === 'AltLeft') {
-        if (traceEle.value) {
-            traceEle.value.classList.add('cursor-copy');
-            altKey.value = true;
-        }
-    }
-}
-
-function keyboard_up_watcher(e: KeyboardEvent) {
-    if (e.code === 'AltLeft') {
-        if (traceEle.value) {
-            traceEle.value.classList.remove('cursor-copy');
-            altKey.value = false;
-        }
-    }
-}
-
 function window_blur() {
     if (traceEle.value) {
         traceEle.value.classList.remove('cursor-copy');
         altKey.value = false;
     }
+    props.context.selection.setShowInterval(false);
 }
 
 //标注线
-const isLableLine = ref(false);
-const lableLineStatus = () => {
-    const isLable = props.context.tool.isLable;
-    if (isLable) {
-        isLableLine.value = true;
-    } else {
-        isLableLine.value = false;
-    }
+const isLabelLine = ref(false);
+const labelLineStatus = () => {
+    const label = props.context.tool.isLable;
+    const interval = props.context.selection.is_interval;
+
+    isLabelLine.value = label || interval;
 }
 
 function page_watcher() {
@@ -395,21 +418,16 @@ function page_watcher() {
 
 function remove_page_watcher() {
     const page = props.context.selection.selectedPage;
-
-    if (page) {
-        page.unwatch(shapesWatcher);
-    }
+    if (page) page.unwatch(shapesWatcher);
 }
 
 // hooks
-watch(() => props.matrix, update_by_matrix, { deep: true });
+watch(() => props.params.matrix, update_by_matrix, { deep: true });
 
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspace_watcher);
     props.context.tool.watch(tool_watcher);
-    document.addEventListener('keydown', keyboard_down_watcher);
-    document.addEventListener('keyup', keyboard_up_watcher);
     window.addEventListener('blur', window_blur)
     page_watcher();
 })
@@ -417,34 +435,39 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
     props.context.tool.unwatch(tool_watcher);
-    document.removeEventListener('keydown', keyboard_down_watcher);
-    document.removeEventListener('keyup', keyboard_up_watcher);
     window.removeEventListener('blur', window_blur);
     remove_page_watcher();
 })
 </script>
+
 <template>
-    <!-- 描边 -->
-    <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-        style="transform: translate(0px, 0px); position: absolute;">
-        <path v-if="tracing_class.thick_stroke" :d="tracingFrame.path" fill="none" stroke="transparent" stroke-width="14"
-            @mousedown="(e: MouseEvent) => pathMousedown(e)">
-        </path>
-        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
-            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-        </path>
-    </svg>
-    <!-- 控制 -->
-    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
-        :shape="context.selection.selectedShapes[0]" :theme="theme">
-    </component>
-    <!-- 辅助 -->
-    <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
-    <!-- 标注线 -->
-    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
-    <!-- 选中大小 -->
-    <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
+<!-- 描边 -->
+<svg v-if="tracing" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet"
+     overflow="visible"
+     :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+     style="transform: translate(0px, 0px); position: absolute;">
+    <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
+          @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
+    <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
+          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
+    <path v-if="borderPath" :d="borderPath" fill="transparent" @mousedown="(e: MouseEvent) => pathMousedown(e)"/>
+</svg>
+<TidyUpOutline :context="props.context" :controller-frame="controllerFrame"/>
+
+<!-- 控制 -->
+<component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
+           :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.params.matrix"
+           :shape="context.selection.selectedShapes[0]" :theme="theme">
+</component>
+
+<AutoLayoutChildEdit :context="props.context"/>
+<InsertBar :context="props.context"/>
+<!-- 辅助 -->
+<Assist :context="props.context" :controller-frame="controllerFrame"/>
+<gapAssist :context="props.context"/>
+<!-- 标注线 -->
+<LabelLine v-if="isLabelLine" :context="props.context" :matrix="props.params.matrix"
+           :update-trigger="updateTrigger"></LabelLine>
+<!-- 选中大小 -->
+<ShapeSize :context="props.context" :controller-frame="controllerFrame"/>
 </template>

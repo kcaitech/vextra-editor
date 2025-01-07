@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Asssit, PageXY2 } from '@/context/assist';
+import { Assist } from '@/context/assist';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { get_p_form_pg_by_x, get_p_form_pg_by_y } from '@/utils/assist';
 
 interface Props {
     context: Context
@@ -15,10 +14,6 @@ interface Data {
     nodesY: ClientXY[]
     lineX: string
     lineY: string
-    exLineX: string[]
-    exLineY: string[]
-    exNodesX: ClientXY[]
-    exNodesY: ClientXY[]
 }
 
 const props = defineProps<Props>();
@@ -29,191 +24,42 @@ const data = reactive<Data>({
     nodesY: [],
     lineX: '',
     lineY: '',
-    exLineX: [],
-    exLineY: [],
-    exNodesX: [],
-    exNodesY: []
 });
-let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = data;
-let ax = 0, ay = 0;
+let { lineX, nodesX, lineY, nodesY } = data;
 
 function assist_watcher(t: number) {
-    if (t === Asssit.UPDATE_ASSIST_PATH) {
+    if (t === Assist.UPDATE_ASSIST_PATH) {
         render();
-    } else if (t === Asssit.UPDATE_MAIN_LINE_PATH) {
-        update_main_line();
-    } else if (t === Asssit.CLEAR && assist.value) {
+    } else if (t === Assist.CLEAR && assist.value) {
         clear();
-    }
-}
-
-function update_main_line() {
-    const cpg = props.context.assist.CPG;
-    if (!cpg) {
-        return;
-    }
-    clear4main_line();
-    const ns_x = minus_nodes_x(props.context.assist.nodes_x);
-    const ns_y = minus_nodes_y(props.context.assist.nodes_y);
-    if (ns_x.length) {
-        ax = ns_x[0].x;
-        nodesX = ns_x.concat(get_p_form_pg_by_x(cpg, ax)).map(n => matrix.value.computeCoord3(n));
-        lineX = render_line_x(nodesX);
-    }
-    if (ns_y.length) {
-        ay = ns_y[0].y;
-        nodesY = ns_y.concat(get_p_form_pg_by_y(cpg, ay)).map(n => matrix.value.computeCoord3(n));
-        lineY = render_line_y(nodesY);
     }
 }
 
 function render() {
     clear();
-    const ns_x = minus_nodes_x(props.context.assist.nodes_x);
-    const ns_y = minus_nodes_y(props.context.assist.nodes_y);
-    if (ns_x.length) {
-        ax = ns_x[0].x;
-        points_to_client(ns_x, props.context.workspace.matrix, nodesX);
-        lineX = render_line_x(nodesX);
+
+    const nx = [...props.context.assist.nodesX2];
+    const ny = [...props.context.assist.nodesY2];
+
+    if (nx.length) {
+        nodesX.push(...nx);
+        lineX = render_line_x(nx);
         assist.value = true;
     }
-    if (ns_y.length) {
-        ay = ns_y[0].y;
-        points_to_client(ns_y, props.context.workspace.matrix, nodesY);
-        lineY = render_line_y(nodesY);
+    if (ny.length) {
+        nodesY.push(...ny);
+        lineY = render_line_y(ny);
         assist.value = true;
-    }
-    getExLineX();
-    getExLineY();
-}
-
-function points_to_client(points: { x: number, y: number }[], matrix: Matrix, local: { x: number, y: number }[]) {
-    for (let i = 0, len = points.length; i < len; i++) local[i] = matrix.computeCoord3(points[i]);
-}
-
-function getExLineX() {
-    const cpg = props.context.assist.CPG;
-    if (!cpg) return;
-    const xAxis = props.context.assist.xAxis;
-    const { left, cx, right } = cpg;
-    if (left !== undefined && Math.abs(left - ax) > 1) {
-        let t = minus_nodes_x(xAxis.get(left) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_x(cpg, left));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesX.push(...t);
-                exLineX.push(render_line_x(t));
-            }
-        }
-    }
-    if (cx !== undefined && Math.abs(cx - ax) > 1) {
-        let t = minus_nodes_x(xAxis.get(cx) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_x(cpg, cx));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesX.push(...t);
-                exLineX.push(render_line_x(t));
-            }
-        }
-
-    }
-    if (right !== undefined && Math.abs(right - ax) > 1) {
-        let t = minus_nodes_x(xAxis.get(right) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_x(cpg, right));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesX.push(...t);
-                exLineX.push(render_line_x(t));
-            }
-        }
-    }
-}
-
-function getExLineY() {
-    const cpg = props.context.assist.CPG;
-    if (!cpg) return;
-    const yAxis = props.context.assist.yAxis;
-    const { top, cy, bottom } = cpg;
-    if (top !== undefined && Math.abs(top - ay) > 1) {
-        let t = minus_nodes_y(yAxis.get(top) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_y(cpg, top));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesY.push(...t);
-                exLineY.push(render_line_y(t));
-            }
-        }
-    }
-    if (cy !== undefined && Math.abs(cy - ay) > 1) {
-        let t = minus_nodes_y(yAxis.get(cy) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_y(cpg, cy));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesY.push(...t);
-                exLineY.push(render_line_y(t));
-            }
-        }
-    }
-    if (bottom !== undefined && Math.abs(bottom - ay) > 1) {
-        let t = minus_nodes_y(yAxis.get(bottom) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_y(cpg, bottom));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesY.push(...t);
-                exLineY.push(render_line_y(t));
-            }
-        }
     }
 }
 
 function clear() {
-    ax = 0, ay = 0;
     nodesX.length = 0;
     nodesY.length = 0;
-    exNodesY.length = 0;
-    exNodesX.length = 0;
-    exLineX.length = 0;
-    exLineY.length = 0;
     lineX = '';
     lineY = '';
+
     assist.value = false;
-}
-
-function clear4main_line() {
-    ax = 0, ay = 0;
-    nodesX.length = 0;
-    nodesY.length = 0;
-    lineX = '';
-    lineY = '';
-}
-
-/**
- * @description 去除重复的点
- */
-function minus_nodes_x(nodes: PageXY2[]): PageXY[] {
-    const except = props.context.assist.except;
-    let result: PageXY[] = [];
-    for (let i = 0, len = nodes.length; i < len; i++) {
-        const n = nodes[i];
-        if (!except.get(n.id)) result.push(n.p);
-    }
-    return result;
-}
-
-function minus_nodes_y(nodes: PageXY2[]): PageXY[] {
-    const except = props.context.assist.except;
-    let result: PageXY[] = [];
-    for (let i = 0, len = nodes.length; i < len; i++) {
-        const n = nodes[i];
-        if (!except.get(n.id)) result.push(n.p);
-    }
-    return result;
 }
 
 /**
@@ -275,33 +121,34 @@ onUnmounted(() => {
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" width="4"
-        height="4" viewBox="0 0 4 4" style="position: absolute">
-        <g id="node">
-            <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;" />
-            <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;" />
+         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" width="100"
+         height="100" viewBox="0 0 100 100" style="position: absolute">
+        <g id="node-path">
+            <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
+            <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
         </g>
         <g v-if="assist">
-            <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
-            <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
-            <use v-for="(n, i) in exNodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
-            <use v-for="(n, i) in exNodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
-            <path v-if="lineX" :d="lineX" class="a-path" />
-            <path v-if="lineY" :d="lineY" class="a-path" />
-            <path v-for="(el, i) in exLineX" :d="el" :key="i" class="a-path" />
-            <path v-for="(el, i) in exLineY" :d="el" :key="i" class="a-path" />
+            <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node-path" :key="i"/>
+            <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node-path" :key="i"/>
+
+            <path v-if="lineX" :d="lineX" class="a-path"/>
+            <path v-if="lineY" :d="lineY" class="a-path"/>
         </g>
     </svg>
 </template>
 <style scoped lang="scss">
+svg {
+    pointer-events: none;
+}
+
 use {
-    stroke-width: 1px;
-    stroke: #ff2200;
+    stroke-width: 0.5px;
+    stroke: #ff4400;
 }
 
 .a-path {
-    stroke-width: 1px;
-    stroke: #ff2200;
+    stroke-width: 0.5px;
+    stroke: #ff4400;
     fill: none;
 }
 </style>

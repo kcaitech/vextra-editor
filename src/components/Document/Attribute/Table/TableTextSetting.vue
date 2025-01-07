@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import Popover from '@/components/common/Popover.vue';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch, shallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextTransformType, TableView, TableCell, TableCellView } from "@kcdesign/data";
+import { AttrGetter, TextTransformType, TableView, TableCell, TableCellView, TableCellType, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 import { TableSelection } from '@/context/tableselection';
+import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -15,18 +16,16 @@ interface Props {
 const popover = ref();
 const props = defineProps<Props>();
 const selectCase = ref()
-const wordSpace = ref()
-const rowHeight = ref()
 const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref()
-const charSpacing = ref<HTMLInputElement>()
-const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
-const shape = ref<TableCellView>()
+const shape = shallowRef<TableCellView>()
 // const selection = ref(props.context.selection)
 const isActived1 = ref(false)
 const isActived2 = ref(false)
 const isActived3 = ref(false)
+const isUnderline = ref(false)
+const isDeleteline = ref(false)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -69,75 +68,6 @@ const onSelectCase = (icon: TextTransformType) => {
   props.context.workspace.focusText();
 }
 
-const setRowHeight = () => {
-  rowHeight.value = rowHeight.value.trim()
-  if (rowHeight.value.length < 1) {
-    rowHeight.value = 1
-  }
-  if (shape.value) {
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape(shape.value)
-    if (!isNaN(Number(rowHeight.value))) {
-      if (isSelectText()) {
-        editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
-      } else {
-        editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
-      }
-    } else {
-      textFormat();
-    }
-  } else {
-    if (!isNaN(Number(rowHeight.value))) {
-      const table = props.textShape;
-      const table_Selection = props.context.tableSelection;
-      const editor = props.context.editor4Table(table)
-      if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-        editor.setLineHeight(Number(rowHeight.value));
-      } else {
-        const cell_selection = cellSelect(table_Selection)
-        editor.setLineHeight(Number(rowHeight.value), cell_selection);
-      }
-    } else {
-      textFormat();
-    }
-  }
-}
-
-const setWordSpace = () => {
-  wordSpace.value = wordSpace.value.trim()
-  if (wordSpace.value.length < 1) { wordSpace.value = 0 }
-  if (shape.value) {
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape(shape.value)
-    // if (wordSpace.value.slice(-1) === '%') {
-    //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
-    // }
-    if (!isNaN(Number(wordSpace.value))) {
-      if (isSelectText()) {
-        editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
-      } else {
-        editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
-      }
-    } else {
-      textFormat()
-    }
-  } else {
-    if (!isNaN(Number(wordSpace.value))) {
-      const table = props.textShape;
-      const table_Selection = props.context.tableSelection;
-      const editor = props.context.editor4Table(table)
-      if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-        editor.setCharSpacing(Number(wordSpace.value));
-      } else {
-        const cell_selection = cellSelect(table_Selection)
-        editor.setCharSpacing(Number(wordSpace.value), cell_selection);
-      }
-    } else {
-      textFormat();
-    }
-  }
-}
-
 const setParagraphSpace = () => {
   paragraphSpace.value = paragraphSpace.value.trim()
   if (shape.value) {
@@ -169,6 +99,54 @@ const setParagraphSpace = () => {
   }
 }
 
+//设置下划线
+const onUnderlint = () => {
+  isUnderline.value = !isUnderline.value
+  if (shape.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen()
+    const editor = props.context.editor4TextShape(shape.value)
+    if (isSelectText()) {
+      editor.setTextUnderline(isUnderline.value, 0, Infinity)
+    } else {
+      editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
+    }
+  } else {
+    const table = props.textShape;
+    const table_Selection = props.context.tableSelection;
+    const editor = props.context.editor4Table(table)
+    if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+      editor.setTextUnderline(isUnderline.value);
+    } else {
+      const cell_selection = cellSelect(table_Selection)
+      editor.setTextUnderline(isUnderline.value, cell_selection);
+    }
+  }
+  textFormat();
+}
+const onDeleteline = () => {
+  isDeleteline.value = !isDeleteline.value
+  if (shape.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen()
+    const editor = props.context.editor4TextShape(shape.value)
+    if (isSelectText()) {
+      editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
+    } else {
+      editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
+    }
+  } else {
+    const table = props.textShape;
+    const table_Selection = props.context.tableSelection;
+    const editor = props.context.editor4Table(table)
+    if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+      editor.setTextStrikethrough(isDeleteline.value);
+    } else {
+      const cell_selection = cellSelect(table_Selection)
+      editor.setTextStrikethrough(isDeleteline.value, cell_selection);
+    }
+  }
+  textFormat();
+}
+
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
   if (shape.value) {
@@ -181,17 +159,19 @@ const isSelectText = () => {
   }
 }
 
-const selectCharSpacing = () => {
-  isActived1.value = true
-  charSpacing.value && charSpacing.value.select()
-}
-const selectLineHeight = () => {
-  isActived2.value = true
-  lineHeight.value && lineHeight.value.select()
-}
 const selectParaSpacing = () => {
   isActived3.value = true
-  paraSpacing.value && paraSpacing.value.select()
+}
+
+const is_select = ref(false);
+function click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
 }
 
 const shapeWatch = watch(() => props.textShape, (value, old) => {
@@ -213,12 +193,12 @@ const textFormat = () => {
     } else {
       format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
     }
-    wordSpace.value = format.kerning || 0;
-    rowHeight.value = format.minimumLineHeight || '';
     paragraphSpace.value = format.paraSpacing || 0;
     selectCase.value = format.transform;
-    if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`;
-    if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`;
+    isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+    isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
+    if (format.underlineIsMulti) isUnderline.value = false;
+    if (format.strikethroughIsMulti) isDeleteline.value = false;
     if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.transformIsMulti) selectCase.value = '';
   } else {
@@ -232,7 +212,7 @@ const textFormat = () => {
     const formats: any[] = [];
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
-      if (cell && cell.text) {
+      if (cell && cell.cellType === TableCellType.Text && cell.text) {
         const editor = props.context.editor4TextShape(cell);
         const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
         formats.push(forma);
@@ -257,19 +237,27 @@ const textFormat = () => {
         }
       }
     }
-    wordSpace.value = format.kerning || 0;
-    rowHeight.value = format.minimumLineHeight || ''
     paragraphSpace.value = format.paraSpacing || 0;
     selectCase.value = format.transform;
-    if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-    if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-    if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
-    if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+    isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+    isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
+    if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
     if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
+    if (format.underline === 'unlikeness') isUnderline.value = false;
     if (format.transformIsMulti === 'unlikeness') selectCase.value = '';
     if (format.transform === 'unlikeness') selectCase.value = '';
+    if (formats.length === 0) {
+      getTableFormat();
+    }
   }
+}
+
+const getTableFormat = () => {
+  const textAttr = props.textShape.data.textAttr;
+  if (!textAttr) return;
+  paragraphSpace.value = textAttr.paraSpacing || 0;
+  selectCase.value = textAttr.transform;
 }
 function selection_wather(t: any) {
   if (t === Selection.CHANGE_TEXT) {
@@ -283,9 +271,22 @@ function table_selection_watcher(t: any) {
 }
 
 function blur2() {
-    isActived1.value = false
-    isActived2.value = false
-    isActived3.value = false
+  isActived1.value = false
+  isActived2.value = false
+  isActived3.value = false
+  is_select.value = false;
+}
+
+function workspace_wather(t: number) {
+  if (t === WorkSpace.UNDER_LINE) {
+    onUnderlint();
+  } else if (t === WorkSpace.DELETE_LINE) {
+    onDeleteline();
+  } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    textFormat();
+  } else if (t === WorkSpace.TABLE_TEXT_GRADIENT_UPDATE) {
+    textFormat();
+  }
 }
 
 onMounted(() => {
@@ -293,13 +294,24 @@ onMounted(() => {
   props.textShape.watch(textFormat);
   props.context.selection.watch(selection_wather);
   props.context.tableSelection.watch(table_selection_watcher);
+  props.context.workspace.watch(workspace_wather);
 })
 onUnmounted(() => {
   props.context.selection.unwatch(selection_wather);
   props.textShape.unwatch(textFormat);
   props.context.tableSelection.unwatch(table_selection_watcher);
+  props.context.workspace.unwatch(workspace_wather);
   shapeWatch();
 })
+
+import gear_icon from '@/assets/icons/svg/gear.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import text_no_list_icon from '@/assets/icons/svg/text-no-list.svg';
+import text_underline_icon from '@/assets/icons/svg/text-underline.svg';
+import text_deleteline_icon from '@/assets/icons/svg/text-deleteline.svg';
+import text_uppercase_icon from '@/assets/icons/svg/text-uppercase.svg';
+import text_lowercase_icon from '@/assets/icons/svg/text-lowercase.svg';
+import text_titlecase_icon from '@/assets/icons/svg/text-titlecase.svg';
 </script>
 
 <template>
@@ -309,29 +321,50 @@ onUnmounted(() => {
       <template #trigger>
         <div class="trigger" @click="showMenu">
           <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
-            <svg-icon icon-class="gear"></svg-icon>
+            <SvgIcon :icon="gear_icon"/>
           </Tooltip>
         </div>
       </template>
+
       <template #body>
         <div class="options-container">
           <div>
-            <span>{{ t('attr.word_space') }}</span>
-            <div :class="{ actived: isActived1 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="charSpacing" @focus="selectCharSpacing" @blur="blur2" v-model="wordSpace" class="input"
-                @change="setWordSpace" style="width: 100%;height: 100%"></div>
-          </div>
-          <div>
-            <span>{{ t('attr.row_height') }}</span>
-            <div :class="{ actived: isActived2 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="lineHeight" @focus="selectLineHeight" @blur="blur2" v-model="rowHeight"
-                :placeholder="row_height" class="input" @change="setRowHeight" style="width: 100%;height: 100%"></div>
-          </div>
-          <div>
             <span>{{ t('attr.paragraph_space') }}</span>
-            <div :class="{ actived: isActived3 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace" class="input"
-                @change="setParagraphSpace" style="width: 100%;height: 100%"></div>
+            <div :class="{ actived: isActived3 }"
+              style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
+              <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
+                class="input" @change="setParagraphSpace" style="width: 100%;height: 100%" @click="click">
+            </div>
+          </div>
+          <div>
+            <span>{{ t('attr.underline') }}</span>
+            <div class="underline jointly-text">
+              <i :class="{ 'jointly-text': true, selected_bgc: !isUnderline }" @click="onUnderlint">
+                <Tooltip :content="t('attr.none_list')" :offset="15">
+                  <SvgIcon :icon="text_no_list_icon"/>
+                </Tooltip>
+              </i>
+              <i :class="{ 'jointly-text': true, selected_bgc: isUnderline }" @click="onUnderlint">
+                <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
+                  <SvgIcon :icon="text_underline_icon"/>
+                </Tooltip>
+              </i>
+            </div>
+          </div>
+          <div>
+            <span>{{ t('attr.deleteline') }}</span>
+            <div class="underline jointly-text">
+              <i :class="{ 'jointly-text': true, selected_bgc: !isDeleteline }" @click="onDeleteline">
+                <Tooltip :content="t('attr.none_list')" :offset="15">
+                  <SvgIcon :icon="text_no_list_icon"/>
+                </Tooltip>
+              </i>
+              <i :class="{ 'jointly-text': true, selected_bgc: isDeleteline }" @click="onDeleteline">
+                <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
+                  <SvgIcon :icon="text_deleteline_icon"/>
+                </Tooltip>
+              </i>
+            </div>
           </div>
           <div>
             <span>{{ t('attr.letter_case') }}</span>
@@ -339,25 +372,25 @@ onUnmounted(() => {
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'none' }"
                 @click="onSelectCase(TextTransformType.None)">
                 <Tooltip :content="t('attr.as_typed')" :offset="15">
-                  <svg-icon icon-class="text-no-list"></svg-icon>
+                    <SvgIcon :icon="text_no_list_icon"/>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'uppercase' }"
                 @click="onSelectCase(TextTransformType.Uppercase)">
                 <Tooltip :content="t('attr.uppercase')" :offset="15">
-                  <svg-icon icon-class="text-uppercase" style="width: 17px;height: 14px"></svg-icon>
+                  <SvgIcon :icon="text_uppercase_icon" style="width: 17px;height: 14px"/>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'lowercase' }"
                 @click="onSelectCase(TextTransformType.Lowercase)">
                 <Tooltip :content="t('attr.lowercase')" :offset="15">
-                  <svg-icon icon-class="text-lowercase" style="width: 14px;height: 14px"></svg-icon>
+                  <SvgIcon :icon="text_lowercase_icon" style="width: 14px;height: 14px"/>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'uppercase-first' }"
                 @click="onSelectCase(TextTransformType.UppercaseFirst)">
                 <Tooltip :content="t('attr.titlecase')" :offset="15">
-                  <svg-icon icon-class="text-titlecase" style="width: 15px;height: 14px"></svg-icon>
+                  <SvgIcon :icon="text_titlecase_icon" style="width: 15px;height: 14px"/>
                 </Tooltip>
               </i>
             </div>
@@ -392,7 +425,7 @@ onUnmounted(() => {
     }
 
     .trigger:hover {
-        background-color: #F5F5F5;
+      background-color: #F5F5F5;
     }
 
     .options-container {
@@ -430,14 +463,28 @@ onUnmounted(() => {
           height: 14px;
           font-size: var(--font-default-fontsize);
         }
+        .underline {
+          display: flex;
+          width: 98px;
+          padding: 2px;
+          box-sizing: border-box;
 
+          >i {
+            flex: 1;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #F4F5F5;
+          }
+        }
         .vertical-aligning {
           padding: 0 5px;
         }
 
         .level-aligning {
-            padding: 2px;
-            box-sizing: border-box;
+          padding: 2px;
+          box-sizing: border-box;
         }
 
         .font-posi {
@@ -465,7 +512,7 @@ onUnmounted(() => {
           -moz-appearance: textfield;
           appearance: textfield;
           font-size: 13px;
-          width: 124px;
+          width: 98px;
           border: none;
           background-color: var(--input-background);
           height: 32px;
@@ -481,19 +528,19 @@ onUnmounted(() => {
           outline: none;
         }
 
-          input::selection {
-              color: #FFFFFF;
-              background: #1878F5;
-          }
+        input::selection {
+          color: #FFFFFF;
+          background: #1878F5;
+        }
 
-          input::-moz-selection {
-              color: #FFFFFF;
-              background: #1878F5;
-          }
+        input::-moz-selection {
+          color: #FFFFFF;
+          background: #1878F5;
+        }
 
-          .actived {
-              border: 1px solid #1878F5;
-          }
+        .actived {
+          border: 1px solid #1878F5;
+        }
       }
     }
   }

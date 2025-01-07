@@ -5,6 +5,7 @@ export const shape: any = {
     line: '直线',
     oval: '圆形',
     rect: '矩形',
+    path: '路径',
     artboard: '容器',
     arrow: '箭头',
     text: '文字',
@@ -18,6 +19,10 @@ export const shape: any = {
     curve: "曲线工具",
     clip: "裁剪工具",
     default: '默认',
+    pen: '钢笔',
+    pencil: '铅笔',
+    polygon: '多边形',
+    star: '星形',
 }
 shape[ShapeType.Rectangle] = '矩形';
 

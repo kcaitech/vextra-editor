@@ -13,11 +13,13 @@ interface Props {
     shape: ContactLineView
     cFrame: Point[]
 }
+
 interface Slice {
     type: 'hor' | 'ver'
     bar: { x: number, y: number }
     sliceIndex: number
 }
+
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
@@ -32,10 +34,12 @@ let search: boolean = false;
 let drag_type: 'ver' | 'hor' = 'ver';
 let drag_index: number = -1;
 const dragActiveDis = 3;
+
 function update() {
     matrix.reset(props.matrix);
     update_slice_path();
 }
+
 function update_slice_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         return;
@@ -44,9 +48,7 @@ function update_slice_path() {
     show.value = false;
 
     const s = props.shape;
-    if (!(s instanceof ContactLineView)) {
-        return;
-    }
+    if (!(s instanceof ContactLineView)) return;
 
     const points: CurvePoint[] = s.getPoints();
 
@@ -98,6 +100,10 @@ function update_slice_path() {
 
 function point_mousedown(event: MouseEvent, slice: Slice) {
     if (event.button !== 0) {
+        return;
+    }
+
+    if (props.shape.isLocked) {
         return;
     }
 
@@ -161,17 +167,20 @@ function point_mousemove(event: MouseEvent) {
         }
     }
 }
+
 function point_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
     }
     reset_status();
 }
+
 // 重置路径
 function reset_path() {
     const editor = props.context.editor4Shape(props.shape);
     editor.reset_contact_path();
 }
+
 function reset_status() {
     if (isDragging) {
         isDragging = false;
@@ -198,6 +207,7 @@ function reset_status() {
 
     remove_move_and_up_from_document(move, point_mouseup);
 }
+
 function window_blur() {
     reset_status();
 }
@@ -222,10 +232,10 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <rect v-for="(item, idx) in slices.hor" :key="idx" :x="item.bar.x - 10" :y="item.bar.y - 4" class="bar-h" rx="4" ry="4"
-        @mousedown="(e: MouseEvent) => point_mousedown(e, item)" @dblclick="reset_path"></rect>
-    <rect v-for="(item, idx) in slices.ver" :key="idx" :x="item.bar.x - 4" :y="item.bar.y - 10" class="bar-v" rx="4" ry="4"
-        @mousedown="(e: MouseEvent) => point_mousedown(e, item)" @dblclick="reset_path"></rect>
+<rect v-for="(item, idx) in slices.hor" :key="idx" :x="item.bar.x - 10" :y="item.bar.y - 4" class="bar-h" rx="4" ry="4"
+      @mousedown="(e: MouseEvent) => point_mousedown(e, item)" @dblclick="reset_path"></rect>
+<rect v-for="(item, idx) in slices.ver" :key="idx" :x="item.bar.x - 4" :y="item.bar.y - 10" class="bar-v" rx="4" ry="4"
+      @mousedown="(e: MouseEvent) => point_mousedown(e, item)" @dblclick="reset_path"></rect>
 </template>
 <style lang='scss' scoped>
 .bar-h {

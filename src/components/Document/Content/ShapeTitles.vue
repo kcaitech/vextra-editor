@@ -1,197 +1,108 @@
 <script lang="ts" setup>
-import {watchEffect, onMounted, onUnmounted, computed, reactive} from "vue";
-import {Context} from "@/context";
-import {Matrix, Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape} from "@kcdesign/data";
-import {WorkSpace} from "@/context/workspace";
-import {ClientXY} from "@/context/selection";
+import { onMounted, onUnmounted, reactive, watch } from "vue";
+import { Context } from "@/context";
+import { PageView, ShapeView } from "@kcdesign/data";
+import { WorkSpace } from "@/context/workspace";
+import { Selection } from "@/context/selection"
+import { TitleAttri, TitleRenderer } from "@/components/Document/Content/titleRenderer";
 import ArtboardName from "./ArtboardName.vue";
-import {is_shape_out, pre_modify_anchor, shape_title_width} from "@/utils/content";
 
 const props = defineProps<{
-    context: Context
-    data: PageView,
-    matrix: number[]
+    context: Context;
+    data: PageView;
 }>()
 
-interface Title {
-    id: string
-    content: string
-    x: number
-    y: number
-    width: number
-    shape(): ShapeView
-    rotate: number
-    maxWidth: number
-    selected: boolean
+
+const titlesList = reactive<TitleAttri[]>([]);
+const titleRenderer = new TitleRenderer(props.context, titlesList as TitleAttri[]);
+
+function pageWatcher(...args: any[]) {
+    if (args.length === 1 && args[0] === 'childs') {
+        titleRenderer.updateUnderRootContainerMap();
+        watch_shapes();
+    }
 }
 
-const matrix = new Matrix(props.matrix);
-const titles: Title[] = reactive([]);
-const origin: ClientXY = {x: 0, y: 0};
-const watcher = () => {
-    updater();
-}
-
-function updater() {
-    watchShapes();
-    setOrigin();
-    setPosition();
-}
-
-function handleWorkspaceUpdate(t: any) {
+function workspaceWatcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        setOrigin();
-        setPosition();
+        titleRenderer.fullUpdate();
+    } else if (t === WorkSpace.ROOT_UPDATE) {
+        titleRenderer.updateUnderRootContainerMap();
+        titleRenderer.fullUpdate();
     }
 }
 
-const setPosition = () => {
-    const artboards: ShapeView[] = props.data.artboardList; // 只要遍历容器就可以了，直接拿这个，这个数组里面有全部容器，如果拿childs，会存在多余的遍历
-    const len = artboards.length;
-    if (len) {
-        titles.length = 0;
-        for (let i = 0; i < len; i++) {
-            const artboard = artboards[i];
-            if (artboard.parent?.type === ShapeType.Page && artboard.isVisible()) { // 只给页面的直接子元素上标题
-                const selecte = props.context.selection.selectedShapes;
-                const hovered = props.context.selection.hoveredShape;
-                let selected = false
-                if (selecte[0] && artboard.id === selecte[0].id) {
-                    selected = true
-                } else if (hovered && artboard.id === hovered.id) {
-                    selected = true
-                } else {
-                    selected = false
-                }
-                const f2p = artboard.frame2Root();
-                
-                const frame = artboard.frame;
-                const matrix_artboard_root = artboard.matrix2Root(); // 图形到页面的转换矩阵
-                const matrix = props.context.workspace.matrix; // 页面到屏幕的转换矩阵
-                const matrix_artboard = new Matrix(matrix_artboard_root);
-                matrix_artboard.multiAtLeft(matrix);
-                if (is_shape_out(props.context, artboard, matrix_artboard)) continue;
-                const maxWidth = shape_title_width(artboard, matrix_artboard);
-                if (maxWidth < 24) continue;
-                // let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系
-                let anchor = modify_anchor(artboard, matrix_artboard_root);
-                anchor = matrix.computeCoord({x: anchor.x, y: anchor.y}); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
-                anchor.y -= origin.y;
-                anchor.x -= origin.x;
-                anchor.y -= 22; // 顶上去22像素
-                const width = f2p.width;
-                titles.push({id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: () => artboard, rotate: modify_rotate(artboard), maxWidth, selected});
-            }
-        }
-    } else {
-        titles.length = 0;
+function selectionWatcher(t: number | string) {
+    if (t === Selection.CHANGE_PAGE) {
+        titleRenderer.updateUnderRootContainerMap();
+        watch_shapes();
+    } else if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_SHAPE_HOVER) {
+        titleRenderer.updateActive();
     }
-}
-
-function modify_rotate(shape: ShapeView) {
-    let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-    if (shape.isFlippedVertical) rotate = 360 - rotate;
-    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-    if (rotate >= 0 && rotate < 45) {
-    } else if (rotate >= 45 && rotate < 135) {
-        rotate -= 90;
-    } else if (rotate >= 135 && rotate < 225) {
-        rotate -= 180;
-    } else if (rotate >= 225 && rotate < 315) {
-        rotate += 90;
-    } else if (rotate > 315 && rotate <= 360) {
-    }
-    return rotate;
-}
-
-function modify_anchor(shape: ShapeView, m2r: Matrix) {
-    const rotate = pre_modify_anchor(shape);
-    const frame = shape.frame;
-    let anchor = {x: 0, y: 0};
-    if (rotate >= 0 && rotate < 45) {
-        anchor = m2r.computeCoord2(0, 0);
-    } else if (rotate >= 45 && rotate < 135) {
-        anchor = m2r.computeCoord2(0, frame.height);
-    } else if (rotate >= 135 && rotate < 225) {
-        anchor = m2r.computeCoord2(frame.width, frame.height);
-    } else if (rotate >= 225 && rotate < 315) {
-        anchor = m2r.computeCoord2(frame.width, 0);
-    } else if (rotate >= 315 && rotate <= 360) {
-        anchor = m2r.computeCoord2(0, 0);
-    }
-    return anchor;
-}
-
-function setOrigin() { // 这个动作是让container与页面坐标系重合
-    matrix.reset(props.context.workspace.matrix);
-    matrix.preTrans(props.data.frame.x, props.data.frame.y);
-    origin.x = matrix.m02;
-    origin.y = matrix.m12;
-}
-const watchedShapes = new Map();
-
-function watchShapes() { // 监听相关shape的变化
-    const needWatchShapes = new Map();
-    const selection = props.data.childs;
-    if (selection) {
-        selection.forEach((v) => {
-            needWatchShapes.set(v.id, v);
-        })
-    }
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
-        watchedShapes.delete(k);
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(watcher);
-        watchedShapes.set(k, v);
-    })
 }
 
 const rename = (value: string, shape: ShapeView) => {
-    const editor = computed(() => {
-        return props.context.editor4Shape((shape));
-    });
-    editor.value.setName(value)
-    props.context.selection.rename();
+    props.context.editor4Shape((shape)).setName(value)
+    props.context.selection.unHoverShape();
+    props.context.selection.hoverShape(shape);
 }
 
 function hover(shape: ShapeView) {
-    const page = props.data;
-    const s = page.data.artboards.get(shape.id);
-    const _s = s && page.getShape(s.id);
-    if (_s) {
-        props.context.selection.hoverShape(_s);
-    }
+    props.context.selection.hoverShape(shape);
 }
+
+const stopDataWatcher = watch(() => props.data, (n, o) => {
+    n.watch(pageWatcher);
+    o.unwatch(pageWatcher);
+});
 
 function leave() {
     props.context.selection.unHoverShape();
 }
 
+const update_by_shapes = (...args: any[]) => {
+    if (args.length === 1 && args[0] === 'isVisible') titleRenderer.fullUpdate();
+}
+const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+function watch_shapes() {
+    watchedShapes.forEach((v, k) => {
+        v.unwatch(update_by_shapes);
+        watchedShapes.delete(k);
+    })
+
+    const artboardList = props.data.childs;
+    artboardList.forEach((v) => {
+        v.watch(update_by_shapes);
+        watchedShapes.set(v.id, v)
+    });
+}
+
 onMounted(() => {
-    props.context.workspace.watch(handleWorkspaceUpdate)
-    props.context.selection.watch(updater);
-    props.data.watch(watcher);
+    props.context.workspace.watch(workspaceWatcher)
+    props.context.selection.watch(selectionWatcher);
+    watch_shapes();
+    props.data.watch(pageWatcher);
+
+    titleRenderer.updateUnderRootContainerMap();
+    titleRenderer.fullUpdate();
 })
 onUnmounted(() => {
-    props.context.workspace.unwatch(handleWorkspaceUpdate);
-    props.data.unwatch(watcher);
-    props.context.selection.unwatch(updater);
+    props.context.workspace.unwatch(workspaceWatcher);
+    props.context.selection.unwatch(selectionWatcher);
+
+    props.data.unwatch(pageWatcher);
+
+    titleRenderer.clearContainerWatcher();
+
+    stopDataWatcher()
 })
-watchEffect(() => updater());
 </script>
 <template>
-    <!-- container -->
-    <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
-        <div class="title-container" v-for="(t, index) in titles" :key="index"
-             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
-            <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth"
-                          @rename="rename"
-                          @hover="hover" @leave="leave" :shape="t.shape()" :selected="t.selected"></ArtboardName>
+    <div class="container">
+        <div v-for="(title, index) in titlesList" class="title-container" :key="index"
+            :style="{ transform: title.transform }">
+            <ArtboardName :context="props.context" :data="title as TitleAttri" @rename="rename" @hover="hover"
+                @leave="leave" />
         </div>
     </div>
 </template>
@@ -199,19 +110,29 @@ watchEffect(() => updater());
 .container {
     position: absolute;
     overflow: visible;
+    height: 100px;
+    width: 100px;
+    pointer-events: none;
 
     .title-container {
+        transform-origin: left top;
+        pointer-events: auto;
+
+        position: absolute;
+
         display: flex;
         align-items: flex-end;
+
+        min-width: 14px;
         height: 20px;
-        min-width: 10px;
+
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        position: absolute;
+
         font-size: var(--font-default-fontsize);
-        transform-origin: bottom left;
         color: grey;
+
         z-index: 1;
     }
 }

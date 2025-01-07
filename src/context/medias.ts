@@ -29,7 +29,7 @@ export class PdMedia extends WatchableObject {
 
         const timer = setTimeout(() => {
             const __buff = new Uint8Array(buff);
-            this.m_context.communication.docResourceUpload.upload(ref, __buff.buffer)
+            this.m_context.net?.upload(ref, __buff.buffer)
             clearTimeout(timer);
         }, 60000)
     }

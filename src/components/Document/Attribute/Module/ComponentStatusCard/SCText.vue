@@ -7,6 +7,7 @@ import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
 import PopoverDefaultInput from "@/components/Document/Attribute/Module/PopoverDefaultInput.vue";
+import { v4 } from "uuid";
 
 interface Props {
     context: Context
@@ -21,6 +22,7 @@ const { t } = useI18n();
 const card_ref = ref<HTMLDivElement>();
 const dialog_posi = ref({ x: 0, y: 0 });
 const iseditText = ref(false);
+const default_value = ref('');
 
 function rename() {
     showRename.value = true;
@@ -42,10 +44,16 @@ function get_dialog_posi(div: HTMLDivElement | undefined) {
 }
 
 function edit_text() {
+    get_text();
     get_dialog_posi(card_ref.value);
     iseditText.value = true;
+    props.context.escstack.save(v4(), de_text_is_show);
 }
-
+function de_text_is_show() {
+    const is_achieve_expected_results = iseditText.value;
+    iseditText.value = false;
+    return is_achieve_expected_results;
+}
 //选中图层的id
 const layerIds = ref<string[]>();
 const selectLayerId = (ids: string[]) => {
@@ -72,6 +80,16 @@ function _delete() {
 const getValue = (value: Text | string | undefined) => {
     return typeof value === 'string' ? value : value?.toString();
 }
+
+const get_text = () => {
+    default_value.value = props.variable.value.getText(0, Infinity).slice(0, -1);
+}
+
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import layer_text_icon from '@/assets/icons/svg/layer-text.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
 </script>
 <template>
     <div v-if="props.variable.type === VariableType.Text" class="module_attr_item" ref="card_ref">
@@ -79,7 +97,7 @@ const getValue = (value: Text | string | undefined) => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="layer-text"></svg-icon>
+                        <SvgIcon :icon="layer_text_icon"/>
                     </div>
                     <div class="name">
                         <span style="width: 35%;">{{ props.variable.name }}</span>
@@ -88,19 +106,20 @@ const getValue = (value: Text | string | undefined) => {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
-        <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px" :width="260"
-            :add-type="VariableType.Text" :title="t('compos.text_content')" @save-layer-show="save_text"
+        <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px"
+            :width="260" :add-type="VariableType.Text" :title="t('compos.text_content')" @save-layer-show="save_text"
             :dialog_posi="dialog_posi" :default_name="props.variable.name" :variable="props.variable">
             <template #layer>
-                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text" :context="props.context"
-                    :placeholder="t('compos.place_select_layer')" :variable="props.variable" @change="selectLayerId">
+                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text"
+                    :context="props.context" :placeholder="t('compos.place_select_layer')" :variable="props.variable"
+                    @change="selectLayerId">
                 </SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Text" :default_value="props.variable.value"
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Text" :default_value="default_value"
                     @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
@@ -111,14 +130,14 @@ const getValue = (value: Text | string | undefined) => {
     position: relative;
     display: flex;
     flex-direction: column;
-    //margin-bottom: 5px;
+    margin-top: 8px;
     width: 100%;
 
     .attr_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 38px;
+        height: 32px;
         box-sizing: border-box;
     }
 
@@ -221,22 +240,23 @@ const getValue = (value: Text | string | undefined) => {
         width: 28px;
         height: 28px;
         border-radius: var(--default-radius);
+        transition: .2s;
 
         >svg {
             width: 16px;
             height: 16px;
         }
-
-        transition: .2s;
     }
 
     .delete:hover {
         background-color: #F5F5F5;
     }
 }
+
 .module_item_left:hover {
-        background-color: #EBEBEB;
-    }
+    background-color: #EBEBEB;
+}
+
 :deep(.el-input__inner) {
     --el-input-inner-height: 100%;
 }

@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 import PointsPathEditContainer from "@/components/Document/Selection/Controller/Points/PointsPathEditContainer.vue";
-import {Context} from "@/context";
-import {computed, onMounted, onUnmounted, reactive, ref} from "vue";
-import {Matrix} from "@kcdesign/data";
-import {WorkSpace} from "@/context/workspace";
+import { Context } from "@/context";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
+import { Matrix } from "@kcdesign/data";
+import { WorkSpace } from "@/context/workspace";
 
 interface Props {
     context: Context
 }
 
 const props = defineProps<Props>();
-const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0});
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const width = computed(() => {
     const w = bounds.right - bounds.left;
     return w < 10 ? 10 : w;
@@ -30,7 +30,7 @@ function modify_matrix() {
     if (!path_shape) {
         return;
     }
-    matrix.value = path_shape.matrix2Root();
+    matrix.value = path_shape.matrix2Root().toMatrix();
     matrix.value.multiAtLeft(props.context.workspace.matrix);
 }
 
@@ -41,7 +41,7 @@ function update() {
     }
     modify_matrix();
     const f = path_shape.frame;
-    const __points = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+    const __points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
     for (let i = 0; i < __points.length; i++) {
         const p = __points[i];
         __points[i] = matrix.value.computeCoord3(p);
@@ -52,7 +52,7 @@ function update() {
     bounds.bottom = Math.max(__points[0].y, __points[1].y, __points[2].y, __points[3].y);
 }
 
-function matrix_watcher(t: number) {
+function matrix_watcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
     }
@@ -75,13 +75,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+    <svg xmlns="http://www.w3.org/2000/svg" data-area="controller" preserveAspectRatio="xMinYMin meet"
          :width="width" :height="height" overflow="visible" :viewBox="genViewBox(bounds)"
          :style="{transform: `translate(${bounds.left}px,${bounds.top}px)`}"
     >
-        <PointsPathEditContainer :context="props.context"></PointsPathEditContainer>
+        <PointsPathEditContainer :context="props.context"/>
     </svg>
 </template>
 <style lang="scss" scoped>

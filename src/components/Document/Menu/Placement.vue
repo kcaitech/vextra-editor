@@ -1,35 +1,41 @@
 <script lang="ts" setup>
-import { Context } from '@/context';
-import { Menu } from '@/context/menu';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { XY } from "@/context/selection";
+import { onMounted, onUnmounted, ref } from "vue";
+import { Context } from "@/context";
+import { Menu } from "@/context/menu";
 
 interface Props {
-    x: number
-    y: number
-    context: Context
-}
-const props = defineProps<Props>();
-const show_placement = ref<boolean>(false);
-function menu_watcher(t?: number) {
-    if (t === Menu.SHOW_PLACEMENT) {
-        show_placement.value = true;
-    } else if (t === Menu.HIDE_PLACEMENT) {
-        show_placement.value = false;
+    context: Context;
+    params: {
+        site: XY;
     }
 }
+
+const props = defineProps<Props>();
+
+const pulse = ref<boolean>(false);
+
+function menuWatcher(t: any) {
+    if (t === Menu.HIDE_PLACEMENT || t === Menu.SHUTDOWN_MENU) {
+        pulse.value = false;
+    } else if (t === Menu.SHOW_PLACEMENT) {
+        pulse.value = true;
+    }
+}
+
 onMounted(() => {
-    props.context.menu.watch(menu_watcher);
-})
+    props.context.menu.watch(menuWatcher);
+});
 onUnmounted(() => {
-    props.context.menu.unwatch(menu_watcher);
+    props.context.menu.unwatch(menuWatcher);
 })
 </script>
 <template>
-    <div class="container" :style="{ left: `${props.x}px`, top: `${props.y}px`, opacity: show_placement ? 1 : 0 }">
-        <div class="dot"></div>
-        <div class="pulse"></div>
-        <div class="pulse1"></div>
-    </div>
+<div v-if="pulse" class="container" :style="{ left:params.site.x + 'px',top:params.site.y + 'px' }">
+    <div class="dot"/>
+    <div class="pulse"/>
+    <div class="pulse1"/>
+</div>
 </template>
 <style lang="scss" scoped>
 @keyframes warn {
@@ -103,6 +109,11 @@ onUnmounted(() => {
     background-color: transparent;
     transition: 0.32s;
     z-index: 199;
+    pointer-events: none;
+
+    > div {
+        pointer-events: none;
+    }
 
     .dot {
         position: absolute;

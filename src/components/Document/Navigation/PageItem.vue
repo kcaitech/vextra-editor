@@ -2,7 +2,7 @@
 import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
 import { Selection } from "@/context/selection";
 import { Context } from "@/context";
-import { Perm } from "@/context/workspace";
+// import { Perm } from "@/context/workspace";
 export interface ItemData {
     name: string
     id: string
@@ -20,6 +20,7 @@ const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
 const esc = ref<boolean>(false)
 const MOUSE_LEFT = 0;
+const pageItem = ref<HTMLDivElement>();
 function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
     if (e.button === MOUSE_LEFT) {
@@ -33,7 +34,7 @@ function onMouseDown(e: MouseEvent) {
 }
 
 const onRename = () => {
-    if (props.data.context.workspace.documentPerm !== Perm.isEdit) return;
+    if (props.data.context.readonly) return;
     if (props.data.context.tool.isLable) return;
     isInput.value = true
     nextTick(() => {
@@ -86,19 +87,21 @@ onMounted(() => {
 onUnmounted(() => {
     props.data.context.selection.unwatch(update)
 });
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
 </script>
 
 <template>
-    <div class="pageItem"
+    <div class="pageItem" ref="pageItem"
         :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected, select: isInput }"
         @mousedown="onMouseDown">
         <div class="ph">
-            <svg-icon v-if="props.data.selected" icon-class="page-select"></svg-icon>
+            <SvgIcon v-if="props.data.selected" :icon="page_select_icon"/>
         </div>
         <div class="item zero-symbol">
             <div class="title" @dblclick="onRename" :class="{ selected: props.data.selected }"
                 :style="{ display: isInput ? 'none' : '' }">{{ props.data.name }}</div>
-            <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput">
+            <input v-if="isInput" class="rename" @mousedown.stop @change="onChangeName" type="text" ref="nameInput">
         </div>
     </div>
 </template>

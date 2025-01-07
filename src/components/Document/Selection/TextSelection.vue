@@ -7,8 +7,10 @@ import SelectView from './Controller/Text/SelectBySearch.vue';
 import { Navi } from '@/context/navigate';
 
 interface Props {
-  context: Context
-  matrix: Matrix
+  context: Context,
+  params: {
+    matrix: Matrix
+  }
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
@@ -26,8 +28,8 @@ function update() {
   focus_shape.value = shape;
   if (!shape) return;
   const m2p = shape.matrix2Root();
-  matrix.reset(m2p);
-  matrix.multiAtLeft(props.matrix);
+  matrix.reset(m2p.toMatrix());
+  matrix.multiAtLeft(props.params.matrix);
   if (!submatrix.equals(matrix)) {
     submatrix.reset(matrix);
   }
@@ -68,7 +70,7 @@ function workspace_watcher(t?: number) {
 function navi_watcher(t?: number) {
   if (t === Navi.TEXT_SELECTION_CHANGE) update();
 }
-watch(() => props.matrix, update, { deep: true })
+watch(() => props.params.matrix, update, { deep: true })
 onMounted(() => {
   props.context.workspace.watch(workspace_watcher);
   props.context.navi.watch(navi_watcher);

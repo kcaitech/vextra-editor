@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { shallowRef } from "vue"
 import { Context } from '@/context';
-import Home from "./BackToHome.vue";
-import EditorTools from "./EditorTools.vue";
-import UserInfo from './UserInfo.vue';
+import Home from "./Home/index.vue";
+import EditorTools from "./Tools/index.vue";
+import UserInfo from './Others/index.vue';
 const props = defineProps<{ context: Context }>();
 const selection = shallowRef(props.context.selection);
 </script>

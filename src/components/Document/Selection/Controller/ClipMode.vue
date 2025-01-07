@@ -29,7 +29,7 @@ function modify_matrix() {
     if (!shape) {
         return;
     }
-    matrix.value = shape.matrix2Root();
+    matrix.value = shape.matrix2Root().toMatrix();
     matrix.value.multiAtLeft(props.context.workspace.matrix);
 }
 
@@ -51,7 +51,7 @@ function update() {
     bounds.bottom = Math.max(__points[0].y, __points[1].y, __points[2].y, __points[3].y);
 }
 
-function matrix_watcher(t: number) {
+function matrix_watcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
     }

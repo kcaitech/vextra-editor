@@ -28,7 +28,7 @@ export function is_shape_in_selection(shapes: ShapeView[], shape: ShapeView): bo
 export function selection_types(shapes: ShapeView[]): number {
     let types = 0;
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Group) {
+        if (shapes[i].type === ShapeType.Group || shapes[i].type === ShapeType.BoolShape) {
             types = types | 1;
         } else if (shapes[i].type === ShapeType.Artboard) {
             types = types | 2;
@@ -61,7 +61,7 @@ export function is_parent_locked(shape: ShapeView): boolean {
     let is_pu = false;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        if (p.isLocked()) {
+        if (p.isLocked) {
             is_pu = true;
             break;
         }
@@ -180,7 +180,7 @@ export function get_state_name(state: SymbolView, dlt: string) {
     return name_slice.toString();
 }
 
-export function get_name(shape: ShapeView, dlt: string) {
+export function get_name(shape: ShapeView | Shape, dlt: string) {
     if (shape.type !== ShapeType.Symbol) {
         return shape.name;
     } else {

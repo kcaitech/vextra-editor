@@ -1,17 +1,18 @@
 <script lang="ts" setup>
-import {ref} from 'vue';
-import {Search} from '@element-plus/icons-vue';
+import { ref } from 'vue';
+import { Search } from '@element-plus/icons-vue';
 import ComponentContainer from './ComponentContainer.vue';
-import {Context} from '@/context';
-import {useI18n} from 'vue-i18n';
+import { Context } from '@/context';
+import { useI18n } from 'vue-i18n';
 import ComponentSearchPanel from './ComponentSearchPanel.vue';
-import {Page, SymbolShape} from '@kcdesign/data';
-import {classification_level_page, get_search_symbol_list, search_symbol_by_keywords} from '@/utils/symbol';
-import {debounce} from 'lodash';
+import { Page, SymbolShape } from '@kcdesign/data';
+import { classification_level_page, get_search_symbol_list, search_symbol_by_keywords } from '@/utils/symbol';
+import { debounce } from 'lodash';
 import Border from "@/components/Document/Attribute/Border/Border.vue";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import Tooltip from "@/components/common/Tooltip.vue";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -41,6 +42,10 @@ function _searching() {
 }
 
 const searching = debounce(_searching, 300);
+
+import search_icon from '@/assets/icons/svg/search.svg';
+import source_icon from '@/assets/icons/svg/source.svg';
+import list_icon from '@/assets/icons/svg/list.svg';
 </script>
 
 <template>
@@ -49,15 +54,17 @@ const searching = debounce(_searching, 300);
             <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')"
                       @input="searching">
                 <template v-slot:prefix>
-                    <svg-icon icon-class="search" style="width: 12px;height: 12px"></svg-icon>
-                </template >
+                    <SvgIcon :icon="search_icon" style="width: 12px;height: 12px"/>
+                </template>
             </el-input>
-            <div class="toggle_list">
-                <svg-icon v-if="card_type === 'alpha'" icon-class="source"
-                          @click.stop="() => set_card_type('beta')"></svg-icon>
-                <svg-icon v-if="card_type === 'beta'" icon-class="list"
-                          @click.stop="() => set_card_type('alpha')"></svg-icon>
-            </div>
+            <Tooltip :content="`${t('compos.toggle_list_style')}`">
+                <div class="toggle_list">
+                    <SvgIcon v-if="card_type === 'alpha'" :icon="source_icon"
+                              @click.stop="() => set_card_type('beta')"/>
+                    <SvgIcon v-if="card_type === 'beta'" :icon="list_icon"
+                              @click.stop="() => set_card_type('alpha')"/>
+                </div>
+            </Tooltip>
         </div>
         <div class="body" ref="root" v-show="!search">
             <ComponentContainer :context="context" :search="search" :is-attri="false"
@@ -127,6 +134,7 @@ const searching = debounce(_searching, 300);
             align-items: center;
             justify-content: center;
             border-radius: var(--default-radius);
+            cursor: pointer;
 
             svg {
                 width: 16px;
@@ -144,7 +152,7 @@ const searching = debounce(_searching, 300);
     }
 
     .body {
-        height: calc(100% - 35px);
+        height: calc(100% - 50px);
         box-sizing: border-box;
     }
 }

@@ -1,12 +1,43 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import { AsyncOpacityEditor, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncOpacityEditor, BlendMode, ContextSettings, LinearApi, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { throttle } from 'lodash';
 import { modifyOpacity } from '@/utils/common';
 import { hidden_selection } from '@/utils/content';
+import { v4 } from 'uuid';
+import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
+
+const mixModeList = [
+    BlendMode.Normal,
+    BlendMode.Darken,
+    BlendMode.Multiply,
+    BlendMode.ColorBurn,
+    BlendMode.Lighten,
+    BlendMode.Screen,
+    BlendMode.ColorDodge,
+    BlendMode.Overlay,
+    BlendMode.SoftLight,
+    BlendMode.HardLight,
+    BlendMode.Difference,
+    BlendMode.Exclusion,
+    BlendMode.Hue,
+    BlendMode.Saturation,
+    BlendMode.Color,
+    BlendMode.Luminosity,
+    BlendMode.PlusDarker,
+    BlendMode.PlusLighter
+]
+const dialogLine = [
+    BlendMode.Normal,
+    BlendMode.ColorBurn,
+    BlendMode.ColorDodge,
+    BlendMode.HardLight,
+    BlendMode.Exclusion,
+    BlendMode.Luminosity
+]
 
 interface Props {
     context: Context;
@@ -18,21 +49,41 @@ const props = defineProps<Props>();
 const { t } = useI18n();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
-const shapes = ref<ShapeView[]>([]);
+const shapes = ref<ShapeView[]>();
 const opacityValue = ref(0);
 const opacityInput = ref<HTMLInputElement>();
 const executed = ref(true);
+const selectedMixMode = ref<BlendMode>();
+const hovered = ref<BlendMode>();
+const modeList = ref<HTMLDivElement[]>();
+const panel = ref<HTMLDivElement>();
 let opacity_editor: AsyncOpacityEditor | undefined = undefined;
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function showMenu(e: MouseEvent) {
     if (popoverVisible.value) return popoverVisible.value = false;
     popoverVisible.value = true;
+    props.context.escstack.save(v4(), min_mode_dialog);
     nextTick(() => {
         if (!popover.value) return;
-        popover.value.style.left = 80 + 'px';
-        popover.value.style.top = 20 + 'px';
+        const index = mixModeList.findIndex(item => item === selectedMixMode.value);
+        if (index === -1) {
+            popover.value.style.top = 30 + 'px';
+        } else {
+            if (modeList.value) {
+                const max_top = -(panel.value?.offsetTop || 0);
+                let top = -modeList.value[index].offsetTop;
+                popover.value.style.top = Math.max(top, max_top) + 'px';
+            }
+        }
     })
     document.addEventListener('click', onMenuBlur)
+}
+
+function min_mode_dialog() {
+    const is_achieve_expected_results = popoverVisible.value;
+    popoverVisible.value = false;
+    return is_achieve_expected_results;
 }
 
 function onMenuBlur(e: MouseEvent) {
@@ -65,6 +116,7 @@ const ipt = () => {
 }
 
 function change(e: Event) {
+    is_select.value = false;
     if (!executed.value) return;
     executed.value = false;
     const value = opacityValue.value;
@@ -76,8 +128,19 @@ function change(e: Event) {
 
         if (isNaN(value)) return;
     }
+    modifyOpacity(props.context, value, shapes.value);
+}
 
-    modifyOpacity(props.context, value);
+function keydownOpacity(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) * 0.01 + (event.code === 'ArrowUp' ? 0.01 : -0.01);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        value = value >= 1 ? 1 : value <= 0 ? 0 : value
+        linearApi.modifyShapesOpacity(shapes, value);
+        event.preventDefault();
+    }
 }
 
 function down(v: number) {
@@ -165,13 +228,25 @@ const focus = (e: Event) => {
         shapes.value = [...props.context.selection.selectedShapes];
         const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
         opacityValue.value = value;
-        opacityInput.value.select();
     }
 }
+const is_select = ref(false);
+function click() {
+    if (!opacityInput.value) return;
+    const el = opacityInput.value;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
+}
+
 const text_keyboard = (e: KeyboardEvent) => {
     if (e.code === "Enter" || e.code === "NumpadEnter") {
         opacityInput.value?.blur();
     }
+    keydownOpacity(e)
 }
 
 function _update() {
@@ -195,16 +270,69 @@ function _update() {
     } else {
         opacity.value = firstOpacity;
     }
+    getMixMode();
     if (progressBar.value && progress.value) {
         progress.value.style.width = (firstOpacity * 100) + '%';
         progressBtn.value!.style.left = (firstOpacity * 100) - 4 + '%';
     }
 }
 
-const update = throttle(_update, 320, { leading: true });
+const getMixMode = () => {
+    const shapes = props.context.selection.selectedShapes
+    if (!shapes.length) return;
+    const contextSettings = shapes[0].contextSettings as ContextSettings;
+    let fristMode
+    if (contextSettings) {
+        fristMode = contextSettings.blenMode;
+    } else {
+        fristMode = BlendMode.Normal;
+    }
+    if (shapes.length > 1) {
+        for (let i = 1; i < shapes.length; i++) {
+            const c = shapes[i].contextSettings;
+            let mode
+            if (c) {
+                mode = c.blenMode;
+            } else {
+                mode = BlendMode.Normal;
+            }
+            if (mode !== fristMode) {
+                selectedMixMode.value = undefined;
+                hovered.value = undefined;
+                return;
+            }
+        }
+    }
+    selectedMixMode.value = fristMode;
+    hovered.value = fristMode;
+}
+
+const onClickMode = (mode: BlendMode) => {
+    selectedMixMode.value = mode;
+    setMixMode(mode);
+    popoverVisible.value = false;
+}
+
+const enterMixMode = (mode: BlendMode) => {
+    hovered.value = mode;
+}
+
+const setMixMode = (mode: BlendMode) => {
+    const shapes = props.context.selection.selectedShapes
+    if (!shapes.length) {
+        return;
+    }
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const editor = props.context.editor4Page(page);
+    editor.modifyShapesContextSettingBlendMode((shapes as ShapeView[]).map(s => adapt2Shape(s)), mode);
+}
+
+// const update = throttle(_update, 320, { leading: true });
+const update = _update;
 
 const stop = watch(() => props.trigger, (v) => {
-    if (v.includes('contextSettings') || v.includes('variables')) {
+    if (v.includes('layout')) {
         update();
     }
 });
@@ -221,59 +349,41 @@ onUnmounted(() => {
     stop();
     stop2();
 })
+
+import arrow2_icon from '@/assets/icons/svg/arrow2.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
 </script>
 <template>
-    <div class="opacity-panel">
+    <div class="opacity-panel" ref="panel">
         <TypeHeader :title="t('attr.opacity')" class="mt-24" :active="true">
             <template #tool>
-                <!--                <div class="icon" @click="showMenu" ref="trigger">-->
-                <!--                    <input v-model="selectedOption">-->
-                <!--                    <svg-icon icon-class="down"></svg-icon>-->
-                <!--                </div>-->
-                <!--                <div ref="popover" class="popover-f" v-if="popoverVisible">-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.normal') }">{{-->
-                <!--                        t('opacity.normal') }}</span>-->
-                <!--                    <div class="line"></div>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.become_dark') }">{{-->
-                <!--                        t('opacity.become_dark') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.multiply') }">{{-->
-                <!--                        t('opacity.multiply') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color_deepening') }">{{-->
-                <!--                        t('opacity.color_deepening') }}</span>-->
-                <!--                    <div class="line"></div>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.become_bright') }">{{-->
-                <!--                        t('opacity.become_bright') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.filter') }">{{-->
-                <!--                        t('opacity.filter') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color_dodge') }">{{-->
-                <!--                        t('opacity.color_dodge') }}</span>-->
-                <!--                    <div class="line"></div>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.superpose') }">{{-->
-                <!--                        t('opacity.superpose') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.soft_light') }">{{-->
-                <!--                        t('opacity.soft_light') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.strong_light') }">{{-->
-                <!--                        t('opacity.strong_light') }}</span>-->
-                <!--                    <div class="line"></div>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.difference') }">{{-->
-                <!--                        t('opacity.difference') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.exclude') }">{{-->
-                <!--                        t('opacity.exclude') }}</span>-->
-                <!--                    <div class="line"></div>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.hue') }">{{-->
-                <!--                        t('opacity.hue') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.saturation') }">{{-->
-                <!--                        t('opacity.saturation') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color') }">{{-->
-                <!--                        t('opacity.color') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.lightness') }">{{-->
-                <!--                        t('opacity.lightness') }}</span>-->
-                <!--                    <div class="line"></div>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.darken') }">{{-->
-                <!--                        t('opacity.darken') }}</span>-->
-                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.brighten') }">{{-->
-                <!--                        t('opacity.brighten') }}</span>-->
-                <!--                </div>-->
+                <div class="icon" @click="showMenu" ref="trigger">
+                    <div class="mode_box">{{ selectedMixMode ? t(`opacity.${selectedMixMode}`) : t('attr.more_value') }}
+                    </div>
+                    <SvgIcon :icon="arrow2_icon"/>
+                </div>
+                <div ref="popover" class="popover-f" v-if="popoverVisible">
+                    <div class="item" style="opacity: 0.3;" v-if="!selectedMixMode">
+                        <div></div>
+                        <span>{{ t('attr.more_value') }}</span>
+                    </div>
+                    <div class="line" v-if="!selectedMixMode"></div>
+                    <template v-for="(item, index) in mixModeList" :key="index">
+                        <div class="item" ref="modeList" :class="{ 'hovered': hovered === item }"
+                            @mouseenter="enterMixMode(item)" @click="onClickMode(item)">
+                            <div>
+                                <SvgIcon v-if="selectedMixMode === item"
+                                    :icon="hovered === item ? white_select_icon : page_select_icon"/>
+                            </div>
+                            <span>{{ t(`opacity.${item}`) }}</span>
+                        </div>
+                        <div class="line" v-if="dialogLine.includes(item)"></div>
+                    </template>
+                </div>
             </template>
         </TypeHeader>
         <div class="opacity-container">
@@ -284,8 +394,8 @@ onUnmounted(() => {
                 </div>
             </div>
             <input type="text" ref="opacityInput" class="input-text"
-                :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`" @focus="focus" @change="change" @blur="change"
-                @input="handleOPacity" @keydown="text_keyboard" />
+                :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`" @click="click" @focus="focus"
+                @change="change" @blur="change" @input="handleOPacity" @keydown="text_keyboard" />
         </div>
     </div>
 </template>
@@ -294,7 +404,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 20px 8px 12px 8px;
+    padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -303,78 +413,75 @@ onUnmounted(() => {
     }
 
     .icon {
-        width: 10px;
-        height: 28px;
+        height: 26px;
         display: flex;
-        padding-right: 4px;
-        margin-right: 2px;
-        justify-content: center;
+        padding: 0 5px;
+        justify-content: space-between;
         align-items: center;
         color: #000000;
-        transition: 0.3s;
+        border-radius: 4px;
+        box-sizing: border-box;
+        transition: 0.2s;
 
-        >input {
-            width: 55px;
-            height: 15px;
-            margin-left: -79px;
-            text-align: center;
-            background-color: white;
-            border: none;
-            font-size: 12px;
+        &:hover {
+            background-color: #F5F5F5;
         }
 
-        >svg {
-            width: 80%;
-            height: 60%;
-            margin-left: -2px;
+        .mode_box {
+            flex: 1;
+            margin-right: 3px;
+            box-sizing: border-box;
+        }
+
+        >img {
+            width: 10px;
+            height: 10px;
         }
     }
 
     .popover-f {
         position: absolute;
-        color: #ffffff;
+        right: 0px;
+        color: #000000;
         z-index: 999;
-        width: 150px;
+        width: 104px;
         height: auto;
         font-size: var(--font-default-fontsize);
-        background-color: var(--theme-color);
+        background-color: #fff;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         border-radius: 4px;
+        border: 1px solid #F5F5F5;
         outline: none;
-        padding: var(--default-padding-half) 0;
-
-        .selected::before {
-            content: '';
-            position: absolute;
-            left: 3px;
-            box-sizing: border-box;
-            width: 10px;
-            height: 6px;
-            border-width: 0 0 2px 2px;
-            border-style: solid;
-            border-color: var(--theme-color-anti);
-            transform: rotate(-45deg) translateY(-4%);
-        }
+        padding: 4px 0;
 
         .line {
             width: 100%;
-            height: 8px;
-            border-bottom: 1px solid gray;
-            margin-bottom: 8px;
+            height: 4px;
+            border-bottom: 1px solid #EBEBEB;
+            margin-bottom: 4px;
             box-sizing: border-box;
         }
 
-        >span {
-            position: relative;
+        .item {
             width: 100%;
-            height: 28px;
-            padding: 0 var(--default-padding);
+            height: 32px;
+            padding-right: var(--default-padding);
             display: flex;
             flex-direction: row;
             align-items: center;
             box-sizing: border-box;
 
-            &:hover {
-                background-color: var(--active-color);
+            >div {
+                width: 32px;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                >img {
+                    width: 13px;
+                    height: 13px;
+                }
             }
         }
     }
@@ -383,8 +490,6 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: -14px;
-        margin-bottom: 3px;
 
         .aj_tempt {
             display: contents;
@@ -494,5 +599,10 @@ onUnmounted(() => {
     box-sizing: border-box;
     cursor: pointer;
     box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.2);
+}
+
+.hovered {
+    background-color: var(--active-color);
+    color: #ffffff;
 }
 </style>

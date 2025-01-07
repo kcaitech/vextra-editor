@@ -28,7 +28,8 @@ function onDragEnter(event: DragEvent) {
 function onDrop(event: DragEvent) {
   event.preventDefault();
   const file = Array.from(event.dataTransfer?.files || []).find((file) => {
-    return file.name.toLowerCase().endsWith('.sketch');
+    const filename = file.name.toLowerCase();
+    return filename.endsWith('.sketch') || filename.endsWith('.fig');
   });
   if (file) {
     fileRef.value = file;

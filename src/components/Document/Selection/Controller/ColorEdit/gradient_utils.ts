@@ -1,7 +1,19 @@
 import { Context } from "@/context";
 import { flattenShapes } from "@/utils/cutout";
-import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D, TextShapeView, AttrGetter, Shape, TableCell, TableView, TableCellView } from "@kcdesign/data";
-import { importGradient } from "@kcdesign/data/dist/data/baseimport";
+import {
+    Color,
+    Stop,
+    ShapeView,
+    ShapeType,
+    Gradient,
+    GradientType,
+    BasicArray,
+    Point2D,
+    TextShapeView,
+    AttrGetter,
+    TableCellView
+} from "@kcdesign/data";
+import { importGradient } from "@kcdesign/data";
 import { v4 } from "uuid";
 
 export type GradientFrom = 'fills' | 'borders' | 'text' | 'table_text';
@@ -26,9 +38,9 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
                 const f_posi = stops[i - 1].position;
                 const a_len = alpha - stop.color.alpha;
                 const proportion = ((position - f_posi) * a_len) / (stop.position - f_posi);
-                if(a_len === 0) {
+                if (a_len === 0) {
                     n_alpha = alpha;
-                }else {
+                } else {
                     n_alpha = a_len > 0 ? alpha - proportion : alpha + proportion;
                 }
             } else {
@@ -48,10 +60,10 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
     const locat = context.color.locat;
     if (!locat || !shape || !shape.style) return;
     if (locat.type !== 'text' && locat.type !== 'table_text') {
-        let gradient_type = shape.style[locat.type];
-        if (shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-            const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-            gradient_type = shapes[0].style[locat.type];
+        let gradient_type = locat.type === 'fills' ? shape.getFills() : shape.getBorders();
+        if (shape.type === ShapeType.Group) {
+            const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group);
+            gradient_type = locat.type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders();
         }
         if (!gradient_type[locat.index]) return;
         const gradient = gradient_type[locat.index].gradient;
@@ -86,9 +98,12 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
             } else {
                 let cells: (TableCellView)[];
                 if (table_s.tableRowStart < 0 || table_s.tableColStart < 0) {
-                  cells = shape.childs as (TableCellView)[];
+                    cells = shape.childs as (TableCellView)[];
                 } else {
-                  cells = table_s.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
+                    cells = table_s.getSelectedCells(true).reduce((cells, item) => {
+                        if (item.cell) cells.push(item.cell);
+                        return cells;
+                    }, [] as (TableCellView[]));
                 }
                 const formats: any[] = [];
                 for (let i = 0; i < cells.length; i++) {
@@ -105,7 +120,10 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
     }
 }
 
-export const get_temporary_stop = (position: number, dot1: { x: number, y: number }, dot2: { x: number, y: number }, shape: ShapeView, context: Context) => {
+export const get_temporary_stop = (position: number, dot1: { x: number, y: number }, dot2: {
+    x: number,
+    y: number
+}, shape: ShapeView, context: Context) => {
     const x1 = dot1.x + ((dot2.x - dot1.x) * position);
     const y1 = dot1.y + ((dot2.y - dot1.y) * position);
     const gradient = get_gradient(context, shape);
@@ -180,4 +198,24 @@ export const isSelectText = (context: Context) => {
     } else {
         return true
     }
+}
+
+export const gradient_equals = (a: Gradient, b: Gradient) => {
+    if (a.gradientType !== b.gradientType || a.elipseLength !== b.elipseLength || a.gradientOpacity !== b.gradientOpacity) {
+        return false;
+    }
+    if (a.from.x !== b.from.x || a.from.y !== b.from.y || a.to.x !== b.to.x || a.to.y !== b.to.y) {
+        return false;
+    }
+    if (a.stops.length !== b.stops.length) {
+        return false;
+    }
+    for (let i = 0; i < a.stops.length; i++) {
+        const stop1 = a.stops[i];
+        const stop2 = b.stops[i];
+        if (stop1.position !== stop2.position || !(stop1.color as Color).equals(stop2.color as Color)) {
+            return false;
+        }
+    }
+    return true;
 }

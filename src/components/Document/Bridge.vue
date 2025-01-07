@@ -33,8 +33,6 @@ function up(e: MouseEvent) {
     if (is_content(props.context, e) && wonder.value) {
         const locate = get_position_on_page(e);
         ref_symbol(props.context, locate, wonder.value);
-    } else {
-        console.log('区外');
     }
     props.context.component.set_brige_status(false);
     document.removeEventListener('mousemove', move);
@@ -45,17 +43,16 @@ function modify_wonder_xy(e: MouseEvent) {
     wonder_card_y.value = e.clientY - 50;
 }
 function get_position_on_page(e: MouseEvent) {
-    const matirx = props.context.workspace.matrix;
-    const root = props.context.workspace.root;
-    return matirx.inverseCoord(e.clientX - root.x, e.clientY - root.y);
+    const workspace =  props.context.workspace;
+    return workspace.matrix.inverseCoord(workspace.getContentXY(e));
 }
 
 onMounted(() => {
-    props.context.watch(component_watcher);
+    props.context.component.watch(component_watcher);
     check_status();
 })
 onUnmounted(() => {
-    props.context.unwatch(component_watcher);
+    props.context.component.unwatch(component_watcher);
 })
 
 </script>
@@ -72,8 +69,9 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     z-index: 1005;
-    left: 0px;
-    top: 0px;
+    left: 0;
+    top: 0;
+    cursor: grabbing;
 
     .wonder-wrap {
         position: absolute;

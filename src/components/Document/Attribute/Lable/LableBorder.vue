@@ -5,7 +5,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
 import { ArrowDown } from '@element-plus/icons-vue';
-import { Border, Color } from '@kcdesign/data';
+import { Border, Color, FillType } from '@kcdesign/data';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { useI18n } from 'vue-i18n';
 import LableTootip from './LableTootip.vue';
@@ -160,7 +160,7 @@ const update_by_shapes = () => {
     watchShapes();
     getBordersData();
 }
-const selection_wather = (t: number) => {
+const selection_wather = (t: number | string) => {
     if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
         watchShapes();
         getBordersData();
@@ -181,6 +181,8 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.menu.unwatch(menu_watcher);
 })
+
+import down_icon from "@/assets/icons/svg/down.svg"
 </script>
 
 <template>
@@ -189,82 +191,107 @@ onUnmounted(() => {
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ fillMenuItems[fill_i] }}</span>
-<!--                    <el-icon>-->
-<!--                        <ArrowDown-->
-<!--                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />-->
-<!--                    </el-icon>-->
-                    <svg-icon icon-class="down"></svg-icon>
+                    <SvgIcon :icon="down_icon"/>
                     <LableDropMenu v-if="selsectedShow" :context="context" :Items="fillMenuItems" :choose="fill_i"
                         @close="close" @listMenuStatus="listMenuStatus"></LableDropMenu>
                 </div>
             </template>
+
             <template #body>
                 <template v-for="(b, i) in borders" :key="b.id">
                     <div class="row">
                         <span class="named">{{ t('lable.position') }}</span>
                         <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'address'">
-                            <div><span @click="(e) => copyLable(e, b.id + 'address')" style="cursor: pointer;font-weight: 500"
+                            <div><span @click="(e) => copyLable(e, b.id + 'address')"
+                                    style="cursor: pointer;font-weight: 500" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
-                                        t(`attr.${b.border.position}`) }}</span></div>
+            t(`attr.${b.border.position}`) }}</span></div>
                         </LableTootip>
                     </div>
                     <div class="color_row">
-                        <span class="named">{{ t('lable.pure_color') }}</span>
-                        <div style="display: flex;font-weight: 500">
+                        <span class="color_name" style="height: 34px;"
+                            v-if="!b.border.fillType || b.border.fillType === FillType.SolidColor">{{ t('lable.pure_color') }}</span>
+                        <span class="color_name" :style="{ height: `${28 * b.border.gradient!.stops.length}px` }"
+                            v-else>{{ t(`color.${b.border.gradient!.gradientType}`) }}</span>
+                        <div class="color_box" v-if="!b.border.fillType || b.border.fillType === FillType.SolidColor">
                             <div class="color"
                                 :style="{ backgroundColor: toRGB(b.border.color.red, b.border.color.green, b.border.color.blue) }">
                             </div>
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'color'">
-                                <span class="name" style="cursor: pointer;" @click="(e) => copyLable(e, b.id + 'color')"
+                                <span class="name hovered" style="cursor: pointer;" @click="(e) => copyLable(e, b.id + 'color')"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
-                                        toColor(b.border.color, fillMenuItems[fill_i]) }}</span>
+            toColor(b.border.color, fillMenuItems[fill_i]) }}</span>
                             </LableTootip>
                             <LableTootip v-if="fillMenuItems[fill_i] === 'HEX'" :copy_text="copy_text"
                                 :visible="_visible === b.id + 'alpha'">
-                                <span style="margin-left: 15px; cursor: pointer;" v-if="fillMenuItems[fill_i] === 'HEX'"
+                                <span style="margin-left: 15px; cursor: pointer;" class="hovered" v-if="fillMenuItems[fill_i] === 'HEX'"
                                     @click="(e) => copyLable(e, b.id + 'alpha')"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
-                                        filterAlpha(b.border.color.alpha * 100) + '%' }}</span>
+            filterAlpha(b.border.color.alpha * 100) + '%' }}</span>
                             </LableTootip>
+                        </div>
+                        <div v-else>
+                            <div v-for="stop in b.border.gradient!.stops" :key="stop.id" class="color_box"
+                                style="height: 28px;">
+                                <div class="color"
+                                    :style="{ backgroundColor: toRGB(stop.color.red, stop.color.green, stop.color.blue) }">
+                                </div>
+                                <LableTootip :copy_text="copy_text" :visible="_visible === stop.id + 'color'">
+                                    <span class="name hovered" @click="(e) => copyLable(e, stop.id + 'color')"
+                                        @mouseleave.stop="_visible = undefined, copy_text = false">{{
+            toColor(stop.color as Color,
+                fillMenuItems[fill_i]) }}</span>
+                                </LableTootip>
+                                <LableTootip :copy_text="copy_text" :visible="_visible === stop.id + 'alpha'"
+                                    v-if="fillMenuItems[fill_i] === 'HEX'">
+                                    <span style="margin-left: 16px; cursor: pointer;" class="hovered"
+                                        @click="(e) => copyLable(e, stop.id + 'alpha')"
+                                        @mouseleave.stop="_visible = undefined, copy_text = false">{{
+            filterAlpha(stop.color.alpha * 100) + '%' }}</span>
+                                </LableTootip>
+                            </div>
                         </div>
                     </div>
                     <div class="row">
                         <span class="named">{{ t('lable.thickness') }}</span>
-                        <div style="font-weight: 500">
+                        <div style="font-weight: 500" class="thickness">
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'top'">
-                                <span @click="(e) => copyLable(e, b.id + 'top')" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, b.id + 'top')" style="cursor: pointer;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ b.border.thickness *
-                                        multiple + 'px' }}&nbsp;</span>
+            multiple + 'px' }}&nbsp;</span>
                             </LableTootip>
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'right'">
-                                <span @click="(e) => copyLable(e, b.id + 'right')" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, b.id + 'right')" style="cursor: pointer;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ b.border.thickness
-                                        * multiple + 'px' }}&nbsp;</span>
+            * multiple + 'px' }}&nbsp;</span>
                             </LableTootip>
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'bottom'">
-                                <span @click="(e) => copyLable(e, b.id + 'bottom')" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, b.id + 'bottom')" style="cursor: pointer;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
-                                        b.border.thickness * multiple + 'px' }}&nbsp;</span>
+            b.border.thickness * multiple + 'px' }}&nbsp;</span>
                             </LableTootip>
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'left'">
-                                <span @click="(e) => copyLable(e, b.id + 'left')" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, b.id + 'left')" style="cursor: pointer;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ b.border.thickness *
-                                        multiple + 'px' }}</span>
+            multiple + 'px' }}</span>
                             </LableTootip>
                         </div>
                     </div>
                     <div class="row">
                         <span class="named">{{ t('lable.style') }}</span>
-                        <div style="display: flex;">
+                        <div style="display: flex;" class="thickness">
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'line'">
-                                <span style="color: #000000; cursor: pointer;font-weight: 500" @click="(e) => copyLable(e, b.id + 'line')"
+                                <span style="color: #000000; cursor: pointer;font-weight: 500"
+                                    @click="(e) => copyLable(e, b.id + 'line')" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
-                                        b.border.borderStyle.gap > 0 ? `${t('lable.dotted_line')}` : `${t('lable.solid_line')}`
+            b.border.borderStyle.gap > 0 ? `${t('lable.dotted_line')}` :
+                `${t('lable.solid_line')}`
                                     }}</span>
                             </LableTootip>
-                            <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;">{{ b.border.borderStyle.gap
-                            }}</span>
-                            <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;">{{
+                            <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;color: #000000;">{{
+                                b.border.borderStyle.gap
+                                }}</span>
+                            <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;color: #000000;">{{
                                 b.border.borderStyle.length }}</span>
                         </div>
                     </div>
@@ -307,13 +334,32 @@ onUnmounted(() => {
 
 .row {
     display: flex;
-    padding: 9px 0;
+    align-items: center;
+    height: 34px;
+}
+.thickness {
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .color_row {
     display: flex;
-    padding: 9px 0;
     color: #000;
+
+    .color_name {
+        display: flex;
+        align-items: center;
+        width: 58px;
+        color: #8C8C8C;
+    }
+
+    .color_box {
+        display: flex;
+        font-weight: 500;
+        height: 34px;
+        align-items: center;
+    }
 
     .color {
         margin-right: 8px;
@@ -339,4 +385,14 @@ onUnmounted(() => {
     border-color: #fff;
     box-sizing: border-box;
     background-color: rgb(0, 0, 0, .05);
-}</style>
+}
+
+.hovered {
+    padding: 3px;
+    border-radius: 4px;
+    &:hover {
+        border-radius: 2px;
+        background-color: #EBEBEB;
+    }
+}
+</style>

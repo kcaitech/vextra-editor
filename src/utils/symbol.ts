@@ -14,9 +14,8 @@ import {
     SymbolView,
     Variable,
     VariableType,
-    adapt2Shape
+    adapt2Shape,
 } from "@kcdesign/data";
-import { getName } from "./content";
 import { compare_layer_3 } from "./group_ungroup";
 import { debounce } from "lodash";
 import { v4 } from "uuid";
@@ -24,6 +23,7 @@ import { get_name } from "@/utils/shapelist";
 import { XY } from "@/context/selection";
 import { isTarget } from "@/utils/common";
 import { message } from "@/utils/message";
+import { SymbolDom } from "@/components/Document/Content/vdom/symbol";
 
 export enum SymbolType {
     Symbol = 'symbol',
@@ -69,7 +69,7 @@ export function classification_level_page(pages: { page: Page, desc: string }[])
 
 function get_symbol_level_under(group: GroupShape) {
     const symbols: (SymbolShape | SymbolUnionShape)[] = [];
-    const childs = group.childs;
+    const childs = flattenArtboard(group.childs).filter(s => s.type !== ShapeType.Group);
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolUnion) {
@@ -100,7 +100,7 @@ export function classification_level_artboard(page: Page) {
     const artboard_map: Map<string, SymbolListItem> = new Map();
     for (let i = 0, len = artboards.length; i < len; i++) {
         const artboard = artboards[i];
-        if (artboard.parent?.type !== ShapeType.Page) continue;
+        if (parentHasArtboard(artboard)) continue;
         const symbols = check_symbol_level_artboard(artboard);
         if (!symbols.length) continue;
         const already = artboard_map.get(artboard.name);
@@ -109,7 +109,7 @@ export function classification_level_artboard(page: Page) {
             continue;
         }
         const item: SymbolListItem = {
-            id: artboard.name,
+            id: artboard.id,
             title: artboard.name,
             isFolder: true,
             extend: false,
@@ -128,14 +128,14 @@ export function classification_level_artboard(page: Page) {
         }
         item.childs.push(child);
         result.push(item);
-        artboard_map.set(item.id, item);
+        artboard_map.set(item.title, item);
     }
     return result;
 }
 
 function check_symbol_level_artboard(artboard: GroupShape, init?: (SymbolShape | SymbolUnionShape)[]) {
     const symbols: (SymbolShape | SymbolUnionShape)[] = init || [];
-    const childs = artboard.childs;
+    const childs = flattenArtboard(artboard.childs).filter(s => s.type !== ShapeType.Group);
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolUnion) {
@@ -146,6 +146,31 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: (SymbolShape |
         if (item.type === ShapeType.Artboard) check_symbol_level_artboard(item as Artboard, symbols);
     }
     return symbols;
+}
+
+export function flattenArtboard(shapes: Shape[]): Shape[] {
+    return shapes.reduce((result: any, item: Shape) => {
+        if (item.type === ShapeType.Group) {
+            const childs = (item as GroupShape).childs as Shape[];
+            if (Array.isArray(childs)) {
+                result = result.concat(flattenArtboard(childs));
+            }
+        }
+        return result.concat(item);
+    }, []);
+}
+
+const parentHasArtboard = (shape: Shape) => {
+    let result = false;
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        if (p.type === ShapeType.Artboard) {
+            result = true;
+            break;
+        }
+        p = p.parent;
+    }
+    return result;
 }
 
 /**
@@ -258,7 +283,8 @@ export const clear_scroll_target = debounce(_clear_scroll_target, 300);
 // endregion
 // region union属性列表相关
 export interface AttriListItem {
-    variable: Variable
+    variable: Variable,
+    current_state: string,
     values: { key: string, value: string }[]
 }
 
@@ -275,7 +301,7 @@ export function variable_sort(symbol: SymbolView, t: Function) {
     let status_index = 0;
     const resource = symbol.variables;
     resource.forEach(v => {
-        const item: { variable: Variable, values: any[] } = { variable: v, values: [] };
+        const item: { variable: Variable, current_state: string, values: any[] } = { variable: v, current_state: '', values: [] };
         if (v.type === VariableType.Status) {
             item.values = tag_values_sort(symbol, v, t);
             list.splice(status_index++, 0, item);
@@ -320,6 +346,7 @@ export function delete_variable(context: Context, variable: Variable) {
 // region 可变组件属性列表相关
 export interface StatusValueItem {
     variable: Variable
+    current_state: string
     values: any[]
 }
 
@@ -328,14 +355,18 @@ export interface StatusValueItem {
  */
 export function states_tag_values_sort(shapes: SymbolView[], t: Function) {
     const result: StatusValueItem[] = [];
+    const defaultVal = t('compos.dlt');
     if (shapes.length === 1) {
         const par = shapes[0].parent as SymbolView;
         const variables = par.variables;
         if (!variables) return result;
         variables.forEach((v, k) => {
             if (v.type !== VariableType.Status) return;
+            let val = shapes[0].symtags?.get(v.id) || SymbolShape.Default_State;
+            if (val === SymbolShape.Default_State) val = defaultVal;
             const item: StatusValueItem = {
                 variable: v,
+                current_state: val,
                 values: tag_values_sort(par, v, t)
             }
             result.push(item);
@@ -404,7 +435,11 @@ export function make_symbol(context: Context, t: Function) {
         return false;
     }
     const editor = context.editor4Page(page);
-    const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
+    // const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource.map(arr => arr[0]), t);
+    let name = t(`shape.${ShapeType.Symbol}`);
+    const repeats: number = context.data.symbolsMgr.size;
+    name = repeats ? `${name} ${repeats}` : name;
+
     const shapes: ShapeView[] = compare_layer_3(selected);
     return editor.makeSymbol(context.data, shapes.map((s) => adapt2Shape(s)), name);
 }
@@ -682,7 +717,7 @@ function get_ot_by_vt(vt: VariableType) {
     if (vt === VariableType.Text) return OverrideType.Text;
 }
 
-function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableType, vari?: Variable, container?: ShapeView[]) {
+export function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableType, vari?: Variable, container?: ShapeView[]) {
     let shapes: ShapeView[] = [];
     const childs = (group).childs;
     if (!childs?.length) return shapes;
@@ -723,6 +758,7 @@ function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableT
 
 export interface RefAttriListItem {
     variable: Variable
+    current_state: string
     values: any[]
 }
 
@@ -734,12 +770,11 @@ export interface RefAttriListItem {
 export function get_var_for_ref(symref: SymbolRefView, t: Function) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
-
     const sym = symref.symData;
+
     if (!sym) {
         return false;
     }
-
 
     const parent = sym.parent;
 
@@ -756,7 +791,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         }
 
         variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v, current_state: '', values: [] };
+            let i = state.symtags?.get(v.id) || t('compos.dlt');
+            item.current_state = i === SymbolShape.Default_State ? t('compos.dlt') : i
             if (v.type === VariableType.Status) {
                 item.values = tag_values_sort(usym as SymbolShape, v, t);
                 result.push(item);
@@ -767,7 +804,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         let instance_index: number = result.length;
         let text_index: number = instance_index;
         sub_variables.forEach((v: Variable) => { // 整理顺序
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v, current_state: '', values: [] };
+            let i = state.symtags?.get(v.id) || t('compos.dlt')
+            item.current_state = i === SymbolShape.Default_State ? t('compos.dlt') : i
             if (v.type === VariableType.Visible) {
                 result2.push(item);
             } else if (v.type === VariableType.SymbolRef) {
@@ -787,7 +826,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         let text_index: number = 0;
 
         variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v, current_state: '', values: [] };
+            const i = sym.symtags?.get(v.id) || t('compos.dlt')
+            item.current_state = i === SymbolShape.Default_State ? t('compos.dlt') : i
             if (v.type === VariableType.Visible) {
                 const overrides = symref.findOverride(v.id, OverrideType.Visible);
                 if (overrides) item.variable = overrides[overrides.length - 1];
@@ -849,16 +890,6 @@ export function get_vari_value_for_ref2(symbol_ref: SymbolRefView, variable: Var
     }
     const _val = (symbol as SymbolShape | SymbolUnionShape).symtags?.get(variable.id) || '';
     return _val || SymbolShape.Default_State;
-}
-
-/**
- * @description 修改实例身上某个变量vari的值 ---zrxfix1804
- */
-export function modify_vari_value_for_ref(context: Context, vari: Variable, value: any) {
-    const symref = context.selection.symbolrefshape;
-    if (!symref) return;
-    const editor = context.editor4Shape(symref);
-    editor.modifySymbolRefVariable(vari, value);
 }
 
 /**
@@ -936,14 +967,12 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
 }
 
 /**
- * @description 检查symbol与symbol2之间是否存在循环引用
- * symbol2将包含symbol，若用symbol建一棵树，这颗树上不可以存在一条以symbol2为形的枝叶，若存在则存在循环
+ * @description 检查set与symbol之间是否存在循环引用
+ * symbol不可以包含set
+ * 若用set建一棵树，这颗树上不可以存在一条以symbol为形的枝叶，否则存在循环
  */
-export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {
-        shape: symbol2,
-        ref: symbol.id
-    }];
+export function is_circular_ref2(set: Shape, symbol: string): boolean {
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(set), { shape: symbol, ref: set.id }];
     while (deps.length && is_exist_single_stick(deps)) {
         deps = filter_deps(deps, 'shape', 'ref');
         deps = filter_deps(deps, 'ref', 'shape');
@@ -1051,8 +1080,8 @@ export function reset_all_attr_for_ref(context: Context) {
     editor.resetSymbolRefVariable();
 }
 
-export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
-    if (!(symbol as SymbolShape).isSymbolUnionShape) return;
+export function find_space_for_state(symbol: SymbolView, state: SymbolView) {
+    if (!(symbol.data as SymbolShape).isSymbolUnionShape) return;
     const targets = symbol.childs;
     if (!targets.length) return;
     const init_frame = {
@@ -1297,7 +1326,7 @@ export function untie_instance(context: Context) {
     const ref_shapes = selection.selectedShapes;
     if (page) {
         const editor = context.editor4Page(page);
-        const shapes = editor.extractSymbol(ref_shapes.map(s => adapt2Shape(s)) as SymbolRefShape[]);
+        const shapes = editor.extractSymbol(ref_shapes as SymbolRefView[]);
         if (shapes) {
             context.nextTick(page, () => {
                 const select = shapes.reduce((pre, cur) => {

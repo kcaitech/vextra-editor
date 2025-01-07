@@ -3,26 +3,21 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
-import CommentTab from "./Comment/CommentTab.vue";
 import { useI18n } from 'vue-i18n';
-import { Page, PageView } from "@kcdesign/data";
-import { Comment } from "@/context/comment";
-import { Action, Tool } from "@/context/tool";
-
+import { PageView } from "@kcdesign/data";
+import { Tool } from "@/context/tool";
+import { Navi } from "@/context/navigate";
 const { t } = useI18n();
 
 interface Props {
     context: Context
     page: PageView
-    leftTriggleVisible: boolean
-    showLeft: boolean
 }
 
 const props = defineProps<Props>();
 const controllerRef = ref<HTMLElement>();
 const underlineWidth = ref(0);
 const underlinePosition = ref(0);
-const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 type Tab = "Shape" | "Comps" | "Resource" | "Comment"
 
 const currentTab = ref<Tab>("Shape");
@@ -38,14 +33,6 @@ const tabs: { title: string, id: Tab }[] = [
         id: 'Comment'
     }
 ]
-
-function update(t: number) {
-    if (t === Comment.SELECT_LIST_TAB) {
-        if (!props.showLeft) showHiddenLeft();
-        currentTab.value = 'Comment';
-        updateUnderlinePosition();
-    }
-}
 
 function toggle(id: Tab) {
     currentTab.value = id;
@@ -74,40 +61,37 @@ function updateUnderlinePosition() {
     underlinePosition.value = left + width / 2;
 }
 
-const showHiddenLeft = () => {
-    emit('showNavigation')
-}
 const tool_watch = (t: number) => {
     if (t === Tool.COMPONENT) {
-        console.log("tool_watch", t);
-
-        if (!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comps';
         props.context.navi.set_current_navi_module(currentTab.value);
         updateUnderlinePosition();
     }
 }
-const stopMouseDown = (e: MouseEvent) => {
-    const action = props.context.tool.action;
-    const comment = props.context.comment;
-    if (action === Action.AddComment && !comment.isCommentInputMove) {
-        e.stopPropagation();
+
+const navi_watch = (t: number) => {
+    if (t === Navi.MODULE_CHANGE) {
+        currentTab.value = props.context.navi.current_navi_module;
+        updateUnderlinePosition();
     }
 }
+
 onMounted(() => {
     props.context.navi.set_current_navi_module(currentTab.value);
-    props.context.comment.watch(update);
     props.context.tool.watch(tool_watch);
+    props.context.navi.watch(navi_watch);
     updateUnderlinePosition();
 });
 onUnmounted(() => {
-    props.context.comment.unwatch(update);
     props.context.tool.unwatch(tool_watch);
+    props.context.navi.watch(navi_watch);
 })
+
+const plugins = props.context.pluginsMgr.search2('navigation');
 </script>
 
 <template>
-    <div class="tab-container" @mouseup="stopMouseDown">
+<div class="tab-container">
         <div ref="controllerRef" class="controller">
             <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
                 :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
@@ -119,12 +103,12 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body">
-            <ShapeTab :context="props.context" v-show="currentTab === 'Shape'" v-bind="$attrs" :page="page"
-                :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
-            <CompsTab :context="props.context" v-show="currentTab === 'Comps'" :showLeft="showLeft"
-                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
-            <CommentTab :context="props.context" v-show="currentTab === 'Comment'" :showLeft="showLeft"
-                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
+            <!-- begin plugin -->
+            <component v-for="p in plugins.begin" :is=p.component :context="props.context" :params="p.params" />
+            <ShapeTab :context="props.context" v-show="currentTab === 'Shape'" v-bind="$attrs" :page="page"/>
+            <CompsTab :context="props.context" v-show="currentTab === 'Comps'"/>
+            <!-- end plugin -->
+            <component v-for="p in plugins.end" :is=p.component :context="props.context" :params="p.params" />
         </div>
     </div>
 </template>
@@ -170,7 +154,7 @@ onUnmounted(() => {
     .body {
         border-top: 1px solid #F0F0F0;
         width: 100%;
-        height: calc(100% - 32px);
+        height: calc(100% - 40px);
         position: relative;
         flex: 1 1 auto;
         box-sizing: border-box;

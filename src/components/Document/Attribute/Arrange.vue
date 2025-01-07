@@ -1,312 +1,337 @@
 <script lang="ts" setup>
-import { Context } from '@/context';
-import { ShapeType, ShapeView } from '@kcdesign/data';
-import { PositonAdjust } from "@kcdesign/data";
-import { onMounted, onUnmounted, watch } from 'vue';
-import { align_left, align_cneter_x, align_right, align_top, align_cneter_y, align_bottom, distribute_horizontally, vertical_uniform_distribution, is_container } from '@/utils/arrange';
-import { useI18n } from 'vue-i18n';
+import {Context} from '@/context';
+import {ArtboardView, ShapeType, ShapeView} from '@kcdesign/data';
+import {PositionAdjust} from "@kcdesign/data";
+import {onMounted, onUnmounted, watch} from 'vue';
+import {
+  align_left,
+  align_center_x,
+  align_right,
+  align_top,
+  align_center_y,
+  align_bottom,
+  distribute_horizontally,
+  vertical_uniform_distribution,
+  is_container
+} from '@/utils/arrange';
+import {useI18n} from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { Arrange } from '@/context/arrange';
-import { reactive } from 'vue';
-import { debounce, throttle } from 'lodash';
-import { Selection } from '@/context/selection';
+import {Arrange} from '@/context/arrange';
+import {reactive} from 'vue';
+import {throttle} from 'lodash';
+import {string_by_sys} from "@/utils/common";
+
 interface Props {
-    context: Context;
-    shapes: ShapeView[];
-    trigger: any[];
-    selectionChange: number;
+  context: Context;
+  shapes: ShapeView[];
+  trigger: any[];
+  selectionChange: number;
 }
+
 const props = defineProps<Props>();
-const { t } = useI18n();
-const model_enable = reactive<{ hv: boolean, o: boolean }>({ hv: false, o: false });
+const {t} = useI18n();
+const model_enable = reactive<{ hv: boolean, o: boolean }>({hv: false, o: false});
+
 // 靠左对齐
 function flex_start() {
-    if (!model_enable.o) {
-        return;
+  if (!model_enable.o) {
+    return;
+  }
+  const actions: PositionAdjust[] = align_left(props.shapes);
+  const page = props.context.selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    if (actions.find(i => i.transX !== 0)) {
+      editor.arrange(actions);
     }
-    const actions: PositonAdjust[] = align_left(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transX !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+  }
 }
+
 // 水平线对齐
-function justify_midle_h() {
-    if (!model_enable.o) {
-        return;
+function justify_middle_h() {
+  if (!model_enable.o) return;
+  const actions: PositionAdjust[] = align_center_x(props.shapes);
+  const page = props.context.selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    if (actions.find(i => i.transX !== 0)) {
+      editor.arrange(actions);
     }
-    const actions: PositonAdjust[] = align_cneter_x(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transX !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+  }
 }
+
 // 靠右对齐
 function flex_end() {
-    if (!model_enable.o) {
-        return;
+  if (!model_enable.o) return;
+  const actions: PositionAdjust[] = align_right(props.shapes);
+  const page = props.context.selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    if (actions.find(i => i.transX !== 0)) {
+      editor.arrange(actions);
     }
-    const actions: PositonAdjust[] = align_right(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transX !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+  }
 }
+
 // 靠顶部对齐
 function flex_start_col() {
-    if (!model_enable.o) {
-        return;
+  if (!model_enable.o) {
+    return;
+  }
+  const actions: PositionAdjust[] = align_top(props.shapes);
+  const page = props.context.selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    if (actions.find(i => i.transY !== 0)) {
+      editor.arrange(actions);
     }
-    const actions: PositonAdjust[] = align_top(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transY !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+  }
 }
+
 // 中线对齐
-function justify_midle_v() {
-    if (!model_enable.o) {
-        return;
+function justify_middle_v() {
+  if (!model_enable.o) {
+    return;
+  }
+  const actions: PositionAdjust[] = align_center_y(props.shapes);
+  const page = props.context.selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    if (actions.find(i => i.transY !== 0)) {
+      editor.arrange(actions);
     }
-    const actions: PositonAdjust[] = align_cneter_y(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transY !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+  }
 }
+
 // 靠底部对齐
 function flex_end_col() {
-    if (!model_enable.o) {
-        return;
+  if (!model_enable.o) {
+    return;
+  }
+  const actions: PositionAdjust[] = align_bottom(props.shapes);
+  const page = props.context.selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    if (actions.find(i => i.transY !== 0)) {
+      editor.arrange(actions);
     }
-    const actions: PositonAdjust[] = align_bottom(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transY !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+  }
 }
+
 function space_around_h() {
-    if (!model_enable.hv) {
-        return;
+  if (!model_enable.hv) {
+    return;
+  }
+  const page = props.context.selection.selectedPage;
+  const actions = distribute_horizontally(props.shapes);
+  if (actions && page) {
+    const editor = props.context.editor4Page(page);
+    if (actions.find(i => i.transX !== 0)) {
+      editor.arrange(actions);
     }
-    const page = props.context.selection.selectedPage;
-    const actions = distribute_horizontally(props.shapes);
-    if (actions && page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transX !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+  }
 }
+
 function space_around_v() {
-    if (!model_enable.hv) {
-        return;
+  if (!model_enable.hv) {
+    return;
+  }
+  const page = props.context.selection.selectedPage;
+  const actions = vertical_uniform_distribution(props.shapes);
+  if (actions && page) {
+    const editor = props.context.editor4Page(page);
+    if (actions.find(i => i.transY !== 0)) {
+      editor.arrange(actions);
     }
-    const page = props.context.selection.selectedPage;
-    const actions = vertical_uniform_distribution(props.shapes);
-    if (actions && page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transY !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+  }
 }
+
 function arrange_watcher(t: Number) {
-    switch (t) {
-        case Arrange.FLEX_START:
-            flex_start();
-            break;
-        case Arrange.SPACE_AROUND_HOR:
-            space_around_h();
-            break;
-        case Arrange.ITEMS_ALIGN:
-            justify_midle_h();
-            break;
-        case Arrange.FLEX_END:
-            flex_end();
-            break;
-        case Arrange.FLEX_START_COL:
-            flex_start_col();
-            break;
-        case Arrange.SPACE_AROUND_VER:
-            space_around_v();
-            break;
-        case Arrange.ITEMS_ALIGN_VER:
-            justify_midle_v();
-            break;
-        case Arrange.FLEX_END_COL:
-            flex_end_col();
-            break;
-        default:
-            break;
-    }
+  switch (t) {
+    case Arrange.FLEX_START:
+      flex_start();
+      break;
+    case Arrange.SPACE_AROUND_HOR:
+      space_around_h();
+      break;
+    case Arrange.ITEMS_ALIGN:
+      justify_middle_h();
+      break;
+    case Arrange.FLEX_END:
+      flex_end();
+      break;
+    case Arrange.FLEX_START_COL:
+      flex_start_col();
+      break;
+    case Arrange.SPACE_AROUND_VER:
+      space_around_v();
+      break;
+    case Arrange.ITEMS_ALIGN_VER:
+      justify_middle_v();
+      break;
+    case Arrange.FLEX_END_COL:
+      flex_end_col();
+      break;
+    default:
+      break;
+  }
 }
 
 function _modify_model_disable() {
-    reset_model();
-    const selected = props.context.selection.selectedShapes;
+  reset_model();
+  const selected = props.context.selection.selectedShapes;
 
-    if (selected.length === 0) {
-        return;
+  if (selected.length === 0) {
+    return;
+  }
+  const first = selected[0];
+  const first_p = first.parent;
+
+  if (!first_p) {
+    return;
+  }
+
+  if (selected.length === 1) {
+    if (first_p.type !== ShapeType.Page) {
+      model_enable.o = true;
     }
-    const first = selected[0];
-    const first_p = first.parent;
-
-    if (!first_p) {
-        return;
+    if (is_container(first)) {
+      model_enable.o = true;
+      model_enable.hv = true;
     }
-
-    if (selected.length === 1) {
-        if (first_p.type !== ShapeType.Page) {
-            model_enable.o = true;
-        }
-        if (is_container(first)) {
-            model_enable.o = true;
-            model_enable.hv = true;
-        }
-
-        return;
+    if ((first as ArtboardView).autoLayout || (first_p as ArtboardView).autoLayout) {
+      reset_model();
     }
-    model_enable.o = true;
+    return;
+  }
+  const some = selected.some(s => (s as ArtboardView).autoLayout || (s.parent as ArtboardView).autoLayout);
+  if (some) {
+    return reset_model();
+  }
+  model_enable.o = true;
 
-    if (selected.length > 2) {
-        model_enable.hv = true;
-    }
+  if (selected.length > 2) {
+    model_enable.hv = true;
+  }
 }
 
 // const modify_model_disable = debounce(_modify_model_disable, 150, { leading: true });
 
 function reset_model() {
-    model_enable.hv = false;
-    model_enable.o = false;
+  model_enable.hv = false;
+  model_enable.o = false;
 }
 
-// function selection_watcher(t: number) {
-//     if (t === Selection.CHANGE_SHAPE) {
-//         modify_model_disable();
-//     }
-// }
-const update = throttle(_modify_model_disable, 160, { leading: true });
+const update = throttle(_modify_model_disable, 160, {leading: true});
 
-// 这里在下代协作算法出来后可以优化
 const stop = watch(() => props.trigger, update); // 监听图层变化
 const stop2 = watch(() => props.selectionChange, update); // 监听选区变化
 
 onMounted(() => {
-    _modify_model_disable();
-    props.context.arrange.watch(arrange_watcher);
-    // props.context.selection.watch(selection_watcher);
+  _modify_model_disable();
+  props.context.arrange.watch(arrange_watcher);
 })
 onUnmounted(() => {
-    stop
-    stop2
-    props.context.arrange.unwatch(arrange_watcher);
-    // props.context.selection.unwatch(selection_watcher);
+  stop();
+  stop2();
+  props.context.arrange.unwatch(arrange_watcher);
 })
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import flex_start_icon from '@/assets/icons/svg/flex-start.svg';
+import justify_middle_h_icon from '@/assets/icons/svg/justify-midle-h.svg';
+import flex_end_icon from '@/assets/icons/svg/flex-end.svg';
+import flex_start_col_icon from '@/assets/icons/svg/flex-start-col.svg';
+import justify_middle_v_icon from '@/assets/icons/svg/justify-midle-v.svg';
+import flex_end_col_icon from '@/assets/icons/svg/flex-end-col.svg';
+import space_around_h_icon from '@/assets/icons/svg/space-around-h.svg';
+import space_around_v_icon from '@/assets/icons/svg/space-around-v.svg';
+
 </script>
 <template>
-    <div class="container">
-        <Tooltip :content="t('home.align_left')" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_start">
-                <svg-icon icon-class="flex-start"></svg-icon>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t('home.align_h_c')" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_midle_h">
-                <svg-icon icon-class="justify-midle-h"></svg-icon>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t('home.align_right')" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end">
-                <svg-icon icon-class="flex-end"></svg-icon>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t('home.align_top')" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_start_col">
-                <svg-icon icon-class="flex-start-col"></svg-icon>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t('home.align_v_c')" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_midle_v">
-                <svg-icon icon-class="justify-midle-v"></svg-icon>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t('home.align_bottom')" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end_col">
-                <svg-icon icon-class="flex-end-col"></svg-icon>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t('home.distribute_h')" :offset="15">
-            <div :class="model_enable.hv ? 'item' : 'disable'" @click="space_around_h">
-                <svg-icon icon-class="space-around-h"></svg-icon>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t('home.distribute_v')" :offset="15">
-            <div :class="model_enable.hv ? 'item' : 'disable'" @click="space_around_v">
-                <svg-icon icon-class="space-around-v"></svg-icon>
-            </div>
-        </Tooltip>
-    </div>
+  <div class="container">
+    <Tooltip :content="`${t('home.align_left')} ${string_by_sys('Alt A')}`" :offset="15">
+      <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_start">
+        <SvgIcon :icon="flex_start_icon"/>
+      </div>
+    </Tooltip>
+    <Tooltip :content="`${t('home.align_h_c')} ${string_by_sys('Alt H')}`" :offset="15">
+      <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_middle_h">
+        <SvgIcon :icon="justify_middle_h_icon"/>
+      </div>
+    </Tooltip>
+    <Tooltip :content="`${t('home.align_right')} ${string_by_sys('Alt D')}`" :offset="15">
+      <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end">
+        <SvgIcon :icon="flex_end_icon"/>
+      </div>
+    </Tooltip>
+    <Tooltip :content="`${t('home.align_top')} ${string_by_sys('Alt W')}`" :offset="15">
+      <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_start_col">
+        <SvgIcon :icon="flex_start_col_icon"/>
+      </div>
+    </Tooltip>
+    <Tooltip :content="`${t('home.align_v_c')} ${string_by_sys('Alt V')}`" :offset="15">
+      <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_middle_v">
+        <SvgIcon :icon="justify_middle_v_icon"/>
+      </div>
+    </Tooltip>
+    <Tooltip :content="`${t('home.align_bottom')} ${string_by_sys('Alt S')}`" :offset="15">
+      <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end_col">
+        <SvgIcon :icon="flex_end_col_icon"/>
+      </div>
+    </Tooltip>
+    <Tooltip :content="`${t('home.distribute_h')} ${string_by_sys('Shift Alt H')}`" :offset="15">
+      <div :class="model_enable.hv ? 'item' : 'disable'" @click="space_around_h">
+        <SvgIcon :icon="space_around_h_icon"/>
+      </div>
+    </Tooltip>
+    <Tooltip :content="`${t('home.distribute_v')} ${string_by_sys('Shift Alt V')}`" :offset="15">
+      <div :class="model_enable.hv ? 'item' : 'disable'" @click="space_around_v">
+        <SvgIcon :icon="space_around_v_icon"/>
+      </div>
+    </Tooltip>
+  </div>
 </template>
 <style scoped lang="scss">
 .container {
-    display: flex;
-    justify-content: space-evenly;
-    padding: 6px 8px 6px 8px;
-    box-sizing: border-box;
-    height: 40px;
-    border-bottom: 1px solid #F0F0F0;
+  display: flex;
+  justify-content: space-evenly;
+  padding: 6px 8px 6px 8px;
+  box-sizing: border-box;
+  height: 40px;
+  border-bottom: 1px solid #F0F0F0;
 }
 
 .item {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  border-radius: var(--default-radius);
+
+  > svg {
+    color: var(--theme-color);
     width: 28px;
     height: 28px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 1;
-    border-radius: var(--default-radius);
-
-    >svg {
-        color: var(--theme-color);
-        width: 28px;
-        height: 28px;
-    }
+  }
 }
 
 .item:hover {
-    background-color: rgba(216, 216, 216, 0.4);
+  background-color: rgba(216, 216, 216, 0.4);
 }
 
 .disable {
-    width: 40px;
-    height: 28px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0.3;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.3;
 
-    >svg {
-        width: 28px;
-        height: 28px;
-    }
+  > svg {
+    width: 28px;
+    height: 28px;
+  }
 }
 </style>

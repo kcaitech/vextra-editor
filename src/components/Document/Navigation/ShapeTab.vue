@@ -11,51 +11,37 @@ import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
-import { Page, PageView } from "@kcdesign/data";
-import ShowHiddenLeft from "./ShowHiddenLeft.vue";
+import { PageView } from "@kcdesign/data";
 import { Navi } from "@/context/navigate";
-const props = defineProps<{ context: Context, page: PageView, leftTriggleVisible: boolean, showLeft: boolean }>();
-const emit = defineEmits<{ (e: 'showNavigation'): void }>()
-const i_height = 119;
-const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: i_height, pagelistHeightBackup: 32 });
+
+const props = defineProps<{ context: Context, page: PageView }>();
+const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: 120, pagelistHeightBackup: 32 });
 const container = ref<HTMLDivElement>();
 const sash = ref<HTMLDivElement>();
 const containerHeight = ref<number>(0);
-const isPagelistFold = ref<boolean>(false);
-const transition = ref<string>('0.3s');
+const isPagelistFold = ref<boolean>(props.context.user.pageListSpace.fold);
 
 function dragStart() {
     structure.value.pagelistHeightBackup = structure.value.pagelistHeight
-    transition.value = '0s'
 }
 function onDragOffset(offset: number) {
-    const newheight = Math.min(containerHeight.value - 90, Math.max(74, structure.value.pagelistHeightBackup + Number(offset)));
-    structure.value.pagelistHeight = newheight
+    structure.value.pagelistHeight = Math.min(containerHeight.value - 90, Math.max(74, structure.value.pagelistHeightBackup + Number(offset)))
 }
 function pageListFold(fold: boolean) {
     isPagelistFold.value = fold;
+    props.context.user.modifyPageListSpaceFold(fold);
 }
 function end() {
-    transition.value = '0.3s'
+    props.context.user.modifyPageListSpaceHeight(structure.value.pagelistHeight);
 }
 
 const observer = new ResizeObserver(() => {
     const el = container.value;
     el && (containerHeight.value = el.clientHeight);
 })
-const showHiddenLeft = () => {
-    emit('showNavigation')
-}
 function init_pagelist_height() {
-    const page_list = props.context.data.pagesList.length;
-    let w_height = document.body.clientHeight;
-    if (container.value) {
-        w_height = container.value.clientHeight;
-    }
-    let max_height = 5 * 32 + 40; // 页面自动新增高度最大为5个
-    let init_height = page_list * 32 + 56; // 页面自动新增高度空出16像素
-    init_height = Math.max(init_height, i_height); // 页面自动新增高度不能小于120像素
-    structure.value.pagelistHeight = Math.min(init_height, max_height); // 页面自动新增高度不能超过最大高度 max_height
+    isPagelistFold.value = props.context.user.pageListSpace.fold;
+    structure.value.pagelistHeight = props.context.user.pageListSpace.height;
 }
 function navi_watcher(t?: number) {
     if (t === Navi.ADD_PAGE) {
@@ -74,31 +60,27 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="shapetab-container" ref="container">
-        <div class="page-navi" :style="{ height: isPagelistFold ? '40px' : `${structure.pagelistHeight}px` }">
-            <!-- <div class="page-navi" :style="{ height: isPagelistFold ? '40px' : `${structure.pagelistHeight}px`, transition }"> -->
-            <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"></PageList>
+<div class="shape-tab-container" ref="container">
+    <div class="navi" :style="{ height: isPagelistFold ? '40px' : `${structure.pagelistHeight}px` }">
+            <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"/>
             <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"
-                @drag-end="end"></Sash>
+                  @drag-end="end"/>
         </div>
-        <div class="page-navi"
+    <div class="navi"
             :style="{ height: isPagelistFold ? 'calc(100% - 40px)' : `calc(100% - ${structure.pagelistHeight}px)` }">
-            <ShapeList :context="props.context" :page="page" :pageHeight="structure.pagelistHeight"></ShapeList>
+            <ShapeList :context="props.context" :page="page" :pageHeight="structure.pagelistHeight"/>
         </div>
-        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft">
-        </ShowHiddenLeft>
     </div>
 </template>
 
 <style scoped lang="scss">
-.shapetab-container {
+.shape-tab-container {
     width: 100%;
     height: 100%;
     box-sizing: border-box;
 
-    >.page-navi {
+    > .navi {
         position: relative;
-        // transition: all 0.3s ease 0s;
     }
 }
 </style>

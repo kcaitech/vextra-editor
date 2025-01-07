@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import {h, nextTick, onMounted, onUnmounted, ref, shallowRef} from 'vue';
-import comsMap from '@/components/Document/Content/comsmap';
+import { h, nextTick, onMounted, onUnmounted, ref, shallowRef, toRaw } from 'vue';
 import { GroupShape, ShapeType, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
-import { renderSymbolPreview as r } from "@kcdesign/data";
-import { initCommonShape } from "@/components/Document/Content/common";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
 import { debounce } from "lodash";
+import ShapeCard from "@/components/common/ShapeCard.vue";
+import { Navi } from '@/context/navigate';
 
 interface Props {
     data: GroupShape
@@ -17,30 +16,25 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const common = initCommonShape(props);
 const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
-const render_item = shallowRef<GroupShape>(props.data);
+let render_item = toRaw<GroupShape>(props.data);
 const name = ref<string>('');
 
-function gen_view_box() {
-    const frame = render_item.value.frame;
-    return `-20 -20 ${frame.width + 40} ${frame.height + 40}`;
-}
-
-function render() {
-    return r(h, render_item.value as any, comsMap);
-}
-
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) check_selected_status();
+    else if (t === Selection.PAGE_RENAME) {
+        const curr_module = props.context.navi.current_navi_module;
+        if (curr_module === "Comps") get_name();
+    }
 }
 
 function check_selected_status() {
     selected.value = is_select();
 }
+
 function is_select() {
     const selected = props.context.selection.selectedShapes;
 
@@ -72,13 +66,12 @@ function is_select() {
 
 function check_render_item() {
     if (props.data.type !== ShapeType.SymbolUnion) return;
-    render_item.value = (props.data?.childs[0] as GroupShape) || props.data;
+    render_item = (props.data?.childs[0] as GroupShape) || props.data;
     props.data.unwatch(shape_watcher);
-    render_item.value.watch(shape_watcher);
+    render_item.watch(shape_watcher);
 }
 
 function _shape_watcher() {
-    console.log('changed');
     check_render_item();
     get_name();
 }
@@ -102,7 +95,7 @@ function intersection(entries: any) {
     } else {
         props.context.selection.unwatch(selection_watcher);
         props.data.unwatch(shape_watcher);
-        render_item.value.unwatch(shape_watcher);
+        render_item.unwatch(shape_watcher);
     }
 }
 
@@ -134,7 +127,7 @@ function is_need_scroll_to_view() {
 function danger_check() {
     const symbolref = props.context.selection.symbolrefshape;
     if (!symbolref) return;
-    const sym = props.context.data.symbolsMgr.getSync(props.data.id);
+    const sym = props.context.data.getSymbolSync(props.data.id);
     if (!sym) return;
     const is_circular = is_circular_ref2(sym, symbolref.refId);
     if (is_circular) danger.value = true;
@@ -142,10 +135,17 @@ function danger_check() {
 
 function get_name() {
     if (is_state(props.data)) {
-        const sym = props.context.data.symbolsMgr.getSync(props.data.parent!.id);
+        const sym = props.context.data.getSymbolSync(props.data.parent!.id);
         name.value = sym?.name || props.data.name;
     } else {
         name.value = props.data.name;
+    }
+}
+
+const navi_watch = (t: number) => {
+    if (t === Navi.MODULE_CHANGE) {
+        const curr_module = props.context.navi.current_navi_module;
+        if (curr_module === "Comps") get_name();
     }
 }
 
@@ -153,21 +153,19 @@ onMounted(() => {
     check_render_required();
     is_need_scroll_to_view();
     get_name();
+    props.context.navi.watch(navi_watch);
 })
 onUnmounted(() => {
     io.disconnect();
     props.context.selection.unwatch(selection_watcher);
+    props.context.navi.unwatch(navi_watch);
     props.data.unwatch(shape_watcher);
 })
 </script>
 <template>
-    <div class="compo-preview-container" ref="preview_container">
+    <div class="compo-preview-container" ref="preview_container" :style="{ cursor: isAttri ? 'auto' : 'grab' }">
         <div class="card-wrap" v-if="render_preview">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="28px" height="28px"
-                :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
-                <render></render>
-            </svg>
+            <ShapeCard :shape="render_item" class="render-wrap" :size="28"></ShapeCard>
             <div>{{ name }}</div>
         </div>
         <div :class="{ status: true, selected, danger }"></div>
@@ -178,6 +176,7 @@ onUnmounted(() => {
     width: 100%;
     height: 36px;
     position: relative;
+    //cursor: grab;
 
     .card-wrap {
         width: 100%;
@@ -187,7 +186,7 @@ onUnmounted(() => {
         padding: 4px 0;
         box-sizing: border-box;
 
-        >.render-wrap {
+        > .render-wrap {
             margin-left: 2px;
             background-color: var(--grey-light);
             // border: 1px solid var(--grey-dark);
@@ -196,7 +195,7 @@ onUnmounted(() => {
             flex-shrink: 0;
         }
 
-        >div {
+        > div {
             margin-left: 4px;
             max-height: 100%;
             overflow: hidden;

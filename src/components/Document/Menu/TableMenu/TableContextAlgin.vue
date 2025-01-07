@@ -37,37 +37,42 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
     props.context.selection.notify(Selection.CHANGE_TEXT);
     emit('textAlginVer', svg)
 }
+
+import text_left_icon from '@/assets/icons/svg/text-left.svg';
+import text_center_icon from '@/assets/icons/svg/text-center.svg';
+import text_right_icon from '@/assets/icons/svg/text-right.svg';
+import text_justify_icon from '@/assets/icons/svg/text-justify.svg';
+import align_top_icon from '@/assets/icons/svg/align-top.svg';
+import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
+import align_middle_icon from '@/assets/icons/svg/align-middle.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 
 <template>
-    <div class="text-bottom-align">
+    <div class="text-bottom-align" style="height: 44px;">
         <div class="level-aligning jointly-text" v-if="menu === 'hor'">
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-left' }"
                 @click.stop="onSelectLevel(TextHorAlign.Left, 'text-left')">
                 <Tooltip :content="t('attr.align_left')" :offset="15">
-                    <svg-icon :style="{ fill: selectIcon === 'text-left' ? '#fff' : '#000' }"
-                        icon-class="text-left"></svg-icon>
+                    <SvgIcon :icon="text_left_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-center' }"
                 @click.stop="onSelectLevel(TextHorAlign.Centered, 'text-center')">
                 <Tooltip :content="t('attr.align_center')" :offset="15">
-                    <svg-icon :style="{ fill: selectIcon === 'text-center' ? '#fff' : '#000' }"
-                        icon-class="text-center"></svg-icon>
+                    <SvgIcon :icon="text_center_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-right' }"
                 @click.stop="onSelectLevel(TextHorAlign.Right, 'text-right')">
                 <Tooltip :content="t('attr.align_right')" :offset="15">
-                    <svg-icon :style="{ fill: selectIcon === 'text-right' ? '#fff' : '#000' }"
-                        icon-class="text-right"></svg-icon>
+                    <SvgIcon :icon="text_right_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-justify' }"
                 @click.stop="onSelectLevel(TextHorAlign.Natural, 'text-justify')">
                 <Tooltip :content="t('attr.align_the_sides')" :offset="15">
-                    <svg-icon :style="{ fill: selectIcon === 'text-justify' ? '#fff' : '#000' }"
-                        icon-class="text-justify"></svg-icon>
+                    <SvgIcon :icon="text_justify_icon"/>
                 </Tooltip>
             </i>
         </div>
@@ -75,22 +80,19 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-top' }"
                 @click.stop="onSelectVertical(TextVerAlign.Top, 'align-top')">
                 <Tooltip :content="t('attr.align_top')" :offset="15">
-                    <svg-icon :style="{ fill: selectIcon === 'align-top' ? '#fff' : '#000' }"
-                        icon-class="align-top"></svg-icon>
+                    <SvgIcon :icon="align_top_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-middle' }"
                 @click.stop="onSelectVertical(TextVerAlign.Middle, 'align-middle')">
                 <Tooltip :content="t('attr.align_middle')" :offset="15">
-                    <svg-icon :style="{ fill: selectIcon === 'align-middle' ? '#fff' : '#000' }"
-                        icon-class="align-middle"></svg-icon>
+                    <SvgIcon :icon="align_middle_icon"/>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-bottom' }"
                 @click.stop="onSelectVertical(TextVerAlign.Bottom, 'align-bottom')">
                 <Tooltip :content="t('attr.align_bottom')" :offset="15">
-                    <svg-icon :style="{ fill: selectIcon === 'align-bottom' ? '#fff' : '#000' }"
-                        icon-class="align-bottom"></svg-icon>
+                    <SvgIcon :icon="align_bottom_icon"/>
                 </Tooltip>
             </i>
         </div>
@@ -100,56 +102,73 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
 <style scoped lang="scss">
 .text-bottom-align {
     position: absolute;
-    bottom: -26px;
-    left: 0;
+    top: 34px;
+    left: -7px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 6px;
+    border: 1px solid #F0F0F0;
+    box-sizing: border-box;
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.18);
 }
 
 .jointly-text {
-    height: 25px;
-    border-radius: 4px;
-    background-color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
     >svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         overflow: visible !important;
     }
 }
 
 .level-aligning {
-    box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.2);
-    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    height: 32px;
+    width: 124px;
+    border-radius: 4px;
+    padding: 2px;
+    background-color: #F0F0F0;
+}
+
+.vertical-aligning {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    height: 32px;
+    width: 94px;
+    border-radius: 4px;
+    padding: 2px;
+    background-color: #F0F0F0;
 }
 
 .font-posi {
-    width: 25px;
-    height: 25px;
     display: flex;
+    align-items: center;
     justify-content: center;
+    width: 30px;
+    height: 28px;
+    border-radius: 3px;
+    
 
     >svg {
         fill: #000;
     }
 
-    &:hover {
-        background-color: var(--active-color) !important;
-
-        svg {
-            fill: #fff !important;
-        }
-    }
 }
 
 .selected_bgc {
-    background-color: var(--active-color) !important;
+    border: 1px solid #F0F0F0;
+    box-sizing: border-box;
+    background-color: #ffffff !important;
 }
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}</style>
+}
+</style>

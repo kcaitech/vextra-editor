@@ -1,26 +1,22 @@
-import { styleSheetController } from "@/utils/cursor";
 import { WatchableObject } from "@kcdesign/data";
-import { Context } from ".";
+import { CursorPicker, CursorType } from "@/utils/cursor2";
 
 export class Cursor extends WatchableObject {
     static CHANGE_CURSOR = 1;
     static RESET = 2;
     private m_current_cursor_type: string = '';
-    private m_context: Context;
-    private m_styler = styleSheetController();
+    private m_styler: CursorPicker;
     private m_freeze: boolean = false;
     private m_auto: string = '';
-    private m_reseted: boolean = true;
+    private m_stash: string = '';
 
-    constructor(context: Context) {
+    constructor() {
         super();
-        this.m_context = context;
+        this.m_styler = new CursorPicker();
     }
 
-    async init() {
-        await this.m_styler.setup();
-
-        const auto = await this.m_styler.getClass('auto', 0);
+    init() {
+        const auto = this.m_styler.getClass(CursorType.Auto, 0);
         if (!auto) {
             return;
         }
@@ -42,37 +38,45 @@ export class Cursor extends WatchableObject {
         this.m_freeze = val;
     }
 
-    async setType(type: string, rotate: number) {
-        if (this.m_freeze) {
-            return;
-        }
+    setType(type: CursorType, rotate: number) {
+        if (this.m_freeze) return;
+        let res = this.m_styler.getClass(type, rotate) || this.m_auto;
+        this.m_current_cursor_type = res;
+        this.notify(Cursor.CHANGE_CURSOR, res);
+    }
 
-        let res = await this.m_styler.getClass(type, rotate) || this.m_auto;
+    setTypeForce(type: CursorType, deg: number) {
+        let res = this.m_styler.getClass(type, deg) || this.m_auto;
 
         this.m_current_cursor_type = res;
         this.notify(Cursor.CHANGE_CURSOR, res);
     }
 
-    async setTypeForce(type: string, rotate: number) {
-        let res = await this.m_styler.getClass(type, rotate) || this.m_auto;
+    stash() {
+        this.m_stash = this.m_current_cursor_type;
+    }
 
-        this.m_current_cursor_type = res;
-        this.notify(Cursor.CHANGE_CURSOR, res);
+    rollback() {
+        if (this.m_stash) {
+            this.m_current_cursor_type = this.m_stash;
+            this.notify(Cursor.CHANGE_CURSOR, this.m_current_cursor_type);
+        } else {
+            this.reset();
+        }
     }
 
     reset() {
-        if (this.m_freeze) {
-            return;
-        }
-
+        if (this.m_freeze) return;
         this.m_current_cursor_type = this.m_auto;
-
         this.notify(Cursor.CHANGE_CURSOR, this.m_auto);
     }
 
     resetForce() {
         this.m_current_cursor_type = this.m_auto;
-
         this.notify(Cursor.CHANGE_CURSOR, this.m_auto);
+    }
+
+    remove() {
+        this.m_styler.remove();
     }
 }

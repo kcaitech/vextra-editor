@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { useI18n } from 'vue-i18n';
+
 const { t } = useI18n();
 
 const props = defineProps<{
@@ -12,15 +13,21 @@ const props = defineProps<{
 }>();
 const emits = defineEmits<{
     (e: 'onChange', value: number): void;
+    (e: 'dragstart', event: MouseEvent): void;
+    (e: 'dragging', event: MouseEvent): void;
+    (e: 'dragend'): void;
+    (e: 'keyDown', event: KeyboardEvent, val: string | number): void;
 }>();
 const input = ref<HTMLInputElement>();
 const isActived = ref(false)
 const selectValue = () => {
     isActived.value = true
-    if (input.value) {
-        input.value.select()
-    }
 }
+
+watch(()=>props.shadowV,()=>{
+    console.log('更新了');
+    
+})
 
 const onChange = () => {
     if (input.value) {
@@ -53,44 +60,82 @@ const decrease = () => {
         emits('onChange', result);
     }
 }
-const curpt: { x: number } = { x: 0 };
-const _curpt: { x: number } = { x: 0 };
-const isDrag = ref(false);
+
+let isDown = false;
 const onMouseDown = (e: MouseEvent) => {
     e.stopPropagation();
-    if (props.disabled) return;
-    curpt.x = e.screenX;
-    _curpt.x = e.screenX;
-    isDrag.value = true;
+
+    if (props.disabled || e.button !== 0 || isDown) {
+        return;
+    }
+
+    isDown = true;
+
+    emits('dragstart', e);
+
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('blur', windowBlur);
 }
 const onMouseMove = (e: MouseEvent) => {
-    let mx = e.screenX - curpt.x;
-    const diff = e.screenX - _curpt.x;
-    if ((diff > 3 || diff < 3) && input.value) {
-        curpt.x = e.screenX
-        let value = input.value.value;
-        if (mx > 0) {
-            if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
-            const result = +value + 1;
-            emits('onChange', result);
-        } else if (mx < 0) {
-            if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
-            const result = +value - 1;
-            emits('onChange', result);
-        }
-    }
+    // let mx = e.screenX - curpt.x;
+    // const diff = e.screenX - _curpt.x;
+    // if ((diff > 3 || diff < 3) && input.value) {
+    //     curpt.x = e.screenX
+    //     let value = input.value.value;
+    //     if (mx > 0) {
+    //         if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
+    //         const result = +value + 1;
+    //         emits('onChange', result);
+    //     } else if (mx < 0) {
+    //         if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
+    //         const result = +value - 1;
+    //         emits('onChange', result);
+    //     }
+    // }
+
+    emits('dragging', e);
 }
 const onMouseUp = (e: MouseEvent) => {
+    if (e.button !== 0) {
+        return
+    }
     e.stopPropagation();
-    isDrag.value = false;
+
+    clearStatus();
+}
+
+function clearStatus() {
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
+    window.removeEventListener('blur', windowBlur);
+    isDown = false;
+    emits('dragend');
 }
+
+function windowBlur() {
+    clearStatus();
+}
+
 function blur2() {
     isActived.value = false
+    is_select.value = false;
 }
+const is_select = ref(false);
+function click() {
+    if (!input.value) return;
+    const el = input.value;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
+}
+
+import down_icon from '@/assets/icons/svg/down.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 
 <template>
@@ -99,18 +144,19 @@ function blur2() {
             <span class="icon" ref="icon" @mousedown="onMouseDown">{{ ticon }}</span>
         </Tooltip>
         <span class="icon" ref="icon" v-if="!props.tootip || props.disabled" @mousedown="onMouseDown"
-            :style="{ cursor: props.disabled ? 'default' : 'ew-resize' }">{{ ticon }}</span>
-        <Tooltip v-if="props.disabled" :content="`${t('shadow.only_used')}`" :offset="12">
+            :class="{ cursor: !props.disabled }">{{ ticon }}</span>
+        <Tooltip v-if="props.tootip && props.disabled" :content="props.tootip" :offset="12">
             <input ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
                 :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
         <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2">
+            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click"
+            @keydown="e=>emits('keyDown',e,props.shadowV)">
         <div class="adjust" :class="{ active: isActived }">
-            <svg-icon icon-class="down" style="transform: rotate(180deg);"
-                :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>
-            <svg-icon icon-class="down" :style="{ cursor: props.disabled ? 'default' : 'pointer' }"
-                @click="decrease"></svg-icon>
+            <SvgIcon :icon="down_icon" style="transform: rotate(180deg);"
+                :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"/>
+            <SvgIcon :icon="down_icon" :style="{ cursor: props.disabled ? 'default' : 'pointer' }"
+                @click="decrease"/>
         </div>
     </div>
 </template>
@@ -126,6 +172,7 @@ function blur2() {
     align-items: center;
     //padding-left: 12px;
     //padding-right: 3px;
+    border: 1px solid transparent;
     box-sizing: border-box;
     background-color: var(--input-background);
     border-radius: var(--default-radius);
@@ -133,10 +180,10 @@ function blur2() {
 
     .icon {
         flex-shrink: 0;
-        cursor: ew-resize;
+        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
         text-align: center;
         width: 8px;
-        height: 14px;
+        height: 16px;
         font-family: HarmonyOS Sans;
         font-size: 12px;
         color: #8C8C8C;
@@ -146,7 +193,7 @@ function blur2() {
         width: 100%;
         flex: 1 1 auto;
         align-content: center;
-        margin-left: 6px;
+        margin-left: 8px;
         color: #000000;
         font-family: HarmonyOS Sans;
         text-overflow: ellipsis;
@@ -203,7 +250,12 @@ function blur2() {
 .disabled {
     opacity: 0.4;
 }
+
 .actived {
     border: 1px solid #1878F5;
+}
+
+.cursor {
+    cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
 }
 </style>

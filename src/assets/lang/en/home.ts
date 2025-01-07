@@ -1,8 +1,4 @@
-import { BorderPosition } from "@kcdesign/data";
-
-export const product = {
-    name: 'ProtoDesign'
-}
+import { BlendMode, BorderPosition, StackSizing } from "@kcdesign/data";
 
 export const system = {
     incorrect_input: 'Incorrect input!',
@@ -14,6 +10,7 @@ export const system = {
     'paste_here': 'Paste Here',
     'only_text': 'Paste text',
     copy: 'Copy',
+    copyAs: 'Copy/Paste as',
     cut: 'Cut',
     replace: 'Replace',
     failed: 'Failed',
@@ -30,24 +27,29 @@ export const system = {
     'select_all': 'Select all',
     'fit_canvas': 'Adapt to artboard',
     'show_many_cursor': 'Show others cursor',
-    'show_comment': 'Show comment',
+    'show_comment': 'Show Comment',
+    'show_cutout': 'Show Cutout',
     'show_ruler': 'show ruler',
     'show_pixel_network': 'Show grid',
     'hide_operation_interface': 'Hide UI',
     'creating_groups': 'Create group',
     'create_container': 'Create artboard',
+    'outline': 'Outline',
+    'set_mask': 'Use as mask',
+    'remove_mask': 'Remove mask',
     'un_group': 'Dissolve the group',
     'create_component': 'Create component',
     'unbind_instance': 'Unbind',
     'reset_instance_roperties': 'Reset',
     'edit_component': 'Edit component',
-    'wx_login': 'Wechat scan code login',
+    'create_mask': 'Use as Mask',
+    'mask_group': 'Mask Group',
+    'wx_login': 'Scan the code on WeChat',
     'login_read': 'Scanning code indicates that you have read and agreed',
     'read_TOS': 'Service Agreement',
     'read_Privacy': 'Privacy Agreement',
-    'product_name': 'ProtoDesign',
     'product_description': 'An efficient RPD writing tool that supports prototyping, document presentation, and approval management.',
-    'login_footer': '© 2023 Kc.Design Inc.All rights reserved.',
+    'login_footer': 'Zhuhai Kuangcai Technology Co., Ltd',
     'placeholder': 'Search file',
     'about': 'About',
     'help_manual': 'Help manual',
@@ -66,7 +68,16 @@ export const system = {
     sensitive_reminder: 'Contains sensitive information, please re-enter.',
     sensitive_reminder2: 'Contains sensitive information and cannot be shared.',
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
-    piexl: 'Pixel Round'
+    pixel: 'Pixel Round',
+    grid: 'Pixel grid',
+    rule: 'Rule',
+    uploadMediaFail: 'Image upload failed',
+    internet: 'Go Home',
+    notfound: 'Sorry, this page does not exist.',
+    gohome: 'Return to official website',
+    trynow: 'Try it now',
+    updatetips: 'Update_',
+    timeout: 'Timeout'
 }
 
 export const home = {
@@ -105,7 +116,7 @@ export const home = {
     file_star_marking: 'File has been marked star, can be viewed in the star list!',
     rect: 'Rectangle',
     picture: 'Picture',
-    comment: 'Add comment',
+    comment: 'Comments',
     groups: 'Group up',
     ungroup: 'Ungroup',
     search_layer: 'Search layer',
@@ -151,7 +162,18 @@ export const home = {
     'distribute_v': 'Distribute vertical spacing',
     people_are_visiting: 'People are visiting:',
     permissions: 'Permissions:',
-    contact: 'Contact'
+    contact: 'Contact',
+    full: 'Full screen',
+    exit_full: 'Exit full screen',
+    not_preview_frame: 'There is no demonstrable container',
+    image_uploaded: 'xx images uploaded successfully',
+    publish: 'Publish',
+    downloadJs: 'Download JS',
+    homePage: 'Home page',
+    download: 'Download',
+    downloading: 'Downloading',
+    downloaded: 'Downloaded',
+    no_board: 'No frame exists',
 }
 
 export const search = {
@@ -164,25 +186,26 @@ export const search = {
 
 
 export const navi = {
-    shape: 'Shape',
-    comps: 'Compnents',
+    shape: 'Shapes',
+    comps: 'Components',
     resource: 'Resource',
     page: 'Page',
     add_page: 'Add new page',
     copy: 'copy',
-    development: 'Functional development…',
+    development: 'Functional development in progress',
     overname: 'The maximum length of filenames is 50 characters'
 }
 
 export const frame = {
     custom: 'Custom',
     phone: 'Phone',
-    tablet: 'Tablet',
+    pad: 'Pad',
     deskdop: 'Deskdop',
     presentation: 'Presentation',
     watch: 'Watch',
     paper: 'Paper',
-    social_media: 'Social media'
+    social_media: 'Social media',
+    slide: 'Slide'
 }
 
 export const fileMenu = {
@@ -206,7 +229,7 @@ export const attr: any = {
     prototype: 'Prototype',
     inspect: 'Inspect',
     constraints: 'Constraints',
-    groupings: 'Groupings',
+    groupings: 'Constraints',
     border: 'Border',
     opacity: 'Opacity',
     fill: 'Fill',
@@ -280,6 +303,8 @@ export const attr: any = {
     used_font: 'Used font',
     no_font_is_currently_in_use: 'No font is currently in use',
     chinese_font: 'Chinese font',
+    font_missing: 'Local font missing',
+    local_font: 'Local font',
     english_font: 'English font',
     find_the_fonts: "Can't find the fonts",
     font_is_not: 'The font is not present locally. Use the default font effect instead',
@@ -300,11 +325,46 @@ export const attr: any = {
     completely_symmetrical: "Completely Symmetrical",
     angular_symmetry: "Angular Symmetry",
     asymmetric: "Asymmetric",
-    path: 'Path'
+    path: 'Path',
+    corner: 'corner',
+    unilateral: 'unilateral',
+    independentCorners: 'Independent corners',
+    constrainProportions: 'Constrain proportions',
+    frameSize: 'Frame',
+    outlineNameSuffix: '(stroke)',
+    brightness: 'Brightness',
+    contrast: 'Contrast',
+    saturation: 'Saturation',
+    temperature: 'Temperature',
+    tint: 'Tint',
+    shadow: 'Shadow',
+    hue: 'Hue',
+    selected_picture: 'swap image',
+    tidy_up: 'Tidy up',
+    scale: "Scale",
+    scale_from_lt: "transform-origin: top left",
+    scale_from_top: "transform-origin: top",
+    scale_from_rt: "transform-origin: top right",
+    scale_from_right: "transform-origin: right",
+    scale_from_rb: "transform-origin: bottom right",
+    scale_from_bottom: "transform-origin: bottom",
+    scale_from_lb: "transform-origin: bottom left",
+    scale_from_left: "transform-origin: left",
+    scale_from_center: "transform-origin: center",
+    exit_scale: "Exit",
+    startingAngle: "Start",
+    sweep: "Sweep",
+    ratio: "Ratio",
+    clip: 'Clip content'
 }
 
 export const login = {
-    login_failure: 'Login failure'
+    login_failure: 'Login failure',
+    welcome: 'Welcome',
+    name: 'MossDesign',
+    describe: 'Online collaborative professional product design software',
+    miniprogram: 'MiniProgram',
+    scan_code: 'Scan wechat'
 }
 
 export const comment = {
@@ -320,40 +380,27 @@ export const comment = {
     show_resolved_comments: 'Show resolved comments',
     comment_area: 'Comment section',
     input_comments: 'Input comments',
+    reply_comment: 'Reply to comment',
     check: 'check',
     a_few_reply: 'reply',
     month: 'month',
     day: 'day',
-    no_comment: 'No current comments',
-    leave_a_comment: 'Click anywhere to leave a comment',
+    no_comment: 'No comments',
     comments_hide: 'Comments are set to hide',
-    show_comments: 'Show comments'
+    show_comments: 'Show comments',
+    input_no_perm: 'No permission to comment'
 }
 export const clipboard = {
     'invalid_data': 'invalid data',
     'not_supported1': 'The current browser does not support it, please use Ctrl C to copy',
-    'not_supported2': 'The current browser does not support it, please use ctrl X to cut'
+    'not_supported2': 'The current browser does not support it, please use ctrl X to cut',
+    'copyAsPNGSuccess': 'copied as PNG',
+    'copyAsPNGFailed': 'Failed',
+    'copyAsPNG': 'copy as PNG',
+    'copyStyle': 'Copy properties',
+    'pasteStyle': 'Paste properties'
 }
-export const opacity = {
-    normal: 'Normal',
-    become_dark: 'Become dark',
-    multiply: 'Multiply',
-    color_deepening: 'Color deepening',
-    become_bright: 'Become bright',
-    filter: 'Filter',
-    color_dodge: 'Color dodge',
-    superpose: 'Superpose',
-    soft_light: 'Soft light',
-    strong_light: 'Strong light',
-    difference: 'Difference',
-    exclude: 'Exclude',
-    hue: 'Hue',
-    saturation: 'Saturation',
-    color: 'Color',
-    lightness: 'Lightness',
-    darken: 'Darken',
-    brighten: 'Brighten'
-}
+export const opacity: any = {}
 export const message = {
     doc_notopen: "Network anomalies, the document can't open, please try again after checking the network.",
     list_for_failure: 'Network exception, file list acquisition failed, please check the network and try again.',
@@ -364,7 +411,7 @@ export const message = {
     link_success: 'Network connection successful',
     autosave: 'Automatic document saving',
     cancel: 'Cancel',
-    exit_document: 'Exit document',
+    exit_document: 'Exit',
     back_home: 'Back to home',
     unuploaded_msg: 'The document has unuploaded resources. If you exit, content will be lost. Do you want to exit?'
 }
@@ -375,7 +422,106 @@ export const bool = {
     difference: 'Exclude',
     cohere: 'Vector'
 }
+export const date = {
+    just_now: 'Just now',
+    s: 's',
+    minutes: 'Minutes ago',
+    hour: 'Hour ago',
+    today: 'today',
+    yesterday: 'yesterday',
+    day: 'Day ago'
+}
+
+export const preview: any = {
+    actual_size: 'Actual size',
+    previous_page: 'Previous page',
+    next_page: 'Next page',
+    first_page: 'First page',
+    preview: 'Preview',
+    open: 'Opens in Design mode',
+    fill_screen: 'Fill screen',
+    fit_width: 'Fit width',
+    fit_screen: 'Fit screen',
+    all: 'All canvas',
+    hot_zone: 'Hot zone warning',
+    flow_describe: 'Flow describe',
+}
+
+export const userconfig = {
+    settings: 'Preferences',
+    movetips: 'Nudge amount',
+    keysdown: 'Small nudge',
+    shift_keysdown: 'Big nudge',
+}
+
+
+export const autolayout: any = {
+    auto_layout: 'Auto layout',
+    auto_layout_settings: 'Auto layout settings',
+    included: 'Included',
+    excluded: 'Excluded',
+    canvas_stack: 'Canvas stacking',
+    stack: 'Stacking',
+    reverse_stack: 'Reverse stacking',
+    stroke: 'Strokes',
+    add_auto_layout: 'Add auto layout',
+    remove_auto_layout: 'Remove auto layout',
+    ver: 'Vertical',
+    hor: 'Horizontal',
+    wrap: 'Wrap',
+    hor_gap: 'Horizontal gap',
+    ver_gap: 'Vertical gap',
+    hor_padding: 'Horizontal padding',
+    ver_padding: 'Vertical padding',
+    top_padding: 'Top padding',
+    right_padding: 'Right padding',
+    bottom_padding: 'bottom padding',
+    left_padding: 'Left padding',
+    hor_fixed: 'Horizontal Fixed',
+    ver_fixed: 'Vertical Fixed',
+    hor_resizing: 'Horizontal resizing',
+    ver_resizing: 'Vertical resizing',
+    unfold: 'Unfold',
+    fold: 'Fold',
+    settings: 'Auto layout settings',
+    lt_align: 'Align top left',
+    ct_align: 'Align top center',
+    rt_align: 'Align top right',
+    lc_align: 'Align left',
+    center_align: 'Align center',
+    rc_align: 'Align right',
+    lb_align: 'Align bottom left',
+    cb_align: 'Align bottom center',
+    rb_align: 'Align bottom right',
+    top_align: 'Align top',
+    bottom_align: 'Align bottom',
+    layout_area_size: 'Layout area size:',
+    auto: 'Auto',
+    adapt: 'Adapt'
+}
 
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';
+
+opacity[BlendMode.Normal] = "Normal";
+opacity[BlendMode.Darken] = "Become dark";
+opacity[BlendMode.Multiply] = "Multiply";
+opacity[BlendMode.ColorBurn] = "Color deepening";
+opacity[BlendMode.Lighten] = "Become bright";
+opacity[BlendMode.Screen] = "Filter";
+opacity[BlendMode.ColorDodge] = "Color dodge";
+opacity[BlendMode.Overlay] = "Superpose";
+opacity[BlendMode.SoftLight] = "Soft light";
+opacity[BlendMode.HardLight] = "Strong light";
+opacity[BlendMode.Difference] = "Difference";
+opacity[BlendMode.Exclusion] = "Exclude";
+opacity[BlendMode.Hue] = "Hue";
+opacity[BlendMode.Saturation] = "Saturation";
+opacity[BlendMode.Color] = "Color";
+opacity[BlendMode.Luminosity] = "Lightness";
+opacity[BlendMode.PlusDarker] = "Plus darker";
+opacity[BlendMode.PlusLighter] = "Plus lighter";
+
+autolayout[StackSizing.Auto] = "Auto";
+autolayout[StackSizing.Fixed] = "Fixed";

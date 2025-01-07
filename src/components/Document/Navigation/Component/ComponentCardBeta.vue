@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { h, nextTick, onMounted, onUnmounted, ref, toRaw } from 'vue';
-import comsMap from '@/components/Document/Content/comsmap';
 import { GroupShape, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
-import { renderSymbolPreview as r } from "@kcdesign/data";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
 import { debounce } from "lodash";
 import Tooltip from '@/components/common/Tooltip.vue';
+import ShapeCard from "@/components/common/ShapeCard.vue";
+import { Navi } from '@/context/navigate';
 
 interface Props {
     data: GroupShape
@@ -24,18 +24,12 @@ const danger = ref<boolean>(false);
 let render_item = toRaw<GroupShape>(props.data);
 const tip_name = ref('');
 
-function gen_view_box() {
-    const frame = render_item.frame;
-    return `-8 -8 ${frame.width + 16} ${frame.height + 16}`;
-}
-
-function render() {
-    return r(h, render_item as any, comsMap);
-}
-
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
         check_selected_status();
+    } else if (t === Selection.PAGE_RENAME) {
+        const curr_module = props.context.navi.current_navi_module;
+        if (curr_module === "Comps") update_name();
     }
 }
 
@@ -86,7 +80,7 @@ function check_render_item() {
     }
 
     render_item = toRaw((props.data?.childs[0] as GroupShape) || props.data);
-    
+
     props.data.unwatch(shape_watcher);
     render_item.watch(shape_watcher);
 }
@@ -145,19 +139,26 @@ function is_need_scroll_to_view() {
 function danger_check() {
     const symbolref = props.context.selection.symbolrefshape;
     if (!symbolref) return;
-    const sym = props.context.data.symbolsMgr.getSync(props.data.id);
+    const sym = props.context.data.getSymbolSync(props.data.id);
     if (!sym) return;
-    const is_circular = is_circular_ref2(sym, symbolref.refId);
+    let is_circular = is_circular_ref2(sym, symbolref.refId);
     if (is_circular) danger.value = true;
 }
 
 function update_name() {
     tip_name.value = '';
     if (is_state(props.data)) {
-        const sym = props.context.data.symbolsMgr.getSync(props.data.parent!.id);
+        const sym = props.context.data.getSymbolSync(props.data.parent!.id);
         tip_name.value = sym?.name || props.data.name;
     } else {
         tip_name.value = props.data.name;
+    }
+}
+
+const navi_watch = (t: number) => {
+    if (t === Navi.MODULE_CHANGE) {
+        const curr_module = props.context.navi.current_navi_module;
+        if (curr_module === "Comps") update_name();
     }
 }
 
@@ -165,22 +166,20 @@ onMounted(() => {
     check_render_required();
     is_need_scroll_to_view();
     update_name();
+    props.context.navi.watch(navi_watch);
 })
 onUnmounted(() => {
     io.disconnect();
+    props.context.navi.unwatch(navi_watch);
     props.context.selection.unwatch(selection_watcher);
     props.data.unwatch(shape_watcher);
 })
 </script>
 <template>
-    <div class="compo-preview-container" ref="preview_container">
+    <div class="compo-preview-container" ref="preview_container" :style="{ cursor: isAttri ? 'auto' : 'grab' }">
         <Tooltip :content="tip_name" v-if="render_preview">
             <div>
-                <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                    xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"
-                    height="96px" :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
-                    <render></render>
-                </svg>
+                <ShapeCard :shape="render_item" class="render-wrap" />
                 <div :class="{ status: true, selected, danger }"></div>
             </div>
         </Tooltip>
@@ -195,11 +194,13 @@ onUnmounted(() => {
     // border: 2px solid var(--grey-dark);
     box-sizing: border-box;
     position: relative;
+    //cursor: grab;
 
     .render-wrap {
         margin-top: 2px;
         margin-left: 2px;
     }
+
 
     .status {
         border-radius: 4px;

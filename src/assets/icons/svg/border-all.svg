@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none"
+    version="1.1" width="16" height="16" viewBox="0 0 16 16">
+    <defs>
+        <clipPath id="master_svg0_1605_10622/1605_09087/1605_08857">
+            <rect x="0" y="0" width="16" height="16" rx="0" />
+        </clipPath>
+    </defs>
+    <g clip-path="url(#master_svg0_1605_10622/1605_09087/1605_08857)">
+        <g>
+            <path d="M12,2.5L4,2.5L4,1.5L12,1.5L12,2.5Z" fill-rule="evenodd" fill="#434343"
+                fill-opacity="1" />
+        </g>
+        <g>
+            <path d="M12,14.5L4,14.5L4,13.5L12,13.5L12,14.5Z" fill-rule="evenodd" fill="#434343"
+                fill-opacity="1" />
+        </g>
+        <g>
+            <path d="M1.5,12L1.5,4L2.5,4L2.5,12L1.5,12Z" fill-rule="evenodd" fill="#434343"
+                fill-opacity="1" />
+        </g>
+        <g>
+            <path d="M13.5,12L13.5,4L14.5,4L14.5,12L13.5,12Z" fill-rule="evenodd" fill="#434343"
+                fill-opacity="1" />
+        </g>
+    </g>
+</svg>

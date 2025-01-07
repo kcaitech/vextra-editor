@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import IconText from "@/components/common/IconText.vue";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { Path, PointEditType } from "@/context/path";
-import { get_action_for_key_change, get_value_from_point, get_value_from_points } from "@/utils/pathedit";
-import { CurveMode, PathShape, PathShapeView } from "@kcdesign/data";
+import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
+import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
+import MossInput from "@/components/common/MossInput.vue";
+import { format_value as format } from '@/utils/common';
 
 interface Props {
     context: Context
@@ -28,9 +29,15 @@ const r = ref<number | string>('');
 const curve_mode = ref<PointEditType>('INVALID');
 const model_state: ModelState = reactive({ x: true, y: true, r: true, tool: true });
 const t = useI18n().t;
-let path_shape: PathShapeView | undefined = undefined;
+let path_shape: ShapeView | undefined = undefined;
 const path_close_status = ref<boolean>(true);
 const btn_string_for_status = ref<string>(t('attr.de_close_path'));
+
+const tel = ref<boolean>(false);
+const telX = ref<number>(0);
+const telY = ref<number>(0);
+let asyncPathEditor: AsyncPathEditor | undefined = undefined;
+
 function execute_change_xy(key: 'x' | 'y', val: any) {
     val = Number(val);
     if (!path_shape || isNaN(val)) {
@@ -69,6 +76,122 @@ function onChangeCurveMode(cm: CurveMode) {
     editor.modifyPointsCurveMode(selected_points, cm);
 }
 
+
+function updatePosition(movementX: number, movementY: number) {
+    const clientHeight = document.documentElement.clientHeight;
+    const clientWidth = document.documentElement.clientWidth;
+    telX.value += movementX;
+    telY.value += movementY;
+    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
+    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
+}
+const dragstart = async (e: MouseEvent) => {
+    tel.value = true;
+    telX.value = e.clientX;
+    telY.value = e.clientY;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    const pathshape = props.context.selection.pathshape;
+    if (!pathshape) {
+        return;
+    }
+    asyncPathEditor = props.context.editor
+        .controller()
+        .asyncPathEditor(pathshape as PathShapeView, props.context.selection.selectedPage!)
+    document.addEventListener("pointerlockchange", pointerLockChange, false);
+}
+
+function draggingX(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    const selected = props.context.path.syntheticPoints;
+    const pathshape = props.context.selection.pathshape;
+    if (!pathshape) {
+        return;
+    }
+    if (!selected?.size) {
+        return;
+    }
+    if (!asyncPathEditor) return;
+    const keys = Array.from(selected.keys());
+    const values = Array.from(selected.values());
+    let firstPoint: CurvePoint | undefined = undefined;
+    if (pathshape.pathType === PathType.Editable) {
+        const __points = (pathshape as PathShapeView)?.segments[keys[0]]?.points;
+        if (!__points) return;
+        firstPoint = __points[values[0][0]] as CurvePoint;
+    }
+    if (!firstPoint) return;
+    const m = pathshape.matrix2Root();
+    m.preScale(pathshape.frame.width, pathshape.frame.height);
+
+    const _firstPoint = m.computeCoord3(firstPoint);
+    _firstPoint.x += e.movementX;
+    const __firstPointTarget = m.inverseCoord(_firstPoint);
+    asyncPathEditor.execute2(selected, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y);
+}
+
+function draggingY(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    const selected = props.context.path.syntheticPoints;
+    const pathshape = props.context.selection.pathshape;
+    if (!pathshape) {
+        return;
+    }
+    if (!selected?.size) {
+        return;
+    }
+    if (!asyncPathEditor) return;
+    const keys = Array.from(selected.keys());
+    const values = Array.from(selected.values());
+    let firstPoint: CurvePoint | undefined = undefined;
+    if (pathshape.pathType === PathType.Editable) {
+        const __points = (pathshape as PathShapeView)?.segments[keys[0]]?.points;
+        if (!__points) return;
+        firstPoint = __points[values[0][0]] as CurvePoint;
+    }
+    if (!firstPoint) return;
+    const m = pathshape.matrix2Root();
+    m.preScale(pathshape.frame.width, pathshape.frame.height);
+
+    const _firstPoint = m.computeCoord3(firstPoint);
+    _firstPoint.y += e.movementX;
+    const __firstPointTarget = m.inverseCoord(_firstPoint);
+    asyncPathEditor.execute2(selected, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y);
+}
+
+function draggingR(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    const selected = props.context.path.syntheticPoints;
+
+    if (!selected?.size) {
+        return;
+    }
+    if (!asyncPathEditor) return;
+    asyncPathEditor.executeRadius(selected, e.movementX);
+}
+
+function modifyTelUp() {
+    tel.value = false;
+    document.exitPointerLock();
+    asyncPathEditor?.close();
+    asyncPathEditor = undefined;
+    document.removeEventListener("pointerlockchange", pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        modifyTelUp();
+    }
+}
+
+function dragend() {
+    modifyTelUp();
+}
+
 function exit() {
     props.context.workspace.setPathEditMode(false);
 }
@@ -77,20 +200,8 @@ function calc() {
     x.value = '';
     y.value = '';
     r.value = '';
-    const selected_points = props.context.path.selectedPoints;
-    const l = selected_points.length;
-    if (l === 1) {
-        const state = get_value_from_point(props.context, selected_points[0]);
-        if (!state) {
-            return;
-        }
-        x.value = state.x;
-        y.value = state.y;
-        r.value = state.r;
-        return;
-    }
 
-    const state = get_value_from_points(props.context, selected_points);
+    const state = get_value_from_points(props.context, props.context.path.selectedPoints);
     if (!state) {
         return;
     }
@@ -103,29 +214,29 @@ function calc() {
 function modify_path_closed_status() {
     path_close_status.value = true;
     btn_string_for_status.value = t('attr.de_close_path');
+
     if (!path_shape) {
         console.log('modify_path_closed_status: !path_shape');
         return;
     }
-    if (!path_shape.isClosed) {
-        path_close_status.value = false;
-        btn_string_for_status.value = t('attr.close_path');
-    }
-}
 
-function modify_closed_status() {
-    if (!path_shape) {
-        console.log('modify_closed_status: !path_shape');
-        return;
+    const segments = (path_shape as PathShapeView)?.segments;
+    if (!segments?.length) return;
+
+    for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        if (!segment.isClosed) {
+            path_close_status.value = false;
+            btn_string_for_status.value = t('attr.close_path');
+            break;
+        }
     }
-    const editor = props.context.editor4Shape(path_shape);
-    editor.setPathClosedStatus(!path_close_status.value);
 }
 
 function modify_model_state() {
     const selected_points = props.context.path.selectedPoints;
-    const l = selected_points.length;
-    if (l) {
+    const selected_sides = props.context.path.selectedSides;
+    if (selected_points.size || selected_sides.size) {
         model_state.x = false;
         model_state.y = false;
         model_state.r = false;
@@ -140,30 +251,28 @@ function modify_model_state() {
 
 function get_current_curve_mode() {
     curve_mode.value = 'INVALID';
-    const selected_points = props.context.path.selectedPoints;
-    const l = selected_points.length;
-    if (!l) {
-        return;
-    }
-    const __points = path_shape!.points;
+
+    const __points = props.context.path.getCurvePoints();
     if (!__points?.length) {
         return;
     }
-    if (l === 1) {
-        const __point = __points[selected_points[0]];
+    if (__points.length === 1) {
+        const __point = __points[0];
         if (!__point) {
             return;
         }
         curve_mode.value = __point.mode;
         return;
     }
-    const fcm: CurveMode = __points[selected_points[0]]?.mode;
+
+    const fcm: CurveMode = __points[0].mode;
     if (!fcm) {
         console.log('!fcm');
         return;
     }
-    for (let i = 1, _l = selected_points.length; i < _l; i++) {
-        const curve_point = __points[selected_points[i]];
+
+    for (let i = 1, _l = __points.length; i < _l; i++) {
+        const curve_point = __points[i];
 
         if (!curve_point) {
             continue;
@@ -173,6 +282,7 @@ function get_current_curve_mode() {
             return;
         }
     }
+
     curve_mode.value = fcm;
 }
 
@@ -183,7 +293,7 @@ function update() {
     calc();
 }
 
-function __update() {
+function __update(...args: any) {
     modify_path_closed_status();
     get_current_curve_mode();
     calc();
@@ -202,7 +312,7 @@ function init_path_shape() {
     }
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         const t = props.context.selection.pathshape;
         if (path_shape) {
@@ -228,58 +338,70 @@ onUnmounted(() => {
         path_shape.unwatch(__update);
     }
 })
+
+import x_icon from "@/assets/icons/svg/X.svg";
+import y_icon from "@/assets/icons/svg/Y.svg";
+import radius_icon from "@/assets/icons/svg/radius.svg";
+import straight_icon from "@/assets/icons/svg/straight.svg";
+import mirrored_icon from "@/assets/icons/svg/mirrored.svg";
+import asymmetric_icon from "@/assets/icons/svg/asymmetric.svg";
+import disconnected_icon from "@/assets/icons/svg/disconnected.svg";
+
 </script>
 <template>
     <div class="table">
         <div class="tr">
-            <IconText class="td position" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(2) : x" @onchange="onChangeX"
-                :disabled="model_state.x" :context="context" />
-            <IconText class="td position" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(2) : y" @onchange="onChangeY"
-                :disabled="model_state.y" :context="context" />
+            <MossInput :icon="x_icon" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend">
+            </MossInput>
+            <MossInput :icon="y_icon" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend">
+            </MossInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <div class="tr">
-            <IconText class="td position" svgicon="radius" :frame="{ width: 12, height: 12 }"
-                :text="typeof (r) === 'number' ? r.toFixed(2) : r" @onchange="onChangeR" :disabled="model_state.r"
-                :context="context" />
+            <MossInput :icon="radius_icon" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
+                @dragstart="dragstart" @dragging="draggingR" @dragend="dragend">
+            </MossInput>
         </div>
         <div class="tr">
             <div :class="{ tool: true, tool_disabled: model_state.tool }">
                 <Tooltip :content="t('attr.right_angle')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Straight)"
                         :class="{ item: true, active: curve_mode === CurveMode.Straight }">
-                        <svg-icon icon-class="straight"></svg-icon>
+                        <SvgIcon :icon="straight_icon"/>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.completely_symmetrical')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Mirrored)"
                         :class="{ item: true, active: curve_mode === CurveMode.Mirrored }">
-                        <svg-icon icon-class="mirrored"></svg-icon>
+                        <SvgIcon :icon="mirrored_icon"/>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.asymmetric')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Asymmetric)"
                         :class="{ item: true, active: curve_mode === CurveMode.Asymmetric }">
-                        <svg-icon icon-class="asymmetric"></svg-icon>
+                        <SvgIcon :icon="asymmetric_icon"/>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.angular_symmetry')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Disconnected)"
                         :class="{ item: true, active: curve_mode === CurveMode.Disconnected }">
-                        <svg-icon icon-class="disconnected"></svg-icon>
+                        <SvgIcon :icon="disconnected_icon"/>
                     </div>
                 </Tooltip>
             </div>
         </div>
         <div class="btns">
-            <div class="path-status" @click="modify_closed_status">
-                {{ btn_string_for_status }}
-            </div>
             <div class="exit" @click="exit">
                 {{ t('attr.exit_path_edit') }}
             </div>
         </div>
     </div>
+    <teleport to="body">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+        </div>
+    </teleport>
 </template>
 <style scoped lang="scss">
 .table {
@@ -349,8 +471,12 @@ onUnmounted(() => {
                 }
             }
 
+            .item:hover {
+                background-color: rgba(235, 235, 235);
+            }
+
             .active {
-                background-color: #ffffff;
+                background-color: #ffffff !important;
             }
         }
 
@@ -380,8 +506,13 @@ onUnmounted(() => {
             border-radius: var(--default-radius);
         }
 
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
         .exit {
-            width: 108px;
+            width: 100%;
             height: 100%;
             background-color: var(--active-color);
             color: var(--theme-color-anti);
@@ -392,5 +523,16 @@ onUnmounted(() => {
 
         }
     }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>

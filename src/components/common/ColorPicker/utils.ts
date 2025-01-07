@@ -1,5 +1,5 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, GroupShape, ShapeType, ShapeView, TableShape, TextShapeView, Gradient, Stop, GradientType, FillType } from '@kcdesign/data';
+import { Border, Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';
@@ -42,7 +42,8 @@ export function toHex(options: {
   }
   return "#" + toHex(options.red) + toHex(options.green) + toHex(options.blue);
 }
-export type Model = 'RGB' | 'HSL' | 'HSB';
+
+export type Model = 'RGB' | 'HSL' | 'HSB' | 'Hex';
 
 /**
  * 加载base64图片
@@ -341,7 +342,7 @@ export function RGB2H(color: Color, sub?: number) {
   const min = Math.min(red, green, blue);
   let h = 0;
   if (max === min) {
-    h = sub ? sub * 360 : 0;
+    h = sub ? sub : 0;
   } else if (max === red && green >= blue) {
     h = 60 * ((green - blue) / (max - min)) + 0;
   } else if (max === red && green < blue) {
@@ -392,7 +393,38 @@ export function RGB2HSB(color: Color): HSB {
   b = max / 255;
   return { h: h / 360, s, b };
 }
-export function validate(model: Model, field: number, value: number): boolean {
+export function RGB2SB(color: Color): { s: number, b: number } {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let s = 0, b = 0;
+  if (max === min && min === 0) {
+    s = 0;
+  } else {
+    s = (max - min) / max;
+  }
+  b = max / 255;
+  return { s, b };
+}
+
+export function validate(model: Model, field: number, value: number | string): boolean {
+  if (typeof value === "string") {
+    if (model === "Hex" && field === 0) {
+      const _v = /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value.toString());
+      let _v2: boolean;
+      if (_v) {
+        let color = value.replace(/^#/, '');
+        if (color.length === 3) {
+          color = [color.charAt(0), color.charAt(0), color.charAt(1), color.charAt(1), color.charAt(2), color.charAt(2)].join('');
+        }
+        let r = parseInt(color.substring(0, 2), 16);
+        let g = parseInt(color.substring(2, 4), 16);
+        let b = parseInt(color.substring(4, 6), 16);
+        _v2 = (r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255);
+      } else _v2 = false;
+      return _v2 && _v;
+    } else return false;
+  }
   if (isNaN(value)) return false;
   let result = true;
   if (model === "RGB") {
@@ -575,8 +607,10 @@ function finder(context: Context, shape: ShapeView, init?: Map<string, Color[]>)
       if (r) r.push(c);
       else result.set(c2s(c), [c]);
     }
-    if (s instanceof GroupShape && s.childs.length) finder(context, s, result);
-    else if (s instanceof TableShape) finder(context, s, result);
+    if (s instanceof GroupShapeView && s.childs.length) {
+      finder(context, s, result)
+    }
+    else if (s instanceof TableView) finder(context, s, result);
   }
   return result;
 }
@@ -584,13 +618,19 @@ function c2s(c: Color) {
   return `${c.alpha}|${c.red}|${c.green}|${c.blue}`;
 }
 export function block_style_generator(color: Color, gradient?: Gradient, fillType?: FillType) {
+  if (fillType === FillType.Pattern) return {
+    border: 'none',
+    display: 'flex',
+    'align-items': 'center',
+    'justify-content': 'center'
+  }
   let style: any = {
-    'background-color': toRGBA(color)
+    'background-color': toRGBA(color),
   }
   if (!gradient || !fillType) {
     return style;
   }
-  if(fillType === FillType.Gradient) {
+  if (fillType === FillType.Gradient) {
     delete style['background-color'];
     if (gradient.gradientType === GradientType.Linear) {
       style = get_linear_gradient(gradient);
@@ -618,8 +658,7 @@ export function gradient_channel_generator(gradient: Gradient) {
   lg = lg.slice(0, lg.length - 2);
   lg += ')';
   if (stops.length === 1) {
-    const c = toRGBA(stops[0].color!);
-    lg = c
+    lg = toRGBA(stops[0].color!);
   }
   style['background'] = lg;
   return style;
@@ -654,15 +693,14 @@ export function hexToX(hex: string): number[] {
   if (hex.length === 3) {
     let temp = hex.split('');
     result = temp.map(v => {
-      return Number(eval(`0
-          x${v}${v}`).toString(10));
+      const __v = `0x${v}${v}`;
+      return Number(parseInt(__v, 16));
     })
   } else if (hex.length === 6) {
     let temp = hex.split('');
     for (let i = 0; i < 6; i = i + 2) {
-      result.push(Number(eval(`0
-          x
-          ${temp[i]}${temp[i + 1]}`).toString(10)));
+      const __v = `0x${temp[i]}${temp[i + 1]}`;
+      result.push(Number(parseInt(__v, 16)));
     }
   }
   return result
@@ -672,9 +710,9 @@ function get_linear_gradient(gradient: Gradient) {
   const { from, to, stops } = gradient;
   const rotate = getHorizontalAngle({ x: from.x * 10, y: from.y * 10 }, { x: to.x * 10, y: to.y * 10 });
   const colors = [];
-  if(stops.length === 1) {
+  if (stops.length === 1) {
     return {
-      'background': toRGBA(stops[0].color)
+      'background': toRGBA(stops[0].color),
     }
   }
   for (let i = 0; i < stops.length; i++) {
@@ -684,16 +722,18 @@ function get_linear_gradient(gradient: Gradient) {
   }
   const linear = `linear-gradient(${rotate + 90}deg, ${colors.join(', ')})`
   return {
-    'background': linear
+    'background': linear,
+
   }
 }
 
 function get_radial_gradient(gradient: Gradient) {
   const { stops } = gradient;
   const colors = [];
-  if(stops.length === 1) {
+  if (stops.length === 1) {
     return {
-      'background': toRGBA(stops[0].color)
+      'background': toRGBA(stops[0].color),
+
     }
   }
   for (let i = 0; i < stops.length; i++) {
@@ -703,7 +743,8 @@ function get_radial_gradient(gradient: Gradient) {
   }
   const radial = `radial-gradient(circle closest-side, ${colors.join(', ')})`
   return {
-    'background-image': radial
+    'background-image': radial,
+
   }
 }
 
@@ -752,7 +793,6 @@ function get_angular_gradient(gradient: Gradient) {
   const angular = "conic-gradient(" + f + "," + angular_gradient + ")"
   return {
     'background': angular,
-    height: '-webkit-fill-available',
     width: '-webkit-fill-available'
   }
 }

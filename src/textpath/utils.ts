@@ -26,7 +26,8 @@ export function setHtmlAttribute(html: string, attrName: string, value: string):
 }
 
 export function fixed(number: number): string {
-    return number.toFixed(3).replace('.000', '');
+    // return number.toFixed(3).replace('.000', '');
+    return number.toString();
 }
 
 export function mod(a: number, n: number): number {
@@ -156,15 +157,14 @@ export const setHtmlAttr = setHtmlAttribute
  * @param {Number} [scale]
  * @returns {string}
  */
-export function renderCurve(curve: Curve, scale: { x: number, y: number }) {
-    scale = scale || { x: 1, y: 1 };
+export function renderCurve(curve: Curve, scale: { x: number, y: number }, trans: { x: number, y: number }) {
 
     const startingPoint = curve.c[(curve.n - 1) * 3 + 2];
 
     const path = [
         'M '
-        + fixed(startingPoint.x * scale.x) + ' '
-        + fixed(startingPoint.y * scale.y)
+        + fixed(startingPoint.x * scale.x + trans.x) + ' '
+        + fixed(startingPoint.y * scale.y + trans.y)
     ];
 
     curve.tag.forEach(function (tag, i) {
@@ -176,15 +176,15 @@ export function renderCurve(curve: Curve, scale: { x: number, y: number }) {
         if (tag === "CURVE") {
             path.push(
                 'C '
-                + fixed(p0.x * scale.x) + ' ' + fixed(p0.y * scale.y) + ', '
-                + fixed(p1.x * scale.x) + ' ' + fixed(p1.y * scale.y) + ', '
-                + fixed(p2.x * scale.x) + ' ' + fixed(p2.y * scale.y)
+                + fixed(p0.x * scale.x + trans.x) + ' ' + fixed(p0.y * scale.y + trans.y) + ', '
+                + fixed(p1.x * scale.x + trans.x) + ' ' + fixed(p1.y * scale.y + trans.y) + ', '
+                + fixed(p2.x * scale.x + trans.x) + ' ' + fixed(p2.y * scale.y + trans.y)
             );
         } else if (tag === "CORNER") {
             path.push(
                 'L '
-                + fixed(p1.x * scale.x) + ' ' + fixed(p1.y * scale.y) + ' '
-                + fixed(p2.x * scale.x) + ' ' + fixed(p2.y * scale.y)
+                + fixed(p1.x * scale.x + trans.x) + ' ' + fixed(p1.y * scale.y + trans.y) + ' '
+                + fixed(p2.x * scale.x + trans.x) + ' ' + fixed(p2.y * scale.y + trans.y)
             );
         }
     });

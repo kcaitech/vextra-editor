@@ -6,21 +6,27 @@ import { Context } from "@/context";
 import { Color, Page, PageView } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
+import { debounce } from "@/utils/timing_util";
+
 interface Props {
     context: Context
     page: PageView
 }
+
 const props = defineProps<Props>();
 const { t } = useI18n();
-const background_color = ref<Color>(new Color(1, 239, 239, 239));
+let background_color = new Color(1, 239, 239, 239);
+
 const clr_v = ref<string>('EFEFEF');
 const alpha_v = ref<number>(100);
 const clr_ele = ref<HTMLInputElement>();
 const alpha_ele = ref<HTMLInputElement>();
+
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
 }
+
 function setColor(clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
     if (!res) return message('danger', t('system.illegal_input'));
@@ -33,12 +39,18 @@ function setColor(clr: string, alpha: number) {
     const editor = props.context.editor4Page(page);
     editor.setBackground(nc);
 }
-function colorChangeFromPicker(c: Color) {
+
+const _colorChangeFromPicker = debounce((c: Color) => {
     const page = props.context.selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
     editor.setBackground(c);
-}
+}, 100)
+const colorChangeFromPicker = (c: Color) => {
+    _colorChangeFromPicker(c).catch((e) => {
+    });
+};
+
 function change_c(e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
     if (value.slice(0, 1) !== '#') value = "#" + value;
@@ -50,21 +62,25 @@ function change_c(e: Event) {
         message('danger', t('system.illegal_input'));
     }
 }
+
 function update() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
-    if (!page.data.backgroundColor) { // todo ??
-        const editor = props.context.editor4Page(page);
-        editor.setBackground(new Color(1, 239, 239, 239));
-        const c = page.data.backgroundColor!;
+    if (!page.data.backgroundColor) {
+        const c = Page.defaultBGColor;
         init_value(c);
     } else {
-        init_value(page.data.backgroundColor);
+        const c = page.data.backgroundColor;
+        init_value(new Color(c.alpha, c.red, c.green, c.blue));
     }
 }
+
 function change_a(e: Event) {
     let value = (e.currentTarget as any)['value'];
     value = Number(value) / 100;
+    if (isNaN(value)) {
+        return;
+    }
     if (1 >= value && value >= 0) {
         setColor("#" + clr_v.value, value);
         alpha_v.value = value * 100;
@@ -80,20 +96,40 @@ function change_a(e: Event) {
         }
     }
 }
+
 function init_value(c: Color) {
-    background_color.value = c;
+    background_color = c;
     clr_v.value = toHex(c.red, c.green, c.blue);
     alpha_v.value = c.alpha * 100;
 }
-function clr_click() {
-    if (clr_ele.value) clr_ele.value.select();
+
+const is_color_select = ref(false);
+
+function clr_click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_color_select.value) return;
+    el.select();
+    is_color_select.value = true;
 }
-function alpha_click() {
-    if (alpha_ele.value) alpha_ele.value.select();
+
+const is_alpha_select = ref(false);
+
+function alpha_click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_alpha_select.value) return;
+    el.select();
+    is_alpha_select.value = true;
 }
+
 const stopWatch = watch(() => props.page, (cur) => {
-    const f = cur.getFills()[0];
-    if (f) init_value(f.color);
+    const f = cur.data.backgroundColor;
+    if (f) init_value(f);
 })
 onMounted(() => {
     update();
@@ -111,24 +147,24 @@ onUnmounted(() => {
             <span>{{ t('attr.background') }}</span>
         </div>
         <div class="setting">
-            <ColorPicker class="color" :color="(background_color as Color)" :context="props.context"
-                :auto_to_right_line="true" @change="c => colorChangeFromPicker(c)">
+            <ColorPicker class="color" :color="background_color" :context="props.context" :late="-26"
+                         :auto_to_right_line="true" @change="c => colorChangeFromPicker(c)">
             </ColorPicker>
-            <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele" @click="clr_click"
-                :spellcheck="false">
-            <input type="number" @change="(e: Event) => change_a(e)" :value="alpha_v" id="alpha" :max="100" :min="0"
-                @click="alpha_click" :step="1" ref="alpha_ele">
+            <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele"
+                   @click="clr_click" :spellcheck="false" @blur="is_color_select = false">
+            <input @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`" id="alpha" @blur="is_alpha_select = false"
+                   @click="alpha_click" ref="alpha_ele">
         </div>
     </div>
 </template>
 <style scoped lang="scss">
 .wrap {
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     height: auto;
     border-bottom: 1px solid #F0F0F0;
 
-    >span {
+    > span {
         width: 48px;
         height: 14px;
         font-weight: 700;

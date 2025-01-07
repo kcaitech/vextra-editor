@@ -1,12 +1,12 @@
 import { Context } from "@/context";
-import { Matrix, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Menu } from "@/context/menu";
-import { ClientXY, PageXY, XY } from "@/context/selection";
+import { ClientXY, PageXY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
-import { Comment } from "@/context/comment";
-import { XYsBounding, scout_once } from "@/utils/common";
-import { get_root_points } from "@/utils/pathedit";
+// import { Comment } from "@/context/comment";
+import { scout_once, XYsBounding } from "@/utils/common";
 import { multi_select_shape } from "./listview";
+import { is_straight } from "@/utils/attri_setting";
 
 /**
  * @description 判断落点是否在content上
@@ -45,11 +45,14 @@ export function is_ctrl_element(e: MouseEvent, context: Context) {
     const selection = context.selection;
     const selected = selection.selectedShapes;
     if (selected.length === 1) {
-        if (selected[0].type === ShapeType.Cutout) {
+        const shape = selected[0];
+        const type = shape.type;
+        if (type === ShapeType.Cutout) {
             return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
+        } else if ((type === ShapeType.Contact || is_straight(shape))) {
+            return selection.scout.isPointInShape(shape, workspace.getRootXY(e));
         } else {
-            const m = new Matrix(workspace.matrix.inverse);
-            return selection.scout.isPointInShape(selected[0], m.computeCoord3(workspace.getContentXY(e)));
+            return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
         }
     } else {
         return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
@@ -188,37 +191,6 @@ export function gen_offset_points_map(shapes: ShapeView[], down: PageXY) {
 }
 
 /**
- * @description
- * @param down root坐标系上的一点
- */
-export function gen_offset_points_map2(context: Context, down: PageXY, points: number[]) {
-    const path_shape = context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
-    const op = get_root_points(context, points);
-    if (!op) {
-        return;
-    }
-    const offset: XY[] = [];
-    for (let i = 0, l = op.length; i < l; i++) {
-        const p = op[i];
-        offset.push({ x: p.x - down.x, y: p.y - down.y });
-    }
-    return offset;
-}
-
-/**
- * @description 判定下一次移动为数据正式修改时，设置控件更新状态、预设辅助线中心对象、以及其他一些编辑器状态
- */
-export function reset_assist_before_translate(context: Context, shapes: ShapeView[]) {
-    context.selection.unHoverShape();
-    context.workspace.setSelectionViewUpdater(false);
-    context.workspace.translating(true);
-    context.assist.set_trans_target(shapes);
-}
-
-/**
  * @description 更新更新类型update_type更新鼠标在client坐标系上的落点
  */
 export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
@@ -266,9 +238,6 @@ export function end_transalte(context: Context) {
  * @description 当移动图形上挂有评论时，需要更新评论位置信息
  */
 export function update_comment(context: Context, need_update_comment: boolean) {
-    if (need_update_comment) {
-        context.comment.notify(Comment.UPDATE_COMMENT_POS);
-    }
     return false;
 }
 
@@ -287,7 +256,6 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
         } else {
             selection.selectShape(hoveredShape);
         }
-
         return;
     }
 
@@ -306,20 +274,6 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
         } else {
             selection.resetSelectShapes();
         }
-    }
-}
-
-/**
- * @description 获取移动辅助中心对象点图
- */
-export function gen_assist_target(context: Context, shapes: ShapeView[], is_multi: boolean, offset_map: any, pe: {
-    x: number,
-    y: number
-}) {
-    if (is_multi) {
-        return context.assist.trans_match_multi(shapes, offset_map, pe);
-    } else {
-        return context.assist.trans_match(offset_map, pe);
     }
 }
 

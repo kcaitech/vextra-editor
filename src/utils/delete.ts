@@ -1,61 +1,61 @@
 import { Context } from "@/context";
 import { ColorCtx } from "@/context/color";
-import { Shape, ShapeView, TableCellType, TableShape, TableView, adapt2Shape } from "@kcdesign/data";
+import { PathShapeView, ShapeView, TableCellType, TableView } from "@kcdesign/data";
+import { ReferLineHandler } from "@/components/Document/Rule/refer";
+import { PathClipper } from "@/path/clipper";
 
-export function deleteUnits(context: Context) {
-    if(context.color.selected_stop !== undefined) {
+export function deleteUnits(context: Context, shift = false) {
+    // 删除参考线
+    if (context.user.isRuleVisible && context.tool.referSelection?.selected?.valid) {
+        const { env, index, axis } = context.tool.referSelection.selected;
+        new ReferLineHandler(context, axis, env, index).delete(env, index);
+        return;
+    }
+    // 删除颜色控点
+    if (context.color.selected_stop !== undefined) {
         context.color.notify(ColorCtx.STOP_DELETE);
         return
     }
+    // 删除路径节点
     const path_edit_mode = context.workspace.is_path_edit_mode;
     if (path_edit_mode) {
-        delete_for_path_edit(context);
+        delete_for_path_edit(context, shift);
         return;
     }
 
     const selected = context.selection.selectedShapes;
-
     if (selected.length === 0) {
         return;
     }
 
+    // 批量删除图层
     if (selected.length > 1) {
         delete_shapes(context, selected);
         return;
     }
 
+    // 删除单元格
     const table = context.selection.tableshape;
     if (table) {
         delete_for_table(context, table);
         return;
     }
 
+    // 删除单个图层
     delete_shapes(context, selected);
 }
 
-function delete_for_path_edit(context: Context) {
+function delete_for_path_edit(context: Context, keepClosed = false) {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) {
-        console.log('!path_shape');
-        return;
-    }
+    if (!path_shape) return;
 
-    const points = context.path.get_synthetic_points(path_shape.points.length - 1);
-    if (!points.length) {
-        console.log('!points.length');
-        return;
-    }
-
-    const editor = context.editor4Shape(path_shape);
-
-    const result = editor.removePoints(points);
-
-    if (result === 1) {
-        context.path.reset();
-    } else if (result === 0) {
+    const result = new PathClipper(context, path_shape as PathShapeView).clip(keepClosed);
+    if (result === 0) {
         context.workspace.setPathEditMode(false);
         context.path._reset();
         context.selection.resetSelectShapes();
+    } else if (result > 0) {
+        context.path.reset();
     }
 }
 
@@ -78,14 +78,14 @@ function delete_for_table(context: Context, table: TableView) {
         ts.resetSelection();
 
         context.nextTick(context.selection.selectedPage!, () => {
-            const ec = table.data.getCellAt(rs, cs);
+            const ec = table.getCellAt(rs, cs);
             if (!ec || ec.cellType === TableCellType.None) {
                 return;
             }
 
-            const cell = table.cells.get(ec.id);
+            // const cell = table.cells.get(ec.id);
 
-            ts.setEditingCell(cell);
+            ts.setEditingCell(ec);
 
             context.textSelection.setCursor(0, false);
         })

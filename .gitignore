@@ -10,3 +10,8 @@ yarn.lock
 .idea
 *.sql
 /src/communication/communication.js
+/deployment/ssh-port-forward-internal/ssh_pids.txt
+.env.*
+.env
+*.task.txt
+/vite.config.ts.*.mjs

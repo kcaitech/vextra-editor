@@ -5,10 +5,9 @@ import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection"
 import { XYsBounding } from "@/utils/common";
-import { DocSelectionData } from "@/communication/modules/doc_selection_op";
-import { TeamWork } from "@/context/teamwork";
 import { Selection } from '@/context/selection';
 import { throttle } from 'lodash';
+import { DocSelectionData } from "@/context/user";
 const props = defineProps<{
     context: Context
     matrix: Matrix
@@ -35,7 +34,7 @@ const origin: ClientXY = { x: 0, y: 0 };
 const avatars = ref<Avatar[]>([]);
 const multipShape = ref<MultipShape[]>([]);
 const shapes = ref<ShapeView[]>([]);
-const userSelectionInfo = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
+const userSelectionInfo = ref<DocSelectionData[]>(props.context.selection.getUserSelection);
 const groupedShapes = ref();
 const multipShapeGroup = ref<any>({});
 const setOrigin = () => {
@@ -137,7 +136,7 @@ function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
     return true;
 }
 
-const workspaceUpdate = (t: number) => {
+const workspaceUpdate = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin();
         setPosition();
@@ -146,11 +145,15 @@ const workspaceUpdate = (t: number) => {
         setPosition();
     }
 }
-const updater = (t?: number) => {
-    if (t === TeamWork.CHANGE_USER_STATE) {        
-        userSelectionInfo.value = props.context.teamwork.getUserSelection;
+
+const selectionWatcher = (t: number | string) => {
+    if (t === Selection.CHANGE_SHAPE) {
+        setOrigin();
+        setPosition();
+    } else if (t === Selection.CHANGE_USER_STATE) {
+        userSelectionInfo.value = props.context.selection.getUserSelection;
         const page = props.context.selection.selectedPage;
-        props.context.teamwork.getUserSelection.forEach(item  => {
+        props.context.selection.getUserSelection.forEach(item => {
             for (let i = 0; i < item.select_shape_id_list.length; i++) {
                 const shape = page!.shapes.get(item.select_shape_id_list[i]);
                 if (shape) shapes.value.push(shape);
@@ -160,13 +163,6 @@ const updater = (t?: number) => {
         setOrigin();
         setPosition();
         watchShapes();
-    }
-}
-
-const selectionWatcher = (t: number) => {
-    if (t === Selection.CHANGE_SHAPE) {
-        setOrigin();
-        setPosition();
     }
 }
 const set_position = throttle(() => {
@@ -186,7 +182,7 @@ function watchShapes() { // 监听相关shape的变化
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);                   
+        v.unwatch(watcher);
         watchedShapes.delete(k);
     })
     needWatchShapes.forEach((v, k) => {
@@ -201,13 +197,11 @@ onMounted(() => {
     setOrigin();
     setPosition();
     props.context.workspace.watch(workspaceUpdate);
-    props.context.teamwork.watch(updater);
     props.context.selection.watch(selectionWatcher);
 })
 
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
-    props.context.teamwork.watch(updater);
     props.context.selection.unwatch(selectionWatcher);
 })
 </script>
@@ -229,8 +223,9 @@ onUnmounted(() => {
             <template v-for="(u, i) in multipShapeGroup[m.shapesIds]" :key="i">
                 <div class="avatars" v-if="i < 3"><img :src="u.avatar" alt=""></div>
             </template>
-            <div class="avatars bgc" v-if="multipShapeGroup[m.shapesIds].length > 3">{{ multipShapeGroup[m.shapesIds].length
-            }}</div>
+            <div class="avatars bgc" v-if="multipShapeGroup[m.shapesIds].length > 3">{{
+        multipShapeGroup[m.shapesIds].length
+    }}</div>
         </div>
     </div>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
+import { locale } from '@/locale';
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
@@ -57,7 +58,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="lablemenu-container">
+    <div class="lablemenu-container" :lang="locale">
         <template v-for="(item, index) in props.Items" :key="index">
             <div class="menu-item" :class="{active: i === item}" @mouseenter="(e: MouseEvent) => hoverShape(e, item)" @mouseleave="(e: MouseEvent) => unHoverShape(e)" @click.stop="onClick(index)">
                 <div class="choose" :style="{visibility: choose === index ? 'visible' : 'hidden'}" :class="{choose_active: i === item}"></div>
@@ -91,6 +92,11 @@ onUnmounted(() => {
         border-radius: 8px;
         box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         z-index: 99;
+        text-wrap: nowrap;
+
+        :lang(en) {
+            font-size: 11px;
+        }
     }
     .menu-item {
         display: flex;

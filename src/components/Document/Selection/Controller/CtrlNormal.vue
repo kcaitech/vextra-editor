@@ -1,7 +1,10 @@
 <script setup lang='ts'>
+/**
+ * @description 单选通用型控件
+ */
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { ArtboardView, PolygonShapeView, ShapeView, PathShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -11,28 +14,30 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
+import { point_map } from "./Points/map"
+import { ColorCtx } from "@/context/color";
+import AutoLayoutPadding from "./AutoLayoutController/AutoLayoutPadding.vue";
+import AutoLayoutPaddingLine from "./AutoLayoutController/AutoLayoutPaddingLine.vue";
+import AutoLayoutSpace from "./AutoLayoutController/AutoLayoutSpace.vue";
+
 interface Props {
-    context: Context
-    controllerFrame: Point[]
-    rotate: number
-    matrix: Matrix
-    shape: ShapeView
-    theme: SelectionTheme
+    context: Context;
+    shape: ShapeView;
+    controllerFrame: Point[];
+    theme: SelectionTheme;
 }
 
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
-const editing = ref<boolean>(false);
+
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
-const matrix = new Matrix();
-const submatrix = reactive(new Matrix());
+
 const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
+
 function modify_selection_hidden() {
-    if (hidden_holder) {
-        clearTimeout(hidden_holder);
-    }
+    if (hidden_holder) clearTimeout(hidden_holder);
 
     hidden_holder = setTimeout(() => {
         selection_hidden.value = false;
@@ -42,45 +47,31 @@ function modify_selection_hidden() {
 
     selection_hidden.value = true;
 }
+
 function reset_hidden() {
     selection_hidden.value = false;
     clearTimeout(hidden_holder);
     hidden_holder = null;
 }
-let viewBox = '';
+
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
-const width = computed(() => {
-    const w = bounds.right - bounds.left;
-    return w < 10 ? 10 : w;
-})
-const height = computed(() => {
-    const h = bounds.bottom - bounds.top;
-    return h < 10 ? 10 : h;
-})
 
-// #region 绘制控件
-function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
-    return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
-}
+const partVisible = computed(() => {
+    return bounds.bottom - bounds.top > 8 || bounds.right - bounds.left > 8;
+});
 
 function updateControllerView() {
-    const m2r = props.shape.matrix2Root();
-    matrix.reset(m2r);
-    matrix.multiAtLeft(props.matrix);
-    submatrix.reset(matrix);
-
     const framePoint = props.controllerFrame;
     boundrectPath.value = genRectPath(framePoint);
     props.context.workspace.setCtrlPath(boundrectPath.value);
 
-    const p0 = framePoint[0];
-    bounds.left = p0.x;
-    bounds.top = p0.y;
-    bounds.right = p0.x;
-    bounds.bottom = p0.y;
+    bounds.left = Infinity;
+    bounds.top = Infinity;
+    bounds.right = -Infinity;
+    bounds.bottom = -Infinity;
     framePoint.reduce((bounds, point) => {
         if (point.x < bounds.left) bounds.left = point.x;
         else if (point.x > bounds.right) bounds.right = point.x;
@@ -88,41 +79,22 @@ function updateControllerView() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds);
-    viewBox = genViewBox(bounds);
-}
-
-// #endregion
-function selection_watcher(t: number) {
-    if (t == Selection.CHANGE_SHAPE) {
-        editing.value = false;
-        reset_hidden();
-    } else if (t === Selection.SELECTION_HIDDEN) {
-        modify_selection_hidden();
-    }
-}
-
-function workspace_watcher(t: number) {
-    if (t === WorkSpace.TRANSLATING) {
-        selection_hidden.value = props.context.workspace.isTranslating;
-    } else if (t === WorkSpace.PATH_EDIT_MODE) {
-        selection_hidden.value = props.context.workspace.is_path_edit_mode;
-    }
 }
 
 function check_status() {
     selection_hidden.value = props.context.workspace.is_path_edit_mode;
 }
 
-function mousedown(e: MouseEvent) {
+function mousedown() {
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
 
-function mousemove(e: MouseEvent) {
+function mousemove() {
     if (isDrag()) selection_hidden.value = true;
 }
 
-function mouseup(e: MouseEvent) {
+function mouseup() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
@@ -132,34 +104,97 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 
+let needActivateAfterEditorDestroy: boolean = false;
+const pointActivated = ref(false);
+const autoLayoutShow = ref(false);
+const mouseenter = () => {
+    if (props.context.workspace.linearEditorExist) return needActivateAfterEditorDestroy = true;
+    needActivateAfterEditorDestroy = true;
+    pointActivated.value = true;
+}
+const move = () => {
+    autoLayoutShow.value = true;
+}
+const mouseleave = () => {
+    if (props.context.workspace.linearEditorExist) return needActivateAfterEditorDestroy = false;
+    needActivateAfterEditorDestroy = false;
+    pointActivated.value = false;
+    autoLayoutShow.value = false;
+}
+
+const pointVisible = computed(() => {
+    return !(props.shape as PathShapeView).haveEdit && pointActivated.value && (bounds.bottom - bounds.top > 60 && bounds.right - bounds.left > 60);
+})
+
+const paddingIndex = ref(-1);
+const hoverPaddingIndex = (index: number) => paddingIndex.value = index;
+
+function color_watcher(t: number, hidden: boolean) {
+    if (t === ColorCtx.HIDDEN_SELECTED) selection_hidden.value = hidden;
+}
+
+function selection_watcher(t: number | string) {
+    if (t == Selection.CHANGE_SHAPE || t === Selection.HIDDEN_RESET) {
+        if (!props.context.workspace.isTranslating) reset_hidden();
+    } else if (t === Selection.SELECTION_HIDDEN) {
+        modify_selection_hidden();
+    }
+}
+
+function workspace_watcher(t: number) {
+    if (t === WorkSpace.TRANSLATING) {
+        selection_hidden.value = props.context.workspace.isTranslating;
+        autoLayoutShow.value = false;
+    } else if (t === WorkSpace.PATH_EDIT_MODE) {
+        selection_hidden.value = props.context.workspace.is_path_edit_mode;
+    } else if (t === WorkSpace.LINER_EDITOR_CONSTRUCTED) {
+        pointActivated.value = false;
+    } else if (t === WorkSpace.LINER_EDITOR_DESTROYED) {
+        if (needActivateAfterEditorDestroy) pointActivated.value = true;
+    }
+}
+
+const stop = watchEffect(updateControllerView);
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
+    props.context.color.watch(color_watcher);
     window.addEventListener('blur', windowBlur);
+
     check_status();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.color.unwatch(color_watcher);
     window.removeEventListener('blur', windowBlur);
+
     props.context.cursor.reset();
     reset_hidden();
+    stop();
 })
-watchEffect(updateControllerView);
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
-        :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
-        <ShapesStrokeContainer :context="props.context">
-        </ShapesStrokeContainer>
-        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-            :c-frame="props.controllerFrame" :theme="theme">
-        </PointsContainer>
-    </svg>
+<svg xmlns="http://www.w3.org/2000/svg" data-area="controller" preserveAspectRatio="xMinYMin meet"
+     viewBox="0 0 100 100" width="100" height="100" overflow="visible" :class="{ hidden: selection_hidden }"
+     @mousedown="mousedown" @mouseenter="mouseenter" @mouseleave="mouseleave" @mousemove="move">
+    <path
+        :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
+        fill="transparent"/>
+    <ShapesStrokeContainer :context="props.context"/>
+    <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
+                       :paddingIndex="paddingIndex"/>
+    <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
+                   :theme="theme"/>
+    <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
+                     :c-frame="props.controllerFrame" :theme="theme"/>
+    <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
+                     :controllerFrame="controllerFrame"/>
+    <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
+                           @hoverPaddint="hoverPaddingIndex"/>
+    <component v-if="pointVisible" :is="point_map.get(shape.type)" :context="props.context"
+               :shape="props.shape as PolygonShapeView"/>
+</svg>
 </template>
 <style lang='scss' scoped>
 .hidden {

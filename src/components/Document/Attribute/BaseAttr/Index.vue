@@ -1,38 +1,57 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ShapeType, RectShape, PathShape, ImageShape, Artboard, adapt2Shape, ShapeView } from '@kcdesign/data';
-import IconText from '@/components/common/IconText.vue';
+import { ArtboardView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlgin } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { hasRadiusShape } from '@/utils/content'
 import Radius from './Radius.vue';
 import {
     get_actions_constrainer_proportions,
     get_actions_frame_x, get_actions_frame_y,
-    get_actions_flip_h,
-    get_actions_flip_v,
     is_straight,
     get_xy,
     get_width,
     get_height,
     get_constrainer_proportions,
-    get_shapes_rotation
+    get_shapes_rotation,
+    get_shapes_angle_counts,
+    get_actions_counts,
+    showCounts,
+    showInnerAngle,
+    get_shapes_inner_angle,
+    get_actions_inner_angle, showOvalOptions
 } from '@/utils/attri_setting';
 import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
+import MossInput from "@/components/common/MossInput.vue";
+import { LockMouse } from "@/transform/lockMouse";
+import { computeString } from "@/utils/content";
+import { Attribute } from '@/context/atrribute';
+import { flip } from "@/transform/flip";
+import { Tool } from "@/context/tool";
+import { rotate as __rotate } from "@/transform/rotate"
+import Oval from "@/components/Document/Attribute/BaseAttr/Oval.vue";
+import {
+    checkTidyUpShapesOrder,
+    getSelectedWidthHeight,
+    getVisibleShapes,
+    hiddenTidyUp,
+    layoutSpacing,
+    tidyUpShapesOrder,
+    whetherNeedTidyUp
+} from '@/utils/tidy_up';
+import { WorkSpace } from '@/context/workspace';
+import { LinearApi } from "@kcdesign/data"
+import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
+import ContentClip from "@/components/Document/Attribute/BaseAttr/ContentClip.vue";
+
 interface Props {
     context: Context
     selectionChange: number
-    triggle: any[]
+    trigger: any[]
 }
-interface LayoutOptions {
-    s_adapt: boolean
-    s_flip: boolean
-    s_radius: boolean
-    s_length: boolean
-}
+
 interface ModelState {
     x: boolean
     y: boolean
@@ -40,9 +59,14 @@ interface ModelState {
     height: boolean
     rotation: boolean
     flipHorizontal: boolean
-    filpVertical: boolean
+    flipVertical: boolean
     radius: boolean
+    counts: boolean
+    innerAngle: boolean
+    ovalOptions: boolean
+    clip: boolean
 }
+
 const props = defineProps<Props>();
 const { t } = useI18n();
 const x = ref<number | string>(0);
@@ -50,20 +74,45 @@ const y = ref<number | string>(0);
 const w = ref<number | string>(0);
 const h = ref<number | string>(0);
 const rotate = ref<number | string>(0);
+const counts = ref<number | string>(0);
+const innerAngle = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const fix = 2;
-const multiRadius = ref(false)
 const mixed = t('attr.mixed');
-const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
-const model_disable_state: ModelState = reactive({ x: false, y: false, width: false, height: false, rotation: false, flipHorizontal: false, filpVertical: false, radius: false });
-let { s_flip, s_adapt, s_radius, s_length } = layout_options;
-const reflush = ref<number>(0);
+const horTidyUp = ref(true);
+const verTidyUp = ref(true);
+const horSpace = ref<number | string>('');
+const verSpace = ref<number | string>('');
+const s_tidy_up = ref(false);
+let {s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_oval, s_clip} = reactive({
+    s_flip: true,
+    s_radius: false,
+    s_adapt: false,
+    s_length: false,
+    s_counts: false,
+    s_inner_angle: false,
+    s_oval: false,
+    s_clip: false
+});
+const model_disable_state: ModelState = reactive({
+    x: false,
+    y: false,
+    width: false,
+    height: false,
+    rotation: false,
+    flipHorizontal: false,
+    flipVertical: false,
+    radius: false,
+    counts: false,
+    innerAngle: false,
+    ovalOptions: false,
+    clip: false
+});
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
-    if (!selected.length) {
-        return;
-    }
+    if (!selected.length) return;
     const xy = get_xy(selected, mixed);
     x.value = xy.x;
     y.value = xy.y;
@@ -71,6 +120,8 @@ function _calc_attri() {
     h.value = get_height(selected, mixed);
     isLock.value = get_constrainer_proportions(selected);
     rotate.value = get_shapes_rotation(selected, mixed);
+    counts.value = get_shapes_angle_counts(selected, mixed);
+    innerAngle.value = get_shapes_inner_angle(selected, mixed);
 }
 
 const calc_attri = throttle(_calc_attri, 60, { trailing: true });
@@ -103,6 +154,7 @@ const parentSymbolRef = () => {
     }
     return is_dis;
 }
+
 function _update_view() {
     if (props.context.selection.selectedShapes.length) {
         layout();
@@ -114,67 +166,115 @@ function _update_view() {
     } else {
         check_model_state();
     }
+    autoLayoutDisable();
 }
+
 const update_view = debounce(_update_view, 200, { leading: true });
 
-function onChangeX(value: string, shapes: ShapeView[]) {
+function changeX(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _x: number = Number.parseFloat(value);
-    if (isNaN(_x)) {
-        return;
-    }
+    if (isNaN(_x)) return;
+
+    const shapes = props.context.selection.selectedShapes;
+
 
     const actions = get_actions_frame_x(shapes, _x);
 
-    const page = props.context.selection.selectedPage;
-    if (!page) {
-        return;
-    }
+    const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
     editor.modifyShapesX(actions);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
-function onChangeY(value: string, shapes: ShapeView[]) {
+
+function keydownX(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const actions = get_actions_frame_x(shapes, value);
+        linearApi.modifyShapesX(actions)
+        event.preventDefault();
+    }
+}
+
+function changeY(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _y: number = Number.parseFloat(value);
-    if (isNaN(_y)) {
-        return;
-    }
+    if (isNaN(_y)) return;
+
+    const shapes = props.context.selection.selectedShapes;
 
     const actions = get_actions_frame_y(shapes, _y);
-    const page = props.context.selection.selectedPage;
-    if (!page) {
-        return;
-    }
+    const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
     editor.modifyShapesY(actions);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
-function onChangeW(value: string, shapes: ShapeView[]) {
+
+function keydownY(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const actions = get_actions_frame_y(shapes, value);
+        linearApi.modifyShapesY(actions)
+        event.preventDefault();
+    }
+}
+
+function changeW(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _w: number = Number.parseFloat(value);
-    if (isNaN(_w)) {
-        return;
-    }
+    if (isNaN(_w)) return;
+
+    const shapes = props.context.selection.selectedShapes;
 
     const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
 
-    editor.modifyShapesWidth(shapes.map(s => adapt2Shape(s)), _w);
+    editor.modifyShapesWidth(shapes, _w);
+    props.context.attr.notify(Attribute.FRAME_CHANGE);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
-function onChangeH(value: string, shapes: ShapeView[]) {
+
+function keydownW(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifyShapesWidth(shapes, value)
+        event.preventDefault();
+    }
+}
+
+function changeH(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _h: number = Number.parseFloat(value);
@@ -182,12 +282,31 @@ function onChangeH(value: string, shapes: ShapeView[]) {
         return;
     }
 
+    const shapes = props.context.selection.selectedShapes;
+
     const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
 
-    editor.modifyShapesHeight(shapes.map(s => adapt2Shape(s)), _h);
+    editor.modifyShapesHeight(shapes, _h);
+    props.context.attr.notify(Attribute.FRAME_CHANGE);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
+
+function keydownH(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifyShapesHeight(shapes, value)
+        event.preventDefault();
+    }
+}
+
 function lockToggle() {
     if (s_length) {
         return;
@@ -203,221 +322,715 @@ function lockToggle() {
     const editor = props.context.editor4Page(page);
     editor.setShapesConstrainerProportions(actions);
 }
+
 function fliph() {
     if (model_disable_state.flipHorizontal) {
         return;
     }
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const e = props.context.editor4Shape((selected[0]));
-        e.flipH();
-    } else if (selected.length > 1) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const actions = get_actions_flip_h(props.context.selection.selectedShapes);
-            const editor = props.context.editor4Page(page);
-            editor.shapesFlip(actions);
-        }
-    }
+    flip(props.context, 'Y');
 }
+
 function flipv() {
-    if (model_disable_state.filpVertical) {
+    if (model_disable_state.flipVertical) {
         return;
     }
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const e = props.context.editor4Shape((selected[0]));
-        e.flipV();
-    } else if (selected.length > 1) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const actions = get_actions_flip_v(props.context.selection.selectedShapes);
-            const editor = props.context.editor4Page(page);
-            editor.shapesFlip(actions);
-        }
-    }
+    flip(props.context, 'X');
 }
-function onChangeRotate(value: string, shapes: ShapeView[]) {
+
+function changeR(value: string) {
+    value = value.replace('°', '');
+
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const newRotate: number = Number.parseFloat(value);
 
-    if (isNaN(newRotate)) {
-        return;
-    }
+    if (isNaN(newRotate)) return;
 
-    if (!shapes.length) {
-        return;
-    }
-
-    const page = props.context.selection.selectedPage;
-    if (!page) {
-        return;
-    }
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
 
-    editor.setShapesRotate(shapes.map(s => adapt2Shape(s)), newRotate);
+    const transforms = __rotate(shapes, newRotate);
+
+    editor.setShapesRotate(transforms);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
+
+function keydownR(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        const shapes = props.context.selection.selectedShapes;
+        const transforms = __rotate(shapes, value)
+        linearApi.setShapesRotate(transforms)
+        event.preventDefault();
+    }
+}
+
+function changeCounts(value: string) {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    let count = Number.parseFloat(value);
+    if (isNaN(count) || count == counts.value) {
+        return;
+    }
+    if (count < 3) count = 3;
+    if (count > 60) count = 60;
+    const shapes = props.context.selection.selectedShapes;
+
+    const page = props.context.selection.selectedPage!;
+
+    const editor = props.context.editor4Page(page);
+    const actions = get_actions_counts(shapes, count);
+
+    editor.modifyShapesAngleCount(actions);
+}
+
+function changeInnerAngle(value: string) {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    let offset: number = Number.parseFloat(value);
+    if (isNaN(offset) || offset == innerAngle.value) {
+        return;
+    }
+    if (offset < 0.1) offset = 0.1;
+    if (offset > 100) offset = 100;
+
+    const shapes = props.context.selection.selectedShapes;
+
+    const page = props.context.selection.selectedPage!;
+
+    const editor = props.context.editor4Page(page);
+    const actions = get_actions_inner_angle(shapes, offset / 100);
+
+    editor.modifyShapesInnerAngle(actions);
+}
+
 function adapt() {
     props.context
         .editor4Shape((props.context.selection.selectedShapes[0]))
         .adapt();
 }
-function modify_multi_radius(shape: ShapeView) {
-    multiRadius.value = false;
-    if (!(shape instanceof PathShape)) {
-        return;
-    }
-    if (!shape.isClosed) {
-        return;
-    }
-    const points = shape.points;
-    if (points.length !== 4) {
-        return;
-    }
-    multiRadius.value = true;
-}
-const RADIUS_SETTING = [
-    ShapeType.Rectangle, ShapeType.Artboard,
-    ShapeType.Image, ShapeType.Group,
-    ShapeType.Path, ShapeType.Path2, ShapeType.Contact
-];
+
 function layout() {
     reset_layout();
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const shape = selected[0];
-        s_radius = hasRadiusShape(shape, RADIUS_SETTING);
+        s_radius = !!shape.radiusType;
         s_adapt = shape.type === ShapeType.Artboard;
-
-        if (s_radius) {
-            modify_multi_radius(shape);
-        }
-
-        if (shape.type === ShapeType.Cutout) {
-            s_flip = false;
-        }
-
-        if (is_straight(shape) || shape.type === ShapeType.Contact) {
-            s_length = true;
-        }
-    } else {
-        if (selected.find(i => i instanceof RectShape || i instanceof ImageShape || i instanceof Artboard)) {
-            s_radius = true;
-        }
+        if (shape.type === ShapeType.Cutout) s_flip = false;
+        if (is_straight(shape) || shape.type === ShapeType.Contact) s_length = true;
+    } else if (selected.length > 1) {
+        s_radius = selected.some(item => !!item.radiusType);
     }
-    reflush.value++;
+
+    s_counts = showCounts(selected);
+    s_inner_angle = showInnerAngle(selected);
+    s_oval = showOvalOptions(selected);
+    s_clip = selected.some(i => !i.isVirtualShape && (i.type === ShapeType.Artboard || i.type === ShapeType.Symbol || i.type === ShapeType.SymbolRef));
 }
+
 function reset_layout() {
     s_adapt = false;
     s_flip = true;
     s_radius = false;
     s_length = false;
+    s_counts = false;
+    s_inner_angle = false;
+    s_oval = false;
 }
+
 function check_model_state() {
     reset_model_state();
     const shapes = props.context.selection.selectedShapes;
-    if (shapes.length !== 1) {
-        return;
-    }
+    if (shapes.length !== 1) return;
     const shape = shapes[0];
 
     if (shape.type === ShapeType.Contact) {
-        model_disable_state.x = true, model_disable_state.y = true;
-        model_disable_state.width = true, model_disable_state.height = true;
+        model_disable_state.x = true;
+        model_disable_state.y = true;
+        model_disable_state.width = true;
+        model_disable_state.height = true;
         model_disable_state.rotation = true;
-        model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
+        model_disable_state.flipVertical = true;
+        model_disable_state.flipHorizontal = true;
         model_disable_state.radius = false;
+        model_disable_state.counts = false;
+        model_disable_state.innerAngle = false;
     }
 
     if (is_straight(shape)) {
         model_disable_state.height = true;
     }
 }
+
 function reset_model_state() {
-    model_disable_state.x = false, model_disable_state.y = false;
-    model_disable_state.width = false, model_disable_state.height = false;
+    model_disable_state.x = false;
+    model_disable_state.y = false;
+    model_disable_state.width = false;
+    model_disable_state.height = false;
     model_disable_state.rotation = false;
-    model_disable_state.filpVertical = false, model_disable_state.flipHorizontal = false;
+    model_disable_state.flipVertical = false;
+    model_disable_state.flipHorizontal = false;
     model_disable_state.radius = false;
+    model_disable_state.counts = false;
+    model_disable_state.innerAngle = false;
+    model_disable_state.ovalOptions = false;
 }
+
 function all_disable() {
-    model_disable_state.x = true, model_disable_state.y = true;
-    model_disable_state.width = true, model_disable_state.height = true;
+    model_disable_state.x = true;
+    model_disable_state.y = true;
+    model_disable_state.width = true;
+    model_disable_state.height = true;
     model_disable_state.rotation = true;
-    model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
+    model_disable_state.flipVertical = true;
+    model_disable_state.flipHorizontal = true;
     model_disable_state.radius = true;
+    model_disable_state.counts = true;
+    model_disable_state.innerAngle = true;
+    model_disable_state.ovalOptions = true;
 }
+
+const autoLayoutDisable = () => {
+    const shapes = props.context.selection.selectedShapes;
+    const every = shapes.every(item => item.parent && (item.parent as ArtboardView).autoLayout);
+    if (every) {
+        model_disable_state.x = true, model_disable_state.y = true;
+    }
+}
+
+const tel = ref<boolean>(false);
+const telX = ref<number>(0);
+const telY = ref<number>(0);
+let lockMouseHandler: LockMouse | undefined = undefined;
+
+function updatePosition(movementX: number, movementY: number) {
+    const clientHeight = document.documentElement.clientHeight;
+    const clientWidth = document.documentElement.clientWidth;
+    telX.value += movementX;
+    telY.value += movementY;
+    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
+    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
+}
+
+let orderShapes: ShapeView[][] = [];
+let minHor = 0;
+let minVer = 0;
+async function modifyTelDown(e: MouseEvent) {
+    tel.value = true;
+    telX.value = e.clientX;
+    telY.value = e.clientY;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    const selected = props.context.selection.selectedShapes;
+    const d = props.context.selection.isTidyUpDir;
+    orderShapes = checkTidyUpShapesOrder(selected, d);
+    minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+    minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+    lockMouseHandler = new LockMouse(props.context, e);
+    document.addEventListener("pointerlockchange", pointerLockChange, false);
+}
+
+function modifyTelUp() {
+    tel.value = false;
+    document.exitPointerLock();
+
+    lockMouseHandler?.fulfil();
+    lockMouseHandler = undefined;
+    document.removeEventListener("pointerlockchange", pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        modifyTelUp();
+    }
+}
+
+
+function dragstart(e: MouseEvent) {
+    modifyTelDown(e);
+}
+
+function draggingX(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeX(e.movementX);
+}
+
+function draggingY(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeY(e.movementX);
+}
+
+function draggingW(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('scaling');
+    }
+
+    lockMouseHandler.executeW(e.movementX);
+}
+
+function draggingH(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('scaling');
+    }
+
+    lockMouseHandler.executeH(e.movementX);
+}
+
+function draggingRotate(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('rotating');
+    }
+    lockMouseHandler.executeRotate(e.movementX);
+}
+
+function draggingCounts(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (isNaN(Number(counts.value)) || e.movementX === 0) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('rotating');
+    }
+    let count = Number(counts.value) + e.movementX;
+    if (count < 3) count = 3;
+    if (count > 60) count = 60;
+    lockMouseHandler.executeCounts(count);
+}
+
+function draggingInnerAngle(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (isNaN(Number(innerAngle.value)) || e.movementX === 0) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('rotating');
+    }
+
+    lockMouseHandler.executeInnerAngle(e.movementX / 1000);
+}
+
+function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    const d = props.context.selection.isTidyUpDir;
+    const frame = layoutSpacing(orderShapes, d);
+
+    let hor = frame.hor;
+    let ver = frame.ver;
+    if (dir === 'hor') {
+        hor += e.movementX;
+        horSpace.value = Math.max(hor, -minHor);
+    } else {
+        ver += e.movementX;
+        verSpace.value = Math.max(ver, -minVer);
+    }
+
+    disalbeTidyup(orderShapes, d);
+    const algin = props.context.selection.tidyUpAlgin;
+    lockMouseHandler.executeTidyup(orderShapes, Math.max(hor, -minHor), Math.max(ver, -minVer), d, algin);
+}
+
+function dragend() {
+    modifyTelUp();
+}
+
+function dragend2() {
+    modifyTelUp();
+    props.context.attr.notify(Attribute.FRAME_CHANGE);
+}
+
+function formatRotate(rotate: number | string) {
+    return rotate + `${rotate === mixed ? '' : '°'}`;
+}
+
+const tidyUp = () => {
+    if(!props.context.selection.isTidyUp) return;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    const { width, height } = getSelectedWidthHeight(props.context, selected);
+
+    const shapes = tidyUpShapesOrder(selected, height > width);
+    const frame = layoutSpacing(shapes, height > width);
+    horSpace.value = frame.hor;
+    verSpace.value = frame.ver;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width, 'center');
+}
+
+const changeHorTidyUp = (value: string) => {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    const hor: number = Number.parseFloat(value);
+    if (isNaN(hor)) return;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    const dir = props.context.selection.isTidyUpDir;
+    const shapes = checkTidyUpShapesOrder(selected, dir);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    disalbeTidyup(shapes, dir);
+    const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+    horSpace.value = Math.max(hor, -minHor);
+    const algin = props.context.selection.tidyUpAlgin;
+    editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir, algin);
+}
+
+function keydownHorTidyUp(e: KeyboardEvent) {
+    let hor: any = sortValue(horSpace.value.toString());
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        hor = hor + (e.code === 'ArrowUp' ? 1 : -1)
+        if (isNaN(hor)) return;
+        const selected = props.context.selection.selectedShapes;
+        const dir = props.context.selection.isTidyUpDir;
+        const shapes = checkTidyUpShapesOrder(selected, dir);
+        const ver = typeof verSpace.value === 'number' ? verSpace.value : 0
+        disalbeTidyup(shapes, dir);
+        const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+        horSpace.value = Math.max(hor, -minHor);
+        const algin = props.context.selection.tidyUpAlgin;
+        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir, algin)
+        e.preventDefault();
+    }
+
+}
+
+const changeVerTidyUp = (value: string) => {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    const ver: number = Number.parseFloat(value);
+    if (isNaN(ver)) return;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    const dir = props.context.selection.isTidyUpDir;
+    const shapes = checkTidyUpShapesOrder(selected, dir);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
+    disalbeTidyup(shapes, dir);
+    const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+    verSpace.value = Math.max(ver, -minVer);
+    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir, props.context.selection.tidyUpAlgin);
+}
+
+function keydownVerTidyUp(e: KeyboardEvent) {
+    let ver: any = sortValue(verSpace.value.toString());
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        ver = ver + (e.code === 'ArrowUp' ? 1 : -1)
+        if (isNaN(ver)) return;
+        const selected = props.context.selection.selectedShapes;
+        const dir = props.context.selection.isTidyUpDir;
+        const shapes = checkTidyUpShapesOrder(selected, dir);
+        const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
+        disalbeTidyup(shapes, dir);
+        const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+        verSpace.value = Math.max(ver, -minVer);
+        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, props.context.selection.tidyUpAlgin);
+        e.preventDefault();
+    }
+
+}
+
 function selection_change() {
     update_view();
     calc_attri();
+    textBehaviour();
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    if (selected.length > 1 && !hiddenTidyUp(selected)) {
+        s_tidy_up.value = true;
+        whetherTidyUp();
+    } else {
+        s_tidy_up.value = false;
+        props.context.selection.whetherTidyUp(true, false, 'center');
+    }
 }
+
+const _whetherTidyUp = () => {
+    if (props.context.workspace.tidyUpIsTrans) return;
+    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    s_tidy_up.value = false;
+    const length = selected.filter(shape => shape.isVisible).length;
+    if (length <= 1 || length > 100) return;
+    s_tidy_up.value = true;
+    if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
+    const Info = whetherNeedTidyUp(props.context);
+    if (!Info) {
+        props.context.selection.whetherTidyUp(true, false, 'center');
+        return;
+    }
+    const { tidyup, hor, ver, shapes, dir } = Info;
+    if (!tidyup) {
+        horSpace.value = hor;
+        verSpace.value = ver;
+    } else {
+        horSpace.value = '';
+        verSpace.value = '';
+    }
+    verTidyUp.value = tidyup;
+    horTidyUp.value = tidyup;
+    disalbeTidyup(shapes, dir);
+    props.context.selection.whetherTidyUp(tidyup, dir, Info.algin as TidyUpAlgin);
+}
+
+const disalbeTidyup = (shapes: ShapeView[][], d: boolean) => {
+    if (d) {
+        if (shapes.length === 1) {
+            horTidyUp.value = true;
+            horSpace.value = '';
+        } else {
+            const v = shapes.every(s => s.length === 1);
+            if (v) {
+                verTidyUp.value = true;
+                verSpace.value = '';
+            }
+        }
+    } else {
+        if (shapes.length === 1) {
+            verTidyUp.value = true;
+            verSpace.value = '';
+        } else {
+            const v = shapes.every(s => s.length === 1);
+            if (v) {
+                horTidyUp.value = true;
+                horSpace.value = '';
+            }
+        }
+    }
+}
+
+const whetherTidyUp = debounce(_whetherTidyUp, 250);
+
+const attr_watcher = (t: number, params: any) => {
+    if (t === Attribute.HOR_HILP) {
+        fliph();
+    } else if (t === Attribute.VER_HILP) {
+        flipv();
+    } else if (t === Attribute.TIDY_UP_SPACE_CHANGE) {
+        if (typeof horSpace.value === 'number') {
+            horSpace.value = params.hor;
+        }
+        if (typeof verSpace.value === 'number') {
+            verSpace.value = params.ver;
+        }
+    }
+}
+
+const textBehaviour = () => {
+    const shapes = props.context.selection.selectedShapes;
+    const all_text = shapes.every(item => item instanceof TextShapeView);
+    if (all_text) {
+        model_disable_state.width = false;
+        model_disable_state.height = false;
+        const fixwh = shapes.some(item => (item as TextShapeView).text.attr?.textBehaviour === TextBehaviour.FixWidthAndHeight);
+        if (fixwh) return;
+        const fixw = shapes.some(item => (item as TextShapeView).text.attr?.textBehaviour === TextBehaviour.Fixed);
+        if (fixw) {
+            model_disable_state.height = true;
+            return;
+        }
+        model_disable_state.width = true;
+        model_disable_state.height = true;
+    }
+}
+
+const workspace_watcher = (t: string | number) => {
+    if (t === WorkSpace.SCALING || t === WorkSpace.ROTATING) {
+        whetherTidyUp();
+    }
+}
+
 const stop1 = watch(() => props.selectionChange, selection_change);
-const stop3 = watch(() => props.triggle, v => {
+const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
         calc_attri();
+        whetherTidyUp();
+    }
+    if (v.includes('textBehaviour')) {
+        textBehaviour();
     }
 });
 
-onMounted(selection_change);
+onMounted(() => {
+    selection_change();
+    props.context.attr.watch(attr_watcher);
+    props.context.workspace.watch(workspace_watcher);
+});
 onUnmounted(() => {
+    props.context.attr.unwatch(attr_watcher);
+    props.context.workspace.unwatch(workspace_watcher);
     stop1();
     stop3();
 })
-</script>
 
+import x_icon from "@/assets/icons/svg/X.svg";
+import y_icon from "@/assets/icons/svg/Y.svg";
+import w_icon from "@/assets/icons/svg/W.svg";
+import h_icon from "@/assets/icons/svg/H.svg";
+import angle_icon from "@/assets/icons/svg/angle.svg";
+import angle_count_icon from "@/assets/icons/svg/angle-count.svg";
+import inner_angle_icon from "@/assets/icons/svg/inner-angle.svg";
+import hor_space2_icon from "@/assets/icons/svg/hor-space2.svg";
+import ver_space2_icon from "@/assets/icons/svg/ver-space2.svg";
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import adapt_icon from "@/assets/icons/svg/adapt.svg";
+import lock_icon from "@/assets/icons/svg/lock.svg";
+import lock_open_icon from "@/assets/icons/svg/lock-open.svg";
+import fliph_icon from "@/assets/icons/svg/fliph.svg";
+import flipv_icon from "@/assets/icons/svg/flipv.svg";
+import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
+
+</script>
 <template>
     <div class="table">
-        <div class="tr" :reflush="reflush">
-            <IconText class="td positon" ticon="X" :text="format(x)" @onchange="onChangeX" :disabled="model_disable_state.x"
-                :context="context" />
-            <IconText class="td positon" ticon="Y" :text="format(y)" @onchange="onChangeY" :disabled="model_disable_state.y"
-                :context="context" />
-            <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
-                <svg-icon icon-class="adapt"></svg-icon>
+        <div class="tr">
+            <MossInput :icon="x_icon" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
+                           @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @keydown="keydownX">
+            </MossInput>
+            <MossInput :icon="y_icon" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY"></MossInput>
+            <div v-if="s_adapt" class="adapt" @click="adapt">
+                <Tooltip :content="t('attr.adapt')">
+                    <SvgIcon :icon="adapt_icon" style="outline: none;" />
+                </Tooltip>
             </div>
-            <div style="width: 32px;height: 32px;" v-else></div>
+            <div v-else style="width: 32px;height: 32px;"/>
         </div>
-        <div class="tr" :reflush="reflush">
-            <IconText class="td frame" ticon="W" :text="format(w)" @onchange="onChangeW"
-                :disabled="model_disable_state.width" :context="context" />
-
-            <IconText class="td frame" ticon="H" :text="format(h)" @onchange="onChangeH"
-                :disabled="model_disable_state.height" :context="context" />
-            <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
-            </div>
-            <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
-                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
-            </div>
+        <div class="tr">
+            <MossInput :icon="w_icon" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
+                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2" @keydown="keydownW"></MossInput>
+            <MossInput :icon="h_icon" draggable :value="format(h)" @change="changeH"
+                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"
+                @keydown="keydownH">
+            </MossInput>
+            <Tooltip :content="t('attr.constrainProportions')">
+                <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
+                    <SvgIcon :icon="isLock ? lock_icon : lock_open_icon" :class="{ 'active': isLock }"/>
+                </div>
+                <div v-else class="lock" style="background-color: #F4F5F5;opacity: 0.4; pointer-events: none">
+                    <SvgIcon :icon="lock_open_icon"/>
+                </div>
+            </Tooltip>
         </div>
-        <div class="tr" :reflush="reflush">
-            <IconText class="td angle" svgicon="angle" :text="`${rotate}` + `${rotate === mixed ? '' : '°'}`"
-                @onchange="onChangeRotate" :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation"
-                :context="context" />
-            <div class="flip-warpper">
-                <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
-                    <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical }"
+        <div class="tr">
+            <MossInput :icon="angle_icon" draggable :value="formatRotate(rotate)" @change="changeR"
+                :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
+                @dragend="dragend" @keydown="keydownR"></MossInput>
+            <div class="flip-wrapper">
+                <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="fliph">
-                        <svg-icon icon-class="fliph"></svg-icon>
+                        <SvgIcon :icon="fliph_icon"/>
                     </div>
                 </Tooltip>
-                <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
-                    <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical }"
+                <Tooltip v-if="s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="flipv">
-                        <svg-icon icon-class="flipv"></svg-icon>
+                        <SvgIcon :icon="flipv_icon"/>
                     </div>
                 </Tooltip>
             </div>
-            <div style="width: 32px;height: 32px;margin-left: 7px"></div>
+            <div style="width: 32px;height: 32px;margin-left: 7px"/>
         </div>
-        <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
+        <div class="tr" v-if="s_counts">
+            <MossInput :icon="angle_count_icon" draggable :value="format(counts)" @change="changeCounts"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
+                @dragend="dragend"></MossInput>
+            <MossInput v-if="s_inner_angle" :icon="inner_angle_icon" draggable
+                :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
+                @dragend="dragend"></MossInput>
+            <div style="width: 32px;height: 32px;"/>
+        </div>
+        <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius"/>
+        <ContentClip v-if="s_clip" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
+        <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
+        <div class="tr" v-if="s_tidy_up">
+            <MossInput :icon="hor_space2_icon" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyUp"
+                :disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
+                @dragend="dragend" @keydown="keydownHorTidyUp">
+            </MossInput>
+            <MossInput :icon="ver_space2_icon" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyUp"
+                :disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
+                @dragend="dragend" @keydown="keydownVerTidyUp">
+            </MossInput>
+            <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
+                :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
+                <Tooltip :content="t('attr.tidy_up')">
+                    <SvgIcon :icon="tidy_up_icon" style="outline: none;" />
+                </Tooltip>
+            </div>
+        </div>
     </div>
+    <teleport to="body">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+        </div>
+    </teleport>
 </template>
-
 <style scoped lang="scss">
 .ml-24 {
     margin-left: 18px;
@@ -428,6 +1041,7 @@ onUnmounted(() => {
     height: auto;
     display: flex;
     flex-direction: column;
+    gap: 8px;
     padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     visibility: visible;
@@ -441,17 +1055,10 @@ onUnmounted(() => {
         justify-content: space-between;
         display: flex;
         flex-direction: row;
-        margin-bottom: 8px;
-
+        gap: 8px;
 
         >.icontext {
             background-color: var(--input-background);
-        }
-
-        .positon {
-            width: 88px;
-            height: 32px;
-            border-radius: var(--default-radius);
         }
 
         .frame {
@@ -473,13 +1080,13 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            >img {
                 color: #808080;
-                width: 14px;
-                height: 14px;
+                width: 13px;
+                height: 13px;
             }
 
-            >svg.active {
+            >img.active {
                 color: #FFFFFF;
             }
         }
@@ -505,10 +1112,10 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            >img {
                 transition: 0.3s;
-                width: 14px;
-                height: 14px;
+                width: 13px;
+                height: 13px;
                 color: #808080;
             }
         }
@@ -522,19 +1129,19 @@ onUnmounted(() => {
             height: 32px;
             border-radius: var(--default-radius);
 
-            >svg {
+            >img {
                 width: 12px;
                 height: 12px;
             }
         }
 
-        .flip-warpper {
+        .flip-wrapper {
             width: 88px;
             height: 32px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-left: 7px;
+            gap: 8px;
 
             .flip {
                 background-color: var(--input-background);
@@ -547,9 +1154,9 @@ onUnmounted(() => {
                 padding: 9px 14px;
                 box-sizing: border-box;
 
-                >svg {
+                >img {
                     color: var(--coco-grey);
-                    width: 14px;
+                    width: 12px;
                     height: 14px;
                 }
             }
@@ -568,7 +1175,7 @@ onUnmounted(() => {
                 height: 32px;
                 border-radius: var(--default-radius);
 
-                >svg {
+                >img {
                     color: var(--coco-grey);
                     width: 40%;
                     height: 40%;
@@ -593,14 +1200,14 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            >img {
                 transition: 0.3s;
                 color: #808080;
-                width: 14px;
-                height: 14px;
+                width: 13px;
+                height: 13px;
             }
 
-            >svg.active {
+            >img.active {
                 color: #FFFFFF;
             }
         }
@@ -614,5 +1221,20 @@ onUnmounted(() => {
             border: 1px solid #1878F5;
         }
     }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
+}
+
+.tidy-up-disable {
+    pointer-events: none;
 }
 </style>

@@ -2,34 +2,29 @@ import {
     CoopRepository,
     TaskMgr,
     WatchableObject,
-    TableShape,
     TableEditor,
-    Text,
     PageView,
     ShapeView,
-    adapt2Shape,
     TableView,
     TextShapeView,
     TableCellView,
-    Task,
-    TaskPriority,
-    SymbolShape,
+    IEventEmitter,
+    EventEmitter,
+    Document,
+    Page,
+    DocEditor,
+    Editor,
+    PageEditor,
+    ShapeEditor,
+    TextShapeEditor
 } from "@kcdesign/data";
-import { Document } from "@kcdesign/data";
-import { Page } from "@kcdesign/data";
-import { Shape } from "@kcdesign/data";
-import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
-import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
-import { Comment } from "./comment";
 import { Menu } from "./menu";
 import { Tool } from "./tool";
 import { Navi } from "./navigate";
-import { Communication } from "@/context/communication/communication";
 import { Cursor } from "./cursor";
-import { EscStack } from "./escstack";
-import { Asssit } from "./assist";
+import { Assist } from "./assist";
 import { TeamWork } from "./teamwork";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
@@ -38,11 +33,20 @@ import { PdMedia } from "./medias";
 import { User } from './user';
 
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
-import { TableSelection } from "./tableselection";
 import { Component } from "./component";
 import { Path } from "./path";
 import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
+import { Attribute } from "./atrribute";
+import { DocumentProps, INet, IScout, IToolBox } from "@/openapi";
+import { PluginsMgr } from "./pluginsmgr";
+import { events } from "./events";
+import { IContext } from "@/openapi";
+import { EscStack } from "./escstack";
+import { scout } from "@/utils/scout";
+import { Preview } from "./preview";
+import { MossClipboard } from "@/clipboard";
+import { EditorLayout } from "@/components/Document/Layout/editorlayout";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -77,6 +81,10 @@ export class RepoWraper {
         throw new Error("Not implemented")
     }
 
+    // setOnLoaded(onLoaded: () => void) {
+    //     this.m_repo.setOnLoaded(onLoaded);
+    // }
+
     // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
     //     return this.m_repo.onCommit(...args)
     // }
@@ -86,7 +94,34 @@ export class RepoWraper {
     // }
 }
 
-export class Context extends WatchableObject {
+class ToolBox implements IToolBox {
+
+    _scout: IScout | undefined;
+    _event = new EventEmitter()
+    _context: Context;
+
+    constructor(context: Context) {
+        this._context = context;
+    }
+
+    get scout(): IScout {
+        if (!this._scout) this._scout = scout(this._context);
+        return this._scout;
+    }
+
+    get event(): IEventEmitter {
+        return this._event;
+    }
+
+}
+
+export class Context extends WatchableObject implements IContext {
+    // 用EventEmitter及storage来进行界面组件之间的数据同步及通信
+    // storage的key可以用组件路径也可用uuid等唯一标识
+    // eventid同上，需要个唯一前缀。
+    // 做到不同功能的组件之间可以完全解耦合
+    // public storage: Map<string, any> = new Map();
+
     private m_data: Document;
     private m_editor: Editor;
     private m_repo: RepoWraper;
@@ -95,43 +130,49 @@ export class Context extends WatchableObject {
     private m_textEditor?: TextShapeEditor;
     private m_selection: Selection;
     private m_workspace: WorkSpace;
-    private m_comment: Comment;
+    private m_pluginsMgr: PluginsMgr;
     private m_menu: Menu;
     private m_tool: Tool;
     private m_navi: Navi;
     private m_cursor: Cursor;
-    private m_communication: Communication;
     private m_escstack: EscStack;
-    private m_assist: Asssit;
+    private m_assist: Assist;
     private m_teamwork: TeamWork;
     private m_component: Component;
     private m_path: Path;
     private m_color: ColorCtx;
     private m_medias: PdMedia;
     private m_user: User;
+    private m_attr: Attribute;
+    private m_preview: Preview;
+    private m_clip: MossClipboard;
+    private m_layout: EditorLayout;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
+    private m_props: DocumentProps;
+    private m_net?: INet;
+    private m_readonly?: boolean;
 
-    constructor(data: Document, repo: CoopRepository) {
+    constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
         super();
         (window as any).__context = this;
         this.m_data = data;
         this.m_coopRepo = repo;
+        this.m_props = props;
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
         this.m_selection = new Selection(data, this); //选区相关
         repo.setSelection(this.m_selection);
         this.m_workspace = new WorkSpace(this); // 编辑器状态
-        this.m_comment = new Comment(); // 评论相关
+        this.m_pluginsMgr = new PluginsMgr();
         this.m_menu = new Menu(this); // 菜单相关
         this.m_tool = new Tool(this); // 工具栏相关
         this.m_navi = new Navi(); // 导航栏相关
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
-        this.m_communication = new Communication();
-        this.m_cursor = new Cursor(this); // 光标变换
+        this.m_cursor = new Cursor(); // 光标变换
         this.m_escstack = new EscStack(); // esc任务队列
-        this.m_assist = new Asssit(this); // 辅助线相关
+        this.m_assist = new Assist(this); // 辅助线相关
         this.m_teamwork = new TeamWork();
 
         this.m_component = new Component(this);
@@ -140,8 +181,66 @@ export class Context extends WatchableObject {
         this.m_color = new ColorCtx();
         this.m_medias = new PdMedia(this);
         this.m_user = new User();
-        
+        this.m_attr = new Attribute();
+        this.m_preview = new Preview(this);
+        this.m_clip = new MossClipboard(this);
+        this.m_layout = new EditorLayout(this);
         startLoadTask(data, this.m_taskMgr);
+    }
+
+    private _storage: Map<string, string> = new Map();
+    get storage(): Map<string, string> {
+        return this._storage;
+    }
+
+    private _sessionStorage: Map<string, string> = new Map();
+    get sessionStorage(): Map<string, string> {
+        return this._sessionStorage;
+    }
+
+    private m_toolbox = new ToolBox(this);
+
+    get toolbox(): IToolBox {
+        return this.m_toolbox; // todo
+    }
+
+    get escstack(): EscStack {
+        return this.m_escstack;
+    }
+
+    get curAction(): string | undefined {
+        return this.tool.action;
+    }
+
+    setCurAction(uuid: string): void {
+        this.tool.setAction(uuid);
+    }
+
+    keyHandlers: {
+        [key: string]: (
+            event: KeyboardEvent, context: IContext) => void
+    } = {}
+
+    registKeyHandler(keyCode: string, handler: (
+        event: KeyboardEvent, context: IContext) => void): void {
+        this.keyHandlers[keyCode] = handler;
+    }
+
+    lastRemoteCmdVersion(): string | undefined {
+        return this.m_coopRepo.lastRemoteCmdVersion()
+    }
+
+    hasPendingSyncCmd(): boolean {
+        return this.m_coopRepo.hasPendingSyncCmd();
+    }
+
+    setNet(net: INet): void {
+        this.m_net = net;
+        this.m_coopRepo.setNet(net);
+    }
+
+    get net() {
+        return this.m_net;
     }
 
     get editor(): Editor {
@@ -157,15 +256,17 @@ export class Context extends WatchableObject {
     }
 
     editor4Shape(shape: ShapeView): ShapeEditor {
-        return this.editor.editor4Shape(shape);
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        return this.editor.editor4Shape(this.selection.selectedPage, shape);
     }
 
     // 在editor里缓存临时数据不太对，应缓存到textselection
     editor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor {
-        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id && this.m_textEditor.view.parent) {
             return this.m_textEditor;
         }
-        this.m_textEditor = this.editor.editor4TextShape(shape);
+        this.m_textEditor = this.editor.editor4TextShape(this.selection.selectedPage, shape);
         return this.m_textEditor;
     }
 
@@ -176,7 +277,8 @@ export class Context extends WatchableObject {
     }
 
     editor4Table(shape: TableView): TableEditor {
-        return this.editor.editor4Table(shape);
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        return this.editor.editor4Table(this.selection.selectedPage, shape);
     }
 
     get data() {
@@ -185,6 +287,19 @@ export class Context extends WatchableObject {
 
     get repo(): RepoWraper {
         return this.m_repo;
+    }
+
+    get props() {
+        return this.m_props;
+    }
+
+    setReadonly(readonly: boolean) {
+        this.m_readonly = readonly;
+        this.notify(events.context_readonly_change, readonly)
+    }
+
+    get readonly() {
+        return !!this.m_readonly;
     }
 
     get coopRepo(): CoopRepository {
@@ -199,8 +314,8 @@ export class Context extends WatchableObject {
         return this.m_workspace;
     }
 
-    get comment() {
-        return this.m_comment;
+    get pluginsMgr() {
+        return this.m_pluginsMgr;
     }
 
     get menu() {
@@ -213,10 +328,6 @@ export class Context extends WatchableObject {
 
     get navi() {
         return this.m_navi;
-    }
-
-    get communication() {
-        return this.m_communication;
     }
 
     get cursor() {
@@ -239,10 +350,6 @@ export class Context extends WatchableObject {
         return this.m_selection.textSelection;
     }
 
-    get esctask() {
-        return this.m_escstack;
-    }
-
     get component() {
         return this.m_component;
     }
@@ -259,12 +366,22 @@ export class Context extends WatchableObject {
         return this.m_user;
     }
 
+    get attr() {
+        return this.m_attr;
+    }
+
+    get preview() {
+        return this.m_preview;
+    }
+
+    get clip() {
+        return this.m_clip;
+    }
+
     private createVDom(page: Page) {
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
         const dom: PageDom = new PageDom(domCtx, { data: page });
-        // dom.update(props, true);
-        // console.log("dom.nodeCount: " + dom.nodeCount);
         const ret = { dom, ctx: domCtx }
         this.m_vdom.set(page.id, ret);
         return ret;
@@ -288,5 +405,41 @@ export class Context extends WatchableObject {
 
     get color() {
         return this.m_color;
+    }
+
+    private m_doc_info: { name: string } | undefined;
+
+    setDocumentInfo(info: { name: string }) {
+        this.m_doc_info = info;
+    }
+
+    get documentInfo(): { name: string } {
+        return this.m_doc_info || { name: '' };
+    }
+
+    rename(name: string) {
+        const editor = this.editor4Doc();
+        editor.rename(name);
+    }
+
+    get layout() {
+        return this.m_layout;
+    }
+
+    // setOnLoaded(onLoaded: () => void) {
+    //     this.m_repo.setOnLoaded(onLoaded);
+    // }
+
+    private m_custom_loading = false;
+    private m_custom_loading_watcher: (show: boolean) => void = () => { };
+    setCustomLoading(show: boolean): void {
+        this.m_custom_loading = show;
+        this.m_custom_loading_watcher(show)
+    }
+    watchCustomLoading(cb: (show: boolean) => void) {
+        this.m_custom_loading_watcher = (cb);
+    }
+    get customLoading() {
+        return this.m_custom_loading;
     }
 }

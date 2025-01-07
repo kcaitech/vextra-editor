@@ -44,7 +44,7 @@ export const Createteam = {
     confirm: 'confirm',
     cancel: 'cancel',
 
-    joinprojecttipsA: 'Apply for a project',
+    joinprojecttipsA: 'Apply for a project:',
     joinprojecttipsB: 'After you join a project, you can access all files and resources in the project',
     joinprojecttipsC: 'Application has been sent,',
     joinprojecttipsC1: 'You are about to enter the home page of the application. After approval, you can view the contents of the project',
@@ -69,7 +69,7 @@ export const Createteam = {
     confirmTransfer: 'Confirm transfer',
 
     project:'Project',
-    Team:'Team',
+    team:'Team',
 
     welcome:'Welcome to',
     rejectprompt1:'The application to join',
@@ -198,8 +198,8 @@ export const teamsetting = {
     disband:'Disband',
     confirm:'Confirm',
     cancel:'Cancel', 
-    title_name1:'修改团队名称',
-    title_name2:'修改团队描述',
-    title_name3:'解散团队',
-    title_name4:'离开团队',
+    title_name1:'Change team name',
+    title_name2:'Modify team description',
+    title_name3:'Dissolve the team',
+    title_name4:'Leaving the team',
 }

@@ -4,7 +4,7 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { SymbolView } from '@kcdesign/data';
+import { SymbolView, TextShapeView } from '@kcdesign/data';
 import { SymbolShape, VariableType } from '@kcdesign/data';
 import {
     AttriListItem,
@@ -71,7 +71,7 @@ function selectCompsType() {
     }
     compsType.value = true;
     document.addEventListener('mousedown', closeCompsType);
-    props.context.esctask.save(v4(), close);
+    props.context.escstack.save(v4(), close);
 }
 
 /**
@@ -96,7 +96,7 @@ const layerIsShow = () => {
     addType.value = VariableType.Visible;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
-    props.context.esctask.save(v4(), de_layer_is_show);
+    props.context.escstack.save(v4(), de_layer_is_show);
     close();
 }
 
@@ -114,6 +114,7 @@ const addTextDialog = () => {
     addType.value = VariableType.Text;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    props.context.escstack.save(v4(), de_layer_is_show);
     close();
 }
 /**
@@ -124,6 +125,7 @@ const examplesToggle = () => {
     addType.value = VariableType.SymbolRef;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    props.context.escstack.save(v4(), de_layer_is_show);
     close();
 }
 const warn = ref(false);
@@ -166,7 +168,10 @@ function list_change(data: string[]) {
     const page = props.context.selection.selectedPage;
     if (page) {
         const shape = page.getShape(data[0]);
-        if (shape) default_value.value = shape.name;
+        if(shape) {
+            const value = shape instanceof TextShapeView ? shape.text.getText(0, Number.MAX_VALUE).slice(0, -1) : shape.name;
+           default_value.value = value;
+        }
     }
 }
 
@@ -196,38 +201,45 @@ onMounted(() => {
 onUnmounted(() => {
     props.shape.unwatch(variable_watcher);
 })
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import add_icon from "@/assets/icons/svg/add.svg"
+import comp_state_icon from "@/assets/icons/svg/comp-state.svg"
+import eye_open_icon from "@/assets/icons/svg/eye-open.svg"
+import lozenge_icon from "@/assets/icons/svg/lozenge.svg"
+import text_icon from "@/assets/icons/svg/text.svg"
+
 </script>
 
 <template>
-    <div style="position: relative;margin-top: 12px;margin-bottom: 12px;box-sizing: border-box" ref="atrrdialog">
+    <div style="position: relative; box-sizing: border-box" ref="atrrdialog">
         <!--header-->
         <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="!!variables.length">
             <template #tool>
                 <div class="add-comps" @click.stop="selectCompsType" :class="{ 'clicked': compsType }">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"/>
                     <div class="selectType" v-if="compsType" ref="selectComps" @click.stop>
                         <div class="type-title">{{ t('compos.delect_attr_type') }}</div>
                         <div class="status" @click="addModuleState">
                             <div>
-                                <svg-icon icon-class="comp-state"></svg-icon>
+                                <SvgIcon :icon="comp_state_icon"/>
                             </div>
                             <span>{{ t('compos.compos_state') }}</span>
                         </div>
                         <div class="status" @click="layerIsShow">
                             <div>
-                                <svg-icon icon-class="eye-open"></svg-icon>
+                                <SvgIcon :icon="eye_open_icon"/>
                             </div>
                             <span>{{ t('compos.display_state') }}</span>
                         </div>
                         <div class="status" @click="examplesToggle">
                             <div>
-                                <svg-icon icon-class="lozenge"></svg-icon>
+                                <SvgIcon :icon="lozenge_icon"/>
                             </div>
                             <span>{{ t('compos.instance_toggle') }}</span>
                         </div>
                         <div class="status" @click="addTextDialog">
                             <div>
-                                <svg-icon icon-class="text"></svg-icon>
+                                <SvgIcon :icon="text_icon"/>
                             </div>
                             <span>{{ t('compos.text_content') }}</span>
                         </div>
@@ -236,7 +248,7 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <!--list container-->
-        <div class="module_container">
+        <div v-if="variables.length" class="module_container">
             <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id"
                 :context="props.context" :variable="item.variable" :item="item"></component>
         </div>
@@ -439,13 +451,12 @@ onUnmounted(() => {
             width: 28px;
             height: 28px;
             border-radius: var(--default-radius);
+            transition: .2s;
 
             >svg {
                 width: 16px;
                 height: 16px;
             }
-
-            transition: .2s;
         }
 
         .delete:hover {

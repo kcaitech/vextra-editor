@@ -1,3 +1,13 @@
+:root[data-system=mac]{
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+}
+
+:root[data-system=win]{
+    --font-weight-regular: 400;
+    --font-weight-medium: 600;
+}
+
 :root {
     // position
     --default-padding: 16px;
@@ -9,7 +19,7 @@
     --default-input-height: 30px;
 
     // font
-    --font-family: BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, PingFang SC, Microsoft Yahei, Hiragino Sans GB, sans-serif, apple color emoji, Noto Color Emoji, segoe ui emoji, segoe ui symbol;
+    --font-family:Inter,Apple System,"SF Pro SC","SF Pro Display","Helvetica Neue","Arial","PingFang SC","Hiragino Sans GB","STHeiti","Microsoft YaHei","Microsoft JhengHei","Source Han Sans SC","Noto Sans CJK SC","Source Han Sans CN",sans-serif;
     --font-default-bold: 500;
     --font-default-fontsize: 12px;
 
@@ -35,7 +45,7 @@
     --theme-color: #2c2c2c;
     --theme-color-anti: #ffffff;
     --input-background: #F4F5F5;
-    --active-color: #1878f5;
+    --active-color: #3387f5;
     // --active-color-beta: #1878f5;
     // --component-color: #5607f6;
     --component-color: #7F58F9;
@@ -121,12 +131,13 @@
     --el-svg-monochrome-grey: var(--el-border-color);
     --el-font-size-base: 10px;
 }
+
 .network_error_message {
     position: fixed;
     font-size: var(--font-default-fontsize);
     display: flex;
     align-items: center;
-    top: 60px;
+    top: 120px;
     left: 50%;
     transform: translateX(-50%);
     color: #f1f1f1;
@@ -134,29 +145,31 @@
     padding: 7px 30px;
     border: 1px solid var(--active-color);
     border-radius: 4px;
-  
+
     .loading-spinner {
-      >div {
-        border: 2px solid transparent;
-        border-top: 2px solid #000;
-        border-left: 2px solid #000;
-        border-bottom: 2px solid #000;
-        border-radius: 50%;
-        width: 12px;
-        height: 12px;
-        color: #000;
-      }
-  
-      animation: spin 1s linear infinite;
+        > div {
+            border: 2px solid transparent;
+            border-top: 2px solid #000;
+            border-left: 2px solid #000;
+            border-bottom: 2px solid #000;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            color: #000;
+        }
+
+        & {
+            animation: spin 1s linear infinite;
+        }
     }
-  
+
     @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-  
-      100% {
-        transform: rotate(360deg);
-      }
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
-  }
+}

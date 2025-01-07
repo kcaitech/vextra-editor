@@ -11,13 +11,14 @@ import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
 import { TextSelectionLite as TextSelection } from '@/context/textselectionlite';
+import { DBL_CLICK } from "@/const";
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
     const workspace_matrix = ref<Matrix>(context.workspace.matrix);
     const matrix = new Matrix();
     const dragActiveDis = 3;
-    const TIMER = 300; // 连续点击最大间隔时间
+    const TIMER = DBL_CLICK; // 连续点击最大间隔时间
     let isDragging = false;
     let startPosition: ClientXY = { x: 0, y: 0 };
     let root: ClientXY = { x: 0, y: 0 };
@@ -91,7 +92,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function get_matrix4table() {
         const m = table.matrix2Root();
         m.multiAtLeft(workspace.value.matrix);
-        matrix4table = new Matrix(m.inverse);
+        matrix4table = (m.inverse.toMatrix());
     }
     function down4body(e: MouseEvent) {
         if (e.button !== 0) return;
@@ -145,11 +146,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
     }
-    function init_text_cell(cell: TableGridItem) {
-        const editor = context.editor4Table(table);
-        editor.initTextCell(cell.index.row, cell.index.col);
-    }
-    function down(e: MouseEvent) {
+    // function init_text_cell(cell: TableGridItem) {
+    //     const editor = context.editor4Table(table);
+    //     editor.initTextCell(cell.index.row, cell.index.col);
+    // }
+    function down(e: MouseEvent) {        
         // console.log('单击 cell:', down_item);
         table_selection.resetSelection();
         set_position(e);
@@ -171,7 +172,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     table_selection.selectTableCell(down_item.index.row, down_item.index.col);
                 } else {
                     // console.log('unexcept');
-                    init_text_cell(down_item);
+                    // init_text_cell(down_item);
                     context.nextTick(context.selection.selectedPage!, () => {
                         text_selection = context.textSelection;
                         text_selection.setCursor(0, false);
@@ -181,7 +182,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 }
             } else {
                 // console.log('init cell');
-                init_text_cell(down_item);
+                // init_text_cell(down_item);
                 down_item = check_cell_on_point(e);
                 context.nextTick(context.selection.selectedPage!, () => {
                     const cellView = down_item ? table.getCellAt(down_item.index.row, down_item.index.col) : undefined;
@@ -234,8 +235,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
             get_matrix4table();
             init_down_timer();
             table_selection = context.tableSelection;
-            // table_selection.resetSelection();
-            // table_selection.setEditingCell();
         }
     }
     function init_down_timer() {
@@ -252,7 +251,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context);
     }
-    function selection_watcher(t?: number) {
+    function selection_watcher(t?: number | string) {
         if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) initController();
     }
     function workspace_watcher(t?: number) {

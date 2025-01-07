@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Matrix, PathShape, Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch } from 'vue';
+import { CurvePoint, Matrix, PathShapeView, PathType, ShapeView } from '@kcdesign/data';
+import { watch } from 'vue';
 import { XY } from "@/context/selection";
 import { Segment } from '@/utils/pathedit';
+
 export interface SelectorFrame {
     top: number
     left: number
@@ -18,98 +19,136 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const selected_points: Set<number> = new Set();
-const selected_segs: Set<number> = new Set();
+
+const selected_points = new Map<number, Set<number>>();
+const selected_segs = new Map<number, Set<number>>();
+
 let p_changed: boolean = false;
 let s_changed: boolean = false;
-let path_shape: Shape | undefined;
+
+let path_shape: ShapeView | undefined;
 let path_string: string = '';
-let m42Dp: Matrix | undefined; // 2D点到页面的转换矩阵
+let reusableMatrix: Matrix | undefined;
+
 function select() {
     path_shape = props.context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
+    if (!path_shape) return;
+
     p_changed = false;
     s_changed = false;
+
     modify_select_path();
+
     remove_points();
     remove_segs();
+
     finder_points();
     finder_segs();
+
     if (p_changed || s_changed) {
-        props.context.path.select(Array.from(selected_points.values()), Array.from(selected_segs.values()));
+        props.context.path.select(selected_points, selected_segs);
     }
 }
 
-/**
- * @description 得到selector框在page上的路径path
- */
 function modify_select_path() {
     const m = new Matrix(props.context.workspace.matrix.inverse);
     const l = props.selectorFrame.left;
     const r = props.selectorFrame.left + props.selectorFrame.width;
     const t = props.selectorFrame.top;
     const b = props.selectorFrame.top + props.selectorFrame.height;
+
     const _ps = [
         { x: l, y: t },
         { x: r, y: t },
         { x: r, y: b },
         { x: l, y: b },
     ].map(i => m.computeCoord3(i));
+
     const [lt, rt, rb, lb] = _ps;
     path_string = `M${lt.x} ${lt.y} L${rt.x} ${rt.y} L${rb.x} ${rb.y} L${lb.x} ${lb.y} z`;
 }
 
-// 加入
 function finder_points() {
-    if (!path_shape) return;
-    if (!m42Dp) {
-        m42Dp = new Matrix();
-        m42Dp.preScale(path_shape.frame.width, path_shape.frame.height);
-        m42Dp.multiAtLeft(path_shape.matrix2Root());
+    if (!path_shape || path_shape.pathType !== PathType.Editable) return;
+
+    if (!reusableMatrix) {
+        reusableMatrix = path_shape.matrix2Root().toMatrix();
+        reusableMatrix.preScale(path_shape.frame.width, path_shape.frame.height);
     }
-    const points = (path_shape as PathShape).points;
-    for (let i = 0, l = points.length; i < l; i++) {
-        if (selected_points.has(i)) continue;
-        const __cp = points[i];
-        const p = m42Dp.computeCoord2(__cp.x, __cp.y);
-        if (point_is_target(p)) {
-            selected_points.add(i);
-            p_changed = true;
+
+    const segments = (path_shape as PathShapeView).segments;
+    segments.forEach((segment, k) => {
+        __exe(k, segment.points as CurvePoint[], reusableMatrix!);
+    })
+
+    function __exe(segmentIdx: number, points: CurvePoint[], matrix: Matrix) {
+        let __indexes = selected_points.get(segmentIdx);
+
+        if (!__indexes) {
+            const s = new Set<number>();
+            selected_points.set(segmentIdx, s);
+            __indexes = s;
+        }
+
+        for (let i = 0, l = points.length; i < l; i++) {
+            if (__indexes.has(i)) continue;
+
+            const p = matrix.computeCoord3(points[i]);
+            if (point_is_target(p)) {
+                __indexes.add(i);
+                p_changed = true;
+            }
         }
     }
 }
-function finder_segs() {
-    if (!path_shape) {
-        return;
-    }
-    const segments = props.context.path.segments;
-    for (let i = 0, l = segments.length; i < l; i++) {
-        if (selected_segs.has(i)) {
-            continue;
-        }
-        if (is_target_segs(segments[i])) {
-            selected_segs.add(i);
-            s_changed = true;
-        }
-    }
-}
-// 剔除
+
 function remove_points() {
-    if (!selected_points.size || !path_shape) return;
-    if (!m42Dp) {
-        m42Dp = new Matrix();
-        m42Dp.preScale(path_shape.frame.width, path_shape.frame.height);
-        m42Dp.multiAtLeft(path_shape.matrix2Root());
+    if (!selected_points.size || !path_shape || path_shape.pathType !== PathType.Editable) return;
+
+    if (!reusableMatrix) {
+        reusableMatrix = path_shape.matrix2Root().toMatrix();
+        reusableMatrix.preScale(path_shape.frame.width, path_shape.frame.height);
     }
-    const points = (path_shape as PathShape).points;
-    selected_points.forEach(i => {
-        const __cp = points[i];
-        const p = m42Dp!.computeCoord2(__cp.x, __cp.y);
-        if (!point_is_target(p)) {
-            selected_points.delete(i);
-            p_changed = true;
+
+    const segments = (path_shape as PathShapeView).segments;
+    segments.forEach((segment, index) => {
+        __exe(index, segment.points as CurvePoint[], reusableMatrix!);
+    });
+
+    function __exe(segmentIdx: number, points: CurvePoint[], matrix: Matrix) {
+        const __points = selected_points.get(segmentIdx);
+
+        if (!__points) return;
+
+        __points.forEach(i => {
+            if (!point_is_target(matrix.computeCoord3(points[i]))) {
+                __points.delete(i);
+                p_changed = true;
+            }
+        })
+    }
+}
+
+function finder_segs() {
+    if (!path_shape) return;
+
+    const segments = props.context.path.segments;
+
+    segments.forEach((seg, index) => {
+        let __selected = selected_segs.get(index);
+        if (!__selected) {
+            const s = new Set<number>();
+            selected_segs.set(index, s);
+            __selected = s;
+        }
+
+        for (let i = 0, l = seg.length; i < l; i++) {
+            if (__selected.has(i)) continue;
+
+            if (is_target_segs(seg[i])) {
+                __selected.add(i);
+                s_changed = true;
+            }
         }
     })
 }
@@ -119,17 +158,23 @@ function remove_segs() {
         return;
     }
     const segments = props.context.path.segments;
-    selected_segs.forEach(i => {
-        if (!is_target_segs(segments[i])) {
-            selected_segs.delete(i);
-            s_changed = true;
-        }
+
+    selected_segs.forEach((segment, index) => {
+        const __segments = segments[index];
+
+        if (!__segments) return;
+
+        segment.forEach(i => {
+            if (__segments[i] && !is_target_segs(__segments[i])) {
+                segment.delete(i);
+                s_changed = true;
+            }
+        })
     })
 }
 
 function point_is_target(p: XY) {
-    const scout = props.context.selection.scout!;
-    return scout.isPointInPath(path_string, p);
+    return props.context.selection.scout.isPointInPath(path_string, p);
 }
 
 function isPointInsideRect(x: number, y: number) {
@@ -150,7 +195,11 @@ function cubicBezierPoint(t: number, p0: XY, p1: XY, p2: XY, p3: XY) {
 }
 
 function is_target_segs(segs: Segment) {
-    return selected_points.size ? is_bezise_inside_rect(segs) : is_bezise_intersect_rect(segs);
+    const { start, end } = segs;
+
+    return (isPointInsideRect(start.x, start.y) || isPointInsideRect(end.x, end.y))
+        ? is_bezise_inside_rect(segs)
+        : is_bezise_intersect_rect(segs);
 }
 
 function is_bezise_inside_rect(segs: Segment) { // 内包
@@ -158,43 +207,31 @@ function is_bezise_inside_rect(segs: Segment) { // 内包
     const step = 0.01;
     for (let t = 0; t <= 1; t += step) {
         const xy = cubicBezierPoint(t, start, from, to, end);
-        if (!isPointInsideRect(xy.x, xy.y)) {
-            return false;
-        }
+        if (!isPointInsideRect(xy.x, xy.y)) return false;
     }
     return true;
 }
+
 function is_bezise_intersect_rect(segs: Segment) { // 相交
     const { start, from, to, end } = segs;
     const step = 0.01;
     for (let t = 0; t <= 1; t += step) {
         const xy = cubicBezierPoint(t, start, from, to, end);
-        if (isPointInsideRect(xy.x, xy.y)) {
-            return true;
-        }
+        if (isPointInsideRect(xy.x, xy.y)) return true;
     }
     return false;
 }
-function reset() {
-    selected_points.clear();
-    selected_segs.clear();
-}
 
 watch(() => props.selectorFrame, select, { deep: true });
-// hooks
-onMounted(() => {
-});
-onUnmounted(() => {
-});
 </script>
 <template>
-    <div class="selector" :style="{
+<div class="selector" :style="{
         top: `${props.selectorFrame.top}px`,
         left: `${props.selectorFrame.left}px`,
         width: `${props.selectorFrame.width}px`,
         height: `${props.selectorFrame.height}px`
-    }">
-    </div>
+    }"
+/>
 </template>
 <style scoped lang="scss">
 .selector {

@@ -20,6 +20,7 @@ import { Selection } from '@/context/selection';
 import { v4 } from "uuid";
 import { Menu } from '@/context/menu';
 import Key from '@/components/common/Key.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface Props {
     context: Context
@@ -37,7 +38,7 @@ const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
     document.addEventListener('click', closeResetMenu);
-    props.context.esctask.save(v4(), close_popover);
+    props.context.escstack.save(v4(), close_popover);
 }
 
 const closeResetMenu = (e: MouseEvent) => {
@@ -69,7 +70,7 @@ const untie = () => {
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    const shapes = editor.extractSymbol(props.shapes.map(s => adapt2Shape(s)));
+    const shapes = editor.extractSymbol(props.shapes);
     if (!shapes) return;
     props.context.nextTick(page, () => {
         const select = shapes.reduce((pre, cur) => {
@@ -125,7 +126,7 @@ function updater_untie_state() {
     untie_state.value = is_able_to_unbind(props.context.selection.selectedShapes);
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         updater_untie_state();
         watchShapes();
@@ -189,6 +190,9 @@ onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
     watchedShapes.forEach(v => v.unwatch(shape_watcher));
 })
+
+import reset_comp_icon from "@/assets/icons/svg/reset_comp.svg"
+import comp_state_icon from "@/assets/icons/svg/comp-state.svg"
 </script>
 
 <template>
@@ -197,11 +201,11 @@ onUnmounted(() => {
             <template #tool>
                 <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
-                        <svg-icon icon-class="comp-state"></svg-icon>
+                        <SvgIcon :icon="comp_state_icon"/>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset"
                         :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
-                        <svg-icon icon-class="reset_comp"></svg-icon>
+                        <SvgIcon :icon="reset_comp_icon"/>
                         <div class="reset_menu" v-if="resetMenu">
                             <div :class="{ untie, disabled: !untie_state }" @click="untie">
                                 <span>{{ t('compos.untie') }}</span>
@@ -213,8 +217,8 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
-        <div>
-            <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
+        <div style="padding-top: 8px;">
+            <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '8px' : '0' }">
                 <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
                     :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
             </div>
@@ -234,8 +238,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .instance-attr {
     width: 100%;
-    margin-bottom: 10px;
-    padding: 0 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -325,9 +328,7 @@ onUnmounted(() => {
     .visible-var-container {
         display: flex;
         width: 100%;
-        line-height: 20px;
-        margin-bottom: 6px;
-        margin-top: 6px;
+        align-items: center;
 
         .show {
             display: flex;
@@ -337,7 +338,7 @@ onUnmounted(() => {
             .title {
                 color: #595959;
                 width: 40%;
-                line-height: 20px;
+                line-height: 28px;
                 padding-right: 10px;
             }
 

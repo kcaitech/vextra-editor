@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, toRaw } from 'vue';
 import { Selection, SelectionTheme } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { reactive } from 'vue';
@@ -36,20 +36,19 @@ function watchShapes() { // 监听选区相关shape的变化
     })
 }
 
-function selection_watcher(t?: number) {
+function selection_watcher(t?: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         watchShapes();
         update_themes();
         update_paths();
     }
 }
+
 function update_paths() {
     const shapes = props.context.selection.selectedShapes;
+    // const shapes = props.context.selection.selectedShapes.map(i => toRaw(i));
     const workspace = props.context.workspace;
-    if (!workspace.shouldSelectionViewUpdate) {
-        return;
-    }
-
+    if (!workspace.shouldSelectionViewUpdate) return;
     const m = workspace.matrix;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
@@ -58,7 +57,7 @@ function update_paths() {
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(m);
         path.transform(m2r);
-        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normol });
+        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normal });
     }
     if (shapes.length === 1 && paths.value.length === 1) {
         workspace.setCtrlPath(paths.value[0].path);
@@ -70,12 +69,12 @@ function update_themes() {
     theme_map.clear();
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const theme = is_symbol_class(shape) ? SelectionTheme.Symbol : SelectionTheme.Normol;
+        const theme = is_symbol_class(shape) ? SelectionTheme.Symbol : SelectionTheme.Normal;
         theme_map.set(shape.id, theme);
     }
 }
 
-function workspace_watcher(t: number) {
+function workspace_watcher(t: number | string) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         passive_update();
     } else if (t === WorkSpace.MATRIX_TRANSFORMATION) {
@@ -93,8 +92,9 @@ function passive_update() {
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(m);
         path.transform(m2r);
-        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normol });
+        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normal });
     }
+
     if (shapes.length === 1 && paths.value.length === 1) {
         props.context.workspace.setCtrlPath(paths.value[0].path);
     }
@@ -132,8 +132,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g>
-        <path v-for="(p, i) in paths" :key="i" :d="p.path" :stroke="p.theme" fill="none"></path>
-    </g>
+<g>
+    <path v-for="(p, i) in paths" :key="i" :d="p.path" :stroke="p.theme" fill="none"/>
+</g>
 </template>
 <style lang='scss' scoped></style>

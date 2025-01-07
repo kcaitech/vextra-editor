@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ToolButton from '../../ToolButton.vue';
+import ToolButton from '../ToolButton.vue';
 import { ref, nextTick } from 'vue';
 import { Action } from "@/context/tool";
 import { Context } from '@/context';
@@ -7,8 +7,11 @@ import { useI18n } from 'vue-i18n';
 import CreateTable from './CreateTable.vue';
 const { t } = useI18n()
 interface Props {
-  context: Context
-  active: boolean
+  context: Context,
+  params: {
+    active: boolean,
+    select: (action: string) => void
+  }
 }
 type Button = InstanceType<typeof ToolButton>;
 const props = defineProps<Props>();
@@ -16,11 +19,12 @@ const button = ref<Button>();
 const visible = ref(false);
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
-const emit = defineEmits<{
-  (e: "select", action: Action): void;
-}>();
-function select(action: Action) {
-  emit('select', action);
+// const emit = defineEmits<{
+//   (e: "select", action: string): void;
+// }>();
+function select(action: string) {
+  // emit('select', action);
+  props.params.select(action)
 }
 
 function showTable(e: MouseEvent) {
@@ -69,6 +73,9 @@ const onMouseleave = () => {
   clearTimeout(timer);
   visible.value = false;
 }
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import pattern_table_icon from '@/assets/icons/svg/pattern-table.svg';
 </script>
 
 <template>
@@ -78,10 +85,10 @@ const onMouseleave = () => {
   </div>
   <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
     :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" :selected="props.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
+    <ToolButton ref="button" :selected="props.params.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
       style="width: 32px">
       <div class="svg-table" @click="showTable">
-        <svg-icon icon-class="pattern-table"></svg-icon>
+        <SvgIcon :icon="pattern_table_icon"/>
       </div>
     </ToolButton>
   </el-tooltip>

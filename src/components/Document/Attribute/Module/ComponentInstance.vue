@@ -5,13 +5,24 @@ import TypeHeader from '../TypeHeader.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import { ref, onUnmounted, onMounted, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { OverrideType, Shape, ShapeView, SymbolRefShape, SymbolRefView, SymbolShape, SymbolView, Variable, adapt2Shape } from '@kcdesign/data';
+import {
+    OverrideType,
+    Shape,
+    ShapeView,
+    SymbolRefShape,
+    SymbolRefView,
+    SymbolShape,
+    SymbolView,
+    Variable,
+    adapt2Shape,
+    ShapeType
+} from '@kcdesign/data';
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { MoreFilled } from '@element-plus/icons-vue';
 import { VariableType } from '@kcdesign/data';
 import {
     create_var_by_type,
-    get_symbol_by_layer,
+    get_symbol_by_layer, get_x_type_option,
     is_bind_x_vari,
     modify_variable,
     reset_all_attr_for_ref
@@ -19,6 +30,7 @@ import {
 import { message } from '@/utils/message';
 import { Selection } from '@/context/selection';
 import Key from '@/components/common/Key.vue';
+import { v4 } from 'uuid';
 
 interface Props {
     context: Context
@@ -33,7 +45,8 @@ const saveExamplesToggle = () => {
 }
 const layerIsShow = () => {
     getDialogPosi(atrrdialog.value);
-    isInstanceShow.value = true
+    isInstanceShow.value = true;
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
 
 const resetMenu = ref(false)
@@ -42,7 +55,7 @@ const untie = () => {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(props.shapes.map(s => adapt2Shape(s)));
+        const shapes = editor.extractSymbol(props.shapes);
         if (shapes) {
             props.context.nextTick(page, () => {
                 const select = shapes.reduce((pre, cur) => {
@@ -101,9 +114,24 @@ const isBind = () => {
     if (shapes.length === 1) {
         const vari = is_bind_x_vari(shapes[0], OverrideType.SymbolID);
         sym_layer.value = get_symbol_by_layer(shapes[0]);
+
+        let __sym = sym_layer.value!;
+        let union = sym_layer.value!;
+        if (!__sym) {
+            return;
+        }
+        if (__sym.parent?.type === ShapeType.SymbolUnion) {
+            union = __sym.parent! as SymbolView;
+        }
+
         selectId.value = [shapes[0].id];
+
         is_bind.value = vari;
         if (vari) {
+            const _temp: ShapeView[] = [];
+            get_x_type_option(union, __sym, vari.type, vari, _temp);
+            selectId.value = _temp.map(i => i.id);
+
             default_name.value = vari.name;
         } else {
             default_name.value = shapes[0].name;
@@ -115,12 +143,21 @@ const card_ref = ref<HTMLDivElement>();
 function edit_instance() {
     getDialogPosi(card_ref.value);
     isInstanceShow.value = true;
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
 
-function save_layer_show(type: VariableType, name: string) {    
+function de_layer_is_show() {
+    const is_achieve_expected_results = isInstanceShow.value;
+    isInstanceShow.value = false;
+    return is_achieve_expected_results;
+}
+
+function save_layer_show(type: VariableType, name: string) {
     if (is_bind.value) {
         if (!sym_layer.value) return;
-        modify_variable(props.context, (sym_layer.value), is_bind.value, name, is_bind.value.value, [is_bind.value.value])
+        // modify_variable(props.context, (sym_layer.value), is_bind.value, name, is_bind.value.value, [is_bind.value.value])
+
+        modify_variable(props.context, (sym_layer.value), is_bind.value, name, is_bind.value.value, selectId.value);
     } else {
         if (!name.trim()) {
             message('info', t('compos.validate_info_2'));
@@ -135,9 +172,9 @@ function save_layer_show(type: VariableType, name: string) {
 }
 
 const getValue = (id: string) => {
-    return props.context.data.symbolsMgr.getSync(id)?.name;
+    return props.context.data.getSymbolSync(id)?.name;
 }
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         isBind();
     }
@@ -174,18 +211,25 @@ onUnmounted(() => {
     document.removeEventListener('click', closeResetMenu)
 
 })
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import relevance_icon from '@/assets/icons/svg/relevance.svg';
+import comp_state_icon from "@/assets/icons/svg/comp-state.svg"
+import gray_symbol_ref_icon from "@/assets/icons/svg/gray-symbol-ref.svg"
+import delete_icon from "@/assets/icons/svg/delete.svg"
+
 </script>
 
 <template>
-    <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
+    <div style="position: relative;" ref="atrrdialog">
         <TypeHeader :title="t('compos.compos_instance')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">
                     <div class="rele_svg" @click="layerIsShow" v-if="!is_bind">
-                        <svg-icon icon-class="relevance"></svg-icon>
+                        <SvgIcon :icon="relevance_icon"/>
                     </div>
                     <div class="edit_svg" @click.stop="editComps">
-                        <svg-icon icon-class="comp-state"></svg-icon>
+                        <SvgIcon :icon="comp_state_icon"/>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset">
                         <el-icon>
@@ -208,7 +252,7 @@ onUnmounted(() => {
             <div class="module_item_left" @click="edit_instance">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="gray-symbol-ref"></svg-icon>
+                        <SvgIcon :icon="gray_symbol_ref_icon"/>
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind?.name }}</span>
@@ -217,13 +261,13 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-            :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')" :dialog_posi="dialog_posi"
-            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show"
-            :symbol="sym_layer">
+            :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')"
+            :dialog_posi="dialog_posi" :default_name="default_name" :variable="is_bind ? is_bind : undefined"
+            @save-layer-show="save_layer_show" :symbol="sym_layer">
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
                     :context="props.context" :placeholder="t('compos.place_select_instance')" :selectId="selectId">
@@ -256,7 +300,7 @@ onUnmounted(() => {
     }
 
     .rele_svg:hover {
-        background-color: #EBEBEB;
+        background-color: #F5F5F5;
     }
 
     .edit_svg {
@@ -275,7 +319,7 @@ onUnmounted(() => {
     }
 
     .edit_svg:hover {
-        background-color: #EBEBEB;
+        background-color: #F5F5F5;
     }
 
     .reset_svg {
@@ -321,12 +365,14 @@ onUnmounted(() => {
     }
 
     .reset_svg:hover {
-        background-color: #EBEBEB;
+        background-color: #F5F5F5;
     }
 }
 
 .attr_con {
     display: flex;
+    margin-bottom: 2px;
+    margin-top: 6px;
     align-items: center;
     justify-content: space-between;
 }
@@ -335,9 +381,13 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     border-radius: 4px;
-    background-color: var(--grey-light);
-    width: calc(100% - 22px);
-    height: 30px;
+    background-color: #F5F5F5;
+    width: calc(100% - 32px);
+    height: 32px;
+
+    &:hover {
+        background-color: #EBEBEB;
+    }
 
     .module_name {
         display: flex;
@@ -399,18 +449,22 @@ onUnmounted(() => {
 }
 
 .delete {
-    flex: 0 0 22px;
+    flex: 0 0 28px;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    transition: .2s;
 
     >svg {
-        width: 11px;
-        height: 11px;
+        width: 16px;
+        height: 16px;
     }
 
-    transition: .2s;
+    &:hover {
+        background-color: #F5F5F5;
+    }
 }
 </style>

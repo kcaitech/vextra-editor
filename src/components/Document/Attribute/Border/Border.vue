@@ -1,7 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import {
+    BasicArray,
+    AsyncBorderThickness,
+    GradientType,
+    ShapeType,
+    ShapeView,
+    Stop,
+    TableCellView,
+    CornerType,
+    BorderSideSetting,
+    SideType,
+    PathShapeView,
+    TableView,
+    LinearApi
+} from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -11,7 +25,6 @@ import { FillType, BorderPosition } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
 import { toHex } from "@/utils/color";
-import { WorkSpace } from '@/context/workspace';
 import {
     get_borders,
     get_actions_add_boder,
@@ -21,7 +34,8 @@ import {
     get_actions_border_delete,
     get_aciton_gradient,
     get_aciton_gradient_stop,
-    get_actions_filltype
+    get_actions_filltype,
+    get_actions_border,
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import Apex from './Apex.vue';
@@ -30,6 +44,15 @@ import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
+import { format_value, genOptions } from '@/utils/common';
+import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
+import {
+    get_actions_border_thickness,
+    get_actions_border_position,
+} from '@/utils/shape_style'
+import { getSideThickness } from "./index"
+import { sortValue } from '../BaseAttr/oval';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface BorderItem {
     id: number
@@ -39,6 +62,8 @@ interface BorderItem {
 interface Props {
     context: Context
     shapes: ShapeView[]
+    cellsTrigger: any[]
+    trigger: any[]
 }
 
 const { t } = useI18n();
@@ -49,12 +74,27 @@ const alphaBorder = ref<HTMLInputElement[]>();
 const colorBorder = ref<HTMLInputElement[]>()
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
+// const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
 const watchedShapes = new Map();
 const show_apex = ref<boolean>(false);
-const shapes = ref<ShapeView[]>([]);
+const shapes = ref<ShapeView[]>();
 const apex_view = ref<number>(0);
-let table: TableShape;
+// let table: TableView;
+let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
+let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
+const reflush_side = ref(0);
+const reflush_apex = ref(0);
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const keydownval = ref<boolean>(false)
+
+const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
+const positonOptionsSource: SelectSource[] = genOptions([
+    [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
+    [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
+    [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
+]);
+const isActived = ref(-1)
+const borderThickness = ref<HTMLInputElement[] | undefined>();
 
 function watchShapes() {
     const needWatchShapes = new Map();
@@ -88,16 +128,21 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('style') || args.includes('variables'))) [
-        updateData()
-    ]
+    if ((args.includes('layout') || args.includes('borders'))) {
+        updateData();
+    }
+    if (args.includes('pathsegs') && args.includes('points')) {
+        layout();
+        reflush_apex.value++;
+    }
 }
 
 function updateData() {
-    borders.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const selecteds = getShapesForStyle(props.context.selection.selectedShapes);
+    const selecteds = props.context.selection.selectedShapes;
+    if (selecteds.length < 1) return;
+    borders.length = 0;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -126,7 +171,7 @@ function updateData() {
             }
         }
     } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
         const _bs = get_borders(shapes);
         if (_bs === 'mixed') {
             mixed.value = true;
@@ -134,13 +179,14 @@ function updateData() {
             borders.push(..._bs.reverse());
         }
     }
+    reflush_side.value++
 }
 
 function addBorder() {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -150,9 +196,9 @@ function addBorder() {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
         if (mixed_cell.value) {
-            e.addBorder4Multi(border, range)
+            e.addBorder4Cell(border, range, true)
         } else {
-            e.addBorder(border, range)
+            e.addBorder4Cell(border, range, false)
         }
     } else {
         const shapes = getShapesForStyle(props.shapes);
@@ -175,7 +221,6 @@ function first() {
 
 function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -184,7 +229,7 @@ function deleteBorder(idx: number) {
         const table = props.context.tableSelection;
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.deleteBorder(_idx, range)
+        e.deleteBorder4Cell(_idx, range)
     } else {
         const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_delete(shapes, _idx);
@@ -197,7 +242,6 @@ function deleteBorder(idx: number) {
 }
 
 function toggleVisible(idx: number) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
     const _idx = borders.length - idx - 1;
@@ -209,7 +253,7 @@ function toggleVisible(idx: number) {
         const table = props.context.tableSelection;
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setBorderEnable(_idx, isEnabled, range)
+        e.setBorderEnable4Cell(_idx, isEnabled, range)
     } else {
         const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_enabled(shapes, _idx, isEnabled);
@@ -220,6 +264,7 @@ function toggleVisible(idx: number) {
     }
     hidden_selection(props.context);
 }
+
 const colorValue = ref('');
 const alphaValue = ref('');
 const tableSelect = ref({
@@ -229,6 +274,7 @@ const tableSelect = ref({
     tableColStart: props.context.tableSelection.tableColStart,
     tableColEnd: props.context.tableSelection.tableColEnd
 });
+
 function onColorChange(e: Event, idx: number) {
     let value = colorValue.value;
     if (value.slice(0, 1) !== '#') {
@@ -249,12 +295,10 @@ function onColorChange(e: Event, idx: number) {
     const alpha = border.color.alpha;
     const color = new Color(alpha, r, g, b);
     setColor(idx, color);
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     hidden_selection(props.context);
 }
 
 function onAlphaChange(b: Border, idx: number) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     let alpha: any = alphaValue.value;
     if (!alphaBorder.value) return;
     if (alpha.slice(-1) === '%') {
@@ -295,8 +339,36 @@ function onAlphaChange(b: Border, idx: number) {
     hidden_selection(props.context);
 }
 
+function keydownAlpha(event: KeyboardEvent, b: Border, idx: number, val: string) {
+    let value: any = sortValue(val);
+    if (!alphaBorder.value) return;
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        keydownval.value = true;
+        if (value >= 0) {
+            if (value >= 100) {
+                value = 100
+            }
+            value = value / 100 + (event.code === 'ArrowUp' ? 0.01 : -0.01)
+            if (isNaN(value)) return;
+            value = value <= 0 ? 0 : value <= 1 ? value : 1
+            const border = borders[idx].border;
+            const { red, green, blue } = border.color
+            const color = new Color(value, red, green, blue);
+            if (b.fillType === FillType.SolidColor) {
+                setColor(idx, color);
+            } else if (b.gradient && b.fillType === FillType.Gradient) {
+                set_gradient_opacity(idx, value);
+            }
+        } else {
+            alpha_message(idx, b);
+        }
+        event.preventDefault();
+    }
+
+}
+
 function setColor(idx: number, color: Color) {
-    const selected = props.context.selection.selectedShapes;
+    const selected = shapes.value || props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     const s = selected[0] as ShapeView;
     const _idx = borders.length - idx - 1;
@@ -304,19 +376,29 @@ function setColor(idx: number, color: Color) {
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        const tablecells = (s as TableView).getVisibleCells(table.tableRowStart,
-            table.tableRowEnd,
-            table.tableColStart,
-            table.tableColEnd);
+        const tablecells = (s as TableView).getVisibleCells(range.rowStart,
+            range.rowEnd,
+            range.colStart,
+            range.colEnd);
         if (tablecells.length > 0 && tablecells[0].cell) {
-            e.setBorderColor(_idx, color, range)
+            if (keydownval.value) {
+                linearApi.modifyBorderOpacity4Cell(_idx, color, range, s as TableView);
+                keydownval.value = false;
+            } else {
+                e.setBorderColor4Cell(_idx, color, range)
+            }
         }
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_color(shapes, _idx, color);
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setShapesBorderColor(actions);
+            if (keydownval.value) {
+                linearApi.modifyBorderOpacity(actions)
+                keydownval.value = false
+            } else {
+                editor.setShapesBorderColor(actions);
+            }
         }
     }
 }
@@ -341,7 +423,12 @@ const set_gradient_opacity = (idx: number, opacity: number) => {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'borders');
-    editor.setGradientOpacity(actions);
+    if (keydownval.value) {
+        linearApi.modifyGradientOpacity(actions)
+        keydownval.value = false
+    } else {
+        editor.setGradientOpacity(actions);
+    }
 }
 
 function getColorFromPicker(color: Color, idx: number) {
@@ -353,7 +440,7 @@ function getColorFromPicker(color: Color, idx: number) {
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setBorderColor(_idx, color, range)
+        e.setBorderColor4Cell(_idx, color, range)
     } else {
         const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_color(shapes, _idx, color);
@@ -365,7 +452,7 @@ function getColorFromPicker(color: Color, idx: number) {
     hidden_selection(props.context);
 }
 
-const selectColor = (i: number) => {
+const selectColor = (e: FocusEvent) => {
     if (colorBorder.value) {
         shapes.value = [...props.context.selection.selectedShapes];
         const table = props.context.tableSelection;
@@ -376,14 +463,33 @@ const selectColor = (i: number) => {
             tableColStart: table.tableColStart,
             tableColEnd: table.tableColEnd
         }
-        colorBorder.value[i].select()
     }
 }
-const colorInput = (i: number) => {
+const is_color_select = ref(false);
+const colorClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_color_select.value) return;
+    el.select();
+    is_color_select.value = true;
+}
+const colorInput = (e: Event) => {
     if (colorBorder.value) {
-        const value = colorBorder.value[i].value;
+        const value = (e.target as HTMLInputElement).value;
         colorValue.value = value;
     }
+}
+const is_alpha_select = ref(false);
+const alphaClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_alpha_select.value) return;
+    el.select();
+    is_alpha_select.value = true;
 }
 const selectAlpha = (e: Event) => {
     if (alphaBorder.value) {
@@ -397,7 +503,6 @@ const selectAlpha = (e: Event) => {
             tableColEnd: table.tableColEnd
         }
     }
-    (e.target as HTMLInputElement).select();
 }
 const alphaInput = (e: Event) => {
     if (alphaBorder.value) {
@@ -425,86 +530,91 @@ const filterAlpha = (border: Border) => {
 
 /**
  * @description 翻转渐变
- * @param idx 
+ * @param idx
  */
 function gradient_reverse(idx: number) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient(shapes, _idx, 'borders');
     editor.reverseShapesGradient(actions);
 }
+
 /**
  * @description 旋转渐变
- * @param idx 
+ * @param idx
  */
 function gradient_rotate(idx: number) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient(shapes, _idx, 'borders');
     editor.rotateShapesGradient(actions);
 }
+
 /**
  * @description 添加渐变节点
- * @param idx 
- * @param position 
- * @param color 
+ * @param idx
+ * @param position
+ * @param color
  */
 function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const stop = new Stop(new BasicArray(), id, position, color);
     const actions = get_aciton_gradient_stop(shapes, _idx, stop, 'borders');
     editor.addShapesGradientStop(actions);
 }
+
 /**
  * @description 切换渐变类型
- * @param idx 
+ * @param idx
  */
-function togger_gradient_type(idx: number, type: GradientType | 'solid') {
+function togger_gradient_type(idx: number, type: GradientType, fillType: FillType) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    if (type === 'solid') {
-        toggle_fill_type(idx, FillType.SolidColor);
+    if (fillType !== FillType.Gradient) {
+        toggle_fill_type(idx, fillType);
     } else {
         const actions = get_aciton_gradient_stop(shapes, _idx, type, 'borders');
         editor.toggerShapeGradientType(actions);
     }
 }
+
 /**
  * @description 修改节点颜色
- * @param idx 
- * @param color 
+ * @param idx
+ * @param color
  */
 function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, { color, stop_i: index }, 'borders');
     editor.setShapesGradientStopColor(actions);
 }
+
 /**
  * @description 删除渐变节点
- * @param idx 
- * @param index 
+ * @param idx
+ * @param index
  */
-function gradient_stop_delete(idx: number, index: number) {
+function gradient_stop_delete(idx: number, index: any) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, index, 'borders');
@@ -520,9 +630,9 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setFillType(_idx, fillType, range)
+        e.setFillType4Cell(_idx, fillType, range);
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_filltype(shapes, _idx, fillType);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -533,10 +643,15 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 
 function layout() {
     show_apex.value = false;
-    if (props.shapes.length === 1) {
-        const type = props.shapes[0].type;
-        show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
-    }
+    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
+
+    show_apex.value = line_end_point(shapes);
+}
+
+const line_end_point = (shapes: ShapeView[]) => {
+    const segment = shapes.every(v => ((v instanceof PathShapeView) && ((v.segments.length === 1 && !v.segments[0].isClosed) || v.segments.length > 1)));
+    const endpoint = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
+    return endpoint;
 }
 
 function update_by_shapes() {
@@ -550,10 +665,10 @@ function shapes_watcher(v: ShapeView[]) {
     watchCells.forEach((v) => v.unwatch(updateData));
     watchCells.clear();
     if (v.length === 1 && v[0].type === ShapeType.Table) {
-        table?.unwatch(table_watcher);
+        // table?.unwatch(table_watcher);
         v[0].watch(table_watcher);
     } else {
-        table?.unwatch(table_watcher);
+        // table?.unwatch(table_watcher);
     }
 }
 
@@ -561,19 +676,21 @@ function table_watcher() {
     cells_watcher();
 }
 
-let watchCells: Map<string, TableCell> = new Map();
+let watchCells: Map<string, TableCellView> = new Map();
 
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
     const is_edting = table_selection.editingCell;
     if (table_selection.tableRowStart > -1 || is_edting) {
-        let cells: any[] = [];
+        let cells: {
+            cell: TableCellView | undefined;
+        }[] = [];
         if (is_edting) {
-            cells.push(is_edting);
+            cells.push({ cell: is_edting });
         } else {
             cells = table_selection.getSelectedCells(true);
         }
-        const needWatch: Map<string, TableCell> = new Map();
+        const needWatch: Map<string, TableCellView> = new Map();
         for (let i = 0, len = cells.length; i < len; i++) {
             let c = cells[i];
             if (c.cell) {
@@ -598,13 +715,13 @@ function table_selection_watcher(t: number) {
     }
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
 }
 
 const isGradient = () => {
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     let ret = false;
     shapes.forEach(s => {
         if (s.type !== ShapeType.Contact) {
@@ -616,6 +733,12 @@ const isGradient = () => {
 
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
+const stop2 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
+    if (v.length > 0 && (v.includes('borders'))) updateData();
+})
+const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
+    if (v.length > 0 && (v.includes('layout'))) updateData();
+});
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
@@ -623,12 +746,263 @@ onMounted(() => {
 })
 onUnmounted(() => {
     stop();
+    stop2();
+    stop3();
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.context.selection.unwatch(selection_watcher);
     watchedShapes.forEach(v => {
         v.unwatch(watcher)
     });
 })
+
+function positionSelect(selected: SelectItem, id: number | undefined) {
+    position.value = selected;
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shapes = getShapesForStyle(selecteds);
+    const actions = get_actions_border_position(shapes, id!, selected.value as BorderPosition);
+    if (actions && actions.length) {
+        const editor = props.context.editor4Page(page);
+        editor.setShapesBorderPosition(actions);
+    }
+}
+
+const testEl = ref<HTMLElement>()
+const testidx = ref<number>(0)
+const pointX = ref<number>()
+const pointY = ref<number>()
+const showpoint = ref<boolean>(false)
+const rotate = ref<boolean>()
+
+async function onMouseDown(e: MouseEvent, index: number) {
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+    const page = props.context.selection.selectedPage;
+    const table = props.context.tableSelection;
+    pointX.value = e.clientX
+    pointY.value = e.clientY
+    testEl.value = borderThickness.value![index] as HTMLElement
+    if (borderThickness.value && isNaN(Number(borderThickness.value[index].value))) return;
+    if (testEl.value)
+        testidx.value = index
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    e.stopPropagation()
+    if (shapes.length === 1 && shapes[0].type === ShapeType.Table && is_editing(table)) {
+        const table = props.context.tableSelection;
+        const range = get_table_range(table);
+        bordercellthickness_editor = props.context.editor4Table(shapes[0] as TableView).asyncBorderThickness4Cell(range);
+        // bordercellthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
+    } else {
+        borderthickness_editor = props.context.editor.controller().asyncBorderThickness(shapes, page!)
+        // borderthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
+    }
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener("mousemove", onMouseMove, false);
+    // document.addEventListener("pointerlockchange", lockChangeAlert, false);
+    document.addEventListener("pointerlockchange", pointerLockChange, false);
+    showpoint.value = true
+}
+
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        onMouseUp();
+    }
+}
+
+function lockChangeAlert() {
+    if (document.pointerLockElement) {
+        showpoint.value = true
+        document.addEventListener("mousemove", onMouseMove, false);
+    } else {
+        showpoint.value = false
+        document.removeEventListener("mousemove", onMouseMove, false);
+    }
+}
+
+const selectBorderThicknes = (e: FocusEvent, index: number) => {
+    isActived.value = index;
+}
+
+
+function updatePosition(movementX: number, movementY: number, isRotating: boolean) {
+    if (pointX.value === undefined || pointY.value === undefined) return;
+    const clientHeight = document.documentElement.clientHeight
+    const clientWidth = document.documentElement.clientWidth
+    rotate.value = isRotating
+    pointX.value += movementX
+    pointY.value += movementY
+    pointX.value = pointX.value < 0 ? clientWidth : (pointX.value > clientWidth ? 0 : pointX.value)
+    pointY.value = pointY.value < 0 ? clientHeight : (pointY.value > clientHeight ? 0 : pointY.value)
+}
+
+function onMouseMove(e: MouseEvent) {
+    const isRotating = e.movementX > 0;
+    updatePosition(e.movementX, e.movementY, isRotating)
+    const index = testidx.value
+    const id = borders.length - index - 1
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+    const page = props.context.selection.selectedPage;
+    if (!page || shapes.length < 1) return;
+    const shape = shapes[0];
+    const table = props.context.tableSelection;
+    if (borderThickness.value?.length) {
+        let thickness = (getSideThickness(borders[index].border.sideSetting) || 0) + e.movementX;
+        if (thickness > 300) thickness = 300;
+        if (shapes.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
+            bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness, id)
+        } else {
+            const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
+            if (actions && actions.length && borderthickness_editor) {
+                borderthickness_editor.execute(thickness < 0 ? 0 : thickness, id);
+            }
+        }
+        reflush_side.value++;
+    }
+}
+
+function onMouseUp() {
+    document.exitPointerLock()
+    showpoint.value = false
+
+    document.removeEventListener("mousemove", onMouseMove, false);
+    document.removeEventListener('mouseup', onMouseUp);
+    if (borderthickness_editor) {
+        borderthickness_editor.close();
+        borderthickness_editor = undefined;
+    }
+    if (bordercellthickness_editor) {
+        bordercellthickness_editor.close();
+        bordercellthickness_editor = undefined
+    }
+    document.removeEventListener("pointerlockchange", pointerLockChange, false);
+}
+
+function setThickness(e: Event, id: number) {
+    let thickness = Number((e.target as HTMLInputElement).value);
+    (e.target as HTMLInputElement).blur();
+    if (isNaN(thickness)) return;
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    if (thickness > 300) thickness = 300;
+    const shape = selecteds[0];
+    const table = props.context.tableSelection;
+    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(shape as TableView);
+        const range = get_table_range(table);
+        e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
+    } else {
+        const shapes = getShapesForStyle(selecteds);
+        const t = thickness < 0 ? 0 : thickness;
+        const actions = get_actions_border(shapes, id, t);
+        if (actions && actions.length) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesBorderThickness(actions);
+        }
+    }
+    reflush_side.value++;
+}
+
+function keydownThickness(event: KeyboardEvent, id: number, val: string | number) {
+    let value: any = sortValue(val.toString());
+    let old = value;
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shape = selecteds[0];
+    const table = props.context.tableSelection;
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        if (value >= 0) {
+            if (value >= 300) {
+                value = 300
+            }
+            value = value + (event.code === 'ArrowUp' ? 1 : -1)
+            if (isNaN(value)) return;
+            value = value <= 0 ? 0 : value <= 300 ? value : 300
+            if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+                const e = props.context.editor4Table(shape as TableView);
+                const range = get_table_range(table);
+                if (old !== value) linearApi.modifyBorderThickness4Cell(id, value, range, shape as TableView);
+            } else {
+                const shapes = getShapesForStyle(selecteds);
+                const actions = get_actions_border(shapes, id, value);
+                if (actions && actions.length) {
+                    if (old !== value) linearApi.modifyShapesBorderThickness(actions);
+                }
+            }
+        }
+        event.preventDefault();
+        reflush_side.value++;
+    }
+
+}
+
+const thickness_value = (index: number, idx: number) => {
+    if (typeof getSideThickness(borders[idx].border.sideSetting) === 'boolean') {
+        return t('attr.mixed')
+    } else {
+        let result = [];
+        const selecteds = props.context.selection.selectedShapes;
+        const shape = selecteds[0]
+        const table = props.context.tableSelection;
+        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+            if (table.tableRowStart > -1) {
+                const _cs = table.getSelectedCells(true);
+                const v = new Set()
+                for (let i = 0, len = _cs.length; i < len; i++) {
+                    v.add(_cs[i].cell?.style.borders[0].sideSetting.thicknessLeft)
+                }
+                if (v.size === 1) {
+                    v.forEach(i => result.push(i))
+                }
+            } else {
+                const is_edting = table.editingCell;
+                const v = is_edting?.style.borders[0].sideSetting.thicknessLeft;
+                if (v || v === 0) result.push(v)
+            }
+        } else {
+            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const borders = shape.getBorders();
+                if (!borders.length) return 0;
+                result.push(getSideThickness(borders[index].sideSetting, shape));
+            }
+        };
+
+        const unique = new Set(result);
+        if (unique.size === 1 && !unique.has(false)) {
+            return format_value(Number(result[0]));
+        } else {
+            return t('attr.mixed')
+        }
+    }
+}
+const is_stroke_select = ref(false);
+const strokeBlur = () => {
+    isActived.value = -1;
+    is_stroke_select.value = false;
+}
+const strokeClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_stroke_select.value) return;
+    el.select();
+    is_stroke_select.value = true;
+}
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import thickness_icon from '@/assets/icons/svg/thickness.svg';
 </script>
 
 <template>
@@ -636,7 +1010,7 @@ onUnmounted(() => {
         <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
             <template #tool>
                 <div class="add" @click.stop="addBorder">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </template>
         </TypeHeader>
@@ -646,53 +1020,123 @@ onUnmounted(() => {
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="borders-container" v-else-if="!mixed && !mixed_cell">
+        <div class="borders-container" v-else-if="!mixed && !mixed_cell && borders.length">
             <div class="border" v-for="(b, idx) in borders" :key="b.id">
-                <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                    <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
+                <div class="top">
+                    <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                        <SvgIcon v-if="b.border.isEnabled" :icon="select_icon"/>
+                    </div>
+                    <div class="color">
+                        <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
+                            :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
+                            @change="(c: Color) => getColorFromPicker(c, idx)"
+                            @gradient-reverse="() => gradient_reverse(idx)"
+                            :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
+                            @gradient-rotate="() => gradient_rotate(idx)"
+                            @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
+                            @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
+                            @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                            @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
+                        <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
+                            :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
+                            :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                            @click="colorClick" @blur="is_color_select = false" @focus="selectColor($event)"
+                            @input="colorInput($event)" />
+                        <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
+                            v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
+                                t(`color.${b.border.gradient.gradientType}`)
+                            }}</span>
+                        <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
+                            style="text-align: center;" :value="filterAlpha(b.border) + '%'" @click="alphaClick"
+                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"
+                            @focus="selectAlpha" @input="alphaInput"
+                            @keydown="(e) => keydownAlpha(e, b.border, idx, filterAlpha(b.border))" />
+                    </div>
+                    <div class="delete" @click="deleteBorder(idx)">
+                        <SvgIcon :icon="delete_icon"/>
+                    </div>
                 </div>
-                <div class="color">
-                    <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                        :locat="{ index: borders.length - idx - 1, type: 'borders' }" @change="(c: Color) => getColorFromPicker(c, idx)"
-                        @gradient-reverse="() => gradient_reverse(idx)" :gradient="isGradient() ? b.border.gradient : undefined"
-                        :fillType="b.border.fillType" @gradient-rotate="() => gradient_rotate(idx)"
-                        @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                        @gradient-type="(type) => togger_gradient_type(idx, type)"
-                        @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
-                    <input ref="colorBorder" class="colorBorder" :spellcheck="false"
-                        v-if="b.border.fillType !== FillType.Gradient || !isGradient()" :value="(toHex(b.border.color)).slice(1)"
-                        @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
-                        :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
-                    <span class="colorBorder" style="line-height: 14px;"
-                        v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
-                            t(`color.${b.border.gradient.gradientType}`) }}</span>
-                    <input ref="alphaBorder" class="alphaBorder" style="text-align: center;"
-                        :value="filterAlpha(b.border) + '%'" @change="e => onAlphaChange(b.border, idx)"
-                        @focus="selectAlpha" @input="alphaInput"
-                        :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
+                <div class="bottom">
+                    <div style=" flex: calc(50% - 20px);"
+                        :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
+                        <Select class="select" :context="props.context" :shapes="props.shapes"
+                            :source="positonOptionsSource"
+                            :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
+                            @select="positionSelect" :index="borders.length - idx - 1"></Select>
+                    </div>
+                    <div class="thickness-container" style=" flex: calc(50% - 20px);"
+                        :class="{ actived: isActived === idx }">
+                        <SvgIcon :icon="thickness_icon"
+                            :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
+                            @mousedown.stop="onMouseDown($event, idx)"/>
+                        <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
+                            @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur"
+                            @click="strokeClick" @focus="selectBorderThicknes($event, idx)"
+                            @keydown="e => keydownThickness(e, borders.length - idx - 1, thickness_value(borders.length - idx - 1, idx))">
+                    </div>
+                    <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
+                        :index="borders.length - idx - 1" :reflush_side="reflush_side">
+                    </BorderDetail>
                 </div>
-                <!--                <div class="extra-action">-->
-                <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                    :index="borders.length - idx - 1">
-                </BorderDetail>
-                <div class="delete" @click="deleteBorder(idx)">
-                    <svg-icon icon-class="delete"></svg-icon>
-                </div>
-                <!--                </div>-->
             </div>
         </div>
-        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view">
+        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
+            :trigger="props.trigger" :reflush_apex="reflush_apex">
         </Apex>
     </div>
+    <teleport to="body">
+        <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
+        </div>
+    </teleport>
 </template>
 
 <style scoped lang="scss">
+.showop {
+    opacity: 0.3;
+}
+
+.bounce-enter-active {
+    animation: bounce-in 0.25s;
+}
+
+.bounce-leave-active {
+    animation: bounce-in 0.25s reverse;
+}
+
+@keyframes bounce-in {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.25);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
+}
+
+.actived {
+    border-color: #1878F5 !important;
+}
+
 .border-panel {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     //border-top: 1px solid #F0F0F0;
     border-bottom: 1px solid #F0F0F0;
@@ -707,7 +1151,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
@@ -731,119 +1175,180 @@ onUnmounted(() => {
     }
 
     .borders-container {
+        padding: 6px 0;
+
         .border {
-            height: 30px;
             width: 100%;
             display: flex;
-            flex-direction: row;
-            align-items: center;
-            margin-top: 4px;
+            flex-direction: column;
+            gap: 6px;
 
-            .visibility {
-                flex: 0 0 14px;
-                height: 14px;
-                width: 14px;
-                background-color: var(--active-color);
-                box-sizing: border-box;
-                color: #ffffff;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                border-radius: 4px;
-                margin-right: 5px;
-
-                >svg {
-                    width: 60%;
-                    height: 60%;
-                }
+            &:nth-child(n+2) {
+                margin-top: 16px;
             }
 
-            .hidden {
-                flex: 0 0 14px;
-                height: 14px;
-                width: 14px;
-                background: #FFFFFF;
-                border-radius: 4px;
-                border: 1px solid #EBEBEB;
-                box-sizing: border-box;
-                margin-right: 5px;
-            }
-
-            .color {
-                flex: 1;
-                background-color: var(--input-background);
-                height: 32px;
-                padding: 9px 8px;
-                //margin-left: -11px;
-                border-radius: var(--default-radius);
-                box-sizing: border-box;
+            .top {
                 display: flex;
                 align-items: center;
-                margin-right: 5px;
 
-                .colorBorder {
-                    outline: none;
-                    border: none;
-                    background-color: transparent;
-                    width: 70px;
+                .visibility {
+                    flex: 0 0 14px;
                     height: 14px;
-                    margin-left: 8px;
+                    width: 14px;
+                    background-color: var(--active-color);
+                    box-sizing: border-box;
+                    color: #ffffff;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-radius: 4px;
+                    margin-right: 5px;
+
+                    >img {
+                        width: 60%;
+                        height: 60%;
+                    }
+                }
+
+                .hidden {
+                    flex: 0 0 14px;
+                    height: 14px;
+                    width: 14px;
+                    background: #FFFFFF;
+                    border-radius: 4px;
+                    border: 1px solid #EBEBEB;
+                    box-sizing: border-box;
+                    margin-right: 5px;
+                }
+
+                .color {
                     flex: 1;
-                    font-size: 12px;
+                    background-color: var(--input-background);
+                    height: 32px;
+                    padding: 9px 8px;
+                    //margin-left: -11px;
+                    border-radius: var(--default-radius);
                     box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    margin-right: 5px;
+
+                    .colorBorder {
+                        outline: none;
+                        border: none;
+                        background-color: transparent;
+                        width: calc(100% - 53px);
+                        height: 14px;
+                        margin-left: 8px;
+                        flex: 1;
+                        font-size: 12px;
+                        box-sizing: border-box;
+                    }
+
+                    .alphaBorder {
+                        outline: none;
+                        border: none;
+                        background-color: transparent;
+                        width: 37px;
+                        //margin-left: 20%;
+                        text-align: center;
+                        font-size: 12px;
+                        box-sizing: border-box;
+                    }
+
+                    input+input {
+                        width: 45px;
+                    }
+
+
                 }
 
-                .alphaBorder {
-                    outline: none;
-                    border: none;
-                    background-color: transparent;
-                    width: 37px;
-                    //margin-left: 20%;
-                    text-align: center;
-                    font-size: 12px;
-                    box-sizing: border-box;
+                //.extra-action {
+                //    display: flex;
+                //    align-items: center;
+                //    justify-content: center;
+                //    margin-left: 2px;
+
+                .delete {
+                    flex: 0 0 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 28px;
+                    height: 28px;
+                    transition: 0.2s;
+                    border-radius: var(--default-radius);
+
+                    >img {
+                        width: 16px;
+                        height: 16px;
+                    }
                 }
 
-                input+input {
-                    width: 45px;
+                .delete:hover {
+                    background-color: #F5F5F5;
+                    ;
                 }
 
-                .check {
-                    color: #000000;
-                }
-
-                .nocheck {
-                    color: rgba(0, 0, 0, 0.3);
-                }
+                //}
             }
 
-            //.extra-action {
-            //    display: flex;
-            //    align-items: center;
-            //    justify-content: center;
-            //    margin-left: 2px;
-
-            .delete {
-                flex: 0 0 28px;
+            .bottom {
+                width: calc(100% - 19px);
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                width: 28px;
-                height: 28px;
-                transition: 0.2s;
-                border-radius: var(--default-radius);
-                >svg {
-                    width: 16px;
-                    height: 16px;
+                height: 32px;
+                gap: 6px;
+                margin-left: 19px;
+
+                >.select {
+                    height: 100%;
+                    width: 100px;
+                }
+
+                .thickness-container {
+                    box-sizing: border-box;
+                    padding: 8px 12px;
+                    background-color: var(--input-background);
+                    height: 32px;
+                    border-radius: var(--default-radius);
+                    border: 1px solid transparent;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    overflow: hidden;
+
+                    >img {
+                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
+                        // flex: 0 0 16px;
+                        width: 16px;
+                        height: 16px;
+                    }
+
+                    .cursor_pointer {
+                        cursor: default !important;
+                    }
+
+                    >input {
+                        width: 100%;
+                        outline: none;
+                        border: none;
+                        padding: 0;
+                        background-color: transparent;
+                    }
+
+                    input::selection {
+                        color: #FFFFFF;
+                        background: #1878F5;
+                    }
+
+                    input::-moz-selection {
+                        color: #FFFFFF;
+                        background: #1878F5;
+                    }
+
                 }
             }
-
-            .delete:hover {
-                background-color: #F5F5F5;
-                ;
-            }
-
-            //}
         }
     }
 }

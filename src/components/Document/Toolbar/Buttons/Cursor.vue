@@ -1,165 +1,205 @@
 <script setup lang="ts">
-import { ref, nextTick, onUpdated } from 'vue';
-import ToolButton from '../ToolButton.vue';
-import { Action } from "@/context/tool";
-import DropSelect from "./DropSelect.vue"
+import ToolButton from './ToolButton.vue';
 import { useI18n } from 'vue-i18n'
-import Tooltip from '@/components/common/Tooltip.vue';
-const { t } = useI18n()
-type Button = InstanceType<typeof ToolButton>
+import { Context } from '@/context';
+import { useAuto, useAutoK } from "@/components/Document/Creator/execute";
+import { onMounted, onUnmounted, ref, watch } from "vue";
+import { Action, Tool } from "@/context/tool";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
-const popoverVisible = ref<boolean>(false);
-const popover = ref<HTMLDivElement>();
-const button = ref<Button>();
-const selected = ref<Action>(Action.AutoV);
-const selects = ref<Action>(Action.AutoV);
-const visible = ref(false)
+import tool_scale_icon from '@/assets/icons/svg/tool-scale.svg';
+import white_down_icon from '@/assets/icons/svg/white-down.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import drag_icon from '@/assets/icons/svg/drag.svg';
+
+const t = useI18n().t;
 const props = defineProps<{
-  active: boolean,
-  d: Action,
-  is_lable: boolean,
-  edit: boolean
+    context: Context,
+    params: {
+        active: boolean,
+        is_lable: boolean,
+        edit: boolean,
+        select: (action: string) => void
+    }
 }>();
-const emit = defineEmits<{
-  (e: "select", action: Action): void;
-}>();
-function select(action: Action) {
-  emit('select', action);
+const editable = props.params.edit && props.params.select;
+const tips = ref<string>(`${t('home.object_selector')}  V`);
+const icon = ref<string>(drag_icon);
+const stashAction = ref<string>(Action.AutoV);
+const popover = ref<boolean>(false);
+
+function click() {
+    if (stashAction.value === Action.AutoV) useAuto(props.context);
+    else useAutoK(props.context);
 }
 
-const patterns = ((items: [string, Action, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2] }))))([
-  ['object_selector', Action.AutoV, 'V'],
-  ['scale', Action.AutoK, 'K']
-]);
+function toolWatch(type: any) {
+    if (type === Tool.CHANGE_ACTION && editable) {
+        const action = props.context.tool.action;
+        if (action === Action.AutoV) {
+            stashAction.value = props.context.tool.action;
+            icon.value = drag_icon;
+            tips.value = `${t('home.object_selector')}  V`;
+        } else if (action === Action.AutoK) {
+            stashAction.value = props.context.tool.action;
+            icon.value = tool_scale_icon;
+            tips.value = `${t('home.scale')}  K`;
+        }
+    }
+}
+
+function blur(e: MouseEvent) {
+    if (!(e.target && (e.target as Element).closest('.popover-auto-tool-0958, .tool-auto-menu-trigger'))) popover.value = false;
+}
 
 function showMenu() {
-  if (popoverVisible.value) return popoverVisible.value = false;
-  if (button.value?.toolButtonEl) {
-    const el = button.value?.toolButtonEl;
-    visible.value = false
-    popoverVisible.value = true;
-    nextTick(() => {
-      if (popover.value) {
-        popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 13 + 'px';
-
-      }
-    })
-    document.addEventListener('click', onMenuBlur);
-  }
+    if (popover.value) return popover.value = false;
+    popover.value = true;
 }
 
-const selector = (active: Action) => {
-  selected.value = active
-  emit('select', active);
-  popoverVisible.value = false;
-}
-
-function onMenuBlur(e: MouseEvent) {
-  if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu')) {
-    var timer = setTimeout(() => {
-      popoverVisible.value = false;
-      clearTimeout(timer)
-      document.removeEventListener('click', onMenuBlur);
-    }, 10)
-  }
-}
-var timer: any = null
-const onMouseenter = () => {
-  timer = setTimeout(() => {
-    visible.value = true
-    clearTimeout(timer)
-  }, 600)
-}
-const onMouseleave = () => {
-  clearTimeout(timer)
-  visible.value = false
-}
-
-onUpdated(() => {
-  if (props.d === Action.AutoV || props.d === Action.AutoK) {
-    if (props.d === Action.AutoV) {
-      selects.value = props.d
+const stop = watch(() => popover.value, (v) => {
+    if (v) {
+        document.addEventListener('click', blur);
+        props.context.escstack.save('auto-popover-1021', () => {
+            const achieve = popover.value;
+            popover.value = false;
+            return achieve;
+        })
     } else {
-      selects.value = props.d
+        document.removeEventListener('click', blur);
     }
-  }
 })
 
+function __use_v() {
+    if (stashAction.value !== Action.AutoV) useAuto(props.context);
+    popover.value = false;
+}
+
+function __use_k() {
+    if (stashAction.value !== Action.AutoK) useAutoK(props.context);
+    popover.value = false;
+}
+
+onMounted(() => {
+    props.context.tool.watch(toolWatch);
+});
+onUnmounted(() => {
+    props.context.tool.unwatch(toolWatch);
+    stop();
+    document.removeEventListener('click', blur);
+})
 </script>
 
 <template>
-  <el-tooltip class="box-item" effect="dark"
-    :content="selects === 'drag' ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
-    placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
-      @mouseleave.stop="onMouseleave" :style="{ width: !(edit && !is_lable) ? '32px' : '56px' }">
-      <div class="svg-container" :style="{ marginLeft: !(edit && !is_lable) ? '0px' : '3px' }">
-        <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
-      </div>
-      <div class="menu" @click="showMenu" v-if="edit && !is_lable">
-        <svg-icon icon-class="white-down"></svg-icon>
-      </div>
-    </ToolButton>
-  </el-tooltip>
-    <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-        <template v-for="item in patterns" :key="item.value">
-            <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content" type="cursor">
-            </DropSelect>
-        </template>
+    <div style="position: relative">
+        <ToolButton :selected="props.params.active" :class="{ active: popover }" style="display: flex;">
+            <el-tooltip class="box-item" effect="dark" :content="tips" placement="bottom" :show-after="600" :offset="10"
+                :hide-after="0">
+                <div class="svg-container" @click="click">
+                    <SvgIcon :icon="icon" />
+                </div>
+            </el-tooltip>
+            <div class="tool-auto-menu-trigger" @click="showMenu">
+                <SvgIcon :icon="white_down_icon" />
+            </div>
+        </ToolButton>
+        <div v-if="popover" class="popover-auto-tool-0958">
+            <div class="item" @click="__use_v">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 18px">
+                        <SvgIcon v-if="stashAction === Action.AutoV" :icon="page_select_icon"
+                            style="width: 12px; height: 12px; filter: invert(1);" />
+                    </div>
+                    <div style="display: flex; align-items: center;gap: 8px">
+                        <SvgIcon :icon="drag_icon" style="width: 14px; height: 14px;" />
+                        <span>{{ t('home.object_selector') }}</span>
+                    </div>
+                </div>
+                <div>V</div>
+            </div>
+            <div class="item" @click="__use_k">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 18px">
+                        <SvgIcon v-if="stashAction === Action.AutoK" :icon="page_select_icon"
+                            style="width: 12px; height: 12px; filter: invert(1);" />
+                    </div>
+                    <div style="display: flex; align-items: center;gap: 8px">
+                        <SvgIcon :icon="tool_scale_icon"
+                            style="width: 14px; height: 14px;" />
+                        <span>{{ t('home.scale') }}</span>
+                    </div>
+                </div>
+                <div>K</div>
+            </div>
+        </div>
     </div>
+
 </template>
 
 <style scoped lang="scss">
+.active {
+    background-color: rgba(255, 255, 255, .1);
+}
+
 .svg-container {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 3px;
-  color: #ffffff;
-  padding: 6px 6px 6px 6px;
-  box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-  >svg {
-    width: 18px;
-    height: 18px;
-  }
+    >img {
+        width: 18px;
+        height: 18px;
+        fill: var(--theme-color-anti);
+    }
 }
 
-.menu {
-  width: 20px;
-  height: 32px;
-  display: flex;
-  //padding-right: 4px;
-  //margin-right: 2px;
-  justify-content: center;
-  align-items: center;
-  color: #ffffff;
-  transition: 0.3s;
-  padding: 10px 8px 10px 0;
-  box-sizing: border-box;
+.tool-auto-menu-trigger {
+    width: 16px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
 
-  >svg {
-    width: 12px;
-    height: 12px;
-  }
+    >img {
+        transform: translateX(-1px);
+        width: 12px;
+        height: 12px;
+        transition: 0.2s;
+    }
 }
 
-.menu:hover {
-  transform: translateY(4px);
+.tool-auto-menu-trigger:hover {
+    >img {
+        transform: translate(-1px, 2px);
+    }
 }
 
-.popover {
-  position: absolute;
-  z-index: 999;
-  width: 157px;
-  height: auto;
-  background-color: #262626;
-  border-radius: 4px;
-  outline: none;
-  padding: 4px 0;
-  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+.popover-auto-tool-0958 {
+    top: 41px;
+    left: 0;
+    position: absolute;
+    width: 158px;
+    box-sizing: border-box;
+    padding: 6px 0;
+    background-color: var(--theme-color);
+    color: var(--theme-color-anti);
+    border-radius: var(--default-radius);
+
+    >.item {
+        width: 100%;
+        height: 32px;
+        padding: 0 12px;
+        font-size: 12px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        &:hover {
+            background-color: var(--active-color);
+        }
+    }
 }
 </style>

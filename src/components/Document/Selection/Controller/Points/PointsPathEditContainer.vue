@@ -1,17 +1,17 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncPathEditor, Matrix, PathShape, PathShapeView, Shape, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { ClientXY, PageXY, XY } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
 import { dbl_action } from "@/utils/mouse_interactive";
-import { add_move_and_up_for_document, gen_offset_points_map2 } from "@/utils/mouse";
+import { add_move_and_up_for_document } from "@/utils/mouse";
 import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
-import { ActionEndGenerator } from '@/utils/assist';
 import { Action } from '@/context/tool';
+import { PathEditor } from "@/path/pathEdit";
 
 interface Props {
     context: Context
@@ -19,261 +19,192 @@ interface Props {
 
 interface Dot {
     point: { x: number, y: number }
+    segment: number
     index: number
     selected: boolean
 }
+
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const sub_matrix = new Matrix();
-const data: { dots: Dot[], segments: Segment[] } = reactive({ dots: [], segments: [] });
+const data: { dots: Dot[], segments: Segment[][] } = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
-const current_curve_point_index = ref<number>(-1);
 const dragActiveDis = 3;
-const new_high_light = ref<number>(-1);
-const add_rect = ref<number>(-1);
+const new_high_light = ref<string>('');
+const add_rect = ref<string>('');
 let shape: ShapeView;
-let startPosition: ClientXY = { x: 0, y: 0 };
-let startPosition2: PageXY = { x: 0, y: 0 };
 let isDragging = false;
-let pathEditor: AsyncPathEditor | undefined;
 let move: any;
-let offset_map: XY[] | undefined = [];
-let actionEndGenerator: ActionEndGenerator | undefined = undefined;
 let bridged = false;
+
+let pathModifier: PathEditor | undefined;
+let downXY: XY = { x: 0, y: 0 };
+
+let current_segment: number = -1;
+let current_curve_point_index: number = -1;
+let current_side: number = -1;
+
 function update() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+
     dots.length = 0;
     segments.length = 0;
+
     init_matrix();
-    const points_set = new Set(props.context.path.selectedPoints);
-    dots.push(...get_path_by_point(shape as PathShapeView, matrix, points_set));
-    const segs = new Set(props.context.path.selectedSides);
-    segments.push(...get_segments(shape as PathShapeView, matrix, segs));
+
+    dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
+    segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
+
+    props.context.path.set_segments(segments);
+}
+
+function updatePassive() {
+    dots.length = 0;
+    segments.length = 0;
+
+    init_matrix();
+
+    dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
+    segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
+
     props.context.path.set_segments(segments);
 }
 
 /**
  * @description down下任意一个已有的编辑点
  */
-function point_mousedown(event: MouseEvent, index: number) {
+function point_mousedown(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) {
         return;
     }
+
     if (dbl_action()) {
-        modify_point_curve_mode(props.context, index, shape as PathShapeView);
+        modify_point_curve_mode(props.context, index);
+        return;
     }
+
     event.stopPropagation();
-    modify_start_position(event);
-    current_curve_point_index.value = index;
-    props.context.workspace.setCtrl('controller');
+
+    const path = props.context.path;
     if (event.shiftKey) {
-        props.context.path.adjust_points(current_curve_point_index.value)
+        path.adjust_points(segment, index)
     } else {
-        if (props.context.path.is_selected(current_curve_point_index.value)) {
-            //todo
-        } else {
-            props.context.path.select_point(current_curve_point_index.value);
+        if (!path.is_selected(segment, index)) {
+            path.select_point(segment, index, true);
         }
     }
+
+    current_segment = segment;
+    current_curve_point_index = index;
+
+    pathModifier = new PathEditor(props.context, event, PathEditor.BORDER_MAP, true);
+    downXY = { x: event.x, y: event.y };
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
+
+    props.context.workspace.setSelectionViewUpdater(false);
+
     move = point_mousemove;
 }
-function down_background_path(event: MouseEvent, index: number) {
+
+/**
+ * @description 边
+ */
+function down_background_path(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) {
         return;
     }
     event.stopPropagation();
 
-    modify_start_position(event);
-
     clear_high_light();
-
-    props.context.workspace.setCtrl('controller');
 
     const path = props.context.path;
 
     if (event.shiftKey) {
-        path.adjust_sides(index);
+        path.adjust_sides(segment, index);
     } else {
-        if (path.is_selected_segs(index)) {
-            // todo
-        } else {
-            path.select_side(index);
+        if (!path.is_selected_segs(segment, index)) {
+            path.select_side(segment, index);
         }
     }
 
+    current_segment = segment;
+    current_side = index;
+
+    pathModifier = new PathEditor(props.context, event);
+    downXY = { x: event.x, y: event.y };
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
+
     move = point_mousemove;
 }
-function modify_start_position(event: MouseEvent) {
-    const workspace = props.context.workspace;
-    const root = workspace.root;
-    startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
-    startPosition2 = workspace.matrix.inverseCoord(startPosition);
-}
+
 function point_mousemove(event: MouseEvent) {
     if (bridged) {
         return;
     }
-    const workspace = props.context.workspace;
-    const root = workspace.root;
-    const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
 
-    if (isDragging && pathEditor) {
-        __exe(event, pathEditor, sub_matrix.computeCoord3(mouseOnClient));
-        startPosition.x = mouseOnClient.x
-        startPosition.y = mouseOnClient.y;
-        return;
-    }
+    if (isDragging) {
+        pathModifier?.execute(event);
+    } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
+        isDragging = true;
 
-    const { x: sx, y: sy } = startPosition;
-    const { x: mx, y: my } = mouseOnClient;
-    if (Math.hypot(mx - sx, my - sy) < dragActiveDis) {
-        return;
-    }
-
-    if (is_curve_tool()) {
-        if (props.context.path.selectedSides.length) {
+        if (props.context.path.selectedSides.size) {
+            pathModifier?.createApiCaller();
             return;
         }
-        bridged = true;
-        launch_bridging(event);
-        return;
+
+        if (is_curve_tool()) {
+            bridged = true;
+            launch_bridging(event); // handle交接
+            return;
+        }
+
+        pathModifier?.createApiCaller();
     }
-
-    pathEditor = props.context.editor
-        .controller()
-        .asyncPathEditor(shape as PathShapeView, props.context.selection.selectedPage!);
-
-    isDragging = true;
-
-    sub_matrix.reset(workspace.matrix.inverse);
-
-    props.context.assist.set_points_map();
-
-    const synthetic_points = props.context.path.get_synthetic_points((shape as PathShapeView).points.length - 1);
-
-    offset_map = gen_offset_points_map2(props.context, startPosition2, synthetic_points);
-
-    // console.log('offset_map:', offset_map);
-
-    if (!offset_map) {
-        return;
-    }
-
-    actionEndGenerator = new ActionEndGenerator(props.context, offset_map, startPosition2);
-
-    props.context.path.editing(true);
 }
 
 function launch_bridging(event: MouseEvent) {
-    props.context.path.bridging({ index: -1, event });
+    props.context.path.bridging({ segment: -1, index: -1, event });
 }
 
 function bridging_completed() {
     bridged = false;
 }
 
-function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
-    if (!offset_map) {
-        console.log("!offset_map");
-        return;
-    }
-
-    if (!actionEndGenerator) {
-        return;
-    }
-
-
-    const max = (shape as PathShapeView).points.length - 1;
-    const select_point = props.context.path.get_synthetic_points(max);
-
-    if (!select_point?.length) {
-        console.log('!select_point?.length');
-        return;
-    }
-
-    const f = props.context.assist
-        .edit_mode_match
-        .bind(props.context.assist);
-
-    const point = actionEndGenerator.__gen(_point, select_point, f, event.shiftKey); // 开启辅助
-    // const point = _point;
-    if (select_point.length === 1) {
-        pathEditor.execute(current_curve_point_index.value, point);
-        return;
-    }
-
-    const points = (shape as PathShapeView).points;
-    if (!points?.length) {
-        console.log('!points?.length');
-        return;
-    }
-
-    const first_point = points[select_point[0]];
-    if (!first_point) {
-        console.log('!first_point');
-        return;
-    }
-
-    const first_offset = offset_map[0];
-    const compute_root_point = { x: point.x + first_offset.x, y: point.y + first_offset.y };
-    const m = shape.matrix2Root();
-    m.preScale(shape.frame.width, shape.frame.height);
-    const m2 = new Matrix(m.inverse);
-    const compute_unit_point = m2.computeCoord3(compute_root_point);
-
-    pathEditor.execute2(select_point, compute_unit_point.x - first_point.x, compute_unit_point.y - first_point.y);
-}
-
 /**
  * @description 新增一个编辑点
  */
-function n_point_down(event: MouseEvent, index: number) {
+function n_point_down(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) {
         return;
     }
+
     event.stopPropagation();
-    modify_start_position(event);
-    current_curve_point_index.value = index + 1;
 
-    if (!pathEditor) {
-        pathEditor = props.context.editor
-            .controller()
-            .asyncPathEditor(shape as PathShapeView, props.context.selection.selectedPage!);
+    pathModifier = new PathEditor(props.context, event);
+    downXY = { x: event.x, y: event.y };
 
-        const idx = current_curve_point_index.value;
-        pathEditor.addNode(idx);
-        props.context.path.select_point(idx);
+    const __index = index + 1;
+
+    if (pathModifier.createApiCaller(segment, __index)) {
+        current_curve_point_index = __index;
+        current_segment = segment;
     }
 
-    props.context.workspace.setCtrl('controller');
     add_move_and_up_for_document(n_point_mousemove, point_mouseup);
     move = n_point_mousemove;
 }
+
 /**
  * @description 新增编辑点之后紧接的拖拽编辑
  */
 function n_point_mousemove(event: MouseEvent) {
-    const workspace = props.context.workspace;
-    const root = workspace.root;
-    const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
-    if (isDragging && pathEditor) {
-        pathEditor.execute(current_curve_point_index.value, sub_matrix.computeCoord3(mouseOnClient));
-        startPosition.x = mouseOnClient.x;
-        startPosition.y = mouseOnClient.y;
-    } else {
-        const { x: sx, y: sy } = startPosition;
-        const { x: mx, y: my } = mouseOnClient;
-        if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-            isDragging = true;
-            sub_matrix.reset(workspace.matrix.inverse);
-            props.context.path.editing(true);
-        }
+    if (isDragging) {
+        pathModifier?.execute(event);
+    } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
+        isDragging = true;
     }
 }
 
@@ -282,80 +213,69 @@ function n_point_mousemove(event: MouseEvent) {
  */
 function point_mouseup(event: MouseEvent) {
     clear_high_light();
+
     if (event.button !== 0) {
         return;
     }
 
     if (isDragging) {
         isDragging = false;
-        props.context.assist.reset();
     } else {
-        if (props.context.path.selectedPoints.length > 1 && !event.shiftKey) {
-            props.context.path.select_point(current_curve_point_index.value);
+        const path = props.context.path;
+
+        if (path.selectedPointsLength && !event.shiftKey) {
+            path.select_point(current_segment, current_curve_point_index);
+        }
+        if (path.selectedSidesLength && !event.shiftKey) {
+            path.select_side(current_segment, current_side);
         }
     }
 
-    if (pathEditor) {
-        pathEditor.close();
-        pathEditor = undefined;
-    }
+    pathModifier?.fulfil();
+    pathModifier = undefined;
 
-    if (actionEndGenerator) {
-        actionEndGenerator.__reset();
-        actionEndGenerator = undefined;
-    }
+    props.context.workspace.setSelectionViewUpdater(true);
 
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', point_mouseup);
-
-    const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.setCtrl('page');
-
-    props.context.path.editing(false);
 }
-function enter(event: MouseEvent, index: number) {
+
+function enter(event: MouseEvent, segment: number, index: number) {
     clear_high_light();
+
     const path = props.context.path;
     if (path.no_hover) {
         return;
     }
-    new_high_light.value = index;
+
+    new_high_light.value = `${segment}-${index}`;
+
     if (path.no_add) {
         return;
     }
-    add_rect.value = index;
+
+    add_rect.value = `${segment}-${index}`;
 }
+
 function leave(event: MouseEvent) {
     clear_high_light();
 }
-function clear_high_light() {
-    new_high_light.value = -1;
-    add_rect.value = -1;
-}
-// listener
-function window_blur() {
-    const workspace = props.context.workspace;
-    if (isDragging) {
-        isDragging = false;
-        props.context.assist.reset();
-    }
-    if (pathEditor) {
-        pathEditor.close();
-        pathEditor = undefined;
-    }
 
-    workspace.scaling(false);
-    workspace.setCtrl('page');
-    props.context.path.editing(false);
-    props.context.cursor.reset();
+function clear_high_light() {
+    new_high_light.value = '';
+    add_rect.value = '';
+}
+
+function window_blur() {
+    pathModifier?.fulfil();
+    pathModifier = undefined;
 
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
 
 function init_matrix() {
-    matrix.reset(shape.matrix2Root());
+    matrix.reset(shape.matrix2Root().toMatrix());
     matrix.multiAtLeft(props.context.workspace.matrix);
 }
 
@@ -375,51 +295,69 @@ function path_watcher(type: number) {
     }
 }
 
-function matrix_watcher(t: number) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        update();
-    }
-}
-
 function is_curve_tool() {
     return props.context.tool.action === Action.Curve;
 }
 
-onMounted(() => {
-    props.context.workspace.watch(matrix_watcher);
-    shape = props.context.selection.pathshape!;
-    if (!shape) {
-        return console.log('wrong shape');
+function workspaceWatcher(t: number | string) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        update();
+    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        updatePassive();
     }
+}
+
+function resetContactStatus() {
+    props.context.tool.action === Action.AutoV && props.context.path.setContactStatus(false);
+}
+
+onMounted(() => {
+    shape = props.context.selection.pathshape!;
+    if (!shape) return console.error('wrong shape');
     shape.watch(update);
     update();
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
+    props.context.workspace.watch(workspaceWatcher);
+    resetContactStatus();
 })
+
 onUnmounted(() => {
-    props.context.workspace.unwatch(matrix_watcher);
-    shape?.unwatch(update);
-    window.removeEventListener('blur', window_blur);
     props.context.path.unwatch(path_watcher);
+
+    shape?.unwatch(update);
+
+    window.removeEventListener('blur', window_blur);
+    props.context.workspace.unwatch(workspaceWatcher);
 })
 </script>
 <template>
-    <g v-for="(p, i) in segments" :key="i" data-area="controller-element" @mouseenter="(e) => enter(e, i)"
-        @mouseleave="leave">
-        <g @mousedown="(e) => down_background_path(e, i)">
-            <path class="background-path" :d="p.path"></path>
-            <path :class="{ path: true, 'path-high-light': new_high_light === i, 'path-selected': p.is_selected }"
-                :d="p.path">
-            </path>
+    <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
+        <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
+           @mouseleave="leave">
+            <g @mousedown="(e) => down_background_path(e, si, i)">
+                <path class="background-path" :d="p.path"></path>
+                <path
+                    :class="{ path: true, 'path-high-light': new_high_light === `${si}-${i}`, 'path-selected': p.is_selected }"
+                    :d="p.path">
+                </path>
+            </g>
+            <rect v-if="add_rect === `${si}-${i}`"
+                  :class="{ 'insert-point': true, 'insert-point-selected': add_rect === `${si}-${i}` }"
+                  :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, si, i)">
+            </rect>
         </g>
-        <rect v-if="add_rect === i" :class="{ 'insert-point': true, 'insert-point-selected': add_rect === i }"
-            :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, i)">
-        </rect>
     </g>
+
     <Handle :context="props.context"></Handle>
+<!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
+<!--    <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">-->
+<!--        {{ i }}-->
+<!--    </text>-->
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
-        class="point" rx="4" ry="4" data-area="controller-element" @mousedown.stop="(e) => point_mousedown(e, p.index)"
-        :class="{ point: true, selected: p.selected }">
+          class="point" rx="4" ry="4" data-area="controller-element"
+          @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
+          :class="{ point: true, selected: p.selected }">
     </rect>
 </template>
 <style lang='scss' scoped>
@@ -430,9 +368,16 @@ onUnmounted(() => {
     width: 8px;
 }
 
+.point:hover {
+    fill: rgb(174, 205, 246);
+    stroke: #ffffff;
+    height: 8px;
+    width: 8px;
+}
+
 .selected {
     stroke: #ffffff;
-    fill: var(--active-color);
+    fill: var(--active-color) !important;
 }
 
 .background-path {

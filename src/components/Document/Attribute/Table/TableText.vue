@@ -2,9 +2,9 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick, shallowRef } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, gradient_equals } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, TableCellType, AsyncTextAttrEditor } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -14,12 +14,16 @@ import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
 import TableTextSetting from './TableTextSetting.vue';
 import { TableSelection } from '@/context/tableselection';
-import { getGradient } from '../../Selection/Controller/ColorEdit/gradient_utils';
+import { getGradient, gradient_equals } from '../../Selection/Controller/ColorEdit/gradient_utils';
 import { throttle } from 'lodash';
+import FontWeightSelected from '../Text/FontWeightSelected.vue';
+import { fontWeightConvert } from '../Text/FontNameList';
+import { format_value, is_mac } from "@/utils/common";
 interface Props {
     context: Context
     shape: TableView
 }
+const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
 
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -27,13 +31,11 @@ const fonstSize = ref<any>(14)
 const showSize = ref(false)
 const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
-const isBold = ref(false)
+const isBold = ref<any>()
 const isTilt = ref(false)
-const isUnderline = ref(false)
-const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref()
+const fontName = ref(DefaultFontName)
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -43,24 +45,38 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const shape = ref<TableCellView>()
-const table = ref<TableCellView>()
+const shape = shallowRef<TableCellView>()
+const table = shallowRef<TableCellView>()
 const sizeHoverIndex = ref(-1);
 const fillType = ref<FillType>(FillType.SolidColor);
 const gradient = ref<Gradient>();
 const mixed = ref<boolean>(false);
+const fontWeight = ref('Regular');
+const weightMixed = ref<boolean>(false);
+const disableWeight = ref(false);
+const fontNameEl = ref<HTMLDivElement>();
+const wordSpace = ref()
+const rowHeight = ref()
 // const selection = ref(props.context.selection) 
-
-function toHex(r: number, g: number, b: number) {
+const charSpacing = ref<HTMLInputElement>()
+const lineHeight = ref<HTMLInputElement>()
+const isAutoLineHeight = ref<boolean>(true);
+function toHex(r: number, g: number, b: number, prefix = true) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
-    return '#' + hex(r) + hex(g) + hex(b);
+    return (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
 }
 
 const onShowFont = () => {
     props.context.workspace.focusText()
     if (showFont.value) return showFont.value = false
     showFont.value = true
-    document.addEventListener('click', onShowFontBlur);
+    props.context.escstack.save('onShowFont', () => {
+        const achieve = showFont.value;
+        showFont.value = false;
+        return achieve;
+    })
+
+    document.addEventListener('mousedown', onShowFontBlur);
 }
 
 const onShowFontBlur = (e: Event) => {
@@ -69,7 +85,7 @@ const onShowFontBlur = (e: Event) => {
             showFont.value = false;
             props.context.workspace.focusText()
             clearTimeout(timer)
-            document.removeEventListener('click', onShowFontBlur);
+            document.removeEventListener('mousedown', onShowFontBlur);
         }, 10)
     }
 }
@@ -96,102 +112,33 @@ const onShowSizeBlur = (e: Event) => {
 const cellSelect = (table: TableSelection) => {
     return { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
 }
-// 设置加粗
-const onBold = () => {
-    isBold.value = !isBold.value
+// 设置字重
+const setFontWeight = (weight: number, italic: boolean) => {
+    fontWeight.value = fontWeightConvert(weight, italic);
+    isBold.value = weight
+    isTilt.value = italic
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
         if (isSelectText()) {
-            editor.setTextBold(isBold.value, 0, Infinity)
+            editor.setTextWeight(weight, italic, 0, Infinity)
         } else {
-            editor.setTextBold(isBold.value, textIndex, selectLength)
+            editor.setTextWeight(weight, italic, textIndex, selectLength)
         }
     } else {
         const table = props.shape;
         const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextBold(isBold.value);
+            editor.setTextWeight(weight, italic);
         } else {
             const cell_selection = cellSelect(table_Selection)
-            editor.setTextBold(isBold.value, cell_selection);
+            editor.setTextWeight(weight, italic, cell_selection);
         }
     }
     textFormat();
 }
-// 设置文本倾斜
-const onTilt = () => {
-    isTilt.value = !isTilt.value
-    if (shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        const editor = props.context.editor4TextShape(shape.value)
-        if (isSelectText()) {
-            editor.setTextItalic(isTilt.value, 0, Infinity)
-        } else {
-            editor.setTextItalic(isTilt.value, textIndex, selectLength)
-        }
-    } else {
-        const table = props.shape;
-        const table_Selection = props.context.tableSelection;
-        const editor = props.context.editor4Table(table)
-        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextItalic(isTilt.value);
-        } else {
-            const cell_selection = cellSelect(table_Selection)
-            editor.setTextItalic(isTilt.value, cell_selection);
-        }
-    }
-    textFormat();
-}
-//设置下划线
-const onUnderlint = () => {
-    isUnderline.value = !isUnderline.value
-    if (shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        const editor = props.context.editor4TextShape(shape.value)
-        if (isSelectText()) {
-            editor.setTextUnderline(isUnderline.value, 0, Infinity)
-        } else {
-            editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
-        }
-    } else {
-        const table = props.shape;
-        const table_Selection = props.context.tableSelection;
-        const editor = props.context.editor4Table(table)
-        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextUnderline(isUnderline.value);
-        } else {
-            const cell_selection = cellSelect(table_Selection)
-            editor.setTextUnderline(isUnderline.value, cell_selection);
-        }
-    }
-    textFormat();
-}
-// 设置删除线
-const onDeleteline = () => {
-    isDeleteline.value = !isDeleteline.value
-    if (shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        const editor = props.context.editor4TextShape(shape.value)
-        if (isSelectText()) {
-            editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
-        } else {
-            editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
-        }
-    } else {
-        const table = props.shape;
-        const table_Selection = props.context.tableSelection;
-        const editor = props.context.editor4Table(table)
-        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextStrikethrough(isDeleteline.value);
-        } else {
-            const cell_selection = cellSelect(table_Selection)
-            editor.setTextStrikethrough(isDeleteline.value, cell_selection);
-        }
-    }
-    textFormat();
-}
+
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
@@ -285,6 +232,79 @@ const setFont = (font: string) => {
     textFormat();
 }
 
+const setRowHeight = () => {
+    let isAuto = isAutoLineHeight.value;
+    if ((rowHeight.value as string).toLowerCase() === 'auto' || rowHeight.value === '自动') {
+        rowHeight.value = '';
+    }
+    if (rowHeight.value.length < 1) {
+        isAuto = true;
+    } else if (rowHeight.value[rowHeight.value.length - 1] === '%') {
+        isAuto = true;
+    } else {
+        isAuto = false;
+    }
+    const value = rowHeight.value[rowHeight.value.length - 1] === '%' ? rowHeight.value.slice(0, -1) : rowHeight.value;
+    if (shape.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        const editor = props.context.editor4TextShape(shape.value)
+        if (!isNaN(Number(value))) {
+            if (isSelectText()) {
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, 0, Infinity)
+            } else {
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, textIndex, selectLength)
+            }
+        } else {
+            textFormat();
+        }
+    } else {
+        if (!isNaN(Number(value))) {
+            const table = props.shape;
+            const table_Selection = props.context.tableSelection;
+            const editor = props.context.editor4Table(table)
+            if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto);
+            } else {
+                const cell_selection = cellSelect(table_Selection)
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, cell_selection);
+            }
+        } else {
+            textFormat();
+        }
+    }
+}
+
+const setWordSpace = () => {
+    if (wordSpace.value.length < 1) { wordSpace.value = 0 }
+    if (shape.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        const editor = props.context.editor4TextShape(shape.value)
+        if (!isNaN(Number(wordSpace.value))) {
+            if (isSelectText()) {
+                editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
+            } else {
+                editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
+            }
+        } else {
+            textFormat()
+        }
+    } else {
+        if (!isNaN(Number(wordSpace.value))) {
+            const table = props.shape;
+            const table_Selection = props.context.tableSelection;
+            const editor = props.context.editor4Table(table)
+            if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+                editor.setCharSpacing(Number(wordSpace.value));
+            } else {
+                const cell_selection = cellSelect(table_Selection)
+                editor.setCharSpacing(Number(wordSpace.value), cell_selection);
+            }
+        } else {
+            textFormat();
+        }
+    }
+}
+
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
     const selection = props.context.textSelection;
@@ -307,6 +327,7 @@ const sizeValue = ref('');
 const executed = ref(true);
 //输入框设置字体大小
 const setTextSize = () => {
+    is_size_select.value = false;
     if (!executed.value) return;
     executed.value = false;
     let value = sizeValue.value.trim();
@@ -336,12 +357,15 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
     old.unwatch(textFormat);
     value.watch(textFormat);
 })
-
+const reflush = ref(0);
 // 获取当前文字格式
-const textFormat = () => {
+const textFormat = (_t?: any) => {
+    if (_t && (_t === 'frame' || _t === 'colWidths' || _t === 'rowHeights')) return;
     const table = props.context.tableSelection;
     shape.value = undefined;
     mixed.value = false;
+    disableWeight.value = false;
+    weightMixed.value = false;
     if (table.editingCell) {
         shape.value = table.editingCell;
         // 拿到某个单元格
@@ -354,26 +378,31 @@ const textFormat = () => {
         } else {
             format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
         }
+        isAutoLineHeight.value = format.autoLineHeight ?? true;
         colorIsMulti.value = format.colorIsMulti;
+        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0)
+        wordSpace.value = format.kerning || 0;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fontName.value = format.fontName || DefaultFontName;
         fonstSize.value = format.fontSize || 14;
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
-        isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         textColor.value = format.color;
         highlight.value = format.highlight;
-        isBold.value = format.bold || false;
+        isBold.value = format.weight;
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
-        if (format.italicIsMulti) isTilt.value = false;
-        if (format.boldIsMulti) isBold.value = false;
-        if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`;
+        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
+        if (format.minimumLineHeightIsMulti || format.autoLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`;
+        if (format.italicIsMulti) weightMixed.value = true;
+        if (format.weightIsMulti) weightMixed.value = true;
+        if (format.fontNameIsMulti) {
+            disableWeight.value = true;
+            fontName.value = `${t('attr.more_value')}`
+        }
+        if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`;
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`;
-        if (format.underlineIsMulti) isUnderline.value = false;
-        if (format.strikethroughIsMulti) isDeleteline.value = false;
         if (format.fillTypeIsMulti) mixed.value = true;
         if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
         props.context.workspace.focusText();
@@ -386,12 +415,11 @@ const textFormat = () => {
         }
         shape.value = undefined
         const formats: any[] = [];
-
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
-            if (cell && cell.text) {
-                const editor = props.context.editor4TextShape(cell);
-                const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+            if (cell && cell.cellType === TableCellType.Text && cell.data.text) {
+                const editor = props.context.peekEditor4TextShape(cell);
+                const forma = (cell.data.text as Text).getTextFormat(0, Number.MAX_SAFE_INTEGER, editor?.getCachedSpanAttr());
                 formats.push(forma);
             }
         }
@@ -434,30 +462,44 @@ const textFormat = () => {
                 }
             }
         }
+        isAutoLineHeight.value = format.autoLineHeight ?? true;
         colorIsMulti.value = format.colorIsMulti;
+        wordSpace.value = format.kerning || 0;
+        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0) as number;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fontName.value = format.fontName || DefaultFontName;
         fonstSize.value = format.fontSize || 14;
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
-        isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
-        isBold.value = format.bold || false;
+        isBold.value = format.weight;
         isTilt.value = format.italic || false;
         textColor.value = format.color;
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
-        if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
-        if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
+        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
+        if (format.fontName === 'unlikeness') {
+            disableWeight.value = true;
+            fontName.value = `${t('attr.more_value')}`;
+        } else if (format.fontNameIsMulti) {
+            disableWeight.value = true;
+            fontName.value = `${t('attr.more_value')}`;
+        }
+        if (format.fontSize === 'unlikeness') {
+            fonstSize.value = `${t('attr.more_value')}`;
+        } else if (format.fontSizeIsMulti) {
+            fonstSize.value = `${t('attr.more_value')}`;
+        }
+        if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+        if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeight === 'unlikeness' || format.autoLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeightIsMulti === 'unlikeness' || format.autoLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if (format.bold === 'unlikeness') isBold.value = false;
-        if (format.italic === 'unlikeness') isTilt.value = false;
-        if (format.underline === 'unlikeness') isUnderline.value = false;
-        if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
+        if (format.weight === 'unlikeness') weightMixed.value = true;
+        if (format.italic === 'unlikeness') weightMixed.value = true;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
         if (format.fillType === 'unlikeness') mixed.value = true;
@@ -466,11 +508,12 @@ const textFormat = () => {
         if (format.gradient === 'unlikeness') gradient.value = undefined;
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
+    reflush.value++;
 }
 
 const _textFormat = throttle(textFormat, 160, { leading: true })
 
-function selection_wather(t: number) {
+function selection_wather(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
         textFormat();
     } else if (t === Selection.CHANGE_SHAPE) {
@@ -478,15 +521,7 @@ function selection_wather(t: number) {
     }
 }
 function workspace_wather(t: number) {
-    if (t === WorkSpace.BOLD) {
-    } else if (t === WorkSpace.UNDER_LINE) {
-        onBold();
-        onUnderlint();
-    } else if (t === WorkSpace.DELETE_LINE) {
-        onDeleteline();
-    } else if (t === WorkSpace.ITALIC) {
-        onTilt();
-    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat();
     } else if (t === WorkSpace.TABLE_TEXT_GRADIENT_UPDATE) {
         _textFormat();
@@ -575,7 +610,6 @@ const set_gradient_opacity = (opacity: number) => {
     g.gradientOpacity = opacity;
     editor_gradient(g);
 }
-
 
 function onColorChange(e: Event, type: string) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -712,7 +746,7 @@ const deleteHighlight = () => {
 }
 
 const addHighlight = () => {
-    if(highlight.value && !highlightIsMulti.value) return
+    if (highlight.value && !highlightIsMulti.value) return
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -763,10 +797,10 @@ const setMixedTextColor = () => {
     if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value);
         format = shape.value.text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr());
-        const { alpha, red, green, blue} = format.color || new Color(1, 6, 6, 6);
+        const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
         editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
         editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
-        if(format.gradient) {
+        if (format.gradient) {
             editor.setTextGradient(format.gradient, textIndex, selectLength);
         }
     } else {
@@ -778,7 +812,7 @@ const setMixedTextColor = () => {
         } else {
             cells = table_Selection.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
         }
-        if(!cells[0]) return;
+        if (!cells[0]) return;
         const cell_editor = props.context.editor4TextShape(cells[0] as any);
         const forma = (cells[0].text as Text).getTextFormat(0, 1, cell_editor.getCachedSpanAttr());
         const { alpha, red, green, blue } = forma.color || new Color(1, 6, 6, 6);
@@ -786,16 +820,14 @@ const setMixedTextColor = () => {
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextColor(new Color(alpha, red, green, blue));
             editor.setTextFillType(forma.fillType || FillType.SolidColor);
-            if(forma.gradient) {
+            if (forma.gradient) {
                 editor.setTextGradient(forma.gradient);
             }
         } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextColor(new Color(alpha, red, green, blue), cell_selection);
             editor.setTextFillType(forma.fillType || FillType.SolidColor, cell_selection);
-            console.log(forma, 'forma');
-            
-            if(forma.gradient) {
+            if (forma.gradient) {
                 editor.setTextGradient(forma.gradient, cell_selection);
             }
         }
@@ -803,9 +835,8 @@ const setMixedTextColor = () => {
     textFormat();
 }
 
-const togger_gradient_type = (type: GradientType | 'solid') => {
-    const fillType = type === 'solid' ? FillType.SolidColor : FillType.Gradient;
-    const g = type !== 'solid' && getGradient(gradient.value, type, textColor.value!);
+const togger_gradient_type = (type: GradientType, fillType: FillType) => {
+    const g = fillType === FillType.Gradient && getGradient(gradient.value, type, textColor.value!);
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -964,20 +995,119 @@ const selectSizeValue = () => {
     if (textSize.value) {
         executed.value = true;
         table.value = shape.value;
-        textSize.value.select();
+        const value = textSize.value!.value;
+        sizeValue.value = value;
     }
 }
 const selectColorValue = () => {
-    sizeColor.value && sizeColor.value.select();
 }
 const selectAlphaValue = () => {
-    alphaFill.value && alphaFill.value.select();
 }
 const selectHiglightColor = () => {
-    higlightColor.value && higlightColor.value.select();
 }
 const selectHiglighAlpha = () => {
-    higlighAlpha.value && higlighAlpha.value.select();
+}
+
+
+const pointX = ref<number>()
+const pointY = ref<number>()
+const showpoint = ref<boolean>(false)
+let type = 'row-height';
+let textAttrEditor: AsyncTextAttrEditor | undefined = undefined;
+let tableTextAttrEditor: AsyncTextAttrEditor | undefined = undefined;
+const onMouseDown = async (e: MouseEvent, t: string) => {
+    pointX.value = e.clientX
+    pointY.value = e.clientY
+    type = t;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    if (shape.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        let index = textIndex;
+        let length = selectLength;
+        if (isSelectText()) {
+            index = 0; length = Number.MAX_VALUE;
+        } else {
+            index = textIndex; length = selectLength;
+        }
+        textAttrEditor = props.context.editor4TextShape(shape.value).asyncSetTextAttr([shape.value], index, length);
+    } else {
+        const table = props.shape;
+        const table_Selection = props.context.tableSelection;
+        const editor = props.context.editor4Table(table);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            tableTextAttrEditor = editor.asyncSetTableAttr();
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            tableTextAttrEditor = editor.asyncSetTableAttr(cell_selection);
+        }
+
+    }
+    e.stopPropagation()
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener("mousemove", onMouseMove, false);
+    showpoint.value = true;
+    document.addEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        onMouseUp();
+    }
+}
+
+function updatePosition(movementX: number, movementY: number, isRotating: boolean) {
+    if (pointX.value === undefined || pointY.value === undefined) return;
+    const clientHeight = document.documentElement.clientHeight
+    const clientWidth = document.documentElement.clientWidth
+    pointX.value += movementX
+    pointY.value += movementY
+    pointX.value = pointX.value < 0 ? clientWidth : (pointX.value > clientWidth ? 0 : pointX.value)
+    pointY.value = pointY.value < 0 ? clientHeight : (pointY.value > clientHeight ? 0 : pointY.value)
+}
+
+function onMouseMove(e: MouseEvent) {
+    const isRotating = e.movementX > 0;
+    updatePosition(e.movementX, e.movementY, isRotating);
+    if (type === 'row-height') {
+        if (isNaN(rowHeight.value) || rowHeight.value < 0) return;
+        rowHeight.value = Number(rowHeight.value) + e.movementX < 0 ? 0 : Number(rowHeight.value) + e.movementX;
+        if (textAttrEditor) {
+            textAttrEditor.execute_line_height(rowHeight.value);
+        }
+        if (tableTextAttrEditor) {
+            tableTextAttrEditor.execute_line_height(rowHeight.value);
+        }
+    } else {
+        if (isNaN(wordSpace.value) || wordSpace.value < 0) return;
+        wordSpace.value = Number(wordSpace.value) + e.movementX < 0 ? 0 : Number(wordSpace.value) + e.movementX;
+        if (textAttrEditor) {
+            textAttrEditor.execute_char_spacing(wordSpace.value);
+        }
+        if (tableTextAttrEditor) {
+            tableTextAttrEditor.execute_char_spacing(wordSpace.value);
+        }
+    }
+}
+
+function onMouseUp() {
+    document.exitPointerLock()
+    showpoint.value = false
+    document.removeEventListener("mousemove", onMouseMove, false);
+    document.removeEventListener('mouseup', onMouseUp);
+    if (textAttrEditor) {
+        textAttrEditor.close();
+        textAttrEditor = undefined;
+    }
+    if (tableTextAttrEditor) {
+        tableTextAttrEditor.close();
+        tableTextAttrEditor = undefined;
+    }
+    document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 const watchCells = new Map<string, TableCellView>(); // 表格单元格监听
@@ -986,9 +1116,7 @@ function watch_cells() {
         v.unwatch(_textFormat);
         watchCells.delete(k);
     })
-
     const tableSelection = props.context.tableSelection;
-
     const selectedCells = tableSelection.getSelectedCells();
     const editedCell = tableSelection.editingCell;
     const list = [...selectedCells.map(s => s.cell), editedCell];
@@ -1000,7 +1128,26 @@ function watch_cells() {
         }
     })
 }
+const is_higligh_alpha_select = ref(false);
+const is_higligh_color_select = ref(false);
+const is_font_alpha_select = ref(false);
+const is_font_color_select = ref(false);
+const is_char_space_select = ref(false);
+const is_row_height_select = ref(false);
+const is_size_select = ref(false);
+
+function click(e: Event, variate: boolean) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (variate) return;
+    el.select();
+    variate = true;
+}
+
 onMounted(() => {
+    _textFormat();
     props.shape.watch(_textFormat);
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
@@ -1014,7 +1161,25 @@ onUnmounted(() => {
     watchCells.forEach(v => {
         v.unwatch(_textFormat);
     })
+
 })
+
+
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import down_icon from '@/assets/icons/svg/down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import word_space_icon from '@/assets/icons/svg/word-space.svg';
+import row_height_icon from '@/assets/icons/svg/row-height.svg';
+import text_left_icon from '@/assets/icons/svg/text-left.svg';
+import text_center_icon from '@/assets/icons/svg/text-center.svg';
+import text_right_icon from '@/assets/icons/svg/text-right.svg';
+import text_justify_icon from '@/assets/icons/svg/text-justify.svg';
+import add_icon from '@/assets/icons/svg/add.svg';
+import align_top_icon from '@/assets/icons/svg/align-top.svg';
+import align_middle_icon from '@/assets/icons/svg/align-middle.svg';
+import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
+
 </script>
 
 <template>
@@ -1026,166 +1191,177 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="text-container">
             <div class="text-top">
-                <div class="select-font jointly-text" style="padding-right: 0;" @click="onShowFont">
+                <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ fontName }}</span>
                     <div class="down">
-                        <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
+                        <SvgIcon :icon="down_icon" style="width: 12px;height: 12px"/>
                     </div>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>
+                <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
+                    :fontWeight="fontWeight" @setFontWeight="setFontWeight" :fontNameEl="fontNameEl">
+                </SelectFont>
             </div>
             <div class="text-middle">
-                <div class="text-middle-size">
-                    <div class="text-size jointly-text" style="padding-right: 0;">
-                        <div class="size_input">
-                            <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                                @focus="selectSizeValue" @input="handleSize" @blur="setTextSize">
-                            <div class="down" @click="onShowSize">
-                                <svg-icon icon-class="down"></svg-icon>
-                            </div>
-                        </div>
-                        <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
-                            v-if="showSize">
-                            <div v-for="(item, i) in textSizes" :key="i" @click="selectTextSize(item)"
-                                @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
-                                <div class="icon">
-                                    <svg-icon v-if="sizeSelectIndex === i"
-                                        :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
-                                </div>
-                            </div>
+                <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
+                    :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
+                </FontWeightSelected>
+                <div class="text-size jointly-text" style="padding-right: 0;">
+                    <div class="size_input">
+                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
+                            @focus="selectSizeValue" @input="handleSize" @blur="setTextSize"
+                            @click="(e) => click(e, is_size_select)">
+                        <div class="down" @click="onShowSize">
+                            <SvgIcon :icon="down_icon"/>
                         </div>
                     </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
-                        <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl B`" :offset="15">
-                            <svg-icon :icon-class="isBold ? 'text-white-bold' : 'text-bold'"></svg-icon>
-                        </Tooltip>
-                    </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isTilt }" @click="onTilt">
-                        <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl I`" :offset="15">
-                            <svg-icon :icon-class="isTilt ? 'text-white-tilt' : 'text-tilt'"></svg-icon>
-                        </Tooltip>
-                    </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
-                        <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
-                            <svg-icon :icon-class="isUnderline ? 'text-white-underline' : 'text-underline'"></svg-icon>
-                        </Tooltip>
-                    </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isDeleteline }" @click="onDeleteline">
-                        <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                            <svg-icon :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
-                        </Tooltip>
+                    <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
+                        v-if="showSize">
+                        <div v-for="(item, i) in textSizes" :key="i" @click="selectTextSize(item)"
+                            @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
+                            <div class="icon">
+                                <SvgIcon v-if="sizeSelectIndex === i"
+                                    :icon="sizeHoverIndex === i ? white_select_icon : page_select_icon"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <!--                <div class="perch"></div>-->
+            </div>
+            <div class="text-middle">
+                <div class="interval jointly-text" style="margin-right: 8px;">
+                    <div @mousedown="(e) => onMouseDown(e, 'row-height')">
+                        <SvgIcon :icon="word_space_icon"/>
+                    </div>
+                    <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="setRowHeight"
+                        @input="handleSize" @click="(e) => click(e, is_row_height_select)"
+                        @blur="is_row_height_select = false">
+                </div>
+                <div class="interval jointly-text" style="padding-right: 0;">
+                    <div @mousedown="(e) => onMouseDown(e, 'char-space')">
+                        <SvgIcon :icon="row_height_icon"/>
+                    </div>
+                    <input type="text" v-model="wordSpace" ref="charSpacing" class="input" @change="setWordSpace"
+                        @input="handleSize" @click="(e) => click(e, is_char_space_select)"
+                        @blur="is_char_space_select = false">
+                </div>
             </div>
             <div class="text-bottom">
-                <div class="text-bottom-align">
-                    <div class="level-aligning jointly-text">
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'left' }"
-                            @click="onSelectLevel(TextHorAlign.Left)">
-                            <Tooltip :content="t('attr.align_left')" :offset="15">
-                                <svg-icon icon-class="text-left"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'centered' }"
-                            @click="onSelectLevel(TextHorAlign.Centered)">
-                            <Tooltip :content="t('attr.align_center')" :offset="15">
-                                <svg-icon icon-class="text-center"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'right' }"
-                            @click="onSelectLevel(TextHorAlign.Right)">
-                            <Tooltip :content="t('attr.align_right')" :offset="15">
-                                <svg-icon icon-class="text-right"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'natural' }"
-                            @click="onSelectLevel(TextHorAlign.Natural)">
-                            <Tooltip :content="t('attr.align_the_sides')" :offset="15">
-                                <svg-icon icon-class="text-justify"></svg-icon>
-                            </Tooltip>
-                        </i>
-                    </div>
-                    <div class="vertical-aligning jointly-text">
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'top' }"
-                            @click="onSelectVertical(TextVerAlign.Top)">
-                            <Tooltip :content="t('attr.align_top')" :offset="15">
-                                <svg-icon icon-class="align-top"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'middle' }"
-                            @click="onSelectVertical(TextVerAlign.Middle)">
-                            <Tooltip :content="t('attr.align_middle')" :offset="15">
-                                <svg-icon icon-class="align-middle"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'bottom' }"
-                            @click="onSelectVertical(TextVerAlign.Bottom)">
-                            <Tooltip :content="t('attr.align_bottom')" :offset="15">
-                                <svg-icon icon-class="align-bottom"></svg-icon>
-                            </Tooltip>
-                        </i>
-                    </div>
+                <div class="level-aligning jointly-text">
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'left' }"
+                        @click="onSelectLevel(TextHorAlign.Left)">
+                        <Tooltip :content="t('attr.align_left')" :offset="15">
+                            <SvgIcon :icon="text_left_icon"/>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'centered' }"
+                        @click="onSelectLevel(TextHorAlign.Centered)">
+                        <Tooltip :content="t('attr.align_center')" :offset="15">
+                            <SvgIcon :icon="text_center_icon"/>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'right' }"
+                        @click="onSelectLevel(TextHorAlign.Right)">
+                        <Tooltip :content="t('attr.align_right')" :offset="15">
+                            <SvgIcon :icon="text_right_icon"/>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'natural' }"
+                        @click="onSelectLevel(TextHorAlign.Natural)">
+                        <Tooltip :content="t('attr.align_the_sides')" :offset="15">
+                            <SvgIcon :icon="text_justify_icon"/>
+                        </Tooltip>
+                    </i>
                 </div>
-                <!--                <div class="perch"></div>-->
+            </div>
+            <div class="text-bottom">
+                <div class="vertical-aligning jointly-text">
+                    <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'top' }"
+                        @click="onSelectVertical(TextVerAlign.Top)">
+                        <Tooltip :content="t('attr.align_top')" :offset="15">
+                            <SvgIcon :icon="align_top_icon"/>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'middle' }"
+                        @click="onSelectVertical(TextVerAlign.Middle)">
+                        <Tooltip :content="t('attr.align_middle')" :offset="15">
+                            <SvgIcon :icon="align_middle_icon"/>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'bottom' }"
+                        @click="onSelectVertical(TextVerAlign.Bottom)">
+                        <Tooltip :content="t('attr.align_bottom')" :offset="15">
+                            <SvgIcon :icon="align_bottom_icon"/>
+                        </Tooltip>
+                    </i>
+                </div>
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 6px;">
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :locat="{ index: 0, type: 'table_text' }"
-                        :fill-type="fillType" :gradient="gradient instanceof Gradient ? gradient : undefined"
-                        @gradient-type="(type) => togger_gradient_type(type)" @change="c => getColorFromPicker(c, 'color')"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
+                        :locat="{ index: 0, type: 'table_text' }" :fill-type="fillType"
+                        :gradient="gradient instanceof Gradient ? gradient : undefined"
+                        @gradient-type="(type, fillType) => togger_gradient_type(type, fillType)"
+                        @change="c => getColorFromPicker(c, 'color')"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
-                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)" @gradient-reverse="gradient_reverse"
-                        @gradient-rotate="gradient_rotate" @gradient-stop-delete="(index) => gradient_stop_delete(index)">
+                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)"
+                        @gradient-reverse="gradient_reverse" @gradient-rotate="gradient_rotate"
+                        @gradient-stop-delete="(index) => gradient_stop_delete(index)">
                     </ColorPicker>
-                    <input v-if="fillType !== FillType.Gradient" ref="sizeColor" class="sizeColor" @focus="selectColorValue"
-                        :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
-                        @change="(e) => onColorChange(e, 'color')" />
+                    <input v-if="fillType !== FillType.Gradient" ref="sizeColor" class="sizeColor"
+                        @focus="selectColorValue" :spellcheck="false"
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue, false)"
+                        @change="(e) => onColorChange(e, 'color')" @click="(e) => click(e, is_font_color_select)"
+                        @blur="is_font_color_select = false" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
+            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
-                        :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
+                        :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')"
+                        @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false" />
                 </div>
-                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>
+                <!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
             </div>
-            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
+                        }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 6px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                    <div class="nocheck" style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px">{{
+            t('attr.font_color')
+        }}
                     </div>
                     <div class="add" @click="addTextColor">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                 </div>
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px"
                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
-                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
-                        @change="(e) => onColorChange(e, 'highlight')" />
+                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
+                        @change="(e) => onColorChange(e, 'highlight')" @click="(e) => click(e, is_higligh_color_select)"
+                        @blur="is_higligh_color_select = false" />
                     <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
-                        :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')" />
+                        :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')"
+                        @click="(e) => click(e, is_higligh_alpha_select)" @blur="is_higligh_alpha_select = false" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
-                    <svg-icon class="svg" icon-class="delete"></svg-icon>
+                    <SvgIcon class="svg" :icon="delete"/>
                 </div>
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
@@ -1193,7 +1369,7 @@ onUnmounted(() => {
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="add" @click="addHighlight">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
@@ -1204,11 +1380,15 @@ onUnmounted(() => {
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <SvgIcon :icon="add_icon"/>
                     </div>
                 </div>
             </div>
         </div>
+        <teleport to="body">
+            <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
+            </div>
+        </teleport>
     </div>
 </template>
 
@@ -1217,7 +1397,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -1231,7 +1411,7 @@ onUnmounted(() => {
         margin-left: -12px;
         border-radius: var(--default-radius);
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
@@ -1252,7 +1432,7 @@ onUnmounted(() => {
             justify-content: space-between;
             align-items: center;
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 overflow: visible !important;
@@ -1261,20 +1441,121 @@ onUnmounted(() => {
 
         .text-top {
             position: relative;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            margin-top: 6px;
             display: flex;
 
             .select-font {
-                flex: 1;
                 padding: 9px 12px;
                 box-sizing: border-box;
-                width: 224px;
+                width: 100%;
                 height: 32px;
                 border-radius: 6px;
+
+                span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
             }
 
             .select-font:hover {
                 background: #EBEBEB;
+            }
+
+        }
+
+        .text-size {
+            flex: 1;
+            position: relative;
+            height: 32px;
+            border-radius: 6px;
+            padding: 9px 0;
+            box-sizing: border-box;
+
+            .size_input {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-left: 12px;
+
+                .down {
+                    width: 26px;
+                    height: 26px;
+                    margin-right: 3px;
+
+                    &:hover {
+                        background-color: #EBEBEB;
+                    }
+
+                    >svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+            }
+
+            .input {
+                width: 64px;
+                background-color: transparent;
+                border: none;
+            }
+
+            input[type="text"]::-webkit-inner-spin-button,
+            input[type="text"]::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            input[type="text"] {
+                -moz-appearance: textfield;
+                appearance: textfield;
+                font-size: var(--font-default-fontsize);
+            }
+
+            input:focus {
+                outline: none;
+            }
+
+            .font-size-list {
+                position: absolute;
+                left: 0px;
+                width: 100%;
+                border-radius: 6px;
+                background-color: #fff;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                border: 1px solid #EBEBEB;
+                color: #262626;
+                padding: 4px 0;
+                z-index: 100;
+
+                >div {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
+                    padding-left: 10px;
+                    height: 32px;
+                    box-sizing: border-box;
+
+                    .icon {
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+
+                        >img {
+                            width: 12px;
+                            height: 12px;
+                        }
+                    }
+
+                    &:hover {
+                        background-color: #1878F5;
+                        color: #fff;
+                    }
+                }
             }
         }
 
@@ -1282,48 +1563,39 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
 
-            .text-middle-size {
+            .overbold {
+                width: 32px;
                 display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex: 1;
+                justify-content: center;
+                margin-left: 8px;
             }
 
-            .text-size {
-                position: relative;
-                width: 62px;
+            .overbold:hover {
+                background-color: #EBEBEB;
+            }
+
+            .interval {
+                flex: 1;
                 height: 32px;
-                border-radius: 6px;
-                padding: 9px 0;
-                box-sizing: border-box;
 
-                .size_input {
+                >div {
                     display: flex;
-                    justify-content: space-between;
                     align-items: center;
-                    padding-left: 12px;
-                    padding-right: 6px;
+                    justify-content: flex-end;
+                    width: 26px;
+                    height: 32px;
 
-                    .down {
-                        width: 19px;
-                        height: 26px;
-                        margin-right: 3px;
-
-                        &:hover {
-                            background-color: #EBEBEB;
-                        }
-
-                        >svg {
-                            width: 12px;
-                            height: 12px;
-                        }
+                    >img {
+                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
+                        width: 14px;
+                        height: 14px;
                     }
                 }
 
                 .input {
-                    width: 24px;
+                    width: 78px;
                     background-color: transparent;
                     border: none;
                 }
@@ -1343,58 +1615,6 @@ onUnmounted(() => {
                 input:focus {
                     outline: none;
                 }
-
-                .font-size-list {
-                    position: absolute;
-                    left: 0px;
-                    width: 100%;
-                    border-radius: 6px;
-                    background-color: #fff;
-                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-                    border: 1px solid #EBEBEB;
-                    color: #262626;
-                    padding: 4px 0;
-                    z-index: 100;
-
-                    >div {
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        width: 100%;
-                        padding-left: 10px;
-                        height: 32px;
-                        box-sizing: border-box;
-
-                        .icon {
-                            width: 30px;
-                            height: 30px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-
-                            >svg {
-                                width: 12px;
-                                height: 12px;
-                            }
-                        }
-
-                        &:hover {
-                            background-color: #1878F5;
-                            color: #fff;
-                        }
-                    }
-                }
-            }
-
-            .overbold {
-                width: 32px;
-                display: flex;
-                justify-content: center;
-                margin-left: 8px;
-            }
-
-            .overbold:hover {
-                background-color: #EBEBEB;
             }
         }
 
@@ -1402,39 +1622,40 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
-
-            .text-bottom-align {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex: 1;
-            }
+            margin-bottom: 6px;
 
             .level-aligning {
-                width: 124px;
+                width: 100%;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
                 border-radius: var(--default-radius);
+
+                >i {
+                    flex: 1;
+                    height: 28px;
+                    display: flex;
+                    justify-content: center;
+                    border-radius: 4px;
+                    border: 1px solid #F4F5F5;
+                }
             }
 
             .vertical-aligning {
-                width: 94px;
+                width: 100%;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                margin-left: 6px;
                 border-radius: var(--default-radius);
-            }
 
-            .font-posi {
-                width: 30px;
-                height: 28px;
-                display: flex;
-                justify-content: center;
-                border-radius: 4px;
-                border: 1px solid #F4F5F5;
+                >i {
+                    flex: 1;
+                    height: 28px;
+                    display: flex;
+                    justify-content: center;
+                    border-radius: 4px;
+                    border: 1px solid #F4F5F5;
+                }
             }
 
             .selected_bg {
@@ -1448,6 +1669,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            text-wrap: nowrap;
 
             .color {
                 background-color: var(--input-background);
@@ -1540,7 +1762,7 @@ onUnmounted(() => {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 5px;
+                height: 32px;
 
                 .add {
                     width: 28px;
@@ -1549,13 +1771,12 @@ onUnmounted(() => {
                     align-items: center;
                     justify-content: center;
                     border-radius: var(--default-radius);
+                    transition: .2s;
 
-                    >svg {
+                    >img {
                         width: 16px;
                         height: 16px;
                     }
-
-                    transition: .2s;
                 }
 
                 .add:hover {
@@ -1586,7 +1807,7 @@ onUnmounted(() => {
             margin-left: 5px;
             border-radius: var(--default-radius);
 
-            >svg {
+            >img {
                 height: 16px;
                 width: 16px;
             }
@@ -1613,7 +1834,7 @@ onUnmounted(() => {
     margin-right: 8px;
     box-sizing: border-box;
 
-    >svg {
+    >img {
         width: 12px;
         height: 12px;
     }
@@ -1621,5 +1842,16 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>

@@ -9,6 +9,7 @@ import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
 import { Matrix, ShapeView } from "@kcdesign/data";
+
 interface Props {
     context: Context
     controllerFrame: Point[]
@@ -17,8 +18,9 @@ interface Props {
     shape: ShapeView
     theme: SelectionTheme
 }
+
 const props = defineProps<Props>();
-const { isDblClick, isDrag } = useController(props.context);
+const { isDrag } = useController(props.context);
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 let viewBox = '';
 const line_path = ref("");
@@ -27,6 +29,7 @@ const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
+
 function modify_selection_hidden() {
     if (hidden_holder) {
         clearTimeout(hidden_holder);
@@ -40,11 +43,13 @@ function modify_selection_hidden() {
 
     selection_hidden.value = true;
 }
+
 function reset_hidden() {
     selection_hidden.value = false;
     clearTimeout(hidden_holder);
     hidden_holder = null;
 }
+
 // #region 绘制控件
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -58,13 +63,15 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 })
+
 // #endregion
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
 }
+
 function updateControllerView() {
     const m2p = props.shape.matrix2Root();
-    matrix.reset(m2p);
+    matrix.reset(m2p.toMatrix());
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
@@ -86,31 +93,34 @@ function updateControllerView() {
     }, bounds);
     viewBox = genViewBox(bounds);
 }
+
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) {
         selection_hidden.value = props.context.workspace.isTranslating;
-    }
-    else if (t === WorkSpace.PATH_EDIT_MODE) {
+    } else if (t === WorkSpace.PATH_EDIT_MODE) {
         selection_hidden.value = props.context.workspace.is_path_edit_mode;
     }
 }
+
 function mousedown(e: MouseEvent) {
-    const isdblc = isDblClick();
-    if (isdblc) { }
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
+
 function mousemove(e: MouseEvent) {
     if (isDrag()) selection_hidden.value = true;
 }
+
 function check_status() {
     selection_hidden.value = props.context.workspace.is_path_edit_mode;
 }
+
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
-function selection_watcher(t: number) {
+
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         editing.value = false;
         reset_hidden();
@@ -123,6 +133,7 @@ function windowBlur() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
@@ -139,14 +150,19 @@ onUnmounted(() => {
 watchEffect(updateControllerView)
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
-        :height="height"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         data-area="controller" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
+         :width="width"
+         :height="height"
+         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
+         :class="{ hidden: selection_hidden }"
+         overflow="visible"
+         @mousedown="mousedown"
+    >
         <path :d="line_path" class="main-path" :stroke="theme"></path>
         <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
+                                       :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame"
+                                       :theme="theme">
         </PointContainerForStraightLine>
     </svg>
 </template>

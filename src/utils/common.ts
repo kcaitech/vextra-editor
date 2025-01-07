@@ -1,19 +1,38 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import {
+    ContactShape,
+    Matrix,
+    PathShape,
+    PathShapeView,
+    Shape,
+    ShapeType,
+    ShapeView,
+    adapt2Shape,
+    ContactLineView
+} from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { hidden_selection, selectShapes } from './content';
+// import { Perm } from '@/context/workspace';
+// import { permIsEdit } from './permission';
+export const permIsEdit = (context: Context) => {
+    return Boolean(!context.readonly && !context.tool.isLable);
+}
+
 // 打印
 function _debounceLog(mes: any, flag?: string) {
     console.log(flag ? `${flag} ${mes}` : mes);
 }
+
 export const debounceLog = debounce(_debounceLog, 300);
+
 // 简易id
 export function simpleId(): string {
     return uuid().split('-')[3];
 }
+
 // 获取Select的options
 export function genOptions(items: string[][]) {
     return items.map((item: string[], index: number) => {
@@ -21,7 +40,9 @@ export function genOptions(items: string[][]) {
             id: index,
             data: {
                 value: item[0],
-                content: item[1]
+                content: item[1],
+                [item[2] ? 'icon' : '']: item[2],
+                [item[3] ? 'type' : '']: item[3]
             }
         }
     })
@@ -29,11 +50,14 @@ export function genOptions(items: string[][]) {
 
 // 获取两条直线的夹角
 export function getAngle(line1: [number, number, number, number], line2: [number, number, number, number]): number {
-    const slope1 = Math.abs((line1[3] - line1[1]) / (line1[2] - line1[0])) === Infinity ? 0 : (line1[3] - line1[1]) / (line1[2] - line1[0]);
-    const slope2 = Math.abs((line2[3] - line2[1]) / (line2[2] - line2[0])) === Infinity ? 0 : (line2[3] - line2[1]) / (line2[2] - line2[0]);
+    // const slope1 = Math.abs((line1[3] - line1[1]) / (line1[2] - line1[0])) === Infinity ? 0 : (line1[3] - line1[1]) / (line1[2] - line1[0]);
+    // const slope2 = Math.abs((line2[3] - line2[1]) / (line2[2] - line2[0])) === Infinity ? 0 : (line2[3] - line2[1]) / (line2[2] - line2[0]);
+    const slope1 = (line1[3] - line1[1]) / (line1[2] - line1[0]);
+    const slope2 = (line2[3] - line2[1]) / (line2[2] - line2[0]);
     const angleRad = Math.atan((slope2 - slope1) / (1 + slope1 * slope2));
     return angleRad * (180 / Math.PI);
 }
+
 // 根据四个点生成一个矩形
 // p1 p2
 // p4 p3
@@ -58,6 +82,7 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
         `height: ${height}px; ` +
         transform;
 }
+
 // 根据四个点生成一条线
 // p1 p2
 // p4 p3
@@ -111,9 +136,7 @@ export function getRectWH(x1: number, y1: number, x2: number, y2: number, x3: nu
 export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
     const deltaX = B.x - A.x;
     const deltaY = B.y - A.y;
-    const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-    const angle = (angleInDegrees + 360) % 360;
-    return angle;
+    return (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 360) % 360;
 }
 
 // 根据若干个点[x, y]，确定最边界的四个点
@@ -145,6 +168,7 @@ export function XYsBounding(points: XY[]) {
     const right = Math.max(...xs);
     return { top, bottom, left, right };
 }
+
 // 寻找群体shape在屏幕坐标系上的边界
 export function XYsBounding2(shapes: Shape[], context: Context) {
     if (!shapes.length) return false;
@@ -153,7 +177,8 @@ export function XYsBounding2(shapes: Shape[], context: Context) {
     if (!fsp) return false;
     const fspm2r = fsp.matrix2Root();
     fspm2r.multiAtLeft(wm);
-    const xy1 = fspm2r.computeCoord2(fbox.x, fbox.y), xy2 = fspm2r.computeCoord2(fbox.x + fbox.width, fbox.y + fbox.height);
+    const xy1 = fspm2r.computeCoord2(fbox.x, fbox.y),
+        xy2 = fspm2r.computeCoord2(fbox.x + fbox.width, fbox.y + fbox.height);
     let top = xy1.y, bottom = xy2.y, left = xy1.y, right = xy2.x;
     if (shapes.length < 2) return { top, bottom, left, right };
     for (let i = 1, len = shapes.length; i < len; i++) {
@@ -168,16 +193,18 @@ export function XYsBounding2(shapes: Shape[], context: Context) {
     }
     return { top, bottom, left, right };
 }
+
 export function is_box_outer_view(box: { top: number, bottom: number, left: number, right: number }, context: Context) {
     const { x, right, y, bottom } = context.workspace.root;
     return (box.right > right - x) || (box.left < 0) || (box.top < 0) || (box.bottom > bottom - y);
 }
+
 export function is_box_outer_view2(shapes: Shape[], context: Context) {
     const wm = context.workspace.matrix
     const { x, right, y, bottom } = context.workspace.root;
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const f = shapes[i].frame;
-        const p = wm.computeCoord3(f);
+        const { m01: x, m12: y } = shapes[i].transform;
+        const p = wm.computeCoord2(x, y);
 
         if ((p.x > right - x) || (p.x < 0) || (p.y < 0) || (p.y > bottom - y)) {
             return true;
@@ -185,7 +212,6 @@ export function is_box_outer_view2(shapes: Shape[], context: Context) {
     }
     return false;
 }
-
 
 
 // 判断线段p1q1与线段p2q2是否🍌
@@ -207,6 +233,7 @@ export function isIntersect(p1: XY, q1: XY, p2: XY, q2: XY): boolean {
         if (val === 0) return 0;
         return (val > 0) ? 1 : 2;
     }
+
     function isOnSegment(p: XY, q: XY, r: XY) {
         return (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y));
     }
@@ -214,7 +241,8 @@ export function isIntersect(p1: XY, q1: XY, p2: XY, q2: XY): boolean {
 
 // 判断形状是否被包涵
 export function isIncluded(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]): boolean {
-    const left = selectorPoints[0].x, top = selectorPoints[0].y, right = selectorPoints[2].x, bottom = selectorPoints[2].y;
+    const left = selectorPoints[0].x, top = selectorPoints[0].y, right = selectorPoints[2].x,
+        bottom = selectorPoints[2].y;
 
     const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
     return l >= left && r <= right && t >= top && b <= bottom;
@@ -237,10 +265,12 @@ export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]
     }
     return false;
 }
+
 interface Side {
     start: XY
     end: XY
 }
+
 export function get_side_by_points(points: XY[]) {
     if (points.length <= 1) {
         return [];
@@ -253,9 +283,11 @@ export function get_side_by_points(points: XY[]) {
     }
     return sides;
 }
+
 export function get_points_for_straight(shape: PathShapeView) {
-    const start = shape.points[0];
-    const end = shape.points[1];
+    const segment = shape.segments[0];
+    const start = segment.points[0];
+    const end = segment.points[1];
 
     if (!start || !end) {
         return [];
@@ -267,54 +299,45 @@ export function get_points_for_straight(shape: PathShapeView) {
 
     return [m.computeCoord2(start.x, start.y), m.computeCoord2(end.x, end.y)];
 }
+
 export function get_points_from_shape(shape: ShapeView) {
-    if (is_straight(shape)) {
-        return get_points_for_straight(shape as PathShapeView);
-    }
+    if (is_straight(shape)) return get_points_for_straight(shape as PathShapeView);
 
     const m = shape.matrix2Root();
-    const { width, height } = shape.frame;
+    const { width, height, x, y } = shape.frame;
 
-    if (shape instanceof ContactShape) {
+    if (shape instanceof ContactLineView) {
         m.preScale(width, height);
         return shape.getPoints().map(i => m.computeCoord2(i.x, i.y));
     }
 
-    const ps: XY[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }, { x: 0, y: 0 }];
+    const ps: XY[] = [{ x, y }, { x: x + width, y }, { x: x + width, y: y + height }, { x, y: y + height }, { x, y }];
     for (let i = 0; i < 5; i++) {
         const p = ps[i];
         ps[i] = m.computeCoord3(p);
     }
     return ps;
 }
+
 export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
     const { left, top, right, bottom } = XYsBounding(selectorPoints);
     const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
     return l >= left && r <= right && t >= top && b <= bottom;
 }
-/**
- * @param includes 需要全包含
- */
+
 export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
     const points = get_points_from_shape(shape);
+    if (isIncluded2(selectorPoints, points)) return true; // 选择器是否完全覆盖目标
 
-    if (isIncluded2(selectorPoints, points)) { // 选择器是否完全覆盖目标
-        return true;
-    }
-    if (includes) { // 需要完全覆盖而未完全覆盖，判为false
-        return false;
-    }
-    if (isIncluded2(points, selectorPoints)) { // 目标是否覆盖了选择器
-        return true;
-    }
+    if (includes) return false; // 需要完全覆盖而未完全覆盖，判为false
+
+    if (isIncluded2(points, selectorPoints)) return true;  // 目标是否覆盖了选择器
 
     // 检测是否相交
     const selectorPointsSides = get_side_by_points(selectorPoints);
     const shapeSides = get_side_by_points(points);
 
-    if (!shapeSides.length) {
-        return false;
-    }
+    if (!shapeSides.length) return false;
 
     for (let i = 0, l = selectorPointsSides.length; i < l; i++) {
         const side = selectorPointsSides[i];
@@ -328,16 +351,16 @@ export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView
             const p2 = _side.start
             const q2 = _side.end;
 
-            if (isIntersect(p1, q1, p2, q2)) {
-                return true;
-            }
+            if (isIntersect(p1, q1, p2, q2)) return true;
         }
     }
     return false;
 }
+
 export function is_mac() {
     return /macintosh|mac os x/i.test(navigator.userAgent);
 }
+
 export function string_by_sys(str: string): string {
     if (is_mac()) {
         return str.replace(/ctrl|Ctrl/g, "⌘").replace(/shift|Shift/g, "⇧").replace(/alt|Alt/g, "⌥");
@@ -347,25 +370,7 @@ export function string_by_sys(str: string): string {
 }
 
 export function forbidden_to_modify_frame(shape: ShapeView) {
-    return shape.isLocked() || shape.isVirtualShape;
-}
-
-export function shapes_organize(shapes: ShapeView[]) {
-    const result: ShapeView[] = [];
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
-
-        if (forbidden_to_modify_frame(shape)) {
-            continue;
-        }
-
-        result.push(shape);
-    }
-    return result;
-}
-
-export function get_input_value(value: string, origin?: number | string, min?: number | string, max?: number | string) {
-
+    return shape.isLocked || shape.isVirtualShape;
 }
 
 export function scout_once(context: Context, e: MouseEvent) {
@@ -376,7 +381,7 @@ export function scout_once(context: Context, e: MouseEvent) {
     selectShapes(context, shapes);
 }
 
-export function menu_locate(context: Context, site: XY, el: HTMLDivElement | undefined) {
+export function menu_locate(context: Context, site: XY, el: HTMLElement | undefined) {
     if (!el) {
         return;
     }
@@ -429,7 +434,7 @@ export function menu_locate2(e: MouseEvent, el: HTMLDivElement | undefined, el_p
     }
 
     if (top * -1 > box.y - 46 - 4) {
-        top = - (box.y - 46 - 4);
+        top = -(box.y - 46 - 4);
     }
 
     el.style.left = left + 'px';
@@ -442,7 +447,7 @@ export function isInt(num: number, fix = 2) {
 }
 
 export function format_value(val: number | string, fix = 2) {
-    if (typeof val === 'string') {
+    if (typeof val === 'string' || val === undefined) {
         return val;
     }
 
@@ -450,14 +455,27 @@ export function format_value(val: number | string, fix = 2) {
         return Number(val.toFixed(0));
     }
 
-    return val.toFixed(fix);
+    return fixedZero(val);
 }
 
-export function modifyOpacity(context: Context, val: number) {
+export const fixedZero = (value: number | string) => {
+    if (typeof value === 'string') return value;
+    value = Math.round(value * 100) / 100;
+    if (Number.isInteger(value)) {
+        return value.toFixed(0); // 返回整数形式
+    } else if (Math.abs(value * 10 - Math.round(value * 10)) < Number.EPSILON) {
+        return value.toFixed(1); // 保留一位小数
+    } else {
+        return value.toFixed(2); // 保留两位小数
+    }
+}
+
+export function modifyOpacity(context: Context, val: number, _shapes?: ShapeView[]) {
+    if (!permIsEdit(context) || context.textSelection.cursorStart > -1) return;
     const page = context.selection.selectedPage!;
-    const shapes = context.selection.selectedShapes;
+    const shapes = _shapes || context.selection.selectedShapes;
     const editor = context.editor4Page(page);
-    editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
+    editor.modifyShapesContextSettingOpacity(shapes, val);
     hidden_selection(context);
 }
 
