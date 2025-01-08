@@ -1,5 +1,5 @@
 <template>
-    <div ref="panelEl" class="shadow-container">
+    <div ref="panelEl" id="blur-container" class="shadow-container">
         <div class="header">
             <div class="title">模糊样式</div>
             <div class="tool">
@@ -89,8 +89,6 @@ import { ElementLocateModifier } from "@/components/common/elementlocate";
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
-    top: number;
-    left: number;
     id?: string;
 }>()
 
@@ -117,8 +115,6 @@ const list = reactive<Mask[]>([]);
 const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], list as Mask[]);
 
 const panelEl = ref<HTMLDivElement>();
-
-let ELM: ElementLocateModifier | undefined = undefined;
 
 const currentType = (t: string) => {
     types.value.has(t) ? types.value.delete(t) : types.value.add(t)
@@ -266,11 +262,6 @@ function stylelib_watcher(t: number | string) {
 onMounted(() => {
     update();
     props.context.data.watch(stylelib_watcher);
-
-    ELM = new ElementLocateModifier(panelEl.value!);
-    ELM.left = props.left;
-    ELM.top = props.top;
-    ELM.locate();
 })
 
 onUnmounted(() => {

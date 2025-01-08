@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { ShapeView, Blur, Point2D, BlurType, BasicArray, BlurMask } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
@@ -17,7 +17,6 @@ import { hidden_selection } from '@/utils/content';
 import BlurDetail from "./BlurDetail.vue";
 import BlurTypeSelect from "./BlurTypeSelect.vue";
 import BlurStyle from '@/components/Document/Attribute/Blur/Lib/BlurStyle.vue';
-import { v4 } from 'uuid';
 import { getShapesForStyle } from '@/utils/style';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import add_icon from '@/assets/icons/svg/add.svg';
@@ -25,6 +24,7 @@ import delete_icon from '@/assets/icons/svg/delete.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import style_icon from '@/assets/icons/svg/styles.svg';
 import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 
 type Props = {
     context: Context
@@ -39,10 +39,19 @@ const blurInfo = ref<Blur>();
 const mixed = ref<boolean>(false);
 const reflush = ref<number>(0);
 const mask = ref<boolean>(false)
-const Top = ref<number>(0)
-const Left = ref<number>(0)
-const blurLibVisible = ref<boolean>(false)
+// const blurLibVisible = ref<boolean>(false)
 const blurMask = ref<BlurMask>();
+
+const blurPanelTrigger = ref<HTMLDivElement>();
+const blurLibStatus = reactive<ElementStatus>({id: 'blur-container', visible: false});
+const blurPanelStatusMgr = new ElementManager(
+    props.context,
+    blurLibStatus,
+    {
+        offsetLeft: -460,
+        whiteList: ['.shadow-container', '.blur-style', '.blur-left']
+    }
+);
 
 function updateData() {
     mixed.value = false;
@@ -152,40 +161,43 @@ const delStyleBlur = () => {
     editor.shapesDelStyleBlur(actions);
 }
 
-const openBlurPanel = (e: MouseEvent) => {
-    let el = e.target as HTMLElement;
-    while (el.className !== 'blur-panel') {
-        if (el.parentElement) {
-            el = el.parentElement;
-        }
-    }
-    const { top, left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    blurLibVisible.value = !blurLibVisible.value
-    document.addEventListener('click', checkTargetList)
-    props.context.escstack.save(v4(), close);
+const openBlurPanel = () => {
+    // let el = e.target as HTMLElement;
+    // while (el.className !== 'blur-panel') {
+    //     if (el.parentElement) {
+    //         el = el.parentElement;
+    //     }
+    // }
+    // const { top, left } = el.getBoundingClientRect();
+    // Top.value = top;
+    // Left.value = left - 250;
+    // blurLibVisible.value = !blurLibVisible.value
+    // document.addEventListener('click', checkTargetList)
+    // props.context.escstack.save(v4(), close);
+
+    blurPanelStatusMgr.showBy(blurPanelTrigger.value!);
 }
 
-function close() {
-    const is_achieve_expected_results = blurLibVisible.value;
-    blurLibVisible.value = false;
-    document.removeEventListener('click', checkTargetList)
-    return is_achieve_expected_results;
-}
+// function close() {
+//     const is_achieve_expected_results = blurLibVisible.value;
+//     blurLibVisible.value = false;
+//     document.removeEventListener('click', checkTargetList)
+//     return is_achieve_expected_results;
+// }
 
-function checkTargetList(e: MouseEvent) {
-    e.target instanceof Element &&
-        !e.target.closest('.shadow-container') &&
-        !e.target.closest('.blur-style') &&
-        !e.target.closest('.blur-left') &&
-        close();
-}
+// function checkTargetList(e: MouseEvent) {
+//     e.target instanceof Element &&
+//         !e.target.closest('.shadow-container') &&
+//         !e.target.closest('.blur-style') &&
+//         !e.target.closest('.blur-left') &&
+//         close();
+// }
 
 const closePanel = () => {
-    props.context.escstack.execute()
-    blurLibVisible.value = false
-    document.removeEventListener('click', checkTargetList)
+    // props.context.escstack.execute()
+    // blurLibVisible.value = false
+    // document.removeEventListener('click', checkTargetList)
+    blurPanelStatusMgr.close();
 }
 
 const stop1 = watch(() => props.trigger, v => v?.includes('style') && updateData());
@@ -194,14 +206,13 @@ onMounted(updateData);
 onUnmounted(() => {
     stop1();
     stop2();
-    blurLibVisible.value = false;
 });
 </script>
 <template>
     <div class="blur-panel">
         <TypeHeader :title="t('blur.blur')" @click="first" :active="!!blurInfo">
             <template v-if="!mask" #tool>
-                <div v-if="!mixed" class="blur-style" @click="openBlurPanel($event)">
+                <div v-if="!mixed" ref="blurPanelTrigger" class="blur-style" @click="openBlurPanel">
                     <SvgIcon :icon="style_icon"/>
                 </div>
                 <div v-if="!blurInfo || mixed" class="add" @click.stop="addBlur">
@@ -230,7 +241,7 @@ onUnmounted(() => {
         </div>
         <div v-if="mask" class="blur-mask">
             <div class="info">
-                <div class="blur-left" @click="openBlurPanel($event)">
+                <div class="blur-left" @click="openBlurPanel">
                     <div class="effect"/>
                     <div class="name">{{ blurMask!.name }}</div>
                 </div>
@@ -242,8 +253,8 @@ onUnmounted(() => {
                 <SvgIcon :icon="delete_icon" />
             </div>
         </div>
-        <BlurStyle v-if="blurLibVisible" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-                   @close="closePanel" :id="blurMask?.id"/>
+        <BlurStyle v-if="blurLibStatus.visible" :context="props.context" :shapes="props.shapes" @close="closePanel"
+                   :id="blurMask?.id"/>
     </div>
 </template>
 <style scoped lang="scss">
