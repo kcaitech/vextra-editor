@@ -1136,7 +1136,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="borders-container" v-else-if="!mixed && !mixed_cell && strokePaints.length">
+        <div class="borders-container colors" v-else-if="!mixed && !mixed_cell && strokePaints.length">
             <div class="border" v-for="(b, idx) in strokePaints" :key="b.id">
                 <div class="top">
                     <div :class="b.strokePaint.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
@@ -1348,6 +1348,10 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
     }
 
+    .colors{
+       flex-direction: column;
+    }
+
     .border {
         width: 100%;
         display: flex;
@@ -1449,7 +1453,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
             justify-content: center;
             width: 28px;
             height: 28px;
-            transition: 0.2s;
             border-radius: var(--default-radius);
 
             >img {
@@ -1460,7 +1463,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
         .delete:hover {
             background-color: #F5F5F5;
-            ;
         }
 
         //}

@@ -109,8 +109,8 @@ const hasStroke = ref(false);
 const positonvalue = ref<BorderPosition>(BorderPosition.Center)
 const thickness = ref<string>('')
 const oldvalue = ref<string>('')
-const name = ref<string>('name')
-const des = ref<string>('des')
+const name = ref<string>('边框样式')
+const des = ref<string>('')
 
 const setThickness = () => {
     let arrs = thickness.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
