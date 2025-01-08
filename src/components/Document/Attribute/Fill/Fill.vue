@@ -740,9 +740,29 @@ const positionpanel = (e: MouseEvent) => {
         }
     }
     const { top, left } = el.getBoundingClientRect();
+    console.log(el.getBoundingClientRect());
+
     styleTop.value = top;
     styleLeft.value = left - 250;
     openstyle.value = !openstyle.value
+    console.log(openstyle.value);
+
+    document.addEventListener('click', checktargetlist)
+    props.context.escstack.save(v4(), close);
+}
+
+function checktargetlist(e: MouseEvent) {
+    e.target instanceof Element &&
+        !e.target.closest('.popover') &&
+        !e.target.closest('.style') &&
+        close();
+}
+
+function close() {
+    const is_achieve_expected_results = openstyle.value;
+    openstyle.value = false;
+    document.removeEventListener('click', checktargetlist)
+    return is_achieve_expected_results;
 }
 
 const initpanel = () => {
@@ -792,17 +812,23 @@ onUnmounted(() => {
     stop4();
     stop5();
 })
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import add_icon from "@/assets/icons/svg/add.svg"
+import select_icon from "@/assets/icons/svg/select.svg"
+import delete_icon from "@/assets/icons/svg/delete.svg"
+import unbind_icon from '@/assets/icons/svg/unbind.svg'
+import style_icon from '@/assets/icons/svg/styles.svg'
 </script>
 
 <template>
     <div class="fill-panel">
         <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first" :active="!!fills.length">
             <template #tool>
-                <div v-if="!mask && !mixed" class="style" @click.stop="positionpanel($event)">
-                    <svg-icon icon-class="styles"></svg-icon>
+                <div v-if="!mask && !mixed" class="style" @click="positionpanel($event)">
+                    <SvgIcon :icon="style_icon"></SvgIcon>
                 </div>
                 <div v-if="!mask" class="add" @click.stop="addFill">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
             </template>
         </TypeHeader>
@@ -821,18 +847,20 @@ onUnmounted(() => {
                             </div>
                             <div v-if="f.fillType === FillType.SolidColor" class="main"
                                 :style="{ backgroundColor: `rgb(${f.color.red},${f.color.green},${f.color.blue})`, opacity: f.color.alpha }">
-                                <div v-if="fill!.fills.length==1" class="mask" :style="{ opacity: 1 - f.color.alpha }"></div>
+                                <div v-if="fill!.fills.length == 1" class="mask"
+                                    :style="{ opacity: 1 - f.color.alpha }">
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="name">{{ fill?.name }}</div>
                 </div>
                 <div class="unbind" @click.stop="delfillmask">
-                    <svg-icon icon-class="unbind"></svg-icon>
+                    <SvgIcon :icon="unbind_icon"></SvgIcon>
                 </div>
             </div>
-            <div class="delete-style">
-                <svg-icon icon-class="delete" @click.stop="delstylefill"></svg-icon>
+            <div class="delete-style" @click.stop="delstylefill">
+                <SvgIcon :icon="delete_icon"></SvgIcon>
             </div>
         </div>
         <div class="tips-wrap" v-if="mixed_cell">
@@ -841,7 +869,7 @@ onUnmounted(() => {
         <div class="fills-container" v-else-if="!mixed && !mask && !mixed_cell && fills.length">
             <div class="fill" v-for="(f, idx) in fills" :key="f.id">
                 <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                    <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
+                    <SvgIcon v-if="f.fill.isEnabled" :icon="select_icon" />
                 </div>
                 <div class="color" v-if="f.fill">
                     <ColorPicker :fillslist="fills" :open="openstyle" :styletop="styleTop" :styleleft="styleLeft"
@@ -881,7 +909,7 @@ onUnmounted(() => {
                 </div>
                 <!--                <div class="temporary"></div>-->
                 <div class="delete" @click="deleteFill(idx)">
-                    <svg-icon icon-class="delete"></svg-icon>
+                    <SvgIcon :icon="delete_icon" />
                 </div>
             </div>
         </div>
@@ -909,13 +937,13 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
     }
 
-    .style svg {
+    .style img {
         padding: 2px;
         box-sizing: border-box;
     }
@@ -953,7 +981,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                >svg {
+                >img {
                     width: 60%;
                     height: 60%;
                 }
@@ -1041,7 +1069,7 @@ onUnmounted(() => {
                 border-radius: var(--default-radius);
                 transition: .2s;
 
-                >svg {
+                >img {
                     width: 16px;
                     height: 16px;
                 }
@@ -1148,7 +1176,7 @@ onUnmounted(() => {
                 width: 28px;
                 height: 32px;
 
-                >svg {
+                >img {
                     width: 16px;
                     height: 16px;
                 }

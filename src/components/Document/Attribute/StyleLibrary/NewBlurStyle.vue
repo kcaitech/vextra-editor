@@ -1,9 +1,9 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">创建模糊样式</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -20,24 +20,25 @@
         <div class="effect">
             <div class="create-effect">
                 <div class="title">模糊</div>
-                <div class="add" v-if="!blurInfo" @click="addShadow">
-                    <svg-icon icon-class="add"></svg-icon>
+                <div class="add" v-if="!blurInfo" @click="addblur">
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
             </div>
             <div v-if="blurInfo" class="effect-list">
                 <div class="item">
                     <div class="show">
-                        <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
-                            <svg-icon v-if="blurInfo.isEnabled" icon-class="select"></svg-icon>
+                        <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click.stop="toggleVisible()">
+                            <SvgIcon v-if="blurInfo.isEnabled" :icon="select_icon"></SvgIcon>
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
                         :source="positonOptionsSource"
                         :selected="positonOptionsSource.find(i => i.data.value === blurInfo?.type)?.data"
                         @select="(value) => positionSelect(value)"></Select>
-                    <BlurDetail :context="props.context" :blur="blurInfo" :shapes="props.shapes" />
+                    <BlurDetail ref="detailref" :context="props.context" :blur="blurInfo" :shapes="props.shapes"
+                        :isMask="isMask" />
                     <div class="delete" :class="{ disable }">
-                        <svg-icon icon-class="delete"></svg-icon>
+                        <SvgIcon :icon="delete_icon"></SvgIcon>
                     </div>
                 </div>
             </div>
@@ -49,8 +50,8 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BlurType, Shadow, ShapeType, BasicArray, ShadowMask, Point2D, Blur, BlurMask } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { ShapeView, BlurType, ShapeType, BasicArray, Point2D, Blur, BlurMask } from '@kcdesign/data';
+import { Component, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
 import BlurDetail from "../Blur/BlurDetail.vue";
@@ -65,6 +66,19 @@ import { computed } from 'vue';
 import { v4 } from 'uuid';
 import { hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
     context: Context;
@@ -89,6 +103,10 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 const watchedShapes2 = new Map();
 const reflush = ref<number>(0);
+const isMask = ref<boolean>(false);
+const detailref = ref()
+
+
 
 const invalid = computed(() => {
     return !blurInfo.value || !name.value
@@ -97,6 +115,12 @@ const invalid = computed(() => {
 function positionSelect(selected: SelectItem) {
     const actions = get_actions_blur_modify(props.shapes, selected.value);
     const page = props.context.selection.selectedPage;
+    if (isMask.value && blurInfo.value) {
+        const _blur = { ...blurInfo.value }
+        _blur.type = selected.value as BlurType;
+        blurInfo.value = _blur as Blur
+        return
+    }
     if (page) {
         const editor = props.context.editor4Page(page);
         editor.setShapeBlurType(actions);
@@ -108,16 +132,18 @@ const Neweffect = () => {
     if (invalid.value) return
     const editor = props.context.editor4Doc()
     if (!blurInfo.value) return
-    const style = new BlurMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, blurInfo.value)
+    const blur = new Blur(new BasicArray(), blurInfo.value.isEnabled, new Point2D(0, 0), blurInfo.value.saturation, blurInfo.value.type)
+    const style = new BlurMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, blur)
     const page = props.context.selection.selectedPage!
     const selected = props.context.selection.selectedShapes;
     const shapes = getShapesForStyle(selected);
     editor.insertStyleLib(style, page, shapes);
-    props.context.escstack.execute()
     emits('close')
+    props.context.escstack.execute()
+
 }
 
-function addShadow(): void {
+function addblur(): void {
     const len = props.shapes.length;
     if (len < 1) return;
     const blur = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
@@ -138,6 +164,12 @@ function addShadow(): void {
 function toggleVisible() {
     const len = props.shapes.length;
     const isEnabled = !blurInfo.value!.isEnabled;
+    if (isMask && blurInfo.value) {
+        const _blur = { ...blurInfo.value }
+        _blur.isEnabled = isEnabled
+        blurInfo.value = _blur as Blur
+        return
+    }
     if (len < 1) return;
     const actions = get_actions_blur_enabled(props.shapes, isEnabled);
     const page = props.context.selection.selectedPage;
@@ -188,10 +220,17 @@ function watchShapes() {
 const updateData2 = () => {
     mixed.value = false;
     blurInfo.value = undefined;
+    isMask.value = false;
     const len = props.shapes.length;
+    const shape = props.shapes[0];
     if (len === 1) {
-        const shape = props.shapes[0];
-        blurInfo.value = shape.blur;
+        if (shape.style.blursMask) {
+            isMask.value = true;
+            const libs = shape.style.getStylesMgr()
+            blurInfo.value = (libs?.getSync(shape.style.blursMask) as BlurMask).blur
+        } else {
+            blurInfo.value = shape.blur;
+        }
     } else if (len > 1) {
         const blur = get_blur(props.shapes);
         if (blur === 'mixed') {
@@ -222,6 +261,17 @@ const stop = watch(() => props.shapes, update_by_shapes);
 
 onMounted(() => {
     update_by_shapes();
+    watch(() => detailref.value, () => {
+        const { Detail } = detailref.value
+        watch(Detail, () => {
+            if (isMask.value && blurInfo.value) {
+                const _blur = { ...blurInfo.value }
+                _blur.saturation = Detail.value
+                blurInfo.value = _blur as Blur
+            }
+        })
+
+    })
 })
 onUnmounted(() => {
     stop();
@@ -265,7 +315,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
@@ -332,7 +382,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                svg {
+                img {
                     width: 16px;
                     height: 16px;
                     margin: auto;
@@ -369,7 +419,7 @@ onUnmounted(() => {
                         align-items: center;
                         border-radius: 4px;
 
-                        >svg {
+                        >img {
                             width: 60%;
                             height: 60%;
                         }
@@ -405,7 +455,7 @@ onUnmounted(() => {
                         background-color: #F5F5F5;
                     }
 
-                    svg {
+                    img {
                         width: 16px;
                         height: 16px;
                         margin: auto;

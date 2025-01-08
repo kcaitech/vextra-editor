@@ -35,23 +35,23 @@ const picker = ref<HTMLInputElement>();
 const pattern = computed<string>(() => {
     switch (currentTool.value) {
         case Action.AddRect:
-            return 'pattern-rectangle';
+            return pattern_rectangle_icon;
         case Action.AddEllipse:
-            return 'pattern-oval';
+            return pattern_oval_icon;
         case Action.AddLine:
-            return 'pattern-line';
+            return pattern_line_icon;
         case Action.AddArrow:
-            return 'pattern-arrow';
+            return pattern_arrow_icon;
         case Action.Pen:
-            return 'pattern-pen';
+            return pattern_pen_icon;
         case Action.Polygon:
-            return 'pattern-polygon';
+            return pattern_polygon_icon;
         case Action.Star:
-            return 'pattern-star';
+            return pattern_star_icon;
         case Action.AddImage:
-            return 'picture';
+            return picture_icon;
         default:
-            return 'pattern-rectangle';
+            return pattern_rectangle_icon;
     }
 });
 
@@ -191,6 +191,18 @@ onUnmounted(() => {
     stop();
     document.removeEventListener('click', blur);
 })
+
+import white_down_icon from "@/assets/icons/svg/white-down.svg";
+import white_select_icon from "@/assets/icons/svg/white-select.svg";
+import pattern_rectangle_icon from "@/assets/icons/svg/pattern-rectangle.svg";
+import pattern_oval_icon from "@/assets/icons/svg/pattern-oval.svg";
+import pattern_line_icon from "@/assets/icons/svg/pattern-line.svg";
+import pattern_arrow_icon from "@/assets/icons/svg/pattern-arrow.svg";
+import pattern_pen_icon from "@/assets/icons/svg/pattern-pen.svg";
+import pattern_polygon_icon from "@/assets/icons/svg/pattern-polygon.svg";
+import pattern_star_icon from "@/assets/icons/svg/pattern-star.svg";
+import picture_icon from "@/assets/icons/svg/picture.svg";
+
 </script>
 
 <template>
@@ -198,10 +210,10 @@ onUnmounted(() => {
         <div :class="{ 'path-button': true, 'path-button-selected': selected, active: popover }" @mouseenter.stop="enter"
              @mouseleave.stop="leave">
             <div class="svg-container" @click="shot">
-                <svg-icon :icon-class="pattern"/>
+                <SvgIcon :icon="pattern"/>
             </div>
             <div class="tool-pathshape-menu-trigger" @click="showMenu">
-                <svg-icon icon-class="white-down"/>
+                <SvgIcon :icon="white_down_icon"/>
             </div>
         </div>
     </el-tooltip>
@@ -209,10 +221,10 @@ onUnmounted(() => {
         <!--矩形-->
       <div class="item" @click="() => { useRect(context);popover = false }">
             <div v-if="currentTool === Action.AddRect" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <div class="desc">
-                <svg-icon icon-class="pattern-rectangle"></svg-icon>
+                <SvgIcon :icon="pattern_rectangle_icon"/>
                 <span>{{ t('shape.rect') }}</span>
             </div>
             <div class="shortKey">R</div>
@@ -220,10 +232,10 @@ onUnmounted(() => {
         <!--圆形-->
       <div class="item" @click="() => { useEllipse(context);popover = false  }">
             <div v-if="currentTool === Action.AddEllipse" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <div class="desc">
-                <svg-icon icon-class="pattern-oval"></svg-icon>
+                <SvgIcon :icon="pattern_oval_icon"/>
                 <span>{{ t('shape.oval') }}</span>
             </div>
             <div class="shortKey">O</div>
@@ -231,10 +243,10 @@ onUnmounted(() => {
         <!--线条-->
       <div class="item" @click="() => { useLine(context);popover = false  }">
             <div v-if="currentTool === Action.AddLine" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <div class="desc">
-                <svg-icon icon-class="pattern-line"></svg-icon>
+                <SvgIcon :icon="pattern_line_icon"/>
                 <span>{{ t('shape.line') }}</span>
             </div>
             <div class="shortKey">L</div>
@@ -242,20 +254,20 @@ onUnmounted(() => {
         <!--箭头-->
       <div class="item" @click="() => { useArrow(context);popover = false  }">
             <div v-if="currentTool === Action.AddArrow" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <div class="desc">
-                <svg-icon icon-class="pattern-arrow"></svg-icon>
+                <SvgIcon :icon="pattern_arrow_icon"/>
                 <span>{{ t('shape.arrow') }}</span>
             </div>
             <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
         </div>
       <div class="item" @click="() => { usePolygon(context);popover = false  }">
             <div v-if="currentTool === Action.Polygon" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <div class="desc">
-                <svg-icon icon-class="pattern-polygon"></svg-icon>
+                <SvgIcon :icon="pattern_polygon_icon"/>
                 <span>{{ t('shape.polygon') }}</span>
             </div>
             <div class="shortKey"></div>
@@ -263,10 +275,10 @@ onUnmounted(() => {
         <!--星形-->
       <div class="item" @click="() => { useStar(context);popover = false  }">
             <div v-if="currentTool === Action.Star" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <div class="desc">
-                <svg-icon icon-class="pattern-star"></svg-icon>
+                <SvgIcon :icon="pattern_star_icon"/>
                 <span>{{ t('shape.star') }}</span>
             </div>
             <div class="shortKey"></div>
@@ -274,10 +286,10 @@ onUnmounted(() => {
         <!-- 图片 -->
       <div class="item" @click="() => {select();popover = false }">
             <div v-if="currentTool === Action.AddImage" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <div class="desc">
-                <svg-icon icon-class="picture"></svg-icon>
+                <SvgIcon :icon="picture_icon"/>
                 <span>{{ t('home.picture') }}</span>
             </div>
             <div class="shortKey">{{ string_by_sys('Shift Ctrl K') }}</div>
@@ -288,10 +300,10 @@ onUnmounted(() => {
         <!--钢笔-->
       <div class="item" @click="() => { usePen(context);popover = false  }">
             <div v-if="currentTool === Action.Pen" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
+                <SvgIcon :icon="white_select_icon"/>
             </div>
             <div class="desc">
-                <svg-icon icon-class="pattern-pen"></svg-icon>
+                <SvgIcon :icon="pattern_pen_icon"/>
                 <span>{{ t('shape.pen') }}</span>
             </div>
             <div class="shortKey">P</div>
@@ -321,7 +333,7 @@ onUnmounted(() => {
         flex-direction: row-reverse;
         height: 100%;
 
-        >svg {
+        >img {
             width: 18px;
             height: 18px;
         }
@@ -334,7 +346,7 @@ onUnmounted(() => {
         align-items: center;
         height: 100%;
 
-        >svg {
+        >img {
             width: 12px;
             height: 12px;
             transition: 0.2s;
@@ -342,7 +354,7 @@ onUnmounted(() => {
     }
 
     .tool-pathshape-menu-trigger:hover {
-        >svg {
+        >img {
             transform: translateY(2px);
         }
     }
@@ -391,7 +403,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
 
-            >svg {
+            >img {
                 width: 12px;
                 height: 12px;
             }
@@ -402,7 +414,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
 
-            >svg {
+            >img {
                 width: 14px;
                 height: 14px;
             }

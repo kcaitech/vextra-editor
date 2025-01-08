@@ -22,6 +22,7 @@ import {
     BorderSideSetting,
     SideType,
     ResourceMgr,
+    StrokePaint,
 } from "@kcdesign/data"
 import {v4 as uuid} from "uuid"
 import {
@@ -686,8 +687,10 @@ export class BaseCreator extends BaseTreeNode {
             else fill.fillRule = FillRule.Nonzero;
         }
 
-        const borders = new BasicArray<Border>()
+        const strokePaints = new BasicArray<StrokePaint>()
         const stroke = this.attributes.stroke
+        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
         if (stroke) {
             const strokeWidth = stroke.width || 1
 
@@ -705,19 +708,24 @@ export class BaseCreator extends BaseTreeNode {
                 cornerType = CornerType.Miter;
             }
             const borderStyle = new BorderStyle(stroke.dashArray[0], stroke.dashArray[1])
-            const side = new BorderSideSetting(new BasicArray(),SideType.Normal, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
-            const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color), position, strokeWidth, borderStyle, cornerType, side)
-            borders.push(border)
+            const side = new BorderSideSetting(SideType.Normal, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
+            const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color))
+            border.position = position;
+            border.borderStyle = borderStyle;
+            border.cornerType = cornerType;
+            border.sideSetting = side;
 
             if (stroke.colorType !== "color") {
-                border.gradient = buildGradientByFillColor(stroke)
-                border.fillType = FillType.Gradient
+                strokePaint.gradient = buildGradientByFillColor(stroke)
+                strokePaint.fillType = FillType.Gradient
             }
+            strokePaints.push(strokePaint);
+            border.strokePaints = strokePaints;
         }
 
         const shadows = new BasicArray<Shadow>()
 
-        this.style = new Style(borders, fills, shadows)
+        this.style = new Style(fills, shadows, border)
         if (this.attributes.opacity) this.style.contextSettings = new ContextSettings(BlendMode.Normal, this.attributes.opacity);
         shape.style = this.style
     }

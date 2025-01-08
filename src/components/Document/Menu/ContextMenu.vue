@@ -18,7 +18,7 @@ import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
 import {
-    ArtboradView,
+    ArtboardView,
     ShapeType,
     ShapeView,
     SymbolRefView,
@@ -310,7 +310,7 @@ function dissolution_container() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.dissolution_artboard(artboards as ArtboradView[]);
+        const shapes = editor.dissolution_artboard(artboards as ArtboardView[]);
         if (shapes) {
             const selectShapes = [...saveSelectShape, ...shapes]
             props.context.nextTick(page, () => {
@@ -482,6 +482,9 @@ onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
     document.removeEventListener('mousedown', handleClickOutside);
 })
+
+import down_icon from '@/assets/icons/svg/down.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 </script>
 <template>
     <div ref="menu" class="__context-menu" :style="{ width: `${width || 196}px` }" @mousedown.stop @mousemove.stop
@@ -490,7 +493,7 @@ onUnmounted(() => {
         <div v-if="items.has(MenuItemType.Layers)" class="menu-item"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <svg-icon icon-class="down" style="transform: rotate(-90deg)" />
+            <SvgIcon :icon="down_icon" style="transform: rotate(-90deg)" />
             <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers"
                 :style="{ 'max-height': layersHeight + 'px' }">
                 <Layers @close="emits('close')" :layers="props.layers" :context="props.context"></Layers>
@@ -509,7 +512,7 @@ onUnmounted(() => {
         <div v-if="items.has(MenuItemType.CopyAs)" class="menu-item"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.CopyAs)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.copyAs') }}</span>
-            <svg-icon icon-class="down" style="transform: rotate(-90deg)" />
+            <SvgIcon :icon="down_icon" style="transform: rotate(-90deg)" />
             <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.CopyAs">
                 <div class="sub-item" @click="copyAsPNG">
                     <span>{{ t('clipboard.copyAsPNG') }}</span>
@@ -740,7 +743,7 @@ onUnmounted(() => {
             fill: #000;
         }
 
-        >svg {
+        >img {
             width: 9px;
             height: 9px;
 
@@ -791,8 +794,9 @@ onUnmounted(() => {
             fill: #FFF;
         }
 
-        >svg {
-            fill: #fff;
+        >img {
+            // fill: #fff;
+            filter: invert(1);
             transform: rotate(0deg);
         }
     }

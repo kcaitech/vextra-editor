@@ -67,13 +67,19 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
 })
+
+import down_icon from '@/assets/icons/svg/down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 
 <template>
     <div class="shadow-position">
         <div class="context" @click.stop="showMenu">{{ t(`shadow.${shadow.position}`) }}</div>
         <div class="down" @click.stop="showMenu" :class="{ 'active-down': isMenu }">
-            <svg-icon icon-class="down" />
+            <SvgIcon :icon="down_icon" />
         </div>
         <div class="select_menu" v-if="isMenu"
             :style="{ top: shadow.position === ShadowPosition.Outer ? -4 + 'px' : -32 + 'px' }">
@@ -81,16 +87,16 @@ onUnmounted(() => {
                 :class="{ 'active-item': activeItem === ShadowPosition.Outer }">
                 <div class="text">{{ t(`shadow.outer`) }}</div>
                 <div class="icon">
-                    <svg-icon v-if="shadow.position === ShadowPosition.Outer"
-                        :icon-class="activeItem === ShadowPosition.Outer ? 'white-select' : 'page-select'"></svg-icon>
+                    <SvgIcon v-if="shadow.position === ShadowPosition.Outer"
+                        :icon="activeItem === ShadowPosition.Outer ? white_select_icon : page_select_icon"/>
                 </div>
             </div>
             <div class="item" @click="togglePositinon(ShadowPosition.Inner)" @mouseenter="activeItem = ShadowPosition.Inner"
                 :class="{ 'active-item': activeItem === ShadowPosition.Inner }">
                 <div class="text">{{ t(`shadow.inner`) }}</div>
                 <div class="icon">
-                    <svg-icon v-if="shadow.position === ShadowPosition.Inner"
-                        :icon-class="activeItem === ShadowPosition.Inner ? 'white-select' : 'page-select'"></svg-icon>
+                    <SvgIcon v-if="shadow.position === ShadowPosition.Inner"
+                        :icon="activeItem === ShadowPosition.Inner ? white_select_icon : page_select_icon"/>
                 </div>
             </div>
         </div>

@@ -116,18 +116,14 @@ function point2curve3rd(point: XY, start: XY, c1: XY, c2: XY, end: XY) {
 
         const derivativeDotProduct = dxToPoint * _der.x + dyToPoint * _der.y;
 
-        if (Math.abs(derivativeDotProduct) < epsilon) {
-            break;
-        }
+        if (Math.abs(derivativeDotProduct) < epsilon) break;
 
         t -= (derivativeDotProduct / (_der.x * _der.x + _der.y * _der.y));
 
         i++;
     }
 
-    if (t < 0 || t > 1) {
-        return;
-    }
+    if (t < 0 || t > 1) return;
 
     const xy = cubicBezier(t, start, c1, c2, end);
     const distance = Math.sqrt((point.x - xy.x) ** 2 + (point.y - xy.y) ** 2);
@@ -209,6 +205,8 @@ export class PathEditor extends TransformHandler {
         if (flattenPoint) { // 用于减去重合的点
             this.getUniquePosition();
         }
+
+        context.workspace.linearEditorExist = true;
     }
 
     private mapX = new Map<number, XY[]>();
@@ -291,8 +289,8 @@ export class PathEditor extends TransformHandler {
         const frame = this.shape.frame;
         m.preScale(frame.width, frame.height);
 
-        this.baseMatrix = m;
-        this.baseMatrixInverse = new Matrix(m.inverse);
+        this.baseMatrix = m.toMatrix();
+        this.baseMatrixInverse = (m.inverse).toMatrix();
 
         this.getBaseData();
 
@@ -581,56 +579,52 @@ export class PathEditor extends TransformHandler {
     }
 
     private modifyBySegment(activePoints: XY[]) {
+        return false;
         // 点与线之间 比对、吸附、挣脱
-        if (!this.initFixedSegments) {
-            this.__initFS();
-        }
-
-        if (!this.initFixedSegments) {
-            return;
-        }
-
-        let distance = Infinity;
-        let dx = 0;
-        let dy = 0;
-
-        for (let i = 0; i < activePoints.length; i++) {
-            const point = activePoints[i];
-
-            this.fixedSegments.forEach(segment => {
-                let d: { point: { x: number, y: number }, distance: number } | undefined;
-
-                if (segment.type === SegmentType.Straight) {
-                    const seg = segment.seg as Line;
-                    d = point2line(point, seg.start, seg.end)
-                } else {
-                    const seg = segment.seg as Curve3rd;
-                    d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
-                }
-
-                if (d === undefined) return;
-
-                const D = Math.abs(d.distance);
-
-                if (D < distance) {
-                    const targetPoint = d.point;
-
-                    dx = targetPoint.x - point.x;
-                    dy = targetPoint.y - point.y;
-                    distance = D;
-                }
-            })
-        }
-
-        let modified = false;
-
-        if (distance < PathEditor.DELTA) {
-            activePoints[0].x += dx;
-            activePoints[0].y += dy;
-            modified = true;
-        }
-
-        return modified;
+        // if (!this.initFixedSegments) this.__initFS();
+        //
+        // if (!this.initFixedSegments) return;
+        //
+        // let distance = Infinity;
+        // let dx = 0;
+        // let dy = 0;
+        // for (let i = 0; i < activePoints.length; i++) {
+        //     const point = activePoints[i];
+        //
+        //     this.fixedSegments.forEach(segment => {
+        //         let d: { point: { x: number, y: number }, distance: number } | undefined;
+        //
+        //         if (segment.type === SegmentType.Straight) {
+        //             const seg = segment.seg as Line;
+        //             d = point2line(point, seg.start, seg.end)
+        //         } else {
+        //             const seg = segment.seg as Curve3rd;
+        //             d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
+        //         }
+        //
+        //         if (d === undefined) return;
+        //
+        //         const D = Math.abs(d.distance);
+        //
+        //         if (D < distance) {
+        //             const targetPoint = d.point;
+        //
+        //             dx = targetPoint.x - point.x;
+        //             dy = targetPoint.y - point.y;
+        //             distance = D;
+        //         }
+        //     })
+        // }
+        //
+        // let modified = false;
+        //
+        // if (distance < PathEditor.DELTA) {
+        //     activePoints[0].x += dx;
+        //     activePoints[0].y += dy;
+        //     modified = true;
+        // }
+        //
+        // return modified;
     }
 
     private __execute() {
@@ -859,14 +853,16 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
-    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
-        if (!this.asyncApiCaller || !this.shape) {
-            return false;
-        }
+    addPoint(segmentIdx: number, index: number, apex?: { xy: XY, t?: number }) {
+        if (!this.asyncApiCaller || !this.shape) return false;
+        if (!this.isInitMatrix) this.init();
+        return (this.asyncApiCaller as PathModifier).addPoint(this.shape, segmentIdx, index, apex as any);
+    }
 
-        if (!this.isInitMatrix) {
-            this.init();
-        }
+    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
+        if (!this.asyncApiCaller || !this.shape) return false;
+
+        if (!this.isInitMatrix) this.init();
 
         let xy;
 
@@ -882,9 +878,7 @@ export class PathEditor extends TransformHandler {
         let addRes = false;
         if (index > -1 && segment > -1) {
             const __segment = (this.shape as PathShapeView).segments[segment];
-            if (!__segment) {
-                return this.addSegmentForPen(down);
-            }
+            if (!__segment) return this.addSegmentForPen(down);
 
             index = __segment.points.length;
 
@@ -907,13 +901,9 @@ export class PathEditor extends TransformHandler {
     }
 
     addSegmentForPen(down: XY, point?: CurvePoint) {
-        if (!this.asyncApiCaller || !this.shape) {
-            return false;
-        }
+        if (!this.asyncApiCaller || !this.shape) return false;
 
-        if (!this.isInitMatrix) {
-            this.init();
-        }
+        if (!this.isInitMatrix) this.init();
 
         let xy;
 
@@ -948,7 +938,7 @@ export class PathEditor extends TransformHandler {
         const env = this.context.selection.getClosestContainer(this.livingPoint);
         const frame = new ShapeFrame(0, 0, 1, 1);
 
-        const m = new Matrix(env.matrix2Root().inverse);
+        const m = (env.matrix2Root().inverse);
 
         const __xy = m.computeCoord3(this.livingPoint);
         if (this.context.user.isPixelAlignMent) {
@@ -966,7 +956,7 @@ export class PathEditor extends TransformHandler {
 
         const name = `${this.context.workspace.t('shape.path')} ${count}`;
 
-        const previousPathStyle = this.path.previousPathStyle?.borders.length ? this.path.previousPathStyle : undefined;
+        const previousPathStyle = this.path.previousPathStyle?.borders.strokePaints.length ? this.path.previousPathStyle : undefined;
 
         const _vec = (this.asyncApiCaller as PathModifier).createVec(name, frame, env as GroupShapeView, previousPathStyle);
 
@@ -1250,9 +1240,9 @@ export class PathEditor extends TransformHandler {
     }
 
     fulfil() {
-        this.workspace.setSelectionViewUpdater(true);
         this.path.editing(false);
-
+        this.workspace.setSelectionViewUpdater(true);
+        this.workspace.linearEditorExist = false;
         super.fulfil();
     }
 
@@ -1296,26 +1286,6 @@ export class PathEditor extends TransformHandler {
             }
 
             (this.asyncApiCaller as PathModifier).sortSegment(this.shape);
-        } finally {
-            this.fulfil();
-        }
-    }
-
-    modifyClosedStatus(val: boolean) {
-        try {
-            if (!this.isInitMatrix) {
-                this.init();
-            }
-
-            if (!this.asyncApiCaller) {
-                this.createApiCaller();
-            }
-
-            if (!this.asyncApiCaller || !this.isInitMatrix) {
-                return;
-            }
-
-            (this.asyncApiCaller as PathModifier).modifyClosedStatus(this.shape, val);
         } finally {
             this.fulfil();
         }

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CurvePoint, Matrix, PathShapeView } from '@kcdesign/data';
+import { CurvePoint, Matrix, PathSegment, PathShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -12,6 +12,7 @@ import { PathEditor } from "@/path/pathEdit";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
 import { roundBy } from "@/path/common";
+import { PathHitChecker } from "@/path/hit";
 
 type Props = {
     context: Context
@@ -345,10 +346,10 @@ function window_blur() {
 }
 
 function init_matrix() {
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.multiAtLeft(props.context.workspace.matrix);
 
-    return m;
+    return m.toMatrix();
 }
 
 function path_watcher(type: number) {
@@ -387,7 +388,7 @@ function fixXYByShift(e: MouseEvent) {
     const _previous = getLastPoint();
     if (!_previous) return;
 
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
     m.multiAtLeft(props.context.workspace.matrix);
 
@@ -602,7 +603,7 @@ function modifyLivingPath() {
     const previous = getLastPoint();
     if (!previous) return;
 
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
     m.multiAtLeft(props.context.workspace.matrix);
 
@@ -631,23 +632,40 @@ function down(e: MouseEvent) {
             pathModifier = new PathEditor(props.context, e);
             pathModifier.createApiCaller();
             pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1, { ...preXY.value });
+            const m = (shape.matrix2Root());
+            m.preScale(shape.frame.width, shape.frame.height);
+            m.multiAtLeft(props.context.workspace.matrix);
+            const hit = new PathHitChecker(props.context, m.toMatrix());
+            const hitRes = hit.check(shape.segments as PathSegment[], preXY.value);
+            if (hitRes && hitRes.segmentIndex !== lastPoint.segment) {
+                const {isCurve, segmentIndex, index, t} = hitRes;
+                const apex: { xy: XY, t?: number } = {xy: m.inverseCoord(preXY.value)};
+                if (isCurve && t) apex["t"] = t;
+                if (!pathModifier.addPoint(segmentIndex, index + 1, apex)) return;
+                props.context.path.adjust_points(segmentIndex, index + 1);
+            }
             asyncEnvMount();
-
             e.stopPropagation();
         }
     } else {
         pathModifier = new PathEditor(props.context, e);
         pathModifier.createApiCaller();
-        const addRes = pathModifier.addSegmentForPen(preXY.value);
-
-        if (!addRes) return;
-
+        if (!pathModifier.addSegmentForPen(preXY.value)) return;
+        const m = (shape.matrix2Root());
+        m.preScale(shape.frame.width, shape.frame.height);
+        m.multiAtLeft(props.context.workspace.matrix);
+        const hit = new PathHitChecker(props.context, m.toMatrix());
+        const hitRes = hit.check(shape.segments as PathSegment[], preXY.value);
+        if (hitRes) {
+            const {isCurve, segmentIndex, index, t} = hitRes;
+            const apex: { xy: XY, t?: number } = {xy: m.inverseCoord(preXY.value)};
+            if (isCurve && t) apex["t"] = t;
+            if (!pathModifier.addPoint(segmentIndex, index + 1, apex)) return;
+            props.context.path.adjust_points(segmentIndex, index + 1);
+        }
         props.context.path.setContactStatus(true);
-
         setDisContactTrigger(props.context.path);
-
         asyncEnvMount();
-
         e.stopPropagation();
     }
 }
@@ -681,7 +699,7 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
         if (!previous) return;
     }
 
-    const m = new Matrix(shape.matrix2Root());
+    const m = (shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
     m.multiAtLeft(props.context.workspace.matrix);
 

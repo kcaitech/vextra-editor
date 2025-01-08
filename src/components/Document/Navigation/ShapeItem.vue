@@ -376,6 +376,14 @@ onUnmounted(() => {
     parent?.unwatch(parentWatcher);
     page.unwatch(pageWatcher);
 })
+
+import lock_open_icon from '@/assets/icons/svg/lock-open.svg';
+import lock_lock_icon from '@/assets/icons/svg/lock-lock.svg';
+import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
+import eye_closed_icon from '@/assets/icons/svg/eye-closed.svg';
+import locate_icon from '@/assets/icons/svg/locate.svg';
+import triangle_down_icon from '@/assets/icons/svg/triangle-down.svg';
+import masked_by_icon from "@/assets/icons/svg/masked-by.svg";
 </script>
 
 <template>
@@ -398,18 +406,18 @@ onUnmounted(() => {
     <!-- 开合 -->
     <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }"
          @mousedown.stop="toggleExpand" @mouseup.stop>
-        <svg-icon
+        <SvgIcon
             v-if="showTriangle"
-            icon-class="triangle-down"
+            :icon="triangle_down_icon"
             :id="props.data.expand ? 'down' : 'right'"
             :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"
         />
     </div>
     <!-- icon -->
-    <svg-icon
+    <SvgIcon
         v-if="maskView"
         class="zero-symbol"
-        icon-class="masked-by"
+        :icon="masked_by_icon"
         style="width: 12px; height: 12px;margin-right: 3px"
     />
     <div class="container-svg zero-symbol"
@@ -424,17 +432,17 @@ onUnmounted(() => {
         <div class="tool_icon" @mousedown.stop
              :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
             <div class="tool_lock tool" @click="toggleContainer" @dblclick="fitToggleContainer">
-                <svg-icon class="svg-open" icon-class="locate"></svg-icon>
+                <SvgIcon class="svg-open" :icon="locate_icon"/>
             </div>
             <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
                  v-if="!data.context.readonly && !isLable">
-                <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"/>
-                <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"/>
+                <SvgIcon v-if="lock_status === 0" class="svg-open" :icon="lock_open_icon"/>
+                <SvgIcon v-else-if="lock_status === 1" class="svg" :icon="lock_lock_icon"/>
             </div>
             <div class="tool_eye tool" :class="{ 'visible': visible_status }"
                  @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLable">
-                <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"/>
-                <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"/>
+                <SvgIcon v-if="visible_status === 0" class="svg" :icon="eye_open_icon"/>
+                <SvgIcon v-else-if="visible_status === 1" class="svg" :icon="eye_closed_icon"/>
             </div>
         </div>
     </div>

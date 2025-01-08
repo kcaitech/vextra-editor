@@ -1,109 +1,111 @@
 <template>
-    <div class="border-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop
-        @mousedown.stop>
+    <div class="border-container" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">边框样式</div>
             <div class="tool">
                 <div class="newstyle" @click="NewPanel($event)">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
                 <div class="close" @click="emits('close')">
-                    <svg-icon icon-class="close"></svg-icon>
+                    <SvgIcon :icon="close_icon"></SvgIcon>
                 </div>
             </div>
         </div>
         <div class="search">
             <div class="icon">
-                <svg-icon icon-class="search"></svg-icon>
+                <SvgIcon :icon="search_icon"></SvgIcon>
             </div>
             <div class="filter" @click="FilterPanel">
-                <svg-icon icon-class="arrow"></svg-icon>
+                <SvgIcon :icon="arrow_icon"></SvgIcon>
             </div>
             <input v-focus type="text" placeholder="搜索样式" v-model="searchval"
                 @keydown.esc="props.context.escstack.execute()">
             <div v-if="filterpanel" class="filter-list">
-                <div class="list-item" @click.stop="Changefilter('全部')">
-                    <span>全部</span>
-                </div>
-                <div class="list-item" v-for="i in test" :key="i.type" @click.stop="Changefilter(i.type)">
-                    <span> {{ i.type }}</span>
+                <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="Changefilter(item[1])">
+                    <div class="choose" :style="{ visibility: filterval === item[1] ? 'visible' : 'hidden' }">
+                        <SvgIcon :icon="choose_icon"></SvgIcon>
+                    </div>
+                    <span> {{ item[1] }}</span>
                 </div>
             </div>
         </div>
         <el-scrollbar>
             <div class="content">
-                <div class="style-item" v-for="i in data" :key="i.type">
-                    <div class="type" @click.stop="showtype(i.type)">
-                        <svg-icon :icon-class="showtypes.has(i.type) ? 'triangle-down' : 'triangle-right'"></svg-icon>
-                        <span>{{ i.type }}</span>
+                <div class="style-item" v-for="sheet in showdata" :key="sheet.id">
+                    <div class="type" @click.stop="showtype(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <SvgIcon
+                            :icon="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon">
+                        </SvgIcon>
+                        <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
-                    <template v-if="showtypes.has(i.type)">
-                        <div class="styles" :class="{ 'active': editorpanel && currenttarget === s.content[0].id }"
-                            v-for="s in i.styles.filter(s => s.name.includes(searchval))">
+                    <template v-if="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <div class="styles"
+                            :class="{ 'active': editorpanel && currenttarget === mask.id, 'target': mask.id === props.id }"
+                            v-for="mask in (sheet.variables as BorderMask[])" :key="mask.id">
                             <div class="left">
                                 <div class="border" :style="{
-                                    borderTop: s.content[0].sideSetting.thicknessTop < 3 ? s.content[0].sideSetting.thicknessTop : 3 + 'px',
-                                    borderRight: s.content[0].sideSetting.thicknessRight < 3 ? s.content[0].sideSetting.thicknessRight : 3 + 'px',
-                                    borderBottom: s.content[0].sideSetting.thicknessBottom < 3 ? s.content[0].sideSetting.thicknessBottom : 3 + 'px',
-                                    borderLeft: s.content[0].sideSetting.thicknessLeft < 3 ? s.content[0].sideSetting.thicknessLeft : 3 + 'px',
+                                    borderTop: mask.border.sideSetting.thicknessTop < 3 ? mask.border.sideSetting.thicknessTop : 3 + 'px',
+                                    borderRight: mask.border.sideSetting.thicknessRight < 3 ? mask.border.sideSetting.thicknessRight : 3 + 'px',
+                                    borderBottom: mask.border.sideSetting.thicknessBottom < 3 ? mask.border.sideSetting.thicknessBottom : 3 + 'px',
+                                    borderLeft: mask.border.sideSetting.thicknessLeft < 3 ? mask.border.sideSetting.thicknessLeft : 3 + 'px',
                                     borderColor: 'black',
                                     borderStyle: 'solid'
                                 }">
                                 </div>
-                                <div class="name">{{ s.name }}</div>
+                                <div class="name">{{ mask.name }}</div>
                             </div>
-                            <div class="editor clickeditor" style="visibility: hidden;"
-                                @click="EditPanel($event, s.content[0].id, s.content[0])">
-                                <svg-icon icon-class="export-menu"></svg-icon>
+                            <div class="editor" style="visibility: hidden;" @click="EditPanel($event, mask.id)">
+                                <SvgIcon :icon="editor_icon"></SvgIcon>
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-if="!data.length" class="null">没有搜索到相关样式</div>
+                <div v-if="!showdata.length && searchval" class="null">没有搜索到相关样式</div>
+                <div v-if="!showdata.length && !searchval" class="null">没有可用的样式</div>
             </div>
         </el-scrollbar>
         <NewBorderStyle v-if="newpanel" :top="Top" :left="Left" :context="props.context" :shapes="props.shapes"
             @close="props.context.escstack.execute()"></NewBorderStyle>
-        <EditorBorderStyle v-if="editorpanel" :border="borders" :top="Top" :left="Left" :shapes="props.shapes"
-            :context="props.context" @close="props.context.escstack.execute()"></EditorBorderStyle>
+        <EditorBorderStyle v-if="editorpanel" :maskid="currenttarget" :reder="fillRenderer" :top="Top" :left="Left"
+            :shapes="props.shapes" :context="props.context" @close="props.context.escstack.execute()">
+        </EditorBorderStyle>
     </div>
 
 </template>
 <script setup lang="ts">
 import {
-    BasicArray,
     Border,
-    BorderPosition,
-    BorderSideSetting,
-    BorderStyle,
-    Color,
-    CornerType,
-    Fill,
-    FillType,
-    GradientType,
-    ImageScaleMode,
-    ShapeType,
+    BorderMask,
     ShapeView,
-    SideType,
-    Stop, SymbolView,
-    TableView
 } from "@kcdesign/data";
 import { Context } from '@/context';
-import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EditorBorderStyle from './EditorBorderStyle.vue';
 import NewBorderStyle from "./NewBorderStyle.vue";
+import { FillRenderer, Mask } from "./fillRenderer";
+import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { v4 } from "uuid";
-interface FillItem {
-    id: number,
-    fill: Fill
-}
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[]
     top: number;
     left: number
+    id?: string;
 }>()
 
 const emits = defineEmits<{
@@ -114,42 +116,47 @@ const emits = defineEmits<{
 const { t } = useI18n();
 const filterpanel = ref<boolean>(false)
 const searchval = ref<string>('')
-const filterval = ref<string>('')
+const filterval = ref<string>('全部样式')
 const showtypes = ref(new Set<string>())
 const newpanel = ref<boolean>(false)
 const editorpanel = ref<boolean>(false)
 const Top = ref<number>(0)
 const Left = ref<number>(0)
-const Type = ref<string>('')
-
 const currenttarget = ref<string>('')
-const borders = ref<Border>()
+const sheets = reactive<StyleSheet[]>([])
+const showdata = reactive<StyleSheet[]>([])
+const masklist = reactive<Mask[]>([]);
+const listfilter = new Map()
+const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], masklist as Mask[]);
+
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
 }
 
-const color = new Color(1, 0, 0, 0);
-const borderStyle = new BorderStyle(0, 0);
-const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 2, 0, 4);
-const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
-
-const test = [
-    { type: 'location', styles: [{ name: '33', content: [border] }, { name: '2', content: [border] }] },
-]
-
-const data = computed(() => {
-    let d;
-    if (filterval.value && filterval.value !== '全部') {
-        d = test.filter(i => i.type === filterval.value)
-    } else {
-        d = test
-    }
-    return d.filter(i => i.styles.filter(s => s.name.includes(searchval.value)).length !== 0)
+watchEffect(() => {
+    listfilter.set('all', '全部样式')
+    sheets.forEach(s => {
+        if (s.id === props.context.data.id) {
+            listfilter.set(s.name, '此文件样式')
+        } else {
+            listfilter.set(s.name, s.name)
+        }
+    })
+    listfilter.forEach((v) => showtypes.value.add(v))
 })
-let timer: any
 
-const EditPanel = (e: MouseEvent, id: string, b: Border) => {
-    borders.value = b;
+watchEffect(() => {
+    showdata.length = 0;
+    const arr = sheets.filter(s => s.name.includes(filterval.value === '全部样式' ? "" : filterval.value === '此文件样式' ? "新文件" : filterval.value))
+    const new_arr = arr.map(s => {
+        let newSheet: StyleSheet = { ...s }
+        newSheet.variables = s.variables.filter(v => (v as BorderMask).name.includes(searchval.value))
+        return newSheet
+    })
+    showdata.push(...new_arr.filter(s => s.variables.length !== 0))
+})
+
+const EditPanel = (e: MouseEvent, id: string,) => {
     let el = e.target as HTMLElement;
     const { top } = el.getBoundingClientRect()
     while (el.parentElement?.className !== 'border-container') {
@@ -162,29 +169,16 @@ const EditPanel = (e: MouseEvent, id: string, b: Border) => {
     Left.value = left - 250;
     currenttarget.value === id ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
     currenttarget.value = id;
-    if (editorpanel.value) {
-        if (timer) clearTimeout(timer)
-        timer = setTimeout(() => {
-            document.addEventListener('click', checkeditorpanel)
-            clearTimeout(timer)
-        }, 0);
-        props.context.escstack.save(v4(), closeEditorPanel)
-    } else {
-        document.removeEventListener('click', checkeditorpanel)
-    }
+    console.log(currenttarget.value,'id');
+    document.addEventListener('click', checkeditorpanel)
+    props.context.escstack.save(v4(), closeEditorPanel)
 }
 
 function checkeditorpanel(e: MouseEvent) {
-    const muen2 = document.querySelectorAll('.clickeditor')
-    let b: boolean[] = [];
-    muen2.forEach((i) => {
-        b.push(i.contains(e.target as HTMLElement))
-    })
-    const a = b.some(i => i === true)
-    if (!a) {
-        editorpanel.value = false
-        document.removeEventListener('click', checkeditorpanel)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.editor-style') &&
+        !e.target.closest('.editor') &&
+        closeEditorPanel();
 }
 
 const closeEditorPanel = () => {
@@ -193,7 +187,7 @@ const closeEditorPanel = () => {
     document.removeEventListener('click', checkeditorpanel)
     return exe_result
 }
-let timer2: any
+
 const NewPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'border-container') {
@@ -205,26 +199,8 @@ const NewPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     newpanel.value = !newpanel.value
-    if (editorpanel.value) editorpanel.value = false
-    if (newpanel.value) {
-        if (timer2) clearTimeout(timer2)
-        timer2 = setTimeout(() => {
-            document.addEventListener('click', checknewpanel)
-            clearTimeout(timer2)
-        }, 0);
-        props.context.escstack.save(v4(), closeNewPanel)
-    } else {
-        document.removeEventListener('click', checknewpanel)
-    }
-}
-
-function checknewpanel(e: MouseEvent) {
-    const muen = document.querySelector('.new-style')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        newpanel.value = false
-        document.removeEventListener('click', checknewpanel)
-    }
+    document.addEventListener('click', checknewpanel)
+    props.context.escstack.save(v4(), closeNewPanel)
 }
 
 const closeNewPanel = () => {
@@ -234,28 +210,29 @@ const closeNewPanel = () => {
     return exe_result
 }
 
+function checknewpanel(e: MouseEvent) {
+    e.target instanceof Element &&
+        !e.target.closest('.new-style') &&
+        !e.target.closest('.newstyle') &&
+        closeNewPanel();
+}
 
-let timer3: any
 const FilterPanel = () => {
+    if (filterpanel.value) return;
     filterpanel.value = !filterpanel.value
-    if (filterpanel.value) {
-        if (timer3) clearTimeout(timer3)
-        timer3 = setTimeout(() => {
-            document.addEventListener('click', checkfilterpanel)
-            clearTimeout(timer3)
-        }, 0);
-    } else {
-        document.removeEventListener('click', checkfilterpanel)
-    }
+    document.addEventListener('click', checkfilterpanel)
+}
+
+const closeFilterPanel = () => {
+    filterpanel.value = false
+    document.removeEventListener('click', checkfilterpanel)
 }
 
 const checkfilterpanel = (e: MouseEvent) => {
-    const muen = document.querySelector('.filter-list')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        filterpanel.value = false
-        document.removeEventListener('click', checkfilterpanel)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.filter-list') &&
+        !e.target.closest('.filter') &&
+        closeFilterPanel();
 }
 
 const Changefilter = (v: string) => {
@@ -265,13 +242,23 @@ const Changefilter = (v: string) => {
     document.removeEventListener('click', checkfilterpanel)
 }
 
-watchEffect(() => {
-    data.value.forEach(i => showtypes.value.add(i.type))
-})
+function update() {
+    const lib = props.context.data.stylelib
+    if (!lib) return
+    fillRenderer.updateUnderRootContainerMap('border')
+}
+
+function stylelib_watcher(t: number | string) {
+    if (t === 'stylelib') update();
+}
 
 onMounted(() => {
+    update();
+    props.context.data.watch(stylelib_watcher);
+})
 
-
+onUnmounted(() => {
+    props.context.data.unwatch(stylelib_watcher)
 })
 
 
@@ -317,7 +304,7 @@ onMounted(() => {
                 background-color: #f5f5f5;
             }
 
-            >svg {
+            >img {
                 outline: none;
                 width: 16px;
                 height: 16px;
@@ -337,7 +324,7 @@ onMounted(() => {
                 background-color: #f5f5f5;
             }
 
-            >svg {
+            >img {
                 outline: none;
                 width: 16px;
                 height: 16px;
@@ -370,10 +357,16 @@ onMounted(() => {
         width: 18px;
         height: 32px;
 
-        svg {
+        img {
             height: 100%;
             width: 14px;
         }
+    }
+
+    .filter img {
+        rotate: -90deg;
+        padding: 1px;
+        box-sizing: border-box;
     }
 
     input {
@@ -411,6 +404,19 @@ onMounted(() => {
             border-radius: 6px;
             box-sizing: border-box;
 
+            .choose {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+
+                img {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+
             &:hover {
                 background-color: #F5F5F5;
             }
@@ -439,7 +445,7 @@ onMounted(() => {
         }
     }
 
-    .style-item .type svg {
+    .style-item .type img {
         width: 14px;
         height: 14px;
     }
@@ -496,7 +502,7 @@ onMounted(() => {
             background-color: #e5e5e5;
         }
 
-        svg {
+        img {
             outline: none;
             margin: auto;
             width: 16px;
@@ -511,10 +517,13 @@ onMounted(() => {
 
 .active {
     background-color: #f5f5f5;
+}
 
-    .editor {
-        visibility: visible !important;
-        background-color: #e5e5e5;
+.target {
+    background-color: rgba(24, 120, 245, 0.2) !important;
+
+    .editor:hover {
+        background-color: rgba(24, 120, 245, 0.3) !important;
     }
 }
 </style>

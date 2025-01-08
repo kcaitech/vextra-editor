@@ -38,11 +38,11 @@
                         <span>{{ i.type }}</span>
                     </div>
                     <template v-if="showtypes.has(i.type)">
-                        <div class="styles" :class="{ 'active': editorpanel && currenttarget === s.content[0].id }"
+                        <div class="styles" :class="{ 'active': editorpanel && currenttarget === s.content.id }"
                             v-for="s in i.styles.filter(s => s.name.includes(searchval))">
                             <div class="left">
                                 <div class="border" :style="{
-                                    borderTop: s.content[0].sideSetting.thicknessTop < 3 ? s.content[0].sideSetting.thicknessTop : 3 + 'px',
+                                    borderTop: s.content.sideSetting.thicknessTop < 3 ? s.content[0].sideSetting.thicknessTop : 3 + 'px',
                                     borderRight: s.content[0].sideSetting.thicknessRight < 3 ? s.content[0].sideSetting.thicknessRight : 3 + 'px',
                                     borderBottom: s.content[0].sideSetting.thicknessBottom < 3 ? s.content[0].sideSetting.thicknessBottom : 3 + 'px',
                                     borderLeft: s.content[0].sideSetting.thicknessLeft < 3 ? s.content[0].sideSetting.thicknessLeft : 3 + 'px',
@@ -85,7 +85,7 @@ import {
     ShapeType,
     ShapeView,
     SideType,
-    Stop, SymbolView,
+    Stop, StrokePaint, SymbolView,
     TableView
 } from "@kcdesign/data";
 import { Context } from '@/context';
@@ -129,8 +129,11 @@ const showtype = (t: string) => {
 
 const color = new Color(1, 0, 0, 0);
 const borderStyle = new BorderStyle(0, 0);
-const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 2, 0, 4);
-const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
+const side = new BorderSideSetting(SideType.Normal, 1, 2, 0, 4);
+const strokePaints = new BasicArray<StrokePaint>();
+const strokePaint = new StrokePaint( new BasicArray<number>(0), v4(),true, FillType.SolidColor, color);
+strokePaints.push(strokePaint);
+const border = new Border(BorderPosition.Center, borderStyle, CornerType.Miter, side, strokePaints);
 
 const test = [
     { type: 'location', styles: [{ name: '33', content: [border] }, { name: '2', content: [border] }] },

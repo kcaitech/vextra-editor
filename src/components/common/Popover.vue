@@ -37,7 +37,7 @@ function show() {
     popoverVisible.value = true;
     props.context.menu.isPopoverExisted = true;
     container.value.focus();
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
     props.context.escstack.save(v4(), popoverClose);
 
     nextTick(locate);
@@ -111,6 +111,10 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
 })
+
+import close_icon from "@/assets/icons/svg/close.svg";
+import SvgIcon from './SvgIcon.vue';
+
 </script>
 
 <template>
@@ -123,7 +127,7 @@ onUnmounted(() => {
             <div class="header">
                 <span class="title">{{ props.title }}</span>
                 <div @click="popoverClose" class="close">
-                    <svg-icon icon-class="close"></svg-icon>
+                    <SvgIcon :icon="close_icon"/>
                 </div>
             </div>
             <div class="body">
@@ -145,6 +149,7 @@ onUnmounted(() => {
         background-color: #FFFFFF;
         border-radius: 8px;
         border: 1px solid #F0F0F0;
+        z-index: 999;
 
         >.header {
             width: 100%;

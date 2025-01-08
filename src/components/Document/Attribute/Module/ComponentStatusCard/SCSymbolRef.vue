@@ -83,6 +83,12 @@ const getValue = (id: string) => {
 function _delete() {
     delete_variable(props.context, props.variable);
 }
+
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import gray_symbol_ref_icon from '@/assets/icons/svg/gray-symbol-ref.svg';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+
+
 </script>
 <template>
     <div class="module_attr_item" ref="instance_card">
@@ -90,7 +96,7 @@ function _delete() {
             <div class="module_item_left" @click="edit_instance">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="gray-symbol-ref"></svg-icon>
+                        <SvgIcon :icon="gray_symbol_ref_icon"/>
                     </div>
                     <div class="name">
                         <span style="width: 35%;">{{ props.variable.name }}</span>
@@ -99,7 +105,7 @@ function _delete() {
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
         <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"

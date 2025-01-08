@@ -1,4 +1,4 @@
-import { ArtboradView, ShapeView, SymbolView } from "@kcdesign/data";
+import { ArtboardView, ShapeView, SymbolView } from "@kcdesign/data";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { Context } from "@/context";
 import { Selection } from "@/context/selection";
@@ -19,7 +19,7 @@ export class StyleManager {
 
     private __elements_with_slide: Set<Element> = new Set();
 
-    slidifyEnv(env: SymbolView | ArtboradView) {
+    slidifyEnv(env: SymbolView | ArtboardView) {
         const children = env.childs;
         for (const shape of children) {
             const el = (shape as ShapeDom).el;

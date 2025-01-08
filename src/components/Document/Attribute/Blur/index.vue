@@ -19,6 +19,7 @@ import BlurTypeSelect from "./BlurTypeSelect.vue";
 import BlurStyle from '@/components/Document/Attribute/StyleLibrary/BlurStyle.vue';
 import { v4 } from 'uuid';
 import { getShapesForStyle } from '@/utils/style';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 type Props = {
     context: Context
@@ -80,6 +81,7 @@ function updateData() {
     mixed.value = false;
     mask.value = false;
     blurInfo.value = undefined;
+    blurMask.value = undefined;
     const len = props.shapes.length;
     if (len === 1) {
         const shape = props.shapes[0];
@@ -126,7 +128,7 @@ function addBlur(): void {
         if (mask) {
             const s = props.shapes.findLast(i => i.style.blursMask !== undefined)
             console.log(s);
-            
+
             const id = s?.style.blursMask as string
             const actions = get_actions_add_mask(props.shapes, id);
             editor.shapesSetBlurMask(actions);
@@ -189,7 +191,7 @@ const delstyleblur = () => {
     editor.shapesDelStyleBlur(actions);
 }
 
-const openBlurPanel = (e: MouseEvent) => {
+const openBlurPanel = (e: MouseEvent, id?: string) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'blur-panel') {
         if (el.parentElement) {
@@ -200,12 +202,8 @@ const openBlurPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     showblur.value = !showblur.value
+    document.addEventListener('click', checktargetlist)
     props.context.escstack.save(v4(), close);
-    if (showblur.value) {
-        document.addEventListener('click', checktargetlist)
-    } else {
-        document.removeEventListener('click', checktargetlist)
-    }
 }
 
 function close() {
@@ -221,14 +219,11 @@ function update_by_shapes() {
 }
 
 function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelector('.blur-style')
-    const muen2 = document.querySelector('.shadow-container')
-    if (!muen) return;
-    if (!muen2) return;
-    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
-        showblur.value = false
-        document.removeEventListener('click', checktargetlist)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.shadow-container') &&
+        !e.target.closest('.blur-style') &&
+        !e.target.closest('.blur-left') &&
+        close();
 }
 
 const closepanel = () => {
@@ -254,6 +249,12 @@ onUnmounted(() => {
     watchedShapes.forEach(i => i.unwatch(watcher));
     watchedShapes.clear();
 });
+
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
 </script>
 
 <template>
@@ -261,10 +262,10 @@ onUnmounted(() => {
         <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="!!blurInfo">
             <template v-if="!mask" #tool>
                 <div v-if="!mixed" class="blur-style" @click="openBlurPanel($event)">
-                    <svg-icon icon-class="styles"></svg-icon>
+                    <SvgIcon :icon="style_icon" />
                 </div>
                 <div class="add" @click.stop="addBlur" v-if="!blurInfo || mixed">
-                    <svg-icon icon-class="add" />
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </template>
         </TypeHeader>
@@ -274,7 +275,7 @@ onUnmounted(() => {
         <div class="blur-container" v-if="!mixed && blurInfo && !mask">
             <div class="blur">
                 <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
-                    <svg-icon v-if="blurInfo.isEnabled" icon-class="select" />
+                    <SvgIcon v-if="blurInfo.isEnabled" :icon="select_icon" />
                 </div>
                 <div class="blur_posi">
                     <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" :reflush="reflush" />
@@ -283,27 +284,27 @@ onUnmounted(() => {
                     <BlurDetail :context="context" :blur="blurInfo" :shapes="shapes" :reflush="reflush" />
                 </div>
                 <div class="delete" @click="deleteBlur">
-                    <svg-icon icon-class="delete" />
+                    <SvgIcon :icon="delete_icon" />
                 </div>
             </div>
         </div>
         <div class="shadowmask" v-if="mask">
             <div class="info">
-                <div class="left" @click.stop="">
+                <div class="blur-left" @click="openBlurPanel($event)">
                     <div class="effect">
                     </div>
                     <div class="name">{{ blurMask?.name }}</div>
                 </div>
-                <div class="unbind" @click.stop="delblurmask">
-                    <svg-icon icon-class="unbind"></svg-icon>
+                <div class="unbind" @click="delblurmask">
+                    <SvgIcon :icon="unbind_icon" />
                 </div>
             </div>
-            <div class="delete-style">
-                <svg-icon icon-class="delete" @click.stop="delstyleblur"></svg-icon>
+            <div class="delete-style" @click="delstyleblur">
+                <SvgIcon :icon="delete_icon" />
             </div>
         </div>
         <BlurStyle v-if="showblur" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closepanel">
+            @close="closepanel" :id="blurMask?.id">
         </BlurStyle>
     </div>
 </template>
@@ -328,13 +329,13 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
     }
 
-    .blur-style svg {
+    .blur-style img {
         padding: 2px;
         box-sizing: border-box;
     }
@@ -376,7 +377,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                >svg {
+                >img {
                     width: 60%;
                     height: 60%;
                 }
@@ -411,7 +412,7 @@ onUnmounted(() => {
                 border-radius: var(--default-radius);
                 transition: .2s;
 
-                >svg {
+                >img {
                     width: 16px;
                     height: 16px;
                 }
@@ -451,7 +452,7 @@ onUnmounted(() => {
             background-color: #f4f5f5;
             height: 100%;
 
-            .left {
+            .blur-left {
                 flex: 1;
                 display: flex;
                 align-items: center;
@@ -480,7 +481,7 @@ onUnmounted(() => {
                 width: 28px;
                 height: 32px;
 
-                >svg {
+                >img {
                     width: 16px;
                     height: 16px;
                 }
@@ -502,7 +503,7 @@ onUnmounted(() => {
             border-radius: var(--default-radius);
             overflow: hidden;
 
-            >svg {
+            >img {
                 width: 16px;
                 height: 16px;
             }

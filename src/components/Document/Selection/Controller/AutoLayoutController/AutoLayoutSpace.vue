@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection, XY } from '@/context/selection';
-import { ArtboradView, BorderPosition, ColVector3D, CtrlElementType, Matrix, PaddingDir, Shape, ShapeView, StackMode, StackSizing, adapt2Shape, getHorizontalAngle, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboardView, BorderPosition, ColVector3D, CtrlElementType, Matrix, PaddingDir, Shape, ShapeView, StackMode, StackSizing, adapt2Shape, getHorizontalAngle, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
@@ -67,7 +67,7 @@ function getVerSpacePosition() {
     verSpaceLine.value = [];
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length || shapes.length > 1) return;
-    const shape = shapes[0] as ArtboradView;
+    const shape = shapes[0] as ArtboardView;
     const { x, y, width, height } = shape.frame;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
@@ -123,7 +123,7 @@ function getHorSpacePosition() {
     horSpaceLine.value = [];
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length || shapes.length > 1) return;
-    const shape = shapes[0] as ArtboradView;
+    const shape = shapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
     const matrix2 = new Matrix(props.context.workspace.matrix);
@@ -173,23 +173,16 @@ function getHorSpacePosition() {
 const getIncludedBorderFrame = (shape: Shape, includedBorder?: boolean) => {
     let f = getShapeFrame(shape);
     if (includedBorder) {
-        const borders = shape.getBorders();
+        const border = shape.getBorders();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
-        borders.forEach(b => {
-            if (b.isEnabled) {
-                if (b.position === BorderPosition.Outer) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
-                } else if (b.position === BorderPosition.Center) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
-                }
-            }
-        })
+        const isEnabled = border.strokePaints.some(p => p.isEnabled);
+        if (isEnabled) {
+            const outer = border.position === BorderPosition.Outer;
+            maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+            maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+            maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+            maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
+        }
         f.x -= maxleftborder;
         f.y -= maxtopborder;
         f.width += maxleftborder + maxrightborder;
@@ -247,7 +240,7 @@ let spacing = 0;
 function mousemove(e: MouseEvent) {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
-    const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
     if (isDragging) {
@@ -259,7 +252,7 @@ function mousemove(e: MouseEvent) {
         }
 
         const matrix2Root = shape.matrix2Root();
-        const m = new Matrix(matrix2Root.inverse);
+        const m = (matrix2Root.inverse);
         const downXy = m.computeCoord(downClientXY);
         const moveXy = m.computeCoord2(e.clientX, e.clientY);
         const scale = props.context.workspace.matrix.m00;

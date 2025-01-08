@@ -1,9 +1,9 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">创建边框样式</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -16,26 +16,26 @@
                 <input type="text" id="des" v-model="des">
             </div>
         </div>
-        <div class="border" v-if="borders.length">
+        <div class="border">
             <div class="type">
                 <div class="title">位置</div>
                 <Select class="select" :context="props.context" :shapes="props.shapes" :source="positonOptionsSource"
-                    :selected="positonOptionsSource.find(i => i.data.value === borders[0].border.position)?.data"
-                    @select="positionSelect" :index="borders.length - 1"></Select>
+                    :selected="positonOptionsSource.find(i => i.data.value === borderData.position)?.data"
+                    @select="positionSelect"></Select>
             </div>
             <div class="thickness">
                 <div class="title">粗细</div>
                 <input type="text" v-model="thickness" @change="setThickness">
             </div>
         </div>
-        <div class="create-bnt" @click.stop="emits('close')">创建样式</div>
+        <div class="create-bnt" @click.stop="Newborder">创建样式</div>
     </div>
 
 </template>
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShapeType, Border, TableCellView, PathShapeView } from '@kcdesign/data';
+import { ShapeView, BorderPosition, ShapeType, SideType, TableCellView, PathShapeView, StrokePaint, CornerType, BorderStyle, BorderSideSetting, BorderMaskType, BorderMask, BasicArray } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
@@ -44,11 +44,32 @@ import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_position, get_borders } from '@/utils/shape_style';
 import { Selection } from "@/context/selection";
 import { getShapesForStyle } from '@/utils/style';
+import { v4 } from 'uuid';
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
-interface BorderItem {
+interface StrokePaintItem {
     id: number
-    border: Border
+    strokePaint: StrokePaint
 }
+interface BorderData {
+    position: BorderPosition | string
+    cornerType: CornerType | string
+    borderStyle: BorderStyle | string
+    sideSetting: BorderSideSetting | string,
+}
+
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
@@ -62,6 +83,17 @@ const emits = defineEmits<{
 
 const { t } = useI18n();
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
+const initBorder = {
+    position: BorderPosition.Center,
+    cornerType: CornerType.Miter,
+    borderStyle: new BorderStyle(0, 0),
+    sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
+}
+const borderData = ref<BorderData>({ ...initBorder })
+const data: { strokePaints: StrokePaintItem[] } = reactive({
+    strokePaints: [],
+});
+const { strokePaints } = data;
 const watchedShapes = new Map();
 const positonOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
@@ -73,8 +105,8 @@ const reflush_apex = ref(0);
 const show_apex = ref<boolean>(false);
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-const data: { borders: BorderItem[] } = reactive({ borders: [] });
-const { borders } = data;
+const hasStroke = ref(false);
+const positonvalue = ref<BorderPosition>(BorderPosition.Center)
 const thickness = ref<string>('')
 const oldvalue = ref<string>('')
 const name = ref<string>('name')
@@ -97,8 +129,7 @@ const setThickness = () => {
 }
 
 function positionSelect(selected: SelectItem, id: number | undefined) {
-    console.log(selected.value, id);
-
+    positonvalue.value = selected.value as BorderPosition;
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
@@ -108,6 +139,21 @@ function positionSelect(selected: SelectItem, id: number | undefined) {
         const editor = props.context.editor4Page(page);
         editor.setShapesBorderPosition(actions);
     }
+}
+
+const Newborder = () => {
+    const editor = props.context.editor4Doc()
+    if (!thickness.value && !positonvalue.value) return
+    const value = thickness.value.split(', ').map(i => Number(i))
+    const side = new BorderSideSetting(SideType.Custom, value[0], value[3], value[2], value[1])
+    const border = new BorderMaskType(positonvalue.value, side)
+    const style = new BorderMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, border)
+    const page = props.context.selection.selectedPage!
+    const selected = props.context.selection.selectedShapes;
+    const shapes = getShapesForStyle(selected);
+    editor.insertStyleLib(style, page, shapes);
+    emits('close')
+    props.context.escstack.execute()
 }
 
 function watchShapes() {
@@ -154,9 +200,11 @@ function watcher(...args: any[]) {
 function updateData() {
     mixed.value = false;
     mixed_cell.value = false;
+    hasStroke.value = false;
     const selecteds = props.context.selection.selectedShapes;
     if (selecteds.length < 1) return;
-    borders.length = 0;
+    strokePaints.length = 0;
+    borderData.value = initBorder;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -173,29 +221,35 @@ function updateData() {
             cells.push(is_edting)
         }
         if (cells.length > 0) {
-            const _bs = get_borders(cells);
-            if (_bs === 'mixed') {
+            const { border, stroke_paints } = get_borders(cells);
+            if (stroke_paints === 'mixed') {
                 mixed_cell.value = true;
+                hasStroke.value = true;
             } else {
-                if (_bs.length > 0 && might_is_mixed) {
+                if (stroke_paints.length > 0 && might_is_mixed) {
                     mixed_cell.value = true;
+                    hasStroke.value = true;
                 } else {
-                    borders.push(..._bs.reverse());
+                    strokePaints.push(...stroke_paints.reverse());
+                    if (stroke_paints.length) hasStroke.value = true;
                 }
             }
+            borderData.value = border;
         }
     } else {
         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-        const _bs = get_borders(shapes);
-        if (_bs === 'mixed') {
+        const { border, stroke_paints } = get_borders(shapes);
+        if (stroke_paints === 'mixed') {
             mixed.value = true;
+            hasStroke.value = true;
         } else {
-            borders.push(..._bs.reverse());
+            strokePaints.push(...stroke_paints.reverse());
+            if (stroke_paints.length) hasStroke.value = true;
         }
+        borderData.value = border;
     }
-    if (!borders.length) return;
-    const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders[0].border.sideSetting
-    thickness.value = `${thicknessTop},${thicknessRight},${thicknessBottom},${thicknessLeft}`;
+    const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borderData.value.sideSetting as BorderSideSetting;
+    thickness.value =[thicknessTop,thicknessRight,thicknessBottom,thicknessLeft].join(', ');
     oldvalue.value = thickness.value;
     reflush_side.value++
 }
@@ -268,7 +322,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;

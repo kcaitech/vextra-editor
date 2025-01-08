@@ -92,7 +92,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function get_matrix4table() {
         const m = table.matrix2Root();
         m.multiAtLeft(workspace.value.matrix);
-        matrix4table = new Matrix(m.inverse);
+        matrix4table = (m.inverse.toMatrix());
     }
     function down4body(e: MouseEvent) {
         if (e.button !== 0) return;

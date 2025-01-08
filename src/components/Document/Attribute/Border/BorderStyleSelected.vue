@@ -1,13 +1,27 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import solid_icon from '@/assets/icons/svg/solid.svg';
+import dash_icon from '@/assets/icons/svg/dash.svg';
+import { watch } from 'vue';
 const props = defineProps<{
     data: SelectItem | null
 }>();
+
+const border_style_icons: { [key: string]: string } = {
+    'solid': solid_icon,
+    'dash': dash_icon
+}
+
+watch(() => props.data?.value, () => {
+    console.log(props.data?.value);
+
+})
 </script>
 
 <template>
     <div class="item-container">
-        <svg-icon :icon-class="props.data?.value || ''"></svg-icon>
+        <SvgIcon :icon="props.data?.value === 'dash' ? dash_icon : solid_icon" />
         <span>{{ props.data?.content }}</span>
     </div>
 </template>
@@ -18,16 +32,17 @@ const props = defineProps<{
     height: 32px;
     display: flex;
     align-items: center;
+    gap: 8px;
 
     >span {
         flex: 0 0 40px;
     }
 
-    >svg {
-        width: calc(100% - 74px);
+    >img {
+        width: auto;
         height: 100%;
         color: #BFBFBF;
-        margin-right: 12px;
+        // margin-right: 12px;
     }
 }
 </style>

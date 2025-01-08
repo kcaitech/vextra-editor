@@ -12,6 +12,7 @@ import { LockMouse } from '@/transform/lockMouse';
 import { throttle } from 'lodash';
 import { TranslateHandler } from '@/transform/translate/translate';
 import { Attribute } from '@/context/atrribute';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context
     controllerFrame: Point[];
@@ -335,7 +336,7 @@ const mousemove = (e: MouseEvent) => {
         const selected = props.context.selection.selectedShapes;
         const parent = selected[0].parent!
         const matrix2Root = parent.matrix2Root();
-        const m = new Matrix(matrix2Root.inverse);
+        const m = (matrix2Root.inverse);
         const downXy = m.computeCoord(downClientXY);
         const moveXy = m.computeCoord2(e.clientX, e.clientY);
         const scale = props.context.workspace.matrix.m00;
@@ -532,6 +533,7 @@ const selectedMove = (e: MouseEvent) => {
             // }
             const shapes = props.context.selection.selectedTidyUpShapes;
             const selected = props.context.selection.selectedShapes;
+            
             transporter = new TranslateHandler(props.context, e, selected, [...shapes]);
         }
     }
@@ -619,6 +621,7 @@ onUnmounted(() => {
         watchedShapes.delete(k);
     })
 })
+import white_tidy_up_icon from '@/assets/icons/svg/white-tidy-up.svg';
 </script>
 
 <template>
@@ -677,7 +680,7 @@ onUnmounted(() => {
         <foreignObject v-if="isHover && isTidyUp" :x="controllerFrame[2].x - 32" :y="controllerFrame[2].y - 32"
             width="32px" height="32px">
             <div class="button">
-                <svg-icon icon-class="white-tidy-up"></svg-icon>
+                <SvgIcon :icon="white_tidy_up_icon"/>
             </div>
         </foreignObject>
 

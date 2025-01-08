@@ -60,7 +60,7 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 function updateControllerView() {
     const m2p = props.shape.matrix2Root();
 
-    matrix.reset(m2p);
+    matrix.reset(m2p.toMatrix());
     matrix.multiAtLeft(props.matrix);
 
     if (!submatrix.equals(matrix)) {

@@ -72,7 +72,8 @@ function showImageIcon() {
         props.frame.height > imageIconVisibleSize &&
         cellType.value === TableCellType.None;
 }
-
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import pattern_image_icon from '@/assets/icons/svg/pattern-image.svg';
 </script>
 <template>
     <g>
@@ -83,8 +84,8 @@ function showImageIcon() {
         <g v-if="showImageIcon()"
             :transform="`translate(${bounds.left + (bounds.right - bounds.left - imageIconSize) / 2}, ${bounds.top + (bounds.bottom - bounds.top - imageIconSize) / 2})`">
             <rect :x="0" :y="0" :width="`${imageIconSize}px`" fill="none" stroke="green" :height="`${imageIconSize}px`" @mousedown="onImageClick"></rect>
-            <svg-icon class="cell-image" icon-class="pattern-image" :width="`${imageIconSize}px`" @mousedown="onImageClick"
-                :height="`${imageIconSize}px`"></svg-icon>
+            <SvgIcon class="cell-image" :icon="pattern_image_icon" :width="`${imageIconSize}px`" @mousedown="onImageClick"
+                :height="`${imageIconSize}px`"/>
         </g>
     </g>
 </template>

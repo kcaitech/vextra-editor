@@ -2,7 +2,7 @@
 import { Selection } from '@/context/selection';
 import {
     adapt2Shape,
-    ArtboradView,
+    ArtboardView,
     BoolOp,
     BoolShapeView,
     GroupShape,
@@ -103,7 +103,7 @@ const ungroupClick = () => {
 
     const editor = props.context.editor4Page(page);
     if (boards.length) {
-        const a = editor.dissolution_artboard(boards as ArtboradView[]);
+        const a = editor.dissolution_artboard(boards as ArtboardView[]);
         if (a) others.push(...a);
     }
     if (groups.length) {

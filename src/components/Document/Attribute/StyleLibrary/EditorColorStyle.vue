@@ -3,7 +3,7 @@
         <div class="header">
             <div class="title">{{ props.type === 'editor' ? '编辑颜色样式' : '创建颜色样式' }}</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -20,13 +20,13 @@
             <div class="create-color">
                 <div class="title">颜色</div>
                 <div class="add" @click.stop="addfill">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
             </div>
             <div class="color-list">
                 <div class="item" v-for="(f, idx) in fills" :key="f.id">
                     <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                        <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
+                        <SvgIcon v-if="f.fill.isEnabled" :icon="select_icon"></SvgIcon>
                     </div>
                     <div class="editor">
                         <ColorPicker :color="f.fill.color" :style="props.style" :entrance="'styles'"
@@ -65,7 +65,7 @@
                             @keydown="(e) => keydownAlpha(e, idx, f.fill, filterAlpha(f.fill))" />
                     </div>
                     <div class="delete" :class="{ 'invalid': fills.length === 1 }" @click="deleteFill(idx)">
-                        <svg-icon icon-class="delete"></svg-icon>
+                        <SvgIcon :icon="delete_icon"></SvgIcon>
                     </div>
                 </div>
             </div>
@@ -117,6 +117,20 @@ import { ImgFrame } from '@/context/atrribute';
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { LinearApi } from "@kcdesign/data"
 import { Mask, FillRenderer } from "./fillRenderer";
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 interface FillItem {
     id: number,
     fill: Fill
@@ -283,6 +297,13 @@ function deleteFill(idx: number) {
             const editor = props.context.editor4Doc()
             if (props.style?.sheet && props.style?.id) {
                 editor.modifyFillMaskFillDelFill(props.style?.sheet, props.style?.id, _idx)
+            }
+        } else {
+            const shapes = getShapesForStyle(selected);
+            const actions = get_actions_fill_delete(shapes, _idx);
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesDeleteFill(actions);
             }
         }
 
@@ -863,7 +884,7 @@ watch(() => props.style, () => {
 
 function stylelib_watcher(t: number | string) {
     if (t === 'stylelib')
-    if (!props.style) return
+        if (!props.style) return
     fills.length = 0
     if (props.reder) {
         props.reder.currentTarget(props.style!.id)?.fills?.forEach((f, idx) => fills.push({ id: idx, fill: f }))
@@ -915,7 +936,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
@@ -982,7 +1003,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                svg {
+                img {
                     width: 16px;
                     height: 16px;
                     margin: auto;
@@ -1013,7 +1034,7 @@ onUnmounted(() => {
                     align-items: center;
                     border-radius: 4px;
 
-                    >svg {
+                    >img {
                         width: 60%;
                         height: 60%;
                     }
@@ -1087,7 +1108,7 @@ onUnmounted(() => {
                     border-radius: var(--default-radius);
                     transition: .2s;
 
-                    >svg {
+                    >img {
                         width: 16px;
                         height: 16px;
                     }

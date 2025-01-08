@@ -6,7 +6,7 @@ import { WorkSpace } from '@/context/workspace';
 import { ColorHandler } from '@/transform/color';
 import { getHorizontalAngle, XYsBounding } from '@/utils/common';
 import { CursorType } from '@/utils/cursor2';
-import { ColorPicker, ColVector3D, CtrlElementType, makeShapeTransform2By1, Matrix, ShapeView } from '@kcdesign/data';
+import { ColorPicker, ColVector3D, CtrlElementType, makeShapeTransform2By1, Matrix, ShapeView, TransformRaw } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 
 interface Props {
@@ -58,13 +58,13 @@ const update_position = () => {
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) return;
     const shape = shapes[0];
-    const m = shape.transform2FromRoot; // 图层到Root；
-    const root_m = shape.transform2FromRoot;
-    const clientTransform = makeShapeTransform2By1(props.context.workspace.matrix);
-    m.addTransform(clientTransform); // root 到 client
+    const m = shape.matrix2Root(); // 图层到Root；
+    const root_m = shape.matrix2Root();
+    const clientTransform = (props.context.workspace.matrix);
+    m.multi(clientTransform); // root 到 client
     image_width.value *= matrix.m00;
     image_height.value *= matrix.m00;
-    transform.value = `matrix(${root_m.m00}, ${root_m.m10}, ${root_m.m01}, ${root_m.m11}, ${m.m03}, ${m.m13})`
+    transform.value = `matrix(${root_m.m00}, ${root_m.m10}, ${root_m.m01}, ${root_m.m11}, ${m.m02}, ${m.m12})`
 }
 let direction = Direction.X;
 const onMouseDown = (e: MouseEvent, d: Direction) => {
@@ -107,7 +107,7 @@ const setImageScale = (e: MouseEvent, index: number, direction: Direction) => {
     if (!image_frame) return;
     const fill = shape.style.getFills()[locat.index];
     if (!fill) return;
-    const matrix = new Matrix();
+    const matrix = new TransformRaw();
     if (fill.rotation === 90 || fill.rotation === 270) {
         matrix.preScale(image_frame.height, image_frame.width);
     } else {
@@ -115,7 +115,7 @@ const setImageScale = (e: MouseEvent, index: number, direction: Direction) => {
     }
     matrix.multiAtLeft(shape.matrix2Root()); // 图形转页面矩阵
     matrix.multiAtLeft(props.context.workspace.matrix); // 页面转视图
-    const m = new Matrix(matrix.inverse); // 视图转图形
+    const m = (matrix.inverse); // 视图转图形
     const trans = m.computeCoord(x, y);
     let scale = trans.x;
     if (direction === Direction.X) {
@@ -148,21 +148,15 @@ function getVectors() {
 
     const { x, y, width, height } = shape.frame;
 
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
-    const fromRoot = shape.transform2FromRoot;
-    const fromClient = fromRoot.addTransform(clientMatrix);
-    const {
-        col0: vecLT,
-        col1: vecRT,
-        col2: vecRB,
-        col3: vecLB
-    } = fromClient.transform([
+    const clientMatrix = (props.context.workspace.matrix);
+    const fromRoot = shape.matrix2Root();
+    const fromClient = fromRoot.multi(clientMatrix);
+    return fromClient.transform([
         ColVector3D.FromXY(x, y),
         ColVector3D.FromXY(x + width, y),
         ColVector3D.FromXY(x + width, y + height),
         ColVector3D.FromXY(x, y + height),
     ]);
-    return [vecLT, vecRT, vecRB, vecLB];
 }
 
 function setCursor(t: CtrlElementType) {

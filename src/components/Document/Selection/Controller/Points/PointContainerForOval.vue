@@ -38,7 +38,7 @@ function update() {
 
     const M = new Matrix();
     M.scale(oval.frame.width, oval.frame.height);
-    M.multiAtLeft(oval.matrix2Root());
+    M.multiAtLeft(oval.matrix2Root().toMatrix());
     M.multiAtLeft(context.workspace.matrix);
 
     const sweep = (e - s) / round;

@@ -15,6 +15,7 @@ import { adapt_page2 } from "@/utils/content";
 import { SelectSource } from "@/components/common/Select.vue";
 import { IContext } from "@/openapi";
 import Loading from '@/components/common/Loading.vue';
+import SvgIcon from "../common/SvgIcon.vue";
 const props = defineProps<{ context: IContext }>()
 
 const initialized = ref<boolean>(false);
@@ -359,7 +360,9 @@ const del = (index: number) => {
     const el = document.querySelectorAll('.list-item')
     el[index].classList.remove('active')
 }
-
+import menu_black_icon from '@/assets/icons/svg/menu-black.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import m_select_icon from '@/assets/icons/svg/m-select.svg';
 </script>
 
 <template>
@@ -367,7 +370,7 @@ const del = (index: number) => {
         <div v-if="!showpagelist" class="status-bar" @touchmove.stop="moveIcon"
             :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showEl">
-                <svg-icon icon-class="menu-black"></svg-icon>
+                <SvgIcon :icon="menu_black_icon"/>
             </div>
         </div>
         <transition name="fade">
@@ -375,7 +378,7 @@ const del = (index: number) => {
                 <div class="header">
                     <div class="title">页面</div>
                     <div class="close" @click.stop="showpagelist = false">
-                        <svg-icon icon-class="close"></svg-icon>
+                        <SvgIcon :icon="close_icon"/>
                     </div>
                 </div>
                 <div class="list">
@@ -387,7 +390,7 @@ const del = (index: number) => {
                                 page.data.content }}</div>
                         <div class="choose"
                             :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
-                            <svg-icon icon-class="m-select"></svg-icon>
+                            <SvgIcon :icon="m_select_icon"/>
                         </div>
                     </div>
                 </div>

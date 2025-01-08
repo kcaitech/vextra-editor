@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
 import {
-    ArtboradView,
+    ArtboardView,
     BorderPosition,
     ColVector3D,
     makeShapeTransform2By1,
@@ -81,9 +81,9 @@ const updateDottedPath = (downXY: XY) => {
 function hoverDottedPaths() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
     if (!hoveredShape) return;
-    if (!(hoveredShape as ArtboradView).autoLayout) return;
+    if (!(hoveredShape as ArtboardView).autoLayout) return;
     if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) return;
-    const bordersTakeSpace = (hoveredShape as ArtboradView).autoLayout?.bordersTakeSpace;
+    const bordersTakeSpace = (hoveredShape as ArtboardView).autoLayout?.bordersTakeSpace;
     const childs = hoveredShape.childs;
     for (let i = 0; i < childs.length; i++) {
         const child = childs[i];
@@ -107,23 +107,16 @@ const getPoint = (shape: ShapeView, includedBorder?: boolean) => {
     const shape_root_m = shape.matrix2Root();
     const f = { ...shape.frame };
     if (includedBorder) {
-        const borders = shape.getBorders();
+        const border = shape.getBorders();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
-        borders.forEach(b => {
-            if (b.isEnabled) {
-                if (b.position === BorderPosition.Outer) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
-                } else if (b.position === BorderPosition.Center) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
-                }
-            }
-        })
+        const isEnabled = border.strokePaints.some(p => p.isEnabled);
+        if (isEnabled) {
+            const outer = border.position === BorderPosition.Outer;
+            maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+            maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+            maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+            maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
+        }
         f.x -= maxleftborder;
         f.y -= maxtopborder;
         f.width += maxleftborder + maxrightborder;
@@ -151,7 +144,7 @@ function selectDottedPaths() {
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) return;
     const parent = shapes[0].parent;
-    if (!parent || !(parent as ArtboradView).autoLayout) return;
+    if (!parent || !(parent as ArtboardView).autoLayout) return;
     const every = shapes.every(item => item.parent?.id === parent.id);
     if (!every) return;
     const points: { x: number, y: number }[] = [];
@@ -174,7 +167,7 @@ function selectDottedPaths() {
     ];
     const borPath = genRectPath(framePoint);
     dottedPaths.value.push({ path: borPath, shape: undefined });
-    const bordersTakeSpace = (parent as ArtboradView).autoLayout?.bordersTakeSpace;
+    const bordersTakeSpace = (parent as ArtboardView).autoLayout?.bordersTakeSpace;
     getMovePath(shapes, bordersTakeSpace);
 }
 
@@ -188,22 +181,16 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
         m.addTransform(clientTransform);
         let { x, y, width, height } = shape.frame;
         if (includedBorder) {
-            const borders = shape.getBorders();
+            const border = shape.getBorders();
             let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
-            borders.forEach(b => {
-                if (!b.isEnabled) return;
-                if (b.position === BorderPosition.Outer) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
-                } else if (b.position === BorderPosition.Center) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
-                }
-            })
+            const isEnabled = border.strokePaints.some(p => p.isEnabled);
+            if (isEnabled) {
+                const outer = border.position === BorderPosition.Outer;
+                maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+                maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+                maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+                maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
+            }
             x -= maxleftborder;
             y -= maxtopborder;
             width += maxleftborder + maxrightborder;

@@ -85,7 +85,7 @@ onUnmounted(() => {
             <LableMultiSelect v-if="len > 1"></LableMultiSelect>
             <LableLayerInfo v-if="len === 1" :context="context"></LableLayerInfo>
             <LableFill v-if="len === 1 && shapes[0].getFills().length > 0" :context="context"></LableFill>
-            <LableBorder v-if="len === 1 && shapes[0].getBorders().length > 0" :context="context"></LableBorder>
+            <LableBorder v-if="len === 1 && shapes[0].getBorders().strokePaints.length > 0" :context="context"></LableBorder>
             <LableText v-if="len === 1 && shapeType === ShapeType.Text" :context="context"></LableText>
             <!-- <LableCode v-if="len > 0" :context="context"></LableCode> -->
             <CutoutExport :shapes="(shapes as ShapeView[])" :context="props.context" :trigger="reflush_trigger"></CutoutExport>

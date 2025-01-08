@@ -151,6 +151,12 @@ function render() {
 
 watch(() => props.selected, render);
 onMounted(render)
+
+
+import down_icon from '@/assets/icons/svg/down.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 </script>
 <template>
 <div class="select-container" ref="selectContainer">
@@ -158,7 +164,7 @@ onMounted(render)
         <slot name="prefix"/>
         <div class="value-wrap">{{ curValue?.value === 'mixed' ? t('attr.mixed') : curValue?.content }}</div>
         <div class="svg-wrap">
-            <svg-icon icon-class="down"/>
+            <SvgIcon :icon="down_icon"/>
         </div>
     </div>
 
@@ -169,11 +175,11 @@ onMounted(render)
         <div v-else>
             <div v-if="curValue?.value === 'mixed'" class="disabled">
                 <div class="content-wrap"> {{ t('attr.mixed') }}</div>
-                <svg-icon :icon-class="'page-select'"></svg-icon>
+                <SvgIcon :icon="page_select_icon"/>
             </div>
             <div v-for="c in source" class="item-default" :key="c.id" @click="() => select(c.data)">
                 <div class="content-wrap"> {{ c.data.content }}</div>
-                <svg-icon v-if="curValue?.value === c.data.value" :icon-class="'page-select'"></svg-icon>
+                <SvgIcon v-if="curValue?.value === c.data.value" :icon="page_select_icon"/>
             </div>
         </div>
     </div>

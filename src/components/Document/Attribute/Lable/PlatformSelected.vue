@@ -46,6 +46,8 @@ onMounted(() => {
     multiple.value = props.context.menu.isMulripleI;
     platform.value = props.context.menu.isPlatform;
 })
+
+import down_icon from "@/assets/icons/svg/down.svg"
 </script>
 
 <template>
@@ -58,7 +60,7 @@ onMounted(() => {
 <!--                    <ArrowDown-->
 <!--                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />-->
 <!--                </el-icon>-->
-                <svg-icon icon-class="down"></svg-icon>
+                <SvgIcon :icon="down_icon"/>
                 <LableDropMenu v-if="selsectedShow" :context="context" :Items="platformMenuItems" :pxItems="pxMenuItems"
                     :choose="platform" :choose2="multiple" @close="close" @listMenuStatus="listMenuStatus"
                     @pxMenuStatus="pxMenuStatus"></LableDropMenu>

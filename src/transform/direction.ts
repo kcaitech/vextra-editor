@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import {
     adapt2Shape,
-    ArtboradView,
+    ArtboardView,
     layoutShapesOrder,
     LinearApi,
     PageView,
@@ -179,7 +179,7 @@ export class Direction {
         if (context.workspace.is_path_edit_mode) return this.mode = ActionMode.Edit;
         else if (context.workspace.isEditing) return this.mode = ActionMode.Text;
         else for (const view of context.selection.selectedShapes) {
-                if (!(view.parent as ArtboradView).autoLayout) return this.mode = ActionMode.View;
+                if (!(view.parent as ArtboardView).autoLayout) return this.mode = ActionMode.View;
             }
     }
 
@@ -232,7 +232,7 @@ export class Direction {
         }
     }
 
-    private __order(env: ArtboradView) {
+    private __order(env: ArtboardView) {
         const map: Map<Shape, ShapeView> = new Map();
         env.childs.forEach(view => map.set(adapt2Shape(view), view));
 
@@ -249,7 +249,7 @@ export class Direction {
         })();
     }
 
-    private __girds(env: ArtboradView) {
+    private __girds(env: ArtboardView) {
         const map: Map<Shape, ShapeView> = new Map();
         env.childs.forEach(view => map.set(adapt2Shape(view), view));
 
@@ -274,7 +274,7 @@ export class Direction {
     }
 
     private __left() {
-        const envs = this.envs as ArtboradView[];
+        const envs = this.envs as ArtboardView[];
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
         for (const env of envs) {
@@ -317,7 +317,7 @@ export class Direction {
     }
 
     private __right() {
-        const envs = this.envs as ArtboradView[];
+        const envs = this.envs as ArtboardView[];
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
         for (const env of envs) {
@@ -360,7 +360,7 @@ export class Direction {
     }
 
     private __up() {
-        const envs = this.envs as ArtboradView[];
+        const envs = this.envs as ArtboardView[];
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
         const locate = this.__locate;
@@ -403,7 +403,7 @@ export class Direction {
     }
 
     private __down() {
-        const envs = this.envs as ArtboradView[];
+        const envs = this.envs as ArtboardView[];
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
         const locate = this.__locate;

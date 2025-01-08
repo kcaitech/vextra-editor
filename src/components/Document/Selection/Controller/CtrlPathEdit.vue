@@ -30,7 +30,7 @@ function modify_matrix() {
     if (!path_shape) {
         return;
     }
-    matrix.value = path_shape.matrix2Root();
+    matrix.value = path_shape.matrix2Root().toMatrix();
     matrix.value.multiAtLeft(props.context.workspace.matrix);
 }
 

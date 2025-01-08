@@ -3,7 +3,7 @@ import { Bundle, ImageBundle, MossClipboard, SourceBundle, SVGBundle } from "@/c
 import { ImageLoader } from "@/imageLoader";
 import {
     adapt2Shape,
-    ArtboradView,
+    ArtboardView,
     ColVector3D,
     creator,
     getFormatFromBase64,
@@ -39,7 +39,7 @@ export type InsertAction = {
     index?: number;
 }
 
-export type EnvLike = ArtboradView | SymbolView | GroupShapeView;
+export type EnvLike = ArtboardView | SymbolView | GroupShapeView;
 
 export class BundleHandler {
     private readonly context: Context;
@@ -148,7 +148,7 @@ export class BundleHandler {
         const SH = new SpaceHandler(context);
         const env = SH.getEnvByArea(area);
         const matrix = env.matrix2Root();
-        const inverse = makeShapeTransform2By1(new Matrix(matrix.inverse));
+        const inverse = makeShapeTransform2By1((matrix.inverse));
 
         for (let i = 0; i < transforms.length; i++) {
             const t = makeShapeTransform2By1(transforms[i]);
@@ -276,8 +276,8 @@ export class BundleHandler {
         const context = this.context;
         const selected = context.selection.selectedShapes;
         const container: EnvLike[] = selected.filter(view => {
-            return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
-        }) as ArtboradView[];
+            return view instanceof ArtboardView || view instanceof GroupShapeView || view instanceof SymbolView;
+        }) as ArtboardView[];
 
         const actions: InsertAction[] = [];
         const area = { ...shape.size };
@@ -303,7 +303,7 @@ export class BundleHandler {
             const SH = new SpaceHandler(context);
             const env = SH.getEnvByArea(area);
             const matrix = env.matrix2Root();
-            const inverse = makeShapeTransform2By1(new Matrix(matrix.inverse));
+            const inverse = makeShapeTransform2By1((matrix.inverse));
             const t = makeShapeTransform2By1(__shape.transform);
             t.addTransform(offset);
             t.addTransform(inverse);
@@ -323,8 +323,8 @@ export class BundleHandler {
             const selected = context.selection.selectedShapes;
 
             const container: EnvLike[] = selected.filter(view => {
-                return view instanceof ArtboradView || view instanceof GroupShapeView || view instanceof SymbolView;
-            }) as ArtboradView[];
+                return view instanceof ArtboardView || view instanceof GroupShapeView || view instanceof SymbolView;
+            }) as ArtboardView[];
             const pathviews: PathShapeView[] = selected.filter(view => view instanceof PathShapeView) as PathShapeView[];
 
             if (container.length) {
@@ -373,7 +373,7 @@ export class BundleHandler {
 
             this.assignBeforeInsert(shapes);
             const containerSet = new Set<EnvLike>();
-            const isContainer = (view: ShapeView) => view instanceof GroupShapeView || view instanceof ArtboradView || view instanceof SymbolView;
+            const isContainer = (view: ShapeView) => view instanceof GroupShapeView || view instanceof ArtboardView || view instanceof SymbolView;
             for (const view of selected) {
                 if (isContainer(view)) {
                     containerSet.add(view as EnvLike);
@@ -384,7 +384,7 @@ export class BundleHandler {
             }
             const container = Array.from(containerSet.values());
             const handler = new ClipboardTransformHandler();
-            if (selected.length === 1 && selected[0] instanceof ArtboradView && originIds.length === 1 && originIds[0] === selected[0].id) { // 特殊场景
+            if (selected.length === 1 && selected[0] instanceof ArtboardView && originIds.length === 1 && originIds[0] === selected[0].id) { // 特殊场景
                 params = handler.rightBy(context, source, selected[0]);
             } else if (container.length) {
                 params = handler.fitEnvs(context, container, source);

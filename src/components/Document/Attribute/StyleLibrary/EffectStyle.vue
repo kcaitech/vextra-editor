@@ -1,46 +1,48 @@
 <template>
-    <div class="shadow-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop
-        @mousedown.stop>
+    <div class="shadow-container" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">特效样式</div>
             <div class="tool">
                 <div class="newstyle" @click="NewPanel($event)">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
                 <div class="close" @click="emits('close')">
-                    <svg-icon icon-class="close"></svg-icon>
+                    <SvgIcon :icon="close_icon"></SvgIcon>
                 </div>
             </div>
         </div>
         <div class="search">
             <div class="icon">
-                <svg-icon icon-class="search"></svg-icon>
+                <SvgIcon :icon="search_icon"></SvgIcon>
             </div>
             <div class="filter" @click="FilterPanel">
-                <svg-icon icon-class="arrow"></svg-icon>
+                <SvgIcon :icon="arrow_icon"></SvgIcon>
             </div>
             <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
                 @keydown.esc="props.context.escstack.execute()">
-            <div v-if="filterpanel" class="filter-list" @click.stop>
-                <div class="list-item" @click="Changefilter('全部')">
-                    <span>全部</span>
-                </div>
-                <div class="list-item" v-for="sheet in sheets" :key="sheet.id" @click="Changefilter(sheet.name)">
-                    <span> {{ sheet.name }}</span>
+            <div v-if="filterpanel" class="filter-list">
+                <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="Changefilter(item[1])">
+                    <div class="choose" :style="{ visibility: filterval === item[1] ? 'visible' : 'hidden' }">
+                        <SvgIcon :icon="choose_icon"></SvgIcon>
+                    </div>
+                    <span> {{ item[1] }}</span>
                 </div>
             </div>
         </div>
         <el-scrollbar>
             <div class="content">
-                <div class="style-item" v-for="sheet in sheets" :key="sheet.id">
-                    <div class="type" @click="showtype(sheet.name)">
-                        <svg-icon
-                            :icon-class="showtypes.has(sheet.name) ? 'triangle-down' : 'triangle-right'"></svg-icon>
-                        <span>{{ sheet.name }}</span>
+                <div class="style-item" v-for="sheet in showdata" :key="sheet.id">
+                    <div class="type" @click="showtype(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <SvgIcon
+                            :icon="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon">
+                        </SvgIcon>
+                        <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
-                    <template v-if="showtypes.has(sheet.name)">
-                        <div class="styles" :class="{ 'active': editorpanel && Mask_ID === shadow.id }"
-                            v-for="shadow in masklist" :key="shadow.id" @click.stop="addshadowmask(shadow.id)">
+                    <template v-if="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <div class="styles"
+                            :class="{ 'active': editorpanel && Mask_ID === shadow.id, 'target': shadow.id === props.id }"
+                            v-for="shadow in (sheet.variables as ShadowMask[])" :key="shadow.id"
+                            @click.stop="addshadowmask(shadow.id)">
                             <div class="left">
                                 <div class="effect" :style="{
                                     boxShadow: `
@@ -54,14 +56,14 @@
                                 </div>
                                 <div class="name">{{ shadow.name }}</div>
                             </div>
-                            <div class="editor clickeditor" style="visibility: hidden;"
-                                @click.stop="EditPanel($event, shadow.id)">
-                                <svg-icon icon-class="export-menu"></svg-icon>
+                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event, shadow.id)">
+                                <SvgIcon :icon="editor_icon"></SvgIcon>
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-if="!masklist.length" class="null">没有搜索到相关样式</div>
+                <div v-if="!showdata.length && searchval" class="null">没有搜索到相关样式</div>
+                <div v-if="!showdata.length && !searchval" class="null">没有可用的样式</div>
             </div>
         </el-scrollbar>
         <NewEffectStyle v-if="newpanel" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
@@ -73,7 +75,7 @@
 
 </template>
 <script setup lang="ts">
-import { ShapeView } from "@kcdesign/data";
+import { ShadowMask, ShapeView } from "@kcdesign/data";
 import { v4 } from 'uuid';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
@@ -84,12 +86,25 @@ import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { FillRenderer, Mask } from "./fillRenderer";
 import { getShapesForStyle } from "@/utils/style";
 import { get_actions_add_mask } from "@/utils/shape_style";
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
     context: Context;
-    shapes: ShapeView[]
+    shapes: ShapeView[];
     top: number;
-    left: number
+    left: number;
+    id?: string;
 }>()
 
 const emits = defineEmits<{
@@ -100,7 +115,7 @@ const emits = defineEmits<{
 const { t } = useI18n();
 const filterpanel = ref<boolean>(false)
 const searchval = ref<string>('')
-const filterval = ref<string>('')
+const filterval = ref<string>('全部样式')
 const showtypes = ref(new Set<string>())
 const editorpanel = ref<boolean>(false)
 const newpanel = ref<boolean>(false)
@@ -108,14 +123,38 @@ const Top = ref<number>(0)
 const Left = ref<number>(0)
 const Mask_ID = ref<string>('')
 const search = ref<HTMLInputElement>()
+const listfilter = new Map()
+const showdata = reactive<StyleSheet[]>([])
+const sheets = reactive<StyleSheet[]>([])
+const masklist = reactive<Mask[]>([]);
+const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], masklist as Mask[]);
 
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
 }
 
-const sheets = reactive<StyleSheet[]>([])
-const masklist = reactive<Mask[]>([]);
-const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], masklist as Mask[]);
+watchEffect(() => {
+    listfilter.set('all', '全部样式')
+    sheets.forEach(s => {
+        if (s.id === props.context.data.id) {
+            listfilter.set(s.name, '此文件样式')
+        } else {
+            listfilter.set(s.name, s.name)
+        }
+    })
+    listfilter.forEach((v) => showtypes.value.add(v))
+})
+
+watchEffect(() => {
+    showdata.length = 0;
+    const arr = sheets.filter(s => s.name.includes(filterval.value === '全部样式' ? "" : filterval.value === '此文件样式' ? "新文件" : filterval.value))
+    const new_arr = arr.map(s => {
+        let newSheet: StyleSheet = { ...s }
+        newSheet.variables = s.variables.filter(v => (v as ShadowMask).name.includes(searchval.value))
+        return newSheet
+    })
+    showdata.push(...new_arr.filter(s => s.variables.length !== 0))
+})
 
 const addshadowmask = (id: string) => {
     const selected = props.context.selection.selectedShapes;
@@ -130,7 +169,6 @@ const addshadowmask = (id: string) => {
 const closenewpanel = () => {
     props.context.escstack.execute()
     newpanel.value = false
-    emits('close')
 }
 
 const closeeditorpanel = () => {
@@ -138,13 +176,7 @@ const closeeditorpanel = () => {
     editorpanel.value = false
 }
 
-watchEffect(() => {
-    sheets.forEach(i => showtypes.value.add(i.name))
-    console.log(showtypes.value);
-})
 
-
-let timer: any
 const EditPanel = (e: MouseEvent, maskid: string) => {
     let el = e.target as HTMLElement;
     const { top } = el.getBoundingClientRect()
@@ -158,29 +190,21 @@ const EditPanel = (e: MouseEvent, maskid: string) => {
     Left.value = left - 250;
     Mask_ID.value === maskid ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
     Mask_ID.value = maskid;
-    if (editorpanel.value) {
-        if (timer) clearTimeout(timer)
-        timer = setTimeout(() => {
-            document.addEventListener('click', checkeditorpanel)
-            clearTimeout(timer)
-        }, 0);
-        props.context.escstack.save(v4(), closeEditorPanel)
-    } else {
-        document.removeEventListener('click', checkeditorpanel)
-    }
+
+    document.addEventListener('click', checkeditorpanel)
+    props.context.escstack.save(v4(), closeEditorPanel)
+}
+
+const closeEditPanel = () => {
+    editorpanel.value = false;
+    document.removeEventListener('click', checkeditorpanel);
 }
 
 function checkeditorpanel(e: MouseEvent) {
-    const muen2 = document.querySelectorAll('.clickeditor')
-    let b: boolean[] = [];
-    muen2.forEach((i) => {
-        b.push(i.contains(e.target as HTMLElement))
-    })
-    const a = b.some(i => i === true)
-    if (!a) {
-        editorpanel.value = false
-        document.removeEventListener('click', checkeditorpanel)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.editor-style') &&
+        !e.target.closest('.editor') &&
+        closeEditPanel();
 }
 
 const closeEditorPanel = () => {
@@ -190,7 +214,6 @@ const closeEditorPanel = () => {
     return exe_result
 }
 
-let timer2: any
 const NewPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'shadow-container') {
@@ -202,25 +225,17 @@ const NewPanel = (e: MouseEvent) => {
     Top.value = top;
     Left.value = left - 250;
     newpanel.value = !newpanel.value;
-    if (newpanel.value) {
-        if (timer2) clearTimeout(timer2)
-        timer2 = setTimeout(() => {
-            document.addEventListener('click', checknewpanel)
-            clearTimeout(timer2)
-        }, 0);
-        props.context.escstack.save(v4(), closeNewPanel)
-    } else {
-        document.removeEventListener('click', checknewpanel)
-    }
+
+    document.addEventListener('click', checknewpanel)
+    props.context.escstack.save(v4(), closeNewPanel)
+
 }
 
 function checknewpanel(e: MouseEvent) {
-    const muen = document.querySelector('.newstyle')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        newpanel.value = false
-        document.removeEventListener('click', checknewpanel)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.new-style') &&
+        !e.target.closest('.newstyle') &&
+        closeNewPanel();
 }
 
 const closeNewPanel = () => {
@@ -230,27 +245,22 @@ const closeNewPanel = () => {
     return exe_result
 }
 
-let timer3: any
 const FilterPanel = () => {
+    if (filterpanel.value) return;
     filterpanel.value = !filterpanel.value
-    if (filterpanel.value) {
-        if (timer3) clearTimeout(timer3)
-        timer3 = setTimeout(() => {
-            document.addEventListener('click', checkfilterpanel)
-            clearTimeout(timer3)
-        }, 0);
-    } else {
-        document.removeEventListener('click', checkfilterpanel)
-    }
+    document.addEventListener('click', checkfilterpanel)
+}
+
+const closeFilterPanel = () => {
+    filterpanel.value = false
+    document.removeEventListener('click', checkfilterpanel)
 }
 
 const checkfilterpanel = (e: MouseEvent) => {
-    const muen = document.querySelector('.filter-list')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        filterpanel.value = false
-        document.removeEventListener('click', checkfilterpanel)
-    }
+    e.target instanceof Element &&
+        !e.target.closest('.filter-list') &&
+        !e.target.closest('.filter') &&
+        closeFilterPanel();
 }
 
 const Changefilter = (v: string) => {
@@ -321,7 +331,7 @@ onUnmounted(() => {
                 background-color: #f5f5f5;
             }
 
-            >svg {
+            >img {
                 outline: none;
                 width: 16px;
                 height: 16px;
@@ -341,7 +351,7 @@ onUnmounted(() => {
                 background-color: #f5f5f5;
             }
 
-            >svg {
+            >img {
                 outline: none;
                 width: 16px;
                 height: 16px;
@@ -374,10 +384,16 @@ onUnmounted(() => {
         width: 18px;
         height: 32px;
 
-        svg {
+        >img {
             height: 100%;
             width: 14px;
         }
+    }
+
+    .filter img{
+       rotate: -90deg;
+       padding: 1px;
+       box-sizing: border-box;
     }
 
     input {
@@ -398,11 +414,12 @@ onUnmounted(() => {
     .filter-list {
         position: absolute;
         top: 36px;
-        width: 60%;
+        width: 50%;
         left: 0;
         background-color: #fff;
         border: 1px solid #e5e5e5e5;
         border-radius: 4px;
+        padding: 4px 0;
         box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
         box-sizing: border-box;
         z-index: 9;
@@ -410,10 +427,21 @@ onUnmounted(() => {
         .list-item {
             display: flex;
             align-items: center;
-            justify-content: center;
             height: 32px;
-            border-radius: 6px;
             box-sizing: border-box;
+
+            .choose {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+
+                img {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
 
             &:hover {
                 background-color: #F5F5F5;
@@ -443,7 +471,7 @@ onUnmounted(() => {
         }
     }
 
-    .style-item .type svg {
+    .style-item .type img {
         width: 14px;
         height: 14px;
     }
@@ -458,9 +486,9 @@ onUnmounted(() => {
         justify-content: space-between;
         gap: 8px;
         height: 32px;
-        padding: 0 8px;
         border-radius: 6px;
         box-sizing: border-box;
+        overflow: hidden;
 
         &:hover {
             background-color: #f5f5f5;
@@ -472,8 +500,11 @@ onUnmounted(() => {
     }
 
     .style-item .styles .left {
+        flex: 1;
         display: flex;
         align-items: center;
+        height: 100%;
+        padding-left: 8px;
         gap: 8px;
 
         .effect {
@@ -509,15 +540,14 @@ onUnmounted(() => {
 
     .style-item .styles .editor {
         display: flex;
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
+        width: 32px;
+        height: 100%;
 
         &:hover {
             background-color: #e5e5e5;
         }
 
-        svg {
+        img {
             outline: none;
             margin: auto;
             width: 16px;
@@ -532,10 +562,13 @@ onUnmounted(() => {
 
 .active {
     background-color: #f5f5f5;
+}
 
-    .editor {
-        visibility: visible !important;
-        background-color: #e5e5e5;
+.target {
+    background-color: rgba(24, 120, 245, 0.2) !important;
+
+    .editor:hover {
+        background-color: rgba(24, 120, 245, 0.3) !important;
     }
 }
 </style>

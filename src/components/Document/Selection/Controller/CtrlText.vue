@@ -51,7 +51,7 @@ let downIndex: { index: number, before: boolean };
 function update() {
     // if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const m2p = props.shape.matrix2Root();
-    matrix.reset(m2p);
+    matrix.reset(m2p.toMatrix());
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const frame = props.shape.frame;

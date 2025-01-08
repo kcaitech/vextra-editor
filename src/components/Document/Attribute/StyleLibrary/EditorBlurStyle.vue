@@ -1,9 +1,9 @@
 <template>
-    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">编辑模糊样式</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -20,27 +20,25 @@
         </div>
         <div class="effect">
             <div class="create-effect">
-                <div class="title">特效</div>
+                <div class="title">模糊</div>
                 <div v-if="!blurInfo" class="add">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
             </div>
             <div v-if="blurInfo" class="effect-list">
                 <div class="item">
                     <div class="show">
-                        <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
-                            <svg-icon v-if="blurInfo.isEnabled" icon-class="select"></svg-icon>
+                        <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click.stop="toggleVisible()">
+                            <SvgIcon v-if="blurInfo.isEnabled" :icon="select_icon"></SvgIcon>
                         </div>
                     </div>
-                    <Select class="select" :context="props.context" :shapes="props.shapes"
-                        :source="positonOptionsSource"
-                        :selected="positonOptionsSource.find(i => i.data.value === blurInfo?.type)?.data"
-                        @select="(value) => positionSelect(value)"></Select>
+                    <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" :entry="'style'"
+                        :reflush="reflush" @select="positionSelect" />
                     <BlurDetail :context="props.context" :blur="blurInfo" :shapes="props.shapes" :entry="'style'"
                         @set-blur-saturation="setBlurSaturation" @key-down-saturation="keyDownSaturation"
                         @drag-blur-saturation="dragBlurSaturation" />
                     <div class="delete" :class="{ disable }">
-                        <svg-icon icon-class="delete"></svg-icon>
+                        <SvgIcon :icon="delete_icon"></SvgIcon>
                     </div>
                 </div>
             </div>
@@ -58,8 +56,22 @@ import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
 import { computed } from 'vue';
 import BlurDetail from "../Blur/BlurDetail.vue";
+import BlurTypeSelect from "../Blur/BlurTypeSelect.vue";
 import { FillRenderer } from './fillRenderer';
 import { BlurHandler } from '@/transform/blur';
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 
 
@@ -111,11 +123,11 @@ function setBlurSaturation(value: number) {
     editor.modifyBlurMaskBlurSaturation(mask.sheet, mask.id, value)
 }
 
-function positionSelect(selected: SelectItem) {
+function positionSelect(type: BlurType) {
     if (!props.maskid) return
     const mask = props.reder.currentTarget(props.maskid) as BlurMask
     const editor = props.context.editor4Doc()
-    editor.modifyBlurMaskBlurType(mask.sheet, mask.id, selected.value as BlurType)
+    editor.modifyBlurMaskBlurType(mask.sheet, mask.id, type)
 }
 
 const toggleVisible = () => {
@@ -124,7 +136,6 @@ const toggleVisible = () => {
     if (!props.maskid) return
     const value = !mask.blur.isEnabled;
     editor.modifyBlurMaskBlurEnabled(mask.sheet, mask.id, value)
-
 }
 
 const setSheetName = () => {
@@ -207,7 +218,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
@@ -274,7 +285,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                svg {
+                img {
                     width: 16px;
                     height: 16px;
                     margin: auto;
@@ -311,7 +322,7 @@ onUnmounted(() => {
                         align-items: center;
                         border-radius: 4px;
 
-                        >svg {
+                        >img {
                             width: 60%;
                             height: 60%;
                         }
@@ -347,7 +358,7 @@ onUnmounted(() => {
                         background-color: #F5F5F5;
                     }
 
-                    svg {
+                    img {
                         width: 16px;
                         height: 16px;
                         margin: auto;

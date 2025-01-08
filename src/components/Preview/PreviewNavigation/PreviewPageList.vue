@@ -191,6 +191,9 @@ onUnmounted(() => {
     props.context.selection.unwatch(previewWatcher);
     props.context.data.unwatch(document_watcher);
 });
+
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import down_icon from '@/assets/icons/svg/down.svg';
 </script>
 
 <template>
@@ -199,8 +202,8 @@ onUnmounted(() => {
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="btn">
                 <div class="shrink" @click="toggle">
-                    <svg-icon icon-class="down"
-                        :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                    <SvgIcon :icon="down_icon"
+                        :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"/>
                 </div>
             </div>
         </div>

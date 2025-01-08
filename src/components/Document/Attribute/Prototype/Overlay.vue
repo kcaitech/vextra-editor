@@ -10,7 +10,7 @@
             <div class="margin">
                 <div class="margin-item" v-for=" i  in  margin " :key="i[0]"
                     :style="{ pointerEvents: position?.position?.includes(i[0]) ? 'auto' : 'none', opacity: position?.position?.includes(i[0]) ? 1 : 0.4 }">
-                    <svg-icon icon-class="margin" :style="{ rotate: i[1] + 'deg' }"></svg-icon>
+                    <SvgIcon :icon="margin_icon" :style="{ rotate: i[1] + 'deg' }"/>
                     <input v-select v-if="i[0] === 'TOP'" ref="marginInput" :id="i[0]" type="text"
                         :value="position?.position?.includes(i[0]) ? position.margin.top : '-'"
                         @change="setMargin($event, i[0], position?.margin.top!)">
@@ -56,6 +56,8 @@ import { onMounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
 import { debounce as d } from "@/utils/timing_util";
+import margin_icon from '@/assets/icons/svg/margin.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 export interface Type {
     state: boolean

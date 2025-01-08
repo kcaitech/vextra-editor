@@ -7,6 +7,11 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Action, Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
+import tool_scale_icon from '@/assets/icons/svg/tool-scale.svg';
+import white_down_icon from '@/assets/icons/svg/white-down.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import drag_icon from '@/assets/icons/svg/drag.svg';
+
 const t = useI18n().t;
 const props = defineProps<{
     context: Context,
@@ -19,7 +24,7 @@ const props = defineProps<{
 }>();
 const editable = props.params.edit && props.params.select;
 const tips = ref<string>(`${t('home.object_selector')}  V`);
-const icon = ref<'drag' | 'tool-scale'>('drag');
+const icon = ref<string>(drag_icon);
 const stashAction = ref<string>(Action.AutoV);
 const popover = ref<boolean>(false);
 
@@ -33,11 +38,11 @@ function toolWatch(type: any) {
         const action = props.context.tool.action;
         if (action === Action.AutoV) {
             stashAction.value = props.context.tool.action;
-            icon.value = 'drag';
+            icon.value = drag_icon;
             tips.value = `${t('home.object_selector')}  V`;
         } else if (action === Action.AutoK) {
             stashAction.value = props.context.tool.action;
-            icon.value = 'tool-scale';
+            icon.value = tool_scale_icon;
             tips.value = `${t('home.scale')}  K`;
         }
     }
@@ -91,22 +96,22 @@ onUnmounted(() => {
             <el-tooltip class="box-item" effect="dark" :content="tips" placement="bottom" :show-after="600" :offset="10"
                 :hide-after="0">
                 <div class="svg-container" @click="click">
-                    <svg-icon :icon-class="icon" />
+                    <SvgIcon :icon="icon" />
                 </div>
             </el-tooltip>
             <div class="tool-auto-menu-trigger" @click="showMenu">
-                <svg-icon icon-class="white-down" />
+                <SvgIcon :icon="white_down_icon" />
             </div>
         </ToolButton>
         <div v-if="popover" class="popover-auto-tool-0958">
             <div class="item" @click="__use_v">
                 <div style="display: flex; align-items: center;">
                     <div style="width: 18px">
-                        <svg-icon v-if="stashAction === Action.AutoV" icon-class="page-select"
-                            style="width: 12px; height: 12px;fill: var(--theme-color-anti)" />
+                        <SvgIcon v-if="stashAction === Action.AutoV" :icon="page_select_icon"
+                            style="width: 12px; height: 12px; filter: invert(1);" />
                     </div>
                     <div style="display: flex; align-items: center;gap: 8px">
-                        <svg-icon icon-class="drag" style="width: 14px; height: 14px" />
+                        <SvgIcon :icon="drag_icon" style="width: 14px; height: 14px;" />
                         <span>{{ t('home.object_selector') }}</span>
                     </div>
                 </div>
@@ -115,12 +120,12 @@ onUnmounted(() => {
             <div class="item" @click="__use_k">
                 <div style="display: flex; align-items: center;">
                     <div style="width: 18px">
-                        <svg-icon v-if="stashAction === Action.AutoK" icon-class="page-select"
-                            style="width: 12px; height: 12px;fill: var(--theme-color-anti)" />
+                        <SvgIcon v-if="stashAction === Action.AutoK" :icon="page_select_icon"
+                            style="width: 12px; height: 12px; filter: invert(1);" />
                     </div>
                     <div style="display: flex; align-items: center;gap: 8px">
-                        <svg-icon icon-class="tool-scale"
-                            style="width: 14px; height: 14px; fill: var(--theme-color-anti)" />
+                        <SvgIcon :icon="tool_scale_icon"
+                            style="width: 14px; height: 14px;" />
                         <span>{{ t('home.scale') }}</span>
                     </div>
                 </div>
@@ -143,7 +148,7 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
 
-    >svg {
+    >img {
         width: 18px;
         height: 18px;
         fill: var(--theme-color-anti);
@@ -157,7 +162,7 @@ onUnmounted(() => {
     align-items: center;
     height: 100%;
 
-    >svg {
+    >img {
         transform: translateX(-1px);
         width: 12px;
         height: 12px;
@@ -166,7 +171,7 @@ onUnmounted(() => {
 }
 
 .tool-auto-menu-trigger:hover {
-    >svg {
+    >img {
         transform: translate(-1px, 2px);
     }
 }

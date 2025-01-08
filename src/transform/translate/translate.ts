@@ -6,7 +6,7 @@ import {
     makeShapeTransform1By2,
     makeShapeTransform2By1,
     Shape,
-    ArtboradView,
+    ArtboardView,
     ColVector3D,
     GroupShapeView,
     ShapeType,
@@ -53,26 +53,19 @@ interface LayoutForInsert {
 function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
     let frame = { ...shape.frame };
     if (includedBorder) {
-        const borders = shape.getBorders();
+        const border = shape.getBorders();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;
         let maxbottomborder = 0;
-        borders.forEach(b => {
-            if (b.isEnabled) {
-                if (b.position === BorderPosition.Outer) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
-                } else if (b.position === BorderPosition.Center) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
-                }
-            }
-        })
+        const isEnabled = border.strokePaints.some(p => p.isEnabled);
+        if (isEnabled) {
+            const outer = border.position === BorderPosition.Outer;
+            maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+            maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+            maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+            maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
+        }
         frame.x -= maxleftborder;
         frame.y -= maxtopborder;
         frame.width += maxleftborder + maxrightborder;
@@ -127,7 +120,7 @@ export class TranslateHandler extends TransformHandler {
 
     elementsWithAnimation: Set<Element> = new Set<Element>();
 
-    preInsertLayout: ArtboradView | undefined;
+    preInsertLayout: ArtboardView | undefined;
     layoutForInsert: LayoutForInsert | undefined;
 
     noMigrate: boolean = false;
@@ -200,7 +193,7 @@ export class TranslateHandler extends TransformHandler {
         if (parents.size > 1) {
             __mode = "normal";
         } else {
-            const parent = shapes[0].parent as ArtboradView;
+            const parent = shapes[0].parent as ArtboardView;
             if (parent.autoLayout) {
                 this.autoLayoutShape = parent;
                 __mode = allAbsolute ? "absolute" : "layout";
@@ -304,7 +297,7 @@ export class TranslateHandler extends TransformHandler {
             if (!parent) continue;
             const { x, y, width, height } = shape.frame;
             if (!matrixParent2rootCache.has(parent.id)) {
-                matrixParent2rootCache.set(parent.id, parent.transform2FromRoot)
+                matrixParent2rootCache.set(parent.id, makeShapeTransform2By1(parent.matrix2Root()))
             }
 
             const m = makeShapeTransform2By1(shape.transform).clone();
@@ -595,7 +588,7 @@ export class TranslateHandler extends TransformHandler {
 
             let PI = PIC.get(parent.id);
             if (!PI) {
-                const __p = parent.transform2FromRoot.getInverse();
+                const __p = makeShapeTransform2By1(parent.matrix2Root().getInverse());
 
                 PIC.set(parent.id, __p);
                 PI = __p;
@@ -656,7 +649,7 @@ export class TranslateHandler extends TransformHandler {
         if (!layoutEnv) return;
         const ctx = this.context;
         const living = this.livingPoint;
-        const xy = layoutEnv.transform2FromRoot.getInverse().transform(ColVector3D.FromXY(living.x, living.y)).col0;
+        const xy = layoutEnv.matrix2Root().getInverse().transform(ColVector3D.FromXY(living.x, living.y));
         const layoutGrid = this.layoutForInsert;
         if (!layoutGrid) return;
         for (let i = 0; i < layoutGrid.row.length; i++) {
@@ -718,7 +711,7 @@ export class TranslateHandler extends TransformHandler {
     private _swapLayoutShape() {
         const living = this.livingPoint;
         const shapes = this.shapes;
-        const env = this.autoLayoutShape as ArtboradView;
+        const env = this.autoLayoutShape as ArtboardView;
         if (!this.shapesIdSet.size) this.shapesIdSet = new Set(shapes.map(i => i.id));
         const shapesUnderCommonEnv: ShapeView[] = env.childs;
         const __set = this.shapesIdSet;
@@ -764,7 +757,7 @@ export class TranslateHandler extends TransformHandler {
     getLayoutGridForInsert() {
         const env = this.preInsertLayout!;
         const children = env.childs;
-        const layout = (env as ArtboradView).autoLayout!;
+        const layout = (env as ArtboardView).autoLayout!;
         const shape_rows = layoutShapesOrder(children.map(s => adapt2Shape(s)), !!layout.bordersTakeSpace);
         const rows: {
             grids: {
@@ -939,6 +932,7 @@ export class TranslateHandler extends TransformHandler {
     _tidyUp() {
         if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
             const algin = this.context.selection.tidyUpAlgin;
+            if (this.m_adjusted_shape_rows.length === 0) this.m_adjusted_shape_rows = [...this.m_shape_rows];
             (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, algin, this.tidy_up_start);
         }
     }

@@ -9,7 +9,13 @@ import {
     Border,
     Fill,
     Style,
-    Shadow, Page, ShapeType, TransformRaw, XYsBounding
+    Shadow, Page, ShapeType, TransformRaw, XYsBounding,
+    BorderSideSetting,
+    StrokePaint,
+    BorderPosition,
+    BorderStyle,
+    CornerType,
+    SideType
 } from "@kcdesign/data";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { onBeforeMount, onMounted, onUnmounted, ref } from "vue";
@@ -67,9 +73,11 @@ function getViewBox() {
 function mount() {
     if (assetsSrc.value || !pageSvg.value) return;
     const data = props.shape instanceof ShapeView ? adapt2Shape(props.shape) : props.shape;
-    const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
-    const style = new Style(borders, fills, new BasicArray<Shadow>());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+    const style = new Style(fills, new BasicArray<Shadow>(), border);
     const page = new Page(
         new BasicArray<number>(),
         'assemble-page',
@@ -194,5 +202,5 @@ onUnmounted(unBind);
 </script>
 <template>
     <img v-if="assetsSrc" alt="static" :src="assetsSrc">
-    <svg v-else ref="pageSvg" :width="size" :height="size" :viewBox="viewBox"/>
+    <svg v-else ref="pageSvg" :width="size" :height="size" :viewBox="viewBox" />
 </template>

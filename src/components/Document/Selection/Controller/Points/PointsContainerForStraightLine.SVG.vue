@@ -55,7 +55,7 @@ function update_dot_path() {
     m.preScale(f.width, f.height);
 
     const points = (props.shape as PathShapeView)?.segments[0]?.points;
-    if (!points[0] || !points[1]) return;
+    if (!points?.[0] || !points?.[1]) return;
 
     const p1 = m.computeCoord3(points[0]);
     const p2 = m.computeCoord3(points[1]);

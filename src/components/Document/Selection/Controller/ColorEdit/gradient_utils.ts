@@ -60,10 +60,10 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
     const locat = context.color.locat;
     if (!locat || !shape || !shape.style) return;
     if (locat.type !== 'text' && locat.type !== 'table_text') {
-        let gradient_type = locat.type === 'fills' ? shape.getFills() : shape.getBorders();
+        let gradient_type = locat.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
         if (shape.type === ShapeType.Group) {
             const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group);
-            gradient_type = locat.type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders();
+            gradient_type = locat.type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders().strokePaints;
         }
         if (!gradient_type[locat.index]) return;
         const gradient = gradient_type[locat.index].gradient;

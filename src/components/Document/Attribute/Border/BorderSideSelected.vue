@@ -13,7 +13,7 @@ import {
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { flattenShapes } from '@/utils/cutout';
-import { get_actions_border, get_borders_side } from '@/utils/shape_style';
+import { BorderData, get_actions_border, get_borders_side } from '@/utils/shape_style';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';
 import { useI18n } from 'vue-i18n';
@@ -21,13 +21,12 @@ import { can_custom, getSideInfo, get_actions_border_side_info, get_borders_side
 import { Menu } from '@/context/menu';
 import { format_value } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 
 interface Props {
   context: Context
-  border: Border
-  index: number
   reflush_side: number
 }
 
@@ -45,7 +44,7 @@ const update_side = () => {
   const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group && can_custom.includes(s.type) && !s.data.haveEdit);
   if (!s.length) return;
   shapes.value = s;
-  const action = get_borders_side(s, props.index);
+  const action = get_borders_side(s);
   if (action) {
     select_side.value = action;
   } else {
@@ -59,10 +58,10 @@ const setSideType = (type: SideType) => {
   select_side.value = type;
   const page = props.context.selection.selectedPage;
   if (!page) return;
-  const border = shapes.value[0].style.borders[props.index];
+  const border = shapes.value[0].style.borders;
   const data = getSideInfo(border, type)
   if (!data) return;
-  const actions = get_actions_border_side_info(shapes.value, props.index, data);
+  const actions = get_actions_border_side_info(shapes.value, data);
   if (actions && actions.length) {
     const editor = props.context.editor4Page(page);
     editor.setShapesBorderSide(actions);
@@ -83,7 +82,7 @@ const setSideThickness = (thickness: number, type: SideType) => {
   if (!shapes.value) return;
   const page = props.context.selection.selectedPage;
   if (!page) return;
-  const actions = get_actions_border(shapes.value, props.index, thickness);
+  const actions = get_actions_border(shapes.value, thickness);
   if (actions && actions.length) {
     const editor = props.context.editor4Page(page);
     switch (type) {
@@ -112,7 +111,7 @@ function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType
     value = value + (e.code === 'ArrowUp' ? 1 : -1)
     if (isNaN(value)) return;
     value = value <= 0 ? 0 : value <= 300 ? value : 300
-    const actions = get_actions_border(shapes.value, props.index, value);
+    const actions = get_actions_border(shapes.value, value);
     if (actions && actions.length) {
       switch (type) {
         case SideType.Top:
@@ -137,7 +136,7 @@ function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType
 
 function selection_wather(t?: any) {
 
-  
+
   if (t === Selection.CHANGE_SHAPE) {
     update_side();
   }
@@ -149,7 +148,7 @@ watch(() => props.reflush_side, () => {
 
 const getSideThickness = () => {
   if (!shapes.value) return;
-  const side = get_borders_side_thickness(shapes.value, props.index)
+  const side = get_borders_side_thickness(shapes.value)
   thickness_top.value = typeof side[0] === 'number' ? format_value(side[0]) : t('attr.more_value');
   thickness_right.value = typeof side[1] === 'number' ? format_value(side[1]) : t('attr.more_value');
   thickness_bottom.value = typeof side[2] === 'number' ? format_value(side[2]) : t('attr.more_value');
@@ -202,7 +201,7 @@ const dragging = (e: MouseEvent, thickness: number | string) => {
     val = 300;
   }
   if (borderthickness_editor) {
-    borderthickness_editor.execute(val, props.index);
+    borderthickness_editor.execute(val);
   }
   getSideThickness();
 }
@@ -225,6 +224,14 @@ onMounted(() => {
 onUnmounted(() => {
   props.context.selection.unwatch(selection_wather);
 })
+
+import border_all_icon from '@/assets/icons/svg/border-all.svg';
+import border_top_icon from '@/assets/icons/svg/border-top.svg';
+import border_bottom_icon from '@/assets/icons/svg/border-bottom.svg';
+import border_left_icon from '@/assets/icons/svg/border-left.svg';
+import border_right_icon from '@/assets/icons/svg/border-right.svg';
+import border_custom_icon from '@/assets/icons/svg/border-custom.svg';
+
 </script>
 
 <template>
@@ -233,24 +240,24 @@ onUnmounted(() => {
       <div class="border">{{ t('attr.unilateral') }}</div>
       <div class="border-select">
         <div class="all" :class="{ selected: select_side === SideType.Normal }" @click="setSideType(SideType.Normal)">
-          <svg-icon icon-class="border-all"></svg-icon>
+          <SvgIcon :icon="border_all_icon"/>
         </div>
         <div class="top" :class="{ selected: select_side === SideType.Top }" @click="setSideType(SideType.Top)">
-          <svg-icon icon-class="border-top"></svg-icon>
+          <SvgIcon :icon="border_top_icon"/>
         </div>
         <div class="bottom" :class="{ selected: select_side === SideType.Bottom }"
           @click="setSideType(SideType.Bottom)">
-          <svg-icon icon-class="border-bottom"></svg-icon>
+          <SvgIcon :icon="border_bottom_icon"/>
         </div>
         <div class="left" :class="{ selected: select_side === SideType.Left }" @click="setSideType(SideType.Left)">
-          <svg-icon icon-class="border-left"></svg-icon>
+          <SvgIcon :icon="border_left_icon"/>
         </div>
         <div class="right" :class="{ selected: select_side === SideType.Right }" @click="setSideType(SideType.Right)">
-          <svg-icon icon-class="border-right"></svg-icon>
+          <SvgIcon :icon="border_right_icon"/>
         </div>
         <div class="custom" :class="{ selected: select_side === SideType.Custom }"
           @click="setSideType(SideType.Custom)">
-          <svg-icon icon-class="border-custom"></svg-icon>
+          <SvgIcon :icon="border_custom_icon"/>
         </div>
       </div>
     </div>

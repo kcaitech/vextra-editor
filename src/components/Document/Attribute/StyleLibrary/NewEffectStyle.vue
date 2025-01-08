@@ -1,9 +1,9 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">创建特效样式</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -21,24 +21,26 @@
             <div class="create-effect">
                 <div class="title">特效</div>
                 <div class="add" @click="addShadow">
-                    <svg-icon icon-class="add"></svg-icon>
+                    <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
             </div>
             <div class="effect-list">
                 <div class="item" v-for="(s, index) in shadows" :key="s.id">
                     <div class="show">
-                        <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'">
-                            <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
+                        <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click.stop="toggleVisible(index)">
+                            <SvgIcon v-if="s.shadow.isEnabled" :icon="select_icon"></SvgIcon>
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
                         :source="positonOptionsSource"
                         :selected="positonOptionsSource.find(i => i.data.value === s.shadow.position)?.data"
                         @select="(value) => positionSelect(value, index)"></Select>
-                    <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="index" :length="shadows.length"
-                        :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
-                    <div class="delete" :class="{ disable }">
-                        <svg-icon icon-class="delete"></svg-icon>
+                    <ShadowDetail ref="detail" :context="props.context" :shadow="s.shadow" :idx="index"
+                        :length="shadows.length" :shapes="props.shapes" :reflush="reflush" :isMask="isMask"
+                        :editor="editor">
+                    </ShadowDetail>
+                    <div class="delete" :class="{ disable }" @click.stop="deleteFill(index)">
+                        <SvgIcon :icon="delete_icon"></SvgIcon>
                     </div>
                 </div>
             </div>
@@ -57,6 +59,8 @@ import { format_value, genOptions } from '@/utils/common';
 import ShadowDetail from '../Shadow/ShadowDetail.vue'
 import {
     get_actions_add_shadow,
+    get_actions_shadow_delete,
+    get_actions_shadow_enabled,
     get_actions_shadow_position,
     get_actions_shadow_unify,
     get_shadows
@@ -65,7 +69,19 @@ import { computed } from 'vue';
 import { v4 } from 'uuid';
 import { hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
-
+import { FillRenderer, EditorAtt } from "./fillRenderer";
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface ShadowItem {
     id: number,
@@ -93,19 +109,49 @@ const mixed = ref<boolean>(false);
 const positonOptionsSource: SelectSource[] = genOptions([
     [ShadowPosition.Inner, t(`shadow.inner`)],
     [ShadowPosition.Outer, t(`shadow.outer`)],
-    [BlurType.Gaussian, t(`blur.gaussian`)],
-    [BlurType.Background, t(`blur.background`)]
 ]);
 const watchedShapes2 = new Map();
 const reflush = ref<number>(0);
+const isMask = ref<boolean>(false);
+const detail = ref()
+
+const editor = new EditorAtt(shadows)
 
 const invalid = computed(() => {
     return !shadows.length || !name.value
 })
 
+const toggleVisible = (idx: number) => {
+    const _idx = shadows.length - idx - 1;
+    const len = props.shapes.length;
+    const shadow = shadows[idx].shadow;
+    const isEnabled = !shadow.isEnabled;
+    if (isMask.value) {
+        editor.setIsEnabled(idx, isEnabled)
+        return
+    }
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowEnable(_idx, isEnabled)
+    } else if (len > 1) {
+        const actions = get_actions_shadow_enabled(props.shapes, _idx, isEnabled);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesShadowEnabled(actions);
+        }
+    }
+    hidden_selection(props.context);
+
+}
+
 function positionSelect(selected: SelectItem, id: number) {
     const _idx = shadows.length - id - 1;
     const len = props.shapes.length;
+    if (isMask.value) {
+        editor.setPosition(id, selected.value as ShadowPosition)
+        return
+    }
     if (len === 1) {
         if (shadows[id].shadow.position === selected.value) return;
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
@@ -123,11 +169,17 @@ function positionSelect(selected: SelectItem, id: number) {
 }
 
 const Neweffect = () => {
-    if(invalid.value) return 
+    if (invalid.value) return
     const editor = props.context.editor4Doc()
-    const shadow = new BasicArray<Shadow>()
-    shadows.reverse().forEach(s => shadow.push(s.shadow))
-    const style = new ShadowMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, shadow)
+    const _shadows = new BasicArray<Shadow>()
+    shadows.reverse().forEach(s => {
+        const shadow = s.shadow;
+        const { isEnabled, blurRadius, color, position, spread, offsetX, offsetY, contextSettings } = shadow;
+        const new_shadow = new Shadow(new BasicArray(), v4(), isEnabled, blurRadius, color, offsetX, offsetY, spread, position);
+        new_shadow.contextSettings = contextSettings;
+        _shadows.push(new_shadow);
+    })
+    const style = new ShadowMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, _shadows)
     const page = props.context.selection.selectedPage!
     const selected = props.context.selection.selectedShapes;
     const shapes = getShapesForStyle(selected);
@@ -157,6 +209,23 @@ function addShadow(): void {
                 const editor = props.context.editor4Page(page);
                 editor.shapesAddShadow(actions);
             }
+        }
+    }
+    hidden_selection(props.context);
+}
+
+function deleteFill(idx: number) {
+    const _idx = shadows.length - idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.deleteShadow(_idx)
+    } else if (len > 1) {
+        const actions = get_actions_shadow_delete(props.shapes, _idx);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.shapesDeleteShadow(actions);
         }
     }
     hidden_selection(props.context);
@@ -202,21 +271,40 @@ function watchShapes() {
 const updateData2 = () => {
     shadows.length = 0;
     mixed.value = false;
+    isMask.value = false;
     const len = props.shapes.length;
+    const shape = props.shapes[0];
     if (len === 1) {
-        const shape = props.shapes[0];
-        const _shadows = shape.getShadows();
-        for (let i = 0, len = _shadows.length; i < len; i++) {
-            const shadow = _shadows[i];
-            const s = { id: i, shadow };
-            shadows.unshift(s);
+        if (shape.style.shadowsMask) {
+            isMask.value = true;
+            const libs = shape.style.getStylesMgr()
+            const _shadows = (libs?.getSync(shape.style.shadowsMask) as ShadowMask).shadows
+            for (let i = 0, len = _shadows.length; i < len; i++) {
+                const shadow = _shadows[i];
+                const s = { id: i, shadow };
+                shadows.unshift(s);
+            }
+        } else {
+            const _shadows = shape.getShadows();
+            for (let i = 0, len = _shadows.length; i < len; i++) {
+                const shadow = _shadows[i];
+                const s = { id: i, shadow };
+                shadows.unshift(s);
+            }
         }
     } else if (len > 1) {
         const _shadows = get_shadows(props.shapes);
         if (_shadows === 'mixed') {
             mixed.value = true;
         } else if (_shadows === 'mask') {
-            return
+            isMask.value = true;
+            const libs = shape.style.getStylesMgr()
+            const _shadows = (libs?.getSync(shape.style.shadowsMask!) as ShadowMask).shadows
+            for (let i = 0, len = _shadows.length; i < len; i++) {
+                const shadow = _shadows[i];
+                const s = { id: i, shadow };
+                shadows.unshift(s);
+            }
         } else {
             shadows.push(..._shadows.reverse());
         }
@@ -238,6 +326,8 @@ function update_by_shapes() {
 }
 
 const stop = watch(() => props.shapes, update_by_shapes);
+
+
 
 onMounted(() => {
     update_by_shapes();
@@ -284,7 +374,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
@@ -351,7 +441,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                svg {
+                img {
                     width: 16px;
                     height: 16px;
                     margin: auto;
@@ -388,7 +478,7 @@ onUnmounted(() => {
                         align-items: center;
                         border-radius: 4px;
 
-                        >svg {
+                        >img {
                             width: 60%;
                             height: 60%;
                         }
@@ -424,7 +514,7 @@ onUnmounted(() => {
                         background-color: #F5F5F5;
                     }
 
-                    svg {
+                    img {
                         width: 16px;
                         height: 16px;
                         margin: auto;

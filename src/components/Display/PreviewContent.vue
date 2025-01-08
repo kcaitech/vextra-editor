@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import {
-    ArtboradView,
+    ArtboardView,
     Matrix,
     OverlayBackgroundInteraction,
     OverlayBackgroundType,
@@ -13,6 +13,7 @@ import {
     sessionRefIdKey,
     ShapeType,
     ShapeView,
+    TransformRaw,
     XYsBounding
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
@@ -216,49 +217,57 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
             props.context.preview.addSetTimeout(timer);
         }
     } else if (t === Preview.SYMBOL_REF_SWITCH) {
-        const m = new Matrix();
         if (!s && symRefAnimate.value) {
             symRefAnimate.value.style['transition'] = '';
-            symRefAnimate.value.style['transform'] = m.toString();
+            symRefAnimate.value.style['transform'] = new Matrix().toString();
             symRefAnimate.value.style.opacity = '0';
             return;
         }
         const action = s as PrototypeActions;
-        const hover_shape = action_s || props.context.selection.hoveredShape;
-        if (!action.targetNodeID || !hover_shape || !symRefAnimate.value) return;
-        const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
-        const box = viewBox(matrix, hover_shape);
-        m.scale(viewUpdater.v_matrix.m00);
-        const domCtx = new DomCtx();
-        initComsMap(domCtx.comsMap);
-        const sym = props.context.data.symbolsMgr.get(action.targetNodeID);
-        if (!sym) return;
-        const cur_frame = sym.frame;
-        const _m = sym.matrix2Parent();
-        _m.multiAtLeft(m.clone());
-        const points = [
-            _m.computeCoord2(0, 0),
-            _m.computeCoord2(cur_frame.width, 0),
-            _m.computeCoord2(cur_frame.width, cur_frame.height),
-            _m.computeCoord2(0, cur_frame.height)
-        ];
-        const sym_box = XYsBounding(points);
-        m.trans(box.left - sym_box.left, box.top - sym_box.top);
-        const view = new SymbolDom(domCtx, { data: sym });
-        view.layout();
-        view.render();
-        const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
-        const time = action.transitionDuration ?? 0.3;
-        symRefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
-        symRefAnimate.value.style['transform'] = m.toString();
-        if (view.el) {
-            symRefAnimate.value.appendChild(view.el);
-            symRefAnimate.value.style.opacity = '1';
-            const timer = setTimeout(() => {
-                view.el && symRefAnimate.value?.removeChild(view.el);
-            }, time * 1000);
-            props.context.preview.addSetTimeout(timer);
+        if (action.transitionType === PrototypeTransitionType.DISSOLVE) {
+            symbolTranAnimate(action, action_s);
+        } else if (action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
+
         }
+    }
+}
+
+const symbolTranAnimate = (action: PrototypeActions, action_s: any) => {
+    const m = new Matrix();
+    const hover_shape = action_s || props.context.selection.hoveredShape;
+    if (!action.targetNodeID || !hover_shape || !symRefAnimate.value) return;
+    const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
+    const box = viewBox(matrix, hover_shape);
+    m.scale(viewUpdater.v_matrix.m00);
+    const domCtx = new DomCtx();
+    initComsMap(domCtx.comsMap);
+    const sym = props.context.data.symbolsMgr.get(action.targetNodeID);
+    if (!sym) return;
+    const cur_frame = sym.frame;
+    const _m = sym.matrix2Parent();
+    _m.multiAtLeft(m.clone());
+    const points = [
+        _m.computeCoord2(0, 0),
+        _m.computeCoord2(cur_frame.width, 0),
+        _m.computeCoord2(cur_frame.width, cur_frame.height),
+        _m.computeCoord2(0, cur_frame.height)
+    ];
+    const sym_box = XYsBounding(points);
+    m.trans(box.left - sym_box.left, box.top - sym_box.top);
+    const view = new SymbolDom(domCtx, { data: sym });
+    view.layout();
+    view.render();
+    const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
+    const time = action.transitionDuration ?? 0.3;
+    symRefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+    symRefAnimate.value.style['transform'] = m.toString();
+    if (view.el) {
+        symRefAnimate.value.appendChild(view.el);
+        symRefAnimate.value.style.opacity = '1';
+        const timer = setTimeout(() => {
+            view.el && symRefAnimate.value?.removeChild(view.el);
+        }, time * 1000);
+        props.context.preview.addSetTimeout(timer);
     }
 }
 
@@ -280,6 +289,7 @@ const selectionWatcher = (v: number | string) => {
     if (v === Selection.CHANGE_PAGE) {
         changePage();
         props.context.preview.setFromShapeAction(undefined);
+        reflush.value++;
     } else if (v === Selection.CHANGE_SHAPE) {
         removeChildSymRefAnimate();
         props.context.preview.clearInnerTransform();
@@ -294,6 +304,7 @@ const selectionWatcher = (v: number | string) => {
             return;
         }
         page_watcher();
+        reflush.value++;
     }
 }
 
@@ -319,7 +330,7 @@ const initMatrix = () => {
         is_overlay.value = false;
     }
 }
-let artboard: ArtboradView;
+let artboard: ArtboardView;
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
@@ -328,13 +339,15 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
         previewMode && viewUpdater.scale(e);
+        setFixedTransform();
     } else {
         let hover_shape = search2(e);
         hover_shape = getScrollShape(hover_shape);
         if (!hover_shape) {
             viewUpdater.trans(e);
+            setFixedTransform();
         } else {
-            artboard = hover_shape as ArtboradView;
+            artboard = hover_shape as ArtboardView;
             const scale = viewUpdater.v_matrix.m00;
             let stepx = Math.abs(e.deltaX) > 50 ? (50 * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
             let stepy = Math.abs(e.deltaY) > 50 ? (50 * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
@@ -342,20 +355,21 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
                 stepx = stepy;
                 stepy = 0;
             }
-            let scroll = scrollAtrboard(artboard, { x: -stepx / scale, y: -stepy / scale });
+            let scroll = scrollAtrboard(props.context, artboard, { x: -stepx / scale, y: -stepy / scale });
             let p_x = hover_shape.parent;
             p_x = getScrollShape(p_x);
             while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                scroll.x = scrollAtrboard(p_x as ArtboradView, { x: -stepx / scale, y: 0 }).x;
+                scroll.x = scrollAtrboard(props.context, p_x as ArtboardView, { x: -stepx / scale, y: 0 }).x;
                 p_x = p_x.parent;
             }
             let p_y = hover_shape.parent;
             p_y = getScrollShape(p_y);
             while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: -stepy / scale }).y;
+                scroll.y = scrollAtrboard(props.context, p_y as ArtboardView, { x: 0, y: -stepy / scale }).y;
                 p_y = p_y.parent;
             }
             viewUpdater.trans(e, scroll);
+            setFixedTransform();
         }
     }
 }
@@ -409,9 +423,9 @@ const onMouseDown = (e: MouseEvent) => {
             preview.value.style.cursor = 'grabbing';
         }
         closeSupernatant(e);
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
     }
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
 }
 
 function onMouseMove(e: MouseEvent) {
@@ -430,19 +444,19 @@ function onMouseMove(e: MouseEvent) {
             let dy = e.clientY - downXY.y;
             const diff = Math.hypot(dx, dy);
             if (diff > 4) {
-                artboard = hover_shape as ArtboradView;
+                artboard = hover_shape as ArtboardView;
                 const scale = viewUpdater.v_matrix.m00;
-                let scroll = scrollAtrboard(artboard, { x: e.movementX / scale, y: e.movementY / scale });
+                let scroll = scrollAtrboard(props.context, artboard, { x: e.movementX / scale, y: e.movementY / scale });
                 let p_x = hover_shape.parent;
                 p_x = getScrollShape(p_x);
                 while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                    scroll.x = scrollAtrboard(p_x as ArtboradView, { x: e.movementX / scale, y: 0 }).x;
+                    scroll.x = scrollAtrboard(props.context, p_x as ArtboardView, { x: e.movementX / scale, y: 0 }).x;
                     p_x = p_x.parent;
                 }
                 let p_y = hover_shape.parent;
                 p_y = getScrollShape(p_y);
                 while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                    scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: e.movementY / scale }).y;
+                    scroll.y = scrollAtrboard(props.context, p_y as ArtboardView, { x: 0, y: e.movementY / scale }).y;
                     p_y = p_y.parent;
                 }
                 pageViewDragging(e, scroll);
@@ -502,6 +516,7 @@ const pageViewDragging = (e: MouseEvent, scroll?: { x: boolean, y: boolean }) =>
     }
 
     viewUpdater.setAttri(matrix);
+    setFixedTransform();
 }
 
 const getCurLayerShape = (id?: string) => {
@@ -537,7 +552,6 @@ function onMouseUp(e: MouseEvent) {
     isDragging = false;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
-
 }
 
 const isSpacePressed = () => {
@@ -626,7 +640,7 @@ function search(e: MouseEvent) {
             }
         }
     } else {
-        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);  
+        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);
     }
     const actions = hover_shape?.prototypeInterActions;
     reflush.value++;
@@ -671,6 +685,30 @@ function search2(e: MouseEvent) {
     return hover_shape;
 }
 
+// 吸顶固定和固定的视图偏移值
+const setFixedTransform = () => {
+    const scale = viewUpdater.v_matrix.m00;
+    const selectShape = props.context.selection.selectedShapes[0] as ArtboardView;
+    const select_box = viewBox(viewUpdater.v_matrix, selectShape);
+    const t1 = select_box.top / scale;
+    const l1 = select_box.left / scale;
+    const transform1 = new TransformRaw();
+    transform1.trans(l1, t1);
+    props.context.preview.setFixedTransform(selectShape.id, transform1);
+    selectShape.setFixedTransform(transform1);
+    if (isSuperposed.value) {
+        target_shapes.forEach(s => {
+            const select_box = viewBox(end_matrix.value as Matrix, s);
+            const t2 = Math.max(select_box.top / scale, t1);
+            const l2 = Math.max(select_box.left / scale, l1);
+            const transform2 = new TransformRaw();
+            transform2.trans(l2, t2);
+            props.context.preview.setFixedTransform(s.id, transform2);
+            (s as ArtboardView).setFixedTransform(transform2);
+        })
+    }
+}
+
 const updateSearch = (e?: MouseEvent) => {
     const hover_shape = search2(e || event);
     if (hover_shape) {
@@ -699,6 +737,7 @@ const closeMenu = () => {
 }
 const getTargetShapes = () => {
     target_shapes = [];
+    props.context.preview.setSupernatantShapes();
     renderCard.value = false;
     const page = props.context.selection.selectedPage;
     const shapes = getFrameList(page!);
@@ -718,6 +757,7 @@ const getTargetShapes = () => {
         }
     })
     target_shapes = toRaw(render_shapes);
+    props.context.preview.setSupernatantShapes(render_shapes);
     renderCard.value = true;
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     watch_shapes();
@@ -757,6 +797,9 @@ const getTargetShapes = () => {
                         }
                     }
                 }
+                if (action.transitionType === PrototypeTransitionType.SMARTANIMATE) {
+                    shape.transform.trans(50, 0);
+                }
                 const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
                 const el = els[i] as SVGSVGElement;
                 if (m) {
@@ -786,6 +829,7 @@ const getTargetShapes = () => {
 // 返回上一级动画
 const backTargetShape = (s?: string) => {
     target_shapes = [];
+    props.context.preview.setSupernatantShapes();
     renderCard.value = false;
     const page = props.context.selection.selectedPage;
     const shapes = getFrameList(page!);
@@ -809,6 +853,7 @@ const backTargetShape = (s?: string) => {
         }
     })
     target_shapes = toRaw(render_shapes);
+    props.context.preview.setSupernatantShapes(render_shapes);
     renderCard.value = true;
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     watch_shapes();
@@ -846,7 +891,7 @@ const backTargetShape = (s?: string) => {
     })
 }
 
-const onMouseEnter = (e: MouseEvent) => {    
+const onMouseEnter = (e: MouseEvent) => {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     onMouseMove_CV(e);
@@ -921,17 +966,14 @@ function hideToggleBox() {
     }, 2500); // 3秒后隐藏
 }
 onMounted(() => {
-    props.context.preview.watch(previewWatcher);
     props.context.selection.watch(selectionWatcher);
-    watch_shapes();
+    props.context.preview.watch(previewWatcher);
     // 等cur_shape触发pageCard的挂载
-    page_watcher();
     nextTick(() => {
-        watch_shapes();
         // 然后初始化视图渲染管理器
         viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
+        watch_shapes();
     })
-
     if (preview.value) {
         observer.observe(preview.value);
     }
@@ -960,10 +1002,15 @@ onUnmounted(() => {
         dom.dom.unbind();
     }
 })
+
+import SvgIcon from '../common/SvgIcon.vue';
+import left_arrow_icon from "@/assets/icons/svg/left-arrow.svg"
+import right_arrow_icon from "@/assets/icons/svg/right-arrow.svg"
+
 </script>
 
 <template>
-    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush"
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
         <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
             :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true" />
@@ -977,15 +1024,15 @@ onUnmounted(() => {
             xmlns:xhtml="http://www.w3.org/1999/xhtml" class="sym_ref_animate" preserveAspectRatio="xMinYMin meet"
             viewBox="0 0 100 100" width="100" height="100">
         </svg>
-        <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox">
+        <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox" @mousedown.stop>
             <div class="toggle" v-if="showToggle && listLength && previewMode">
                 <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-                    <svg-icon icon-class="left-arrow"></svg-icon>
+                    <SvgIcon :icon="left_arrow_icon"/>
                 </div>
                 <div class="page">{{ curPage }} / {{ listLength }}</div>
                 <div class="next" @click.stop="togglePage(1)" @mouseup.stop
                     :class="{ disable: listLength === curPage }">
-                    <svg-icon icon-class="right-arrow" />
+                    <SvgIcon :icon="right_arrow_icon" />
                 </div>
             </div>
         </div>
@@ -994,7 +1041,7 @@ onUnmounted(() => {
             :reflush="reflush" @updateSearch="updateSearch">
         </ControlsView>
         <div v-if="is_overlay" class="overlay" />
-        <div v-if="cur_shape" class="preview_overlay" />
+        <div v-if="cur_shape.length" class="preview_overlay" />
     </div>
 </template>
 

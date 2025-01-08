@@ -90,7 +90,7 @@ const stopWatchPage = watch(() => props.params.data, (value, old) => {
     pageViewRegister(true);
     page_watcher();
 
-    if (!loaded) return;
+    // if (!loaded) return;
 
     if (removeRenderIdle) {
         removeRenderIdle.remove();
@@ -128,9 +128,9 @@ function selection_watcher(...args: any[]) {
 let removeRenderIdle: {
     remove: () => void;
 } | undefined;
-let loaded: boolean = false; // 文档数据未加载完成前不进行页面的绘制
+// let loaded: boolean = false; // 文档数据未加载完成前不进行页面的绘制
 const prepareDom = (page: Page | PageView) => {
-    if (!loaded) return;
+    // if (!loaded) return;
 
     pageReady.value = false;
 
@@ -161,10 +161,10 @@ onMounted(() => {
     pageViewRegister(true);
     props.context.selection.watch(selection_watcher);
     page_watcher();
-    props.context.setOnLoaded(() => {
-        loaded = true;
+    // props.context.setOnLoaded(() => {
+    //     loaded = true;
         prepareDom(props.params.data);
-    })
+    // })
 })
 onUnmounted(() => {
     props.params.data.unwatch(page_watcher);

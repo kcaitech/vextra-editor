@@ -13,7 +13,8 @@ defineProps<{
     select: (action: string) => void
   }
 }>();
-
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import pattern_text_icon from '@/assets/icons/svg/pattern-text.svg';
 </script>
 <template>
   <Tooltip :content="`${t('attr.text')} &nbsp;&nbsp; T`">
@@ -24,7 +25,7 @@ defineProps<{
         style="width: 32px"
     >
       <div class="svg-container">
-        <svg-icon icon-class="pattern-text" />
+        <SvgIcon :icon="pattern_text_icon" />
       </div>
     </ToolButton>
   </Tooltip>
@@ -40,7 +41,7 @@ defineProps<{
   padding: 6px 6px 6px 6px;
   box-sizing: border-box;
 
-  >svg {
+  >img {
       width: 18px;
       height: 18px;
   }

@@ -275,7 +275,7 @@ function window_blur() {
 }
 
 function init_matrix() {
-    matrix.reset(shape.matrix2Root());
+    matrix.reset(shape.matrix2Root().toMatrix());
     matrix.multiAtLeft(props.context.workspace.matrix);
 }
 
@@ -307,17 +307,19 @@ function workspaceWatcher(t: number | string) {
     }
 }
 
+function resetContactStatus() {
+    props.context.tool.action === Action.AutoV && props.context.path.setContactStatus(false);
+}
+
 onMounted(() => {
     shape = props.context.selection.pathshape!;
-    if (!shape) {
-        return console.log('wrong shape');
-    }
+    if (!shape) return console.error('wrong shape');
     shape.watch(update);
-
     update();
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
     props.context.workspace.watch(workspaceWatcher);
+    resetContactStatus();
 })
 
 onUnmounted(() => {

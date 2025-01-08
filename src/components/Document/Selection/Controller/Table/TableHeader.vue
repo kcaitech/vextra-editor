@@ -76,7 +76,7 @@ function update_position() {
 
         layout = table.getLayout();
 
-        const m = table.transform2FromRoot;
+        const m = makeShapeTransform2By1(table.matrix2Root());
         const mClient = makeShapeTransform2By1(props.context.workspace.matrix);
         m.addTransform(mClient);
 
@@ -180,7 +180,7 @@ function x_dot_mouseenter(index: number) {
     for (let i = 0; i <= index; i++) {
         width += cols[i];
     }
-    const m = props.shape.transform2FromRoot;
+    const m = makeShapeTransform2By1(props.shape.matrix2Root());
     m.addTransform(makeShapeTransform2By1(props.context.workspace.matrix));
 
     addTransform = makeMatrixByTransform2(
@@ -216,7 +216,7 @@ function y_dot_mouseenter(index: number) {
         height += rows[i];
     }
 
-    const m = props.shape.transform2FromRoot;
+    const m = makeShapeTransform2By1(props.shape.matrix2Root());
     m.addTransform(makeShapeTransform2By1(props.context.workspace.matrix));
     addTransform = makeMatrixByTransform2(
         new Transform()
@@ -266,7 +266,7 @@ function select_col(index: number) {
     table_selection.selectTableCellRange(0, rl - 1, idx, idx, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
-    m4table.reset(m.inverse);
+    m4table.reset(m.inverse.toMatrix());
     index_col = idx, m_index_col = idx;
     props.context.menu.setCellMenuType(CellMenu.selectCol);
     emits("get-menu", (xs[index].point.x + (xs[index - 1]?.point.x || 0)) / 2, xs[index].point.y, CellMenu.selectCol, true);
@@ -283,7 +283,7 @@ function select_row(index: number) {
     table_selection.selectTableCellRange(idx, idx, 0, cl - 1, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
-    m4table.reset(m.inverse);
+    m4table.reset(m.inverse.toMatrix());
     index_row = idx, m_index_row = idx;
     props.context.menu.setCellMenuType(CellMenu.SelectRow);
     emits("get-menu", ys[index].point.x, (ys[index].point.y + (ys[index - 1]?.point.y || 0)) / 2, CellMenu.SelectRow, true);

@@ -23,21 +23,28 @@ const t = useI18n().t;
 
 onMounted(() => {
 });
+
+import fill_gradient_icon from "@/assets/icons/svg/fill-gradient.svg";
+import linear_gradient_icon from "@/assets/icons/svg/linear-gradient.svg";
+import radial_gradient_icon from "@/assets/icons/svg/radial-gradient.svg";
+// import rhomb_gradient_icon from "@/assets/icons/svg/rhomb-gradient.svg";
+import fill_image_icon from "@/assets/icons/svg/fill-image.svg";
+import SvgIcon from '../SvgIcon.vue';
 </script>
 <template>
     <div class="color-type-wrapper">
         <div class="item"
             @click.stop="() => { emits('change', gradient_type || GradientType.Linear, FillType.SolidColor) }"
             :class="{ selected: fillType === FillType.SolidColor }">
-            <svg-icon icon-class="fill-gradient"></svg-icon>
+            <SvgIcon :icon="fill_gradient_icon"/>
         </div>
         <div class="item" @click.stop="() => { emits('change', GradientType.Linear, FillType.Gradient) }"
             :class="{ selected: gradient_type === GradientType.Linear && fillType === FillType.Gradient }">
-            <svg-icon icon-class="linear-gradient"></svg-icon>
+            <SvgIcon :icon="linear_gradient_icon"/>
         </div>
         <div class="item" @click.stop="() => { emits('change', GradientType.Radial, FillType.Gradient) }"
             :class="{ selected: gradient_type === GradientType.Radial && fillType === FillType.Gradient }">
-            <svg-icon icon-class="radial-gradient"></svg-icon>
+            <SvgIcon :icon="radial_gradient_icon"/>
         </div>
         <div class="item" @click.stop="() => { emits('change', GradientType.Angular, FillType.Gradient) }"
             :class="{ selected: gradient_type === GradientType.Angular && fillType === FillType.Gradient }">
@@ -46,12 +53,12 @@ onMounted(() => {
         </div>
         <!-- <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
             :class="{ selected: is_checked === GradientType.Radial }">
-            <svg-icon icon-class="rhomb-gradient"></svg-icon>
+            <SvgIcon icon-class="rhomb-gradient"/>
         </div> -->
         <div class="item" v-if="imageScaleMode"
             @click.stop="() => { emits('change', gradient_type || GradientType.Linear, FillType.Pattern) }"
             :class="{ selected: fillType === FillType.Pattern }">
-            <svg-icon icon-class="fill-image" style="width: 15px; height: 15px;"></svg-icon>
+            <SvgIcon :icon="fill_image_icon" style="width: 15px; height: 15px;"/>
         </div>
     </div>
 </template>

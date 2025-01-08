@@ -7,7 +7,7 @@ import { IScout as Scout } from "@/openapi";
 import { getVisibleBoundingByMatrix } from "@/space";
 import { EnvChain } from "@/mouse/envchain";
 
-export { IScout as Scout } from "@/openapi";
+// export { IScout as Scout } from "@/openapi";
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -19,13 +19,14 @@ export function scout(context: Context): Scout {
     const ele: SVGElement = createSVGGeometryElement(scoutId);
     const path: SVGGeometryElement = createPath('M 0 0 l 2 0 l 2 2 l -2 0 z', pathId); // 任意初始化一条path
     ele.appendChild(path);
+    path.setAttributeNS(null, "fill-rule", "evenodd");
     document.body.appendChild(ele);
 
     // 任意初始化一个point
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
     function isPointInShape(shape: ShapeView, point: PageXY): boolean {
-        const matrix = shape.matrix2Root();
+        const matrix = shape.matrix2Root().toMatrix();
 
         // 先判断包围盒
         const box = getVisibleBoundingByMatrix(shape, matrix);
@@ -38,9 +39,12 @@ export function scout(context: Context): Scout {
         const scale = context.workspace.curScale;
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
+        if (shape.borderPath) {
+            if (path.isPointInFill(SVGPoint)) return true;
+        }
         let onlyStroke = shape instanceof PathShapeView && !shape.getFills().length;
         if (onlyStroke) {
-            path.setAttributeNS(null, 'stroke-width', `${14 / scale}`);
+            path.setAttributeNS(null, 'stroke-width', `${8 / scale}`);
             return path.isPointInStroke(SVGPoint);
         } else {
             if (path.isPointInFill(SVGPoint)) return true;
@@ -94,10 +98,11 @@ export function scout(context: Context): Scout {
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
 
-    function isPointInStroke(d: string, point: XY): boolean {
-        SVGPoint.x = point.x, SVGPoint.y = point.y;
+    function isPointInStroke(d: string, point: XY, stroke = 14): boolean {
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
-        path.setAttributeNS(null, 'stroke-width', '14');
+        path.setAttributeNS(null, 'stroke-width', `${stroke}`);
         return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
     }
 
@@ -130,8 +135,8 @@ function createPath(path: string, id: string): SVGPathElement {
     return p;
 }
 
-function getPathOnPageString(shape: ShapeView | Shape, matrix: Matrix): string {
-    const path = shape.getPath().clone();
+function getPathOnPageString(shape: ShapeView, matrix: Matrix): string {
+    const path = shape.borderPath ? shape.borderPath.clone() : shape.getPath().clone();
     path.transform(matrix);
     return path.toString();
 }
@@ -143,7 +148,7 @@ function getPathOnPageStringCustomOffset(shape: ShapeView, s: number): string { 
     const m = new Matrix();
     m.preScale(scalex * f.width, scaley * f.height);
     m.trans(-offset / 2, -offset / 2);
-    m.multiAtLeft(shape.matrix2Root());
+    m.multiAtLeft(shape.matrix2Root().toMatrix());
     return getBoxPath(m);
 }
 
@@ -196,12 +201,12 @@ export function delayering2(groupshape: ShapeView, flat?: ShapeView[]): ShapeVie
 }
 
 export function is_layers_tree_unit(shape: ShapeView) {
-    return ShapeType.Group === shape.type
+    return shape.isVisible && !shape.isLocked && (ShapeType.Group === shape.type
         || ShapeType.Artboard === shape.type
         || ShapeType.SymbolUnion === shape.type
         || ShapeType.Symbol === shape.type
         || ShapeType.SymbolRef === shape.type
-        || ShapeType.BoolShape === shape.type
+        || ShapeType.BoolShape === shape.type)
 }
 
 /**
@@ -399,20 +404,6 @@ export function is_shape_in_selected(selected: ShapeView[], shape: ShapeView) {
         if (selected[i].id === shape.id) return true;
     }
     return false;
-}
-
-function get_max_thickness_border(shape: ShapeView) {
-    let max_thickness = 0;
-    const borders = shape.getBorders();
-    if (borders.length) {
-        for (let i = 0, l = borders.length; i < l; i++) {
-            const t = borders[i].thickness;
-            if (t > max_thickness) {
-                max_thickness = t;
-            }
-        }
-    }
-    return max_thickness;
 }
 
 /**

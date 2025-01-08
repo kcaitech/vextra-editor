@@ -43,6 +43,11 @@ onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
 
 })
+
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+
+
 </script>
 
 <template>
@@ -53,7 +58,7 @@ onUnmounted(() => {
             <span v-if="item === 'add_new_value' && index === menuItems.length - 1">{{ t('compos.add_new') }}</span>
             <div class="choose" v-if="props.menuIndex === index">
                 <!--                 :style="{ borderColor: isActive === index ? '#fff' : '' }"-->
-                <svg-icon :icon-class="isActive !== index ? 'choose' : 'white-select'"></svg-icon>
+                <SvgIcon :icon="isActive !== index ? choose_icon : white_select_icon"/>
             </div>
         </div>
     </div>

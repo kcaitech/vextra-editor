@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { ArtboradView, ColVector3D, makeShapeTransform2By1, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboardView, ColVector3D, makeShapeTransform2By1, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "./common";
 import { getShapeFrame } from "./content";
 import { Selection, XY } from "@/context/selection";
@@ -247,7 +247,7 @@ export const hiddenTidyUp = (shapes: ShapeView[]) => {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const parent = shape.parent!
-        if ((parent as ArtboradView).autoLayout || pId !== parent.id) {
+        if ((parent as ArtboardView).autoLayout || pId !== parent.id) {
             return true;
         }
     }

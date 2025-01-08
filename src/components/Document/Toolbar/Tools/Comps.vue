@@ -4,6 +4,7 @@ import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import { string_by_sys } from "@/utils/common";
 import ToolButton from "../Buttons/ToolButton.vue";
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
 
@@ -17,7 +18,7 @@ function selectComps() {
 }
 
 
-
+import resource_icon from '@/assets/icons/svg/resource.svg';
 </script>
 
 <template>
@@ -26,7 +27,7 @@ function selectComps() {
             placement="bottom" :show-after="500" :offset="10" :hide-after="0">
             <ToolButton style="width: 32px">
                 <div class="temp" @click="selectComps">
-                    <svg-icon icon-class="resource"></svg-icon>
+                    <SvgIcon :icon="resource_icon"/>
                 </div>
             </ToolButton>
         </el-tooltip>

@@ -32,7 +32,7 @@ export const apply = {
     file_access_request: "文件访问申请",
     applicant: "申请人",
     access_file: "访问文件",
-    authority: '权限',
+    authority: '权限：',
     remarks: '备注',
     agree: '同意',
     refuse: '拒绝',
@@ -47,7 +47,7 @@ export const apply = {
     file_deleted: '文件已被删除，或创建者已关闭分享',
     authorization_failure: '授权失败',
     notification_message: '通知消息',
-    application_documents: '申请文件',
+    application_documents: '申请',
     have_agreed: '已同意',
     rejected: '已拒绝',
     no_message_received: '未收到任何消息',
@@ -59,5 +59,8 @@ export const apply = {
     team_apply: '加入团队申请',
     file: '文件',
     apply_team: '申请加入团队：',
-    apply_project: '申请加入项目：'
+    apply_project: '申请加入项目：',
+    apply:'申请',
+    tips_team:'您申请加入团队',
+    tips_project:'您申请加入项目'
 }

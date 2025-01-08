@@ -332,6 +332,11 @@ onUnmounted(() => {
     stop();
     stop2();
 });
+
+import select_icon from '@/assets/icons/svg/select.svg';
+import vertical_constraint_icon from '@/assets/icons/svg/vertical-constraint.svg';
+import horizontal_constraint_icon from '@/assets/icons/svg/horizontal-constraint.svg';
+
 </script>
 <template>
 <div class="wrap">
@@ -355,7 +360,7 @@ onUnmounted(() => {
                 <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
                         @select="handleHorizontalPositionSelect" :disabled="disabled">
                     <template #prefix>
-                        <svg-icon style="width: 12px; height: 12px;" icon-class="horizontal-constraint"/>
+                        <SvgIcon style="width: 12px; height: 12px;" :icon="horizontal_constraint_icon"/>
                     </template>
                 </Select>
                 <div :class="{ checkboxWrap: true, disabledBox: disableToFixedWidth }"
@@ -365,7 +370,7 @@ onUnmounted(() => {
                             <div class="mixed"></div>
                         </div>
                         <div v-else-if="fixedWidth" class="active">
-                            <svg-icon icon-class="select"/>
+                            <SvgIcon :icon="select_icon"/>
                         </div>
                     </div>
                     <span>{{ t('attr.fixedWidth') }}</span>
@@ -375,7 +380,7 @@ onUnmounted(() => {
                 <Select :selected="verticalPositionSelected" :source="VerticalPositionOptions"
                         @select="handleVerticalPositionSelect" :disabled="disabled">
                     <template #prefix>
-                        <svg-icon style="width: 12px; height: 12px;" icon-class="vertical-constraint"/>
+                        <SvgIcon style="width: 12px; height: 12px;" :icon="vertical_constraint_icon"/>
                     </template>
                 </Select>
                 <div :class="{ checkboxWrap: true, disabledBox: disableToFixedHeight }"
@@ -385,7 +390,7 @@ onUnmounted(() => {
                             <div class="mixed"></div>
                         </div>
                         <div v-else-if="fixedHeight" class="active">
-                            <svg-icon icon-class="select"/>
+                            <SvgIcon :icon="select_icon"/>
                         </div>
                     </div>
                     <span>{{ t('attr.fixedHeight') }}</span>
@@ -476,7 +481,7 @@ onUnmounted(() => {
                             align-items: center;
                             justify-content: center;
 
-                            > svg {
+                            > img {
                                 width: 60%;
                                 height: 60%;
                             }

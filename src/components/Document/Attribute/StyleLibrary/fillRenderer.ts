@@ -14,13 +14,19 @@ import {
     NumberArray2D,
     Shadow,
     ShadowMask,
+    CornerRadius,
     ShapeView, SymbolView,
-    Transform
+    Transform,
+    ShadowPosition,
+    BorderMask,
+    BorderMaskType,
 } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { markRaw } from "vue";
 import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
+import { fill } from "lodash";
+import { ar } from "element-plus/es/locale";
 
 export interface Mask {
     id: string;
@@ -30,6 +36,7 @@ export interface Mask {
     fills?: BasicArray<Fill>;
     shadows?: BasicArray<Shadow>
     blur?: Blur;
+    border?:BorderMaskType
 }
 
 export interface Lib {
@@ -38,6 +45,11 @@ export interface Lib {
     description: string;
     sheet: string;
     fills?: BasicArray<Fill>
+}
+
+export interface ShadowItem {
+    id: number,
+    shadow: Shadow
 }
 
 
@@ -74,13 +86,24 @@ export class FillRenderer {
         this.m_list.push(titleCtx);
     }
 
-    private getblurwmask(v: BlurMask) {
+    private getblurmask(v: BlurMask) {
         const titleCtx: Mask = {
             id: v.id,
             name: v.name,
             description: v.description,
             sheet: v.sheet,
             blur: v.blur
+        };
+        this.m_list.push(titleCtx);
+    }
+
+    private getbordermask(v:BorderMask){
+        const titleCtx: Mask = {
+            id: v.id,
+            name: v.name,
+            description: v.description,
+            sheet: v.sheet,
+            border: v.border
         };
         this.m_list.push(titleCtx);
     }
@@ -98,8 +121,28 @@ export class FillRenderer {
         const ctx = this.m_context;
         const lib = ctx.data.stylelib
         if (!lib) return
-        this.m_list_lib.push(...lib)
+        // this.m_list_lib.push(...lib)
         const sheet = lib.find(s => s.id === ctx.data.id)
+
+        let arr: StyleSheet[] = lib.map((s, i) => {
+            let newSheet: StyleSheet = { ...s }; // 创建 s 的浅拷贝
+            if (type === 'fill') {
+                newSheet.variables = s.variables.filter(v => v instanceof FillMask); // 只保留 FillMask 实例
+            }
+            if (type === 'shadow') {
+                newSheet.variables = s.variables.filter(v => v instanceof ShadowMask); // 只保留 ShadowMask 实例
+            }
+            if (type === 'blur') {
+                newSheet.variables = s.variables.filter(v => v instanceof BlurMask); // 只保留 BlurMask 实例
+            }
+            if(type==='border'){
+                newSheet.variables = s.variables.filter(v => v instanceof BorderMask); // 只保留 Border 实例
+            }
+            return newSheet;
+        });
+        this.m_list_lib.push(...arr);
+
+
         if (!sheet) return
         sheet.variables.forEach(s => {
             if (type === 'fill') {
@@ -114,7 +157,12 @@ export class FillRenderer {
             }
             if (type === 'blur') {
                 if (s instanceof BlurMask) {
-                    this.getblurwmask(s)
+                    this.getblurmask(s)
+                }
+            }
+            if(type==='border'){
+                if (s instanceof BorderMask) {
+                    this.getbordermask(s)
                 }
             }
         })
@@ -124,4 +172,76 @@ export class FillRenderer {
     searchstyle(filter: string, value: string) {
 
     }
+}
+
+export class EditorAtt {
+    private readonly m_list: ShadowItem[];
+
+    constructor(List: ShadowItem[]) {
+        this.m_list = List;
+    }
+
+    OffsetX(index: number, value: number) {
+        const arr = [...this.m_list]
+        const _shadow = { ...arr[index].shadow };
+        _shadow.offsetX = value;
+        arr[index].shadow = _shadow as Shadow
+        this.m_list.length = 0;
+        this.m_list.push(...arr)
+    }
+
+    OffsetY(index: number, value: number) {
+        const arr = [...this.m_list]
+        const _shadow = { ...arr[index].shadow };
+        _shadow.offsetY = value;
+        arr[index].shadow = _shadow as Shadow
+        this.m_list.length = 0;
+        this.m_list.push(...arr)
+    }
+
+    setBlurRadius(index: number, value: number) {
+        const arr = [...this.m_list]
+        const _shadow = { ...arr[index].shadow };
+        _shadow.blurRadius = value;
+        arr[index].shadow = _shadow as Shadow
+        this.m_list.length = 0;
+        this.m_list.push(...arr)
+    }
+
+    setSpread(index: number, value: number) {
+        const arr = [...this.m_list]
+        const _shadow = { ...arr[index].shadow };
+        _shadow.spread = value;
+        arr[index].shadow = _shadow as Shadow
+        this.m_list.length = 0;
+        this.m_list.push(...arr)
+    }
+
+    setColor(index: number, value: Color) {
+        const arr = [...this.m_list]
+        const _shadow = { ...arr[index].shadow };
+        _shadow.color = value;
+        arr[index].shadow = _shadow as Shadow
+        this.m_list.length = 0;
+        this.m_list.push(...arr)
+    }
+
+    setPosition(index: number, value: ShadowPosition) {
+        const arr = [...this.m_list]
+        const _shadow = { ...arr[index].shadow };
+        _shadow.position = value;
+        arr[index].shadow = _shadow as Shadow
+        this.m_list.length = 0;
+        this.m_list.push(...arr)
+    }
+
+    setIsEnabled(index: number, value: boolean){
+        const arr = [...this.m_list]
+        const _shadow = { ...arr[index].shadow };
+        _shadow.isEnabled = value;
+        arr[index].shadow = _shadow as Shadow
+        this.m_list.length = 0;
+        this.m_list.push(...arr)
+    }
+
 }
