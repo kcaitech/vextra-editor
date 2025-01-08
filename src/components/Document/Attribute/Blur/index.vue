@@ -127,7 +127,6 @@ function addBlur(): void {
     if (mixed.value) {
         if (mask) {
             const s = props.shapes.findLast(i => i.style.blursMask !== undefined)
-            console.log(s);
 
             const id = s?.style.blursMask as string
             const actions = get_actions_add_mask(props.shapes, id);

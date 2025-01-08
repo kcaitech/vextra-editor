@@ -1003,9 +1003,6 @@ export function get_blur(shapes: ShapeView[]): Blur | undefined | 'mixed' | 'mas
     const mask_b = blur_mask.every(i => mask !== 'undefined' && i === mask)
     const mask_s = blur_mask.some(i => i !== 'undefined')
 
-    console.log(mask_b, mask_s);
-    
-
     if (mask_b) return 'mask';
     if (mask_s) return 'mixed';
 

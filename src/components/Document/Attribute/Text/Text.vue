@@ -892,8 +892,6 @@ const setMixedHighlight = () => {
     } else {
         format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
         const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
-        console.log(format.highlight, 'format.highlight');
-
         editor.setTextHighlightColorMulti(props.textShapes, new Color(alpha, red, green, blue));
     }
 }

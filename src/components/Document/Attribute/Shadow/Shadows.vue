@@ -117,8 +117,6 @@ function updateData() {
             shadows.push(..._shadows.reverse());
         }
     }
-    console.log(mask.value);
-    
     reflush.value++;
 }
 
@@ -218,8 +216,6 @@ const openEffectPanel = (e: MouseEvent) => {
 }
 
 function close() {
-    console.log('1111111111111111111111');
-    
     const is_achieve_expected_results = showshadow.value;
     showshadow.value = false;
     document.removeEventListener('click', checktargetlist)

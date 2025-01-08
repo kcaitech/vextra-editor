@@ -740,12 +740,10 @@ const positionpanel = (e: MouseEvent) => {
         }
     }
     const { top, left } = el.getBoundingClientRect();
-    console.log(el.getBoundingClientRect());
 
     styleTop.value = top;
     styleLeft.value = left - 250;
     openstyle.value = !openstyle.value
-    console.log(openstyle.value);
 
     document.addEventListener('click', checktargetlist)
     props.context.escstack.save(v4(), close);

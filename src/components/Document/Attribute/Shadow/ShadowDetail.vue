@@ -91,11 +91,6 @@ const setOffsetX = (value: number) => {
     hidden_selection(props.context);
 }
 
-watch(() => props.shapes, () => {
-    console.log('切换了图形');
-
-})
-
 function keydownOffsetX(e: KeyboardEvent, val: string | number) {
     let value: any = sortValue(val.toString());
     const _idx = props.length - props.idx - 1;

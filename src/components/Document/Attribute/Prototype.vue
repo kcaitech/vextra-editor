@@ -456,7 +456,6 @@ let timer3: any
 const _addstyle = () => {
     if (timer3) clearTimeout(timer3)
     timer3 = setTimeout(() => {
-        console.log('添加');
         (ela.value![0] as HTMLDivElement).addEventListener("transitionend", change);
         (elb.value![0] as HTMLDivElement).addEventListener("transitionend", change)
         tarb.value = { ...qsb.value as object, ...mbb.value as object };
@@ -477,12 +476,10 @@ const change = () => {
         delstyle()
         clearTimeout(timer);
     }, 1000);
-    console.log('jinting');
 }
 
 const _delstyle = () => {
     if (timer3) return
-    console.log('移除');
     (ela.value![0] as HTMLDivElement).removeEventListener("transitionend", change);
     (elb.value![0] as HTMLDivElement).removeEventListener("transitionend", change)
     tarb.value = null

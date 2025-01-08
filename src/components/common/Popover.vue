@@ -74,8 +74,6 @@ function locate() {
         if (left > r) {
             _left = left - (left - r) - width
         } else {
-            console.log(props.event,props.event?.includes('text'));
-            
             _left = left - (props.event?.includes('text') ? 208 : 172) - width
         }
     }

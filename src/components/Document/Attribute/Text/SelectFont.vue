@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Context } from '@/context';
-import { fontNameListEn, fontNameListZh, FontAvailable, fontWeightList, isSupportFontFamily } from './FontNameList'
+import { fontWeightList, isSupportFontFamily } from './FontNameList'
 import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
@@ -165,12 +165,9 @@ const unfoldFontName = (num: number) => {
 const get_top_posi = () => {
     if (font_context.value) {
         const p_container = props.fontNameEl?.getBoundingClientRect()
-        console.log(p_container);
-
         if (p_container) {
             const body_h = document.body.clientHeight;
             const { y, height, width } = font_context.value.getBoundingClientRect();
-            console.log(font_context.value.getBoundingClientRect());
             font_context.value.style.top = p_container.y + 'px';
             font_context.value.style.left = (p_container.left - width - 8) + 'px';
             const su = body_h - p_container.y;

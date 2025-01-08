@@ -109,8 +109,7 @@ const getExportShapes = () => {
         const childs = Array.from(page.shapes.values());
         exportShapes.value = childs.filter(s => s.isVisible && s.exportOptions && s.exportOptions.exportFormats.length > 0);
     }
-    console.log(exportShapes.value, 'exportShapes.value');
-    
+
     getExportInfo();
 }
 
