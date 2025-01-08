@@ -34,7 +34,7 @@ export class ThreadPool {
         this._onmessage = this._onmessage.bind(this)
     }
 
-    _continue() {
+    private _continue() {
         if (this.pending.length === 0) return;
         if (this.terminated) {
             return
