@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { ShapeView, ShapeType, Blur, Point2D, BlurType, BasicArray, BlurMask } from "@kcdesign/data";
+import { ShapeView, Blur, Point2D, BlurType, BasicArray, BlurMask } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -16,10 +16,15 @@ import {
 import { hidden_selection } from '@/utils/content';
 import BlurDetail from "./BlurDetail.vue";
 import BlurTypeSelect from "./BlurTypeSelect.vue";
-import BlurStyle from '@/components/Document/Attribute/StyleLib/BlurStyle.vue';
+import BlurStyle from '@/components/Document/Attribute/Blur/Lib/BlurStyle.vue';
 import { v4 } from 'uuid';
 import { getShapesForStyle } from '@/utils/style';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
 
 type Props = {
     context: Context
@@ -30,52 +35,14 @@ type Props = {
 
 const props = defineProps<Props>();
 const { t } = useI18n();
-const watchedShapes = new Map();
 const blurInfo = ref<Blur>();
 const mixed = ref<boolean>(false);
 const reflush = ref<number>(0);
 const mask = ref<boolean>(false)
 const Top = ref<number>(0)
 const Left = ref<number>(0)
-const showblur = ref<boolean>(false)
-const blurMask = ref<BlurMask>()
-
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
-
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        for (let i = 0, l = selectedShapes.length; i < l; i++) {
-            const v = selectedShapes[i];
-            if (v.isVirtualShape) {
-                let p = v.parent;
-                while (p) {
-                    if (p.type === ShapeType.SymbolRef) {
-                        needWatchShapes.set(p.id, p);
-                        break;
-                    }
-                    p = p.parent;
-                }
-            }
-            needWatchShapes.set(v.id, v);
-        }
-    }
-
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
-        watchedShapes.delete(k);
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(watcher);
-        watchedShapes.set(k, v);
-    })
-}
+const blurLibVisible = ref<boolean>(false)
+const blurMask = ref<BlurMask>();
 
 function updateData() {
     mixed.value = false;
@@ -91,7 +58,7 @@ function updateData() {
             const libs = props.shapes[0].style.getStylesMgr()
             blurMask.value = libs?.getSync(id) as BlurMask
             blurInfo.value = blurMask.value.blur
-            return mask.value = true
+            return mask.value = true;
         }
         blurInfo.value = shape.blur;
     } else if (len > 1) {
@@ -99,22 +66,19 @@ function updateData() {
         if (blur === 'mixed') {
             mixed.value = true;
         } else if (blur === 'mask') {
-            const id = props.shapes[0].style.blursMask
-            if (!id) return
+            const id = props.shapes[0].style.blursMask;
+            if (!id) return;
             const libs = props.shapes[0].style.getStylesMgr();
             const blur = libs?.getSync(id) as BlurMask;
             blurMask.value = blur;
             blurInfo.value = blur.blur;
-            mask.value = true
+            mask.value = true;
         } else {
             blurInfo.value = blur;
         }
     }
-    reflush.value++;
-}
 
-function watcher(...args: any[]) {
-    if (args.length > 0 && (args.includes('layout'))) updateData();
+    reflush.value++;
 }
 
 function addBlur(): void {
@@ -122,12 +86,11 @@ function addBlur(): void {
     if (len < 1) return;
     const blur = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
     const page = props.context.selection.selectedPage!;
-    const mask = props.shapes.some(s => s.style.blursMask !== undefined)
+    const mask = props.shapes.some(s => s.style.blursMask)
     const editor = props.context.editor4Page(page);
     if (mixed.value) {
         if (mask) {
-            const s = props.shapes.findLast(i => i.style.blursMask !== undefined)
-
+            const s = props.shapes.findLast(i => i.style.blursMask)
             const id = s?.style.blursMask as string
             const actions = get_actions_add_mask(props.shapes, id);
             editor.shapesSetBlurMask(actions);
@@ -171,17 +134,16 @@ function toggleVisible() {
     hidden_selection(props.context);
 }
 
-const delblurmask = () => {
+const delBlurMask = () => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
     const actions = get_actions_blur_mask(shapes)
     const editor = props.context.editor4Page(page);
     editor.shapesDelBlurMask(actions);
-
 }
 
-const delstyleblur = () => {
+const delStyleBlur = () => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
@@ -190,7 +152,7 @@ const delstyleblur = () => {
     editor.shapesDelStyleBlur(actions);
 }
 
-const openBlurPanel = (e: MouseEvent, id?: string) => {
+const openBlurPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'blur-panel') {
         if (el.parentElement) {
@@ -200,24 +162,19 @@ const openBlurPanel = (e: MouseEvent, id?: string) => {
     const { top, left } = el.getBoundingClientRect();
     Top.value = top;
     Left.value = left - 250;
-    showblur.value = !showblur.value
-    document.addEventListener('click', checktargetlist)
+    blurLibVisible.value = !blurLibVisible.value
+    document.addEventListener('click', checkTargetList)
     props.context.escstack.save(v4(), close);
 }
 
 function close() {
-    const is_achieve_expected_results = showblur.value;
-    showblur.value = false;
-    document.removeEventListener('click', checktargetlist)
+    const is_achieve_expected_results = blurLibVisible.value;
+    blurLibVisible.value = false;
+    document.removeEventListener('click', checkTargetList)
     return is_achieve_expected_results;
 }
 
-function update_by_shapes() {
-    watchShapes();
-    updateData();
-}
-
-function checktargetlist(e: MouseEvent) {
+function checkTargetList(e: MouseEvent) {
     e.target instanceof Element &&
         !e.target.closest('.shadow-container') &&
         !e.target.closest('.blur-style') &&
@@ -225,58 +182,42 @@ function checktargetlist(e: MouseEvent) {
         close();
 }
 
-const closepanel = () => {
+const closePanel = () => {
     props.context.escstack.execute()
-    showblur.value = false
-    document.removeEventListener('click', checktargetlist)
+    blurLibVisible.value = false
+    document.removeEventListener('click', checkTargetList)
 }
 
-// hooks
-const stop = watch(() => props.shapes, update_by_shapes);
-const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
-const stop3 = watch(() => props.trigger, v => {
-    // 监听选区图层变化
-    if (v.length > 0 && (v.includes('layout') || v.includes('blur'))) updateData();
-});
-onMounted(() => {
-    update_by_shapes();
-});
+const stop1 = watch(() => props.trigger, v => v?.includes('style') && updateData());
+const stop2 = watch(() => props.selectionChange, updateData);
+onMounted(updateData);
 onUnmounted(() => {
-    stop();
+    stop1();
     stop2();
-    stop3();
-    watchedShapes.forEach(i => i.unwatch(watcher));
-    watchedShapes.clear();
+    blurLibVisible.value = false;
 });
-
-import add_icon from '@/assets/icons/svg/add.svg';
-import delete_icon from '@/assets/icons/svg/delete.svg';
-import select_icon from '@/assets/icons/svg/select.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
 </script>
-
 <template>
     <div class="blur-panel">
-        <TypeHeader :title="t('blur.blur')" class="mt-24" @click="first" :active="!!blurInfo">
+        <TypeHeader :title="t('blur.blur')" @click="first" :active="!!blurInfo">
             <template v-if="!mask" #tool>
                 <div v-if="!mixed" class="blur-style" @click="openBlurPanel($event)">
-                    <SvgIcon :icon="style_icon" />
+                    <SvgIcon :icon="style_icon"/>
                 </div>
-                <div class="add" @click.stop="addBlur" v-if="!blurInfo || mixed">
-                    <SvgIcon :icon="add_icon" />
+                <div v-if="!blurInfo || mixed" class="add" @click.stop="addBlur">
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </template>
         </TypeHeader>
-        <div class="tips-wrap" v-if="mixed && !mask">
+        <div v-if="mixed && !mask" class="tips-wrap">
             <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
         </div>
-        <div class="blur-container" v-if="!mixed && blurInfo && !mask">
+        <div v-if="!mixed && blurInfo && !mask" class="blur-container">
             <div class="blur">
                 <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
                     <SvgIcon v-if="blurInfo.isEnabled" :icon="select_icon" />
                 </div>
-                <div class="blur_posi">
+                <div class="blur-type">
                     <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" :reflush="reflush" />
                 </div>
                 <div class="detail">
@@ -287,27 +228,24 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg';
                 </div>
             </div>
         </div>
-        <div class="shadowmask" v-if="mask">
+        <div v-if="mask" class="blur-mask">
             <div class="info">
                 <div class="blur-left" @click="openBlurPanel($event)">
-                    <div class="effect">
-                    </div>
-                    <div class="name">{{ blurMask?.name }}</div>
+                    <div class="effect"/>
+                    <div class="name">{{ blurMask!.name }}</div>
                 </div>
-                <div class="unbind" @click="delblurmask">
+                <div class="unbind" @click="delBlurMask">
                     <SvgIcon :icon="unbind_icon" />
                 </div>
             </div>
-            <div class="delete-style" @click="delstyleblur">
+            <div class="delete-style" @click="delStyleBlur">
                 <SvgIcon :icon="delete_icon" />
             </div>
         </div>
-        <BlurStyle v-if="showblur" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closepanel" :id="blurMask?.id">
-        </BlurStyle>
+        <BlurStyle v-if="blurLibVisible" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
+                   @close="closePanel" :id="blurMask?.id"/>
     </div>
 </template>
-
 <style scoped lang="scss">
 .blur-panel {
     width: 100%;
@@ -346,10 +284,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg';
     .add:hover {
         background-color: #F5F5F5;
     }
-
-    //.add:hover {
-    //  transform: scale(1.25);
-    //}
 
     .blur-container {
         padding: 6px 0;
@@ -393,11 +327,10 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg';
                 margin-right: 5px
             }
 
-            .blur_posi {
+            .blur-type {
                 flex: 1;
                 height: 100%;
                 margin-right: 5px;
-                //padding: 0px 5px;
                 box-sizing: border-box;
             }
 
@@ -432,7 +365,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg';
         }
     }
 
-    .shadowmask {
+    .blur-mask {
         display: flex;
         height: 32px;
         border-radius: 6px;
@@ -491,7 +424,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg';
             }
         }
 
-
         .delete-style {
             flex: 0 0 28px;
             display: flex;
@@ -525,6 +457,5 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg';
             color: #737373;
         }
     }
-
 }
 </style>

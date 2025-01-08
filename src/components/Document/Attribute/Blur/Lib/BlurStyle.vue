@@ -1,5 +1,5 @@
 <template>
-    <div class="shadow-container" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div ref="panelEl" class="shadow-container">
         <div class="header">
             <div class="title">模糊样式</div>
             <div class="tool">
@@ -38,9 +38,9 @@
                         <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
                     <template v-if="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
-                        <div class="styles"
+                        <div v-for="mask in (sheet.variables as BlurMask[])" class="styles"
                              :class="{ 'active': editorPanel && maskID === mask.id, 'target': mask.id === props.id }"
-                            v-for="mask in (sheet.variables as BlurMask[])" :key="mask.id">
+                             :key="mask.id">
                             <div class="left" @click="addShadowMask(mask.id)">
                                 <div class="effect">
                                     <div class="item" v-for="(_, index) in 25" :key="index"></div>
@@ -72,7 +72,7 @@ import { useI18n } from 'vue-i18n';
 import EditorBlurStyle from './EditorBlurStyle.vue';
 import NewBlurStyle from './NewBlurStyle.vue';
 import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
-import { FillRenderer, Mask } from "./fillRenderer";
+import { FillRenderer, Mask } from "../../StyleLib/fillRenderer";
 import { getShapesForStyle } from "@/utils/style";
 import { get_actions_add_mask } from "@/utils/shape_style";
 import add_icon from '@/assets/icons/svg/add.svg';
@@ -84,6 +84,7 @@ import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { ElementLocateModifier } from "@/components/common/elementlocate";
 
 const props = defineProps<{
     context: Context;
@@ -96,7 +97,6 @@ const props = defineProps<{
 const emits = defineEmits<{
     (e: 'close'): void
 }>()
-
 
 const { t } = useI18n();
 
@@ -115,6 +115,10 @@ const sheets = reactive<StyleSheet[]>([])
 const data = reactive<StyleSheet[]>([])
 const list = reactive<Mask[]>([]);
 const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], list as Mask[]);
+
+const panelEl = ref<HTMLDivElement>();
+
+let ELM: ElementLocateModifier | undefined = undefined;
 
 const currentType = (t: string) => {
     types.value.has(t) ? types.value.delete(t) : types.value.add(t)
@@ -142,7 +146,6 @@ watchEffect(() => {
     })
     data.push(...new_arr.filter(s => s.variables.length !== 0))
 })
-
 
 const addShadowMask = (id: string) => {
     const selected = props.context.selection.selectedShapes;
@@ -175,7 +178,6 @@ const editPanel = (e: MouseEvent, _maskID: string) => {
     document.addEventListener('click', checkEditorPanel)
     props.context.escstack.save(v4(), closeEditorPanel)
 }
-
 
 const closeEditPanel = () => {
     editorPanel.value = false;
@@ -260,19 +262,23 @@ function stylelib_watcher(t: number | string) {
     if (t === 'stylelib') update();
 }
 
+
 onMounted(() => {
     update();
     props.context.data.watch(stylelib_watcher);
+
+    ELM = new ElementLocateModifier(panelEl.value!);
+    ELM.left = props.left;
+    ELM.top = props.top;
+    ELM.locate();
 })
 
 onUnmounted(() => {
     props.context.data.unwatch(stylelib_watcher)
 })
-
 </script>
 <style lang="scss" scoped>
 .shadow-container {
-    position: fixed;
     background-color: #fff;
     z-index: 9;
     width: 250px;
