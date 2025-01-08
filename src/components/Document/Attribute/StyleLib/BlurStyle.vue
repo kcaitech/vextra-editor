@@ -3,27 +3,27 @@
         <div class="header">
             <div class="title">模糊样式</div>
             <div class="tool">
-                <div class="newstyle" @click="NewPanel($event)">
-                    <SvgIcon :icon="add_icon"></SvgIcon>
+                <div class="add" @click="createPanel($event)">
+                    <SvgIcon :icon="add_icon"/>
                 </div>
                 <div class="close" @click="emits('close')">
-                    <SvgIcon :icon="close_icon"></SvgIcon>
+                    <SvgIcon :icon="close_icon"/>
                 </div>
             </div>
         </div>
         <div class="search">
             <div class="icon">
-                <SvgIcon :icon="search_icon"></SvgIcon>
+                <SvgIcon :icon="search_icon"/>
             </div>
-            <div class="filter" @click="FilterPanel">
-                <SvgIcon :icon="arrow_icon"></SvgIcon>
+            <div class="filter" @click="preFilter">
+                <SvgIcon :icon="arrow_icon"/>
             </div>
-            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
+            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="keyword"
                 @keydown.esc="props.context.escstack.execute()">
-            <div v-if="filterpanel" class="filter-list">
-                <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="Changefilter(item[1])">
-                    <div class="choose" :style="{ visibility: filterval === item[1] ? 'visible' : 'hidden' }">
-                        <SvgIcon :icon="choose_icon"></SvgIcon>
+            <div v-if="filterPanel" class="filter-list">
+                <div class="list-item" v-for="item in listFilter" :key="item[0]" @click.stop="filter(item[1])">
+                    <div class="choose" :style="{ visibility: filterWord === item[1] ? 'visible' : 'hidden' }">
+                        <SvgIcon :icon="choose_icon"/>
                     </div>
                     <span> {{ item[1] }}</span>
                 </div>
@@ -31,40 +31,37 @@
         </div>
         <el-scrollbar>
             <div class="content">
-                <div class="style-item" v-for="sheet in showdata" :key="sheet.id">
-                    <div class="type" @click="showtype(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                <div class="style-item" v-for="sheet in data" :key="sheet.id">
+                    <div class="type" @click="currentType(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
                         <SvgIcon
-                            :icon="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon">
-                        </SvgIcon>
+                            :icon="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon"/>
                         <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
-                    <template v-if="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                    <template v-if="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
                         <div class="styles"
-                            :class="{ 'active': editorpanel && Mask_ID === mask.id, 'target': mask.id === props.id }"
+                             :class="{ 'active': editorPanel && maskID === mask.id, 'target': mask.id === props.id }"
                             v-for="mask in (sheet.variables as BlurMask[])" :key="mask.id">
-                            <div class="left" @click="addshadowmask(mask.id)">
+                            <div class="left" @click="addShadowMask(mask.id)">
                                 <div class="effect">
-                                    <div class="item" v-for="(i, index) in 25" :key="index"></div>
+                                    <div class="item" v-for="(_, index) in 25" :key="index"></div>
                                 </div>
                                 <div class="name">{{ mask.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;" @click="EditPanel($event, mask.id)">
-                                <SvgIcon :icon="editor_icon"></SvgIcon>
+                            <div class="editor" style="visibility: hidden;" @click="editPanel($event, mask.id)">
+                                <SvgIcon :icon="editor_icon"/>
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-if="!showdata.length && searchval" class="null">没有搜索到相关样式</div>
-                <div v-if="!showdata.length && !searchval" class="null">没有可用的样式</div>
+                <div v-if="!data.length && keyword" class="null">没有搜索到相关样式</div>
+                <div v-if="!data.length && !keyword" class="null">没有可用的样式</div>
             </div>
         </el-scrollbar>
-        <NewBlurStyle v-if="newpanel" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closeNewPanel"></NewBlurStyle>
-        <EditorBlurStyle v-if="editorpanel" :top="Top" :left="Left" :shapes="props.shapes" :context="props.context"
-            :maskid="Mask_ID" :reder="fillRenderer" @close="closeeditorpanel">
-        </EditorBlurStyle>
+        <NewBlurStyle v-if="addPanel" :context="props.context" :shapes="props.shapes" :top="top" :left="left"
+                      @close="closeCreatePanel"/>
+        <EditorBlurStyle v-if="editorPanel" :top="top" :left="left" :shapes="props.shapes" :context="props.context"
+                         :maskid="maskID" :reder="fillRenderer" @close="closePanel"/>
     </div>
-
 </template>
 <script setup lang="ts">
 import { BlurMask, ShapeView } from "@kcdesign/data";
@@ -82,14 +79,10 @@ import add_icon from '@/assets/icons/svg/add.svg';
 import editor_icon from '@/assets/icons/svg/export-menu.svg';
 import down_icon from '@/assets/icons/svg/triangle-down.svg';
 import right_icon from '@/assets/icons/svg/triangle-right.svg';
-import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
 import search_icon from '@/assets/icons/svg/search.svg';
 import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
-import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
@@ -106,51 +99,52 @@ const emits = defineEmits<{
 
 
 const { t } = useI18n();
-const filterpanel = ref<boolean>(false)
-const searchval = ref<string>('')
-const filterval = ref<string>('全部样式')
-const showtypes = ref(new Set<string>())
-const editorpanel = ref<boolean>(false)
-const newpanel = ref<boolean>(false)
-const Top = ref<number>(0)
-const Left = ref<number>(0)
-const Mask_ID = ref<string>('')
-const search = ref<HTMLInputElement>()
-const listfilter = new Map()
-const sheets = reactive<StyleSheet[]>([])
-const showdata = reactive<StyleSheet[]>([])
-const masklist = reactive<Mask[]>([]);
-const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], masklist as Mask[]);
 
-const showtype = (t: string) => {
-    showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
+const filterPanel = ref<boolean>(false)
+const keyword = ref<string>('')
+const filterWord = ref<string>('全部样式')
+const types = ref(new Set<string>())
+const editorPanel = ref<boolean>(false)
+const addPanel = ref<boolean>(false)
+const top = ref<number>(0)
+const left = ref<number>(0)
+const maskID = ref<string>('')
+const search = ref<HTMLInputElement>()
+const listFilter = new Map()
+const sheets = reactive<StyleSheet[]>([])
+const data = reactive<StyleSheet[]>([])
+const list = reactive<Mask[]>([]);
+const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], list as Mask[]);
+
+const currentType = (t: string) => {
+    types.value.has(t) ? types.value.delete(t) : types.value.add(t)
 }
 
 watchEffect(() => {
-    listfilter.set('all', '全部样式')
+    listFilter.set('all', '全部样式')
     sheets.forEach(s => {
         if (s.id === props.context.data.id) {
-            listfilter.set(s.name, '此文件样式')
+            listFilter.set(s.name, '此文件样式')
         } else {
-            listfilter.set(s.name, s.name)
+            listFilter.set(s.name, s.name)
         }
     })
-    listfilter.forEach((v) => showtypes.value.add(v))
+    listFilter.forEach((v) => types.value.add(v))
 })
 
 watchEffect(() => {
-    showdata.length = 0;
-    const arr = sheets.filter(s => s.name.includes(filterval.value === '全部样式' ? "" : filterval.value === '此文件样式' ? "新文件" : filterval.value))
+    data.length = 0;
+    const arr = sheets.filter(s => s.name.includes(filterWord.value === '全部样式' ? "" : filterWord.value === '此文件样式' ? "新文件" : filterWord.value))
     const new_arr = arr.map(s => {
         let newSheet: StyleSheet = { ...s }
-        newSheet.variables = s.variables.filter(v => (v as BlurMask).name.includes(searchval.value))
+        newSheet.variables = s.variables.filter(v => (v as BlurMask).name.includes(keyword.value))
         return newSheet
     })
-    showdata.push(...new_arr.filter(s => s.variables.length !== 0))
+    data.push(...new_arr.filter(s => s.variables.length !== 0))
 })
 
 
-const addshadowmask = (id: string) => {
+const addShadowMask = (id: string) => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
@@ -160,36 +154,35 @@ const addshadowmask = (id: string) => {
     emits('close')
 }
 
-const closeeditorpanel = () => {
+const closePanel = () => {
     props.context.escstack.execute()
-    editorpanel.value = false
+    editorPanel.value = false
 }
 
-const EditPanel = (e: MouseEvent, maskid: string) => {
+const editPanel = (e: MouseEvent, _maskID: string) => {
     let el = e.target as HTMLElement;
-    const { top } = el.getBoundingClientRect() // 获取当前点击元素的top值
     while (el.parentElement?.className !== 'shadow-container') {
         if (el.parentElement) {
             el = el.parentElement;
         }
     }
-    const { left } = el.getBoundingClientRect(); // 获取编辑面板的left值
-    Top.value = top;
-    Left.value = left - 250;
-    Mask_ID.value === maskid ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
-    Mask_ID.value = maskid;
+    const rect = el.getBoundingClientRect(); // 获取编辑面板的left值
+    top.value = rect.top;
+    left.value = rect.left - 250;
+    maskID.value === _maskID ? editorPanel.value = !editorPanel.value : editorPanel.value = true;
+    maskID.value = _maskID;
 
-    document.addEventListener('click', checkeditorpanel)
+    document.addEventListener('click', checkEditorPanel)
     props.context.escstack.save(v4(), closeEditorPanel)
 }
 
 
 const closeEditPanel = () => {
-    editorpanel.value = false;
-    document.removeEventListener('click', checkeditorpanel);
+    editorPanel.value = false;
+    document.removeEventListener('click', checkEditorPanel);
 }
 
-function checkeditorpanel(e: MouseEvent) {
+function checkEditorPanel(e: MouseEvent) {
     e.target instanceof Element &&
         !e.target.closest('.editor-style') &&
         !e.target.closest('.editor') &&
@@ -197,64 +190,64 @@ function checkeditorpanel(e: MouseEvent) {
 }
 
 const closeEditorPanel = () => {
-    const exe_result: boolean = editorpanel.value;
-    editorpanel.value = false
-    document.removeEventListener('click', checkeditorpanel)
+    const exe_result: boolean = editorPanel.value;
+    editorPanel.value = false
+    document.removeEventListener('click', checkEditorPanel)
     return exe_result
 }
 
-const NewPanel = (e: MouseEvent) => {
+const createPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
     while (el.className !== 'shadow-container') {
         if (el.parentElement) {
             el = el.parentElement;
         }
     }
-    const { top, left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    newpanel.value = !newpanel.value;
-    document.addEventListener('click', checknewpanel)
-    props.context.escstack.save(v4(), closeNewPanel)
+    const rect = el.getBoundingClientRect();
+    top.value = rect.top;
+    left.value = rect.left - 250;
+    addPanel.value = !addPanel.value;
+    document.addEventListener('click', checkPanel)
+    props.context.escstack.save(v4(), closeCreatePanel)
 }
 
-function checknewpanel(e: MouseEvent) {
+function checkPanel(e: MouseEvent) {
     e.target instanceof Element &&
         !e.target.closest('.new-style') &&
-        !e.target.closest('.newstyle') &&
-        closeNewPanel();
+    !e.target.closest('.add') &&
+    closeCreatePanel();
 }
 
-const closeNewPanel = () => {
-    const exe_result: boolean = newpanel.value;
-    newpanel.value = false
-    document.removeEventListener('click', checknewpanel)
+const closeCreatePanel = () => {
+    const exe_result: boolean = addPanel.value;
+    addPanel.value = false
+    document.removeEventListener('click', checkPanel)
     return exe_result
 }
 
 const closeFilterPanel = () => {
-    filterpanel.value = false
-    document.removeEventListener('click', checkfilterpanel)
+    filterPanel.value = false
+    document.removeEventListener('click', checkFilterPanel)
 }
 
-const FilterPanel = () => {
-    if (filterpanel.value) return;
-    filterpanel.value = !filterpanel.value
-    document.addEventListener('click', checkfilterpanel)
+const preFilter = () => {
+    if (filterPanel.value) return;
+    filterPanel.value = !filterPanel.value
+    document.addEventListener('click', checkFilterPanel)
 }
 
-const checkfilterpanel = (e: MouseEvent) => {
+const checkFilterPanel = (e: MouseEvent) => {
     e.target instanceof Element &&
         !e.target.closest('.filter-list') &&
         !e.target.closest('.filter') &&
         closeFilterPanel();
 }
 
-const Changefilter = (v: string) => {
-    filterval.value = v;
-    filterpanel.value = false
-    showtypes.value.add(v)
-    document.removeEventListener('click', checkfilterpanel)
+const filter = (v: string) => {
+    filterWord.value = v;
+    filterPanel.value = false
+    types.value.add(v)
+    document.removeEventListener('click', checkFilterPanel)
 }
 
 function update() {
@@ -298,14 +291,12 @@ onUnmounted(() => {
     padding: 0 12px;
     border-bottom: 1px solid #F5F5F5;
 
-    .title {}
-
     .tool {
         display: flex;
         align-items: center;
         gap: 4px;
 
-        >.newstyle {
+        > .add {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -535,11 +526,6 @@ onUnmounted(() => {
                 }
             }
         }
-    }
-
-
-    .style-item .styles .name {
-        // color: #c8c8c8;
     }
 
     .style-item .styles .editor {

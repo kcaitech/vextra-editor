@@ -15,7 +15,7 @@ import { useI18n } from "vue-i18n";
 import { fixedZero } from '@/utils/common';
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { LinearApi } from "@kcdesign/data"
-import RadiusStyle from '../StyleLibrary/RadiusStyle.vue';
+import RadiusStyle from '@/components/Document/Attribute/StyleLib/RadiusStyle.vue';
 import { v4 } from 'uuid';
 
 const { t } = useI18n();

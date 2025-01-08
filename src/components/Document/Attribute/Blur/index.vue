@@ -16,7 +16,7 @@ import {
 import { hidden_selection } from '@/utils/content';
 import BlurDetail from "./BlurDetail.vue";
 import BlurTypeSelect from "./BlurTypeSelect.vue";
-import BlurStyle from '@/components/Document/Attribute/StyleLibrary/BlurStyle.vue';
+import BlurStyle from '@/components/Document/Attribute/StyleLib/BlurStyle.vue';
 import { v4 } from 'uuid';
 import { getShapesForStyle } from '@/utils/style';
 import SvgIcon from '@/components/common/SvgIcon.vue';

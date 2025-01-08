@@ -21,7 +21,7 @@ import { Menu } from "@/context/menu";
 import { LockMouse } from "@/transform/lockMouse";
 import { format_value } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
-import { FillRenderer, EditorAtt } from "../StyleLibrary/fillRenderer";
+import { FillRenderer, EditorAtt } from "@/components/Document/Attribute/StyleLib/fillRenderer";
 const { t } = useI18n();
 
 interface Props {

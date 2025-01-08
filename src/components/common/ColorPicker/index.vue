@@ -56,8 +56,8 @@ import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
 import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
 import { ImgFrame } from '@/context/atrribute';
-import ColorStyle from '@/components/Document/Attribute/StyleLibrary/ColorStyle.vue';
-import EditorColorStyle from '@/components/Document/Attribute/StyleLibrary/EditorColorStyle.vue';
+import ColorStyle from '@/components/Document/Attribute/StyleLib/ColorStyle.vue';
+import EditorColorStyle from '@/components/Document/Attribute/StyleLib/EditorColorStyle.vue';
 import { watchEffect } from 'vue';
 
 interface FillItem {

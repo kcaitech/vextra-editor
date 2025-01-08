@@ -35,7 +35,7 @@ import { fontWeightConvert } from './FontNameList';
 import { Attribute } from '@/context/atrribute';
 import { format_value, is_mac } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
-import TextStyle from '../StyleLibrary/TextStyle.vue';
+import TextStyle from '@/components/Document/Attribute/StyleLib/TextStyle.vue';
 import { v4 } from 'uuid';
 
 interface Props {

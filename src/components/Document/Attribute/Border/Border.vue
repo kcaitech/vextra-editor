@@ -54,7 +54,7 @@ import {
 } from '@/utils/shape_style'
 import { getSideThickness } from "./index"
 import { sortValue } from '../BaseAttr/oval';
-import Borderstyle from '@/components/Document/Attribute/StyleLibrary/BorderStyle.vue';
+import Borderstyle from '@/components/Document/Attribute/StyleLib/BorderStyle.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface StrokePaintItem {

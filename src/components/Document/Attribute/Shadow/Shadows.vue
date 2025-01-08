@@ -17,7 +17,7 @@ import {
     get_shadows
 } from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
-import EffectStyle from '@/components/Document/Attribute/StyleLibrary/EffectStyle.vue';
+import EffectStyle from '@/components/Document/Attribute/StyleLib/EffectStyle.vue';
 import { getShapesForStyle } from '@/utils/style';
 
 interface ShadowItem {
