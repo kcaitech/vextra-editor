@@ -7,13 +7,13 @@ export type ElementStatus = {
     visible: boolean;
 }
 
-export class ElementManager { /* 窗口需要是一个DIV类型的元素 */
+export class ElementManager { /* 可用于窗口状态处理，窗口应该要是一个DIV类型的元素 */
     private m_left: number;
     private m_top: number;
     private m_offset_l: number;
     private m_offset_t: number;
     private m_white_list: string[];
-    private stop: any = undefined;
+    private m_stop: any = undefined;
 
     constructor(
         private context: Context,
@@ -32,8 +32,8 @@ export class ElementManager { /* 窗口需要是一个DIV类型的元素 */
         this.m_offset_t = init?.offsetTop ?? 0;
         this.m_white_list = init?.whiteList ?? [];
 
-        this.stop = watch(() => this.element.visible, (val) => {
-            if (!val) document.removeEventListener("mousedown", this.downCheck);
+        this.m_stop = watch(() => this.element.visible, (val) => {
+            if (!val) this.removeEvent();
         });
     }
 
@@ -72,7 +72,7 @@ export class ElementManager { /* 窗口需要是一个DIV类型的元素 */
     private trigger: Element | undefined;
     private scope: Element | undefined;
 
-    showBy(trigger: Element, params?: { scope?: Element, protect?: boolean }) {
+    showBy(trigger: Element /*触发元素*/, params?: { scope?: Element, protect?: boolean }) {
         if (this.element.visible) {
             this.element.visible = false;
             return;
@@ -100,16 +100,13 @@ export class ElementManager { /* 窗口需要是一个DIV类型的元素 */
     }
 
     private locate() {
-        const byVal = () => {
+        const fromPreset = () => {
             return {left: this.left, top: this.top};
         }
-        const byTrigger = () => {
+        const fromTrigger = () => {
             const trigger = this.trigger!;
             const triggerRect = trigger.getBoundingClientRect();
-            let left = triggerRect.left + this.offsetLeft;
-            let top = triggerRect.top + this.offsetTop;
-
-            return {left, top};
+            return {left: triggerRect.left + this.offsetLeft, top: triggerRect.top + this.offsetTop};
         }
 
         const target = this.target;
@@ -118,13 +115,14 @@ export class ElementManager { /* 窗口需要是一个DIV类型的元素 */
         const clientWidth = document.documentElement.clientWidth;
         const clientHeight = document.documentElement.clientHeight;
 
-        let {left, top} = this.trigger ? byTrigger() : byVal();
+        let {left, top} = this.trigger ? fromTrigger() : fromPreset();
 
         const exceedW = clientWidth - (left + rect.width);
         if (exceedW < 0) left = Math.max(0, left + exceedW);
         const exceedH = clientHeight - (top + rect.height);
         if (exceedH < 0) top = Math.max(0, top + exceedH);
 
+        target.style.position = "fixed";
         target.style.left = `${left}px`;
         target.style.top = `${top}px`;
     }
@@ -139,8 +137,13 @@ export class ElementManager { /* 窗口需要是一个DIV类型的元素 */
 
     private downCheck = this.__downCheck.bind(this);
 
-    unMounted() {
-        this.stop?.();
+    private removeEvent() {
+        document.removeEventListener("mousedown", this.downCheck);
+    }
+
+    unmounted() {
+        this.removeEvent();
+        this.m_stop?.();
     }
 
     close() {

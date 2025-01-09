@@ -38,8 +38,7 @@ const { t } = useI18n();
 const blurInfo = ref<Blur>();
 const mixed = ref<boolean>(false);
 const reflush = ref<number>(0);
-const mask = ref<boolean>(false)
-// const blurLibVisible = ref<boolean>(false)
+const mask = ref<boolean>(false);
 const blurMask = ref<BlurMask>();
 
 const blurPanelTrigger = ref<HTMLDivElement>();
@@ -132,14 +131,11 @@ function deleteBlur() {
 
 function toggleVisible() {
     const len = props.shapes.length;
-    const isEnabled = !blurInfo.value!.isEnabled;
     if (len < 1) return;
+    const isEnabled = !blurInfo.value!.isEnabled;
     const actions = get_actions_blur_enabled(props.shapes, isEnabled);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapeBlurEnabled(actions);
-    }
+    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+    editor.setShapeBlurEnabled(actions);
     hidden_selection(props.context);
 }
 
@@ -162,41 +158,10 @@ const delStyleBlur = () => {
 }
 
 const openBlurPanel = () => {
-    // let el = e.target as HTMLElement;
-    // while (el.className !== 'blur-panel') {
-    //     if (el.parentElement) {
-    //         el = el.parentElement;
-    //     }
-    // }
-    // const { top, left } = el.getBoundingClientRect();
-    // Top.value = top;
-    // Left.value = left - 250;
-    // blurLibVisible.value = !blurLibVisible.value
-    // document.addEventListener('click', checkTargetList)
-    // props.context.escstack.save(v4(), close);
-
     blurPanelStatusMgr.showBy(blurPanelTrigger.value!);
 }
 
-// function close() {
-//     const is_achieve_expected_results = blurLibVisible.value;
-//     blurLibVisible.value = false;
-//     document.removeEventListener('click', checkTargetList)
-//     return is_achieve_expected_results;
-// }
-
-// function checkTargetList(e: MouseEvent) {
-//     e.target instanceof Element &&
-//         !e.target.closest('.shadow-container') &&
-//         !e.target.closest('.blur-style') &&
-//         !e.target.closest('.blur-left') &&
-//         close();
-// }
-
 const closePanel = () => {
-    // props.context.escstack.execute()
-    // blurLibVisible.value = false
-    // document.removeEventListener('click', checkTargetList)
     blurPanelStatusMgr.close();
 }
 
@@ -206,6 +171,7 @@ onMounted(updateData);
 onUnmounted(() => {
     stop1();
     stop2();
+    blurPanelStatusMgr.unmounted();
 });
 </script>
 <template>

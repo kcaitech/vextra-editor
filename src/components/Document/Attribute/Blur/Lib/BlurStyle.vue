@@ -84,7 +84,6 @@ import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
-import { ElementLocateModifier } from "@/components/common/elementlocate";
 
 const props = defineProps<{
     context: Context;
@@ -266,6 +265,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     props.context.data.unwatch(stylelib_watcher)
+
 })
 </script>
 <style lang="scss" scoped>
