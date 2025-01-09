@@ -10,7 +10,8 @@ export interface SelectItem {
     value: string | number,
     content: string,
     icon?: string,
-    type?: string
+    type?: string,
+
 }
 export interface SelectSource {
     id: number,
@@ -34,6 +35,7 @@ interface Props {
     animation?: boolean;
     status?: boolean;
     iscontainer?: boolean;
+    entry?: string
 }
 
 interface Emits {
@@ -189,7 +191,7 @@ const showOP = ref<boolean>(false)
 const arr = ref<string[]>([])
 watchEffect(() => {
     if (props.shapes) {
-        showOP.value = [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type)
+        showOP.value = [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) && !props.entry
     }
 })
 
@@ -209,7 +211,7 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg"
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
             <div class="icon-img" v-if="curValue?.icon">
-                <SvgIcon :icon="curValue?.icon"/>
+                <SvgIcon :icon="curValue?.icon" />
             </div>
             <div v-if="!props.valueView || mixed" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{
                 curValue?.content }}
@@ -218,7 +220,7 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg"
                 <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
             </div>
             <div class="svg-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">
-                <SvgIcon :icon="down_icon"/>
+                <SvgIcon :icon="down_icon" />
             </div>
         </div>
 
@@ -247,8 +249,8 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg"
                 } : {}" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
                     @mouseleave="curHoverValueIndex = -1">
                     <SvgIcon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
-                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon"/>
-                    <SvgIcon v-if="c.data.icon" class="icon" :icon="c.data.icon!"/>
+                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon" />
+                    <SvgIcon v-if="c.data.icon" class="icon" :icon="c.data.icon!" />
                     <div class="content-wrap"> {{ c.data.content }}</div>
                 </div>
             </div>
@@ -259,8 +261,8 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg"
                 }" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
                     @mouseleave="curHoverValueIndex = -1">
                     <SvgIcon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
-                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon"/>
-                    <SvgIcon v-if="c.data.icon" class="icon" :icon="c.data.icon!"/>
+                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon" />
+                    <SvgIcon v-if="c.data.icon" class="icon" :icon="c.data.icon!" />
                     <div class="content-wrap"> {{ c.data.content }}</div>
 
                 </div>
@@ -270,7 +272,7 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg"
                     @mouseover="curHoverValueIndex = idx" @mouseleave="curHoverValueIndex = -1">
                     <div class="content-wrap"> {{ c.data.content }}</div>
                     <SvgIcon v-if="idx === curValueIndex"
-                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon"/>
+                        :icon="curHoverValueIndex === idx ? white_select_icon : page_select_icon" />
                 </div>
             </div>
         </div>

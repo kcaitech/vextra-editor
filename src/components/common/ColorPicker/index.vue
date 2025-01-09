@@ -1578,7 +1578,7 @@ import add_icon from "@/assets/icons/svg/add.svg"
             </div>
             <div v-if="custom === 'style' && !props.entrance" class="color-style">
                 <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
-                    :fill="props.fillslist" @close="EditorStyle = false">
+                    :fill="props.fillslist" @close="EditorStyle = false" :locat="props.locat">
                 </ColorStyle>
             </div>
             <div v-if="EditorStyle" class="editorstyle">

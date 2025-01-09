@@ -16,7 +16,8 @@ import {
     TableView,
     LinearApi,
     StrokePaint,
-    BorderMask
+    BorderMask,
+    Fill
 } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
@@ -51,11 +52,17 @@ import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue
 import {
     get_actions_border_thickness,
     get_actions_border_position,
+    get_actions_border_mask
 } from '@/utils/shape_style'
 import { getSideThickness } from "./index"
 import { sortValue } from '../BaseAttr/oval';
 import Borderstyle from '@/components/Document/Attribute/StyleLibrary/BorderStyle.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+
+interface FillItem {
+    id: number,
+    fill: Fill
+}
 
 interface StrokePaintItem {
     id: number
@@ -107,7 +114,10 @@ const keydownval = ref<boolean>(false)
 const hasStroke = ref(false);
 const isMask = ref<boolean>(false)
 const showborder = ref<boolean>(false)
+const openstyle = ref<boolean>(false)
 const bordermask = ref<BorderMask>()
+const styleTop = ref<number>()
+const styleLeft = ref<number>()
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
@@ -116,6 +126,7 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 const isActived = ref(false);
 const borderThickness = ref<HTMLInputElement>();
+const fills: FillItem[] = reactive([]);
 
 function watchShapes() {
     const needWatchShapes = new Map();
@@ -166,6 +177,7 @@ function updateData() {
     const selecteds = props.context.selection.selectedShapes;
     if (selecteds.length < 1) return;
     strokePaints.length = 0;
+    fills.length = 0;
     borderData.value = initBorder;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
@@ -193,6 +205,12 @@ function updateData() {
                     hasStroke.value = true;
                 } else {
                     strokePaints.push(...stroke_paints.reverse());
+                    strokePaints.forEach((i, index) => {
+                        const { crdtidx, id, isEnabled, fillType, color } = i.strokePaint
+                        const c = new Color(color.alpha, color.red, color.green, color.blue)
+                        const fill = new Fill(crdtidx, id, isEnabled, fillType, c)
+                        fills.push({ id: index, fill: fill })
+                    })
                     if (stroke_paints.length) hasStroke.value = true;
                 }
             }
@@ -212,6 +230,13 @@ function updateData() {
             hasStroke.value = true;
         } else {
             strokePaints.push(...stroke_paints.reverse());
+            strokePaints.forEach((i, index) => {
+                const { crdtidx, id, isEnabled, fillType, color } = i.strokePaint
+                const c = new Color(color.alpha, color.red, color.green, color.blue)
+                const fill = new Fill(crdtidx, id, isEnabled, fillType, c)
+                fills.push({ id: index, fill: fill })
+            })
+            console.log(fills, '********************************');
             if (stroke_paints.length) hasStroke.value = true;
         }
         borderData.value = border;
@@ -801,11 +826,40 @@ const EditPanel = (e: MouseEvent) => {
     props.context.escstack.save(v4(), close);
 }
 
+const colorPanel = (e: MouseEvent) => {
+    let el = e.target as HTMLElement;
+    while (!el.className.includes('header-container')) {
+        if (el.parentElement) {
+            el = el.parentElement;
+        }
+    }
+    const { top, left } = el.getBoundingClientRect();
+    styleTop.value = top;
+    styleLeft.value = left - 250 - 8;
+    openstyle.value = !openstyle.value
+    document.addEventListener('click', checkColorPanel)
+    props.context.escstack.save(v4(), close2);
+}
+
 function close() {
     const is_achieve_expected_results = showborder.value;
     showborder.value = false;
     document.removeEventListener('click', checktargetlist)
     return is_achieve_expected_results;
+}
+
+function close2() {
+    const is_achieve_expected_results = openstyle.value;
+    openstyle.value = false;
+    document.removeEventListener('click', checkColorPanel)
+    return is_achieve_expected_results;
+}
+
+function checkColorPanel(e: MouseEvent) {
+    e.target instanceof Element &&
+        !e.target.closest('.popover') &&
+        !e.target.closest('.color-style') &&
+        close2();
 }
 
 function checktargetlist(e: MouseEvent) {
@@ -1010,6 +1064,16 @@ function keydownThickness(event: KeyboardEvent, val: string | number) {
 
 }
 
+const delBorderMask = () => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_border_mask(shapes)
+    const editor = props.context.editor4Page(page);
+    editor.shapesDelBorderMask(actions);
+
+}
+
 const thickness_value = () => {
     if (typeof borderData.value === 'string' || typeof borderData.value.sideSetting === 'string' || typeof getSideThickness(borderData.value.sideSetting as BorderSideSetting) === 'boolean') {
         return t('attr.mixed')
@@ -1042,6 +1106,12 @@ const closepanel = () => {
     props.context.escstack.execute()
     showborder.value = false
     document.removeEventListener('click', checktargetlist)
+}
+
+const initpanel = () => {
+    openstyle.value = false
+    styleTop.value = undefined
+    styleLeft.value = undefined
 }
 
 const positoSelected = () => {
@@ -1107,13 +1177,13 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                         <div class="name">{{ bordermask.name }}</div>
 
                     </div>
-                    <div class="unbind" @click.stop="">
+                    <div class="unbind" @click.stop="delBorderMask">
                         <SvgIcon :icon="unbind_icon" />
                     </div>
                 </div>
             </div>
             <BorderDetail :context="props.context" :shapes="props.shapes" :border="(borderData as BorderData)"
-                :reflush_side="reflush_side">
+                :reflush_side="reflush_side" :isMask="isMask">
             </BorderDetail>
         </div>
         <Apex v-if="show_apex && hasStroke" :context="props.context" :shapes="props.shapes" :view="apex_view"
@@ -1122,7 +1192,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
         <TypeHeader :title="t('attr.stroke_color')" class="mt-24" :active="hasStroke" v-if="hasStroke">
             <template #tool>
-                <div class="border-style" @click="EditPanel($event)">
+                <div class="color-style" @click="colorPanel($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div class="add" @click="addBorder">
@@ -1143,7 +1213,9 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                         <SvgIcon v-if="b.strokePaint.isEnabled" :icon="select_icon" />
                     </div>
                     <div class="color">
-                        <ColorPicker :color="b.strokePaint.color" :context="props.context" :auto_to_right_line="true"
+                        <ColorPicker :color="b.strokePaint.color" :fillslist="fills" :open="openstyle"
+                            :styletop="styleTop" :styleleft="styleLeft" :context="props.context"
+                            :auto_to_right_line="true"
                             :locat="{ index: strokePaints.length - idx - 1, type: 'borders' }"
                             :op="b.strokePaint.isEnabled" @change="(c: Color) => getColorFromPicker(c, idx)"
                             @gradient-reverse="() => gradient_reverse(idx)"
@@ -1152,7 +1224,8 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                             @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                             @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
                             @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                            @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
+                            @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" @close="initpanel"
+                            @addfill="addBorder" />
                         <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.strokePaint.isEnabled }"
                             :spellcheck="false" v-if="b.strokePaint.fillType !== FillType.Gradient || !isGradient()"
                             :value="(toHex(b.strokePaint.color)).slice(1)" @change="e => onColorChange(e, idx)"
@@ -1176,7 +1249,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
             </div>
         </div>
         <Borderstyle v-if="showborder" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closepanel"></Borderstyle>
+            @close="closepanel" :id="bordermask?.id"></Borderstyle>
     </div>
     <teleport to="body">
         <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
@@ -1236,7 +1309,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
     border-bottom: 1px solid #F0F0F0;
 
     .add,
-    .border-style {
+    .border-style,.color-style {
         width: 28px;
         height: 28px;
         display: flex;
@@ -1252,7 +1325,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
         }
     }
 
-    .border-style img {
+    .border-style img,.color-style img {
         padding: 2px;
         box-sizing: border-box;
     }
@@ -1262,6 +1335,10 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
     }
 
     .border-style:hover {
+        background-color: #F5F5F5;
+    }
+
+    .color-style:hover{
         background-color: #F5F5F5;
     }
 
@@ -1348,8 +1425,8 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
     }
 
-    .colors{
-       flex-direction: column;
+    .colors {
+        flex-direction: column;
     }
 
     .border {

@@ -42,7 +42,9 @@ import {
     ShadowMask,
     BlurMask,
     StrokePaint,
-    BorderSideSetting
+    BorderSideSetting,
+    BorderMask,
+    BorderMaskType
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 
@@ -424,7 +426,7 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
         if (len > 0 && typeof border.borderStyle !== 'string' &&
             styleborders.borderStyle.gap !== border.borderStyle.gap &&
             styleborders.borderStyle.length !== border.borderStyle.length) {
-            border.borderStyle = 'mixed'; 
+            border.borderStyle = 'mixed';
         }
         const sideStr = getDideStr(styleborders.sideSetting, border.sideSetting);
         if (len > 0 && !sideStr) {
@@ -483,6 +485,20 @@ export function get_actions_add_boder(shapes: ShapeView[], strokePaint: StrokePa
         const { isEnabled, fillType, color } = strokePaint;
         const newStrokePaint = new StrokePaint(new BasicArray(0), v4(), isEnabled, fillType, color);
         actions.push({ target: (shapes[i]), value: newStrokePaint });
+    }
+    return actions;
+}
+
+export function get_actions_border_mask(shapes: ShapeView[]) {
+    const actions: BatchAction2[] = [];
+    const id = shapes[0].style.bordersMask!;
+    const border = (shapes[0].style.getStylesMgr()?.getSync(id) as BorderMask).border
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        const { position, sideSetting } = border;
+        const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight)
+        const new_border = new BorderMaskType(position, side)
+        actions.push({ target: (shapes[i]), value: new_border });
     }
     return actions;
 }
@@ -579,6 +595,8 @@ export function get_actions_border(shapes: ShapeView[], value: any) {
     }
     return actions;
 }
+
+
 
 export function get_actions_border_Apex(shapes: ShapeView[], type: MarkerType, end: boolean) {
     const actions: BatchAction2[] = [];
@@ -1004,7 +1022,7 @@ export function get_blur(shapes: ShapeView[]): Blur | undefined | 'mixed' | 'mas
     const mask_s = blur_mask.some(i => i !== 'undefined')
 
     console.log(mask_b, mask_s);
-    
+
 
     if (mask_b) return 'mask';
     if (mask_s) return 'mixed';

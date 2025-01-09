@@ -9,12 +9,13 @@
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input v-focus type="text" id="name" @keydown.esc="props.context.escstack.execute()"
-                    v-model="stylename">
+                <input v-focus type="text" id="name" v-model="stylename" @keydown.esc="props.context.escstack.execute()"
+                    @change="setSheetName">
             </div>
             <div class="des">
                 <label for="des">描述</label>
-                <input type="text" id="des" v-model="description">
+                <input type="text" id="des" v-model="description" @keydown.esc="props.context.escstack.execute()"
+                    @change="setSheetDes">
             </div>
         </div>
         <div class="border">
@@ -22,7 +23,7 @@
                 <div class="title">位置</div>
                 <Select class="select" :context="props.context" :shapes="props.shapes" :source="positonOptionsSource"
                     :selected="positonOptionsSource.find(i => i.data.value === border?.position)?.data"
-                    @select="positionSelect"></Select>
+                    @select="positionSelect" :entry="'style'"></Select>
             </div>
             <div class="thickness">
                 <div class="title">粗细</div>
@@ -35,7 +36,7 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, Border, BorderMask, BorderMaskType } from '@kcdesign/data';
+import { ShapeView, BorderPosition, Border, BorderMask, BorderMaskType, BorderSideSetting } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
@@ -82,8 +83,26 @@ const description = ref<string>('')
 const reflush = ref<number>(0)
 
 
-function positionSelect(selected: SelectItem, id: number | undefined) {
+function positionSelect(selected: SelectItem) {
+    if (!props.maskid) return;
+    if (border.value?.position === selected.value) return
+    const mask = props.reder.currentTarget(props.maskid) as BorderMask
+    const editor = props.context.editor4Doc()
+    editor.modifyBorderMaskBorderPosition(mask.sheet, mask.id, selected.value as BorderPosition)
+}
 
+const setSheetName = () => {
+    if (!props.maskid) return;
+    const mask = props.reder.currentTarget(props.maskid) as BorderMask
+    const editor = props.context.editor4Doc()
+    editor.modifyStyleName(mask.sheet, mask.id, stylename.value)
+}
+
+const setSheetDes = () => {
+    if (!props.maskid) return;
+    const mask = props.reder.currentTarget(props.maskid) as BorderMask
+    const editor = props.context.editor4Doc()
+    editor.modifyStyleDescription(mask.sheet, mask.id, description.value)
 }
 
 const setThickness = () => {
@@ -100,6 +119,14 @@ const setThickness = () => {
         arrs = arrs.concat(arrs[1])
     }
     thickness.value = arrs.join(', ')
+
+    const num = thickness.value.split(', ').map(i => Number(i))
+    if (!props.maskid) return;
+    const mask = props.reder.currentTarget(props.maskid) as BorderMask
+    const editor = props.context.editor4Doc()
+    const { sideType } = border.value?.sideSetting as BorderSideSetting
+    const side = new BorderSideSetting(sideType, num[0], num[3], num[2], num[1])
+    editor.modifyBorderMaskBorderSideSetting(mask.sheet, mask.id, side)
 }
 
 const update = () => {
