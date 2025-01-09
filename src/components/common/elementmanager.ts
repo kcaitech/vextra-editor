@@ -1,5 +1,6 @@
 import { nextTick, watch } from "vue";
 import { Context } from "@/context";
+import { Selection } from "@/context/selection";
 import { v4 } from "uuid";
 
 export type ElementStatus = {
@@ -18,7 +19,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private m_offset_l: number;
     private m_offset_t: number;
     private m_white_list: string[];
-    private m_stop: any = undefined;
+    private m_stop: any[] = [];
 
     constructor(
         private context: Context,
@@ -37,7 +38,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.m_offset_t = init?.offsetTop ?? 0;
         this.m_white_list = init?.whiteList ?? [];
 
-        this.m_stop = watch(() => this.element.visible, (val) => !val && this.removeEvent());
+        this.m_stop.push(watch(() => this.element.visible, (val) => !val && this.removeEvent()));
     }
 
     get left() {
@@ -81,8 +82,8 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             scope?: Element,
             protect?: boolean,
             once?: {
-                offsetLeft: number;
-                offsetTop: number;
+                offsetLeft?: number;
+                offsetTop?: number;
             }
         }
     ) {
@@ -98,6 +99,9 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
 
         /*保护状态下只有关闭按钮可以直接将改弹窗关闭, 否则添加其他辅助关闭事件*/
         if (!params?.protect) {
+            this.m_stop.push(this.context.selection.watch((t: any) => {
+                t === Selection.CHANGE_SHAPE && this.close();
+            }));
             this.context.escstack.save(v4(), () => {
                 const achieve = this.element.visible;
                 this.element.visible = false;
@@ -124,7 +128,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         return (this.scope ?? document).querySelector(this.element.id) as HTMLDivElement;
     }
 
-    private locate(once?: { offsetLeft: number, offsetTop: number }) {
+    private locate(once?: { offsetLeft?: number, offsetTop?: number }) {
         const fromPreset = () => {
             return {left: this.left, top: this.top};
         }
@@ -167,11 +171,11 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private removeEvent() {
         counter.delete(this.downCheck); // todo 测试代码
         document.removeEventListener("mousedown", this.downCheck);
+        this.m_stop.forEach(stop => stop());
     }
 
     unmounted() {
         this.removeEvent();
-        this.m_stop?.();
         this.close();
     }
 

@@ -1,7 +1,14 @@
 <script setup lang="ts">
+import add_icon from '@/assets/icons/svg/add.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import unbind_icon from '@/assets/icons/svg/unbind.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Shadow, ShadowPosition, ShapeView, ShapeType, BasicArray, ShadowMask } from "@kcdesign/data";
+import { Color, Shadow, ShadowPosition, ShapeView, BasicArray, ShadowMask } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ShadowDetail from './ShadowDetail.vue'
@@ -17,8 +24,9 @@ import {
     get_shadows
 } from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
-import EffectStyle from '@/components/Document/Attribute/StyleLib/EffectStyle.vue';
+import ShadowStyle from '@/components/Document/Attribute/Shadow/Lib/ShadowStyle.vue';
 import { getShapesForStyle } from '@/utils/style';
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 
 interface ShadowItem {
     id: number,
@@ -34,52 +42,18 @@ interface Props {
 
 const props = defineProps<Props>();
 const { t } = useI18n();
-const watchedShapes = new Map();
 const shadows: ShadowItem[] = reactive([]);
 const mixed = ref<boolean>(false);
 const reflush = ref<number>(0);
-const Top = ref<number>(0)
-const Left = ref<number>(0)
-const showshadow = ref<boolean>(false)
 const mask = ref<boolean>(false)
-const escid = ref<string>('')
 const shadow = ref<ShadowMask>()
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
 
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        for (let i = 0, l = selectedShapes.length; i < l; i++) {
-            const v = selectedShapes[i];
-            if (v.isVirtualShape) {
-                let p = v.parent;
-                while (p) {
-                    if (p.type === ShapeType.SymbolRef) {
-                        needWatchShapes.set(p.id, p);
-                        break;
-                    }
-                    p = p.parent;
-                }
-            }
-            needWatchShapes.set(v.id, v);
-        }
-    }
-
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
-        watchedShapes.delete(k);
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(watcher);
-        watchedShapes.set(k, v);
-    })
-}
+const shadowLibStatus = reactive<ElementStatus>({id: '#shadow-lib-panel', visible: false});
+const shadowPanelStatusMgr = new ElementManager(
+    props.context,
+    shadowLibStatus,
+    {whiteList: ['.shadow-container', '.shadow-style', '.shadow-left']}
+);
 
 function updateData() {
     shadows.length = 0;
@@ -120,10 +94,6 @@ function updateData() {
     reflush.value++;
 }
 
-function watcher(...args: any[]) {
-    if (args.length > 0 && (args.includes('layout'))) updateData();
-}
-
 function addShadow(): void {
     const len = props.shapes.length;
     const s = new Shadow(new BasicArray(), v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
@@ -132,12 +102,12 @@ function addShadow(): void {
         e.addShadow(s);
     } else if (len > 1) {
         const page = props.context.selection.selectedPage;
-        const mask = props.shapes.some(s => s.style.shadowsMask !== undefined)
+        const mask = props.shapes.some(s => s.style.shadowsMask)
         if (!page) return;
         const editor = props.context.editor4Page(page);
         if (mixed.value) {
             if (mask) {
-                const s = props.shapes.find(i => i.style.shadowsMask !== undefined)
+                const s = props.shapes.find(i => i.style.shadowsMask)
                 const id = s?.style.shadowsMask as string
                 const actions = get_actions_add_mask(props.shapes, id);
                 editor.shapesSetShadowMask(actions);
@@ -150,7 +120,6 @@ function addShadow(): void {
             editor.shapesAddShadow(actions);
         }
     }
-    if (showshadow.value) props.context.escstack.execute();
     hidden_selection(props.context);
 }
 
@@ -194,59 +163,35 @@ function toggleVisible(idx: number) {
     hidden_selection(props.context);
 }
 
-function update_by_shapes() {
-    watchShapes();
-    updateData();
-}
-
-const openEffectPanel = (e: MouseEvent) => {
-    let el = e.target as HTMLElement;
-    while (el.className !== 'shadow-panel') {
-        if (el.parentElement) {
-            el = el.parentElement;
+const showShadowLibPanel = (e: MouseEvent) => {
+    let ele: Element | null = e.target as Element;
+    while (ele) {
+        if (ele.classList.contains('shadow-left')) {
+            shadowPanelStatusMgr.showBy(ele, {once: {offsetLeft: -264}});
+            break;
         }
+        if (ele.classList.contains('shadow-style')) {
+            shadowPanelStatusMgr.showBy(ele, {once: {offsetLeft: -424}});
+            break;
+        }
+        ele = ele.parentElement;
     }
-    const { top, left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    showshadow.value = !showshadow.value
-    document.addEventListener('click', checktargetlist)
-    props.context.escstack.save(v4(), close);
-
 }
 
-function close() {
-    const is_achieve_expected_results = showshadow.value;
-    showshadow.value = false;
-    document.removeEventListener('click', checktargetlist)
-    return is_achieve_expected_results;
+const closeShadowLibPanel = () => {
+    shadowPanelStatusMgr.close();
 }
 
-function checktargetlist(e: MouseEvent) {
-    e.target instanceof Element &&
-        !e.target.closest('.shadow-container') &&
-        !e.target.closest('.shadow-style') &&
-        !e.target.closest('.shadow-left') &&
-        close();
-}
-
-const closepanel = () => {
-    props.context.escstack.execute()
-    showshadow.value = false
-    document.removeEventListener('click', checktargetlist)
-}
-
-const delshadowmask = () => {
+const delShadowMask = () => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
     const actions = get_actions_shadow_mask(shapes)
     const editor = props.context.editor4Page(page);
     editor.shapesDelShadowMask(actions);
-
 }
 
-const delstyleshadow = () => {
+const delStyleShadow = () => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
@@ -255,43 +200,24 @@ const delstyleshadow = () => {
     editor.shapesDelStyleShadow(actions);
 }
 
-
-// hooks
-const stop = watch(() => props.shapes, update_by_shapes);
-const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
-const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
-    if (v.length > 0 && (v.includes('layout') || v.includes('shadows'))) updateData();
-});
-onMounted(() => {
-    update_by_shapes();
-
-});
+const stop1 = watch(() => props.trigger, v => v?.includes('style') && updateData());
+const stop2 = watch(() => props.selectionChange, updateData);
+onMounted(updateData);
 onUnmounted(() => {
-    stop();
+    stop1();
     stop2();
-    stop3();
-    watchedShapes.forEach(i => i.unwatch(watcher));
-    watchedShapes.clear();
+    shadowPanelStatusMgr.unmounted();
 });
-
-import add_icon from '@/assets/icons/svg/add.svg';
-import select_icon from '@/assets/icons/svg/select.svg';
-import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
-import SvgIcon from '@/components/common/SvgIcon.vue';
-
 </script>
-
 <template>
     <div class="shadow-panel">
-        <TypeHeader :title="t('shadow.shadow_stting')" class="mt-24" @click="first" :active="!!shadows.length">
+        <TypeHeader :title="t('shadow.shadow')" @click="first" :active="!!shadows.length">
             <template v-if="!mask" #tool>
-                <div v-if="!mixed" class="shadow-style" @click="openEffectPanel($event)">
-                    <SvgIcon :icon="style_icon"></SvgIcon>
+                <div v-if="!mixed" class="shadow-style" @click="showShadowLibPanel($event)">
+                    <SvgIcon :icon="style_icon"/>
                 </div>
                 <div class="add" @click="addShadow">
-                    <SvgIcon :icon="add_icon"></SvgIcon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </template>
         </TypeHeader>
@@ -301,24 +227,24 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         <div class="shadows-container" v-if="!mixed && shadows.length && !mask">
             <div class="shadow" v-for="(s, idx) in shadows" :key="s.shadow.id">
                 <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                    <SvgIcon v-if="s.shadow.isEnabled" :icon="select_icon"></SvgIcon>
+                    <SvgIcon v-if="s.shadow.isEnabled" :icon="select_icon"/>
                 </div>
-                <div class="shadow_posi">
+                <div class="shadow-position">
                     <ShadowPositionItem :context="context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
-                        :shapes="props.shapes" :reflush="reflush"></ShadowPositionItem>
+                                        :shapes="props.shapes" :reflush="reflush"/>
                 </div>
                 <div class="detail">
                     <ShadowDetail :context="props.context" :shadow="s.shadow" :id:="s.shadow.id" :idx="idx"
-                        :length="shadows.length" :shapes="props.shapes" :reflush="reflush"></ShadowDetail>
+                                  :length="shadows.length" :shapes="props.shapes" :reflush="reflush"/>
                 </div>
                 <div class="delete" @click="deleteFill(idx)">
-                    <SvgIcon :icon="delete_icon"></SvgIcon>
+                    <SvgIcon :icon="delete_icon"/>
                 </div>
             </div>
         </div>
-        <div class="shadowmask" v-if="mask">
+        <div class="shadow-mask" v-if="mask">
             <div class="info">
-                <div class="shadow-left" @click="openEffectPanel($event)">
+                <div class="shadow-left" @click="showShadowLibPanel($event)">
                     <div class="effect" :style="{
                         boxShadow: `
                         ${shadow?.shadows[0].position.includes('in') ? 'inset' : ''} 
@@ -331,19 +257,18 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
                     </div>
                     <div class="name">{{ shadow?.name }}</div>
                 </div>
-                <div class="unbind" @click.stop="delshadowmask">
-                    <SvgIcon :icon="unbind_icon"></SvgIcon>
+                <div class="unbind" @click.stop="delShadowMask">
+                    <SvgIcon :icon="unbind_icon"/>
                 </div>
             </div>
-            <div class="delete-style" @click="delstyleshadow">
-                <SvgIcon :icon="delete_icon"></SvgIcon>
+            <div class="delete-style" @click="delStyleShadow">
+                <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
-        <EffectStyle v-if="showshadow" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closepanel" :id="shadow?.id"></EffectStyle>
+        <ShadowStyle v-if="shadowLibStatus.visible" :context="props.context" :shapes="props.shapes" :id="shadow?.id"
+                     @close="closeShadowLibPanel"/>
     </div>
 </template>
-
 <style scoped lang="scss">
 .shadow-panel {
     width: 100%;
@@ -382,10 +307,6 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
     .shadow-style:hover {
         background-color: #F5F5F5;
     }
-
-    //.add:hover {
-    //  transform: scale(1.25);
-    //}
 
     .shadows-container {
         padding: 6px 0;
@@ -429,11 +350,10 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
                 margin-right: 5px
             }
 
-            .shadow_posi {
+            .shadow-position {
                 flex: 1;
                 height: 100%;
                 margin-right: 5px;
-                //padding: 0px 5px;
                 box-sizing: border-box;
             }
 
@@ -468,7 +388,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         }
     }
 
-    .shadowmask {
+    .shadow-mask {
         display: flex;
         height: 32px;
         border-radius: 6px;
@@ -561,6 +481,5 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
             color: #737373;
         }
     }
-
 }
 </style>

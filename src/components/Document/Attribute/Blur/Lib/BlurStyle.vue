@@ -1,5 +1,5 @@
 <template>
-    <div id="blur-container" class="blur-container">
+    <div id="blur-lib-panel" class="blur-lib-panel">
         <div class="header">
             <div class="title">模糊样式</div>
             <div class="tool">
@@ -219,7 +219,7 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-.blur-container {
+.blur-lib-panel {
     background-color: #fff;
     z-index: 9;
     width: 250px;
@@ -346,9 +346,7 @@ onUnmounted(() => {
     }
 
     .blur-lib-list {
-        top: 36px;
         width: 186px;
-        left: 0;
         background-color: #fff;
         border: 1px solid #e5e5e5e5;
         border-radius: 4px;

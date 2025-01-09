@@ -1,5 +1,5 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="create-shadow-panel" class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
             <div class="title">创建特效样式</div>
             <div class="close" @click.stop="emits('close')">
@@ -9,8 +9,8 @@
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input v-focus ref="inputname" type="text" id="name" v-model="name"
-                    @keydown.esc="props.context.escstack.execute()">
+                <input v-focus ref="inputName" type="text" id="name" v-model="name"
+                       @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
                 <label for="des">描述</label>
@@ -32,8 +32,8 @@
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
-                        :source="positonOptionsSource"
-                        :selected="positonOptionsSource.find(i => i.data.value === s.shadow.position)?.data"
+                        :source="positionOptionsSource"
+                        :selected="positionOptionsSource.find(i => i.data.value === s.shadow.position)?.data"
                         @select="(value) => positionSelect(value, index)"></Select>
                     <ShadowDetail ref="detail" :context="props.context" :shadow="s.shadow" :idx="index"
                         :length="shadows.length" :shapes="props.shapes" :reflush="reflush" :isMask="isMask"
@@ -47,16 +47,21 @@
         </div>
         <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="Neweffect">创建样式</div>
     </div>
-
 </template>
 <script setup lang="ts">
+import add_icon from '@/assets/icons/svg/add.svg';
+import delete_icon from '@/assets/icons/svg/delete.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import select_icon from '@/assets/icons/svg/select.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow, ShapeType, BasicArray, Color, ShadowMask } from '@kcdesign/data';
+import { ShapeView, ShadowPosition, Shadow, ShapeType, BasicArray, Color, ShadowMask } from '../../../../../../../kcdesign-data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { format_value, genOptions } from '@/utils/common';
-import ShadowDetail from '../Shadow/ShadowDetail.vue'
+import { genOptions } from '@/utils/common';
+import ShadowDetail from '../ShadowDetail.vue'
 import {
     get_actions_add_shadow,
     get_actions_shadow_delete,
@@ -69,19 +74,7 @@ import { computed } from 'vue';
 import { v4 } from 'uuid';
 import { hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
-import { FillRenderer, EditorAtt } from "./fillRenderer";
-import add_icon from '@/assets/icons/svg/add.svg';
-import editor_icon from '@/assets/icons/svg/export-menu.svg';
-import down_icon from '@/assets/icons/svg/triangle-down.svg';
-import right_icon from '@/assets/icons/svg/triangle-right.svg';
-import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
-import search_icon from '@/assets/icons/svg/search.svg';
-import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
-import close_icon from '@/assets/icons/svg/close.svg';
-import select_icon from '@/assets/icons/svg/select.svg';
-import SvgIcon from '@/components/common/SvgIcon.vue';
+import { EditorAtt } from "../../StyleLib/fillRenderer";
 
 interface ShadowItem {
     id: number,
@@ -91,8 +84,6 @@ interface ShadowItem {
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
-    top: number;
-    left: number
 }>();
 
 const emits = defineEmits<{
@@ -100,13 +91,12 @@ const emits = defineEmits<{
 }>()
 
 const { t } = useI18n();
-const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const name = ref<string>('')
 const des = ref<string>('')
 const shadows: ShadowItem[] = reactive([])
-const inputname = ref<HTMLInputElement>()
+const inputName = ref<HTMLInputElement>()
 const mixed = ref<boolean>(false);
-const positonOptionsSource: SelectSource[] = genOptions([
+const positionOptionsSource: SelectSource[] = genOptions([
     [ShadowPosition.Inner, t(`shadow.inner`)],
     [ShadowPosition.Outer, t(`shadow.outer`)],
 ]);
@@ -117,9 +107,7 @@ const detail = ref()
 
 const editor = new EditorAtt(shadows)
 
-const invalid = computed(() => {
-    return !shadows.length || !name.value
-})
+const invalid = computed(() => !shadows.length || !name.value);
 
 const toggleVisible = (idx: number) => {
     const _idx = shadows.length - idx - 1;
@@ -142,7 +130,6 @@ const toggleVisible = (idx: number) => {
         }
     }
     hidden_selection(props.context);
-
 }
 
 function positionSelect(selected: SelectItem, id: number) {
@@ -184,7 +171,6 @@ const Neweffect = () => {
     const selected = props.context.selection.selectedShapes;
     const shapes = getShapesForStyle(selected);
     editor.insertStyleLib(style, page, shapes);
-    props.context.escstack.execute()
     emits('close')
 }
 

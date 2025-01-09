@@ -1,5 +1,5 @@
 <template>
-    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="modify-shadow-panel" class="editor-style">
         <div class="header">
             <div class="title">编辑特效样式</div>
             <div class="close" @click.stop="emits('close')">
@@ -64,13 +64,13 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow, ShadowMask, Color, BasicArray, LinearApi } from '@kcdesign/data';
+import { ShapeView, BorderPosition, ShadowPosition, BlurType, Shadow, ShadowMask, Color, BasicArray, LinearApi } from '../../../../../../../kcdesign-data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
 import { computed } from 'vue';
-import ShadowDetail from '../Shadow/ShadowDetail.vue'
-import { FillRenderer } from './fillRenderer';
+import ShadowDetail from '../ShadowDetail.vue'
+import { FillRenderer } from '../../StyleLib/fillRenderer';
 import { v4 } from 'uuid';
 import { LockMouse } from '@/transform/lockMouse';
 import add_icon from '@/assets/icons/svg/add.svg';
@@ -94,8 +94,6 @@ interface ShadowItem {
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
-    top: number;
-    left: number
     maskid: string
     reder: FillRenderer
 }>();
