@@ -42,13 +42,13 @@ const mask = ref<boolean>(false);
 const blurMask = ref<BlurMask>();
 
 const blurPanelTrigger = ref<HTMLDivElement>();
-const blurLibStatus = reactive<ElementStatus>({id: 'blur-container', visible: false});
+const blurLibStatus = reactive<ElementStatus>({id: '#blur-container', visible: false});
 const blurPanelStatusMgr = new ElementManager(
     props.context,
     blurLibStatus,
     {
         offsetLeft: -460,
-        whiteList: ['.shadow-container', '.blur-style', '.blur-left']
+        whiteList: ['.blur-container', '.blur-style', '.blur-left']
     }
 );
 
@@ -157,8 +157,17 @@ const delStyleBlur = () => {
     editor.shapesDelStyleBlur(actions);
 }
 
-const openBlurPanel = () => {
-    blurPanelStatusMgr.showBy(blurPanelTrigger.value!);
+const showBlurPanel = (event: MouseEvent) => {
+    if (blurPanelTrigger.value) {
+        blurPanelStatusMgr.showBy(blurPanelTrigger.value);
+    } else {
+        let e: Element | null = event.target as Element;
+        while (e) {
+            if (e.classList.contains('blur-left')) break;
+            e = e.parentElement;
+        }
+        e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -264, offsetTop: 0}});
+    }
 }
 
 const closePanel = () => {
@@ -178,7 +187,7 @@ onUnmounted(() => {
     <div class="blur-panel">
         <TypeHeader :title="t('blur.blur')" @click="first" :active="!!blurInfo">
             <template v-if="!mask" #tool>
-                <div v-if="!mixed" ref="blurPanelTrigger" class="blur-style" @click="openBlurPanel">
+                <div v-if="!mixed" ref="blurPanelTrigger" class="blur-style" @click="showBlurPanel($event)">
                     <SvgIcon :icon="style_icon"/>
                 </div>
                 <div v-if="!blurInfo || mixed" class="add" @click.stop="addBlur">
@@ -207,7 +216,7 @@ onUnmounted(() => {
         </div>
         <div v-if="mask" class="blur-mask">
             <div class="info">
-                <div class="blur-left" @click="openBlurPanel">
+                <div class="blur-left" @click="showBlurPanel($event)">
                     <div class="effect"/>
                     <div class="name">{{ blurMask!.name }}</div>
                 </div>

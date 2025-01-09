@@ -1,16 +1,16 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="create-blur-panel" class="new-style">
         <div class="header">
             <div class="title">创建模糊样式</div>
             <div class="close" @click.stop="emits('close')">
-                <SvgIcon :icon="close_icon"></SvgIcon>
+                <SvgIcon :icon="close_icon"/>
             </div>
         </div>
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input v-focus ref="inputname" type="text" id="name" v-model="name"
-                    @keydown.esc="props.context.escstack.execute()">
+                <input v-focus ref="inputName" type="text" id="name" v-model="name"
+                       @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
                 <label for="des">描述</label>
@@ -20,8 +20,8 @@
         <div class="effect">
             <div class="create-effect">
                 <div class="title">模糊</div>
-                <div class="add" v-if="!blurInfo" @click="addblur">
-                    <SvgIcon :icon="add_icon"></SvgIcon>
+                <div class="add" v-if="!blurInfo" @click="createBlur">
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </div>
             <div v-if="blurInfo" class="effect-list">
@@ -32,26 +32,25 @@
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
-                        :source="positonOptionsSource"
-                        :selected="positonOptionsSource.find(i => i.data.value === blurInfo?.type)?.data"
+                            :source="positionOptionsSource"
+                            :selected="positionOptionsSource.find(i => i.data.value === blurInfo?.type)?.data"
                         @select="(value) => positionSelect(value)"></Select>
-                    <BlurDetail ref="detailref" :context="props.context" :blur="blurInfo" :shapes="props.shapes"
-                        :isMask="isMask" />
+                    <BlurDetail ref="detail" :context="props.context" :blur="blurInfo" :shapes="props.shapes"
+                                :isMask="isMask"/>
                     <div class="delete" :class="{ disable }">
                         <SvgIcon :icon="delete_icon"></SvgIcon>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="Neweffect">创建样式</div>
+        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="createEffect">创建样式</div>
     </div>
-
 </template>
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BlurType, ShapeType, BasicArray, Point2D, Blur, BlurMask } from '../../../../../../../kcdesign-data';
-import { Component, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
+import { ShapeView, BlurType, ShapeType, BasicArray, Point2D, Blur, BlurMask } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
 import BlurDetail from "../BlurDetail.vue";
@@ -67,24 +66,14 @@ import { v4 } from 'uuid';
 import { hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 import add_icon from '@/assets/icons/svg/add.svg';
-import editor_icon from '@/assets/icons/svg/export-menu.svg';
-import down_icon from '@/assets/icons/svg/triangle-down.svg';
-import right_icon from '@/assets/icons/svg/triangle-right.svg';
 import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
-import search_icon from '@/assets/icons/svg/search.svg';
-import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
-import choose_icon from '@/assets/icons/svg/choose.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
-    top: number;
-    left: number
 }>();
 
 const emits = defineEmits<{
@@ -95,18 +84,16 @@ const { t } = useI18n();
 const name = ref<string>('')
 const des = ref<string>('')
 const blurInfo = ref<Blur>();
-const inputname = ref<HTMLInputElement>()
+const inputName = ref<HTMLInputElement>()
 const mixed = ref<boolean>(false);
-const positonOptionsSource: SelectSource[] = genOptions([
+const positionOptionsSource: SelectSource[] = genOptions([
     [BlurType.Gaussian, t(`blur.gaussian`)],
     [BlurType.Background, t(`blur.background`)]
 ]);
 const watchedShapes2 = new Map();
 const reflush = ref<number>(0);
 const isMask = ref<boolean>(false);
-const detailref = ref()
-
-
+const detail = ref()
 
 const invalid = computed(() => {
     return !blurInfo.value || !name.value
@@ -128,7 +115,7 @@ function positionSelect(selected: SelectItem) {
     hidden_selection(props.context);
 }
 
-const Neweffect = () => {
+const createEffect = () => {
     if (invalid.value) return
     const editor = props.context.editor4Doc()
     if (!blurInfo.value) return
@@ -143,7 +130,7 @@ const Neweffect = () => {
 
 }
 
-function addblur(): void {
+function createBlur(): void {
     const len = props.shapes.length;
     if (len < 1) return;
     const blur = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
@@ -244,9 +231,7 @@ const updateData2 = () => {
     reflush.value++;
 }
 
-const disable = computed(() => {
-    return blurInfo.value ? true : false
-})
+const disable = computed(() => !!blurInfo.value);
 
 function watcher(...args: any[]) {
     if (args.length > 0 && (args.includes('layout'))) updateData2();
@@ -261,8 +246,8 @@ const stop = watch(() => props.shapes, update_by_shapes);
 
 onMounted(() => {
     update_by_shapes();
-    watch(() => detailref.value, () => {
-        const { Detail } = detailref.value
+    watch(() => detail.value, () => {
+        const {Detail} = detail.value
         watch(Detail, () => {
             if (isMask.value && blurInfo.value) {
                 const _blur = { ...blurInfo.value }
@@ -276,8 +261,6 @@ onMounted(() => {
 onUnmounted(() => {
     stop();
 });
-
-
 </script>
 <style lang="scss" scoped>
 .disable {
@@ -286,14 +269,13 @@ onUnmounted(() => {
 }
 
 .new-style {
-    position: fixed;
     display: flex;
     flex-direction: column;
     width: 250px;
     gap: 8px;
     border-radius: 8px;
     background-color: #fff;
-    box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
     box-sizing: border-box;
 
     .header {
@@ -320,7 +302,6 @@ onUnmounted(() => {
                 height: 16px;
                 margin: auto;
                 padding: 2px;
-                /* margin-top: 1px; */
                 box-sizing: border-box;
             }
         }

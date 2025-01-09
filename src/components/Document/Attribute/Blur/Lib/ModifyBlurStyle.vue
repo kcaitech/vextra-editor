@@ -1,28 +1,28 @@
 <template>
-    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="modify-blur-panel" class="editor-style">
         <div class="header">
             <div class="title">编辑模糊样式</div>
             <div class="close" @click.stop="emits('close')">
-                <SvgIcon :icon="close_icon"></SvgIcon>
+                <SvgIcon :icon="close_icon"/>
             </div>
         </div>
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input v-focus ref="effectname" type="text" id="name" v-model="name"
-                    @keydown.esc="props.context.escstack.execute()" @change="setSheetName">
+                <input v-focus ref="effectName" type="text" id="name" v-model="name"
+                       @keydown.esc="props.context.escstack.execute()" @change="setSheetName">
             </div>
             <div class="des">
                 <label for="des">描述</label>
-                <input ref="effectdes" type="text" id="des" v-model="des"
-                    @keydown.esc="props.context.escstack.execute()" @change="setSheetDes">
+                <input ref="effectDes" type="text" id="des" v-model="des"
+                       @keydown.esc="props.context.escstack.execute()" @change="setSheetDes">
             </div>
         </div>
         <div class="effect">
             <div class="create-effect">
                 <div class="title">模糊</div>
                 <div v-if="!blurInfo" class="add">
-                    <SvgIcon :icon="add_icon"></SvgIcon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </div>
             <div v-if="blurInfo" class="effect-list">
@@ -43,14 +43,12 @@
                 </div>
             </div>
         </div>
-
     </div>
-
 </template>
 <script setup lang="ts">
-import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
+import  { SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BlurType, LinearApi, Blur, BlurMask } from '../../../../../../../kcdesign-data';
+import { ShapeView, BlurType, LinearApi, Blur, BlurMask } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
@@ -60,26 +58,14 @@ import BlurTypeSelect from "../BlurTypeSelect.vue";
 import { FillRenderer } from '../../StyleLib/fillRenderer';
 import { BlurHandler } from '@/transform/blur';
 import add_icon from '@/assets/icons/svg/add.svg';
-import editor_icon from '@/assets/icons/svg/export-menu.svg';
-import down_icon from '@/assets/icons/svg/triangle-down.svg';
-import right_icon from '@/assets/icons/svg/triangle-right.svg';
 import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
-import search_icon from '@/assets/icons/svg/search.svg';
-import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
-import choose_icon from '@/assets/icons/svg/choose.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
-
-
 
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
-    top: number;
-    left: number
     maskid: string
     reder: FillRenderer
 }>();
@@ -89,20 +75,18 @@ const emits = defineEmits<{
 }>()
 
 const { t } = useI18n();
-const positonOptionsSource: SelectSource[] = genOptions([
+const positionOptionsSource: SelectSource[] = genOptions([
     [BlurType.Gaussian, t(`blur.gaussian`)],
     [BlurType.Background, t(`blur.background`)]
 ]);
-const effectname = ref<HTMLInputElement>()
-const effectdes = ref<HTMLInputElement>()
+const effectName = ref<HTMLInputElement>()
+const effectDes = ref<HTMLInputElement>()
 const name = ref<string>();
 const des = ref<string>();
 const reflush = ref<number>(0);
 const blurInfo = ref<Blur>();
 
-const disable = computed(() => {
-    return blurInfo.value ? true : false
-})
+const disable = computed(() => !!blurInfo.value);
 
 function dragBlurSaturation(fn: BlurHandler, value: number) {
     if (!props.maskid) return
@@ -179,8 +163,6 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.data.unwatch(stylelib_watcher)
 })
-
-
 </script>
 <style lang="scss" scoped>
 .disable {
@@ -196,7 +178,7 @@ onUnmounted(() => {
     gap: 8px;
     border-radius: 8px;
     background-color: #fff;
-    box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
     box-sizing: border-box;
 
     .header {

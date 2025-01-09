@@ -7,6 +7,11 @@ export type ElementStatus = {
     visible: boolean;
 }
 
+/*以下是一段测试代码，记得删*/
+const counter = new Set<any>();
+(window as any).__event_counter = counter;
+/*==end==*/
+
 export class ElementManager { /* 可用于窗口状态处理，窗口应该要是一个DIV类型的元素 */
     private m_left: number;
     private m_top: number;
@@ -32,9 +37,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.m_offset_t = init?.offsetTop ?? 0;
         this.m_white_list = init?.whiteList ?? [];
 
-        this.m_stop = watch(() => this.element.visible, (val) => {
-            if (!val) this.removeEvent();
-        });
+        this.m_stop = watch(() => this.element.visible, (val) => !val && this.removeEvent());
     }
 
     get left() {
@@ -69,16 +72,27 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.m_offset_t = val;
     }
 
-    private trigger: Element | undefined;
+    private trigger: Element | null = null;
     private scope: Element | undefined;
 
-    showBy(trigger: Element /*触发元素*/, params?: { scope?: Element, protect?: boolean }) {
+    showBy(
+        trigger: Element | MouseEvent | null /*触发元素|事件*/,
+        params?: {
+            scope?: Element,
+            protect?: boolean,
+            once?: {
+                offsetLeft: number;
+                offsetTop: number;
+            }
+        }
+    ) {
         if (this.element.visible) {
             this.element.visible = false;
             return;
         }
 
-        this.trigger = trigger;
+        this.trigger = getTriggerFromE(trigger);
+
         this.scope = params?.scope;
         this.element.visible = true;
 
@@ -90,23 +104,36 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
                 return achieve;
             });
             document.addEventListener('mousedown', this.downCheck);
+
+            counter.add(this.downCheck); // todo 测试代码
         }
 
-        nextTick(this.locate.bind(this));
+        nextTick(() => this.locate(params?.once));
+
+        function getTriggerFromE(e: Element | MouseEvent | null) {
+            if (e instanceof MouseEvent) {
+                let tgr = e.target as Element;
+                if (!(tgr instanceof Element)) return null;
+                if (tgr.classList.contains('svg-icon')) tgr = tgr.parentElement as Element;
+                return tgr;
+            } else return e;
+        }
     }
 
     private get target() {
-        return (this.scope ?? document).querySelector(`#${this.element.id}`) as HTMLDivElement;
+        return (this.scope ?? document).querySelector(this.element.id) as HTMLDivElement;
     }
 
-    private locate() {
+    private locate(once?: { offsetLeft: number, offsetTop: number }) {
         const fromPreset = () => {
             return {left: this.left, top: this.top};
         }
         const fromTrigger = () => {
             const trigger = this.trigger!;
+            const offsetLeft = once?.offsetLeft ?? this.offsetLeft;
+            const offsetTop = once?.offsetTop ?? this.offsetTop;
             const triggerRect = trigger.getBoundingClientRect();
-            return {left: triggerRect.left + this.offsetLeft, top: triggerRect.top + this.offsetTop};
+            return {left: triggerRect.left + offsetLeft, top: triggerRect.top + offsetTop};
         }
 
         const target = this.target;
@@ -138,6 +165,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private downCheck = this.__downCheck.bind(this);
 
     private removeEvent() {
+        counter.delete(this.downCheck); // todo 测试代码
         document.removeEventListener("mousedown", this.downCheck);
     }
 
