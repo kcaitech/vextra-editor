@@ -26,6 +26,7 @@ interface Props {
     shapes: ShapeView[]
     border: BorderData
     reflush_side: number
+    isMask?:boolean
 }
 
 const props = defineProps<Props>();
@@ -154,7 +155,7 @@ import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
             <template #trigger>
                 <div class="trigger">
                     <div class="bg" :class="{ actived: props.context.menu.isPopoverExisted }" @click="showMenu">
-                        <SvgIcon :icon="select_more_icon"/>
+                        <SvgIcon :icon="select_more_icon" />
                     </div>
                 </div>
             </template>
@@ -166,22 +167,22 @@ import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
                             :item-view="BorderStyleItem" :value-view="BorderStyleSelected" @select="borderStyleSelect"
                             :mixed="mixed"></Select>
                     </div>
-                    <BorderSideSelected v-if="is_border_custom" :context="context" :reflush_side="reflush_side">
+                    <BorderSideSelected v-if="is_border_custom && !isMask" :context="context" :reflush_side="reflush_side">
                     </BorderSideSelected>
                     <div class="corner-style" v-if="!is_corner">
                         <div class="corner">{{ t('attr.corner') }}</div>
                         <div class="corner-select">
                             <div class="miter" :class="{ selected: selected === CornerType.Miter }"
                                 @click="setCornerType(CornerType.Miter)" style="margin-right: 5px;">
-                                <SvgIcon :icon="corner_miter_icon"/>
+                                <SvgIcon :icon="corner_miter_icon" />
                             </div>
                             <div class="bevel" :class="{ selected: selected === CornerType.Bevel }"
                                 @click="setCornerType(CornerType.Bevel)">
-                                <SvgIcon :icon="corner_bevel_icon"/>
+                                <SvgIcon :icon="corner_bevel_icon" />
                             </div>
                             <div class="round" :class="{ selected: selected === CornerType.Round }"
                                 @click="setCornerType(CornerType.Round)" style="margin-left: 5px;">
-                                <SvgIcon :icon="corner_round_icon"/>
+                                <SvgIcon :icon="corner_round_icon" />
                             </div>
                         </div>
                     </div>

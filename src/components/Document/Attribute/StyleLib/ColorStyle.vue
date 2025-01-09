@@ -49,7 +49,8 @@
                                 </div>
                                 <div class="name">{{ mask.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event, mask.id,mask)">
+                            <div class="editor" style="visibility: hidden;"
+                                @click.stop="EditPanel($event, mask.id, mask)">
                                 <SvgIcon :icon="editor_icon"></SvgIcon>
                             </div>
                         </div>
@@ -101,6 +102,7 @@ import close_icon from '@/assets/icons/svg/close.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { GradientFrom } from "@/components/Document/Selection/Controller/ColorEdit/gradient_utils";
 
 
 interface FillItem {
@@ -112,6 +114,7 @@ const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
     id?: string;
+    locat?: { index: number, type: GradientFrom };
 }>();
 
 
@@ -180,16 +183,22 @@ function update() {
 }
 
 const addfillmask = (id: string) => {
-    const selected = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage!;
-    const shapes = getShapesForStyle(selected);
-    const actions = get_actions_add_mask(shapes, id);
-    const editor = props.context.editor4Page(page);
-    editor.shapesSetFillMask(actions);
+    if (props.locat?.type === 'borders') {
+        console.log('边框颜色');
+        
+    } else {
+        const selected = props.context.selection.selectedShapes;
+        const page = props.context.selection.selectedPage!;
+        const shapes = getShapesForStyle(selected);
+        const actions = get_actions_add_mask(shapes, id);
+        const editor = props.context.editor4Page(page);
+        editor.shapesSetFillMask(actions);
+    }
+
 }
 
 const maskid = ref<string>('')
-const EditPanel = (e: MouseEvent, id: string,mask:FillMask) => {
+const EditPanel = (e: MouseEvent, id: string, mask: FillMask) => {
     let el = e.target as HTMLElement;
     while (el.parentElement?.className !== 'style-item') {
         if (el.parentElement) {
@@ -201,7 +210,7 @@ const EditPanel = (e: MouseEvent, id: string,mask:FillMask) => {
     Left.value = left - 12 - 250 - 2;
     Mask_ID.value === id ? showeditor.value = !showeditor.value : showeditor.value = true;
     Mask_ID.value = id;
-    styles.value=mask;
+    styles.value = mask;
 }
 
 function inputBlur(e: KeyboardEvent) {

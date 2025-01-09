@@ -9,13 +9,13 @@
         <div class="detail">
             <div class="name">
                 <label for="name">名称</label>
-                <input v-focus ref="effectName" type="text" id="name" v-model="name"
-                       @keydown.esc="props.context.escstack.execute()" @change="setSheetName">
+                <input v-focus type="text" id="name" v-model="name" @keydown.esc="props.context.escstack.execute()"
+                    @change="setSheetName">
             </div>
             <div class="des">
                 <label for="des">描述</label>
-                <input ref="effectDes" type="text" id="des" v-model="des"
-                       @keydown.esc="props.context.escstack.execute()" @change="setSheetDes">
+                <input type="text" id="des" v-model="des" @keydown.esc="props.context.escstack.execute()"
+                    @change="setSheetDes">
             </div>
         </div>
         <div class="effect">
@@ -79,8 +79,6 @@ const positionOptionsSource: SelectSource[] = genOptions([
     [BlurType.Gaussian, t(`blur.gaussian`)],
     [BlurType.Background, t(`blur.background`)]
 ]);
-const effectName = ref<HTMLInputElement>()
-const effectDes = ref<HTMLInputElement>()
 const name = ref<string>();
 const des = ref<string>();
 const reflush = ref<number>(0);

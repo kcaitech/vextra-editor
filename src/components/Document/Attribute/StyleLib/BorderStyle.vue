@@ -42,7 +42,7 @@
                         <div class="styles"
                             :class="{ 'active': editorpanel && currenttarget === mask.id, 'target': mask.id === props.id }"
                             v-for="mask in (sheet.variables as BorderMask[])" :key="mask.id">
-                            <div class="left">
+                            <div class="left" @click="addBorderMask(mask.id)">
                                 <div class="border" :style="{
                                     borderTop: mask.border.sideSetting.thicknessTop < 3 ? mask.border.sideSetting.thicknessTop : 3 + 'px',
                                     borderRight: mask.border.sideSetting.thicknessRight < 3 ? mask.border.sideSetting.thicknessRight : 3 + 'px',
@@ -99,6 +99,8 @@ import close_icon from '@/assets/icons/svg/close.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { getShapesForStyle } from "@/utils/style";
+import { get_actions_add_mask } from "@/utils/shape_style";
 
 const props = defineProps<{
     context: Context;
@@ -156,6 +158,16 @@ watchEffect(() => {
     showdata.push(...new_arr.filter(s => s.variables.length !== 0))
 })
 
+const addBorderMask = (id: string) => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_add_mask(shapes, id);
+    const editor = props.context.editor4Page(page);
+    editor.shapesSetBorderMask(actions);
+    emits('close')
+}
+
 const EditPanel = (e: MouseEvent, id: string,) => {
     let el = e.target as HTMLElement;
     const { top } = el.getBoundingClientRect()
@@ -169,7 +181,6 @@ const EditPanel = (e: MouseEvent, id: string,) => {
     Left.value = left - 250;
     currenttarget.value === id ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
     currenttarget.value = id;
-    console.log(currenttarget.value,'id');
     document.addEventListener('click', checkeditorpanel)
     props.context.escstack.save(v4(), closeEditorPanel)
 }
@@ -460,9 +471,9 @@ onUnmounted(() => {
         justify-content: space-between;
         gap: 8px;
         height: 32px;
-        padding: 0 8px;
         border-radius: 6px;
         box-sizing: border-box;
+        overflow: hidden;
 
         &:hover {
             background-color: #f5f5f5;
@@ -474,8 +485,11 @@ onUnmounted(() => {
     }
 
     .style-item .styles .left {
+        flex: 1;
         display: flex;
         align-items: center;
+        height: 100%;
+        padding-left: 8px;
         gap: 8px;
 
         .border {
@@ -494,9 +508,8 @@ onUnmounted(() => {
 
     .style-item .styles .editor {
         display: flex;
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
+        width: 32px;
+        height: 100%;
 
         &:hover {
             background-color: #e5e5e5;
