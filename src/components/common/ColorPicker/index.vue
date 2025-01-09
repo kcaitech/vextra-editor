@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import close_icon from "@/assets/icons/svg/close.svg";
+import exchange_icon from "@/assets/icons/svg/exchange.svg";
+import rotate90_icon from "@/assets/icons/svg/rotate90.svg";
+import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg";
+import add_icon from "@/assets/icons/svg/add.svg";
+
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
 import {
     AsyncGradientEditor,
@@ -218,17 +225,14 @@ const data = reactive<Data>({
 })
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
 
-// 色相
 const hue = computed<number>(() => {
     return Math.floor((hueIndicatorAttr.x / (LINE_LENGTH - DOT_SIZE)) * 360);
 })
 
-// 饱和度
 const saturation = computed<number>(() => {
     return (dotPosition.left + HALF_DOT_SIZE) / HUE_WIDTH;
 })
 
-// 亮度
 const brightness = computed<number>(() => {
     return (1 - (dotPosition.top + HALF_DOT_SIZE) / HUE_HEIGHT);
 })
@@ -286,9 +290,6 @@ function passive() {
     sleep = true;
 }
 
-/**
- * @description 调色板定位
- */
 function locate() {
     if (!(popoverEl.value && block.value)) {
         return;
@@ -334,9 +335,6 @@ function locate() {
     }
 }
 
-/**
- * @description 退出调色板
- */
 function quit(e: MouseEvent) {
     const need_quit = props.fillType === FillType.Gradient && props.gradient
         ? e.target instanceof Element && !e.target.closest('.color-block') && !e.target.closest('#content')
@@ -429,7 +427,6 @@ function wheel(e: WheelEvent) {
     }
 }
 
-// 设置透明度
 function setAlphaIndicatorPosition(e: MouseEvent) {
     if (sliders.value) {
         setMousedownPosition(e);
@@ -531,7 +528,6 @@ function mousemove4Dot(e: MouseEvent) {
     }
 }
 
-// set color
 function setRGB(indicator: number) {
     const h = (indicator / (LINE_LENGTH - DOT_SIZE)) * 360;
     const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
@@ -579,7 +575,6 @@ const changeColor = (color: Color) => {
     }
 }
 
-// 鼠标抬起
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove4Dot);
     document.removeEventListener('mousemove', mousemove4Alpha)
@@ -599,7 +594,6 @@ function eyedropper() {
     }
 }
 
-// 系统自带的取色器
 function systemEyeDropper() {
     const System_EyeDropper = (window as any).EyeDropper;
     const s_eye_dropper = new System_EyeDropper();
@@ -620,7 +614,6 @@ function systemEyeDropper() {
     setTimeout(() => tooltip?.parentNode?.removeChild(tooltip), 2000);
 }
 
-// 自制取色器
 function eyeDropperInit(): Eyedropper {
     const root = props.context.workspace.root.element;
     return new Eyedropper({
@@ -745,7 +738,6 @@ function keyboardWatcher(e: KeyboardEvent) {
     }
 }
 
-// 输入框输入
 function enter() {
     let v: string | number = inputTarget.value;
     if (model.value.value === 'Hex') {
@@ -841,12 +833,13 @@ function enter() {
     inputTarget.blur();
 }
 
-function triggle() {
+function showPanel() {
+    console.log('--show-panel--');
     picker_visible.value = true;
-    const menu = props.context.menu;
-    const exist = menu.isColorPickerMount;
-    custom.value = 'custom'
-    colorPickerMount();
+    // const menu = props.context.menu;
+    // const exist = menu.isColorPickerMount;
+    // // custom.value = 'custom'
+    // // colorPickerMount();
     // if (exist) {
     //     menu.removeColorPicker();
     //     if (exist !== blockId) {
@@ -891,9 +884,6 @@ function blockUnmount() {
     props.context.color.switch_editor_mode(false);
 }
 
-/**
- * @description 移除调色板
- */
 function removeCurColorPicker() {
     if (need_update_recent.value) {
         update_recent_color();
@@ -923,7 +913,6 @@ function switch_tile() {
     }
 }
 
-// init
 function init_recent() {
     let r = localStorage.getItem(key_storage);
     r = JSON.parse(r || '[]');
@@ -940,7 +929,6 @@ function init_document_colors() {
     document_colors.value = getColorsFromDoc(props.context);
 }
 
-// init
 function init(color = props.color) {
     init_recent();
     const { red, green, blue, alpha } = color;
@@ -1400,8 +1388,6 @@ watch(() => props.imageUrl, (v) => {
     image_url.value = v;
 }, { immediate: true })
 
-
-
 onMounted(() => {
     if (document.body) observer.observe(document.body);
     props.context.menu.watch(menu_watcher);
@@ -1422,23 +1408,13 @@ onUnmounted(() => {
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 })
-
-import SvgIcon from "@/components/common/SvgIcon.vue"
-import close_icon from "@/assets/icons/svg/close.svg"
-import exchange_icon from "@/assets/icons/svg/exchange.svg"
-import rotate90_icon from "@/assets/icons/svg/rotate90.svg"
-import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg"
-import add_icon from "@/assets/icons/svg/add.svg"
-
 </script>
-
 <template>
-    <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
-        <img v-if="fillType === FillType.Pattern" :src="image_url" alt="">
-        <div class="popover" v-if="picker_visible" ref="popoverEl"
+    <div ref="block" class="color-block" :style="block_style_generator(color, gradient, fillType)" @click="showPanel">
+        <img v-if="fillType === FillType.Pattern" :src="image_url" alt="pattern">
+        <div v-if="picker_visible" class="popover" ref="popoverEl"
             :style="{ top: props.styletop + 'px', left: props.styleleft + 'px' }" @click.stop @wheel="wheel"
             @mousedown.stop>
-            <!-- 头部 -->
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
                 <div class="left">
                     <div class="color-type" :class="{ active: custom === 'custom' }" @click="custom = 'custom'">{{
@@ -1561,7 +1537,7 @@ import add_icon from "@/assets/icons/svg/add.svg"
                     <div class="dc-container" v-if="document_colors.length">
                         <div class="inner">
                             <div class="header">{{ t('color.documentc') }}</div>
-                            <div class="documentc-container" @wheel.stop>
+                            <div class="document-color-container" @wheel.stop>
                                 <div class="block" v-for="(c, idx) in document_colors" :key="idx"
                                     @click="() => setColor(c.color as any)"
                                     :title="t('color.times').replace('xx', c.times.toString())"
@@ -1581,19 +1557,14 @@ import add_icon from "@/assets/icons/svg/add.svg"
                     :fill="props.fillslist" @close="EditorStyle = false">
                 </ColorStyle>
             </div>
-            <div v-if="EditorStyle" class="editorstyle">
+            <div v-if="EditorStyle" class="editor-style">
                 <EditorColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
                     :fill="props.fillslist" @close="EditorStyle = false" @addfill="emit('addfill')"></EditorColorStyle>
             </div>
         </div>
     </div>
 </template>
-
 <style lang="scss" scoped>
-.showop {
-    opacity: 0.3;
-}
-
 .active {
     border-bottom: 2px solid #1878f5 !important;
 }
@@ -1602,7 +1573,7 @@ import add_icon from "@/assets/icons/svg/add.svg"
     box-sizing: border-box
 }
 
-.editorstyle {
+.editor-style {
     position: absolute;
     width: 100%;
     top: 0;
@@ -1611,16 +1582,11 @@ import add_icon from "@/assets/icons/svg/add.svg"
 
 .color-block {
     position: relative;
+    flex: 0 0 16px;
     width: 16px;
     height: 16px;
     border-radius: 3px;
-    font-weight: 500;
-    font-size: var(--font-default-fontsize);
-    opacity: 1;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-sizing: border-box;
-    flex: 0 0 16px;
-    background-color: var(--theme-color-anti);
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
 
     img {
         border-radius: 3px;
@@ -1635,7 +1601,6 @@ import add_icon from "@/assets/icons/svg/add.svg"
         box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
         border-radius: 8px;
         border: 1px solid #F0F0F0;
-        // overflow: hidden;
         z-index: 99;
 
         width: v-bind('HUE_WIDTH_CSS');
@@ -1650,9 +1615,6 @@ import add_icon from "@/assets/icons/svg/add.svg"
             align-items: center;
             justify-content: space-between;
             box-sizing: border-box;
-            border-width: 0 0 1px 0;
-            border-style: solid;
-            border-color: #F5F5F5;
             padding: 14px 12px;
 
             >.left {
@@ -2052,13 +2014,12 @@ import add_icon from "@/assets/icons/svg/add.svg"
                 border-bottom: 1px solid #EBEBEB;
 
                 .inner {
-                    //border-top: 1px solid #cecece;
                     width: 100%;
 
                     .header {
                         width: 48px;
                         height: 14px;
-                        font-family: HarmonyOS Sans;
+                        font-family: HarmonyOS Sans, serif;
                         font-size: 12px;
                         font-weight: 500;
                         line-height: 14px;
@@ -2099,13 +2060,11 @@ import add_icon from "@/assets/icons/svg/add.svg"
                 box-sizing: border-box;
 
                 .inner {
-                    //border-top: 1px solid #cecece;
                     width: 100%;
 
                     .header {
-                        // width: 48px;
                         height: 14px;
-                        font-family: HarmonyOS Sans;
+                        font-family: HarmonyOS Sans, serif;
                         font-size: 12px;
                         font-weight: 500;
                         line-height: 14px;
@@ -2113,7 +2072,7 @@ import add_icon from "@/assets/icons/svg/add.svg"
                         margin-bottom: 12px;
                     }
 
-                    >.documentc-container {
+                    > .document-color-container {
                         width: 100%;
                         max-height: 90px;
                         overflow: scroll;

@@ -172,6 +172,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     unmounted() {
         this.removeEvent();
         this.m_stop?.();
+        this.close();
     }
 
     close() {
