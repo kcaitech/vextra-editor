@@ -2,18 +2,8 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import {
-    BasicArray,
-    Color,
-    Fill,
-    FillMask,
-    FillType,
-    Gradient,
-    GradientType,
-    ImageScaleMode,
-    ShapeType,
-    ShapeView,
-    Stop, SymbolView,
-    TableView
+    BasicArray, Color, Fill, FillMask, FillType, Gradient, GradientType,
+    ImageScaleMode, ShapeType, ShapeView, Stop, SymbolView, TableView, LinearApi
 } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
@@ -42,7 +32,6 @@ import { get_table_range, hidden_selection, is_editing } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 import { ImgFrame } from '@/context/atrribute';
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
-import { LinearApi } from "@kcdesign/data"
 import { block_style_generator } from '@/components/common/ColorPicker/utils';
 
 interface FillItem {
@@ -59,9 +48,7 @@ interface Props {
     cellsTrigger: any[];
 }
 
-
 const props = defineProps<Props>();
-const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 const fills: FillItem[] = reactive([]);
@@ -198,9 +185,7 @@ function addFill(): void {
 }
 
 function first() {
-    if (fills.length === 0 && !mixed.value) {
-        addFill();
-    }
+    if (fills.length === 0 && !mixed.value) addFill();
 }
 
 function deleteFill(idx: number) {
@@ -232,8 +217,7 @@ function toggleVisible(idx: number) {
     if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setFillEnable4Cell(_idx, !fills[idx].fill.isEnabled, range)
-
+        e.setFillEnable4Cell(_idx, !fills[idx].fill.isEnabled, range);
     } else {
         const shapes = getShapesForStyle(selected);
         const fills = shapes[0].getFills();
@@ -245,7 +229,6 @@ function toggleVisible(idx: number) {
             editor.setShapesFillEnabled(actions);
         }
     }
-
     hidden_selection(props.context);
 }
 
@@ -500,16 +483,13 @@ const colorClick = (e: Event) => {
 }
 const colorInput = (e: Event) => {
     if (colorFill.value) {
-        const value = (e.target as HTMLInputElement).value;
-        colorValue.value = value;
+        colorValue.value = (e.target as HTMLInputElement).value;
     }
 }
 const is_alpha_select = ref(false);
 const alphaClick = (e: Event) => {
     const el = e.target as HTMLInputElement;
-    if (el.selectionStart !== el.selectionEnd) {
-        return;
-    }
+    if (el.selectionStart !== el.selectionEnd) return;
     if (is_alpha_select.value) return;
     el.select();
     is_alpha_select.value = true;
@@ -529,8 +509,7 @@ const selectAlpha = (e: Event) => {
 }
 const alphaInput = (e: Event) => {
     if (alphaFill.value) {
-        const value = (e.target as HTMLInputElement).value;
-        alphaValue.value = value;
+        alphaValue.value = (e.target as HTMLInputElement).value;
     }
 }
 const filterAlpha = (fill: Fill) => {
@@ -554,10 +533,6 @@ const filterAlpha = (fill: Fill) => {
     }
 }
 
-/**
- * @description 翻转渐变
- * @param idx
- */
 function gradient_reverse(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -568,10 +543,6 @@ function gradient_reverse(idx: number) {
     editor.reverseShapesGradient(actions);
 }
 
-/**
- * @description 旋转渐变
- * @param idx
- */
 function gradient_rotate(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -582,12 +553,6 @@ function gradient_rotate(idx: number) {
     editor.rotateShapesGradient(actions);
 }
 
-/**
- * @description 添加渐变节点
- * @param idx
- * @param position
- * @param color
- */
 function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -599,29 +564,20 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
     editor.addShapesGradientStop(actions);
 }
 
-/**
- * @description 切换渐变类型
- * @param idx
- */
-function togger_gradient_type(idx: number, type: GradientType, fillType: FillType) {
+function modify_gradient_type(idx: number, type: GradientType, fillType: FillType) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     if (fillType !== FillType.Gradient) {
-        toggle_fill_type(idx, fillType);
+        modify_fill_type(idx, fillType);
     } else {
         const actions = get_aciton_gradient_stop(shapes, _idx, type, 'fills');
         editor.toggerShapeGradientType(actions);
     }
 }
 
-/**
- * @description 修改节点颜色
- * @param idx
- * @param color
- */
 function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -632,11 +588,6 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
     editor.setShapesGradientStopColor(actions);
 }
 
-/**
- * @description 删除渐变节点
- * @param idx
- * @param index
- */
 function gradient_stop_delete(idx: number, index: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -647,7 +598,7 @@ function gradient_stop_delete(idx: number, index: number) {
     editor.deleteShapesGradientStop(actions);
 }
 
-function toggle_fill_type(idx: number, fillType: FillType) {
+function modify_fill_type(idx: number, fillType: FillType) {
     const _idx = fills.length - idx - 1;
     const s = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
@@ -732,7 +683,7 @@ const closeMode = (idx: number) => {
     }
 }
 
-const positionpanel = (e: MouseEvent) => {
+const showFillLibPanel = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
     while (el.className !== "fill-panel") {
         if (el.parentElement) {
@@ -740,12 +691,10 @@ const positionpanel = (e: MouseEvent) => {
         }
     }
     const { top, left } = el.getBoundingClientRect();
-    console.log(el.getBoundingClientRect());
 
     styleTop.value = top;
     styleLeft.value = left - 250;
     openstyle.value = !openstyle.value
-    console.log(openstyle.value);
 
     document.addEventListener('click', checktargetlist)
     props.context.escstack.save(v4(), close);
@@ -794,7 +743,6 @@ const style = computed(() => {
     return (c: Color, g: Gradient, t: FillType) => block_style_generator(c, g, t)
 })
 
-// hooks
 const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
 const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
     if (v.length > 0 && (v.includes('layout') || v.includes('fills'))) updateData();
@@ -824,22 +772,22 @@ import style_icon from '@/assets/icons/svg/styles.svg'
     <div class="fill-panel">
         <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first" :active="!!fills.length">
             <template #tool>
-                <div v-if="!mask && !mixed" class="style" @click="positionpanel($event)">
-                    <SvgIcon :icon="style_icon"></SvgIcon>
+                <div v-if="!mask && !mixed" class="style" @click="showFillLibPanel($event)">
+                    <SvgIcon :icon="style_icon"/>
                 </div>
                 <div v-if="!mask" class="add" @click.stop="addFill">
-                    <SvgIcon :icon="add_icon"></SvgIcon>
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </template>
         </TypeHeader>
         <div class="tips-wrap" v-if="mixed">
             <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
         </div>
-        <div class="fillmask" v-if="mask">
+        <div class="fill-mask" v-if="mask">
             <div class="info">
-                <div class="left" @click.stop="">
+                <div class="left">
                     <div class="color">
-                        <div class="containerfill" v-for="f in fill!.fills" :key="f.id">
+                        <div class="container-fill" v-for="f in fill!.fills" :key="f.id">
                             <img v-if="f.fillType === FillType.Pattern" :src="getImageUrl(f as Fill)" alt=""
                                 :style="{ opacity: f.contextSettings?.opacity }">
                             <div class="gradient" v-if="f.fillType === FillType.Gradient"
@@ -882,7 +830,7 @@ import style_icon from '@/assets/icons/svg/styles.svg'
                         :paintFilter="f.fill.paintFilter" @gradient-reverse="() => gradient_reverse(idx)"
                         @gradient-rotate="() => gradient_rotate(idx)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                        @gradient-type="(type, fillType) => togger_gradient_type(idx, type, fillType)"
+                        @gradient-type="(type, fillType) => modify_gradient_type(idx, type, fillType)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                         @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
                         @changeMode="(mode) => changeMode(idx, mode)"
@@ -907,13 +855,11 @@ import style_icon from '@/assets/icons/svg/styles.svg'
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"
                         @keydown="(e) => keydownAlpha(e, idx, f.fill, filterAlpha(f.fill))" />
                 </div>
-                <!--                <div class="temporary"></div>-->
                 <div class="delete" @click="deleteFill(idx)">
                     <SvgIcon :icon="delete_icon" />
                 </div>
             </div>
         </div>
-
     </div>
 </template>
 
@@ -964,7 +910,6 @@ import style_icon from '@/assets/icons/svg/styles.svg'
             width: 100%;
             display: flex;
             flex-direction: row;
-            // justify-content: space-between;
             align-items: center;
             margin-top: 6px;
 
@@ -1094,7 +1039,7 @@ import style_icon from '@/assets/icons/svg/styles.svg'
         }
     }
 
-    .fillmask {
+    .fill-mask {
         display: flex;
         height: 32px;
         border-radius: 6px;
@@ -1134,7 +1079,7 @@ import style_icon from '@/assets/icons/svg/styles.svg'
                     overflow: hidden;
                     margin: 0 8px;
 
-                    .containerfill {
+                    .container-fill {
                         position: absolute;
                         width: 100%;
                         height: 100%;

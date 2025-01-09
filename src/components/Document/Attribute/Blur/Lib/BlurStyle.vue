@@ -1,102 +1,91 @@
 <template>
-    <div class="shadow-container" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="blur-container" class="blur-container">
         <div class="header">
             <div class="title">模糊样式</div>
             <div class="tool">
-                <div class="newstyle" @click="NewPanel($event)">
-                    <SvgIcon :icon="add_icon"></SvgIcon>
+                <div class="add" @click="showCreatePanel($event)">
+                    <SvgIcon :icon="add_icon"/>
                 </div>
                 <div class="close" @click="emits('close')">
-                    <SvgIcon :icon="close_icon"></SvgIcon>
+                    <SvgIcon :icon="close_icon"/>
                 </div>
             </div>
         </div>
         <div class="search">
             <div class="icon">
-                <SvgIcon :icon="search_icon"></SvgIcon>
+                <SvgIcon :icon="search_icon"/>
             </div>
-            <div class="filter" @click="FilterPanel">
-                <SvgIcon :icon="arrow_icon"></SvgIcon>
+            <div class="filter" @click="showLibList($event)">
+                <SvgIcon :icon="arrow_icon"/>
             </div>
-            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
-                @keydown.esc="props.context.escstack.execute()">
-            <div v-if="filterpanel" class="filter-list">
-                <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="Changefilter(item[1])">
-                    <div class="choose" :style="{ visibility: filterval === item[1] ? 'visible' : 'hidden' }">
-                        <SvgIcon :icon="choose_icon"></SvgIcon>
+            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="keyword">
+            <div v-if="libListStatus.visible" id="blur-lib-list" class="blur-lib-list">
+                <div class="list-item" v-for="item in libList" :key="item[0]" @click.stop="filter(item[1])">
+                    <div class="choose" :style="{ visibility: filterWord === item[1] ? 'visible' : 'hidden' }">
+                        <SvgIcon :icon="choose_icon"/>
                     </div>
-                    <span> {{ item[1] }}</span>
+                    <span>{{ item[1] }}</span>
                 </div>
             </div>
         </div>
         <el-scrollbar>
             <div class="content">
-                <div class="style-item" v-for="sheet in showdata" :key="sheet.id">
-                    <div class="type" @click="showtype(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                <div class="style-item" v-for="sheet in data" :key="sheet.id">
+                    <div class="type" @click="currentType(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
                         <SvgIcon
-                            :icon="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon">
-                        </SvgIcon>
+                            :icon="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon"/>
                         <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
-                    <template v-if="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
-                        <div class="styles"
-                            :class="{ 'active': editorpanel && Mask_ID === mask.id, 'target': mask.id === props.id }"
-                            v-for="mask in (sheet.variables as BlurMask[])" :key="mask.id">
-                            <div class="left" @click="addshadowmask(mask.id)">
-                                <div class="effect">
-                                    <div class="item" v-for="(i, index) in 25" :key="index"></div>
-                                </div>
+                    <template v-if="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <div v-for="mask in (sheet.variables as BlurMask[])" class="styles"
+                             :class="{ 'active': modifyPanelStatus.visible && maskID === mask.id, 'target': mask.id === props.id }"
+                             :key="mask.id">
+                            <div class="left" @click="createBlurMask(mask.id)">
+                                <div class="effect"></div>
                                 <div class="name">{{ mask.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;" @click="EditPanel($event, mask.id)">
-                                <SvgIcon :icon="editor_icon"></SvgIcon>
+                            <div class="editor" style="visibility: hidden;"
+                                 @click="(e) =>showModifyPanel(e, mask.id)">
+                                <SvgIcon :icon="editor_icon"/>
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-if="!showdata.length && searchval" class="null">没有搜索到相关样式</div>
-                <div v-if="!showdata.length && !searchval" class="null">没有可用的样式</div>
+                <div v-if="!data.length && keyword" class="null">没有搜索到相关样式</div>
+                <div v-if="!data.length && !keyword" class="null">没有可用的样式</div>
             </div>
         </el-scrollbar>
-        <NewBlurStyle v-if="newpanel" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closeNewPanel"></NewBlurStyle>
-        <EditorBlurStyle v-if="editorpanel" :top="Top" :left="Left" :shapes="props.shapes" :context="props.context"
-            :maskid="Mask_ID" :reder="fillRenderer" @close="closeeditorpanel">
-        </EditorBlurStyle>
+        <CreateBlurStyle v-if="createPanelStatus.visible" :context="props.context" :shapes="props.shapes"
+                         @close="closeCreatePanel"/>
+        <ModifyBlurStyle v-if="modifyPanelStatus.visible" :context="props.context" :shapes="props.shapes"
+                         :maskid="maskID" :reder="fillRenderer" @close="closeModifyPanel"/>
     </div>
-
 </template>
 <script setup lang="ts">
-import { BlurMask, ShapeView } from "@kcdesign/data";
-import { v4 } from 'uuid';
-import { Context } from '@/context';
-import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
-import { useI18n } from 'vue-i18n';
-import EditorBlurStyle from './EditorBlurStyle.vue';
-import NewBlurStyle from './NewBlurStyle.vue';
-import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
-import { FillRenderer, Mask } from "./fillRenderer";
-import { getShapesForStyle } from "@/utils/style";
-import { get_actions_add_mask } from "@/utils/shape_style";
 import add_icon from '@/assets/icons/svg/add.svg';
 import editor_icon from '@/assets/icons/svg/export-menu.svg';
 import down_icon from '@/assets/icons/svg/triangle-down.svg';
 import right_icon from '@/assets/icons/svg/triangle-right.svg';
-import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
 import search_icon from '@/assets/icons/svg/search.svg';
 import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
-import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+
+import { BlurMask, ShapeView } from "@kcdesign/data";
+import { Context } from '@/context';
+import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
+import ModifyBlurStyle from './ModifyBlurStyle.vue';
+import CreateBlurStyle from './CreateBlurStyle.vue';
+import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
+import { FillRenderer, Mask } from "../../StyleLib/fillRenderer";
+import { getShapesForStyle } from "@/utils/style";
+import { get_actions_add_mask } from "@/utils/shape_style";
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
-    top: number;
-    left: number;
     id?: string;
 }>()
 
@@ -104,53 +93,94 @@ const emits = defineEmits<{
     (e: 'close'): void
 }>()
 
+const keyword = ref<string>('')
+const filterWord = ref<string>('全部样式')
+const types = ref(new Set<string>())
 
-const { t } = useI18n();
-const filterpanel = ref<boolean>(false)
-const searchval = ref<string>('')
-const filterval = ref<string>('全部样式')
-const showtypes = ref(new Set<string>())
-const editorpanel = ref<boolean>(false)
-const newpanel = ref<boolean>(false)
-const Top = ref<number>(0)
-const Left = ref<number>(0)
-const Mask_ID = ref<string>('')
+const maskID = ref<string>('')
 const search = ref<HTMLInputElement>()
-const listfilter = new Map()
+const libList = new Map()
 const sheets = reactive<StyleSheet[]>([])
-const showdata = reactive<StyleSheet[]>([])
-const masklist = reactive<Mask[]>([]);
-const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], masklist as Mask[]);
+const data = reactive<StyleSheet[]>([])
+const list = reactive<Mask[]>([]);
+const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], list as Mask[]);
 
-const showtype = (t: string) => {
-    showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
+const createPanelStatus = reactive<ElementStatus>({id: '#create-blur-panel', visible: false});
+const createPanelStatusMgr = new ElementManager(
+    props.context,
+    createPanelStatus,
+    {
+        offsetLeft: -442,
+        whiteList: ['.new-style', '.add']
+    }
+);
+
+const modifyPanelStatus = reactive<ElementStatus>({id: '#modify-blur-panel', visible: false});
+const modifyPanelStatusMgr = new ElementManager(
+    props.context,
+    modifyPanelStatus,
+    {
+        offsetLeft: -462,
+        whiteList: ['.editor-style', '.editor']
+    }
+);
+
+const libListStatus = reactive<ElementStatus>({id: '#blur-lib-list', visible: false});
+const libListStatusMgr = new ElementManager(
+    props.context,
+    libListStatus,
+    {
+        offsetTop: 32,
+        whiteList: ['.blur-lib-list', '.filter']
+    }
+);
+
+const showCreatePanel = (e: MouseEvent) => {
+    createPanelStatusMgr.showBy(e);
+}
+const closeCreatePanel = () => {
+    createPanelStatusMgr.close();
+}
+const showModifyPanel = (event: MouseEvent, _maskID: string) => {
+    modifyPanelStatusMgr.showBy(event);
+    maskID.value = _maskID;
+}
+const closeModifyPanel = () => {
+    modifyPanelStatusMgr.close();
+}
+
+const showLibList = (event: MouseEvent) => {
+    libListStatusMgr.showBy(event)
+}
+
+const currentType = (t: string) => {
+    types.value.has(t) ? types.value.delete(t) : types.value.add(t)
 }
 
 watchEffect(() => {
-    listfilter.set('all', '全部样式')
+    libList.set('all', '全部样式')
     sheets.forEach(s => {
         if (s.id === props.context.data.id) {
-            listfilter.set(s.name, '此文件样式')
+            libList.set(s.name, '此文件样式')
         } else {
-            listfilter.set(s.name, s.name)
+            libList.set(s.name, s.name)
         }
     })
-    listfilter.forEach((v) => showtypes.value.add(v))
+    libList.forEach((v) => types.value.add(v))
 })
 
 watchEffect(() => {
-    showdata.length = 0;
-    const arr = sheets.filter(s => s.name.includes(filterval.value === '全部样式' ? "" : filterval.value === '此文件样式' ? "新文件" : filterval.value))
+    data.length = 0;
+    const arr = sheets.filter(s => s.name.includes(filterWord.value === '全部样式' ? "" : filterWord.value === '此文件样式' ? "新文件" : filterWord.value))
     const new_arr = arr.map(s => {
         let newSheet: StyleSheet = { ...s }
-        newSheet.variables = s.variables.filter(v => (v as BlurMask).name.includes(searchval.value))
+        newSheet.variables = s.variables.filter(v => (v as BlurMask).name.includes(keyword.value))
         return newSheet
     })
-    showdata.push(...new_arr.filter(s => s.variables.length !== 0))
+    data.push(...new_arr.filter(s => s.variables.length !== 0))
 })
 
-
-const addshadowmask = (id: string) => {
+const createBlurMask = (id: string) => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
@@ -160,101 +190,10 @@ const addshadowmask = (id: string) => {
     emits('close')
 }
 
-const closeeditorpanel = () => {
-    props.context.escstack.execute()
-    editorpanel.value = false
-}
-
-const EditPanel = (e: MouseEvent, maskid: string) => {
-    let el = e.target as HTMLElement;
-    const { top } = el.getBoundingClientRect() // 获取当前点击元素的top值
-    while (el.parentElement?.className !== 'shadow-container') {
-        if (el.parentElement) {
-            el = el.parentElement;
-        }
-    }
-    const { left } = el.getBoundingClientRect(); // 获取编辑面板的left值
-    Top.value = top;
-    Left.value = left - 250;
-    Mask_ID.value === maskid ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
-    Mask_ID.value = maskid;
-
-    document.addEventListener('click', checkeditorpanel)
-    props.context.escstack.save(v4(), closeEditorPanel)
-}
-
-
-const closeEditPanel = () => {
-    editorpanel.value = false;
-    document.removeEventListener('click', checkeditorpanel);
-}
-
-function checkeditorpanel(e: MouseEvent) {
-    e.target instanceof Element &&
-        !e.target.closest('.editor-style') &&
-        !e.target.closest('.editor') &&
-        closeEditPanel();
-}
-
-const closeEditorPanel = () => {
-    const exe_result: boolean = editorpanel.value;
-    editorpanel.value = false
-    document.removeEventListener('click', checkeditorpanel)
-    return exe_result
-}
-
-const NewPanel = (e: MouseEvent) => {
-    let el = e.target as HTMLElement;
-    while (el.className !== 'shadow-container') {
-        if (el.parentElement) {
-            el = el.parentElement;
-        }
-    }
-    const { top, left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    newpanel.value = !newpanel.value;
-    document.addEventListener('click', checknewpanel)
-    props.context.escstack.save(v4(), closeNewPanel)
-}
-
-function checknewpanel(e: MouseEvent) {
-    e.target instanceof Element &&
-        !e.target.closest('.new-style') &&
-        !e.target.closest('.newstyle') &&
-        closeNewPanel();
-}
-
-const closeNewPanel = () => {
-    const exe_result: boolean = newpanel.value;
-    newpanel.value = false
-    document.removeEventListener('click', checknewpanel)
-    return exe_result
-}
-
-const closeFilterPanel = () => {
-    filterpanel.value = false
-    document.removeEventListener('click', checkfilterpanel)
-}
-
-const FilterPanel = () => {
-    if (filterpanel.value) return;
-    filterpanel.value = !filterpanel.value
-    document.addEventListener('click', checkfilterpanel)
-}
-
-const checkfilterpanel = (e: MouseEvent) => {
-    e.target instanceof Element &&
-        !e.target.closest('.filter-list') &&
-        !e.target.closest('.filter') &&
-        closeFilterPanel();
-}
-
-const Changefilter = (v: string) => {
-    filterval.value = v;
-    filterpanel.value = false
-    showtypes.value.add(v)
-    document.removeEventListener('click', checkfilterpanel)
+const filter = (v: string) => {
+    filterWord.value = v;
+    types.value.add(v)
+    libListStatusMgr.close();
 }
 
 function update() {
@@ -273,13 +212,14 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    props.context.data.unwatch(stylelib_watcher)
+    props.context.data.unwatch(stylelib_watcher);
+    createPanelStatusMgr.unmounted();
+    modifyPanelStatusMgr.unmounted();
+    libListStatusMgr.unmounted();
 })
-
 </script>
 <style lang="scss" scoped>
-.shadow-container {
-    position: fixed;
+.blur-container {
     background-color: #fff;
     z-index: 9;
     width: 250px;
@@ -298,14 +238,12 @@ onUnmounted(() => {
     padding: 0 12px;
     border-bottom: 1px solid #F5F5F5;
 
-    .title {}
-
     .tool {
         display: flex;
         align-items: center;
         gap: 4px;
 
-        >.newstyle {
+        > .add {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -407,10 +345,9 @@ onUnmounted(() => {
         border: 1px solid #1878F5;
     }
 
-    .filter-list {
-        position: absolute;
+    .blur-lib-list {
         top: 36px;
-        width: 50%;
+        width: 186px;
         left: 0;
         background-color: #fff;
         border: 1px solid #e5e5e5e5;
@@ -535,11 +472,6 @@ onUnmounted(() => {
                 }
             }
         }
-    }
-
-
-    .style-item .styles .name {
-        // color: #c8c8c8;
     }
 
     .style-item .styles .editor {

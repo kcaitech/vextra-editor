@@ -35,7 +35,7 @@ import { fontWeightConvert } from './FontNameList';
 import { Attribute } from '@/context/atrribute';
 import { format_value, is_mac } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
-import TextStyle from '../StyleLibrary/TextStyle.vue';
+import TextStyle from '@/components/Document/Attribute/StyleLib/TextStyle.vue';
 import { v4 } from 'uuid';
 
 interface Props {
@@ -892,8 +892,6 @@ const setMixedHighlight = () => {
     } else {
         format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
         const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
-        console.log(format.highlight, 'format.highlight');
-
         editor.setTextHighlightColorMulti(props.textShapes, new Color(alpha, red, green, blue));
     }
 }

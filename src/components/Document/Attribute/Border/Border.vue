@@ -23,7 +23,7 @@ import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { useI18n } from 'vue-i18n';
-import { Color, Border, BorderStyle } from '@kcdesign/data';
+import { Color, BorderStyle } from '@kcdesign/data';
 import { FillType, BorderPosition } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
@@ -47,7 +47,7 @@ import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
-import { format_value, genOptions } from '@/utils/common';
+import { genOptions } from '@/utils/common';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import {
     get_actions_border_thickness,
@@ -56,7 +56,7 @@ import {
 } from '@/utils/shape_style'
 import { getSideThickness } from "./index"
 import { sortValue } from '../BaseAttr/oval';
-import Borderstyle from '@/components/Document/Attribute/StyleLibrary/BorderStyle.vue';
+import Borderstyle from '@/components/Document/Attribute/StyleLib/BorderStyle.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface FillItem {
@@ -99,12 +99,10 @@ const alphaBorder = ref<HTMLInputElement[]>();
 const colorBorder = ref<HTMLInputElement[]>()
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-// const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
 const watchedShapes = new Map();
 const show_apex = ref<boolean>(false);
 const shapes = ref<ShapeView[]>();
 const apex_view = ref<number>(0);
-// let table: TableView;
 let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
 let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
 const reflush_side = ref(0);
@@ -1305,7 +1303,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
     flex-direction: column;
     padding: 12px 8px;
     box-sizing: border-box;
-    //border-top: 1px solid #F0F0F0;
     border-bottom: 1px solid #F0F0F0;
 
     .add,
@@ -1390,7 +1387,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                     &:hover {
                         background-color: #e5e5e5;
                     }
-
                     .border {
                         margin: 0 8px;
                         width: 16px;
@@ -1399,7 +1395,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                         overflow: hidden;
                         box-sizing: border-box;
                     }
-
                 }
 
                 .unbind {
@@ -1414,15 +1409,11 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                         height: 16px;
                     }
                 }
-
                 .unbind:hover {
                     background-color: #e5e5e5;
                 }
             }
-
-
         }
-
     }
 
     .colors {
@@ -1480,7 +1471,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
             background-color: var(--input-background);
             height: 32px;
             padding: 9px 8px;
-            //margin-left: -11px;
             border-radius: var(--default-radius);
             box-sizing: border-box;
             display: flex;
@@ -1517,12 +1507,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
         }
 
-        //.extra-action {
-        //    display: flex;
-        //    align-items: center;
-        //    justify-content: center;
-        //    margin-left: 2px;
-
         .delete {
             flex: 0 0 28px;
             display: flex;
@@ -1541,8 +1525,6 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
         .delete:hover {
             background-color: #F5F5F5;
         }
-
-        //}
     }
 
     .bottom {
@@ -1596,10 +1578,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                 color: #FFFFFF;
                 background: #1878F5;
             }
-
         }
-
-
     }
 }
 </style>

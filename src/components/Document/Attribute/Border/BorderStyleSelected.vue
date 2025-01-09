@@ -13,10 +13,6 @@ const border_style_icons: { [key: string]: string } = {
     'dash': dash_icon
 }
 
-watch(() => props.data?.value, () => {
-    console.log(props.data?.value);
-
-})
 </script>
 
 <template>

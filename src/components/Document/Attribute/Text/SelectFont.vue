@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Context } from '@/context';
-import { fontNameListEn, fontNameListZh, FontAvailable, fontWeightList, isSupportFontFamily } from './FontNameList'
+import { fontWeightList, isSupportFontFamily } from './FontNameList'
 import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
@@ -90,7 +90,7 @@ const onSearchFont = () => {
     const localList = fontList.local.filter(item => pattern.test(item));
     const failureLocalList = fontList.failure_local.filter(item => pattern.test(item));
     const usedSuccess = fontList.used.success.filter(item => pattern.test(item));
-    const usedFailureL = fontList.used.failurel.filter(item => pattern.test(item));;
+    const usedFailureL = fontList.used.failurel.filter(item => pattern.test(item));
     filterFontList.ch = Array.from(new Set(chList));
     filterFontList.en = Array.from(new Set(enList));
     filterFontList.local = Array.from(new Set(localList));
@@ -132,7 +132,7 @@ const getAllTextFontName = async () => {
         if (pageFont) {
             const font = (Array.from(pageFont) as string[])
             const result = await Promise.all(font.map(name => isSupportFontFamily(name).length > 0));
-            const usedSuccess = font.filter((name, index) => result[index]);
+            const usedSuccess = font.filter((_, index) => result[index]);
             fontList.used.success.push(...usedSuccess)
             const usedFailurel = font.filter((name, index) => {
                 if (!result[index]) {
@@ -162,15 +162,12 @@ const unfoldFontName = (num: number) => {
     }
 }
 
-const get_top_posi = () => {
+const getTop = () => {
     if (font_context.value) {
         const p_container = props.fontNameEl?.getBoundingClientRect()
-        console.log(p_container);
-
         if (p_container) {
             const body_h = document.body.clientHeight;
-            const { y, height, width } = font_context.value.getBoundingClientRect();
-            console.log(font_context.value.getBoundingClientRect());
+            const { height, width } = font_context.value.getBoundingClientRect();
             font_context.value.style.top = p_container.y + 'px';
             font_context.value.style.left = (p_container.left - width - 8) + 'px';
             const su = body_h - p_container.y;
@@ -190,14 +187,14 @@ watch(() => props.showFont, (v) => {
         fontList.local = [...local];
         fontList.failure_local = [...failure_local];
         nextTick(() => {
-            get_top_posi();
+            getTop();
         })
     }
 })
 
 onMounted(() => {
     getAllTextFontName()
-    get_top_posi();
+    getTop();
 })
 
 import search_icon from '@/assets/icons/svg/search.svg';
@@ -413,7 +410,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
     border-radius: 8px;
     background-color: #fff;
     border: 1px solid #F0F0F0;
-    box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.08);
     z-index: 1001;
 
     .search {

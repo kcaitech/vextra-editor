@@ -1008,21 +1008,12 @@ export function get_blur(shapes: ShapeView[]): Blur | undefined | 'mixed' | 'mas
             blur_mask.push('undefined')
         }
         blurs.push(shape.blur);
-        // if (firstBlur.type !== shape.blur?.type) return 'mixed';
-        // if (firstBlur.type === BlurType.Gaussian) {
-        //     if (firstBlur.saturation !== shape.blur?.saturation) return 'mixed';
-        // } else if (firstBlur.type === BlurType.Background) {
-        //     if (firstBlur.saturation !== shape.blur?.saturation) return 'mixed';
-        // }
     }
 
     const b = blurs.every(blur => blur !== undefined && blur.type === firstBlur.type && blur.saturation === firstBlur.saturation)
 
     const mask_b = blur_mask.every(i => mask !== 'undefined' && i === mask)
     const mask_s = blur_mask.some(i => i !== 'undefined')
-
-    console.log(mask_b, mask_s);
-
 
     if (mask_b) return 'mask';
     if (mask_s) return 'mixed';

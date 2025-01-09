@@ -17,7 +17,7 @@ import {
     get_shadows
 } from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
-import EffectStyle from '@/components/Document/Attribute/StyleLibrary/EffectStyle.vue';
+import EffectStyle from '@/components/Document/Attribute/StyleLib/EffectStyle.vue';
 import { getShapesForStyle } from '@/utils/style';
 
 interface ShadowItem {
@@ -117,8 +117,6 @@ function updateData() {
             shadows.push(..._shadows.reverse());
         }
     }
-    console.log(mask.value);
-    
     reflush.value++;
 }
 
@@ -218,8 +216,6 @@ const openEffectPanel = (e: MouseEvent) => {
 }
 
 function close() {
-    console.log('1111111111111111111111');
-    
     const is_achieve_expected_results = showshadow.value;
     showshadow.value = false;
     document.removeEventListener('click', checktargetlist)

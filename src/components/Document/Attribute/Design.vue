@@ -11,7 +11,7 @@ import Border from './Border/Border.vue';
 import Shadow from './Shadow/Shadows.vue';
 import PageBackground from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
-import { debounce, throttle } from 'lodash';
+import { throttle } from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
 import CutoutExport from './CutoutExport/index.vue'
@@ -159,9 +159,7 @@ function _selection_change() {
     reflush.value++;
 }
 
-// const selection_change = debounce(_selection_change, 160, { leading: true });
 const selection_change = _selection_change;
-
 
 function is_constrainted(shape: ShapeView) {
     return shape.isVirtualShape || ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.parent?.type || ShapeType.Rectangle))
