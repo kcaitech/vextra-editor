@@ -234,7 +234,6 @@ function updateData() {
                 const fill = new Fill(crdtidx, id, isEnabled, fillType, c)
                 fills.push({ id: index, fill: fill })
             })
-            console.log(fills, '********************************');
             if (stroke_paints.length) hasStroke.value = true;
         }
         borderData.value = border;
