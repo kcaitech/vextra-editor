@@ -183,15 +183,15 @@ function update() {
 }
 
 const addfillmask = (id: string) => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_add_mask(shapes, id);
+    const editor = props.context.editor4Page(page);
     if (props.locat?.type === 'borders') {
         console.log('边框颜色');
-        
+        editor.shapesSetBorderFillMask(actions)
     } else {
-        const selected = props.context.selection.selectedShapes;
-        const page = props.context.selection.selectedPage!;
-        const shapes = getShapesForStyle(selected);
-        const actions = get_actions_add_mask(shapes, id);
-        const editor = props.context.editor4Page(page);
         editor.shapesSetFillMask(actions);
     }
 

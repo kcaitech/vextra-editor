@@ -47,7 +47,7 @@ const blurPanelStatusMgr = new ElementManager(
     props.context,
     blurLibStatus,
     {
-        offsetLeft: -460,
+        offsetLeft: -250,
         whiteList: ['.blur-container', '.blur-style', '.blur-left']
     }
 );
@@ -166,7 +166,7 @@ const showBlurPanel = (event: MouseEvent) => {
             if (e.classList.contains('blur-left')) break;
             e = e.parentElement;
         }
-        e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -264, offsetTop: 0}});
+        e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -258, offsetTop: 0}});
     }
 }
 
@@ -184,10 +184,10 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <div class="blur-panel">
+    <div class="blur-panel" ref="blurPanelTrigger">
         <TypeHeader :title="t('blur.blur')" @click="first" :active="!!blurInfo">
             <template v-if="!mask" #tool>
-                <div v-if="!mixed" ref="blurPanelTrigger" class="blur-style" @click="showBlurPanel($event)">
+                <div v-if="!mixed"  class="blur-style" @click="showBlurPanel($event)">
                     <SvgIcon :icon="style_icon"/>
                 </div>
                 <div v-if="!blurInfo || mixed" class="add" @click.stop="addBlur">
