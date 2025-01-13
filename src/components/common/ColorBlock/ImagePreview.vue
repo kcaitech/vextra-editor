@@ -13,7 +13,7 @@ onMounted(draw);
 onUnmounted(watch(() => params, draw));
 </script>
 <template>
-    <div style="width: 100%; height: 100%; background-color: #fff">
+    <div style="width: 100%; height: 100%; background-color: #fff; position: absolute;">
         <img :src="src" alt="fill-image" style="width: 100%; height: 100%;object-fit: contain;">
     </div>
 </template>

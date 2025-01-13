@@ -57,7 +57,7 @@ function stringifyGradient(g: Gradient) {
     }
 }
 
-type FillMaskInfo = {
+export type FillMaskInfo = {
     name: string;
     desc: string;
 }
@@ -78,6 +78,10 @@ export class FillContextMgr {
 
     constructor(private context: Context, private fillCtx: FillContext) {
         this.m_selected = [];
+    }
+
+    get fills() {
+        return this.fillCtx.fills;
     }
 
     get selected() {
