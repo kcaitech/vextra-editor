@@ -131,6 +131,8 @@ export class FillContextMgr {
                 name: mask.name,
                 desc: mask.description
             }
+        } else {
+            this.fillCtx.maskInfo = undefined;
         }
     }
 

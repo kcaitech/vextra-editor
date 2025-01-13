@@ -7,17 +7,21 @@ import { Context } from "@/context";
 import { FillCatch, FillContextMgr, FillMaskInfo } from "@/components/Document/Attribute/Fill2/ctx";
 import { Fill } from "@kcdesign/data";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
-import { ref } from "vue";
+import { onUnmounted, ref, watch } from "vue";
 
-type Props = {
+const props = defineProps<{
     context: Context;
     manager: FillContextMgr;
     fills: FillCatch[];
     info: FillMaskInfo
-}
-
-const props = defineProps<Props>();
+}>();
 const colors = ref<Fill[]>(props.fills.map(i => i.fill).reverse());
+const name = ref<string>(props.info.name);
+
+onUnmounted(watch(() => props.info, () => {
+    colors.value = props.fills.map(i => i.fill).reverse();
+    name.value = props.info.name;
+}))
 </script>
 <template>
     <div class="fill-mask-container">
@@ -25,7 +29,7 @@ const colors = ref<Fill[]>(props.fills.map(i => i.fill).reverse());
             <div class="info">
                 <div class="desc">
                     <ColorBlock :colors="colors as Fill[]" round disabled-alpha/>
-                    <span></span>
+                    <span>{{ name }}</span>
                 </div>
                 <div class="unbind">
                     <SvgIcon :icon="unbind_icon"/>
@@ -62,7 +66,6 @@ const colors = ref<Fill[]>(props.fills.map(i => i.fill).reverse());
                 transition: .1s;
                 padding: 0 8px;
                 box-sizing: border-box;
-
                 &:hover {
                     background-color: #e5e5e5;
                 }
@@ -74,6 +77,7 @@ const colors = ref<Fill[]>(props.fills.map(i => i.fill).reverse());
                 height: 100%;
                 display: flex;
                 align-items: center;
+                gap: 8px;
             }
 
             .unbind {
