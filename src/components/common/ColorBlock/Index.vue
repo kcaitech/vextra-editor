@@ -1,45 +1,50 @@
 <script setup lang="ts">
 import { Border, Color, Fill, FillType, Gradient } from "@kcdesign/data";
 import { onUnmounted, ref, watch } from "vue";
-import SolidPreview from "@/components/common/ColorBlock/SolidPreview.vue";
+import { DEFAULT_IMAGE } from "@/context/atrribute";
 
-type Props = {
-    colors: (Fill | Color | Border)[];
-}
-const props = defineProps<Props>();
-type BlockType = 'solid' | 'pattern' | 'Gradient';
+import SolidPreview from "@/components/common/ColorBlock/SolidPreview.vue";
+import GradientPreview from "@/components/common/ColorBlock/GradientPreview.vue";
+import ImagePreview from "@/components/common/ColorBlock/ImagePreview.vue";
+
+const compos = {
+    'solid': SolidPreview,
+    'gradient': GradientPreview,
+    'pattern': ImagePreview
+};
+
+const {colors, round} = defineProps<{ colors: (Color | Fill | Border)[]; round?: boolean }>();
+type BlockType = 'solid' | 'pattern' | 'gradient';
 
 const fillsPreview = ref<{ type: BlockType, data: Color | Gradient | string }[]>([]);
 
 function update() {
     const container = fillsPreview.value;
     container.length = 0;
-    for (const c of props.colors) {
+
+    for (const c of colors) {
         if (c instanceof Color) {
             container.push({type: "solid", data: c});
         } else if (c instanceof Fill) {
             if (c.fillType === FillType.SolidColor) {
                 container.push({type: "solid", data: c.color});
             } else if (c.fillType === FillType.Gradient) {
-                container.push({type: "Gradient", data: c.gradient!});
+                container.push({type: "gradient", data: c.gradient!});
             } else if (c.fillType === FillType.Pattern) {
-                container.push({type: "pattern", data: ''})
+                container.push({type: "pattern", data: c.peekImage(true) || DEFAULT_IMAGE})
             }
         } else {
             // todo border
         }
     }
-    return container;
 }
 
 update();
-onUnmounted(watch(() => props.colors, update));
+onUnmounted(watch(() => colors, update));
 </script>
 <template>
-    <div class="color-wrapper">
-        <template v-for="(c, idx) in fillsPreview" :key="idx">
-            <SolidPreview :params="c as any"/>
-        </template>
+    <div :class="{'color-wrapper': true, round}">
+        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="compos[c.type]" :params="c as any"/>
     </div>
 </template>
 <style scoped lang="scss">
@@ -48,5 +53,11 @@ onUnmounted(watch(() => props.colors, update));
     height: 16px;
     border-radius: 3px;
     overflow: hidden;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+.round {
+    border-radius: 50%;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.6);
 }
 </style>

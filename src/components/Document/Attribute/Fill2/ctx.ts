@@ -1,7 +1,7 @@
 import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { hidden_selection, noGroupShapesFrom } from "@/utils/content";
-import { get_actions_fill_color, get_actions_fill_delete, get_actions_fill_unify } from "@/utils/shape_style";
+import { get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent } from "@/components/Document/Attribute/Fill2/basic";
 import { v4 } from "uuid";
 
@@ -181,6 +181,11 @@ export class FillContextMgr {
     remove(fill: Fill) {
         const actions = get_actions_fill_delete(this.selected, this.getIndexByFill(fill));
         this.editor.shapesDeleteFill(actions);
+    }
+
+    modifyVisible(fill: Fill) {
+        const actions = get_actions_fill_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
+        this.editor.setShapesFillEnabled(actions);
     }
 
     modifyFillHex(event: Event, fill: Fill) {
