@@ -121,7 +121,7 @@ const createPanelStatusMgr = new ElementManager(
     createPanelStatus,
     {
         offsetLeft: -442,
-        whiteList: ['.create-style', '.add']
+        whiteList: ['.new-style', '.add']
     }
 );
 const showCreatePanel = (e: MouseEvent) => {
