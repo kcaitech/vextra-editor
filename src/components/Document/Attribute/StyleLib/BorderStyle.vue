@@ -1,5 +1,5 @@
 <template>
-    <div class="border-container" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="border-container" class="border-container">
         <div class="header">
             <div class="title">边框样式</div>
             <div class="tool">

@@ -47,6 +47,7 @@ import {
     BorderMaskType
 } from "@kcdesign/data";
 import { v4 } from "uuid";
+import { scale_0 } from "./content";
 
 interface FillItem {
     id: number,
@@ -175,7 +176,7 @@ export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
     return actions;
 }
 
-export function get_actions_add_mask(shapes: ShapeView[], id: string) {
+export function get_actions_add_mask(shapes: ShapeView[], id: string | undefined) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -370,12 +371,15 @@ const initBorder = {
     borderStyle: new BorderStyle(0, 0),
     sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
 }
-export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderData, stroke_paints: StrokePaintItem[] | 'mixed' } {
+export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderData, stroke_paints: StrokePaintItem[] | 'mixed' | 'mask' } {
     if (shapes.length === 0) return { border: initBorder, stroke_paints: [] };
     const strokePaints: StrokePaintItem[] = [];
 
     const shape = shapes[0];
     let styleborders1 = shape.getBorders();
+    const mask = styleborders1.fillsMask ?? 'undefined';
+    const fill_mask: string[] = [];
+    fill_mask.push(mask)
     let s = 0;
     while (!styleborders1.strokePaints && s < shapes.length) {
         styleborders1 = shapes[s].getBorders();
@@ -417,6 +421,12 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
         const len = styleborders.strokePaints.length;
         const s_bs = styleborders.strokePaints;
 
+        if (shape.style.borders.fillsMask) {
+            fill_mask.push(shape.style.borders.fillsMask)
+        } else {
+            fill_mask.push('undefined')
+        }
+
         if (len > 0 && styleborders.position !== border.position) {
             border.position = 'mixed';
         }
@@ -436,6 +446,8 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
             result.stroke_paints = 'mixed';
             continue;
         };
+
+
         for (let j = 0; j < len; j++) {
             const styleborder = s_bs[j];
             const str = [
@@ -446,15 +458,28 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
                 styleborder.color.alpha,
                 styleborder.fillType
             ].join('-');
-            if (str !== compare_str[j]) return { border, stroke_paints: 'mixed' };
+            if (str !== compare_str[j]) {
+                result.border = border;
+                result.stroke_paints = 'mixed'
+            };
             if (styleborder.fillType === FillType.SolidColor) continue;
             if (styleborder.gradient) {
-                if (has_g_str[j] !== get_gradient_str(styleborder.gradient)) return { border, stroke_paints: 'mixed' };
+                if (has_g_str[j] !== get_gradient_str(styleborder.gradient)) {
+                    result.border = border;
+                    result.stroke_paints = 'mixed'
+                }
             } else {
-                if (has_g_str[j] !== 'undefined') return { border, stroke_paints: 'mixed' };
+                if (has_g_str[j] !== 'undefined') {
+                    result.border = border;
+                    result.stroke_paints = 'mixed'
+                }
             }
         }
     }
+    const mask_b = fill_mask.every(i => mask !== 'undefined' && i === mask)
+
+    if (mask_b) result.stroke_paints = 'mask';
+
     result.border = border;
     return result;
 }
@@ -499,6 +524,24 @@ export function get_actions_border_mask(shapes: ShapeView[]) {
         const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight)
         const new_border = new BorderMaskType(position, side)
         actions.push({ target: (shapes[i]), value: new_border });
+    }
+    return actions;
+}
+
+export function get_actions_border_fillmask(shapes: ShapeView[]) {
+    const actions: BatchAction2[] = [];
+    const id = shapes[0].style.borders.fillsMask!;
+    const fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        const strokePaints = new BasicArray<StrokePaint>()
+        for (let i = 0; i < fills.length; i++) {
+            const { crdtidx, id, isEnabled, fillType, color } = fills[i]
+            const c = new Color(color.alpha, color.red, color.green, color.blue)
+            const strokePaint = new StrokePaint(crdtidx, id, isEnabled, fillType, c)
+            strokePaints.push(strokePaint)
+        }
+        actions.push({ target: (shapes[i]), value: strokePaints });
     }
     return actions;
 }

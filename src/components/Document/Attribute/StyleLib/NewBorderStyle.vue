@@ -225,6 +225,8 @@ function updateData() {
             if (stroke_paints === 'mixed') {
                 mixed_cell.value = true;
                 hasStroke.value = true;
+            } else if (stroke_paints === 'mask') {
+
             } else {
                 if (stroke_paints.length > 0 && might_is_mixed) {
                     mixed_cell.value = true;
@@ -242,6 +244,8 @@ function updateData() {
         if (stroke_paints === 'mixed') {
             mixed.value = true;
             hasStroke.value = true;
+        } else if (stroke_paints === 'mask') {
+
         } else {
             strokePaints.push(...stroke_paints.reverse());
             if (stroke_paints.length) hasStroke.value = true;
@@ -249,7 +253,7 @@ function updateData() {
         borderData.value = border;
     }
     const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borderData.value.sideSetting as BorderSideSetting;
-    thickness.value =[thicknessTop,thicknessRight,thicknessBottom,thicknessLeft].join(', ');
+    thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
     oldvalue.value = thickness.value;
     reflush_side.value++
 }

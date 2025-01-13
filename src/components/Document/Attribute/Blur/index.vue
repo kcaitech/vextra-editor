@@ -46,8 +46,8 @@ const blurPanelStatusMgr = new ElementManager(
     props.context,
     blurLibStatus,
     {
-        offsetLeft: -256,
-        whiteList: ['.blur-lib-panel', '.blur-style', '.blur-left']
+        offsetLeft: -250,
+        whiteList: ['.blur-container', '.blur-style', '.blur-left']
     }
 );
 
@@ -185,7 +185,7 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <div class="blur-panel">
+    <div class="blur-panel" ref="blurPanelTrigger">
         <TypeHeader :title="t('blur.blur')" @click="first" :active="!!blurInfo">
             <template v-if="!mask" #tool>
                 <div v-if="!mixed" class="blur-style" @click="showBlurPanel($event)">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import {
     BasicArray,
@@ -17,7 +17,9 @@ import {
     LinearApi,
     StrokePaint,
     BorderMask,
-    Fill
+    Fill,
+    FillMask,
+    Gradient
 } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
@@ -39,6 +41,8 @@ import {
     get_aciton_gradient_stop,
     get_actions_filltype,
     get_actions_border,
+    get_actions_add_mask,
+    get_actions_border_fillmask,
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import Apex from './Apex.vue';
@@ -58,6 +62,8 @@ import { getSideThickness } from "./index"
 import { sortValue } from '../BaseAttr/oval';
 import Borderstyle from '@/components/Document/Attribute/StyleLib/BorderStyle.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { block_style_generator } from '@/components/common/ColorPicker/utils';
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 
 interface FillItem {
     id: number,
@@ -125,6 +131,38 @@ const positonOptionsSource: SelectSource[] = genOptions([
 const isActived = ref(false);
 const borderThickness = ref<HTMLInputElement>();
 const fills: FillItem[] = reactive([]);
+const mask = ref<boolean>(false)
+const fillMask = ref<FillMask>()
+const fill = ref<Fill[]>([])
+
+const borderPanelTrigger = ref<HTMLDivElement>();
+const borderLibStatus = reactive<ElementStatus>({ id: '#border-container', visible: false });
+const borderPanelStatusMgr = new ElementManager(
+    props.context,
+    borderLibStatus,
+    {
+        offsetLeft: -250,
+        whiteList: ['.border-container', '.border-style', '.border-left']
+    }
+);
+
+const showBorderPanel = (event: MouseEvent) => {
+
+    if (borderPanelTrigger.value) {
+        borderPanelStatusMgr.showBy(borderPanelTrigger.value);
+    } else {
+        let e: Element | null = event.target as Element;
+        while (e) {
+            if (e.classList.contains('border-left')) break;
+            e = e.parentElement;
+        }
+        e && borderPanelStatusMgr.showBy(e, { once: { offsetLeft: -264, offsetTop: 0 } });
+    }
+}
+
+const closePanel = () => {
+    borderPanelStatusMgr.close();
+}
 
 function watchShapes() {
     const needWatchShapes = new Map();
@@ -172,10 +210,13 @@ function updateData() {
     mixed_cell.value = false;
     hasStroke.value = false;
     isMask.value = false;
+    mask.value = false;
     const selecteds = props.context.selection.selectedShapes;
     if (selecteds.length < 1) return;
     strokePaints.length = 0;
     fills.length = 0;
+    fillMask.value = undefined;
+    fill.value.length = 0;
     borderData.value = initBorder;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
@@ -197,6 +238,8 @@ function updateData() {
             if (stroke_paints === 'mixed') {
                 mixed_cell.value = true;
                 hasStroke.value = true;
+            } else if (stroke_paints === 'mask') {
+
             } else {
                 if (stroke_paints.length > 0 && might_is_mixed) {
                     mixed_cell.value = true;
@@ -226,6 +269,19 @@ function updateData() {
         if (stroke_paints === 'mixed') {
             mixed.value = true;
             hasStroke.value = true;
+        } else if (stroke_paints === 'mask') {
+            hasStroke.value = true
+            const id = shapes[0].style.borders.fillsMask
+            if (!id) return
+            const libs = shapes[0].style.getStylesMgr()
+            fillMask.value = libs?.getSync(id) as FillMask
+            fillMask.value.fills.forEach((f) => {
+                const { isEnabled, fillType, color } = f
+                const new_fill = new Fill(new BasicArray<number>, v4(), isEnabled, fillType, color)
+                fill.value.unshift(new_fill)
+            })
+            mask.value = true
+
         } else {
             strokePaints.push(...stroke_paints.reverse());
             strokePaints.forEach((i, index) => {
@@ -856,6 +912,7 @@ function checkColorPanel(e: MouseEvent) {
     e.target instanceof Element &&
         !e.target.closest('.popover') &&
         !e.target.closest('.color-style') &&
+        !e.target.closest('.left') &&
         close2();
 }
 
@@ -889,6 +946,7 @@ onUnmounted(() => {
     watchedShapes.forEach(v => {
         v.unwatch(watcher)
     });
+    borderPanelStatusMgr.unmounted()
 })
 
 function positionSelect(selected: SelectItem, id: number | undefined) {
@@ -1002,6 +1060,8 @@ function onMouseUp() {
 }
 
 function setThickness(e: Event) {
+
+
     let thickness = Number((e.target as HTMLInputElement).value);
     (e.target as HTMLInputElement).blur();
     if (isNaN(thickness)) return;
@@ -1024,6 +1084,7 @@ function setThickness(e: Event) {
             editor.setShapesBorderThickness(actions);
         }
     }
+    console.log(thickness);
     reflush_side.value++;
 }
 
@@ -1071,6 +1132,15 @@ const delBorderMask = () => {
 
 }
 
+const deleteBorderFillMask = () => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_border_fillmask(shapes);
+    const editor = props.context.editor4Page(page);
+    editor.shapesDelBorderFillMask(actions);
+}
+
 const thickness_value = () => {
     if (typeof borderData.value === 'string' || typeof borderData.value.sideSetting === 'string' || typeof getSideThickness(borderData.value.sideSetting as BorderSideSetting) === 'boolean') {
         return t('attr.mixed')
@@ -1111,6 +1181,14 @@ const initpanel = () => {
     styleLeft.value = undefined
 }
 
+const getImageUrl = (fill: Fill) => {
+    return fill.peekImage(true) || props.context.attr.defaultImage;
+}
+
+const style = computed(() => {
+    return (c: Color, g: Gradient, t: FillType) => block_style_generator(c, g, t)
+})
+
 const positoSelected = () => {
     if (borderData.value.position === 'mixed') {
         return { value: `${t('attr.mixed')}`, content: `${t('attr.mixed')}` };
@@ -1127,10 +1205,10 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 </script>
 
 <template>
-    <div class="border-panel">
+    <div ref="borderPanelTrigger" class="border-panel">
         <TypeHeader :title="t('attr.stroke')" class="mt-24" @click="first" :active="hasStroke">
             <template #tool>
-                <div v-if="!isMask" class="border-style" @click="EditPanel($event)">
+                <div v-if="!isMask" class="border-style" @click="showBorderPanel($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div class="add" @click.stop="addBorder" v-if="!hasStroke">
@@ -1158,9 +1236,9 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                         @keydown="e => keydownThickness(e, thickness_value())">
                 </div>
             </div>
-            <div class="shadowmask" v-if="isMask && bordermask">
+            <div class="bordermask" v-if="isMask && bordermask">
                 <div class="info">
-                    <div class="shadow-left" @click="EditPanel($event)">
+                    <div class="border-left" @click="showBorderPanel($event)">
                         <div class="border" :style="{
                             borderTop: bordermask.border.sideSetting.thicknessTop < 3 ? bordermask.border.sideSetting.thicknessTop : 3 + 'px',
                             borderRight: bordermask.border.sideSetting.thicknessRight < 3 ? bordermask.border.sideSetting.thicknessRight : 3 + 'px',
@@ -1189,10 +1267,10 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
         <TypeHeader :title="t('attr.stroke_color')" class="mt-24" :active="hasStroke" v-if="hasStroke">
             <template #tool>
-                <div class="color-style" @click="colorPanel($event)">
+                <div v-if="!mask && !mixed" class="color-style" @click="colorPanel($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
-                <div class="add" @click="addBorder">
+                <div v-if="!mask" class="add" @click="addBorder">
                     <SvgIcon :icon="add_icon" />
                 </div>
             </template>
@@ -1200,10 +1278,37 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
         <div class="tips-wrap" v-if="mixed">
             <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
         </div>
+        <div class="fill-mask" v-if="mask">
+            <div class="info">
+                <div class="left" @click="colorPanel($event)">
+                    <div class="color">
+                        <div class="container-fill" v-for="f in fill" :key="f.id">
+                            <img v-if="f.fillType === FillType.Pattern" :src="getImageUrl(f as Fill)" alt=""
+                                :style="{ opacity: f.contextSettings?.opacity }">
+                            <div class="gradient" v-if="f.fillType === FillType.Gradient"
+                                :style="[style(f.color as Color, f.gradient as Gradient, f.fillType), { opacity: f.gradient?.gradientOpacity }]">
+                            </div>
+                            <div v-if="f.fillType === FillType.SolidColor" class="main"
+                                :style="{ backgroundColor: `rgb(${f.color.red},${f.color.green},${f.color.blue})`, opacity: f.color.alpha }">
+                                <div v-if="fill.length == 1" class="mask" :style="{ opacity: 1 - f.color.alpha }">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="name">{{ fillMask?.name }}</div>
+                </div>
+                <div class="unbind" @click.stop="deleteBorderFillMask">
+                    <SvgIcon :icon="unbind_icon"></SvgIcon>
+                </div>
+            </div>
+            <div class="delete-style" @click.stop="deleteBorders">
+                <SvgIcon :icon="delete_icon"></SvgIcon>
+            </div>
+        </div>
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="borders-container colors" v-else-if="!mixed && !mixed_cell && strokePaints.length">
+        <div class="borders-container colors" v-else-if="!mixed && !mask && !mixed_cell && strokePaints.length">
             <div class="border" v-for="(b, idx) in strokePaints" :key="b.id">
                 <div class="top">
                     <div :class="b.strokePaint.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
@@ -1245,8 +1350,8 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                 </div>
             </div>
         </div>
-        <Borderstyle v-if="showborder" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closepanel" :id="bordermask?.id"></Borderstyle>
+        <Borderstyle v-if="borderLibStatus.visible" :context="props.context" :shapes="props.shapes" :top="Top"
+            :left="Left" @close="closePanel" :id="bordermask?.id"></Borderstyle>
     </div>
     <teleport to="body">
         <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
@@ -1305,7 +1410,8 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
     border-bottom: 1px solid #F0F0F0;
 
     .add,
-    .border-style,.color-style {
+    .border-style,
+    .color-style {
         width: 28px;
         height: 28px;
         display: flex;
@@ -1321,7 +1427,8 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
         }
     }
 
-    .border-style img,.color-style img {
+    .border-style img,
+    .color-style img {
         padding: 2px;
         box-sizing: border-box;
     }
@@ -1334,7 +1441,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
         background-color: #F5F5F5;
     }
 
-    .color-style:hover{
+    .color-style:hover {
         background-color: #F5F5F5;
     }
 
@@ -1357,7 +1464,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
         gap: 8px;
         padding: 6px 0;
 
-        .shadowmask {
+        .bordermask {
             flex: 1;
             display: flex;
             height: 32px;
@@ -1376,7 +1483,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                 background-color: #f4f5f5;
                 height: 100%;
 
-                .shadow-left {
+                .border-left {
                     flex: 1;
                     display: flex;
                     align-items: center;
@@ -1386,6 +1493,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                     &:hover {
                         background-color: #e5e5e5;
                     }
+
                     .border {
                         margin: 0 8px;
                         width: 16px;
@@ -1408,6 +1516,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                         height: 16px;
                     }
                 }
+
                 .unbind:hover {
                     background-color: #e5e5e5;
                 }
@@ -1552,7 +1661,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
             >img {
                 cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
-                flex: 0 0 16px;
+                width: 16px;
                 height: 16px;
             }
 
@@ -1577,6 +1686,121 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
                 color: #FFFFFF;
                 background: #1878F5;
             }
+        }
+    }
+
+    .fill-mask {
+        display: flex;
+        height: 32px;
+        border-radius: 6px;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        gap: 8px;
+
+        .info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+            overflow: hidden;
+            background-color: #f4f5f5;
+            height: 100%;
+
+            .left {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                background-color: #F5F5F5;
+                height: 100%;
+
+                &:hover {
+                    background-color: #e5e5e5;
+                }
+
+                .color {
+                    position: relative;
+                    width: 16px;
+                    height: 16px;
+                    background-color: #fff;
+                    border: 1px solid rgba(230, 230, 230, 0.7);
+                    border-radius: 3px;
+                    overflow: hidden;
+                    margin: 0 8px;
+
+                    .container-fill {
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+
+                        img {
+                            height: 100%;
+                            width: 100%;
+                            object-fit: contain;
+                        }
+
+                        .gradient {
+                            width: 100%;
+                            height: 100%;
+                        }
+
+                        .main {
+                            width: 16px;
+                            height: 16px;
+                            background-color: #000;
+                            position: relative;
+
+                            .mask {
+                                position: absolute;
+                                top: 0;
+                                right: 0;
+                                width: 50%;
+                                height: 100%;
+                                background: url("data:image/svg+xml;utf8,%3Csvg%20width%3D%226%22%20height%3D%226%22%20viewBox%3D%220%200%206%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200H3V3H0V0Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M3%200H6V3H3V0Z%22%20fill%3D%22white%22/%3E%3Cpath%20d%3D%22M3%203H6V6H3V3Z%22%20fill%3D%22%23E1E1E1%22/%3E%3Cpath%20d%3D%22M0%203H3V6H0V3Z%22%20fill%3D%22white%22/%3E%3C/svg%3E%0A");
+                            }
+                        }
+                    }
+                }
+            }
+
+            .unbind {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 32px;
+
+                >img {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+
+            .unbind:hover {
+                background-color: #e5e5e5;
+            }
+        }
+
+
+        .delete-style {
+            flex: 0 0 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--default-radius);
+            overflow: hidden;
+
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .delete-style:hover {
+            background-color: #F5F5F5;
         }
     }
 }
