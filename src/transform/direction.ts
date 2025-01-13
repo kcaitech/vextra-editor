@@ -6,7 +6,9 @@ import {
     LinearApi,
     PageView,
     Shape,
+    ShapeType,
     ShapeView,
+    SymbolRefView,
 } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { hidden_selection } from "@/utils/content";
@@ -278,6 +280,7 @@ export class Direction {
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
         for (const env of envs) {
+            if(env.type === ShapeType.SymbolRef) continue;
             const order = this.__order(env);
             const reflex = (() => {
                 const m: Map<number, string> = new Map();
@@ -321,6 +324,7 @@ export class Direction {
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
         for (const env of envs) {
+            if(env.type === ShapeType.SymbolRef) continue;
             const order = this.__order(env);
             const reflex = (() => {
                 const m: Map<number, string> = new Map();
@@ -365,6 +369,7 @@ export class Direction {
         let someFire = false;
         const locate = this.__locate;
         for (const env of envs) {
+            if(env.type === ShapeType.SymbolRef) continue;
             const targetMap: Map<number, string> = new Map();
             const { order, grids, shapes } = this.__girds(env);
             const sel = selection
@@ -408,6 +413,7 @@ export class Direction {
         let someFire = false;
         const locate = this.__locate;
         for (const env of envs) {
+            if(env.type === ShapeType.SymbolRef) continue;
             const targetMap: Map<number, string> = new Map();
             const { order, grids, shapes } = this.__girds(env);
             const sel = selection

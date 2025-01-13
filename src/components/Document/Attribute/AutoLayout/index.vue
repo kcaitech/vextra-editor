@@ -134,7 +134,6 @@ const changeVorSpace = (value: string) => {
 const changePadding = (value: string, dir: PaddingDir) => {
     const shapes = props.context.selection.selectedShapes[0];
     const editor = props.context.editor4Shape(shapes);
-
     if (dir === 'hor') {
         if (value.includes(',')) {
             const vulerArray = value.split(',');
@@ -304,7 +303,7 @@ const changeSizing = (value: StackSizing, dir: PaddingDir) => {
 
 const changeGapSizing = (value: StackSizing, dir: PaddingDir) => {
     const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);
+    const editor = props.context.editor4Shape(shapes);    
     editor.modifyAutoLayoutGapSizing(value, dir);
 }
 
@@ -416,32 +415,32 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
         <TypeHeader :title="t('autolayout.auto_layout')" class="mt-24" @click="autoLayout" :active="!isActive">
             <template #tool>
                 <div v-if="isActive" class="add" @click.stop="autoLayout">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
-                <div v-else class="add" @click.stop="deleteAutoLayout">
-                    <SvgIcon :icon="delete_icon"/>
+                <div v-else class="add" :class="{ disabled: isDisable }" @click.stop="deleteAutoLayout">
+                    <SvgIcon :icon="delete_icon" />
                 </div>
             </template>
         </TypeHeader>
-        <div class="container-top" :class="{ disabled: isDisable }" v-if="!isActive && autoLayoutDate">
+        <div class="container-top" v-if="!isActive && autoLayoutDate">
             <div class="container-left">
-                <div class="layout-wrap" :reflush="reflush">
+                <div class="layout-wrap" :class="{ disabled: isDisable }" :reflush="reflush">
                     <div :class="{ active: autoLayoutDate.stackMode === StackMode.Vertical }"
                         @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Vertical)">
                         <Tooltip :content="t(`autolayout.ver`)">
-                            <SvgIcon :icon="ver_arrow_icon"/>
+                            <SvgIcon :icon="ver_arrow_icon" />
                         </Tooltip>
                     </div>
                     <div @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Horizontal)"
                         :class="{ active: autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap }">
                         <Tooltip :content="t(`autolayout.hor`)">
-                            <SvgIcon :icon="hor_arrow_icon"/>
+                            <SvgIcon :icon="hor_arrow_icon" />
                         </Tooltip>
                     </div>
                     <div :class="{ active: !autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap }"
                         @click="changeLayoutMode(StackWrap.Wrap, StackMode.Horizontal)">
                         <Tooltip :content="t(`autolayout.wrap`)">
-                            <SvgIcon :icon="wrap_arrow_icon"/>
+                            <SvgIcon :icon="wrap_arrow_icon" />
                         </Tooltip>
                     </div>
                 </div>
@@ -480,7 +479,7 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
                 </Tooltip>
             </div>
         </div>
-        <div class="layout-padding" :class="{ disabled: isDisable }" v-if="!isActive && autoLayoutDate">
+        <div class="layout-padding" v-if="!isActive && autoLayoutDate">
             <div class="container-input">
                 <AutoLayoutInput :icon="unfold ? left_padding_icon : hor_padding_icon"
                     :name="unfold ? 'left_padding' : 'hor_padding'"
@@ -508,12 +507,12 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
             <div class="container-right">
                 <Tooltip :content="t(`autolayout.${!unfold ? 'unfold' : 'fold'}`)">
                     <div :class="{ 'padding-active': unfold }" @click="unfold = !unfold">
-                        <SvgIcon :icon="unfold ? white_padding_button_icon : border_all_icon"/>
+                        <SvgIcon :icon="unfold ? white_padding_button_icon : border_all_icon" />
                     </div>
                 </Tooltip>
             </div>
         </div>
-        <div class="layout-area-size" :class="{ disabled: isDisable }" v-if="!isActive && autoLayoutDate">
+        <div class="layout-area-size" v-if="!isActive && autoLayoutDate">
             <div class="title">{{ t('autolayout.layout_area_size') }}</div>
             <div class="area-options">
                 <AutoLayoutInput
