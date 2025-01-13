@@ -1,29 +1,28 @@
 <template>
-    <div class="shadow-container" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="shadow-lib-panel" class="shadow-container">
         <div class="header">
-            <div class="title">特效样式</div>
+            <div class="title">阴影样式</div>
             <div class="tool">
-                <div class="newstyle" @click="NewPanel($event)">
-                    <SvgIcon :icon="add_icon"></SvgIcon>
+                <div class="add" @click="showCreatePanel($event)">
+                    <SvgIcon :icon="add_icon"/>
                 </div>
                 <div class="close" @click="emits('close')">
-                    <SvgIcon :icon="close_icon"></SvgIcon>
+                    <SvgIcon :icon="close_icon"/>
                 </div>
             </div>
         </div>
         <div class="search">
             <div class="icon">
-                <SvgIcon :icon="search_icon"></SvgIcon>
+                <SvgIcon :icon="search_icon"/>
             </div>
-            <div class="filter" @click="FilterPanel">
-                <SvgIcon :icon="arrow_icon"></SvgIcon>
+            <div class="filter" @click="showLibList">
+                <SvgIcon :icon="arrow_icon"/>
             </div>
-            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
-                @keydown.esc="props.context.escstack.execute()">
-            <div v-if="filterpanel" class="filter-list">
-                <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="Changefilter(item[1])">
+            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"/>
+            <div v-if="libListStatus.visible" id="shadow-lib-list" class="shadow-lib-list">
+                <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="filter(item[1])">
                     <div class="choose" :style="{ visibility: filterval === item[1] ? 'visible' : 'hidden' }">
-                        <SvgIcon :icon="choose_icon"></SvgIcon>
+                        <SvgIcon :icon="choose_icon"/>
                     </div>
                     <span> {{ item[1] }}</span>
                 </div>
@@ -34,13 +33,12 @@
                 <div class="style-item" v-for="sheet in showdata" :key="sheet.id">
                     <div class="type" @click="showtype(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
                         <SvgIcon
-                            :icon="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon">
-                        </SvgIcon>
+                            :icon="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon"/>
                         <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
                     <template v-if="showtypes.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
                         <div class="styles"
-                            :class="{ 'active': editorpanel && Mask_ID === shadow.id, 'target': shadow.id === props.id }"
+                             :class="{ 'active': modifyPanelStatus.visible && Mask_ID === shadow.id, 'target': shadow.id === props.id }"
                             v-for="shadow in (sheet.variables as ShadowMask[])" :key="shadow.id"
                             @click.stop="addshadowmask(shadow.id)">
                             <div class="left">
@@ -56,7 +54,8 @@
                                 </div>
                                 <div class="name">{{ shadow.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;" @click.stop="EditPanel($event, shadow.id)">
+                            <div class="editor" style="visibility: hidden;"
+                                 @click.stop="showModifyPanel($event, shadow.id)">
                                 <SvgIcon :icon="editor_icon"></SvgIcon>
                             </div>
                         </div>
@@ -66,61 +65,48 @@
                 <div v-if="!showdata.length && !searchval" class="null">没有可用的样式</div>
             </div>
         </el-scrollbar>
-        <NewEffectStyle v-if="newpanel" :context="props.context" :shapes="props.shapes" :top="Top" :left="Left"
-            @close="closenewpanel"></NewEffectStyle>
-        <EditorEffectStyle v-if="editorpanel" :top="Top" :left="Left" :shapes="props.shapes" :context="props.context"
-            :maskid="Mask_ID" :reder="fillRenderer" @close="closeeditorpanel">
-        </EditorEffectStyle>
+        <CreateShadowPanel v-if="createPanelStatus.visible" :context="props.context" :shapes="props.shapes"
+                           @close="closeCreatePanel"/>
+        <ModifyShadowPanel v-if="modifyPanelStatus.visible" :context="props.context" :shapes="props.shapes"
+                           :maskid="Mask_ID" :reder="fillRenderer" @close="closeModifyPanel"/>
     </div>
-
 </template>
 <script setup lang="ts">
-import { ShadowMask, ShapeView } from "@kcdesign/data";
-import { v4 } from 'uuid';
-import { Context } from '@/context';
-import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
-import { useI18n } from 'vue-i18n';
-import EditorEffectStyle from './EditorEffectStyle.vue';
-import NewEffectStyle from './NewEffectStyle.vue';
-import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
-import { FillRenderer, Mask } from "./fillRenderer";
-import { getShapesForStyle } from "@/utils/style";
-import { get_actions_add_mask } from "@/utils/shape_style";
 import add_icon from '@/assets/icons/svg/add.svg';
 import editor_icon from '@/assets/icons/svg/export-menu.svg';
 import down_icon from '@/assets/icons/svg/triangle-down.svg';
 import right_icon from '@/assets/icons/svg/triangle-right.svg';
-import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
 import search_icon from '@/assets/icons/svg/search.svg';
 import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
+import { ShadowMask, ShapeView } from "@kcdesign/data";
+import { Context } from '@/context';
+import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
+import ModifyShadowPanel from './ModifyShadowPanel.vue';
+import CreateShadowPanel from './CreateShadowPanel.vue';
+import { StyleSheet } from "../../../../../../../kcdesign-data/dist/types/data/typesdefine";
+import { FillRenderer, Mask } from "../../StyleLib/fillRenderer";
+import { getShapesForStyle } from "@/utils/style";
+import { get_actions_add_mask } from "@/utils/shape_style";
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+
 const props = defineProps<{
     context: Context;
     shapes: ShapeView[];
-    top: number;
-    left: number;
     id?: string;
 }>()
-
 const emits = defineEmits<{
     (e: 'close'): void
 }>()
 
-
-const { t } = useI18n();
 const filterpanel = ref<boolean>(false)
 const searchval = ref<string>('')
 const filterval = ref<string>('全部样式')
 const showtypes = ref(new Set<string>())
-const editorpanel = ref<boolean>(false)
-const newpanel = ref<boolean>(false)
-const Top = ref<number>(0)
-const Left = ref<number>(0)
+
 const Mask_ID = ref<string>('')
 const search = ref<HTMLInputElement>()
 const listfilter = new Map()
@@ -128,6 +114,55 @@ const showdata = reactive<StyleSheet[]>([])
 const sheets = reactive<StyleSheet[]>([])
 const masklist = reactive<Mask[]>([]);
 const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], masklist as Mask[]);
+
+const createPanelStatus = reactive<ElementStatus>({id: '#create-shadow-panel', visible: false});
+const createPanelStatusMgr = new ElementManager(
+    props.context,
+    createPanelStatus,
+    {
+        offsetLeft: -442,
+        whiteList: ['.create-style', '.add']
+    }
+);
+const showCreatePanel = (e: MouseEvent) => {
+    createPanelStatusMgr.showBy(e);
+}
+
+const closeCreatePanel = () => {
+    createPanelStatusMgr.close();
+}
+const modifyPanelStatus = reactive<ElementStatus>({id: '#modify-shadow-panel', visible: false});
+const modifyPanelStatusMgr = new ElementManager(
+    props.context,
+    modifyPanelStatus,
+    {
+        offsetLeft: -462,
+        whiteList: ['.editor-style', '.editor']
+    }
+);
+
+const closeModifyPanel = () => {
+    modifyPanelStatusMgr.close();
+}
+
+const showModifyPanel = (event: MouseEvent, maskid: string) => {
+    modifyPanelStatusMgr.showBy(event);
+    Mask_ID.value = maskid;
+}
+
+const libListStatus = reactive<ElementStatus>({id: '#shadow-lib-list', visible: false});
+const libListStatusMgr = new ElementManager(
+    props.context,
+    libListStatus,
+    {
+        offsetTop: 32,
+        whiteList: ['.shadow-lib-list', '.filter']
+    }
+);
+
+const showLibList = (event: MouseEvent) => {
+    libListStatusMgr.showBy(event)
+}
 
 const showtype = (t: string) => {
     showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
@@ -166,108 +201,10 @@ const addshadowmask = (id: string) => {
     emits('close')
 }
 
-const closenewpanel = () => {
-    props.context.escstack.execute()
-    newpanel.value = false
-}
-
-const closeeditorpanel = () => {
-    props.context.escstack.execute()
-    editorpanel.value = false
-}
-
-
-const EditPanel = (e: MouseEvent, maskid: string) => {
-    let el = e.target as HTMLElement;
-    const { top } = el.getBoundingClientRect()
-    while (el.parentElement?.className !== 'shadow-container') {
-        if (el.parentElement) {
-            el = el.parentElement;
-        }
-    }
-    const { left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    Mask_ID.value === maskid ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
-    Mask_ID.value = maskid;
-
-    document.addEventListener('click', checkeditorpanel)
-    props.context.escstack.save(v4(), closeEditorPanel)
-}
-
-const closeEditPanel = () => {
-    editorpanel.value = false;
-    document.removeEventListener('click', checkeditorpanel);
-}
-
-function checkeditorpanel(e: MouseEvent) {
-    e.target instanceof Element &&
-        !e.target.closest('.editor-style') &&
-        !e.target.closest('.editor') &&
-        closeEditPanel();
-}
-
-const closeEditorPanel = () => {
-    const exe_result: boolean = editorpanel.value;
-    editorpanel.value = false
-    document.removeEventListener('click', checkeditorpanel)
-    return exe_result
-}
-
-const NewPanel = (e: MouseEvent) => {
-    let el = e.target as HTMLElement;
-    while (el.className !== 'shadow-container') {
-        if (el.parentElement) {
-            el = el.parentElement;
-        }
-    }
-    const { top, left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    newpanel.value = !newpanel.value;
-
-    document.addEventListener('click', checknewpanel)
-    props.context.escstack.save(v4(), closeNewPanel)
-
-}
-
-function checknewpanel(e: MouseEvent) {
-    e.target instanceof Element &&
-        !e.target.closest('.new-style') &&
-        !e.target.closest('.newstyle') &&
-        closeNewPanel();
-}
-
-const closeNewPanel = () => {
-    const exe_result: boolean = newpanel.value;
-    newpanel.value = false
-    document.removeEventListener('click', checknewpanel)
-    return exe_result
-}
-
-const FilterPanel = () => {
-    if (filterpanel.value) return;
-    filterpanel.value = !filterpanel.value
-    document.addEventListener('click', checkfilterpanel)
-}
-
-const closeFilterPanel = () => {
-    filterpanel.value = false
-    document.removeEventListener('click', checkfilterpanel)
-}
-
-const checkfilterpanel = (e: MouseEvent) => {
-    e.target instanceof Element &&
-        !e.target.closest('.filter-list') &&
-        !e.target.closest('.filter') &&
-        closeFilterPanel();
-}
-
-const Changefilter = (v: string) => {
+const filter = (v: string) => {
     filterval.value = v;
-    filterpanel.value = false
     showtypes.value.add(v)
-    document.removeEventListener('click', checkfilterpanel)
+    libListStatusMgr.close();
 }
 
 function update() {
@@ -286,9 +223,10 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    props.context.data.unwatch(stylelib_watcher)
+    props.context.data.unwatch(stylelib_watcher);
+    createPanelStatusMgr.unmounted();
+    modifyPanelStatusMgr.unmounted();
 })
-
 </script>
 <style lang="scss" scoped>
 .shadow-container {
@@ -311,14 +249,12 @@ onUnmounted(() => {
     padding: 0 12px;
     border-bottom: 1px solid #F5F5F5;
 
-    .title {}
-
     .tool {
         display: flex;
         align-items: center;
         gap: 4px;
 
-        >.newstyle {
+        > .add {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -411,11 +347,8 @@ onUnmounted(() => {
         border: 1px solid #1878F5;
     }
 
-    .filter-list {
-        position: absolute;
-        top: 36px;
-        width: 50%;
-        left: 0;
+    .shadow-lib-list {
+        width: 186px;
         background-color: #fff;
         border: 1px solid #e5e5e5e5;
         border-radius: 4px;
@@ -531,11 +464,6 @@ onUnmounted(() => {
                 }
             }
         }
-    }
-
-
-    .style-item .styles .name {
-        // color: #c8c8c8;
     }
 
     .style-item .styles .editor {

@@ -30,7 +30,6 @@ const props = defineProps<{ title: string, active: boolean }>();
         >.title {
             flex: 0 0 auto;
             height: 14px;
-            font-family: HarmonyOS Sans, serif;
             font-size: 12px;
             font-weight: normal;
             font-feature-settings: "kern" on;

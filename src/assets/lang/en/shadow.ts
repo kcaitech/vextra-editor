@@ -1,7 +1,7 @@
 import { BlurType, ShadowPosition } from "@kcdesign/data";
 
 export const shadow: any = {
-    shadow_stting: "Shadow",
+    shadow: "Shadow",
     only_used: 'Only rectangles, circles and containers can be used',
     shadow_setting: 'Shadow setting',
     position: 'position',

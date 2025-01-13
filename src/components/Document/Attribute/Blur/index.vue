@@ -41,8 +41,7 @@ const reflush = ref<number>(0);
 const mask = ref<boolean>(false);
 const blurMask = ref<BlurMask>();
 
-const blurPanelTrigger = ref<HTMLDivElement>();
-const blurLibStatus = reactive<ElementStatus>({id: '#blur-container', visible: false});
+const blurLibStatus = reactive<ElementStatus>({id: '#blur-lib-panel', visible: false});
 const blurPanelStatusMgr = new ElementManager(
     props.context,
     blurLibStatus,
@@ -158,15 +157,17 @@ const delStyleBlur = () => {
 }
 
 const showBlurPanel = (event: MouseEvent) => {
-    if (blurPanelTrigger.value) {
-        blurPanelStatusMgr.showBy(blurPanelTrigger.value);
-    } else {
-        let e: Element | null = event.target as Element;
-        while (e) {
-            if (e.classList.contains('blur-left')) break;
-            e = e.parentElement;
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('blur-left')) {
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -264}});
+            break;
         }
-        e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -258, offsetTop: 0}});
+        if (e.classList.contains('blur-panel')) {
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -256}});
+            break;
+        }
+        e = e.parentElement;
     }
 }
 
@@ -187,7 +188,7 @@ onUnmounted(() => {
     <div class="blur-panel" ref="blurPanelTrigger">
         <TypeHeader :title="t('blur.blur')" @click="first" :active="!!blurInfo">
             <template v-if="!mask" #tool>
-                <div v-if="!mixed"  class="blur-style" @click="showBlurPanel($event)">
+                <div v-if="!mixed" class="blur-style" @click="showBlurPanel($event)">
                     <SvgIcon :icon="style_icon"/>
                 </div>
                 <div v-if="!blurInfo || mixed" class="add" @click.stop="addBlur">
