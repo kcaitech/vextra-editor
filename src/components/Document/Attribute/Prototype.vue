@@ -11,31 +11,31 @@
                         <div class="text" :class="{ active: prototypeinteraction?.length }">
                             {{ t('prototype.interaction') }}</div>
                         <div class="add">
-                            <SvgIcon :icon="add_icon"/>
+                            <SvgIcon :icon="add_icon" />
                         </div>
                     </div>
                     <div class="actions" v-if="prototypeinteraction?.length">
                         <div class="actions-item" v-for="action in prototypeinteraction " :key="action.id">
                             <div class="item" @click.stop="showhandel(action.id)">
                                 <div class="arrow" :class="{ activation: showaction && acitonindex === action.id }">
-                                    <SvgIcon :icon="arrows_dr_icon"/>
+                                    <SvgIcon :icon="arrows_dr_icon" />
                                 </div>
                                 <div class="item-content">
                                     <span class="event">{{ event.get(action.event.interactionType) }}</span>
                                     <div v-if="action.actions.connectionType !== 'NONE'" class="icon-img">
                                         <SvgIcon :icon="actions.find(item => item.data.value === action.actions.connectionType &&
-                                            item.data.type === action.actions.navigationType)?.data.icon!"/>
+                                            item.data.type === action.actions.navigationType)?.data.icon!" />
                                     </div>
                                     <span class="name">{{ getText(action.actions) }}</span>
                                     <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
                                         <Tooltip :content="t('prototype.warning')">
-                                            <SvgIcon :icon="warning_icon"/>
+                                            <SvgIcon :icon="warning_icon" />
                                         </Tooltip>
                                     </div>
 
                                 </div>
                                 <div class="delete" @click.stop="deleteAction(action.id)">
-                                    <SvgIcon :icon="delete_icon"/>
+                                    <SvgIcon :icon="delete_icon" />
                                 </div>
                             </div>
                             <div class="item-setting" v-if="showaction && acitonindex === action.id">
@@ -76,7 +76,7 @@
                                     <div class="container">
                                         <div class="retract-x">
                                             <Tooltip :content="t('prototype.offsetx')" :offset="15">
-                                                <SvgIcon :icon="indent_x_icon" @click.stop/>
+                                                <SvgIcon :icon="indent_x_icon" @click.stop />
                                             </Tooltip>
                                             <input v-select ref="indentx" class="indent" type="text"
                                                 :value="action.actions.extraScrollOffset?.x ?? 0"
@@ -84,7 +84,7 @@
                                         </div>
                                         <div class="retract-y">
                                             <Tooltip :content="t('prototype.offsety')" :offset="15">
-                                                <SvgIcon :icon="indent_y_icon" @click.stop/>
+                                                <SvgIcon :icon="indent_y_icon" @click.stop />
                                             </Tooltip>
                                             <input v-select ref="indenty" class="indent" type="text"
                                                 :value="action.actions.extraScrollOffset?.y ?? 0"
@@ -105,7 +105,7 @@
                                     v-if="action.actions.connectionType === PrototypeConnectionType.URL">
                                     <div :class="action.actions.openUrlInNewTab ? 'visibility_select' : 'hidden_select'"
                                         @click="changeLinkSelect(action.id, !action.actions.openUrlInNewTab)">
-                                        <SvgIcon v-if="action.actions.openUrlInNewTab" :icon="select_icon"/>
+                                        <SvgIcon v-if="action.actions.openUrlInNewTab" :icon="select_icon" />
                                     </div>
                                     <span>{{ t('prototype.open_in_new_tab') }}</span>
                                 </div>
@@ -160,7 +160,7 @@
                                                     v-for="  i of Direction " :key="i[0]"
                                                     @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i[0])">
                                                     <SvgIcon :style="{ rotate: (`${i[1]}` + 'deg') }"
-                                                    :icon="right_arrows_icon"/>
+                                                        :icon="right_arrows_icon" />
                                                 </div>
                                             </div>
                                         </div>
@@ -1734,7 +1734,7 @@ onUnmounted(() => {
                         margin: auto;
                         width: 12px;
                         height: 12px;
-                        color: white;
+                        filter: invert(1);
                     }
                 }
 
@@ -2006,6 +2006,10 @@ onUnmounted(() => {
                         display: flex;
                         gap: 8px;
 
+                        .select {
+                            width: 100%;
+                        }
+
                         input {
                             font-size: 12px;
                             outline: none;
@@ -2049,6 +2053,13 @@ onUnmounted(() => {
 
                 }
 
+                .effect .container {
+                    flex-direction: column;
+
+                    input {
+                        width: 100%;
+                    }
+                }
             }
         }
     }

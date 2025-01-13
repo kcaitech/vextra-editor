@@ -232,9 +232,9 @@ onMounted(() => {
             height: 32px;
             flex: 0 0 10px;
 
-            svg {
+            img {
                 margin: auto 0;
-                width: 10px;
+                width: 12px;
                 height: 12px;
                 transition: 0.3s;
                 color: #666666;

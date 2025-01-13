@@ -295,19 +295,19 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg"
         box-sizing: border-box;
 
         .icon-img {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background-color: #1878F5;
             margin-right: 8px;
             overflow: hidden;
             display: flex;
 
-            svg {
+            img {
                 margin: auto;
                 width: 12px;
                 height: 12px;
-                color: white;
+                filter: invert(1);
             }
         }
 
@@ -410,6 +410,7 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg"
 
             .icon {
                 color: #fff;
+                filter: invert(1);
             }
         }
     }
