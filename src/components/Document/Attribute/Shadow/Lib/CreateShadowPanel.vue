@@ -1,5 +1,5 @@
 <template>
-    <div id="create-shadow-panel" class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="create-shadow-panel" class="new-style">
         <div class="header">
             <div class="title">创建特效样式</div>
             <div class="close" @click.stop="emits('close')">
