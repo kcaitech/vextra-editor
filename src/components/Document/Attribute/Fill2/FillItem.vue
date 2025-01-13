@@ -5,8 +5,10 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
 import { FillCatch, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { onUpdated, ref } from "vue";
+import { onUnmounted, onUpdated, ref, watch } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/Fill2/basic";
+import ColorBlock from "@/components/common/ColorBlock/Index.vue";
+import { Fill } from "@kcdesign/data";
 
 type Props = {
     context: Context;
@@ -17,13 +19,13 @@ const props = defineProps<Props>();
 
 const colorHex = ref<string>(props.data.fill.color.toHex().slice(1));
 const alpha = ref<string>(props.data.fill.color.alpha * 100 + '%');
+const colors = ref<Fill[]>([props.data.fill]);
 
-function update() {
+onUnmounted(watch(() => props.data, () => {
     colorHex.value = props.data.fill.color.toHex().slice(1);
     alpha.value = props.data.fill.color.alpha * 100 + '%';
-}
-
-onUpdated(update);
+    colors.value = [props.data.fill];
+}))
 </script>
 <template>
     <div class="fill-item-container">
@@ -31,14 +33,14 @@ onUpdated(update);
             <SvgIcon v-if="data.fill.isEnabled" :icon="select_icon"/>
         </div>
         <div class="value-panel-wrapper">
-            <div class="color"/>
+            <ColorBlock :colors="colors as Fill[]"/>
             <input type="text" :value="colorHex" :spellcheck="false"
                    @focus="selectAllOnFocus"
                    @change="(e) => manager.modifyFillHex(e, data.fill)"/>
             <input type="text" :value="alpha" @focus="selectAllOnFocus"
                    @change="(e) => manager.modifyFillAlpha(e, data.fill)"/>
         </div>
-        <div class="delete" @click="manager.remove">
+        <div class="delete" @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon"/>
         </div>
     </div>
@@ -110,6 +112,7 @@ onUpdated(update);
         input + input {
             flex: 0 0 46px;
             width: 46px;
+            text-align: right;
         }
     }
 

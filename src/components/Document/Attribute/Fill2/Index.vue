@@ -30,7 +30,7 @@ const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.va
 const fillCtxMgr = new FillContextMgr(props.context, fillCtx.value as FillContext);
 
 const watchList: any[] = [
-    watch(() => props.selectionChange, fillCtxMgr.update.bind(fillCtxMgr)),
+    watch(() => props.selectionChange, () => fillCtxMgr.update()),
     watch(() => props.trigger, v => v?.includes('style') && fillCtxMgr.update())
 ];
 
@@ -45,7 +45,7 @@ onUnmounted(() => watchList.forEach(stop => stop()));
                 <div v-if="cloverVisible" class="clover">
                     <SvgIcon :icon="style_icon"/>
                 </div>
-                <div v-if="!fillCtx.mask" class="create" @click="fillCtxMgr.create.bind(fillCtxMgr)">
+                <div v-if="!fillCtx.mask" class="create" @click="() => fillCtxMgr.create()">
                     <SvgIcon :icon="add_icon"/>
                 </div>
             </template>

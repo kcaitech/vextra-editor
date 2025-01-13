@@ -1,8 +1,9 @@
-import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color } from "@kcdesign/data";
+import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { hidden_selection, noGroupShapesFrom } from "@/utils/content";
-import { get_actions_fill_color } from "@/utils/shape_style";
+import { get_actions_fill_color, get_actions_fill_delete, get_actions_fill_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent } from "@/components/Document/Attribute/Fill2/basic";
+import { v4 } from "uuid";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     if (sye.style.fillsMask) return sye.style.fillsMask;
@@ -94,20 +95,19 @@ export class FillContextMgr {
     private modifyMixedStatus() {
         const selected = this.selected = noGroupShapesFrom(this.context.selection.selectedShapes);
 
-        if (selected.length < 2) return false;
+        if (selected.length < 2) return this.fillCtx.mixed = false;
         const allFills = selected.map(i => ({fills: i.getFills(), style: i.style}));
 
         let firstL = allFills[0].fills.length;
-        for (const s of allFills) if (s.fills.length !== firstL) return true;
+        for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
 
         const stringF = stringifyFills(allFills[0]);
-        for (let i = 0; i < allFills.length; i++) {
+        for (let i = 1; i < allFills.length; i++) {
             const str = stringifyFills(allFills[i]);
-            if (str !== stringF) return true;
+            if (str !== stringF) return this.fillCtx.mixed = true;
         }
-        return false;
+        return this.fillCtx.mixed = false;
     }
-
 
     private updateFills() {
         if (this.fillCtx.mixed) return;
@@ -151,9 +151,36 @@ export class FillContextMgr {
     }
 
     create() {
+        if (this.fillCtx.mixed) return this.unify();
+
+        const actions: BatchAction2[] = [];
+        const selected = this.selected;
+        for (const view of selected) {
+            if (view instanceof ContactLineView) continue;
+            let color: Color;
+            if (view instanceof ArtboardView) {
+                color = new Color(1, 255, 255, 255);
+            } else {
+                color = new Color(0.2, 0, 0, 0);
+            }
+            const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
+            actions.push({target: view, value: fill});
+        }
+
+        this.editor.shapesAddFill(actions);
+
+        this.hiddenCtrl();
     }
 
-    remove() {
+    unify() {
+        const actions = get_actions_fill_unify(this.selected);
+        this.editor.shapesFillsUnify(actions);
+        this.hiddenCtrl();
+    }
+
+    remove(fill: Fill) {
+        const actions = get_actions_fill_delete(this.selected, this.getIndexByFill(fill));
+        this.editor.shapesDeleteFill(actions);
     }
 
     modifyFillHex(event: Event, fill: Fill) {
