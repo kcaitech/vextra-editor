@@ -53,7 +53,8 @@ onUnmounted(() => watchList.forEach(stop => stop()));
         <div v-if="fillCtx.mixed" class="tips-wrapper">
             {{ t('attr.mixed_lang') }}
         </div>
-        <FillMaskView v-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"/>
+        <FillMaskView v-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
+                      :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!"/>
         <div v-if="!fillCtx.mixed && !fillCtx.mask" class="fills-container">
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index"
                       :context="context" :manager="fillCtxMgr" :data="fill as FillCatch"/>

@@ -96,6 +96,7 @@ function draw() {
 
     style.value['width'] = "100%";
     style.value['height'] = "100%";
+    style.value['position'] = "absolute";
 }
 
 onMounted(draw);

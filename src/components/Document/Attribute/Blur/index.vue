@@ -47,7 +47,7 @@ const blurPanelStatusMgr = new ElementManager(
     blurLibStatus,
     {
         offsetLeft: -250,
-        whiteList: ['.blur-container', '.blur-style', '.blur-left']
+        whiteList: ['.blur-container', '.blur-lib-panel', '.blur-left']
     }
 );
 
