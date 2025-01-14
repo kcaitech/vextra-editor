@@ -1,9 +1,9 @@
 <template>
-    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div class="modify-fill-style-panel" id="modify-fill-style-panel">
         <div class="header">
             <div class="title">{{ props.type === 'editor' ? '编辑颜色样式' : '创建颜色样式' }}</div>
             <div class="close" @click.stop="emits('close')">
-                <SvgIcon :icon="close_icon"></SvgIcon>
+                <SvgIcon :icon="close_icon"/>
             </div>
         </div>
         <div class="detail">
@@ -19,14 +19,14 @@
         <div class="color">
             <div class="create-color">
                 <div class="title">颜色</div>
-                <div class="add" @click.stop="addfill">
-                    <SvgIcon :icon="add_icon"></SvgIcon>
+                <div class="add" @click.stop="create">
+                    <SvgIcon :icon="add_icon"/>
                 </div>
             </div>
             <div class="color-list">
                 <div class="item" v-for="(f, idx) in fills" :key="f.id">
                     <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                        <SvgIcon v-if="f.fill.isEnabled" :icon="select_icon"></SvgIcon>
+                        <SvgIcon v-if="f.fill.isEnabled" :icon="select_icon"/>
                     </div>
                     <div class="editor">
                         <ColorPicker :color="f.fill.color" :style="props.style" :entrance="'styles'"
@@ -39,7 +39,7 @@
                             :paintFilter="f.fill.paintFilter" @gradient-reverse="() => gradient_reverse(idx)"
                             @gradient-rotate="() => gradient_rotate(idx)"
                             @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                            @gradient-type="(type, fillType) => togger_gradient_type(idx, type, fillType)"
+                                     @gradient-type="(type, fillType) => modify_gradient_type(idx, type, fillType)"
                             @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                             @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
                             @changeMode="(mode) => changeMode(idx, mode)"
@@ -65,49 +65,34 @@
                             @keydown="(e) => keydownAlpha(e, idx, f.fill, filterAlpha(f.fill))" />
                     </div>
                     <div class="delete" :class="{ 'invalid': fills.length === 1 }" @click="deleteFill(idx)">
-                        <SvgIcon :icon="delete_icon"></SvgIcon>
+                        <SvgIcon :icon="delete_icon"/>
                     </div>
                 </div>
             </div>
         </div>
         <div v-if="props.type !== 'editor'" class="create-bnt" @click.stop="insertStyleLib">创建样式</div>
     </div>
-
 </template>
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Context } from '@/context';
 import {
-    BasicArray,
-    Color,
-    Fill,
-    FillMask,
-    FillType,
-    GradientType,
-    ImageScaleMode,
-    ShapeType,
-    ShapeView,
-    Stop, SymbolView,
-    TableView
+    BasicArray, Color, Fill, FillMask, FillType, GradientType, ImageScaleMode, ShapeType, ShapeView,
+    Stop, TableView
 } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
-import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
 import {
     get_aciton_gradient,
     get_aciton_gradient_stop,
-    get_actions_add_fill,
     get_actions_fill_color,
     get_actions_fill_delete,
-    get_actions_fill_enabled,
     get_actions_fill_opacity,
-    get_actions_fill_unify,
     get_actions_filltype,
     get_actions_image_ref,
     get_actions_image_scale_mode,
-    get_fills
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import { flattenShapes } from '@/utils/cutout';
@@ -116,18 +101,10 @@ import { getShapesForStyle } from '@/utils/style';
 import { ImgFrame } from '@/context/atrribute';
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { LinearApi } from "@kcdesign/data"
-import { Mask, FillRenderer } from "./fillRenderer";
+import { FillRenderer } from "../../StyleLib/fillRenderer";
 import add_icon from '@/assets/icons/svg/add.svg';
-import editor_icon from '@/assets/icons/svg/export-menu.svg';
-import down_icon from '@/assets/icons/svg/triangle-down.svg';
-import right_icon from '@/assets/icons/svg/triangle-right.svg';
 import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
-import search_icon from '@/assets/icons/svg/search.svg';
-import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
-import choose_icon from '@/assets/icons/svg/choose.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
@@ -136,31 +113,25 @@ interface FillItem {
     fill: Fill
 }
 const props = defineProps<{
+    context: Context;
+    maskId?: string;
+
     fill?: FillItem[];
     style?: FillMask;
-    context: Context;
-    shapes: ShapeView[];
-    top?: number;
-    left?: number;
     type?: string;
-    maskid?: string,
+    maskid?: string;
     reder?: FillRenderer
 }>();
 
 const emits = defineEmits<{
     (e: "close"): void;
-    (e: "addfill"): void;
+    (e: "create"): void;
 }>()
 
-
-const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
-const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 let fills: FillItem[] = reactive([]);
 const alphaFill = ref<HTMLInputElement[]>();
 const colorFill = ref<HTMLInputElement[]>();
-const mixed = ref<boolean>(false);
-const mixed_cell = ref(false);
 const shapes = ref<ShapeView[]>();
 const keydownval = ref<boolean>(false)
 const is_color_select = ref(false);
@@ -178,11 +149,11 @@ const styleName = ref<string>('')
 const styleDes = ref<string>('')
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
+const modifyMode = computed<boolean>(() => !!props.maskId);
 
-const addfill = () => {
-    if (!props.type) {
-        emits('addfill')
-        return
+const create = () => {
+    if (!modifyMode.value) {
+        return emits('create');
     }
     const editor = props.context.editor4Doc()
     if (props.style?.sheet && props.style?.id) {
@@ -220,8 +191,7 @@ const setSheetDes = () => {
 
 const alphaInput = (e: Event) => {
     if (alphaFill.value) {
-        const value = (e.target as HTMLInputElement).value;
-        alphaValue.value = value;
+        alphaValue.value = (e.target as HTMLInputElement).value;
     }
 }
 
@@ -263,50 +233,30 @@ const alpha_message = (idx: number, fill: Fill) => {
 
 function toggleVisible(idx: number) {
     const _idx = fills.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const s = selected[0];
-    const table = props.context.tableSelection;
-    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
-        const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
-        e.setFillEnable4Cell(_idx, !fills[idx].fill.isEnabled, range)
-
-    } else {
-        const editor = props.context.editor4Doc()
-        if (props.style?.sheet && props.style?.id) {
-            const value = !props.style.fills[_idx].isEnabled
-            editor.modifyFillMaskFillEnabled(props.style?.sheet, props.style?.id, _idx, value)
-        }
+    const editor = props.context.editor4Doc()
+    if (props.style?.sheet && props.style?.id) {
+        const value = !props.style.fills[_idx].isEnabled
+        editor.modifyFillMaskFillEnabled(props.style?.sheet, props.style?.id, _idx, value)
     }
-
     hidden_selection(props.context);
 }
 
 function deleteFill(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const s = selected[0];
-    const table = props.context.tableSelection;
     const page = props.context.selection.selectedPage;
-    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
-        const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
-        e.deleteFill4Cell(_idx, range)
-    } else {
-        if (props.type) {
-            const editor = props.context.editor4Doc()
-            if (props.style?.sheet && props.style?.id) {
-                editor.modifyFillMaskFillDelFill(props.style?.sheet, props.style?.id, _idx)
-            }
-        } else {
-            const shapes = getShapesForStyle(selected);
-            const actions = get_actions_fill_delete(shapes, _idx);
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.shapesDeleteFill(actions);
-            }
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (props.style?.sheet && props.style?.id) {
+            editor.modifyFillMaskFillDelFill(props.style?.sheet, props.style?.id, _idx)
         }
-
+    } else {
+        const shapes = getShapesForStyle(selected);
+        const actions = get_actions_fill_delete(shapes, _idx);
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.shapesDeleteFill(actions);
+        }
     }
     hidden_selection(props.context);
 }
@@ -415,31 +365,17 @@ function setColor(idx: number, clr: string, alpha: number) {
 
 function toggle_fill_type(idx: number, fillType: FillType) {
     const _idx = fills.length - idx - 1;
-    const s = props.context.selection.selectedShapes[0];
-    const page = props.context.selection.selectedPage;
-    const table = props.context.tableSelection;
-    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
-        const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
-        e.setFillType4Cell(_idx, fillType, range)
+    if (props.type) {
+        const editor = props.context.editor4Doc()
+        if (!props.style) return
+        editor.modifyFillMaskFillFillType(props.style?.sheet, props.style?.id, _idx, fillType)
     } else {
-
-        if (props.type) {
-            console.log('1111111');
-
-            const editor = props.context.editor4Doc()
-            if (!props.style) return
-            editor.modifyFillMaskFillFillType(props.style?.sheet, props.style?.id, _idx, fillType)
-        } else {
-            console.log('2222222');
-            const selected = props.context.selection.selectedShapes;
-            const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-            const actions = get_actions_filltype(shapes, _idx, fillType);
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesFillType(actions);
-            }
-        }
+        const selected = props.context.selection.selectedShapes;
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_filltype(shapes, _idx, fillType);
+        const page = props.context.selection.selectedPage!;
+        const editor = props.context.editor4Page(page);
+        editor.setShapesFillType(actions);
     }
 }
 
@@ -449,15 +385,8 @@ const getImageUrl = (fill: Fill) => {
 
 function getColorFromPicker(idx: number, color: Color) {
     const _idx = fills.length - idx - 1;
-    const s = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
-    const table = props.context.tableSelection;
-    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
-        const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
-        e.setFillColor4Cell(_idx, color, range)
-    } else {
-        if (props.type) {
+    if (props.type) {
             const editor = props.context.editor4Doc()
             if (props.style?.sheet && props.style?.id) {
                 editor.modifyFillMaskFillColor(props.style?.sheet, props.style?.id, _idx, color)
@@ -472,14 +401,9 @@ function getColorFromPicker(idx: number, color: Color) {
                 editor.setShapesFillColor(actions);
             }
         }
-    }
     hidden_selection(props.context);
 }
 
-/**
- * @description 翻转渐变
- * @param idx
- */
 function gradient_reverse(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -498,10 +422,6 @@ function gradient_reverse(idx: number) {
 
 }
 
-/**
- * @description 旋转渐变
- * @param idx
- */
 function gradient_rotate(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -520,12 +440,6 @@ function gradient_rotate(idx: number) {
     }
 }
 
-/**
- * @description 添加渐变节点
- * @param idx
- * @param position
- * @param color
- */
 function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -544,11 +458,7 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
 
 }
 
-/**
- * @description 切换渐变类型
- * @param idx
- */
-function togger_gradient_type(idx: number, type: GradientType, fillType: FillType) {
+function modify_gradient_type(idx: number, type: GradientType, fillType: FillType) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
@@ -571,11 +481,6 @@ function togger_gradient_type(idx: number, type: GradientType, fillType: FillTyp
     }
 }
 
-/**
- * @description 修改节点颜色
- * @param idx
- * @param color
- */
 function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -593,11 +498,6 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
 
 }
 
-/**
- * @description 删除渐变节点
- * @param idx
- * @param index
- */
 function gradient_stop_delete(idx: number, index: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -738,8 +638,7 @@ const selectColor = (e: FocusEvent) => {
 
 const colorInput = (e: Event) => {
     if (colorFill.value) {
-        const value = (e.target as HTMLInputElement).value;
-        colorValue.value = value;
+        colorValue.value = (e.target as HTMLInputElement).value;
     }
 }
 
@@ -860,8 +759,6 @@ function keydownAlpha(event: KeyboardEvent, idx: number, fill: Fill, val: string
 
 }
 
-
-
 const update = () => {
     if (props.fill) {
         fills = props.fill
@@ -877,22 +774,15 @@ const update = () => {
     styleDes.value = props.style?.description ?? '';
 }
 
-watch(() => props.style, () => {
-    console.log('styles 变了');
-
-})
-
 function stylelib_watcher(t: number | string) {
     if (t === 'stylelib')
         if (!props.style) return
     fills.length = 0
     if (props.reder) {
-        props.reder.currentTarget(props.style!.id)?.fills?.forEach((f, idx) => fills.push({ id: idx, fill: f }))
+        props.reder.currentTarget(props.style!.id)?.fills?.forEach((f, idx) => fills.push({id: idx, fill: f}))
     }
     fills = fills.reverse()
-
 }
-
 
 onMounted(() => {
     update();
@@ -902,11 +792,9 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.data.unwatch(stylelib_watcher)
 })
-
-
 </script>
 <style lang="scss" scoped>
-.editor-style {
+.modify-fill-style-panel {
     position: fixed;
     display: flex;
     flex-direction: column;
@@ -914,7 +802,7 @@ onUnmounted(() => {
     gap: 8px;
     border-radius: 8px;
     background-color: #fff;
-    box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
     box-sizing: border-box;
 
     .header {
@@ -941,7 +829,6 @@ onUnmounted(() => {
                 height: 16px;
                 margin: auto;
                 padding: 2px;
-                /* margin-top: 1px; */
                 box-sizing: border-box;
             }
         }
@@ -1130,7 +1017,6 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: auto;
         margin-bottom: 12px;
         font-size: 12px;
         width: 100px;

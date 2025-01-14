@@ -4,7 +4,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 import unbind_icon from "@/assets/icons/svg/unbind.svg";
 
 import { Context } from "@/context";
-import { FillCatch, FillContextMgr, FillMaskInfo } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillCatch, FillContextMgr, MaskInfo } from "@/components/Document/Attribute/Fill2/ctx";
 import { Fill } from "@kcdesign/data";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { onUnmounted, ref, watchEffect } from "vue";
@@ -13,7 +13,7 @@ const props = defineProps<{
     context: Context;
     manager: FillContextMgr;
     fills: FillCatch[];
-    info: FillMaskInfo;
+    info: MaskInfo;
 }>();
 const colors = ref<Fill[]>(props.fills.map(i => i.fill).reverse());
 const name = ref<string>(props.info.name);

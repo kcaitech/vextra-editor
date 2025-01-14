@@ -2,7 +2,7 @@ import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Shap
 import { Context } from "@/context";
 import { hidden_selection, noGroupShapesFrom } from "@/utils/content";
 import { get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
-import { getNumberFromInputEvent, getRGBFromInputEvent } from "@/components/Document/Attribute/Fill2/basic";
+import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/Fill2/basic";
 import { v4 } from "uuid";
 import { getShapesForStyle } from "@/utils/style";
 
@@ -58,10 +58,7 @@ function stringifyGradient(g: Gradient) {
     }
 }
 
-export type FillMaskInfo = {
-    name: string;
-    desc: string;
-}
+
 export type FillCatch = {
     fill: Fill;
 }
@@ -71,7 +68,7 @@ export type FillContext = {
     fills: FillCatch[];
 
     mask?: string;
-    maskInfo?: FillMaskInfo;
+    maskInfo?: MaskInfo;
 }
 
 export class FillContextMgr {

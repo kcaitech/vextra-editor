@@ -63,8 +63,7 @@ import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
 import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
 import { ImgFrame } from '@/context/atrribute';
-import ColorStyle from '@/components/Document/Attribute/StyleLib/ColorStyle.vue';
-import EditorColorStyle from '@/components/Document/Attribute/StyleLib/EditorColorStyle.vue';
+import ColorStyle from '@/components/Document/Attribute/Fill2/Lib/ColorStyle.vue';
 import { watchEffect } from 'vue';
 
 interface FillItem {
@@ -1556,10 +1555,6 @@ onUnmounted(() => {
                 <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
                     :fill="props.fillslist" @close="EditorStyle = false" :locat="props.locat">
                 </ColorStyle>
-            </div>
-            <div v-if="EditorStyle" class="editor-style">
-                <EditorColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
-                    :fill="props.fillslist" @close="EditorStyle = false" @addfill="emit('addfill')"></EditorColorStyle>
             </div>
         </div>
     </div>
