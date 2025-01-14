@@ -7,21 +7,21 @@ import { Context } from "@/context";
 import { FillCatch, FillContextMgr, FillMaskInfo } from "@/components/Document/Attribute/Fill2/ctx";
 import { Fill } from "@kcdesign/data";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
-import { onUnmounted, ref, watch } from "vue";
+import { onUnmounted, ref, watchEffect } from "vue";
 
 const props = defineProps<{
     context: Context;
     manager: FillContextMgr;
     fills: FillCatch[];
-    info: FillMaskInfo
+    info: FillMaskInfo;
 }>();
 const colors = ref<Fill[]>(props.fills.map(i => i.fill).reverse());
 const name = ref<string>(props.info.name);
 
-onUnmounted(watch(() => props.info, () => {
+onUnmounted(watchEffect(() => {
     colors.value = props.fills.map(i => i.fill).reverse();
     name.value = props.info.name;
-}))
+}));
 </script>
 <template>
     <div class="fill-mask-container">
@@ -31,11 +31,11 @@ onUnmounted(watch(() => props.info, () => {
                     <ColorBlock :colors="colors as Fill[]" round disabled-alpha/>
                     <span>{{ name }}</span>
                 </div>
-                <div class="unbind">
+                <div class="unbind" @click="() => manager.unbind()">
                     <SvgIcon :icon="unbind_icon"/>
                 </div>
             </div>
-            <div class="del">
+            <div class="del" @click="() => manager.removeMask()">
                 <SvgIcon :icon="delete_icon"/>
             </div>
         </div>
