@@ -5,9 +5,11 @@ import down_icon from "@/assets/icons/svg/triangle-down.svg";
 import right_icon from "@/assets/icons/svg/triangle-right.svg";
 import { SheetCatch } from "@/components/Document/Attribute/Fill2/Lib/ctx";
 import { Context } from "@/context";
+import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 
 defineProps<{
     context: Context;
+    manager: FillContextMgr;
     data: SheetCatch;
     item: any;
 }>();
@@ -20,7 +22,8 @@ const extend = ref<boolean>(true);
             <span>{{ data.name }}</span>
         </div>
         <div v-if="extend" style="width: 100%;height: fit-content;">
-            <component v-for="c in data.variables" :is="item" :context="context" :data="c" :key="c.id"/>
+            <component v-for="c in data.variables" :key="c.id" :is="item" :context="context"
+                       :manager="manager" :data="c"/>
         </div>
     </div>
 </template>

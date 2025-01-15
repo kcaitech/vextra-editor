@@ -154,6 +154,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         if (exceedH < 0) top = Math.max(0, top + exceedH);
 
         target.style.position = "fixed";
+        target.style.zIndex = '1';
         target.style.left = `${left}px`;
         target.style.top = `${top}px`;
     }

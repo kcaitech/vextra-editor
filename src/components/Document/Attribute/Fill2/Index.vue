@@ -35,7 +35,7 @@ const fillPanelStatusMgr = new ElementManager(
     fillLibStatus,
     {whiteList: ['.fill-style-lib-panel', '.clover']}
 );
-
+fillCtxMgr.catchPanel(fillPanelStatusMgr);
 function showFillLib(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
@@ -78,7 +78,8 @@ onUnmounted(() => {
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index"
                       :context="context" :manager="fillCtxMgr" :data="fill as FillCatch"/>
         </div>
-        <FillStylePanel v-if="fillLibStatus.visible" :context="context" @close="()=> fillPanelStatusMgr.close()"/>
+        <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr"
+                        @close="()=> fillPanelStatusMgr.close()"/>
     </div>
 </template>
 <style scoped lang="scss">

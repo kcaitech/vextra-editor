@@ -5,8 +5,9 @@ import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import ModifyFillStyle from "@/components/Document/Attribute/Fill2/Lib/ModifyFillStyle.vue";
 import { onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, manager: FillContextMgr }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
 const panelStatus = reactive<ElementStatus>({id: '#modify-fill-style-panel', visible: false});
 const panelStatusMgr = new ElementManager(
@@ -33,7 +34,7 @@ onUnmounted(() => {
 <template>
     <div id="fill-style-lib-panel" class="fill-style-lib-panel">
         <PopoverHeader title="填充样式" @create="showCreatePanel" @close="emits('close')"/>
-        <ColorStyle :context="context"/>
+        <ColorStyle :context="context" :manager="manager"/>
         <ModifyFillStyle v-if="panelStatus.visible" :context="context" @close="() => panelStatusMgr.close()"/>
     </div>
 </template>
