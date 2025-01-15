@@ -87,7 +87,7 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import ModifyShadowPanel from './ModifyShadowPanel.vue';
 import CreateShadowPanel from './CreateShadowPanel.vue';
-import { StyleSheet } from "../../../../../../../kcdesign-data/dist/types/data/typesdefine";
+import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { FillRenderer, Mask } from "../../StyleLib/fillRenderer";
 import { getShapesForStyle } from "@/utils/style";
 import { get_actions_add_mask } from "@/utils/shape_style";
@@ -323,6 +323,7 @@ onUnmounted(() => {
         >img {
             height: 100%;
             width: 14px;
+            transition: all 0.2s ease-in;
         }
     }
 
@@ -330,6 +331,14 @@ onUnmounted(() => {
        rotate: -90deg;
        padding: 1px;
        box-sizing: border-box;
+    }
+
+    .filter:hover {
+        cursor: pointer;
+
+        img {
+            transform: translateX(-2px);
+        }
     }
 
     input {

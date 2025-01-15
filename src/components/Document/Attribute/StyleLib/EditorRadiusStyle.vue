@@ -1,5 +1,5 @@
 <template>
-    <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div id="modify-radius-panel" class="editor-style">
         <div class="header">
             <div class="title">编辑圆角样式</div>
             <div class="close" @click.stop="emits('close')">
@@ -30,11 +30,13 @@ import { ShapeView, BorderPosition, Border } from '@kcdesign/data';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
+import { FillRenderer } from '../StyleLib/fillRenderer';
 
 const props = defineProps<{
     context: Context;
-    top: number;
-    left: number
+    shapes: ShapeView[];
+    maskid: string
+    reder: FillRenderer
 }>();
 
 const emits = defineEmits<{

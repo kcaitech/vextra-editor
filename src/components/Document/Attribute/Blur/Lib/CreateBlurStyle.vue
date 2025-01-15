@@ -43,7 +43,7 @@
                 </div>
             </div>
         </div>
-        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="createEffect">创建样式</div>
+        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="createStyles">创建样式</div>
     </div>
 </template>
 <script setup lang="ts">
@@ -115,7 +115,7 @@ function positionSelect(selected: SelectItem) {
     hidden_selection(props.context);
 }
 
-const createEffect = () => {
+const createStyles = () => {
     if (invalid.value) return
     const editor = props.context.editor4Doc()
     if (!blurInfo.value) return

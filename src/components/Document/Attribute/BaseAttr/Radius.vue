@@ -17,6 +17,7 @@ import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { LinearApi } from "@kcdesign/data"
 import RadiusStyle from '@/components/Document/Attribute/StyleLib/RadiusStyle.vue';
 import { v4 } from 'uuid';
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 
 const { t } = useI18n();
 
@@ -24,6 +25,7 @@ interface Props {
     context: Context
     disabled: boolean
     linearApi: LinearApi
+    shapes: ShapeView[]
 }
 
 const props = defineProps<Props>();
@@ -37,10 +39,17 @@ const radius = reactive<{ lt: number | string, rt: number | string, rb: number |
 });
 const mixed = props.context.workspace.t('attr.mixed');
 const keyupdate = ref<boolean>(false)
-const lt = ref<boolean>(false)
-const rt = ref<boolean>(false)
-const lb = ref<boolean>(false)
-const rb = ref<boolean>(false)
+
+
+const radiusLibStatus = reactive<ElementStatus>({ id: '#radius-lib-panel', visible: false });
+const radiusPanelStatusMgr = new ElementManager(
+    props.context,
+    radiusLibStatus,
+    {
+        offsetLeft: -250,
+        whiteList: ['.blur-container', '.radius-lib-panel', '.blur-left']
+    }
+);
 
 function get_value_from_input(val: any) {
     let value = Number.parseFloat(val);
@@ -457,80 +466,23 @@ const pointerLockChange = () => {
     }
 }
 
-const Top = ref<number>(0)
-const Left = ref<number>(0)
-const showradius = ref<boolean>(false)
-function EditPanel(e: MouseEvent, type: string) {
-    let el = e.target as HTMLElement;
-    while (el.className !== 'tr') {
-        if (el.parentElement) {
-            el = el.parentElement;
+const showRadiusPanel = (event: MouseEvent) => {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('header')) {
+            e && radiusPanelStatusMgr.showBy(e, {once: {offsetLeft: -264}});
+            break;
         }
-    }
-    const { top, left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 8 - 250;
-    reset()
-    showradius.value = !showradius.value
-    if (showradius.value) {
-        if (type === 'lt') {
-            lt.value = true;
-        }
-        if (type === 'rt') {
-            rt.value = true
-        }
-        if (type === 'lb') {
-            lb.value = true
-        }
-        if (type === 'rb') {
-            rb.value = true
-        }
-    }
-    props.context.escstack.save(v4(), close);
-    if (showradius.value) {
-        document.addEventListener('click', checktargetlist)
-    } else {
-        document.removeEventListener('click', checktargetlist)
+        // if (e.classList.contains('blur-panel')) {
+        //     e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -256}});
+        //     break;
+        // }
+        e = e.parentElement;
     }
 }
 
-function close() {
-    const is_achieve_expected_results = showradius.value;
-    showradius.value = false;
-    reset();
-    document.removeEventListener('click', checktargetlist)
-    return is_achieve_expected_results;
-}
-
-function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelectorAll('.radius-style')
-    const muen2 = document.querySelector('.radius-container')
-    if (!muen) return;
-    if (!muen2) return;
-    let b: boolean = false;
-    muen.forEach(i => {
-        if (i.contains(e.target as HTMLElement)) {
-            b = true
-        }
-    })
-    if (!b && !muen2.contains(e.target as HTMLElement)) {
-        showradius.value = false
-        reset()
-        document.removeEventListener('click', checktargetlist)
-    }
-}
-
-const reset = () => {
-    rt.value = false
-    lt.value = false
-    lb.value = false
-    rb.value = false
-}
-
-function closepanel() {
-    showradius.value = false;
-    reset();
-    document.removeEventListener('click', checktargetlist);
+const closePanel = () => {
+    radiusPanelStatusMgr.close();
 }
 
 onMounted(() => {
@@ -549,36 +501,38 @@ import more_for_radius_icon from "@/assets/icons/svg/more-for-radius.svg";
 import style_icon from "@/assets/icons/svg/styles.svg"
 </script>
 <template>
+    <div class="header">
+        <div class="title">圆角</div>
+        <div class="styles" @click="showRadiusPanel($event)">
+            <SvgIcon :icon="style_icon"></SvgIcon>
+        </div>
+
+    </div>
     <div class="tr">
-        <MossInput2 :icon="radius_icon" :icon2="style_icon" :draggable="radius.lt !== mixed" :value="radius.lt"
-            :disabled="disabled" @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT"
-            @dragend="dragend" @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup"
-            @click="EditPanel($event, 'lt')">
+        <MossInput2 :icon="radius_icon" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
+            @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT" @dragend="dragend"
+            @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup">
         </MossInput2>
         <div class="space" v-if="!rect"></div>
-        <MossInput2 v-if="rect" class="r-90" :icon="radius_icon" :icon2="style_icon" :draggable="radius.rt !== mixed"
-            :value="radius.rt" :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart"
-            @dragging="draggingRT" @dragend="dragend" @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup"
-            @click="EditPanel($event, 'rt')"></MossInput2>
+        <MossInput2 v-if="rect" class="r-90" :icon="radius_icon" :draggable="radius.rt !== mixed" :value="radius.rt"
+            :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT"
+            @dragend="dragend" @keydown="keydownRadius($event, 'rt')" @keyup="checkKeyup"></MossInput2>
         <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
             <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
-                <SvgIcon :icon="rect ? white_for_radius_icon : more_for_radius_icon"
-                    :class="{ 'active': rect }"/>
+                <SvgIcon :icon="rect ? white_for_radius_icon : more_for_radius_icon" :class="{ 'active': rect }" />
             </div>
         </Tooltip>
     </div>
     <div class="tr" v-if="rect">
-        <MossInput2 class="r-270" :icon="radius_icon" :icon2="style_icon" :draggable="radius.lb !== mixed" :value="radius.lb"
+        <MossInput2 class="r-270" :icon="radius_icon" :draggable="radius.lb !== mixed" :value="radius.lb"
             :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart" @dragging="draggingLB"
-            @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"
-            @click="EditPanel($event, 'lb')"></MossInput2>
-        <MossInput2 class="r-180" :icon="radius_icon" :icon2="style_icon" :draggable="radius.rb !== mixed" :value="radius.rb"
+            @dragend="dragend" @keydown="keydownRadius($event, 'lb')" @keyup="checkKeyup"></MossInput2>
+        <MossInput2 class="r-180" :icon="radius_icon" :draggable="radius.rb !== mixed" :value="radius.rb"
             :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart" @dragging="draggingRB"
-            @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"
-            @click="EditPanel($event, 'rb')"></MossInput2>
+            @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"></MossInput2>
         <div style="width: 32px;height: 32px;"></div>
     </div>
-    <RadiusStyle v-if="lt || rt || lb || rb" :context="props.context" :top="Top" :left="Left" @close="closepanel">
+    <RadiusStyle v-if="radiusLibStatus.visible" :context="props.context" :shapes="props.shapes" @close="closePanel">
     </RadiusStyle>
     <teleport to="body">
         <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
@@ -611,6 +565,31 @@ import style_icon from "@/assets/icons/svg/styles.svg"
     background-color: #F5F5F5;
 }
 
+.header {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+
+    img {
+        width: 28px;
+        height: 28px;
+        padding: 8px;
+        box-sizing: border-box;
+        border-radius: 6px;
+
+        &:hover {
+            background-color: #F5F5F5;
+        }
+    }
+
+
+}
+
 .tr {
     position: relative;
     width: 100%;
@@ -620,6 +599,22 @@ import style_icon from "@/assets/icons/svg/styles.svg"
     display: flex;
     flex-direction: row;
     gap: 8px;
+
+    .container {
+        display: flex;
+        align-items: center;
+        border: 1px solid transparent;
+        box-sizing: border-box;
+        background-color: var(--input-background);
+        border-radius: var(--default-radius);
+        width: 88px;
+
+        img {
+            width: 12px;
+            height: 12px;
+            padding-right: 8px;
+        }
+    }
 
     .space {
         width: 88px;

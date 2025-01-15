@@ -50,6 +50,7 @@ interface Props {
     context: Context
     selectionChange: number
     trigger: any[]
+    shapes: ShapeView[]
 }
 
 interface ModelState {
@@ -1006,7 +1007,7 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
                 @dragend="dragend"></MossInput>
             <div style="width: 32px;height: 32px;"/>
         </div>
-        <Radius v-if="s_radius" :context="context" :linearApi="linearApi" :disabled="model_disable_state.radius"/>
+        <Radius v-if="s_radius" :context="context" :shapes="shapes" :linearApi="linearApi" :disabled="model_disable_state.radius"/>
         <ContentClip v-if="s_clip" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up">

@@ -1,7 +1,7 @@
 <template>
     <div id="create-shadow-panel" class="new-style">
         <div class="header">
-            <div class="title">创建特效样式</div>
+            <div class="title">创建阴影样式</div>
             <div class="close" @click.stop="emits('close')">
                 <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
@@ -45,7 +45,7 @@
                 </div>
             </div>
         </div>
-        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="Neweffect">创建样式</div>
+        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="createStyles">创建样式</div>
     </div>
 </template>
 <script setup lang="ts">
@@ -57,7 +57,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, ShadowPosition, Shadow, ShapeType, BasicArray, Color, ShadowMask } from '../../../../../../../kcdesign-data';
+import { ShapeView, ShadowPosition, Shadow, ShapeType, BasicArray, Color, ShadowMask } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
@@ -155,7 +155,7 @@ function positionSelect(selected: SelectItem, id: number) {
     }
 }
 
-const Neweffect = () => {
+const createStyles = () => {
     if (invalid.value) return
     const editor = props.context.editor4Doc()
     const _shadows = new BasicArray<Shadow>()
@@ -172,6 +172,7 @@ const Neweffect = () => {
     const shapes = getShapesForStyle(selected);
     editor.insertStyleLib(style, page, shapes);
     emits('close')
+    props.context.escstack.execute()
 }
 
 function addShadow(): void {

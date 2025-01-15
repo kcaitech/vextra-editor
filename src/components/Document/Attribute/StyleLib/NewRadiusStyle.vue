@@ -1,5 +1,5 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div id="create-radius-panel" class="new-style">
         <div class="header">
             <div class="title">创建圆角样式</div>
             <div class="close" @click.stop="emits('close')">
@@ -41,8 +41,7 @@ import { v4 } from 'uuid';
 
 const props = defineProps<{
     context: Context;
-    top: number;
-    left: number
+    shapes: ShapeView[];
 }>();
 
 const emits = defineEmits<{

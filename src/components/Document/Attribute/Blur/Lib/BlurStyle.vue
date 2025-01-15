@@ -325,8 +325,8 @@ onUnmounted(() => {
     .filter:hover {
         cursor: pointer;
 
-        svg {
-            transform: translateY(2px);
+        img {
+            transform: translateX(-2px);
         }
     }
 

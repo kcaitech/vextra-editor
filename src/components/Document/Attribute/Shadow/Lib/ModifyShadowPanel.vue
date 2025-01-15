@@ -1,7 +1,7 @@
 <template>
     <div id="modify-shadow-panel" class="editor-style">
         <div class="header">
-            <div class="title">编辑特效样式</div>
+            <div class="title">编辑阴影样式</div>
             <div class="close" @click.stop="emits('close')">
                 <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
