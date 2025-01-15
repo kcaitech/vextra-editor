@@ -33,14 +33,18 @@ const fillLibStatus = reactive<ElementStatus>({id: '#fill-style-lib-panel', visi
 const fillPanelStatusMgr = new ElementManager(
     props.context,
     fillLibStatus,
-    {whiteList: ['.fill-style-lib-panel', '.clover']}
+    {whiteList: ['.fill-style-lib-panel', '.clover', '.desc']}
 );
 fillCtxMgr.catchPanel(fillPanelStatusMgr);
 function showFillLib(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('clover')) {
-            e && fillPanelStatusMgr.showBy(e, {once: {offsetLeft: -424}});
+            e && fillPanelStatusMgr.showBy(e, {once: {offsetLeft: -164, offsetTop: 36}});
+            break;
+        }
+        if (e.classList.contains('desc')) {
+            e && fillPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 36}});
             break;
         }
         e = e.parentElement;
@@ -61,7 +65,7 @@ onUnmounted(() => {
 <template>
     <div class="fills-wrapper">
         <TypeHeader :title="t('attr.fill')" :active="!!fillCtx.fills.length"
-                    @click.stop="fillCtxMgr.init.bind(fillCtxMgr)">
+                    @click.stop="() => fillCtxMgr.init()">
             <template #tool>
                 <div v-if="cloverVisible" class="clover" @click="showFillLib">
                     <SvgIcon :icon="style_icon"/>
@@ -73,7 +77,8 @@ onUnmounted(() => {
         </TypeHeader>
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
         <FillMaskView v-if="fillCtx.mask && !fillCtx.mixed" :context="context" :manager="fillCtxMgr"
-                      :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!"/>
+                      :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!"
+                      @show-style-lib="showFillLib"/>
         <div v-if="!(fillCtx.mixed || fillCtx.mask)" class="fills-container">
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index"
                       :context="context" :manager="fillCtxMgr" :data="fill as FillCatch"/>

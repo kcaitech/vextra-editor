@@ -4,10 +4,11 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 import unbind_icon from "@/assets/icons/svg/unbind.svg";
 
 import { Context } from "@/context";
-import { FillCatch, FillContextMgr, MaskInfo } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillCatch, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { Fill } from "@kcdesign/data";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { onUnmounted, ref, watchEffect } from "vue";
+import { MaskInfo } from "@/components/Document/Attribute/Fill2/basic";
 
 const props = defineProps<{
     context: Context;
@@ -15,6 +16,10 @@ const props = defineProps<{
     fills: FillCatch[];
     info: MaskInfo;
 }>();
+const emits = defineEmits<{
+    (e: "show-style-lib", event: MouseEvent): void;
+}>();
+
 const colors = ref<Fill[]>(props.fills.map(i => i.fill).reverse());
 const name = ref<string>(props.info.name);
 
@@ -26,7 +31,7 @@ onUnmounted(watchEffect(() => {
 <template>
     <div class="fill-mask-container">
         <div class="fill-mask-port">
-            <div class="info">
+            <div class="info" @click="event => emits('show-style-lib', event)">
                 <div class="desc">
                     <ColorBlock :colors="colors as Fill[]" round disabled-alpha/>
                     <span>{{ name }}</span>
