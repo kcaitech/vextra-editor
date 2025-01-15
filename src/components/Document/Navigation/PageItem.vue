@@ -2,7 +2,6 @@
 import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
 import { Selection } from "@/context/selection";
 import { Context } from "@/context";
-// import { Perm } from "@/context/workspace";
 export interface ItemData {
     name: string
     id: string
