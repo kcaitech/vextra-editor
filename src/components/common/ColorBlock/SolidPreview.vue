@@ -23,22 +23,20 @@ onUnmounted(watch(() => params, () => {
 </template>
 <style scoped lang="scss">
 .block-solid {
+    position: absolute;
     width: 100%;
     height: 100%;
-    display: flex;
     background-color: transparent;
-    position: absolute;
 
     .split {
         width: 100%;
         height: 100%;
+        display: flex;
 
         > div {
-        width: 50%;
-        height: 100%;
+            width: 50%;
+            height: 100%;
         }
     }
-
-
 }
 </style>

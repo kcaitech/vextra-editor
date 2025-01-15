@@ -3,30 +3,16 @@ import {
     BasicArray,
     Blur,
     BlurMask,
-    Border,
     Color,
-    ColVector3D,
     Fill,
     FillMask,
-    makeMatrixByTransform2,
-    makeShapeTransform2By1,
-    Matrix2,
-    NumberArray2D,
     Shadow,
     ShadowMask,
-    CornerRadius,
-    ShapeView, SymbolView,
-    Transform,
     ShadowPosition,
     BorderMask,
     BorderMaskType,
 } from "@kcdesign/data";
-import { isShapeOut } from "@/utils/assist";
-import { cursorAngle } from "@/components/Document/Selection/common";
-import { markRaw } from "vue";
 import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
-import { fill } from "lodash";
-import { ar } from "element-plus/es/locale";
 
 export interface Mask {
     id: string;
@@ -39,19 +25,10 @@ export interface Mask {
     border?:BorderMaskType
 }
 
-export interface Lib {
-    id: string;
-    name: string;
-    description: string;
-    sheet: string;
-    fills?: BasicArray<Fill>
-}
-
 export interface ShadowItem {
     id: number,
     shadow: Shadow
 }
-
 
 export class FillRenderer {
     private readonly m_context: Context;
@@ -121,7 +98,6 @@ export class FillRenderer {
         const ctx = this.m_context;
         const lib = ctx.data.stylelib
         if (!lib) return
-        // this.m_list_lib.push(...lib)
         const sheet = lib.find(s => s.id === ctx.data.id)
 
         let arr: StyleSheet[] = lib.map((s, i) => {
@@ -141,8 +117,6 @@ export class FillRenderer {
             return newSheet;
         });
         this.m_list_lib.push(...arr);
-
-
         if (!sheet) return
         sheet.variables.forEach(s => {
             if (type === 'fill') {
@@ -166,11 +140,6 @@ export class FillRenderer {
                 }
             }
         })
-
-    }
-
-    searchstyle(filter: string, value: string) {
-
     }
 }
 

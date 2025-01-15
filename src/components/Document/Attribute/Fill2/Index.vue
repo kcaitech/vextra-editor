@@ -4,12 +4,14 @@ import style_icon from "@/assets/icons/svg/styles.svg";
 import add_icon from "@/assets/icons/svg/add.svg";
 
 import { Context } from "@/context";
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { FillCatch, FillContext, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import TypeHeader from "@/components/Document/Attribute/TypeHeader.vue";
 import FillMaskView from "@/components/Document/Attribute/Fill2/FillMaskView.vue";
 import FillItem from "./FillItem.vue";
 import { useI18n } from "vue-i18n";
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import FillStylePanel from "@/components/Document/Attribute/Fill2/Lib/FillStylePanel.vue";
 
 type Props = {
     context: Context;
@@ -26,8 +28,24 @@ const fillCtx = ref<FillContext>({
     maskInfo: undefined
 });
 const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));
-
 const fillCtxMgr = new FillContextMgr(props.context, fillCtx.value as FillContext);
+const fillLibStatus = reactive<ElementStatus>({id: '#fill-style-lib-panel', visible: false});
+const fillPanelStatusMgr = new ElementManager(
+    props.context,
+    fillLibStatus,
+    {whiteList: ['.fill-style-lib-panel', '.clover']}
+);
+fillCtxMgr.catchPanel(fillPanelStatusMgr);
+function showFillLib(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('clover')) {
+            e && fillPanelStatusMgr.showBy(e, {once: {offsetLeft: -424}});
+            break;
+        }
+        e = e.parentElement;
+    }
+}
 
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),
@@ -35,14 +53,17 @@ const watchList: any[] = [
 ];
 
 onMounted(fillCtxMgr.update.bind(fillCtxMgr));
-onUnmounted(() => watchList.forEach(stop => stop()));
+onUnmounted(() => {
+    watchList.forEach(stop => stop());
+    fillPanelStatusMgr.unmounted();
+});
 </script>
 <template>
     <div class="fills-wrapper">
         <TypeHeader :title="t('attr.fill')" :active="!!fillCtx.fills.length"
                     @click.stop="fillCtxMgr.init.bind(fillCtxMgr)">
             <template #tool>
-                <div v-if="cloverVisible" class="clover">
+                <div v-if="cloverVisible" class="clover" @click="showFillLib">
                     <SvgIcon :icon="style_icon"/>
                 </div>
                 <div v-if="!fillCtx.mask" class="create" @click="() => fillCtxMgr.create()">
@@ -50,15 +71,15 @@ onUnmounted(() => watchList.forEach(stop => stop()));
                 </div>
             </template>
         </TypeHeader>
-        <div v-if="fillCtx.mixed" class="tips-wrapper">
-            {{ t('attr.mixed_lang') }}
-        </div>
-        <FillMaskView v-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
+        <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
+        <FillMaskView v-if="fillCtx.mask && !fillCtx.mixed" :context="context" :manager="fillCtxMgr"
                       :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!"/>
-        <div v-if="!fillCtx.mixed && !fillCtx.mask" class="fills-container">
+        <div v-if="!(fillCtx.mixed || fillCtx.mask)" class="fills-container">
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index"
                       :context="context" :manager="fillCtxMgr" :data="fill as FillCatch"/>
         </div>
+        <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr"
+                        @close="()=> fillPanelStatusMgr.close()"/>
     </div>
 </template>
 <style scoped lang="scss">
