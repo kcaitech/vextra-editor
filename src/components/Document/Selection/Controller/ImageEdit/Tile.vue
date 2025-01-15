@@ -44,7 +44,7 @@ const update_frame = () => {
         const scale = props.context.color.imageScale;
         image_width.value = frame.width * (scale || 0.5);
         image_height.value = frame.height * (scale || 0.5);
-        const fill = shape.style.getFills()[locat.index];
+        const fill = shape.getFills()[locat.index];
         if (!fill) return;
         if (fill.rotation === 90 || fill.rotation === 270) {
             image_width.value = frame.height * (scale || 0.5);
@@ -105,7 +105,7 @@ const setImageScale = (e: MouseEvent, index: number, direction: Direction) => {
     const shape = shapes[0];
     const image_frame = props.context.color.imageOriginFrame;
     if (!image_frame) return;
-    const fill = shape.style.getFills()[locat.index];
+    const fill = shape.getFills()[locat.index];
     if (!fill) return;
     const matrix = new TransformRaw();
     if (fill.rotation === 90 || fill.rotation === 270) {

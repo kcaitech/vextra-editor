@@ -1345,7 +1345,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
         page && context.nextTick(page, () => {
             new_shape && selection.selectShape(page.shapes.get(new_shape.id));
         })
-        const fills = new_shape.style.getFills();
+        const fills = new_shape.style.fills;
         context.net?.upload(fills[0].imageRef || '', media.buff.buffer.slice(0));
     }
     context.tool.setAction(Action.AutoV);
