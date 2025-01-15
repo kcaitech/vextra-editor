@@ -1,10 +1,11 @@
 import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { hidden_selection, noGroupShapesFrom } from "@/utils/content";
-import { get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
+import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/Fill2/basic";
 import { v4 } from "uuid";
 import { getShapesForStyle } from "@/utils/style";
+import { ElementManager } from "@/components/common/elementmanager";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     if (sye.style.fillsMask) return sye.style.fillsMask;
@@ -144,6 +145,12 @@ export class FillContextMgr {
         if (event?.target instanceof HTMLInputElement) event.target.blur();
     }
 
+    private m_panel: Set<ElementManager> = new Set();
+
+    catchPanel(ele: ElementManager) {
+        this.m_panel.add(ele);
+    }
+
     update() {
         this.getSelected();
         this.modifyMixedStatus();
@@ -218,6 +225,13 @@ export class FillContextMgr {
         const selected = this.selected;
         this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
         this.hiddenCtrl(event);
+    }
+
+    modifyFillMask(id: string) {
+        const actions = get_actions_add_mask(this.selected, id);
+        this.editor.shapesSetFillMask(actions);
+        this.m_panel.forEach(i => i.close());
+        this.hiddenCtrl();
     }
 
     unbind() {

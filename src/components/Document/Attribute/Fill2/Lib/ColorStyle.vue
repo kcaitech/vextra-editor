@@ -3,7 +3,7 @@
         <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword"/>
         <el-scrollbar>
             <div class="content">
-                <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :item="FillMaskPanelItem"
+                <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager" :item="FillMaskPanelItem"
                             :data="sheet"/>
                 <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
                 <div v-if="!sheets?.length && !keyword" class="data-null">暂无颜色样式</div>
@@ -19,9 +19,11 @@ import { SheetCatch } from "@/components/Document/Attribute/Fill2/Lib/ctx";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import FillMaskPanelItem from './FillMaskPanelItem.vue';
 import { StyleSheet } from "@kcdesign/data"
+import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 
 const props = defineProps<{
     context: Context;
+    manager: FillContextMgr;
 }>();
 const keyword = ref<string>('')
 const libs = ref<{ label: string, value: string }[]>([]);

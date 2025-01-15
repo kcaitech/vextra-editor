@@ -8,8 +8,9 @@ import ColorBlock from "@/components/common/ColorBlock/Index.vue"
 import ModifyFillStyle from "@/components/Document/Attribute/Fill2/Lib/ModifyFillStyle.vue";
 import { Context } from "@/context";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 
-const {data, context} = defineProps<{ context: Context, data: FillMask }>();
+const {data, context, manager} = defineProps<{ context: Context; manager: FillContextMgr; data: FillMask; }>();
 
 const name = ref<string>(data.name);
 const fills = ref<Fill[]>(data.fills.map(i => i));
@@ -18,9 +19,7 @@ const modifyPanelStatus = reactive<ElementStatus>({id: '#modify-fill-style-panel
 const modifyPanelStatusMgr = new ElementManager(
     context,
     modifyPanelStatus,
-    {
-        whiteList: ['.modify-fill-style-panel', '.modify']
-    }
+    {whiteList: ['.modify-fill-style-panel', '.modify']}
 );
 
 function update() {
@@ -32,11 +31,15 @@ function showModifyPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('modify')) {
-            e && modifyPanelStatusMgr.showBy(e, {once: {offsetLeft: -442}});
+            e && modifyPanelStatusMgr.showBy(e, {once: {offsetLeft: -462}});
             break;
         }
         e = e.parentElement;
     }
+}
+
+function modifyFillMask() {
+    manager.modifyFillMask(data.id);
 }
 
 onMounted(() => {
@@ -49,13 +52,15 @@ onUnmounted(() => {
 </script>
 <template>
     <div :class="{'fill-mask-catch-wrapper': true, extend: modifyPanelStatus.visible }">
-        <ColorBlock :colors="fills as Fill[]" round disabled-alpha/>
-        <span>{{ name }}</span>
-        <div class="modify" style="visibility: hidden;"
-             @click="showModifyPanel">
+        <div class="content" @click="modifyFillMask">
+            <ColorBlock :colors="fills as Fill[]" round disabled-alpha/>
+            <span>{{ name }}</span>
+        </div>
+        <div class="modify" style="visibility: hidden;" @click="showModifyPanel">
             <SvgIcon :icon="editor_icon"/>
         </div>
-        <ModifyFillStyle v-if="modifyPanelStatus.visible" :context="context"/>
+        <ModifyFillStyle v-if="modifyPanelStatus.visible" :context="context"
+                         @close="() => modifyPanelStatusMgr.close()"/>
     </div>
 </template>
 <style scoped lang="scss">
@@ -65,13 +70,21 @@ onUnmounted(() => {
     border-radius: var(--default-radius);
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-left: 8px;
-    box-sizing: border-box;
     overflow: hidden;
 
+    .content {
+        flex: 1;
+        width: 50px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-left: 8px;
+        box-sizing: border-box;
+    }
+
     .modify {
-        margin-left: auto;
+        flex: 0 0 32px;
         display: flex;
         width: 32px;
         height: 100%;
@@ -105,5 +118,4 @@ onUnmounted(() => {
         visibility: visible !important;
     }
 }
-
 </style>
