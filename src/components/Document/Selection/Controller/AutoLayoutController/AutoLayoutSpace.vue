@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection, XY } from '@/context/selection';
-import { ArtboardView, BorderPosition, ColVector3D, Matrix, PaddingDir, ShapeView, StackMode, StackSizing, getShapeFrame, layoutShapesOrder2, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboardView, BorderPosition, ColVector3D, Matrix, PaddingDir, Shape, ShapeView, StackMode, StackSizing, adapt2Shape, layoutShapesOrder2, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
 import { fixedZero } from '@/utils/common';
 import { CursorType } from '@/utils/cursor2';
 import { useI18n } from "vue-i18n";
+import { getShapeFrame } from '@/utils/content';
 const { t } = useI18n();
 
 type Box = {
@@ -170,7 +171,7 @@ function getHorSpacePosition() {
 }
 
 const getIncludedBorderFrame = (shape: ShapeView, includedBorder?: boolean) => {
-    let f = getShapeFrame(shape);
+    let f = getShapeFrame(shape.data);
     if (includedBorder) {
         const border = shape.getBorders();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
