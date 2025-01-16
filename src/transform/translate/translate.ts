@@ -2,7 +2,6 @@ import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "../handler";
 import {
     adapt2Shape,
-    layoutShapesOrder,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
     Shape,
@@ -17,7 +16,7 @@ import {
     TranslateUnit,
     Transporter, AutoLayout,
     BorderPosition, ShapeFrame,
-    Matrix
+    Matrix,
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
@@ -28,6 +27,7 @@ import { message } from "@/utils/message";
 import { isTarget } from "@/utils/scout";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { checkTidyUpShapesOrder, getHorShapeOutlineFrame, getShapesColsMapPosition, getShapesRowsMapPosition, getVerShapeOutlineFrame, layoutSpacing } from "@/utils/tidy_up";
+import { sort_by_layer } from "@/utils/group_ungroup";
 
 type BaseFrame4Trans = {
     originTransform: Transform
@@ -716,8 +716,7 @@ export class TranslateHandler extends TransformHandler {
         const shapesUnderCommonEnv: ShapeView[] = env.childs;
         const __set = this.shapesIdSet;
         const scout = this.context.selection.scout;
-        const shape_rows = layoutShapesOrder(shapesUnderCommonEnv.map(s => adapt2Shape(s)), !!env.autoLayout?.bordersTakeSpace);
-        const shape_row: Shape[] = shape_rows.flat();
+        const shape_row: ShapeView[] = env.childs;
         const sort: Map<string, number> = new Map();
         for (let i = 0; i < shapes.length; i++) {
             const s = shapes[i];
@@ -727,13 +726,8 @@ export class TranslateHandler extends TransformHandler {
         for (const shape of shapesUnderCommonEnv) {
             if (__set.has(shape.id)) continue;
             if (isTarget(scout, shape, living)) {
-                const alpha = shapes[0];
-                const cur_index = shape_row.findIndex(item => item.id === alpha.id);
                 const tar_index = shape_row.findIndex(item => item.id === shape.id);
-                const targetXY = this.__getTargetFrame(adapt2Shape(shape));
-                const transX = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
-                const transY = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
-                (this.asyncApiCaller as Transporter).swap(env, shapes, transX, transY, sort);
+                (this.asyncApiCaller as Transporter).swap(env, sort_by_layer(this.context, shapes, -1), tar_index);
                 break;
             }
         }
@@ -754,57 +748,6 @@ export class TranslateHandler extends TransformHandler {
     migrateOnce = debounce(this.__migrate, 80);
     getMouseAtShapeIndex = throttle(this._getMouseAtShapeIndex, 160);
 
-    getLayoutGridForInsert() {
-        const env = this.preInsertLayout!;
-        const children = env.childs;
-        const layout = (env as ArtboardView).autoLayout!;
-        const shape_rows = layoutShapesOrder(children.map(s => adapt2Shape(s)), !!layout.bordersTakeSpace);
-        const rows: {
-            grids: {
-                start: number;
-                end: number;
-                anchor: XY;
-                shape: Shape;
-            }[];
-            start: number;
-            end: number;
-        }[] = [];
-        let lastRowEnd = 0;
-        for (const row of shape_rows) {
-            let height = 0;
-            let lastEnd: number = 0;
-
-            const grids: {
-                start: number;
-                end: number;
-                anchor: XY;
-                shape: Shape;
-            }[] = [];
-
-            for (const shape of row) {
-                const box = boundingBox(shape, layout!.bordersTakeSpace);
-                if (box.height > height) height = box.height;
-                let __start = lastEnd;
-                let __end = box.x + (box.width / 2);
-                lastEnd = __end;
-                const grid = { start: __start, end: __end, anchor: { x: 0, y: 0 }, shape };
-                grids.push(grid);
-            }
-            grids.push({ start: lastEnd, end: Infinity, anchor: { x: 0, y: 0 }, shape: row[row.length - 1] });
-            let start = lastRowEnd;
-            let end = lastRowEnd + height + (layout!.stackCounterSpacing) / 2;
-            if (!lastRowEnd) end += layout!.stackVerticalPadding;
-            lastRowEnd = end;
-            rows.push({ grids, start, end })
-        }
-        rows[rows.length - 1].end = Infinity;
-        rows.forEach(row => {
-            row.grids.forEach((grid, index) => {
-
-            });
-        })
-        this.layoutForInsert = { shape: env, row: rows, layout };
-    }
     // 获取鼠标所在图形下标位置
     _getMouseAtShapeIndex(e: MouseEvent) {
         const xy = this.context.workspace.getContentXY(e);

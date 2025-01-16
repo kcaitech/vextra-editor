@@ -1,14 +1,11 @@
 import { Context } from "@/context";
 import {
-    adapt2Shape,
     ArtboardView,
-    layoutShapesOrder,
+    layoutShapesOrder2,
     LinearApi,
     PageView,
-    Shape,
     ShapeType,
     ShapeView,
-    SymbolRefView,
 } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { hidden_selection } from "@/utils/content";
@@ -181,8 +178,8 @@ export class Direction {
         if (context.workspace.is_path_edit_mode) return this.mode = ActionMode.Edit;
         else if (context.workspace.isEditing) return this.mode = ActionMode.Text;
         else for (const view of context.selection.selectedShapes) {
-                if (!(view.parent as ArtboardView).autoLayout) return this.mode = ActionMode.View;
-            }
+            if (!(view.parent as ArtboardView).autoLayout) return this.mode = ActionMode.View;
+        }
     }
 
     private __keydown(event: KeyboardEvent) {
@@ -235,28 +232,20 @@ export class Direction {
     }
 
     private __order(env: ArtboardView) {
-        const map: Map<Shape, ShapeView> = new Map();
-        env.childs.forEach(view => map.set(adapt2Shape(view), view));
-
-        const rows = layoutShapesOrder(Array.from(map.keys()), !!env.autoLayout?.bordersTakeSpace);
-
+        const rows = env.childs.filter(c => c.isVisible);
         return (() => {
             const order: Map<string, number> = new Map();
-            let count = 0;
-            for (let y = 0; y < rows.length; y++)
-                for (let x = 0; x < rows[y].length; x++) {
-                    order.set(rows[y][x].id, count++);
-                }
+            for (let i = 0; i < rows.length; i++) {
+                const cc = rows[i];
+                order.set(cc.id, i);
+            }
             return order;
         })();
     }
 
     private __girds(env: ArtboardView) {
-        const map: Map<Shape, ShapeView> = new Map();
-        env.childs.forEach(view => map.set(adapt2Shape(view), view));
-
-        const rows = layoutShapesOrder(Array.from(map.keys()), !!env.autoLayout?.bordersTakeSpace);
-
+        const rows = layoutShapesOrder2(env.childs, !!env.autoLayout?.bordersTakeSpace);
+        const childs = env.childs.filter(c => c.isVisible);
         return (() => {
             const order: Map<string, number> = new Map();
             const grids: { shape: string, order: number, leave?: boolean }[][] = [];
@@ -266,12 +255,15 @@ export class Direction {
                 for (let x = 0; x < rows[y].length; x++) {
                     const shape = rows[y][x];
                     const o = count++;
-                    order.set(shape.id, o);
                     row.push({ shape: shape.id, order: o });
                 }
                 grids.push(row);
             }
-            return { order, grids, shapes: rows.flat().map(i => i.id) };
+            for (let i = 0; i < childs.length; i++) {
+                const cc = childs[i];
+                order.set(cc.id, i);
+            }
+            return { order, grids, shapes: childs.map(i => i.id) };
         })();
     }
 
@@ -280,7 +272,7 @@ export class Direction {
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
         for (const env of envs) {
-            if(env.type === ShapeType.SymbolRef) continue;
+            if (env.type === ShapeType.SymbolRef) continue;
             const order = this.__order(env);
             const reflex = (() => {
                 const m: Map<number, string> = new Map();
@@ -324,7 +316,7 @@ export class Direction {
         const selection = this.context.selection.selectedShapes;
         let someFire = false;
         for (const env of envs) {
-            if(env.type === ShapeType.SymbolRef) continue;
+            if (env.type === ShapeType.SymbolRef) continue;
             const order = this.__order(env);
             const reflex = (() => {
                 const m: Map<number, string> = new Map();
@@ -369,7 +361,7 @@ export class Direction {
         let someFire = false;
         const locate = this.__locate;
         for (const env of envs) {
-            if(env.type === ShapeType.SymbolRef) continue;
+            if (env.type === ShapeType.SymbolRef) continue;
             const targetMap: Map<number, string> = new Map();
             const { order, grids, shapes } = this.__girds(env);
             const sel = selection
@@ -413,7 +405,7 @@ export class Direction {
         let someFire = false;
         const locate = this.__locate;
         for (const env of envs) {
-            if(env.type === ShapeType.SymbolRef) continue;
+            if (env.type === ShapeType.SymbolRef) continue;
             const targetMap: Map<number, string> = new Map();
             const { order, grids, shapes } = this.__girds(env);
             const sel = selection
@@ -453,7 +445,8 @@ export class Direction {
 
     private __sort(env: ShapeView, target: Map<number, string>, order: Map<string, number>, fireTarget: Set<string>, shapes: string[]) {
         const children = shapes.filter(i => !fireTarget.has(i));
-        if (children.length + target.size !== env.childs.length) throw new MossError('wrong match');
+        const childs = env.childs.filter(s => s.isVisible);
+        if (children.length + target.size !== childs.length) throw new MossError('wrong match');
         const orderAfterSort: string[] = [];
         let flowIndex = 0;
         for (let i = 0; i < shapes.length; i++) {
