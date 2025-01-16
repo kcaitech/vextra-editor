@@ -1,6 +1,6 @@
 import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
 import { Context } from "@/context";
-import { hidden_selection, noGroupShapesFrom } from "@/utils/content";
+import { hidden_selection } from "@/utils/content";
 import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/Fill2/basic";
 import { v4 } from "uuid";
@@ -75,7 +75,7 @@ export type FillContext = {
 export class FillContextMgr {
     private m_selected: ShapeView[];
 
-    constructor(private context: Context, private fillCtx: FillContext) {
+    constructor(private context: Context, public fillCtx: FillContext) {
         this.m_selected = [];
     }
 
@@ -89,6 +89,10 @@ export class FillContextMgr {
 
     private get editor() {
         return this.context.editor4Page(this.context.selection.selectedPage!);
+    }
+
+    private get editor4Doc() {
+        return this.context.editor4Doc();
     }
 
     private getSelected() {
@@ -119,9 +123,7 @@ export class FillContextMgr {
         this.fillCtx.mask = represent.style.fillsMask;
         const origin = represent.getFills();
         const replace: FillCatch[] = [];
-        for (let i = origin.length - 1; i > -1; i--) {
-            replace.push({fill: origin[i]});
-        }
+        for (let i = origin.length - 1; i > -1; i--) replace.push({fill: origin[i]});
         this.fillCtx.fills = replace;
 
         if (this.fillCtx.mask) {
@@ -146,9 +148,15 @@ export class FillContextMgr {
     }
 
     private m_panel: Set<ElementManager> = new Set();
-
+    private m_panel_map: Map<string, ElementManager> = new Map();
     catchPanel(ele: ElementManager) {
         this.m_panel.add(ele);
+    }
+
+    keepUniquePanel(type: string, ele: ElementManager) {
+        const exist = this.m_panel_map.get(type);
+        if (exist && exist !== ele) exist.close();
+        this.m_panel_map.set(type, ele);
     }
 
     update() {
@@ -240,5 +248,13 @@ export class FillContextMgr {
 
     removeMask() {
         this.editor.shapesDelStyleFill(get_actions_fill_mask(this.selected));
+    }
+
+    modifyMaskName(sheet: string, fillMaskID: string, name: string) {
+        this.editor4Doc.modifyStyleName(sheet, fillMaskID, name);
+    }
+
+    modifyMaskDesc(sheet: string, fillMaskID: string, desc: string) {
+        this.editor4Doc.modifyStyleDescription(sheet, fillMaskID, desc);
     }
 }

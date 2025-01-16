@@ -3,8 +3,8 @@
         <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword"/>
         <el-scrollbar>
             <div class="content">
-                <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager" :item="FillMaskPanelItem"
-                            :data="sheet"/>
+                <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager"
+                            :item="FillMaskPanelItem" :data="sheet"/>
                 <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
                 <div v-if="!sheets?.length && !keyword" class="data-null">暂无颜色样式</div>
             </div>
@@ -67,7 +67,7 @@ function update() {
             cat.variables = cat.variables.filter((i: any) => i.name.search(reg) > -1);
         }
         return cat as SheetCatch;
-    }).filter(sc => sc);
+    }).filter(sc => sc.variables.length);
 }
 
 function stylelib_watcher(t: number | string) {
