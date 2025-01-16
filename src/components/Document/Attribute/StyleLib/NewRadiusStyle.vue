@@ -1,27 +1,27 @@
 <template>
     <div id="create-radius-panel" class="new-style">
         <div class="header">
-            <div class="title">创建圆角样式</div>
+            <div class="title">{{ t('stylelib.create_radius') }}</div>
             <div class="close" @click.stop="emits('close')">
                 <svg-icon icon-class="close"></svg-icon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{ t('stylelib.name') }}</label>
                 <input v-focus type="text" id="name" v-model="name" @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{ t('stylelib.description') }}</label>
                 <input type="text" id="des" v-model="des">
             </div>
         </div>
         <div class="radius">
-            <div class="title">圆角</div>
+            <div class="title">{{ t('stylelib.round') }}</div>
             <input type="text" v-model="radius" @change="setRadius">
         </div>
 
-        <div class="create-bnt" @click.stop="emits('close')">创建样式</div>
+        <div class="create-bnt" @click.stop="emits('close')">{{ t('stylelib.add_style') }}</div>
     </div>
 
 </template>

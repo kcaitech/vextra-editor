@@ -1,7 +1,7 @@
 <template>
     <div id="border-container" class="border-container">
         <div class="header">
-            <div class="title">边框样式</div>
+            <div class="title">{{t('stylelib.borders')}}</div>
             <div class="tool">
                 <div class="newstyle" @click="NewPanel($event)">
                     <SvgIcon :icon="add_icon"></SvgIcon>
@@ -18,7 +18,7 @@
             <div class="filter" @click="FilterPanel">
                 <SvgIcon :icon="arrow_icon"></SvgIcon>
             </div>
-            <input v-focus type="text" placeholder="搜索样式" v-model="searchval"
+            <input v-focus type="text" :placeholder="t('stylelib.search')" v-model="searchval"
                 @keydown.esc="props.context.escstack.execute()">
             <div v-if="filterpanel" class="filter-list">
                 <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="Changefilter(item[1])">
@@ -60,8 +60,8 @@
                         </div>
                     </template>
                 </div>
-                <div v-if="!showdata.length && searchval" class="null">没有搜索到相关样式</div>
-                <div v-if="!showdata.length && !searchval" class="null">没有可用的样式</div>
+                <div v-if="!showdata.length && searchval" class="null">{{t('stylelib.null_search')}}</div>
+                <div v-if="!showdata.length && !searchval" class="null">{{t('stylelib.null_data')}}</div>
             </div>
         </el-scrollbar>
         <NewBorderStyle v-if="newpanel" :top="Top" :left="Left" :context="props.context" :shapes="props.shapes"

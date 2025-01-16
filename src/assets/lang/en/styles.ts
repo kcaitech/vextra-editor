@@ -2,31 +2,41 @@ export const stylelib = {
     radius: 'Corner radius styles',
     create_radius: 'Create new style',
     editor_radius: 'Editor style',
+    round: 'Radius',
 
 
-    color: 'Color styles',
+    colors: 'Color styles',
     create_color: 'Create new style',
     editor_color: 'Editor style',
+    color: 'Color',
 
-    border: 'Border styles',
+    borders: 'Border styles',
     create_border: 'Create new style',
     editor_border: 'Editor style',
+    position: 'Position',
+    thickness: 'Thickness',
 
-    shadow: 'Shadow styles',
+    shadows: 'Shadow styles',
     create_shadow: 'Create new style',
     editor_shadow: 'Editor style',
+    shadow: 'Shadow',
 
-    blur: 'Blur styles',
+    blurs: 'Blur styles',
     create_blur: 'Create new style',
     editor_blur: 'Editor style',
+    blur: 'Blur',
 
-    text: 'Text styles',
+    format: 'Text styles',
     create_text: 'Create new style',
     editor_text: 'Editor style',
+    text: 'Text',
 
     add_style: 'Create style',
 
-    search:'Search style',
+    search: 'Search style',
+
+    name: 'Name',
+    description: 'Description',
 
     null_data: 'No styles.',
     null_search: 'No styles match this search.'

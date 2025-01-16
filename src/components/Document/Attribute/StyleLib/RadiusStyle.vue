@@ -1,7 +1,7 @@
 <template>
     <div id="radius-lib-panel" class="radius-lib-panel">
         <div class="header">
-            <div class="title">圆角样式</div>
+            <div class="title">{{t('stylelib.radius')}}</div>
             <div class="tool">
                 <div class="add" @click="showCreatePanel($event)">
                     <SvgIcon :icon="add_icon" />
@@ -18,7 +18,7 @@
             <div class="filter" @click="showLibList($event)">
                 <SvgIcon :icon="arrow_icon" />
             </div>
-            <input v-focus type="text" placeholder="搜索样式" v-model="keyword" @keydown.esc="emits('close')">
+            <input v-focus type="text" :placeholder="t('stylelib.search')" v-model="keyword" @keydown.esc="emits('close')">
             <div v-if="libListStatus.visible" id="radius-lib-list" class="filter-list">
                 <div class="list-item" v-for="item in libList" :key="item[0]" @click.stop="filter(item[1])">
                     <div class="choose" :style="{ visibility: filterWord === item[1] ? 'visible' : 'hidden' }">
@@ -52,7 +52,8 @@
                         </div>
                     </template>
                 </div>
-                <div v-if="!data.length" class="null">没有搜索到相关样式</div>
+                <div v-if="!data.length && keyword" class="null">{{t('stylelib.null_search')}}</div>
+                <div v-if="!data.length && !keyword" class="null">{{t('stylelib.null_data')}}</div>
             </div>
         </el-scrollbar>
         <NewRadiusStyle v-if="createPanelStatus.visible" :context="props.context" :shapes="props.shapes"

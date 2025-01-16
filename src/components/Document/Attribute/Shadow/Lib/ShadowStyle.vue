@@ -1,7 +1,7 @@
 <template>
     <div id="shadow-lib-panel" class="shadow-container">
         <div class="header">
-            <div class="title">阴影样式</div>
+            <div class="title">{{t('stylelib.shadows')}}</div>
             <div class="tool">
                 <div class="add" @click="showCreatePanel($event)">
                     <SvgIcon :icon="add_icon"/>
@@ -18,7 +18,7 @@
             <div class="filter" @click="showLibList">
                 <SvgIcon :icon="arrow_icon"/>
             </div>
-            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"/>
+            <input v-focus ref="search" type="text" :placeholder="t('stylelib.search')" v-model="searchval"/>
             <div v-if="libListStatus.visible" id="shadow-lib-list" class="shadow-lib-list">
                 <div class="list-item" v-for="item in listfilter" :key="item[0]" @click.stop="filter(item[1])">
                     <div class="choose" :style="{ visibility: filterval === item[1] ? 'visible' : 'hidden' }">
@@ -61,8 +61,8 @@
                         </div>
                     </template>
                 </div>
-                <div v-if="!showdata.length && searchval" class="null">没有搜索到相关样式</div>
-                <div v-if="!showdata.length && !searchval" class="null">没有可用的样式</div>
+                <div v-if="!showdata.length && searchval" class="null">{{t('stylelib.null_search')}}</div>
+                <div v-if="!showdata.length && !searchval" class="null">{{t('stylelib.null_data')}}</div>
             </div>
         </el-scrollbar>
         <CreateShadowPanel v-if="createPanelStatus.visible" :context="props.context" :shapes="props.shapes"
@@ -92,6 +92,7 @@ import { FillRenderer, Mask } from "../../StyleLib/fillRenderer";
 import { getShapesForStyle } from "@/utils/style";
 import { get_actions_add_mask } from "@/utils/shape_style";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
     context: Context;
@@ -101,7 +102,7 @@ const props = defineProps<{
 const emits = defineEmits<{
     (e: 'close'): void
 }>()
-
+const {t}=useI18n()
 const filterpanel = ref<boolean>(false)
 const searchval = ref<string>('')
 const filterval = ref<string>('全部样式')

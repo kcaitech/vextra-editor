@@ -1,32 +1,32 @@
 <template>
     <div class="editor-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
-            <div class="title">编辑边框样式</div>
+            <div class="title">{{ t('stylelib.editor_border') }}</div>
             <div class="close" @click.stop="emits('close')">
                 <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{ t('stylelib.name') }}</label>
                 <input v-focus type="text" id="name" v-model="stylename" @keydown.esc="props.context.escstack.execute()"
                     @change="setSheetName">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{ t('stylelib.description') }}</label>
                 <input type="text" id="des" v-model="description" @keydown.esc="props.context.escstack.execute()"
                     @change="setSheetDes">
             </div>
         </div>
         <div class="border">
             <div class="type">
-                <div class="title">位置</div>
+                <div class="title">{{ t('stylelib.position') }}</div>
                 <Select class="select" :context="props.context" :shapes="props.shapes" :source="positonOptionsSource"
                     :selected="positonOptionsSource.find(i => i.data.value === border?.position)?.data"
                     @select="positionSelect" :entry="'style'"></Select>
             </div>
             <div class="thickness">
-                <div class="title">粗细</div>
+                <div class="title">{{ t('stylelib.thickness') }}</div>
                 <input type="text" v-model="thickness" @change="setThickness">
             </div>
         </div>

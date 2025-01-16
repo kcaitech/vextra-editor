@@ -55,7 +55,7 @@ onUnmounted(() => {
     <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel">
         <template #preview>
             <div class="content" @click="modifyFillMask">
-                <ColorBlock :colors="fills as Fill[]" round disabled-alpha/>
+                <ColorBlock :colors="(fills as Fill[])" round disabled-alpha/>
                 <span>{{ name }}</span>
             </div>
         </template>

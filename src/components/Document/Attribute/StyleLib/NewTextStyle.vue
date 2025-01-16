@@ -1,25 +1,25 @@
 <template>
     <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
         <div class="header">
-            <div class="title">创建文本样式</div>
+            <div class="title">{{ t('stylelib.create_text') }}</div>
             <div class="close" @click.stop="emits('close')">
                 <svg-icon icon-class="close"></svg-icon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{ t('stylelib.name') }}</label>
                 <input v-focus ref="inputname" type="text" id="name" v-model="name"
                     @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{ t('stylelib.description') }}</label>
                 <input type="text" id="des" v-model="des">
             </div>
         </div>
         <div class="text">
             <div class="text-set">
-                <div class="title">文本</div>
+                <div class="title">{{ t('stylelib.text') }}</div>
                 <TextAdvancedSettings :context="props.context" :event="'text'" :textShape="props.textShape"
                     :textShapes="props.textShapes"></TextAdvancedSettings>
             </div>
@@ -83,7 +83,7 @@
                 </div>
             </div>
         </div>
-        <div class="create-bnt" @click.stop="Neweffect">创建样式</div>
+        <div class="create-bnt" @click.stop="Neweffect">{{ t('stylelib.add_style') }}</div>
     </div>
 
 </template>
@@ -627,7 +627,7 @@ const _textFormat = () => {
             format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
         } else {
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
-        }  
+        }
         colorIsMulti.value = format.colorIsMulti
         isAutoLineHeight.value = format.autoLineHeight ?? true;
         rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0)

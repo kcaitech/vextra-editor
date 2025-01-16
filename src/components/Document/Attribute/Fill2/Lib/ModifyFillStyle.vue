@@ -1,32 +1,33 @@
 <template>
     <div class="modify-fill-style-panel" id="modify-fill-style-panel">
         <div class="header">
-            <div class="title">{{ props.type === 'editor' ? '编辑颜色样式' : '创建颜色样式' }}</div>
+            <div class="title">{{ props.type === 'editor' ? t('stylelib.editor_color') : t('stylelib.create_color') }}
+            </div>
             <div class="close" @click.stop="emits('close')">
-                <SvgIcon :icon="close_icon"/>
+                <SvgIcon :icon="close_icon" />
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{ t('stylelib.name') }}</label>
                 <input type="text" id="name" v-model="styleName" @change="setSheetName">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{ t('stylelib.description') }}</label>
                 <input type="text" id="des" v-model="styleDes" @change="setSheetDes">
             </div>
         </div>
         <div class="color">
             <div class="create-color">
-                <div class="title">颜色</div>
+                <div class="title">{{ t('stylelib.color') }}</div>
                 <div class="add" @click.stop="create">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </div>
             <div class="color-list">
                 <div class="item" v-for="(f, idx) in fills" :key="f.id">
                     <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                        <SvgIcon v-if="f.fill.isEnabled" :icon="select_icon"/>
+                        <SvgIcon v-if="f.fill.isEnabled" :icon="select_icon" />
                     </div>
                     <div class="editor">
                         <ColorPicker :color="f.fill.color" :style="props.style" :entrance="'styles'"
@@ -39,7 +40,7 @@
                             :paintFilter="f.fill.paintFilter" @gradient-reverse="() => gradient_reverse(idx)"
                             @gradient-rotate="() => gradient_rotate(idx)"
                             @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                                     @gradient-type="(type, fillType) => modify_gradient_type(idx, type, fillType)"
+                            @gradient-type="(type, fillType) => modify_gradient_type(idx, type, fillType)"
                             @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                             @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
                             @changeMode="(mode) => changeMode(idx, mode)"
@@ -65,12 +66,13 @@
                             @keydown="(e) => keydownAlpha(e, idx, f.fill, filterAlpha(f.fill))" />
                     </div>
                     <div class="delete" :class="{ 'invalid': fills.length === 1 }" @click="deleteFill(idx)">
-                        <SvgIcon :icon="delete_icon"/>
+                        <SvgIcon :icon="delete_icon" />
                     </div>
                 </div>
             </div>
         </div>
-        <div v-if="props.type !== 'editor'" class="create-bnt" @click.stop="insertStyleLib">创建样式</div>
+        <div v-if="props.type !== 'editor'" class="create-bnt" @click.stop="insertStyleLib">{{ t('stylelib.add_style') }}
+        </div>
     </div>
 </template>
 <script setup lang="ts">
@@ -387,20 +389,20 @@ function getColorFromPicker(idx: number, color: Color) {
     const _idx = fills.length - idx - 1;
     const page = props.context.selection.selectedPage;
     if (props.type) {
-            const editor = props.context.editor4Doc()
-            if (props.style?.sheet && props.style?.id) {
-                editor.modifyFillMaskFillColor(props.style?.sheet, props.style?.id, _idx, color)
-            }
-            return
-        } else {
-            const selected = props.context.selection.selectedShapes;
-            const shapes = getShapesForStyle(selected);
-            const actions = get_actions_fill_color(shapes, _idx, color);
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesFillColor(actions);
-            }
+        const editor = props.context.editor4Doc()
+        if (props.style?.sheet && props.style?.id) {
+            editor.modifyFillMaskFillColor(props.style?.sheet, props.style?.id, _idx, color)
         }
+        return
+    } else {
+        const selected = props.context.selection.selectedShapes;
+        const shapes = getShapesForStyle(selected);
+        const actions = get_actions_fill_color(shapes, _idx, color);
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillColor(actions);
+        }
+    }
     hidden_selection(props.context);
 }
 
@@ -779,7 +781,7 @@ function stylelib_watcher(t: number | string) {
         if (!props.style) return
     fills.length = 0
     if (props.reder) {
-        props.reder.currentTarget(props.style!.id)?.fills?.forEach((f, idx) => fills.push({id: idx, fill: f}))
+        props.reder.currentTarget(props.style!.id)?.fills?.forEach((f, idx) => fills.push({ id: idx, fill: f }))
     }
     fills = fills.reverse()
 }

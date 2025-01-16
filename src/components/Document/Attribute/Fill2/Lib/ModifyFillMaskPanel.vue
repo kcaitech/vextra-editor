@@ -7,6 +7,7 @@ import add_icon from "@/assets/icons/svg/add.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted, onUnmounted, ref } from "vue";
 import FillItem from "@/components/Document/Attribute/Fill2/FillItem.vue";
+import { useI18n } from "vue-i18n";
 
 const {context, manager, data} = defineProps<{
     context: Context;
@@ -17,8 +18,8 @@ const emits = defineEmits<{
     (e: 'close'): void;
 }>();
 
+const {t}=useI18n()
 const firstInput = ref<HTMLInputElement>();
-
 const name = ref<string>(data?.name ?? '颜色样式');
 const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>(getFills());
@@ -69,30 +70,30 @@ onUnmounted(() => {
 <template>
     <div class="modify-fill-style-panel" id="modify-fill-style-panel">
         <div class="header">
-            <div class="title">{{ data ? '编辑颜色样式' : '创建颜色样式' }}</div>
+            <div class="title">{{ data ? t('stylelib.editor_color') : t('stylelib.create_color') }}</div>
             <div class="close" @click.stop="emits('close')">
                 <SvgIcon :icon="close_icon"/>
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{t('stylelib.name')}}</label>
                 <input ref="firstInput" type="text" id="name" :value="name" @change="modifyName" @keydown.esc="blur">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{t('stylelib.description')}}</label>
                 <input type="text" id="des" :value="desc" @change="modifyDesc">
             </div>
         </div>
         <div class="list-header">
-            <div class="title">颜色</div>
+            <div class="title">{{t('stylelib.color')}}</div>
             <div class="create" @click.stop="">
                 <SvgIcon :icon="add_icon"/>
             </div>
         </div>
         <div class="fills-container">
             <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                      :data="fill as FillCatch"/>
+                      :data="(fill as FillCatch)"/>
         </div>
     </div>
 </template>

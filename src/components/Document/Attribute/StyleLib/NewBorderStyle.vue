@@ -1,34 +1,34 @@
 <template>
     <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
         <div class="header">
-            <div class="title">创建边框样式</div>
+            <div class="title">{{t('stylelib.create_border')}}</div>
             <div class="close" @click.stop="emits('close')">
                 <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{t('stylelib.name')}}</label>
                 <input v-focus type="text" id="name" v-model="name" @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{t('stylelib.description')}}</label>
                 <input type="text" id="des" v-model="des">
             </div>
         </div>
         <div class="border">
             <div class="type">
-                <div class="title">位置</div>
+                <div class="title">{{t('stylelib.position')}}</div>
                 <Select class="select" :context="props.context" :shapes="props.shapes" :source="positonOptionsSource"
                     :selected="positonOptionsSource.find(i => i.data.value === borderData.position)?.data"
                     @select="positionSelect"></Select>
             </div>
             <div class="thickness">
-                <div class="title">粗细</div>
+                <div class="title">{{t('stylelib.thickness')}}</div>
                 <input type="text" v-model="thickness" @change="setThickness">
             </div>
         </div>
-        <div class="create-bnt" @click.stop="Newborder">创建样式</div>
+        <div class="create-bnt" @click.stop="Newborder">{{t('stylelib.add_style')}}</div>
     </div>
 
 </template>

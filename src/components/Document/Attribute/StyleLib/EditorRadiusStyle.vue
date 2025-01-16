@@ -1,23 +1,23 @@
 <template>
     <div id="modify-radius-panel" class="editor-style">
         <div class="header">
-            <div class="title">编辑圆角样式</div>
+            <div class="title">{{ t('stylelib.editor_radius') }}</div>
             <div class="close" @click.stop="emits('close')">
                 <svg-icon icon-class="close"></svg-icon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{ t('stylelib.name') }}</label>
                 <input v-focus type="text" id="name" @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{ t('stylelib.description') }}</label>
                 <input type="text" id="des">
             </div>
         </div>
         <div class="radius">
-            <div class="title">圆角</div>
+            <div class="title">{{ t('stylelib.round') }}</div>
             <input type="text" v-model="radius" @change="setRadius">
         </div>
     </div>
@@ -75,7 +75,7 @@ const setRadius = () => {
 
 
 onMounted(() => {
- 
+
 })
 
 </script>
@@ -160,6 +160,7 @@ onMounted(() => {
         padding: 0 12px;
         box-sizing: border-box;
         margin-bottom: 8px;
+
         .title {}
 
         input {

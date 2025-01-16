@@ -1,27 +1,27 @@
 <template>
     <div id="create-blur-panel" class="new-style">
         <div class="header">
-            <div class="title">创建模糊样式</div>
+            <div class="title">{{ t('stylelib.create_blur') }}</div>
             <div class="close" @click.stop="emits('close')">
-                <SvgIcon :icon="close_icon"/>
+                <SvgIcon :icon="close_icon" />
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{ t('stylelib.name') }}</label>
                 <input v-focus ref="inputName" type="text" id="name" v-model="name"
-                       @keydown.esc="props.context.escstack.execute()">
+                    @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{ t('stylelib.description') }}</label>
                 <input type="text" id="des" v-model="des">
             </div>
         </div>
         <div class="effect">
             <div class="create-effect">
-                <div class="title">模糊</div>
+                <div class="title">{{ t('stylelib.blur') }}</div>
                 <div class="add" v-if="!blurInfo" @click="createBlur">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </div>
             <div v-if="blurInfo" class="effect-list">
@@ -32,18 +32,19 @@
                         </div>
                     </div>
                     <Select class="select" :context="props.context" :shapes="props.shapes"
-                            :source="positionOptionsSource"
-                            :selected="positionOptionsSource.find(i => i.data.value === blurInfo?.type)?.data"
+                        :source="positionOptionsSource"
+                        :selected="positionOptionsSource.find(i => i.data.value === blurInfo?.type)?.data"
                         @select="(value) => positionSelect(value)"></Select>
                     <BlurDetail ref="detail" :context="props.context" :blur="blurInfo" :shapes="props.shapes"
-                                :isMask="isMask"/>
+                        :isMask="isMask" />
                     <div class="delete" :class="{ disable }">
                         <SvgIcon :icon="delete_icon"></SvgIcon>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="createStyles">创建样式</div>
+        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="createStyles">{{ t('stylelib.add_style') }}
+        </div>
     </div>
 </template>
 <script setup lang="ts">
@@ -247,7 +248,7 @@ const stop = watch(() => props.shapes, update_by_shapes);
 onMounted(() => {
     update_by_shapes();
     watch(() => detail.value, () => {
-        const {Detail} = detail.value
+        const { Detail } = detail.value
         watch(Detail, () => {
             if (isMask.value && blurInfo.value) {
                 const _blur = { ...blurInfo.value }

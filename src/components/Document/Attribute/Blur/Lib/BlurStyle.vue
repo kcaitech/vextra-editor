@@ -1,28 +1,28 @@
 <template>
     <div id="blur-lib-panel" class="blur-lib-panel">
         <div class="header">
-            <div class="title">模糊样式</div>
+            <div class="title">{{ t('stylelib.blurs') }}</div>
             <div class="tool">
                 <div class="add" @click="showCreatePanel($event)">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
                 <div class="close" @click="emits('close')">
-                    <SvgIcon :icon="close_icon"/>
+                    <SvgIcon :icon="close_icon" />
                 </div>
             </div>
         </div>
         <div class="search">
             <div class="icon">
-                <SvgIcon :icon="search_icon"/>
+                <SvgIcon :icon="search_icon" />
             </div>
             <div class="filter" @click="showLibList($event)">
-                <SvgIcon :icon="arrow_icon"/>
+                <SvgIcon :icon="arrow_icon" />
             </div>
-            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="keyword">
+            <input v-focus ref="search" type="text" :placeholder="t('stylelib.search')" v-model="keyword">
             <div v-if="libListStatus.visible" id="blur-lib-list" class="blur-lib-list">
                 <div class="list-item" v-for="item in libList" :key="item[0]" @click.stop="filter(item[1])">
                     <div class="choose" :style="{ visibility: filterWord === item[1] ? 'visible' : 'hidden' }">
-                        <SvgIcon :icon="choose_icon"/>
+                        <SvgIcon :icon="choose_icon" />
                     </div>
                     <span>{{ item[1] }}</span>
                 </div>
@@ -33,32 +33,31 @@
                 <div class="style-item" v-for="sheet in data" :key="sheet.id">
                     <div class="type" @click="currentType(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
                         <SvgIcon
-                            :icon="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon"/>
+                            :icon="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon" />
                         <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
                     <template v-if="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
                         <div v-for="mask in (sheet.variables as BlurMask[])" class="styles"
-                             :class="{ 'active': modifyPanelStatus.visible && maskID === mask.id, 'target': mask.id === props.id }"
-                             :key="mask.id">
+                            :class="{ 'active': modifyPanelStatus.visible && maskID === mask.id, 'target': mask.id === props.id }"
+                            :key="mask.id">
                             <div class="left" @click="createBlurMask(mask.id)">
                                 <div class="effect"></div>
                                 <div class="name">{{ mask.name }}</div>
                             </div>
-                            <div class="editor" style="visibility: hidden;"
-                                 @click="(e) =>showModifyPanel(e, mask.id)">
-                                <SvgIcon :icon="editor_icon"/>
+                            <div class="editor" style="visibility: hidden;" @click="(e) => showModifyPanel(e, mask.id)">
+                                <SvgIcon :icon="editor_icon" />
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-if="!data.length && keyword" class="null">没有搜索到相关样式</div>
-                <div v-if="!data.length && !keyword" class="null">没有可用的样式</div>
+                <div v-if="!data.length && keyword" class="null">{{t('stylelib.null_search')}}</div>
+                <div v-if="!data.length && !keyword" class="null">{{t('stylelib.null_data')}}</div>
             </div>
         </el-scrollbar>
         <CreateBlurStyle v-if="createPanelStatus.visible" :context="props.context" :shapes="props.shapes"
-                         @close="closeCreatePanel"/>
+            @close="closeCreatePanel" />
         <ModifyBlurStyle v-if="modifyPanelStatus.visible" :context="props.context" :shapes="props.shapes"
-                         :maskid="maskID" :reder="fillRenderer" @close="closeModifyPanel"/>
+            :maskid="maskID" :reder="fillRenderer" @close="closeModifyPanel" />
     </div>
 </template>
 <script setup lang="ts">
@@ -82,6 +81,7 @@ import { FillRenderer, Mask } from "../../StyleLib/fillRenderer";
 import { getShapesForStyle } from "@/utils/style";
 import { get_actions_add_mask } from "@/utils/shape_style";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
     context: Context;
@@ -93,6 +93,7 @@ const emits = defineEmits<{
     (e: 'close'): void
 }>()
 
+const { t } = useI18n()
 const keyword = ref<string>('')
 const filterWord = ref<string>('全部样式')
 const types = ref(new Set<string>())
@@ -105,7 +106,7 @@ const data = reactive<StyleSheet[]>([])
 const list = reactive<Mask[]>([]);
 const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], list as Mask[]);
 
-const createPanelStatus = reactive<ElementStatus>({id: '#create-blur-panel', visible: false});
+const createPanelStatus = reactive<ElementStatus>({ id: '#create-blur-panel', visible: false });
 const createPanelStatusMgr = new ElementManager(
     props.context,
     createPanelStatus,
@@ -115,7 +116,7 @@ const createPanelStatusMgr = new ElementManager(
     }
 );
 
-const modifyPanelStatus = reactive<ElementStatus>({id: '#modify-blur-panel', visible: false});
+const modifyPanelStatus = reactive<ElementStatus>({ id: '#modify-blur-panel', visible: false });
 const modifyPanelStatusMgr = new ElementManager(
     props.context,
     modifyPanelStatus,
@@ -125,7 +126,7 @@ const modifyPanelStatusMgr = new ElementManager(
     }
 );
 
-const libListStatus = reactive<ElementStatus>({id: '#blur-lib-list', visible: false});
+const libListStatus = reactive<ElementStatus>({ id: '#blur-lib-list', visible: false });
 const libListStatusMgr = new ElementManager(
     props.context,
     libListStatus,
@@ -243,7 +244,7 @@ onUnmounted(() => {
         align-items: center;
         gap: 4px;
 
-        > .add {
+        >.add {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -316,7 +317,7 @@ onUnmounted(() => {
         }
     }
 
-    .filter img{
+    .filter img {
         rotate: -90deg;
         padding: 1px;
         box-sizing: border-box;

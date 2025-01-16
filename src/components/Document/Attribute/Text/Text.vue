@@ -1665,13 +1665,13 @@ import style_icon from '@/assets/icons/svg/styles.svg';
         border-radius: var(--default-radius);
         transition: .2s;
 
-        >svg {
+        >img {
             width: 16px;
             height: 16px;
         }
     }
 
-    .text-style svg {
+    .text-style img {
         padding: 2px;
         box-sizing: border-box;
     }
@@ -1691,7 +1691,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
             justify-content: space-between;
             align-items: center;
 
-            >svg {
+            >img {
                 // outline: none;
                 width: 16px;
                 height: 16px;
@@ -1808,7 +1808,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                         align-items: center;
                         justify-content: center;
 
-                        >svg {
+                        >img {
                             width: 12px;
                             height: 12px;
                         }

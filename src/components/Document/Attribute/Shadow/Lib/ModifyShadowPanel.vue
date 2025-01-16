@@ -1,26 +1,26 @@
 <template>
     <div id="modify-shadow-panel" class="editor-style">
         <div class="header">
-            <div class="title">编辑阴影样式</div>
+            <div class="title">{{t('stylelib.editor_shadow')}}</div>
             <div class="close" @click.stop="emits('close')">
                 <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{t('stylelib.name')}}</label>
                 <input v-focus ref="effectname" type="text" id="name" v-model="name"
                     @keydown.esc="props.context.escstack.execute()" @change="setSheetName">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{t('stylelib.description')}}</label>
                 <input ref="effectdes" type="text" id="des" v-model="des"
                     @keydown.esc="props.context.escstack.execute()" @change="setSheetDes">
             </div>
         </div>
         <div class="effect">
             <div class="create-effect">
-                <div class="title">特效</div>
+                <div class="title">{{t('stylelib.shadow')}}</div>
                 <div class="add" @click.stop="addshadow">
                     <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
