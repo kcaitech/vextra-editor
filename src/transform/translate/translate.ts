@@ -683,31 +683,6 @@ export class TranslateHandler extends TransformHandler {
         }
     }
 
-    private __getTargetFrame = (shape: Shape) => {
-        let f = shape.frame;
-        const m = shape.transform;
-        if (shape.isNoTransform()) {
-            f.x = f.x + m.translateX;
-            f.y = f.y + m.translateY
-        } else {
-            const corners = [
-                { x: f.x, y: f.y },
-                { x: f.x + f.width, y: f.y },
-                { x: f.x + f.width, y: f.y + f.height },
-                { x: f.x, y: f.y + f.height }]
-                .map((p) => m.computeCoord(p));
-            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-            f.x = minx;
-            f.y = miny;
-            f.width = maxx - minx;
-            f.height = maxy - miny;
-        }
-        return f;
-    }
-
     private _swapLayoutShape() {
         const living = this.livingPoint;
         const shapes = this.shapes;

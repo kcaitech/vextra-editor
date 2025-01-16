@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection, XY } from '@/context/selection';
-import { ArtboardView, BorderPosition, ColVector3D, CtrlElementType, Matrix, PaddingDir, Shape, ShapeView, StackMode, StackSizing, adapt2Shape, getHorizontalAngle, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboardView, BorderPosition, ColVector3D, Matrix, PaddingDir, ShapeView, StackMode, StackSizing, getShapeFrame, layoutShapesOrder2, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
 import { fixedZero } from '@/utils/common';
 import { CursorType } from '@/utils/cursor2';
 import { useI18n } from "vue-i18n";
-import { getShapeFrame } from '@/utils/content';
 const { t } = useI18n();
 
 type Box = {
@@ -84,7 +83,7 @@ function getVerSpacePosition() {
     if (autoLayout.stackVerticalGapSizing === StackSizing.Auto) {
         ver_space.value = `${t('autolayout.auto')}`
     }
-    const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)), !!autoLayout.bordersTakeSpace);
+    const shape_rows = layoutShapesOrder2(shape.childs, !!autoLayout.bordersTakeSpace);
     for (let i = 0; i < shape_rows.length - 1; i++) {
         const row = shape_rows[i];
         topPadding = Math.max(...row.map(s => {
@@ -133,7 +132,7 @@ function getHorSpacePosition() {
     const clientTransform = makeShapeTransform2By1(matrix2);
     m.addTransform(clientTransform); //root到视图
     let topPadding = autoLayout.stackVerticalPadding; //上边距
-    const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)), !!autoLayout.bordersTakeSpace);
+    const shape_rows = layoutShapesOrder2(shape.childs, !!autoLayout.bordersTakeSpace);
     hor_space.value = autoLayout.stackSpacing;
     if (autoLayout.stackHorizontalGapSizing === StackSizing.Auto) {
         hor_space.value = `${t('autolayout.auto')}`;
@@ -170,7 +169,7 @@ function getHorSpacePosition() {
     }
 }
 
-const getIncludedBorderFrame = (shape: Shape, includedBorder?: boolean) => {
+const getIncludedBorderFrame = (shape: ShapeView, includedBorder?: boolean) => {
     let f = getShapeFrame(shape);
     if (includedBorder) {
         const border = shape.getBorders();
