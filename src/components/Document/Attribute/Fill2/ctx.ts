@@ -1,11 +1,9 @@
 import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
 import { Context } from "@/context";
-import { hidden_selection } from "@/utils/content";
 import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/Fill2/basic";
 import { v4 } from "uuid";
-import { getShapesForStyle } from "@/utils/style";
-import { ElementManager } from "@/components/common/elementmanager";
+import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     if (sye.style.fillsMask) return sye.style.fillsMask;
@@ -71,31 +69,9 @@ export type FillContext = {
     maskInfo?: MaskInfo;
 }
 
-export class FillContextMgr {
-    private m_selected: ShapeView[];
-
-    constructor(private context: Context, public fillCtx: FillContext) {
-        this.m_selected = [];
-    }
-
-    get selected() {
-        return this.m_selected;
-    }
-
-    set selected(ss) {
-        this.m_selected = ss;
-    }
-
-    private get editor() {
-        return this.context.editor4Page(this.context.selection.selectedPage!);
-    }
-
-    private get editor4Doc() {
-        return this.context.editor4Doc();
-    }
-
-    private getSelected() {
-        this.selected = getShapesForStyle(this.context.selection.selectedShapes);
+export class FillContextMgr extends StyleCtx {
+    constructor(protected context: Context, public fillCtx: FillContext) {
+        super(context);
     }
 
     private modifyMixedStatus() {
@@ -138,28 +114,6 @@ export class FillContextMgr {
 
     private getIndexByFill(fill: Fill) {
         return (fill.parent as unknown as Fill[])?.findIndex(i => i === fill) ?? -1;
-    }
-
-    private hiddenCtrl(event?: Event) {
-        hidden_selection(this.context);
-
-        if (event?.target instanceof HTMLInputElement) event.target.blur();
-    }
-
-    private m_panel: Set<ElementManager> = new Set();
-    private m_panel_map: Map<string, ElementManager> = new Map();
-
-    private kill() {
-        this.m_panel.forEach(i => i.close());
-    }
-    catchPanel(ele: ElementManager) {
-        this.m_panel.add(ele);
-    }
-
-    keepUniquePanel(type: string, ele: ElementManager) {
-        const exist = this.m_panel_map.get(type);
-        if (exist && exist !== ele) exist.close();
-        this.m_panel_map.set(type, ele);
     }
 
     update() {
@@ -264,7 +218,7 @@ export class FillContextMgr {
     createStyleLib(name: string, desc: string) {
         const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
         const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);
-        this.editor4Doc.insertStyleLib(fillMask, this.context.selection.selectedPage!, this.selected);
+        this.editor4Doc.insertStyleLib(fillMask, this.page, this.selected);
         this.kill();
     }
 }
