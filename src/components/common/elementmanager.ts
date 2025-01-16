@@ -75,6 +75,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
 
     private trigger: Element | null = null;
     private scope: Element | undefined;
+    private m_target: HTMLDivElement | undefined;
 
     showBy(
         trigger: Element | MouseEvent | null /*触发元素|事件*/,
@@ -84,16 +85,16 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             once?: {
                 offsetLeft?: number;
                 offsetTop?: number;
-            }
+            },
+            fixed?: boolean;
         }
     ) {
         if (this.element.visible) {
             this.element.visible = false;
             return;
         }
-
+        this.m_target = undefined;
         this.trigger = getTriggerFromE(trigger);
-
         this.scope = params?.scope;
         this.element.visible = true;
 
@@ -112,7 +113,10 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             counter.add(this.downCheck); // todo 测试代码
         }
 
-        nextTick(() => this.locate(params?.once));
+        nextTick(() => {
+            this.locate(params?.once);
+            if (!params?.fixed) this.initDragEvent();
+        });
 
         function getTriggerFromE(e: Element | MouseEvent | null) {
             if (e instanceof MouseEvent) {
@@ -125,7 +129,56 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     }
 
     private get target() {
-        return (this.scope ?? document).querySelector(this.element.id) as HTMLDivElement;
+        return this.m_target ?? (this.m_target = (this.scope ?? document).querySelector(this.element.id) as HTMLDivElement);
+    }
+
+    private dragging: boolean = false;
+    private downXY: { x: number, y: number } = {x: 0, y: 0};
+    private clientX: number = 0;
+    private clientY: number = 0;
+
+    private _move(event: MouseEvent) {
+        const {clientX, clientY} = event;
+        if (this.dragging) {
+            const dx = clientX - this.downXY.x;
+            const dy = clientY - this.downXY.y;
+            const left = this.clientX + dx;
+            const top = this.clientY + dy;
+            const target = this.target;
+            target.style.left = `${left}px`;
+            target.style.top = `${top}px`;
+        } else if (Math.hypot(clientX - this.downXY.x, clientY - this.downXY.y) > 5) this.dragging = true;
+    }
+
+    private move = this._move.bind(this);
+
+    private _up(event: MouseEvent) {
+        const {clientX, clientY} = event;
+        const dx = clientX - this.downXY.x;
+        const dy = clientY - this.downXY.y;
+        this.clientX = this.clientX + dx;
+        this.clientY = this.clientY + dy;
+        this.dragging = false;
+        document.removeEventListener('mousemove', this.move);
+        document.removeEventListener('mouseup', this.up);
+    }
+
+    private up = this._up.bind(this);
+
+    private _down(event: MouseEvent) {
+        const target = event.target as HTMLDivElement;
+        if (!target.classList.contains('header')) return;
+        event.stopPropagation();
+        this.downXY = {x: event.clientX, y: event.clientY};
+        document.addEventListener('mousemove', this.move);
+        document.addEventListener('mouseup', this.up);
+    }
+
+    private down = this._down.bind(this);
+
+    private initDragEvent() {
+        const target = this.target;
+        target.addEventListener('mousedown', this.down);
     }
 
     private locate(once?: { offsetLeft?: number, offsetTop?: number }) {
@@ -152,6 +205,9 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         if (exceedW < 0) left = Math.max(0, left + exceedW);
         const exceedH = clientHeight - (top + rect.height);
         if (exceedH < 0) top = Math.max(0, top + exceedH);
+
+        this.clientX = left;
+        this.clientY = top;
 
         target.style.position = "fixed";
         target.style.zIndex = '1';
