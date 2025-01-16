@@ -10,6 +10,7 @@ import { Border, BorderStyle, CornerType, ShapeType, ShapeView, TableView } from
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import {
+    BorderData,
     get_actions_border,
     get_actions_border_style, get_borders_corner
 } from '@/utils/shape_style';
@@ -23,8 +24,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context
     shapes: ShapeView[]
-    border: Border
-    index: number
+    border: BorderData
     reflush_side: number
 }
 
@@ -39,7 +39,7 @@ const borderStyleOptionsSource: SelectSource[] = genOptions([
 const selected = ref<CornerType>();
 const is_corner = ref(true);
 const is_border_custom = ref(false);
-
+const mixed = ref(false);
 function showMenu() {
     props.context.menu.notify(Menu.SHUTDOWN_MENU);
     updater();
@@ -49,6 +49,11 @@ function showMenu() {
 
 function updater() {
     // border style init
+    if (typeof props.border.borderStyle === 'string') {
+        mixed.value = true;
+        borderStyle.value = { value: `${t('attr.mixed')}`, content: `${t('attr.mixed')}` };
+        return;
+    }
     const bs = ((s: BorderStyle) => s.length > 0 ? 'dash' : 'solid')(props.border.borderStyle);
     const borderStyleSelected = borderStyleOptionsSource.find(i => i.data.value === bs)?.data;
     borderStyleSelected && (borderStyle.value = borderStyleSelected);
@@ -65,10 +70,10 @@ function borderStyleSelect(selected: SelectItem) {
         const bs = selected.value === 'dash' ? new BorderStyle(2, 2) : new BorderStyle(0, 0);
         const e = props.context.editor4Table(shape as TableView);
         const range = get_table_range(table);
-        e.setBorderStyle4Cell(props.index, bs, range)
+        e.setBorderStyle4Cell(bs, range)
     } else {
         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
+        const actions = get_actions_border_style(shapes, (selected.value as 'dash' | 'solid'));
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderStyle(actions);
@@ -91,7 +96,7 @@ const setCornerType = (type: CornerType) => {
         const range = get_table_range(table);
     } else {
         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_border(shapes, props.index, type);
+        const actions = get_actions_border(shapes, type);
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderCornerType(actions);
@@ -107,13 +112,13 @@ watch(() => props.border, () => {
 
 const update_corner = () => {
     const s = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
-    if(!s.length) return;
+    if (!s.length) return;
     is_corner.value = s.every(s => s.type === ShapeType.Line || s.type === ShapeType.Contact);
     if (is_corner.value) return;
     is_border_custom.value = s.some(s => {
         return can_custom.includes(s.type) && !s.data.haveEdit;
     });
-    const actions = get_borders_corner(s, props.index);
+    const actions = get_borders_corner(s);
     if (actions) {
         selected.value = actions;
     } else {
@@ -158,12 +163,13 @@ import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
                     <div>
                         <label>{{ t('attr.borderStyle') }}</label>
                         <Select class="select" :source="borderStyleOptionsSource" :selected="borderStyle"
-                            :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-                            @select="borderStyleSelect"></Select>
+                            :item-view="BorderStyleItem" :value-view="BorderStyleSelected" @select="borderStyleSelect"
+                            :mixed="mixed"></Select>
                     </div>
-                    <BorderSideSelected v-if="is_border_custom" :border="props.border" :index="props.index" :context="context" :reflush_side="reflush_side"></BorderSideSelected>
+                    <BorderSideSelected v-if="is_border_custom" :context="context" :reflush_side="reflush_side">
+                    </BorderSideSelected>
                     <div class="corner-style" v-if="!is_corner">
-                        <div class="corner">{{t('attr.corner')}}</div>
+                        <div class="corner">{{ t('attr.corner') }}</div>
                         <div class="corner-select">
                             <div class="miter" :class="{ selected: selected === CornerType.Miter }"
                                 @click="setCornerType(CornerType.Miter)" style="margin-right: 5px;">

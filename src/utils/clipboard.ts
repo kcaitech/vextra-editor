@@ -1,9 +1,15 @@
 import {
     adapt2Shape,
     AsyncCreator,
+    BasicArray,
     Blur,
+    Border,
+    BorderPosition,
+    BorderSideSetting,
+    BorderStyle,
     ColVector3D,
     ContactShape,
+    CornerType,
     CurvePoint,
     Document,
     export_shape,
@@ -20,6 +26,7 @@ import {
     ShapeFrame,
     ShapeType,
     ShapeView,
+    StrokePaint,
     TableCellType,
     Text,
     TextShape,
@@ -38,7 +45,7 @@ import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
 import { WorkSpace } from "@/context/workspace";
-import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
+import { BorderData, get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 import { flattenShapes } from "@/utils/cutout";
 import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
@@ -149,7 +156,7 @@ export class Clipboard {
 
     write_text(text: Text, event?: ClipboardEvent): boolean {
         const _text = export_text(text);
-        
+
         const plain_text = text.getText(0, text.length);
 
         const h = encode_html(paras, _text, plain_text);
@@ -261,7 +268,7 @@ export class Clipboard {
             const selected = this.context.selection.selectedShapes;
             const flatten = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
             const fills = get_fills(flatten);
-            const borders = get_borders(flatten);
+            const { border, stroke_paints } = get_borders(flatten);
             const shadows = get_shadows(selected);
             const blur = get_blur(selected);
 
@@ -272,7 +279,12 @@ export class Clipboard {
 
             const data: any = {};
             if (fills !== "mixed") data['fills'] = fills.map(i => exportFill(i.fill));
-            if (borders !== "mixed") data['borders'] = borders.map(i => exportBorder(i.border));
+            if (typeof stroke_paints !== 'string' && !this.borderIsString(border)) {
+                const paints = new BasicArray<StrokePaint>();
+                (stroke_paints).forEach(i => paints.push(i.strokePaint));
+                const b = new Border(border.position as BorderPosition, border.borderStyle as BorderStyle, border.cornerType as CornerType, border.sideSetting as BorderSideSetting, paints);
+                data['borders'] = exportBorder(b);
+            }
             if (shadows !== "mixed") data['shadows'] = shadows.map(i => exportShadow(i.shadow));
             if (blur instanceof Blur) data['blur'] = exportBlur(blur);
             if (radius) data['radius'] = radius;
@@ -292,6 +304,12 @@ export class Clipboard {
             console.log('write_properties error:', e);
             return false;
         }
+    }
+    borderIsString(border: BorderData) {
+        Object.values(border).forEach(value => {
+            if (typeof value === 'string') return true;
+        });
+        return false;
     }
 
     async paste_properties(event?: ClipboardEvent) {
@@ -620,7 +638,7 @@ export class Clipboard {
             }
 
             const items = event.clipboardData && event.clipboardData.items;
-            
+
             if (items?.length) {
                 return this.paste_text_sync(items);
             }
@@ -642,7 +660,7 @@ export class Clipboard {
             if (!text_shape) {
                 return;
             }
-            
+
             const editor = this.context.editor4TextShape(text_shape);
 
             if (types.length === 1) {
@@ -703,7 +721,7 @@ export class Clipboard {
     paste_text_sync_for_html(items: DataTransferItemList, html: DataTransferItem) {
         html.getAsString(val => {
             const html = decode_html(val);
-            
+
             const is_paras = html.slice(0, 70).indexOf(paras) > -1; // 文本段落
             if (is_paras) {
                 this.insert_paras(html);
@@ -871,12 +889,12 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
         const source = JSON.parse(text_html.split(`${paras}`)[1]);
-        if(source.paras[0].spans.length > 0 && source.paras[0].spans[0].placeholder) {
+        if (source.paras[0].spans.length > 0 && source.paras[0].spans[0].placeholder) {
             source.paras[0].spans[0].placeholder = false;
             source.paras[0].text = source.paras[0].text.slice(1);
         }
         const text = import_text(context.data, source, false) as Text;
-        
+
         editor.insertFormatText(text, s, Math.abs(start - end));
         selection.setCursor(s + text.length, false);
     }
@@ -1348,7 +1366,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
     if (page && parent) {
         const editor = context.editor.controller();
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-        
+
         new_shape = asyncCreator.init_text(page.data, parent.data, frame, content);
     }
     if (asyncCreator && new_shape) {

@@ -9,6 +9,9 @@ import { Context } from '@/context';
 import { hidden_selection } from '@/utils/content';
 import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_Apex, get_actions_border_endpoint, get_actions_border_exchange } from '@/utils/shape_style';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+
 import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context
@@ -116,12 +119,12 @@ function init_v() {
         if (!s_mixed.value) {
             borderFrontStyle.value = { value: sm || MarkerType.Line, content: sm || MarkerType.Line };
         } else {
-            borderFrontStyle.value = { value: '多值', content: '多值' };
+            borderFrontStyle.value = { value: `${t('attr.mixed')}`, content: `${t('attr.mixed')}` };
         }
         if (!e_mixed.value) {
             borderEndStyle.value = { value: em || MarkerType.Line, content: `end-${em || MarkerType.Line}` };
         } else {
-            borderEndStyle.value = { value: '多值', content: '多值' };
+            borderEndStyle.value = { value: `${t('attr.mixed')}`, content: `${t('attr.mixed')}` };
         }
     }
 }
@@ -135,10 +138,10 @@ const apexStyle = () => {
         const s = shapes[0];
         const sm = s.startMarkerType;
         const em = s.endMarkerType;
-        const v = em !== sm ? '多值' : (em === MarkerType.Round || em === MarkerType.Square || em === MarkerType.Line || !em) ? em : '多值';
-        if (v === '多值') {
+        const v = em !== sm ? `${t('attr.mixed')}` : (em === MarkerType.Round || em === MarkerType.Square || em === MarkerType.Line || !em) ? em : `${t('attr.mixed')}`;
+        if (v === `${t('attr.mixed')}`) {
             apex_mixed.value = true;
-            borderApexStyle.value = { value: '多值', content: '多值' };
+            borderApexStyle.value = { value: `${t('attr.mixed')}`, content: `${t('attr.mixed')}` };
         } else {
             borderApexStyle.value = { value: v || MarkerType.Line, content: `end-${v || MarkerType.Line}` };
         }
@@ -149,16 +152,16 @@ const apexStyle = () => {
         const start = !(shapes.every(v => v.startMarkerType === sm));
         const end = !(shapes.every(v => v.endMarkerType === em));
         if (start === end && sm === em) {
-            const v = em === MarkerType.Round || em === MarkerType.Square || em === MarkerType.Line || !em ? em : '多值'
-            if (v === '多值') {
+            const v = em === MarkerType.Round || em === MarkerType.Square || em === MarkerType.Line || !em ? em : `${t('attr.mixed')}`
+            if (v === `${t('attr.mixed')}`) {
                 apex_mixed.value = true;
-                borderApexStyle.value = { value: '多值', content: '多值' };
+                borderApexStyle.value = { value: `${t('attr.mixed')}`, content: `${t('attr.mixed')}` };
             } else {
                 borderApexStyle.value = { value: v || MarkerType.Line, content: `end-${v || MarkerType.Line}` };
             }
         } else {
             apex_mixed.value = true;
-            borderApexStyle.value = { value: '多值', content: '多值' };
+            borderApexStyle.value = { value: `${t('attr.mixed')}`, content: `${t('attr.mixed')}` };
         }
     }
 }
@@ -227,7 +230,8 @@ import exchange_icon from '@/assets/icons/svg/exchange.svg';
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding-top: 10px;
+    padding-top: 2px;
+    padding-bottom: 6px;
     justify-content: space-between;
     gap: 6px;
 

@@ -1533,7 +1533,7 @@ import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg"
     font-weight: 500;
     font-size: var(--font-default-fontsize);
     opacity: 1;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgb(215, 215, 215);
     box-sizing: border-box;
     flex: 0 0 16px;
     background-color: var(--theme-color-anti);

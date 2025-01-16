@@ -361,13 +361,13 @@ class SelModel {
                 const unitTransform = new Transform().setScale(ColVector3D.FromXYZ(width, height, 1)).addTransform(transform);
                 const lt = (shape as PathShapeView).segments[0].points[0];
                 const rb = (shape as PathShapeView).segments[0].points[1];
-                const {col0, col1} = unitTransform.transform([
+                const { col0, col1 } = unitTransform.transform([
                     ColVector3D.FromXY(lt.x, lt.y),
                     ColVector3D.FromXY(rb.x, rb.y)
                 ])
                 points = [col0, col1];
             } else {
-                const {col0, col1, col2, col3} = transform.transform([
+                const { col0, col1, col2, col3 } = transform.transform([
                     ColVector3D.FromXY(x, y),
                     ColVector3D.FromXY(x + width, y),
                     ColVector3D.FromXY(x + width, y + height),
@@ -816,26 +816,19 @@ class Jumper {
 function boundingBox(shape: Shape, includedBorder: boolean): ShapeFrame {
     let frame = { ...shape.frame };
     if (includedBorder) {
-        const borders = shape.getBorders();
+        const border = shape.getBorders();
         let max_top_border = 0;
         let max_left_border = 0;
         let max_right_border = 0;
         let max_bottom_border = 0;
-        borders.forEach(b => {
-            if (b.isEnabled) {
-                if (b.position === BorderPosition.Outer) {
-                    max_top_border = Math.max(b.sideSetting.thicknessTop, max_top_border);
-                    max_left_border = Math.max(b.sideSetting.thicknessLeft, max_left_border);
-                    max_right_border = Math.max(b.sideSetting.thicknessRight, max_right_border);
-                    max_bottom_border = Math.max(b.sideSetting.thicknessBottom, max_bottom_border);
-                } else if (b.position === BorderPosition.Center) {
-                    max_top_border = Math.max(b.sideSetting.thicknessTop / 2, max_top_border);
-                    max_left_border = Math.max(b.sideSetting.thicknessLeft / 2, max_left_border);
-                    max_right_border = Math.max(b.sideSetting.thicknessRight / 2, max_right_border);
-                    max_bottom_border = Math.max(b.sideSetting.thicknessBottom / 2, max_bottom_border);
-                }
-            }
-        })
+        const isEnabled = border.strokePaints.some(p => p.isEnabled);
+        if (isEnabled) {
+            const outer = border.position === BorderPosition.Outer;
+            max_top_border = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+            max_left_border = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+            max_right_border = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+            max_bottom_border = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
+        }
         frame.x -= max_left_border;
         frame.y -= max_top_border;
         frame.width += max_left_border + max_right_border;
@@ -969,22 +962,22 @@ class Inserter {
             const y = layout.stackVerticalPadding;
             const matrix = this.layoutEnv!.matrix2Root();
             matrix.multiAtLeft(this.context.workspace.matrix);
-            start = matrix.computeCoord3({x, y});
-            end = matrix.computeCoord3(isHor ? {x, y: y + 100} : {x: x + 100, y});
+            start = matrix.computeCoord3({ x, y });
+            end = matrix.computeCoord3(isHor ? { x, y: y + 100 } : { x: x + 100, y });
         } else {
-            const {view, position} = grid;
+            const { view, position } = grid;
             const frame = view.frame;
             let len = isHor ? frame.height : frame.width;
             const cx = (frame.x + frame.width) / 2;
             const cy = (frame.y + frame.height) / 2;
             if (position > 0) {
-                if (isHor) start = {x: frame.x + frame.width + gap, y: cy - len / 2};
-                else start = {x: cx - len / 2, y: frame.y + frame.height + gap};
+                if (isHor) start = { x: frame.x + frame.width + gap, y: cy - len / 2 };
+                else start = { x: cx - len / 2, y: frame.y + frame.height + gap };
             } else {
-                if (isHor) start = {x: frame.x - gap, y: cy - len / 2};
-                else start = {x: cx - len / 2, y: frame.y - gap};
+                if (isHor) start = { x: frame.x - gap, y: cy - len / 2 };
+                else start = { x: cx - len / 2, y: frame.y - gap };
             }
-            end = isHor ? {x: start.x, y: start.y + len} : {x: start.x + len, y: start.y}
+            end = isHor ? { x: start.x, y: start.y + len } : { x: start.x + len, y: start.y }
             const matrix = view.matrix2Root();
             matrix.multiAtLeft(this.context.workspace.matrix);
             start = matrix.computeCoord3(start);
@@ -1003,7 +996,7 @@ class Inserter {
 
         const rows = this.rows;
         if (!rows.length) {
-            return this.__render({view: undefined, end: 0, start: 0, position: 1});
+            return this.__render({ view: undefined, end: 0, start: 0, position: 1 });
         }
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
@@ -1111,7 +1104,7 @@ export class Translate2 extends BoundHandler {
         const __is_locked = this.isLocked.bind(this);
         for (const shape of shapes) {
             if (__is_locked(shape)) continue;
-            
+
             const parent = shape.parent!;
             let PI = cache.get(parent)!;
             if (!PI) {

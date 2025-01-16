@@ -355,7 +355,9 @@ export const attr: any = {
     startingAngle: "开始",
     sweep: "弧度",
     ratio: "内径",
-    clip: "裁剪超出内容"
+    clip: "裁剪超出内容",
+    stroke: '描边',
+    stroke_color: '描边色',
 }
 
 export const login = {

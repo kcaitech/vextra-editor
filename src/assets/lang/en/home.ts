@@ -355,7 +355,9 @@ export const attr: any = {
     startingAngle: "Start",
     sweep: "Sweep",
     ratio: "Ratio",
-    clip: 'Clip content'
+    clip: 'Clip content',
+    stroke: 'Stroke',
+    stroke_color: 'Stroke color',
 }
 
 export const login = {

@@ -1,5 +1,5 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
+import { Border, Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView, StrokePaint } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';
@@ -591,8 +591,8 @@ function finder(context: Context, shape: ShapeView, init?: Map<string, Color[]>)
     const s = cs[i];
     if (!s) continue;
     const fills = s.getFills();
-    const borders = s.getBorders();
-    const fbs: Array<Fill | Border> = [...fills, ...borders];
+    const borders = s.getBorders().strokePaints;
+    const fbs: Array<Fill | StrokePaint> = [...fills, ...borders];
     for (let j = 0; j < fbs.length; j++) {
       const r = result.get(c2s(fbs[j].color));
       if (r) r.push(fbs[j].color);

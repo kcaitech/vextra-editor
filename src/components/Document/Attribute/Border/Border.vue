@@ -14,7 +14,8 @@ import {
     SideType,
     PathShapeView,
     TableView,
-    LinearApi
+    LinearApi,
+    StrokePaint
 } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
@@ -54,9 +55,15 @@ import { getSideThickness } from "./index"
 import { sortValue } from '../BaseAttr/oval';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
-interface BorderItem {
+interface StrokePaintItem {
     id: number
-    border: Border
+    strokePaint: StrokePaint
+}
+interface BorderData {
+    position: BorderPosition | string
+    cornerType: CornerType | string
+    borderStyle: BorderStyle | string
+    sideSetting: BorderSideSetting | string,
 }
 
 interface Props {
@@ -68,8 +75,17 @@ interface Props {
 
 const { t } = useI18n();
 const props = defineProps<Props>();
-const data: { borders: BorderItem[] } = reactive({ borders: [] });
-const { borders } = data;
+const initBorder = {
+    position: BorderPosition.Center,
+    cornerType: CornerType.Miter,
+    borderStyle: new BorderStyle(0, 0),
+    sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
+}
+const borderData = ref<BorderData>({ ...initBorder })
+const data: { strokePaints: StrokePaintItem[] } = reactive({
+    strokePaints: [],
+});
+const { strokePaints } = data;
 const alphaBorder = ref<HTMLInputElement[]>();
 const colorBorder = ref<HTMLInputElement[]>()
 const mixed = ref<boolean>(false);
@@ -86,6 +102,7 @@ const reflush_side = ref(0);
 const reflush_apex = ref(0);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
+const hasStroke = ref(false);
 
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
@@ -93,8 +110,8 @@ const positonOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
     [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
 ]);
-const isActived = ref(-1)
-const borderThickness = ref<HTMLInputElement[] | undefined>();
+const isActived = ref(false);
+const borderThickness = ref<HTMLInputElement>();
 
 function watchShapes() {
     const needWatchShapes = new Map();
@@ -140,9 +157,11 @@ function watcher(...args: any[]) {
 function updateData() {
     mixed.value = false;
     mixed_cell.value = false;
+    hasStroke.value = false;
     const selecteds = props.context.selection.selectedShapes;
     if (selecteds.length < 1) return;
-    borders.length = 0;
+    strokePaints.length = 0;
+    borderData.value = initBorder;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -159,34 +178,39 @@ function updateData() {
             cells.push(is_edting)
         }
         if (cells.length > 0) {
-            const _bs = get_borders(cells);
-            if (_bs === 'mixed') {
+            const { border, stroke_paints } = get_borders(cells);
+            if (stroke_paints === 'mixed') {
                 mixed_cell.value = true;
+                hasStroke.value = true;
             } else {
-                if (_bs.length > 0 && might_is_mixed) {
+                if (stroke_paints.length > 0 && might_is_mixed) {
                     mixed_cell.value = true;
+                    hasStroke.value = true;
                 } else {
-                    borders.push(..._bs.reverse());
+                    strokePaints.push(...stroke_paints.reverse());
+                    if (stroke_paints.length) hasStroke.value = true;
                 }
             }
+            borderData.value = border;
         }
     } else {
         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-        const _bs = get_borders(shapes);
-        if (_bs === 'mixed') {
+        const { border, stroke_paints } = get_borders(shapes);
+        if (stroke_paints === 'mixed') {
             mixed.value = true;
+            hasStroke.value = true;
         } else {
-            borders.push(..._bs.reverse());
+            strokePaints.push(...stroke_paints.reverse());
+            if (stroke_paints.length) hasStroke.value = true;
         }
+        borderData.value = border;
     }
     reflush_side.value++
 }
 
 function addBorder() {
     const color = new Color(1, 0, 0, 0);
-    const borderStyle = new BorderStyle(0, 0);
-    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
+    const strokePaint = new StrokePaint(new BasicArray(0), v4(), true, FillType.SolidColor, color);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -196,9 +220,9 @@ function addBorder() {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
         if (mixed_cell.value) {
-            e.addBorder4Cell(border, range, true)
+            e.addBorder4Cell(strokePaint, range, true)
         } else {
-            e.addBorder4Cell(border, range, false)
+            e.addBorder4Cell(strokePaint, range, false)
         }
     } else {
         const shapes = getShapesForStyle(props.shapes);
@@ -207,7 +231,7 @@ function addBorder() {
             const editor = props.context.editor4Page(page);
             editor.shapesBordersUnify(actions);
         } else {
-            const actions = get_actions_add_boder(shapes, border);
+            const actions = get_actions_add_boder(shapes, strokePaint);
             const editor = props.context.editor4Page(page);
             editor.shapesAddBorder(actions);
         }
@@ -215,12 +239,30 @@ function addBorder() {
     hidden_selection(props.context);
 }
 
+function deleteBorders() {
+    const selected = props.context.selection.selectedShapes;
+    const s = selected[0];
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const table = props.context.tableSelection;
+    if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(s as TableView);
+        const range = get_table_range(table);
+        e.deleteBorders4Cell(range);
+    } else {
+        const shapes = getShapesForStyle(props.shapes);
+        const editor = props.context.editor4Page(page);
+        editor.shapesDeleteAllBorder(shapes);
+    }
+    hidden_selection(props.context);
+}
+
 function first() {
-    if (borders.length === 0 && !mixed.value) addBorder();
+    if (strokePaints.length === 0 && !mixed.value) addBorder();
 }
 
 function deleteBorder(idx: number) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -242,9 +284,9 @@ function deleteBorder(idx: number) {
 }
 
 function toggleVisible(idx: number) {
-    const border = borders[idx].border;
+    const border = strokePaints[idx].strokePaint;
     const isEnabled = !border.isEnabled;
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -283,7 +325,7 @@ function onColorChange(e: Event, idx: number) {
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     const hex = value.match(Reg_HEX);
-    const border = borders[idx].border;
+    const border = strokePaints[idx].strokePaint;
     if (!hex) {
         message('danger', t('system.illegal_input'));
         if (!colorBorder.value) return;
@@ -298,24 +340,24 @@ function onColorChange(e: Event, idx: number) {
     hidden_selection(props.context);
 }
 
-function onAlphaChange(b: Border, idx: number) {
+function onAlphaChange(strokePaint: StrokePaint, idx: number) {
     let alpha: any = alphaValue.value;
     if (!alphaBorder.value) return;
     if (alpha.slice(-1) === '%') {
         alpha = Number(alpha?.slice(0, -1))
         if (isNaN(alpha) || alpha < 0) {
-            alpha_message(idx, b);
+            alpha_message(idx, strokePaint);
         }
         if (alpha > 100) {
             alpha = 100;
         }
         alpha = alpha.toFixed(2) / 100
-        const border = borders[idx].border;
+        const border = strokePaints[idx].strokePaint;
         const { red, green, blue } = border.color
         const color = new Color(alpha, red, green, blue);
-        if (b.fillType === FillType.SolidColor) {
+        if (strokePaint.fillType === FillType.SolidColor) {
             setColor(idx, color);
-        } else if (b.gradient && b.fillType === FillType.Gradient) {
+        } else if (strokePaint.gradient && strokePaint.fillType === FillType.Gradient) {
             set_gradient_opacity(idx, alpha);
         }
     } else {
@@ -324,22 +366,22 @@ function onAlphaChange(b: Border, idx: number) {
                 alpha = 100
             }
             alpha = Number((Number(alpha)).toFixed(2)) / 100;
-            const border = borders[idx].border;
+            const border = strokePaints[idx].strokePaint;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
-            if (b.fillType === FillType.SolidColor) {
+            if (strokePaint.fillType === FillType.SolidColor) {
                 setColor(idx, color);
-            } else if (b.gradient && b.fillType === FillType.Gradient) {
+            } else if (strokePaint.gradient && strokePaint.fillType === FillType.Gradient) {
                 set_gradient_opacity(idx, alpha);
             }
         } else {
-            alpha_message(idx, b);
+            alpha_message(idx, strokePaint);
         }
     }
     hidden_selection(props.context);
 }
 
-function keydownAlpha(event: KeyboardEvent, b: Border, idx: number, val: string) {
+function keydownAlpha(event: KeyboardEvent, strokePaint: StrokePaint, idx: number, val: string) {
     let value: any = sortValue(val);
     if (!alphaBorder.value) return;
     if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
@@ -351,16 +393,16 @@ function keydownAlpha(event: KeyboardEvent, b: Border, idx: number, val: string)
             value = value / 100 + (event.code === 'ArrowUp' ? 0.01 : -0.01)
             if (isNaN(value)) return;
             value = value <= 0 ? 0 : value <= 1 ? value : 1
-            const border = borders[idx].border;
+            const border = strokePaints[idx].strokePaint;
             const { red, green, blue } = border.color
             const color = new Color(value, red, green, blue);
-            if (b.fillType === FillType.SolidColor) {
+            if (strokePaint.fillType === FillType.SolidColor) {
                 setColor(idx, color);
-            } else if (b.gradient && b.fillType === FillType.Gradient) {
+            } else if (strokePaint.gradient && strokePaint.fillType === FillType.Gradient) {
                 set_gradient_opacity(idx, value);
             }
         } else {
-            alpha_message(idx, b);
+            alpha_message(idx, strokePaint);
         }
         event.preventDefault();
     }
@@ -371,7 +413,7 @@ function setColor(idx: number, color: Color) {
     const selected = shapes.value || props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     const s = selected[0] as ShapeView;
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const table = props.context.tableSelection;
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
@@ -403,21 +445,21 @@ function setColor(idx: number, color: Color) {
     }
 }
 
-const alpha_message = (idx: number, border: Border) => {
+const alpha_message = (idx: number, strokePaint: StrokePaint) => {
     if (!alphaBorder.value) return;
     message('danger', t('system.illegal_input'));
     let alpha = 1;
-    if (border.fillType === FillType.SolidColor) {
-        alpha = border.color.alpha * 100;
-    } else if (border.gradient && border.fillType === FillType.Gradient) {
-        const opacity = border.gradient.gradientOpacity;
+    if (strokePaint.fillType === FillType.SolidColor) {
+        alpha = strokePaint.color.alpha * 100;
+    } else if (strokePaint.gradient && strokePaint.fillType === FillType.Gradient) {
+        const opacity = strokePaint.gradient.gradientOpacity;
         alpha = (opacity === undefined ? 1 : opacity) * 100;
     }
     alphaBorder.value[idx].value = alpha + '%'
 }
 
 const set_gradient_opacity = (idx: number, opacity: number) => {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = getShapesForStyle(props.shapes);
     const page = props.context.selection.selectedPage!;
@@ -432,7 +474,7 @@ const set_gradient_opacity = (idx: number, opacity: number) => {
 }
 
 function getColorFromPicker(color: Color, idx: number) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -510,12 +552,12 @@ const alphaInput = (e: Event) => {
         alphaValue.value = value;
     }
 }
-const filterAlpha = (border: Border) => {
+const filterAlpha = (strokePaint: StrokePaint) => {
     let a: number = 100;
-    if (border.fillType === FillType.SolidColor || !isGradient()) {
-        a = border.color.alpha * 100;
-    } else if (border.gradient && border.fillType === FillType.Gradient) {
-        const opacity = border.gradient.gradientOpacity;
+    if (strokePaint.fillType === FillType.SolidColor || !isGradient()) {
+        a = strokePaint.color.alpha * 100;
+    } else if (strokePaint.gradient && strokePaint.fillType === FillType.Gradient) {
+        const opacity = strokePaint.gradient.gradientOpacity;
         a = (opacity === undefined ? 1 : opacity) * 100;
     }
     let alpha = Math.round(a * 100) / 100;
@@ -533,7 +575,7 @@ const filterAlpha = (border: Border) => {
  * @param idx
  */
 function gradient_reverse(idx: number) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
@@ -547,7 +589,7 @@ function gradient_reverse(idx: number) {
  * @param idx
  */
 function gradient_rotate(idx: number) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
@@ -563,7 +605,7 @@ function gradient_rotate(idx: number) {
  * @param color
  */
 function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
@@ -578,7 +620,7 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
  * @param idx
  */
 function togger_gradient_type(idx: number, type: GradientType, fillType: FillType) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
@@ -597,7 +639,7 @@ function togger_gradient_type(idx: number, type: GradientType, fillType: FillTyp
  * @param color
  */
 function gradient_stop_color_change(idx: number, color: Color, index: number) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
@@ -612,7 +654,7 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
  * @param index
  */
 function gradient_stop_delete(idx: number, index: any) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
@@ -622,7 +664,7 @@ function gradient_stop_delete(idx: number, index: any) {
 }
 
 function toggle_fill_type(idx: number, fillType: FillType) {
-    const _idx = borders.length - idx - 1;
+    const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -768,24 +810,21 @@ function positionSelect(selected: SelectItem, id: number | undefined) {
     }
 }
 
-const testEl = ref<HTMLElement>()
-const testidx = ref<number>(0)
 const pointX = ref<number>()
 const pointY = ref<number>()
 const showpoint = ref<boolean>(false)
 const rotate = ref<boolean>()
 
-async function onMouseDown(e: MouseEvent, index: number) {
+async function onMouseDown(e: MouseEvent) {
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage;
     const table = props.context.tableSelection;
     pointX.value = e.clientX
     pointY.value = e.clientY
-    testEl.value = borderThickness.value![index] as HTMLElement
-    if (borderThickness.value && isNaN(Number(borderThickness.value[index].value))) return;
-    if (testEl.value)
-        testidx.value = index
+
+    if (borderThickness.value && isNaN(Number(borderThickness.value.value))) return;
+
     const el = e.target as HTMLElement
     if (!document.pointerLockElement) {
         await el.requestPointerLock({
@@ -797,14 +836,11 @@ async function onMouseDown(e: MouseEvent, index: number) {
         const table = props.context.tableSelection;
         const range = get_table_range(table);
         bordercellthickness_editor = props.context.editor4Table(shapes[0] as TableView).asyncBorderThickness4Cell(range);
-        // bordercellthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
     } else {
         borderthickness_editor = props.context.editor.controller().asyncBorderThickness(shapes, page!)
-        // borderthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
     }
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove, false);
-    // document.addEventListener("pointerlockchange", lockChangeAlert, false);
     document.addEventListener("pointerlockchange", pointerLockChange, false);
     showpoint.value = true
 }
@@ -815,20 +851,9 @@ const pointerLockChange = () => {
     }
 }
 
-function lockChangeAlert() {
-    if (document.pointerLockElement) {
-        showpoint.value = true
-        document.addEventListener("mousemove", onMouseMove, false);
-    } else {
-        showpoint.value = false
-        document.removeEventListener("mousemove", onMouseMove, false);
-    }
+const selectBorderThicknes = () => {
+    isActived.value = true;
 }
-
-const selectBorderThicknes = (e: FocusEvent, index: number) => {
-    isActived.value = index;
-}
-
 
 function updatePosition(movementX: number, movementY: number, isRotating: boolean) {
     if (pointX.value === undefined || pointY.value === undefined) return;
@@ -844,23 +869,21 @@ function updatePosition(movementX: number, movementY: number, isRotating: boolea
 function onMouseMove(e: MouseEvent) {
     const isRotating = e.movementX > 0;
     updatePosition(e.movementX, e.movementY, isRotating)
-    const index = testidx.value
-    const id = borders.length - index - 1
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage;
     if (!page || shapes.length < 1) return;
     const shape = shapes[0];
     const table = props.context.tableSelection;
-    if (borderThickness.value?.length) {
-        let thickness = (getSideThickness(borders[index].border.sideSetting) || 0) + e.movementX;
+    if (borderThickness.value && typeof borderData.value.sideSetting !== 'string') {
+        let thickness = (getSideThickness(borderData.value.sideSetting as BorderSideSetting) || 0) + e.movementX;
         if (thickness > 300) thickness = 300;
         if (shapes.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
-            bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness, id)
+            bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness)
         } else {
-            const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
+            const actions = get_actions_border_thickness(shapes, thickness < 0 ? 0 : thickness);
             if (actions && actions.length && borderthickness_editor) {
-                borderthickness_editor.execute(thickness < 0 ? 0 : thickness, id);
+                borderthickness_editor.execute(thickness < 0 ? 0 : thickness);
             }
         }
         reflush_side.value++;
@@ -884,7 +907,7 @@ function onMouseUp() {
     document.removeEventListener("pointerlockchange", pointerLockChange, false);
 }
 
-function setThickness(e: Event, id: number) {
+function setThickness(e: Event) {
     let thickness = Number((e.target as HTMLInputElement).value);
     (e.target as HTMLInputElement).blur();
     if (isNaN(thickness)) return;
@@ -897,11 +920,11 @@ function setThickness(e: Event, id: number) {
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(shape as TableView);
         const range = get_table_range(table);
-        e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
+        e.setBorderThickness4Cell(thickness < 0 ? 0 : thickness, range)
     } else {
         const shapes = getShapesForStyle(selecteds);
         const t = thickness < 0 ? 0 : thickness;
-        const actions = get_actions_border(shapes, id, t);
+        const actions = get_actions_border(shapes, t);
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderThickness(actions);
@@ -910,7 +933,7 @@ function setThickness(e: Event, id: number) {
     reflush_side.value++;
 }
 
-function keydownThickness(event: KeyboardEvent, id: number, val: string | number) {
+function keydownThickness(event: KeyboardEvent, val: string | number) {
     let value: any = sortValue(val.toString());
     let old = value;
     const selecteds = props.context.selection.selectedShapes;
@@ -929,10 +952,10 @@ function keydownThickness(event: KeyboardEvent, id: number, val: string | number
             if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
                 const e = props.context.editor4Table(shape as TableView);
                 const range = get_table_range(table);
-                if (old !== value) linearApi.modifyBorderThickness4Cell(id, value, range, shape as TableView);
+                if (old !== value) linearApi.modifyBorderThickness4Cell(value, range, shape as TableView);
             } else {
                 const shapes = getShapesForStyle(selecteds);
-                const actions = get_actions_border(shapes, id, value);
+                const actions = get_actions_border(shapes, value);
                 if (actions && actions.length) {
                     if (old !== value) linearApi.modifyShapesBorderThickness(actions);
                 }
@@ -944,50 +967,22 @@ function keydownThickness(event: KeyboardEvent, id: number, val: string | number
 
 }
 
-const thickness_value = (index: number, idx: number) => {
-    if (typeof getSideThickness(borders[idx].border.sideSetting) === 'boolean') {
+const thickness_value = () => {
+    if (typeof borderData.value === 'string' || typeof borderData.value.sideSetting === 'string' || typeof getSideThickness(borderData.value.sideSetting as BorderSideSetting) === 'boolean') {
         return t('attr.mixed')
     } else {
-        let result = [];
-        const selecteds = props.context.selection.selectedShapes;
-        const shape = selecteds[0]
-        const table = props.context.tableSelection;
-        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-            if (table.tableRowStart > -1) {
-                const _cs = table.getSelectedCells(true);
-                const v = new Set()
-                for (let i = 0, len = _cs.length; i < len; i++) {
-                    v.add(_cs[i].cell?.style.borders[0].sideSetting.thicknessLeft)
-                }
-                if (v.size === 1) {
-                    v.forEach(i => result.push(i))
-                }
-            } else {
-                const is_edting = table.editingCell;
-                const v = is_edting?.style.borders[0].sideSetting.thicknessLeft;
-                if (v || v === 0) result.push(v)
-            }
+        const thickness = getSideThickness(borderData.value.sideSetting as BorderSideSetting);
+        if (!thickness) {
+            return t('attr.mixed');
         } else {
-            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                const borders = shape.getBorders();
-                if (!borders.length) return 0;
-                result.push(getSideThickness(borders[index].sideSetting, shape));
-            }
-        };
-
-        const unique = new Set(result);
-        if (unique.size === 1 && !unique.has(false)) {
-            return format_value(Number(result[0]));
-        } else {
-            return t('attr.mixed')
+            return thickness;
         }
     }
 }
+
 const is_stroke_select = ref(false);
 const strokeBlur = () => {
-    isActived.value = -1;
+    isActived.value = false;
     is_stroke_select.value = false;
 }
 const strokeClick = (e: Event) => {
@@ -999,6 +994,13 @@ const strokeClick = (e: Event) => {
     el.select();
     is_stroke_select.value = true;
 }
+
+const positoSelected = () => {
+    if (borderData.value.position === 'mixed') {
+        return { value: `${t('attr.mixed')}`, content: `${t('attr.mixed')}` };
+    }
+    return positonOptionsSource.find(i => i.data.value === borderData.value.position)?.data
+}
 import add_icon from '@/assets/icons/svg/add.svg';
 import delete_icon from '@/assets/icons/svg/delete.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
@@ -1007,10 +1009,45 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
 
 <template>
     <div class="border-panel">
-        <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
+        <TypeHeader :title="t('attr.stroke')" class="mt-24" @click.stop="first" :active="hasStroke">
+            <template #tool>
+                <div class="add" @click.stop="addBorder" v-if="!hasStroke">
+                    <SvgIcon :icon="add_icon" />
+                </div>
+                <div class="add" @click.stop="deleteBorders" v-else>
+                    <SvgIcon :icon="delete_icon" />
+                </div>
+            </template>
+        </TypeHeader>
+        <div class="borders-container" v-if="hasStroke">
+            <div class="bottom">
+                <div style=" flex: calc(50% - 20px);"
+                    :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
+                    <Select class="select" :context="props.context" :shapes="props.shapes"
+                        :source="positonOptionsSource" :selected="positoSelected()" @select="positionSelect" :index="0"
+                        :mixed="borderData.position === 'mixed'"></Select>
+                </div>
+                <div class="thickness-container" style=" flex: calc(50% - 20px);" :class="{ actived: isActived }">
+                    <SvgIcon :icon="thickness_icon"
+                        :class="{ cursor_pointer: typeof borderData.sideSetting === 'string' }"
+                        @mousedown.stop="onMouseDown($event)" />
+                    <input ref="borderThickness" type="text" :value="thickness_value()" @change="setThickness($event)"
+                        @blur="strokeBlur" @click="strokeClick" @focus="selectBorderThicknes()"
+                        @keydown="e => keydownThickness(e, thickness_value())">
+                </div>
+                <BorderDetail :context="props.context" :shapes="props.shapes" :border="(borderData as BorderData)"
+                    :reflush_side="reflush_side">
+                </BorderDetail>
+            </div>
+        </div>
+        <Apex v-if="show_apex && hasStroke" :context="props.context" :shapes="props.shapes" :view="apex_view"
+            :trigger="props.trigger" :reflush_apex="reflush_apex">
+        </Apex>
+
+        <TypeHeader :title="t('attr.stroke_color')" class="mt-24" :active="hasStroke" v-if="hasStroke">
             <template #tool>
                 <div class="add" @click.stop="addBorder">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </template>
         </TypeHeader>
@@ -1020,69 +1057,45 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="borders-container" v-else-if="!mixed && !mixed_cell && borders.length">
-            <div class="border" v-for="(b, idx) in borders" :key="b.id">
+        <div class="borders-container" v-else-if="!mixed && !mixed_cell && strokePaints.length">
+            <div class="border" v-for="(b, idx) in strokePaints" :key="b.id">
                 <div class="top">
-                    <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                        <SvgIcon v-if="b.border.isEnabled" :icon="select_icon"/>
+                    <div :class="b.strokePaint.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                        <SvgIcon v-if="b.strokePaint.isEnabled" :icon="select_icon" />
                     </div>
                     <div class="color">
-                        <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                            :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
-                            @change="(c: Color) => getColorFromPicker(c, idx)"
+                        <ColorPicker :color="b.strokePaint.color" :context="props.context" :auto_to_right_line="true"
+                            :locat="{ index: strokePaints.length - idx - 1, type: 'borders' }"
+                            :op="b.strokePaint.isEnabled" @change="(c: Color) => getColorFromPicker(c, idx)"
                             @gradient-reverse="() => gradient_reverse(idx)"
-                            :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
-                            @gradient-rotate="() => gradient_rotate(idx)"
+                            :gradient="isGradient() ? b.strokePaint.gradient : undefined"
+                            :fillType="b.strokePaint.fillType" @gradient-rotate="() => gradient_rotate(idx)"
                             @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                             @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
                             @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                             @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
-                        <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
-                            :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
-                            :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                        <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.strokePaint.isEnabled }"
+                            :spellcheck="false" v-if="b.strokePaint.fillType !== FillType.Gradient || !isGradient()"
+                            :value="(toHex(b.strokePaint.color)).slice(1)" @change="e => onColorChange(e, idx)"
                             @click="colorClick" @blur="is_color_select = false" @focus="selectColor($event)"
                             @input="colorInput($event)" />
-                        <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
-                            v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
-                                t(`color.${b.border.gradient.gradientType}`)
+                        <span class="colorBorder" :class="{ showop: !b.strokePaint.isEnabled }"
+                            style="line-height: 14px;"
+                            v-else-if="b.strokePaint.fillType === FillType.Gradient && b.strokePaint.gradient && isGradient()">{{
+                                t(`color.${b.strokePaint.gradient.gradientType}`)
                             }}</span>
-                        <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
-                            style="text-align: center;" :value="filterAlpha(b.border) + '%'" @click="alphaClick"
-                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"
+                        <input ref="alphaBorder" :class="{ showop: !b.strokePaint.isEnabled }" class="alphaBorder"
+                            style="text-align: center;" :value="filterAlpha(b.strokePaint) + '%'" @click="alphaClick"
+                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.strokePaint, idx)"
                             @focus="selectAlpha" @input="alphaInput"
-                            @keydown="(e) => keydownAlpha(e, b.border, idx, filterAlpha(b.border))" />
+                            @keydown="(e) => keydownAlpha(e, b.strokePaint, idx, filterAlpha(b.strokePaint))" />
                     </div>
                     <div class="delete" @click="deleteBorder(idx)">
-                        <SvgIcon :icon="delete_icon"/>
+                        <SvgIcon :icon="delete_icon" />
                     </div>
-                </div>
-                <div class="bottom">
-                    <div style=" flex: calc(50% - 20px);"
-                        :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
-                        <Select class="select" :context="props.context" :shapes="props.shapes"
-                            :source="positonOptionsSource"
-                            :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
-                            @select="positionSelect" :index="borders.length - idx - 1"></Select>
-                    </div>
-                    <div class="thickness-container" style=" flex: calc(50% - 20px);"
-                        :class="{ actived: isActived === idx }">
-                        <SvgIcon :icon="thickness_icon"
-                            :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
-                            @mousedown.stop="onMouseDown($event, idx)"/>
-                        <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
-                            @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur"
-                            @click="strokeClick" @focus="selectBorderThicknes($event, idx)"
-                            @keydown="e => keydownThickness(e, borders.length - idx - 1, thickness_value(borders.length - idx - 1, idx))">
-                    </div>
-                    <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                        :index="borders.length - idx - 1" :reflush_side="reflush_side">
-                    </BorderDetail>
                 </div>
             </div>
         </div>
-        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
-            :trigger="props.trigger" :reflush_apex="reflush_apex">
-        </Apex>
     </div>
     <teleport to="body">
         <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
@@ -1177,178 +1190,178 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
     .borders-container {
         padding: 6px 0;
 
-        .border {
-            width: 100%;
+    }
+
+    .border {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+
+        &:nth-child(n+2) {
+            margin-top: 6px;
+        }
+
+    }
+
+    .top {
+        display: flex;
+        align-items: center;
+
+        .visibility {
+            flex: 0 0 14px;
+            height: 14px;
+            width: 14px;
+            background-color: var(--active-color);
+            box-sizing: border-box;
+            color: #ffffff;
             display: flex;
-            flex-direction: column;
-            gap: 6px;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            margin-right: 5px;
 
-            &:nth-child(n+2) {
-                margin-top: 16px;
+            >img {
+                width: 60%;
+                height: 60%;
+            }
+        }
+
+        .hidden {
+            flex: 0 0 14px;
+            height: 14px;
+            width: 14px;
+            background: #FFFFFF;
+            border-radius: 4px;
+            border: 1px solid #EBEBEB;
+            box-sizing: border-box;
+            margin-right: 5px;
+        }
+
+        .color {
+            flex: 1;
+            background-color: var(--input-background);
+            height: 32px;
+            padding: 9px 8px;
+            //margin-left: -11px;
+            border-radius: var(--default-radius);
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            margin-right: 5px;
+
+            .colorBorder {
+                outline: none;
+                border: none;
+                background-color: transparent;
+                width: calc(100% - 53px);
+                height: 14px;
+                margin-left: 8px;
+                flex: 1;
+                font-size: 12px;
+                box-sizing: border-box;
             }
 
-            .top {
-                display: flex;
-                align-items: center;
-
-                .visibility {
-                    flex: 0 0 14px;
-                    height: 14px;
-                    width: 14px;
-                    background-color: var(--active-color);
-                    box-sizing: border-box;
-                    color: #ffffff;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    border-radius: 4px;
-                    margin-right: 5px;
-
-                    >img {
-                        width: 60%;
-                        height: 60%;
-                    }
-                }
-
-                .hidden {
-                    flex: 0 0 14px;
-                    height: 14px;
-                    width: 14px;
-                    background: #FFFFFF;
-                    border-radius: 4px;
-                    border: 1px solid #EBEBEB;
-                    box-sizing: border-box;
-                    margin-right: 5px;
-                }
-
-                .color {
-                    flex: 1;
-                    background-color: var(--input-background);
-                    height: 32px;
-                    padding: 9px 8px;
-                    //margin-left: -11px;
-                    border-radius: var(--default-radius);
-                    box-sizing: border-box;
-                    display: flex;
-                    align-items: center;
-                    margin-right: 5px;
-
-                    .colorBorder {
-                        outline: none;
-                        border: none;
-                        background-color: transparent;
-                        width: calc(100% - 53px);
-                        height: 14px;
-                        margin-left: 8px;
-                        flex: 1;
-                        font-size: 12px;
-                        box-sizing: border-box;
-                    }
-
-                    .alphaBorder {
-                        outline: none;
-                        border: none;
-                        background-color: transparent;
-                        width: 37px;
-                        //margin-left: 20%;
-                        text-align: center;
-                        font-size: 12px;
-                        box-sizing: border-box;
-                    }
-
-                    input+input {
-                        width: 45px;
-                    }
-
-
-                }
-
-                //.extra-action {
-                //    display: flex;
-                //    align-items: center;
-                //    justify-content: center;
-                //    margin-left: 2px;
-
-                .delete {
-                    flex: 0 0 28px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 28px;
-                    height: 28px;
-                    transition: 0.2s;
-                    border-radius: var(--default-radius);
-
-                    >img {
-                        width: 16px;
-                        height: 16px;
-                    }
-                }
-
-                .delete:hover {
-                    background-color: #F5F5F5;
-                    ;
-                }
-
-                //}
+            .alphaBorder {
+                outline: none;
+                border: none;
+                background-color: transparent;
+                width: 37px;
+                //margin-left: 20%;
+                text-align: center;
+                font-size: 12px;
+                box-sizing: border-box;
             }
 
-            .bottom {
-                width: calc(100% - 19px);
-                display: flex;
-                align-items: center;
-                height: 32px;
-                gap: 6px;
-                margin-left: 19px;
-
-                >.select {
-                    height: 100%;
-                    width: 100px;
-                }
-
-                .thickness-container {
-                    box-sizing: border-box;
-                    padding: 8px 12px;
-                    background-color: var(--input-background);
-                    height: 32px;
-                    border-radius: var(--default-radius);
-                    border: 1px solid transparent;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    overflow: hidden;
-
-                    >img {
-                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
-                        // flex: 0 0 16px;
-                        width: 16px;
-                        height: 16px;
-                    }
-
-                    .cursor_pointer {
-                        cursor: default !important;
-                    }
-
-                    >input {
-                        width: 100%;
-                        outline: none;
-                        border: none;
-                        padding: 0;
-                        background-color: transparent;
-                    }
-
-                    input::selection {
-                        color: #FFFFFF;
-                        background: #1878F5;
-                    }
-
-                    input::-moz-selection {
-                        color: #FFFFFF;
-                        background: #1878F5;
-                    }
-
-                }
+            input+input {
+                width: 45px;
             }
+
+
+        }
+
+        //.extra-action {
+        //    display: flex;
+        //    align-items: center;
+        //    justify-content: center;
+        //    margin-left: 2px;
+
+        .delete {
+            flex: 0 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            transition: 0.2s;
+            border-radius: var(--default-radius);
+
+            >img {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .delete:hover {
+            background-color: #F5F5F5;
+        }
+
+        //}
+    }
+
+    .bottom {
+        width: calc(100% - 19px);
+        display: flex;
+        align-items: center;
+        height: 32px;
+        gap: 5px;
+        margin-left: 19px;
+
+        >.select {
+            height: 100%;
+            width: 100px;
+        }
+
+        .thickness-container {
+            box-sizing: border-box;
+            padding: 8px 12px;
+            background-color: var(--input-background);
+            height: 32px;
+            border-radius: var(--default-radius);
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+
+            >svg {
+                cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
+                flex: 0 0 16px;
+                height: 16px;
+            }
+
+            .cursor_pointer {
+                cursor: default !important;
+            }
+
+            >input {
+                width: 100%;
+                outline: none;
+                border: none;
+                padding: 0;
+                background-color: transparent;
+            }
+
+            input::selection {
+                color: #FFFFFF;
+                background: #1878F5;
+            }
+
+            input::-moz-selection {
+                color: #FFFFFF;
+                background: #1878F5;
+            }
+
         }
     }
 }
