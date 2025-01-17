@@ -36,7 +36,7 @@ function autoLayout(): void {
     const selectShapes = props.context.selection.selectedShapes;
     let shapes
     const page = props.context.selection.selectedPage;
-    if (!page) return;
+    if (!page || isDisable.value) return;
     const bro = Array.from(page.shapes.values());
     const editor = props.context.editor4Page(page);
     const name = getName(ShapeType.Artboard, bro || [], t);
@@ -243,7 +243,7 @@ function draggingVerSpace(e: MouseEvent) {
 
     if (!autoLayoutModifyHandler.asyncApiCaller) {
         autoLayoutModifyHandler.createApiCaller();
-    }
+    }                             
     const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
