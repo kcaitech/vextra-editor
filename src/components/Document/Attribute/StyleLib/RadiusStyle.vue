@@ -1,16 +1,6 @@
 <template>
     <div id="radius-lib-panel" class="radius-lib-panel">
-        <div class="header">
-            <div class="title">{{t('stylelib.radius')}}</div>
-            <div class="tool">
-                <div class="add" @click="showCreatePanel($event)">
-                    <SvgIcon :icon="add_icon" />
-                </div>
-                <div class="close" @click="emits('close')">
-                    <SvgIcon :icon="close_icon" />
-                </div>
-            </div>
-        </div>
+        <PopoverHeader :title="t('stylelib.radius')" @create="showCreatePanel" @close="emits('close')"/>
         <div class="search">
             <div class="icon">
                 <SvgIcon :icon="search_icon" />
@@ -74,6 +64,7 @@ import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import PopoverHeader from "@/components/common/PopoverHeader.vue";
 
 import {
     BasicArray,
@@ -87,6 +78,7 @@ import {
     FillType,
     GradientType,
     ImageScaleMode,
+    RadiusMask,
     ShapeType,
     ShapeView,
     SideType,
@@ -198,7 +190,7 @@ watchEffect(() => {
     const arr = sheets.filter(s => s.name.includes(filterWord.value === '全部样式' ? "" : filterWord.value === '此文件样式' ? "新文件" : filterWord.value))
     const new_arr = arr.map(s => {
         let newSheet: StyleSheet = { ...s }
-        newSheet.variables = s.variables.filter(v => (v as BlurMask).name.includes(keyword.value))
+        newSheet.variables = s.variables.filter(v => (v as RadiusMask).name.includes(keyword.value))
         return newSheet
     })
     data.push(...new_arr.filter(s => s.variables.length !== 0))
@@ -223,7 +215,7 @@ const filter = (v: string) => {
 function update() {
     const lib = props.context.data.stylelib
     if (!lib) return
-    fillRenderer.updateUnderRootContainerMap('blur')
+    fillRenderer.updateUnderRootContainerMap('radius')
 }
 
 function stylelib_watcher(t: number | string) {
@@ -434,7 +426,7 @@ onUnmounted(() => {
         }
     }
 
-    .style-item .type svg {
+    .style-item .type img {
         width: 14px;
         height: 14px;
     }
@@ -491,7 +483,7 @@ onUnmounted(() => {
             background-color: #e5e5e5;
         }
 
-        svg {
+        img {
             outline: none;
             margin: auto;
             width: 16px;

@@ -3,17 +3,19 @@
         <div class="header">
             <div class="title">{{ t('stylelib.editor_radius') }}</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
                 <label for="name">{{ t('stylelib.name') }}</label>
-                <input v-focus type="text" id="name" @keydown.esc="props.context.escstack.execute()">
+                <input v-focus type="text" id="name" v-model="stylename" @keydown.esc="props.context.escstack.execute()"
+                    @change="setSheetName">
             </div>
             <div class="des">
                 <label for="des">{{ t('stylelib.description') }}</label>
-                <input type="text" id="des">
+                <input type="text" id="des" v-model="styledes" @keydown.esc="props.context.escstack.execute()"
+                    @change="setSheetDes">
             </div>
         </div>
         <div class="radius">
@@ -24,12 +26,13 @@
 
 </template>
 <script setup lang="ts">
-import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
+import close_icon from '@/assets/icons/svg/close.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, Border } from '@kcdesign/data';
+import { RadiusMask, ShapeView, } from '@kcdesign/data';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { format_value, genOptions } from '@/utils/common';
 import { FillRenderer } from '../StyleLib/fillRenderer';
 
 const props = defineProps<{
@@ -44,18 +47,10 @@ const emits = defineEmits<{
 }>()
 
 const { t } = useI18n();
-const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
-const positonOptionsSource: SelectSource[] = genOptions([
-    [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
-    [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
-    [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
-]);
-const thickness = ref<string>('')
 const oldvalue = ref<string>('')
 const radius = ref<string>('')
-function positionSelect(selected: SelectItem, id: number | undefined) {
-
-}
+const stylename = ref<string>('')
+const styledes = ref<string>('')
 
 const setRadius = () => {
     let arrs = radius.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
@@ -71,8 +66,27 @@ const setRadius = () => {
         arrs = arrs.concat('0')
     }
     radius.value = arrs.join(', ')
+
+    const num = radius.value.split(', ').map(i => Number(i))
+    if (!props.maskid) return;
+    const mask = props.reder.currentTarget(props.maskid) as RadiusMask
+    const editor = props.context.editor4Doc()
+    editor.modifyBorderMaskBorderSideSetting(mask.sheet, mask.id, side)
 }
 
+const setSheetName = () => {
+    if (!props.maskid) return;
+    const mask = props.reder.currentTarget(props.maskid) as RadiusMask
+    const editor = props.context.editor4Doc()
+    editor.modifyStyleName(mask.sheet, mask.id, stylename.value)
+}
+
+const setSheetDes = () => {
+    if (!props.maskid) return;
+    const mask = props.reder.currentTarget(props.maskid) as RadiusMask
+    const editor = props.context.editor4Doc()
+    editor.modifyStyleDescription(mask.sheet, mask.id, styledes.value)
+}
 
 onMounted(() => {
 

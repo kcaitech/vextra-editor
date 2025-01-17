@@ -281,10 +281,14 @@ const update = () => {
         })
         shadows.push(..._shadows.reverse())
     }
+    console.log('shadow',shadows);
+    
     reflush.value++;
 }
 
 function stylelib_watcher(t: number | string) {
+    console.log(t);
+    
     if (t === 'stylelib') {
         update();
     }

@@ -13,7 +13,7 @@
             </div>
             <div class="des">
                 <label for="des">{{t('stylelib.description')}}</label>
-                <input type="text" id="des" v-model="des">
+                <input type="text" id="des" v-model="des" @keydown.esc="props.context.escstack.execute()">
             </div>
         </div>
         <div class="border">
