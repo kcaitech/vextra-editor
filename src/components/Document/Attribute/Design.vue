@@ -337,7 +337,7 @@ onUnmounted(() => {
                 <Arrange :context="props.context" :shapes="shapes" :selection-change="reflush_by_selection"
                          :trigger="reflush_trigger"/>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
-                               :trigger="reflush_trigger"/>
+                               :trigger="reflush_trigger" :shapes="shapes"/>
                 <Scale v-if="scaleMode" :context="props.context" :selection-change="reflush_by_selection"
                     :shape-change="reflush_trigger" />
                 <div v-else>

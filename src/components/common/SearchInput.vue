@@ -4,6 +4,7 @@ import search_icon from "@/assets/icons/svg/search.svg";
 import arrow_icon from "@/assets/icons/svg/arrow-right.svg";
 import choose_icon from "@/assets/icons/svg/choose.svg";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 
 const listVisible = ref<boolean>(false);
 defineProps<{
@@ -12,7 +13,7 @@ defineProps<{
     value: any;
 }>();
 const emits = defineEmits(['update:type', 'update:value']);
-
+const {t}=useI18n()
 function change(value: any) {
     emits('update:type', value);
     listVisible.value = false;
@@ -34,7 +35,7 @@ function esc(event: Event) {
         <div class="filter" @click.stop="listVisible = !listVisible">
             <SvgIcon :icon="arrow_icon"/>
         </div>
-        <input v-focus ref="search" type="text" placeholder="搜索样式" @input="input" @keydown.esc="esc">
+        <input v-focus ref="search" type="text" :placeholder="t('stylelib.search')" @input="input" @keydown.esc="esc">
         <div v-if="listVisible" class="filter-list">
             <div v-for="(item, idx) in list" class="list-item" :key="idx" @click="() => change(item.value)">
                 <div class="choose" :style="{ visibility: type === item.value ? 'visible' : 'hidden' }">

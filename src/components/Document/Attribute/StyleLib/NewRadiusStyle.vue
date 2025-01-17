@@ -1,48 +1,47 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div id="create-radius-panel" class="new-style">
         <div class="header">
-            <div class="title">创建圆角样式</div>
+            <div class="title">{{ t('stylelib.create_radius') }}</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon" />
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{ t('stylelib.name') }}</label>
                 <input v-focus type="text" id="name" v-model="name" @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
-                <label for="des">描述</label>
-                <input type="text" id="des" v-model="des">
+                <label for="des">{{ t('stylelib.description') }}</label>
+                <input type="text" id="des" v-model="des" @keydown.esc="props.context.escstack.execute()">
             </div>
         </div>
         <div class="radius">
-            <div class="title">圆角</div>
-            <input type="text" v-model="radius" @change="setRadius">
+            <div class="title">{{ t('stylelib.round') }}</div>
+            <input type="text" v-model="value" @change="setRadius">
         </div>
 
-        <div class="create-bnt" @click.stop="emits('close')">创建样式</div>
+        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="createStyles">{{ t('stylelib.add_style') }}
+        </div>
     </div>
 
 </template>
 <script setup lang="ts">
-import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
+import close_icon from '@/assets/icons/svg/close.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShapeType, Border, TableCellView, PathShapeView, BasicArray } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { ShapeView, ShapeType, PathShapeView, BasicArray, RadiusMask, TableView, TextShapeView, CutoutShapeView, RadiusType, SymbolView } from '@kcdesign/data';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { format_value, genOptions } from '@/utils/common';
-import { is_editing } from '@/utils/content';
-import { flattenShapes } from '@/utils/cutout';
-import { get_actions_border_position, get_borders } from '@/utils/shape_style';
 import { Selection } from "@/context/selection";
 import { getShapesForStyle } from '@/utils/style';
 import { v4 } from 'uuid';
+import { fixedZero } from '@/utils/common';
 
 const props = defineProps<{
     context: Context;
-    top: number;
-    left: number
+    shapes: ShapeView[];
 }>();
 
 const emits = defineEmits<{
@@ -50,98 +49,274 @@ const emits = defineEmits<{
 }>()
 
 const { t } = useI18n();
-const watchedShapes = new Map();
-const radius = ref<string>('')
+const value = ref<string>('')
 const oldvalue = ref<string>('')
-const name = ref<string>('name')
-const des = ref<string>('des')
+const name = ref<string>('')
+const des = ref<string>('')
+const mixed = props.context.workspace.t('attr.mixed');
+const rect = ref<boolean>(localStorage.getItem('radius-corner-display') === "all");
+const can_be_rect = ref<boolean>(false);
+const radius = reactive<{ lt: number | string, rt: number | string, rb: number | string, lb: number | string }>({
+    lt: 0,
+    rt: 0,
+    rb: 0,
+    lb: 0
+});
+
+const invalid = computed(() => {
+    return !name.value
+})
 
 const setRadius = () => {
-    let arrs = radius.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
+    let arrs = value.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
     const b = arrs.every(i => isNaN(Number(i)) === false)
-    console.log(b);
-    if (!b) return radius.value = oldvalue.value;
-    console.log(b);
+    if (!b) return value.value = oldvalue.value;
     if (arrs.length === 1) {
         arrs = arrs.concat(...arrs, ...arrs, ...arrs)
     }
     if (arrs.length === 2) {
-        arrs = arrs.concat('0', '0')
+        arrs = arrs.concat(arrs[0], arrs[1])
     }
     if (arrs.length === 3) {
-        arrs = arrs.concat('0')
+        arrs = arrs.concat(arrs[1])
     }
-    radius.value = arrs.join(', ')
-    oldvalue.value = radius.value
-    const editor=props.context.editor4Doc()
+    value.value = arrs.join(', ')
+
+    const num = value.value.split(', ').map(i => Number(i))
+    const shapes = noGroupShapesFrom(props.context.selection.selectedShapes);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.shapesModifyRadius(shapes, num);
 }
 
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        for (let i = 0, l = selectedShapes.length; i < l; i++) {
-            const v = selectedShapes[i];
-            if (v.isVirtualShape) {
-                let p = v.parent;
-                while (p) {
-                    if (p.type === ShapeType.SymbolRef) {
-                        needWatchShapes.set(p.id, p);
-                        break;
-                    }
-                    p = p.parent;
-                }
-            }
-            needWatchShapes.set(v.id, v);
+
+const createStyles = () => {
+    if (invalid.value) return
+    const values = value.value.split(', ').map(i => Number(i))
+    const _value = new BasicArray<number>
+    _value.push(...values)
+    const editor = props.context.editor4Doc()
+    const style = new RadiusMask(new BasicArray(), props.context.data.id, v4(), name.value, des.value, _value)
+    const page = props.context.selection.selectedPage!
+    const selected = props.context.selection.selectedShapes;
+    const shapes = getShapesForStyle(selected);
+    editor.insertStyleLib(style, page, shapes);
+    emits('close')
+}
+
+
+function noGroupShapesFrom(shapes: ShapeView[]) {
+    const result: ShapeView[] = [];
+    for (const shape of shapes) {
+        if (shape instanceof TableView || shape instanceof TextShapeView || shape instanceof CutoutShapeView) continue;
+        if (shape.type === ShapeType.Group) {
+            result.push(...noGroupShapesFrom(shape.childs));
+            continue;
         }
+        result.push(shape);
     }
+    return result;
+}
+
+const watchedShapes = new Map();
+
+function watch_shapes() {
     watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
+        v.unwatch(update);
         watchedShapes.delete(k);
     })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(watcher);
-        watchedShapes.set(k, v);
-    })
-}
-
-function watcher(...args: any[]) {
-    if ((args.includes('layout') || args.includes('borders'))) {
-        updateData();
+    const selectedShapes = noGroupShapesFrom(props.context.selection.selectedShapes);
+    if (selectedShapes.length > 0) {
+        const first = selectedShapes[0];
+        watchedShapes.set(first.id, first);
+        watchedShapes.forEach((v) => {
+            v.watch(update);
+        });
     }
 }
 
-function updateData() {
-    const selecteds = props.context.selection.selectedShapes;
-    if (selecteds.length < 1) return;
+function modify_can_be_rect() {
+    can_be_rect.value = false;
+    const origin = rect.value;
+    rect.value = false;
+
+    const selected = props.context.selection.selectedShapes;
+    for (let i = 0, l = selected.length; i < l; i++) {
+        if (selected[i].radiusType !== RadiusType.Rect) return;
+    }
+
+    can_be_rect.value = true;
+    rect.value = origin;
+}
+
+function reset_radius_value() {
+    radius.lt = 0;
+    radius.rt = 0;
+    radius.rb = 0;
+    radius.lb = 0;
+}
+
+function get_rect_shape_all_value(shape: ShapeView) {
+    const rs = { lt: 0, rt: 0, rb: 0, lb: 0 };
+    if (shape instanceof PathShapeView) {
+        const s = shape as PathShapeView;
+        const points = s?.segments[0]?.points;
+        if (!points?.length) return rs;
+        rs.lt = points[0]?.radius || s.fixedRadius || 0;
+        rs.rt = points[1]?.radius || s.fixedRadius || 0;
+        rs.rb = points[2]?.radius || s.fixedRadius || 0;
+        rs.lb = points[3]?.radius || s.fixedRadius || 0;
+    } else {
+        const cornerRadius = (shape as SymbolView).cornerRadius;
+        if (cornerRadius) {
+            rs.lt = cornerRadius.lt;
+            rs.rt = cornerRadius.rt;
+            rs.rb = cornerRadius.rb;
+            rs.lb = cornerRadius.lb;
+        }
+    }
+    return rs;
+}
+
+function get_all_values(shapes: ShapeView[]) {
+    reset_radius_value();
+    const first_shape = shapes[0];
+    if (!first_shape) return;
+    const f_r = get_rect_shape_all_value(first_shape);
+    radius.lt = fixedZero(f_r.lt);
+    radius.rt = fixedZero(f_r.rt);
+    radius.rb = fixedZero(f_r.rb);
+    radius.lb = fixedZero(f_r.lb);
+
+    value.value = radius.lt + ', ' + radius.rt + ', ' + radius.rb + ', ' + radius.lb;
+
+    oldvalue.value = value.value;
+
+    for (let i = 1, l = shapes.length; i < l; i++) {
+        const shape = shapes[i];
+        const rs = get_rect_shape_all_value(shape);
+        if (rs.lt !== radius.lt) {
+            radius.lt = mixed;
+        }
+        if (rs.rt !== radius.rt) {
+            radius.rt = mixed;
+        }
+        if (rs.rb !== radius.rb) {
+            radius.rb = mixed;
+        }
+        if (rs.lb !== radius.lb) {
+            radius.lb = mixed;
+        }
+    }
+}
+
+function get_radius_for_shape(shape: ShapeView) {
+    if (shape.radiusType === RadiusType.Rect) {
+        if (shape instanceof PathShapeView) {
+            const s = shape as PathShapeView;
+
+            const points = s?.segments[0]?.points;
+
+            if (!points?.length) return 0;
+
+            let _r = points[0].radius || s.fixedRadius || 0;
+
+            for (let i = 1, l = points.length; i < l; i++) {
+                if ((points[i].radius || s.fixedRadius || 0) !== _r) return mixed;
+            }
+            return _r;
+        } else {
+            const cornerRadius = (shape as SymbolView).cornerRadius;
+            if (!cornerRadius) return 0;
+            if (cornerRadius.lt === cornerRadius.rt
+                && cornerRadius.rt === cornerRadius.rb
+                && cornerRadius.rb === cornerRadius.lb) {
+                return cornerRadius.lt;
+            }
+            return mixed;
+        }
+    }
+
+    if (shape instanceof PathShapeView) {
+        const s = shape as PathShapeView;
+        const segments = s.segments;
+        if (!segments.length) return 0;
+        const firstPoint = segments[0].points[0];
+        if (!firstPoint) {
+
+            return 0;
+        }
+
+        let _r = firstPoint.radius || s.fixedRadius || 0;
+
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
+            const points = segment.points;
+
+            if (!points?.length) continue;
+
+            for (let j = 0; j < points.length; j++) {
+                if ((points[j].radius || s.fixedRadius || 0) !== _r) return mixed;
+            }
+        }
+
+        return _r;
+    } else {
+        return shape.fixedRadius || 0;
+    }
+}
+
+function modify_radius_value() {
+    reset_radius_value();
+
+    const selected = noGroupShapesFrom(props.context.selection.selectedShapes);
+    if (!selected.length) return;
+
+    if (rect.value) {
+        get_all_values(selected);
+        return;
+    }
+
+    let init = get_radius_for_shape(selected[0]);
+
+    if (typeof init === 'string') {
+        radius.lt = init;
+        return;
+    }
+
+    for (let i = 1, l = selected.length; i < l; i++) {
+        const __r = get_radius_for_shape(selected[i]);
+        if (__r !== init) {
+            radius.lt = mixed;
+            return;
+        }
+    }
+
+    radius.lt = fixedZero(init);
+    value.value = radius.lt.toString()
+    oldvalue.value=value.value
 }
 
 
-
-
-
-function selection_watcher(t: number | string) {
-    if (t === Selection.CHANGE_SHAPE) update_by_shapes();
+function selection_watcher(t: Number | string) {
+    if (t !== Selection.CHANGE_SHAPE) return;
+    update();
+    watch_shapes();
 }
 
-function update_by_shapes() {
-    watchShapes();
-    updateData();
+function update() {
+    modify_can_be_rect();
+    modify_radius_value();
 }
 
 onMounted(() => {
-    update_by_shapes();
-    // props.context.tableSelection.watch(table_selection_watcher);
     props.context.selection.watch(selection_watcher);
+    update();
+    watch_shapes();
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
-    watchedShapes.forEach(v => {
-        v.unwatch(watcher)
-    });
 })
 
 </script>
@@ -176,7 +351,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
@@ -267,6 +442,11 @@ onUnmounted(() => {
         &:active {
             background-color: #0A59CF;
         }
+    }
+
+    .invalid {
+        opacity: 0.5;
+        pointer-events: none;
     }
 }
 </style>

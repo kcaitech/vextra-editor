@@ -287,7 +287,6 @@ onUnmounted(() => {
         justify-content: center;
         box-sizing: border-box;
         border-radius: var(--default-radius);
-        transition: .2s;
 
         >img {
             width: 16px;
@@ -365,7 +364,6 @@ onUnmounted(() => {
                 width: 28px;
                 height: 28px;
                 border-radius: var(--default-radius);
-                transition: .2s;
 
                 >svg {
                     width: 16px;

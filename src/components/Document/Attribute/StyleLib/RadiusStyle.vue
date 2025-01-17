@@ -1,75 +1,71 @@
 <template>
-    <div class="radius-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop
-        @mousedown.stop>
-        <div class="header">
-            <div class="title">圆角样式</div>
-            <div class="tool">
-                <div class="newstyle" @click="NewPanel($event)">
-                    <svg-icon icon-class="add"></svg-icon>
-                </div>
-                <div class="close" @click="emits('close')">
-                    <svg-icon icon-class="close"></svg-icon>
-                </div>
-            </div>
-        </div>
+    <div id="radius-lib-panel" class="radius-lib-panel">
+        <PopoverHeader :title="t('stylelib.radius')" @create="showCreatePanel" @close="emits('close')"/>
         <div class="search">
             <div class="icon">
-                <svg-icon icon-class="search"></svg-icon>
+                <SvgIcon :icon="search_icon" />
             </div>
-            <div class="filter" @click="FilterPanel">
-                <svg-icon icon-class="arrow"></svg-icon>
+            <div class="filter" @click="showLibList($event)">
+                <SvgIcon :icon="arrow_icon" />
             </div>
-            <input v-focus type="text" placeholder="搜索样式" v-model="searchval"
-                @keydown.esc="emits('close')">
-            <div v-if="filterpanel" class="filter-list">
-                <div class="list-item" @click.stop="Changefilter('全部')">
-                    <span>全部</span>
-                </div>
-                <div class="list-item" v-for="i in test" :key="i.type" @click.stop="Changefilter(i.type)">
-                    <span> {{ i.type }}</span>
+            <input v-focus type="text" :placeholder="t('stylelib.search')" v-model="keyword" @keydown.esc="emits('close')">
+            <div v-if="libListStatus.visible" id="radius-lib-list" class="filter-list">
+                <div class="list-item" v-for="item in libList" :key="item[0]" @click.stop="filter(item[1])">
+                    <div class="choose" :style="{ visibility: filterWord === item[1] ? 'visible' : 'hidden' }">
+                        <SvgIcon :icon="choose_icon" />
+                    </div>
+                    <span>{{ item[1] }}</span>
                 </div>
             </div>
         </div>
         <el-scrollbar>
             <div class="content">
-                <div class="style-item" v-for="i in data" :key="i.type">
-                    <div class="type" @click.stop="showtype(i.type)">
-                        <svg-icon :icon-class="showtypes.has(i.type) ? 'triangle-down' : 'triangle-right'"></svg-icon>
-                        <span>{{ i.type }}</span>
+                <div class="style-item" v-for="sheet in data" :key="sheet.id">
+                    <div class="type" @click.stop="currentType(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <SvgIcon
+                            :icon="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name) ? down_icon : right_icon" />
+                        <span>{{ sheet.name === '新文件' ? '此文件样式' : sheet.name }}</span>
                     </div>
-                    <template v-if="showtypes.has(i.type)">
-                        <div class="styles" :class="{ 'active': editorpanel && currenttarget === s.content.id }"
-                            v-for="s in i.styles.filter(s => s.name.includes(searchval))">
-                            <div class="left">
-                                <div class="border" :style="{
-                                    borderTop: s.content.sideSetting.thicknessTop < 3 ? s.content[0].sideSetting.thicknessTop : 3 + 'px',
-                                    borderRight: s.content[0].sideSetting.thicknessRight < 3 ? s.content[0].sideSetting.thicknessRight : 3 + 'px',
-                                    borderBottom: s.content[0].sideSetting.thicknessBottom < 3 ? s.content[0].sideSetting.thicknessBottom : 3 + 'px',
-                                    borderLeft: s.content[0].sideSetting.thicknessLeft < 3 ? s.content[0].sideSetting.thicknessLeft : 3 + 'px',
-                                    borderColor: 'black',
-                                    borderStyle: 'solid'
-                                }">
+                    <template v-if="types.has(sheet.name === '新文件' ? '此文件样式' : sheet.name)">
+                        <div class="styles"
+                            :class="{ 'active': modifyPanelStatus.visible && maskID === mask.id, 'target': mask.id === props.id }"
+                            v-for="mask in (sheet.variables as RadiusMask[])" :key="mask.id">
+                            <div class="left"  @click="createBlurMask(mask.id)">
+                                <div class="border" :style="{borderRadius:mask}">
                                 </div>
-                                <div class="name">{{ s.name }}</div>
+                                <div class="name">{{ mask.name }}</div>
                             </div>
                             <div class="editor clickeditor" style="visibility: hidden;"
-                                @click="EditPanel($event, s.content[0].id, s.content[0])">
-                                <svg-icon icon-class="export-menu"></svg-icon>
+                                @click="(e) => showModifyPanel(e, mask.id)">
+                                <SvgIcon :icon="editor_icon" />
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-if="!data.length" class="null">没有搜索到相关样式</div>
+                <div v-if="!data.length && keyword" class="null">{{t('stylelib.null_search')}}</div>
+                <div v-if="!data.length && !keyword" class="null">{{t('stylelib.null_data')}}</div>
             </div>
         </el-scrollbar>
-        <NewRadiusStyle v-if="newpanel" :top="Top" :left="Left" :context="props.context"
-            @close="props.context.escstack.execute()"></NewRadiusStyle>
-        <EditorRadiusStyle v-if="editorpanel" :border="borders" :top="Top" :left="Left" :context="props.context"
-            @close="props.context.escstack.execute()"></EditorRadiusStyle>
+        <NewRadiusStyle v-if="createPanelStatus.visible" :context="props.context" :shapes="props.shapes"
+            @close="closeCreatePanel"></NewRadiusStyle>
+        <EditorRadiusStyle v-if="modifyPanelStatus.visible" :context="props.context" :shapes="props.shapes"
+            :maskid="maskID" :reder="fillRenderer" @close="closeModifyPanel">
+        </EditorRadiusStyle>
     </div>
 
 </template>
 <script setup lang="ts">
+import add_icon from '@/assets/icons/svg/add.svg';
+import editor_icon from '@/assets/icons/svg/export-menu.svg';
+import down_icon from '@/assets/icons/svg/triangle-down.svg';
+import right_icon from '@/assets/icons/svg/triangle-right.svg';
+import search_icon from '@/assets/icons/svg/search.svg';
+import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
+import close_icon from '@/assets/icons/svg/close.svg';
+import choose_icon from '@/assets/icons/svg/choose.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import PopoverHeader from "@/components/common/PopoverHeader.vue";
+
 import {
     BasicArray,
     Border,
@@ -82,6 +78,7 @@ import {
     FillType,
     GradientType,
     ImageScaleMode,
+    RadiusMask,
     ShapeType,
     ShapeView,
     SideType,
@@ -89,20 +86,21 @@ import {
     TableView
 } from "@kcdesign/data";
 import { Context } from '@/context';
-import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EditorRadiusStyle from './EditorRadiusStyle.vue';
 import NewRadiusStyle from "./NewRadiusStyle.vue";
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
+import { FillRenderer, Mask } from "../StyleLib/fillRenderer";
 import { v4 } from "uuid";
-interface FillItem {
-    id: number,
-    fill: Fill
-}
+import { get_actions_add_mask } from '@/utils/shape_style';
+import { getShapesForStyle } from '@/utils/style';
 
 const props = defineProps<{
     context: Context;
-    top: number;
-    left: number
+    shapes: ShapeView[];
+    id?: string;
 }>()
 
 const emits = defineEmits<{
@@ -111,175 +109,134 @@ const emits = defineEmits<{
 
 
 const { t } = useI18n();
-const filterpanel = ref<boolean>(false)
-const searchval = ref<string>('')
-const filterval = ref<string>('')
-const showtypes = ref(new Set<string>())
-const newpanel = ref<boolean>(false)
-const editorpanel = ref<boolean>(false)
-const Top = ref<number>(0)
-const Left = ref<number>(0)
-const Type = ref<string>('')
+const keyword = ref<string>('')
+const filterWord = ref<string>('全部样式')
+const types = ref(new Set<string>())
 
-const currenttarget = ref<string>('')
-const borders = ref<Border>()
-const showtype = (t: string) => {
-    showtypes.value.has(t) ? showtypes.value.delete(t) : showtypes.value.add(t)
+const maskID = ref<string>('')
+const search = ref<HTMLInputElement>()
+const libList = new Map()
+const sheets = reactive<StyleSheet[]>([])
+const data = reactive<StyleSheet[]>([])
+const list = reactive<Mask[]>([]);
+const fillRenderer = new FillRenderer(props.context, sheets as StyleSheet[], list as Mask[]);
+
+const createPanelStatus = reactive<ElementStatus>({ id: '#create-radius-panel', visible: false });
+const createPanelStatusMgr = new ElementManager(
+    props.context,
+    createPanelStatus,
+    {
+        offsetLeft: -442,
+        whiteList: ['.new-style', '.add']
+    }
+);
+
+const modifyPanelStatus = reactive<ElementStatus>({ id: '#modify-radius-panel', visible: false });
+const modifyPanelStatusMgr = new ElementManager(
+    props.context,
+    modifyPanelStatus,
+    {
+        offsetLeft: -462,
+        whiteList: ['.editor-style', '.editor']
+    }
+);
+
+const libListStatus = reactive<ElementStatus>({ id: '#radius-lib-list', visible: false });
+const libListStatusMgr = new ElementManager(
+    props.context,
+    libListStatus,
+    {
+        offsetTop: 32,
+        whiteList: ['.blur-lib-list', '.filter']
+    }
+);
+
+const showCreatePanel = (e: MouseEvent) => {
+    createPanelStatusMgr.showBy(e);
+}
+const closeCreatePanel = () => {
+    createPanelStatusMgr.close();
+}
+const showModifyPanel = (event: MouseEvent, _maskID: string) => {
+    modifyPanelStatusMgr.showBy(event);
+    maskID.value = _maskID;
+}
+const closeModifyPanel = () => {
+    modifyPanelStatusMgr.close();
 }
 
-const color = new Color(1, 0, 0, 0);
-const borderStyle = new BorderStyle(0, 0);
-const side = new BorderSideSetting(SideType.Normal, 1, 2, 0, 4);
-const strokePaints = new BasicArray<StrokePaint>();
-const strokePaint = new StrokePaint( new BasicArray<number>(0), v4(),true, FillType.SolidColor, color);
-strokePaints.push(strokePaint);
-const border = new Border(BorderPosition.Center, borderStyle, CornerType.Miter, side, strokePaints);
-
-const test = [
-    { type: 'location', styles: [{ name: '33', content: [border] }, { name: '2', content: [border] }] },
-]
-
-const data = computed(() => {
-    let d;
-    if (filterval.value && filterval.value !== '全部') {
-        d = test.filter(i => i.type === filterval.value)
-    } else {
-        d = test
-    }
-    return d.filter(i => i.styles.filter(s => s.name.includes(searchval.value)).length !== 0)
-})
-let timer: any
-
-const EditPanel = (e: MouseEvent, id: string, b: Border) => {
-    borders.value = b;
-    let el = e.target as HTMLElement;
-    const { top } = el.getBoundingClientRect()
-    while (el.parentElement?.className !== 'radius-container') {
-        if (el.parentElement) {
-            el = el.parentElement;
-        }
-    }
-    const { left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    currenttarget.value === id ? editorpanel.value = !editorpanel.value : editorpanel.value = true;
-    currenttarget.value = id;
-    if (editorpanel.value) {
-        if (timer) clearTimeout(timer)
-        timer = setTimeout(() => {
-            document.addEventListener('click', checkeditorpanel)
-            clearTimeout(timer)
-        }, 0);
-        props.context.escstack.save(v4(), closeEditorPanel)
-    } else {
-        document.removeEventListener('click', checkeditorpanel)
-    }
+const showLibList = (event: MouseEvent) => {
+    libListStatusMgr.showBy(event)
 }
 
-function checkeditorpanel(e: MouseEvent) {
-    const muen2 = document.querySelectorAll('.clickeditor')
-    let b: boolean[] = [];
-    muen2.forEach((i) => {
-        b.push(i.contains(e.target as HTMLElement))
-    })
-    const a = b.some(i => i === true)
-    if (!a) {
-        editorpanel.value = false
-        document.removeEventListener('click', checkeditorpanel)
-    }
-}
-
-const closeEditorPanel = () => {
-    const exe_result: boolean = editorpanel.value;
-    editorpanel.value = false
-    document.removeEventListener('click', checkeditorpanel)
-    return exe_result
-}
-let timer2: any
-const NewPanel = (e: MouseEvent) => {
-    let el = e.target as HTMLElement;
-    while (el.className !== 'radius-container') {
-        if (el.parentElement) {
-            el = el.parentElement;
-        }
-    }
-    const { top, left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    newpanel.value = !newpanel.value
-    if (editorpanel.value) editorpanel.value = false
-    if (newpanel.value) {
-        if (timer2) clearTimeout(timer2)
-        timer2 = setTimeout(() => {
-            document.addEventListener('click', checknewpanel)
-            clearTimeout(timer2)
-        }, 0);
-        props.context.escstack.save(v4(), closeNewPanel)
-    } else {
-        document.removeEventListener('click', checknewpanel)
-    }
-}
-
-function checknewpanel(e: MouseEvent) {
-    const muen = document.querySelector('.new-style')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        newpanel.value = false
-        document.removeEventListener('click', checknewpanel)
-    }
-}
-
-const closeNewPanel = () => {
-    const exe_result: boolean = newpanel.value;
-    newpanel.value = false
-    document.removeEventListener('click', checknewpanel)
-    return exe_result
-}
-
-
-let timer3: any
-const FilterPanel = () => {
-    filterpanel.value = !filterpanel.value
-    if (filterpanel.value) {
-        if (timer3) clearTimeout(timer3)
-        timer3 = setTimeout(() => {
-            document.addEventListener('click', checkfilterpanel)
-            clearTimeout(timer3)
-        }, 0);
-    } else {
-        document.removeEventListener('click', checkfilterpanel)
-    }
-}
-
-const checkfilterpanel = (e: MouseEvent) => {
-    const muen = document.querySelector('.filter-list')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        filterpanel.value = false
-        document.removeEventListener('click', checkfilterpanel)
-    }
-}
-
-const Changefilter = (v: string) => {
-    filterval.value = v;
-    filterpanel.value = false
-    showtypes.value.add(v)
-    document.removeEventListener('click', checkfilterpanel)
+const currentType = (t: string) => {
+    types.value.has(t) ? types.value.delete(t) : types.value.add(t)
 }
 
 watchEffect(() => {
-    data.value.forEach(i => showtypes.value.add(i.type))
+    libList.set('all', '全部样式')
+    sheets.forEach(s => {
+        if (s.id === props.context.data.id) {
+            libList.set(s.name, '此文件样式')
+        } else {
+            libList.set(s.name, s.name)
+        }
+    })
+    libList.forEach((v) => types.value.add(v))
 })
+
+watchEffect(() => {
+    data.length = 0;
+    const arr = sheets.filter(s => s.name.includes(filterWord.value === '全部样式' ? "" : filterWord.value === '此文件样式' ? "新文件" : filterWord.value))
+    const new_arr = arr.map(s => {
+        let newSheet: StyleSheet = { ...s }
+        newSheet.variables = s.variables.filter(v => (v as RadiusMask).name.includes(keyword.value))
+        return newSheet
+    })
+    data.push(...new_arr.filter(s => s.variables.length !== 0))
+})
+
+const createBlurMask = (id: string) => {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const shapes = getShapesForStyle(selected);
+    const actions = get_actions_add_mask(shapes, id);
+    const editor = props.context.editor4Page(page);
+    editor.shapesSetBlurMask(actions);
+    emits('close')
+}
+
+const filter = (v: string) => {
+    filterWord.value = v;
+    types.value.add(v)
+    libListStatusMgr.close();
+}
+
+function update() {
+    const lib = props.context.data.stylelib
+    if (!lib) return
+    fillRenderer.updateUnderRootContainerMap('radius')
+}
+
+function stylelib_watcher(t: number | string) {
+    if (t === 'stylelib') update();
+}
 
 onMounted(() => {
-
-
+    update();
+    props.context.data.watch(stylelib_watcher);
 })
 
+onUnmounted(() => {
+    props.context.data.unwatch(stylelib_watcher);
+    createPanelStatusMgr.unmounted();
+    modifyPanelStatusMgr.unmounted();
+    libListStatusMgr.unmounted();
+})
 
 </script>
 <style lang="scss" scoped>
-.radius-container {
+.radius-lib-panel {
     position: fixed;
     background-color: #fff;
     z-index: 9;
@@ -306,7 +263,7 @@ onMounted(() => {
         align-items: center;
         gap: 4px;
 
-        >.newstyle {
+        >.add {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -372,9 +329,24 @@ onMounted(() => {
         width: 18px;
         height: 32px;
 
-        svg {
+        img {
             height: 100%;
             width: 14px;
+            transition: all 0.2s ease-in;
+        }
+    }
+
+    .filter img {
+        rotate: -90deg;
+        padding: 1px;
+        box-sizing: border-box;
+    }
+
+    .filter:hover {
+        cursor: pointer;
+
+        img {
+            transform: translateX(-2px);
         }
     }
 
@@ -413,6 +385,19 @@ onMounted(() => {
             border-radius: 6px;
             box-sizing: border-box;
 
+            .choose {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+
+                img {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+
             &:hover {
                 background-color: #F5F5F5;
             }
@@ -441,7 +426,7 @@ onMounted(() => {
         }
     }
 
-    .style-item .type svg {
+    .style-item .type img {
         width: 14px;
         height: 14px;
     }
@@ -498,7 +483,7 @@ onMounted(() => {
             background-color: #e5e5e5;
         }
 
-        svg {
+        img {
             outline: none;
             margin: auto;
             width: 16px;

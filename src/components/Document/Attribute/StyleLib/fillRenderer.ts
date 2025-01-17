@@ -11,6 +11,7 @@ import {
     ShadowPosition,
     BorderMask,
     BorderMaskType,
+    RadiusMask,
 } from "@kcdesign/data";
 import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 
@@ -22,7 +23,8 @@ export interface Mask {
     fills?: BasicArray<Fill>;
     shadows?: BasicArray<Shadow>
     blur?: Blur;
-    border?:BorderMaskType
+    border?: BorderMaskType;
+    radius?:BasicArray<number>;
 }
 
 export interface ShadowItem {
@@ -74,13 +76,24 @@ export class FillRenderer {
         this.m_list.push(titleCtx);
     }
 
-    private getbordermask(v:BorderMask){
+    private getbordermask(v: BorderMask) {
         const titleCtx: Mask = {
             id: v.id,
             name: v.name,
             description: v.description,
             sheet: v.sheet,
             border: v.border
+        };
+        this.m_list.push(titleCtx);
+    }
+
+    private getradiusmask(v: RadiusMask) {
+        const titleCtx: Mask = {
+            id: v.id,
+            name: v.name,
+            description: v.description,
+            sheet: v.sheet,
+            radius: v.radius
         };
         this.m_list.push(titleCtx);
     }
@@ -111,8 +124,11 @@ export class FillRenderer {
             if (type === 'blur') {
                 newSheet.variables = s.variables.filter(v => v instanceof BlurMask); // 只保留 BlurMask 实例
             }
-            if(type==='border'){
+            if (type === 'border') {
                 newSheet.variables = s.variables.filter(v => v instanceof BorderMask); // 只保留 Border 实例
+            }
+            if (type === 'radius') {
+                newSheet.variables = s.variables.filter(v => v instanceof RadiusMask); // 只保留 Radius 实例
             }
             return newSheet;
         });
@@ -134,9 +150,14 @@ export class FillRenderer {
                     this.getblurmask(s)
                 }
             }
-            if(type==='border'){
+            if (type === 'border') {
                 if (s instanceof BorderMask) {
                     this.getbordermask(s)
+                }
+            }
+            if (type === 'radius') {
+                if (s instanceof RadiusMask) {
+                    this.getradiusmask(s)
                 }
             }
         })
@@ -204,7 +225,7 @@ export class EditorAtt {
         this.m_list.push(...arr)
     }
 
-    setIsEnabled(index: number, value: boolean){
+    setIsEnabled(index: number, value: boolean) {
         const arr = [...this.m_list]
         const _shadow = { ...arr[index].shadow };
         _shadow.isEnabled = value;

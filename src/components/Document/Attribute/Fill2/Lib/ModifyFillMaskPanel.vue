@@ -7,6 +7,7 @@ import add_icon from "@/assets/icons/svg/add.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted, onUnmounted, ref } from "vue";
 import FillItem from "@/components/Document/Attribute/Fill2/FillItem.vue";
+import { useI18n } from "vue-i18n";
 
 const {context, manager, data} = defineProps<{
     context: Context;
@@ -17,6 +18,7 @@ const emits = defineEmits<{
     (e: 'close'): void;
 }>();
 
+const {t}=useI18n()
 const firstInput = ref<HTMLInputElement>();
 const name = ref<string>(data?.name ?? '颜色样式');
 const desc = ref<string>(data?.description ?? '');
@@ -73,7 +75,7 @@ onUnmounted(() => {
 <template>
     <div class="modify-fill-style-panel" id="modify-fill-style-panel">
         <div class="header">
-            <div class="title">{{ data ? '编辑颜色样式' : '创建颜色样式' }}</div>
+            <div class="title">{{ data ? t('stylelib.editor_color') : t('stylelib.create_color') }}</div>
             <div class="close" @click.stop="emits('close')">
                 <SvgIcon :icon="close_icon"/>
             </div>

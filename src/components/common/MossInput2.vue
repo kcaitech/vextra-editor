@@ -3,12 +3,9 @@ import { ref, watch } from "vue";
 import SvgIcon from "./SvgIcon.vue";
 
 type Props = {
-    lt?: boolean;
     icon: string;
-    icon2: string;
     value: string | number;
-    show?: boolean;
-    position?: boolean;
+
     disabled?: boolean;
     draggable?: boolean;
 }
@@ -25,15 +22,12 @@ interface Emits {
     (e: "wheel", event: WheelEvent): void;
 
     (e: "keydown", event: KeyboardEvent): void;
-
-    (e: "click", event: MouseEvent): void;
 }
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const inputEl = ref<HTMLInputElement>();
 const active = ref<boolean>();
-const RadiusActive = ref<boolean>(false)
 let isDown = false;
 
 function down(e: MouseEvent) {
@@ -75,10 +69,6 @@ function blur() {
     active.value = false;
 }
 
-function click(e: MouseEvent) {
-    emits('click', e)
-}
-
 function focus() {
     if (active.value) return;
     active.value = true;
@@ -91,19 +81,12 @@ function keydown(event: KeyboardEvent) {
     emits("keydown", event);
 }
 
-watch(() => props.position, (v) => {
-    RadiusActive.value = v
-})
-
 </script>
 
 <template>
     <div :class="{ 'moss-input': true, disabled, active }" @click.stop="focus">
         <SvgIcon :icon="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down" />
         <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown" />
-        <div class="icon" @click.stop="click">
-            <SvgIcon :icon="icon2" />
-        </div>
     </div>
 </template>
 
@@ -126,34 +109,6 @@ watch(() => props.position, (v) => {
         height: 12px;
         display: block;
         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
-    }
-
-
-
-    .icon {
-        width: 18px;
-        height: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-        border-radius: 4px;
-        visibility: hidden;
-
-        img {
-            width: 12px;
-            height: 12px;
-        }
-    }
-
-    .icon img {
-        padding: 1px;
-        box-sizing: border-box;
-    }
-
-    .icon:hover {
-        background-color: #e5e5e5;
-
     }
 
     .un-draggable {
@@ -182,10 +137,6 @@ watch(() => props.position, (v) => {
         color: #FFFFFF;
         background: #1878F5;
     }
-
-    &:hover .icon {
-        visibility: visible;
-    }
 }
 
 .disabled {
@@ -198,8 +149,4 @@ watch(() => props.position, (v) => {
     border: 1px solid #1878F5;
 }
 
-.active-radius {
-    visibility: visible !important;
-    background-color: #e5e5e5;
-}
 </style>

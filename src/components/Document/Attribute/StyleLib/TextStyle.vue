@@ -2,7 +2,7 @@
     <div class="shadow-container" :style="{ top: props.top + 'px', left: props.left + 'px' }" @wheel.stop
         @mousedown.stop>
         <div class="header">
-            <div class="title">文本样式</div>
+            <div class="title">{{t('stylelib.format')}}</div>
             <div class="tool">
                 <div class="newstyle" @click="NewPanel($event)">
                     <svg-icon icon-class="add"></svg-icon>
@@ -19,7 +19,7 @@
             <div class="filter" @click="FilterPanel">
                 <svg-icon icon-class="arrow"></svg-icon>
             </div>
-            <input v-focus ref="search" type="text" placeholder="搜索样式" v-model="searchval"
+            <input v-focus ref="search" type="text" :placeholder="t('stylelib.search')" v-model="searchval"
                 @keydown.esc="props.context.escstack.execute()">
             <div v-if="filterpanel" class="filter-list" @click.stop>
                 <div class="list-item" @click="Changefilter('全部')">
@@ -49,7 +49,8 @@
                         </div>
                     </template>
                 </div>
-                <div v-if="!data.length" class="null">没有搜索到相关样式</div>
+                <div v-if="!data.length && searchval" class="null">{{t('stylelib.null_search')}}</div>
+                <div v-if="!data.length && !searchval" class="null">{{t('stylelib.null_data')}}</div>
             </div>
         </el-scrollbar>
         <NewTextStyle v-if="newpanel" :context="props.context" :textShape="props.textShape" :textShapes="props.textShapes" :top="Top" :left="Left" @close="closenewpanel">

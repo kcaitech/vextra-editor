@@ -475,6 +475,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
     background-color: #fff;
     border-radius: 16px 16px 0 0;
     padding: 4px 0 0 0;
+    box-shadow: 0px 2px 20px 0px rgba(0, 0, 0, 0.03);
     box-sizing: border-box;
     z-index: 1;
 
@@ -499,7 +500,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
             padding: 2px;
             box-sizing: border-box;
 
-            svg {
+            img {
                 width: 100%;
                 height: 100%;
                 color: #595959;
@@ -527,7 +528,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
                 width: 20px;
                 height: 20px;
 
-                svg {
+                img {
                     margin: auto;
                     width: 100%;
                     height: 100%;

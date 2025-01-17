@@ -1,28 +1,28 @@
 <template>
     <div id="modify-blur-panel" class="editor-style">
         <div class="header">
-            <div class="title">编辑模糊样式</div>
+            <div class="title">{{ t('stylelib.editor_blur') }}</div>
             <div class="close" @click.stop="emits('close')">
-                <SvgIcon :icon="close_icon"/>
+                <SvgIcon :icon="close_icon" />
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{ t('stylelib.name') }}</label>
                 <input v-focus type="text" id="name" v-model="name" @keydown.esc="props.context.escstack.execute()"
                     @change="setSheetName">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{ t('stylelib.description') }}</label>
                 <input type="text" id="des" v-model="des" @keydown.esc="props.context.escstack.execute()"
                     @change="setSheetDes">
             </div>
         </div>
         <div class="effect">
             <div class="create-effect">
-                <div class="title">模糊</div>
+                <div class="title">{{ t('stylelib.blur') }}</div>
                 <div v-if="!blurInfo" class="add">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </div>
             <div v-if="blurInfo" class="effect-list">
@@ -46,7 +46,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import  { SelectSource } from '@/components/common/Select.vue';
+import { SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
 import { ShapeView, BlurType, LinearApi, Blur, BlurMask } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';

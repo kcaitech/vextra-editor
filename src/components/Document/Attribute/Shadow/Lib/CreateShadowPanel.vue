@@ -1,25 +1,25 @@
 <template>
-    <div id="create-shadow-panel" class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }">
+    <div id="create-shadow-panel" class="new-style">
         <div class="header">
-            <div class="title">创建特效样式</div>
+            <div class="title">{{t('stylelib.create_shadow')}}</div>
             <div class="close" @click.stop="emits('close')">
                 <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">名称</label>
+                <label for="name">{{t('stylelib.name')}}</label>
                 <input v-focus ref="inputName" type="text" id="name" v-model="name"
                        @keydown.esc="props.context.escstack.execute()">
             </div>
             <div class="des">
-                <label for="des">描述</label>
+                <label for="des">{{t('stylelib.description')}}</label>
                 <input type="text" id="des" v-model="des">
             </div>
         </div>
         <div class="effect">
             <div class="create-effect">
-                <div class="title">特效</div>
+                <div class="title">{{t('stylelib.shadow')}}</div>
                 <div class="add" @click="addShadow">
                     <SvgIcon :icon="add_icon"></SvgIcon>
                 </div>
@@ -45,7 +45,7 @@
                 </div>
             </div>
         </div>
-        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="Neweffect">创建样式</div>
+        <div class="create-bnt" :class="{ 'invalid': invalid }" @click.stop="createStyles">{{t('stylelib.add_style')}}</div>
     </div>
 </template>
 <script setup lang="ts">
@@ -57,7 +57,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, ShadowPosition, Shadow, ShapeType, BasicArray, Color, ShadowMask } from '../../../../../../../kcdesign-data';
+import { ShapeView, ShadowPosition, Shadow, ShapeType, BasicArray, Color, ShadowMask } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
@@ -75,6 +75,7 @@ import { v4 } from 'uuid';
 import { hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 import { EditorAtt } from "../../StyleLib/fillRenderer";
+
 
 interface ShadowItem {
     id: number,
@@ -155,7 +156,7 @@ function positionSelect(selected: SelectItem, id: number) {
     }
 }
 
-const Neweffect = () => {
+const createStyles = () => {
     if (invalid.value) return
     const editor = props.context.editor4Doc()
     const _shadows = new BasicArray<Shadow>()
@@ -172,6 +173,7 @@ const Neweffect = () => {
     const shapes = getShapesForStyle(selected);
     editor.insertStyleLib(style, page, shapes);
     emits('close')
+    props.context.escstack.execute()
 }
 
 function addShadow(): void {

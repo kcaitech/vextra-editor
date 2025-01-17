@@ -6,9 +6,11 @@ import CreateFillMaskPanel from "@/components/Document/Attribute/Fill2/Lib/Modif
 import { onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { useI18n } from "vue-i18n";
 
 const {context, manager} = defineProps<{ context: Context, manager: FillContextMgr }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
+const {t}=useI18n()
 const panelStatus = reactive<ElementStatus>({id: '#modify-fill-style-panel', visible: false});
 const panelStatusMgr = new ElementManager(
     context,
@@ -33,7 +35,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="fill-style-lib-panel" class="fill-style-lib-panel">
-        <PopoverHeader title="填充样式" @create="showCreatePanel" @close="emits('close')"/>
+        <PopoverHeader :title="t('stylelib.colors')" @create="showCreatePanel" @close="emits('close')"/>
         <ColorStyle :context="context" :manager="manager"/>
         <CreateFillMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
                              @close="() => panelStatusMgr.close()"/>
