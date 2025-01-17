@@ -221,6 +221,9 @@ function get_radius_for_shape(shape: ShapeView) {
 
             let _r = points[0].radius || s.fixedRadius || 0;
 
+            value.value = points.map(i => i.radius ?? 0).join(', ')
+            oldvalue.value = value.value
+
             for (let i = 1, l = points.length; i < l; i++) {
                 if ((points[i].radius || s.fixedRadius || 0) !== _r) return mixed;
             }
@@ -243,11 +246,13 @@ function get_radius_for_shape(shape: ShapeView) {
         if (!segments.length) return 0;
         const firstPoint = segments[0].points[0];
         if (!firstPoint) {
-
+            value.value = '0';
             return 0;
         }
 
         let _r = firstPoint.radius || s.fixedRadius || 0;
+
+        value.value = _r + '';
 
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
@@ -262,12 +267,14 @@ function get_radius_for_shape(shape: ShapeView) {
 
         return _r;
     } else {
+        value.value = (shape.fixedRadius || 0) + '';
         return shape.fixedRadius || 0;
     }
 }
 
 function modify_radius_value() {
     reset_radius_value();
+    value.value = '';
 
     const selected = noGroupShapesFrom(props.context.selection.selectedShapes);
     if (!selected.length) return;
@@ -293,8 +300,7 @@ function modify_radius_value() {
     }
 
     radius.lt = fixedZero(init);
-    value.value = radius.lt.toString()
-    oldvalue.value=value.value
+
 }
 
 
