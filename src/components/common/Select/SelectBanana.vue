@@ -16,6 +16,9 @@ const emits = defineEmits(['update:value']);
         <div class="icon">
             <SvgIcon :icon="down_icon"/>
         </div>
+<!--        <div class="popover">-->
+<!--            <div v-for="(op, idx) in " class="item"></div>-->
+<!--        </div>-->
     </div>
 </template>
 <style lang="scss" scoped>
@@ -58,6 +61,15 @@ const emits = defineEmits(['update:value']);
         .icon {
             background-color: #e5e5e5;
         }
+    }
+
+    .popover {
+        position: absolute;
+        width: 100%;
+        height: fit-content;
+        padding: 4px 0;
+        left: 0;
+        top: -4px;
     }
 }
 </style>
