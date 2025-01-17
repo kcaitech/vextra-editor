@@ -4,6 +4,12 @@ import { hidden_selection } from "@/utils/content";
 import { ElementManager } from "@/components/common/elementmanager";
 import { getShapesForStyle } from "@/utils/style";
 
+export type SheetCatch = {
+    name: string;
+    id: string;
+    variables: any[];
+}
+
 export class StyleCtx {
     private m_selected: ShapeView[];
 

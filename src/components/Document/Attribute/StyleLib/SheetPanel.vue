@@ -3,13 +3,12 @@ import { ref } from "vue";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import down_icon from "@/assets/icons/svg/triangle-down.svg";
 import right_icon from "@/assets/icons/svg/triangle-right.svg";
-import { SheetCatch } from "@/components/Document/Attribute/Fill2/Lib/ctx";
 import { Context } from "@/context";
-import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { SheetCatch, StyleCtx } from "@/components/Document/Attribute/stylectx";
 
 defineProps<{
     context: Context;
-    manager: FillContextMgr;
+    manager?: StyleCtx;
     data: SheetCatch;
     item: any;
 }>();

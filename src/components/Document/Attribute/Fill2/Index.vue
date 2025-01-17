@@ -2,7 +2,6 @@
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import style_icon from "@/assets/icons/svg/styles.svg";
 import add_icon from "@/assets/icons/svg/add.svg";
-
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { FillCatch, FillContext, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
@@ -27,8 +26,8 @@ const fillCtx = ref<FillContext>({
     mask: undefined,
     maskInfo: undefined
 });
-const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));
 const fillCtxMgr = new FillContextMgr(props.context, fillCtx.value as FillContext);
+const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));
 const fillLibStatus = reactive<ElementStatus>({id: '#fill-style-lib-panel', visible: false});
 const fillPanelStatusMgr = new ElementManager(
     props.context,
@@ -76,10 +75,10 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <FillMaskView v-if="fillCtx.mask && !fillCtx.mixed" :context="context" :manager="fillCtxMgr"
+        <FillMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
                       :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!"
                       @show-style-lib="showFillLib"/>
-        <div v-if="!(fillCtx.mixed || fillCtx.mask)" class="fills-container">
+        <div v-else class="fills-container">
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index"
                       :context="context" :manager="fillCtxMgr" :data="fill as FillCatch"/>
         </div>
@@ -94,6 +93,9 @@ onUnmounted(() => {
     padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
     .clover, .create {
         width: 28px;

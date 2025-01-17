@@ -15,11 +15,11 @@
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
 import SearchInput from "@/components/common/SearchInput.vue";
-import { SheetCatch } from "@/components/Document/Attribute/Fill2/Lib/ctx";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import FillMaskPanelItem from './FillMaskPanelItem.vue';
 import { StyleSheet } from "@kcdesign/data"
 import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 
 const props = defineProps<{
     context: Context;

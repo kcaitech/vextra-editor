@@ -96,13 +96,8 @@ export class FillContextMgr extends StyleCtx {
 
         const represent = this.selected[0];
         this.fillCtx.mask = represent.style.fillsMask;
-        const origin = represent.getFills();
-        const replace: FillCatch[] = [];
-        for (let i = origin.length - 1; i > -1; i--) replace.push({fill: origin[i]});
-        this.fillCtx.fills = replace;
-
         if (this.fillCtx.mask) {
-            const mask = this.context.data.stylesMgr.getSync(represent.style.fillsMask!) as FillMask;
+            const mask = this.context.data.stylesMgr.getSync(this.fillCtx.mask) as FillMask;
             this.fillCtx.maskInfo = {
                 name: mask.name,
                 desc: mask.description
@@ -110,6 +105,11 @@ export class FillContextMgr extends StyleCtx {
         } else {
             this.fillCtx.maskInfo = undefined;
         }
+
+        const origin = represent.getFills();
+        const replace: FillCatch[] = [];
+        for (let i = origin.length - 1; i > -1; i--) replace.push({fill: origin[i]});
+        this.fillCtx.fills = replace;
     }
 
     private getIndexByFill(fill: Fill) {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { ShapeView, Blur, Point2D, BlurType, BasicArray, BlurMask } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
@@ -23,70 +23,40 @@ import add_icon from '@/assets/icons/svg/add.svg';
 import delete_icon from '@/assets/icons/svg/delete.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { BlurContext, BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
+import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
+import CheckBox from "@/components/common/CheckBox.vue";
+import SelectBanana from "@/components/common/Select/SelectBanana.vue";
 
 type Props = {
-    context: Context
-    shapes: ShapeView[]
+    context: Context;
+    shapes: ShapeView[];
     selectionChange: number;
     trigger: any[];
 }
 
 const props = defineProps<Props>();
-const { t } = useI18n();
+const {t} = useI18n();
 const blurInfo = ref<Blur>();
 const mixed = ref<boolean>(false);
-const reflush = ref<number>(0);
-const mask = ref<boolean>(false);
 const blurMask = ref<BlurMask>();
 
+const blurCtx = ref<BlurContext>({
+    mixed: false,
+    blur: undefined,
+    mask: undefined,
+    maskInfo: undefined
+})
+const blurCtxMgr = new BlurContextMgr(props.context, blurCtx.value as BlurContext);
+const cloverVisible = computed<boolean>(() => !(blurCtx.value.mask || blurCtx.value.mixed));
 const blurLibStatus = reactive<ElementStatus>({id: '#blur-lib-panel', visible: false});
 const blurPanelStatusMgr = new ElementManager(
     props.context,
     blurLibStatus,
-    {
-        offsetLeft: -250,
-        whiteList: ['.blur-container', '.blur-lib-panel', '.blur-left']
-    }
+    {whiteList: ['.blur-container', '.blur-lib-panel', '.mask-port-wrapper']}
 );
-
-function updateData() {
-    mixed.value = false;
-    mask.value = false;
-    blurInfo.value = undefined;
-    blurMask.value = undefined;
-    const len = props.shapes.length;
-    if (len === 1) {
-        const shape = props.shapes[0];
-        if (shape.style.blursMask) {
-            const id = props.shapes[0].style.blursMask
-            if (!id) return
-            const libs = props.shapes[0].style.getStylesMgr()
-            blurMask.value = libs?.getSync(id) as BlurMask
-            blurInfo.value = blurMask.value.blur
-            return mask.value = true;
-        }
-        blurInfo.value = shape.blur;
-    } else if (len > 1) {
-        const blur = get_blur(props.shapes);
-        if (blur === 'mixed') {
-            mixed.value = true;
-        } else if (blur === 'mask') {
-            const id = props.shapes[0].style.blursMask;
-            if (!id) return;
-            const libs = props.shapes[0].style.getStylesMgr();
-            const blur = libs?.getSync(id) as BlurMask;
-            blurMask.value = blur;
-            blurInfo.value = blur.blur;
-            mask.value = true;
-        } else {
-            blurInfo.value = blur;
-        }
-    }
-
-    reflush.value++;
-}
+blurCtxMgr.catchPanel(blurPanelStatusMgr);
 
 function addBlur(): void {
     const len = props.shapes.length;
@@ -159,12 +129,12 @@ const delStyleBlur = () => {
 const showBlurPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('blur-left')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -264}});
+        if (e.classList.contains('mask-port-wrapper')) {
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 42}});
             break;
         }
         if (e.classList.contains('blur-panel')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -256}});
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: 4, offsetTop: 42}});
             break;
         }
         e = e.parentElement;
@@ -175,58 +145,51 @@ const closePanel = () => {
     blurPanelStatusMgr.close();
 }
 
-const stop1 = watch(() => props.trigger, v => v?.includes('style') && updateData());
-const stop2 = watch(() => props.selectionChange, updateData);
-onMounted(updateData);
+const watchList: any[] = [
+    watch(() => props.selectionChange, () => blurCtxMgr.update()),
+    watch(() => props.trigger, v => v?.includes('style') && blurCtxMgr.update())
+]
+onMounted(() => {
+    blurCtxMgr.update();
+});
 onUnmounted(() => {
-    stop1();
-    stop2();
+    watchList.forEach(stop => stop());
     blurPanelStatusMgr.unmounted();
 });
 </script>
 <template>
     <div class="blur-panel" ref="blurPanelTrigger">
         <TypeHeader :title="t('blur.blur')" @click="first" :active="!!blurInfo">
-            <template v-if="!mask" #tool>
-                <div v-if="!mixed" class="blur-style" @click="showBlurPanel($event)">
+            <template v-if="!blurCtx.mask" #tool>
+                <div v-if="cloverVisible" class="clover" @click="showBlurPanel($event)">
                     <SvgIcon :icon="style_icon"/>
                 </div>
-                <div v-if="!blurInfo || mixed" class="add" @click.stop="addBlur">
+                <div v-if="!blurCtx.blur || blurCtx.mixed" class="add" @click.stop="addBlur">
                     <SvgIcon :icon="add_icon"/>
                 </div>
             </template>
         </TypeHeader>
-        <div v-if="mixed && !mask" class="tips-wrap">
-            <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
-        </div>
-        <div v-if="!mixed && blurInfo && !mask" class="blur-container">
+        <div v-if="blurCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
+        <MaskPort v-else-if="blurCtx.maskInfo" @unbind="delBlurMask" @delete="delStyleBlur">
+            <div class="desc" @click="showBlurPanel($event)">
+                <div class="effect"/>
+                <div>{{ blurCtx.maskInfo.name }}</div>
+            </div>
+        </MaskPort>
+        <div v-else-if="blurCtx.blur" class="blur-container">
             <div class="blur">
-                <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
-                    <SvgIcon v-if="blurInfo.isEnabled" :icon="select_icon" />
-                </div>
+                <CheckBox :check="blurCtx.blur.enable" style="flex: 0 0 14px;"
+                          @change="toggleVisible"/>
                 <div class="blur-type">
-                    <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" :reflush="reflush" />
+                    <!--                    <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes"/>-->
+                    <SelectBanana context="" options="" value=""/>
                 </div>
                 <div class="detail">
-                    <BlurDetail :context="context" :blur="blurInfo" :shapes="shapes" :reflush="reflush" />
+                    <BlurDetail :context="context" :blur="blurInfo" :shapes="shapes"/>
                 </div>
                 <div class="delete" @click="deleteBlur">
-                    <SvgIcon :icon="delete_icon" />
+                    <SvgIcon :icon="delete_icon"/>
                 </div>
-            </div>
-        </div>
-        <div v-if="mask" class="blur-mask">
-            <div class="info">
-                <div class="blur-left" @click="showBlurPanel($event)">
-                    <div class="effect"/>
-                    <div class="name">{{ blurMask!.name }}</div>
-                </div>
-                <div class="unbind" @click="delBlurMask">
-                    <SvgIcon :icon="unbind_icon" />
-                </div>
-            </div>
-            <div class="delete-style" @click="delStyleBlur">
-                <SvgIcon :icon="delete_icon" />
             </div>
         </div>
         <BlurStyle v-if="blurLibStatus.visible" :context="props.context" :shapes="props.shapes" @close="closePanel"
@@ -242,8 +205,14 @@ onUnmounted(() => {
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
-    .add,
-    .blur-style {
+    .tips-wrapper {
+        padding: 12px 0;
+        color: #737373;
+        text-align: center;
+        font-size: var(--font-default-fontsize);
+    }
+
+    .add, .clover {
         width: 28px;
         height: 28px;
         display: flex;
@@ -253,18 +222,18 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        >img {
+        > img {
             width: 16px;
             height: 16px;
         }
     }
 
-    .blur-style img {
+    .clover img {
         padding: 2px;
         box-sizing: border-box;
     }
 
-    .blur-style:hover {
+    .clover:hover {
         background-color: #F5F5F5;
     }
 
@@ -297,7 +266,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                >img {
+                > img {
                     width: 60%;
                     height: 60%;
                 }
@@ -331,7 +300,7 @@ onUnmounted(() => {
                 border-radius: var(--default-radius);
                 transition: .2s;
 
-                >img {
+                > img {
                     width: 16px;
                     height: 16px;
                 }
@@ -352,96 +321,31 @@ onUnmounted(() => {
         }
     }
 
-    .blur-mask {
+    .desc {
+        flex: 1;
+        width: 100%;
+        height: 100%;
         display: flex;
-        height: 32px;
-        border-radius: 6px;
-        justify-content: space-between;
         align-items: center;
-        margin-top: 8px;
         gap: 8px;
+        padding: 0 8px;
 
-        .info {
+        .effect {
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+            border: 1px solid #000000e5;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .span {
+            display: inline-block;
             flex: 1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 6px;
+            width: 32px;
             overflow: hidden;
-            background-color: #f4f5f5;
-            height: 100%;
-
-            .blur-left {
-                flex: 1;
-                display: flex;
-                align-items: center;
-                background-color: #F5F5F5;
-                height: 100%;
-
-                &:hover {
-                    background-color: #e5e5e5;
-                }
-
-                .effect {
-                    width: 16px;
-                    height: 16px;
-                    background-color: #fff;
-                    border: 1px solid #000000e5;
-                    border-radius: 3px;
-                    overflow: hidden;
-                    margin: 0 8px;
-                }
-            }
-
-            .unbind {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 28px;
-                height: 32px;
-
-                >img {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
-
-            .unbind:hover {
-                background-color: #e5e5e5;
-            }
-        }
-
-        .delete-style {
-            flex: 0 0 28px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 28px;
-            height: 28px;
-            border-radius: var(--default-radius);
-            overflow: hidden;
-
-            >img {
-                width: 16px;
-                height: 16px;
-            }
-        }
-
-        .delete-style:hover {
-            background-color: #F5F5F5;
-        }
-    }
-
-    .tips-wrap {
-        padding: 12px 0;
-
-        .mixed-tips {
-            display: block;
-            width: 218px;
-            height: 14px;
-            text-align: center;
-            font-size: var(--font-default-fontsize);
-            color: #737373;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
 }
