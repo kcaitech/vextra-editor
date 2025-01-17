@@ -25,9 +25,10 @@ const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>(getFills());
 
 function getFills() {
-    if (!data) return [];
     const container: FillCatch[] = [];
-    for (let i = data.fills.length - 1; i > -1; i--) container.push({fill: data.fills[i]});
+    if (data) {
+        for (let i = data.fills.length - 1; i > -1; i--) container.push({fill: data.fills[i]});
+    }
     return container;
 }
 
@@ -49,6 +50,10 @@ function modifyDesc(event: Event) {
     const target = event.target as HTMLInputElement;
     manager.modifyMaskDesc(data.sheet, data.id, target.value);
     target.blur();
+}
+
+function createStyle() {
+    manager.createStyleLib(name.value, desc.value);
 }
 
 function blur(event: KeyboardEvent) {
@@ -77,24 +82,27 @@ onUnmounted(() => {
         </div>
         <div class="detail">
             <div class="name">
-                <label for="name">{{t('stylelib.name')}}</label>
-                <input ref="firstInput" type="text" id="name" :value="name" @change="modifyName" @keydown.esc="blur">
+                <label for="name">名称</label>
+                <input ref="firstInput" type="text" id="name" v-model="name" @change="modifyName" @keydown.esc="blur">
             </div>
             <div class="des">
-                <label for="des">{{t('stylelib.description')}}</label>
-                <input type="text" id="des" :value="desc" @change="modifyDesc">
+                <label for="des">描述</label>
+                <input type="text" id="des" v-model="desc" @change="modifyDesc">
             </div>
         </div>
-        <div class="list-header">
-            <div class="title">{{t('stylelib.color')}}</div>
-            <div class="create" @click.stop="">
-                <SvgIcon :icon="add_icon"/>
+        <div class="data-panel" v-if="data">
+            <div class="list-header">
+                <div class="title">颜色</div>
+                <div class="create" @click.stop="">
+                    <SvgIcon :icon="add_icon"/>
+                </div>
+            </div>
+            <div class="fills-container">
+                <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
+                          :data="fill as FillCatch"/>
             </div>
         </div>
-        <div class="fills-container">
-            <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                      :data="(fill as FillCatch)"/>
-        </div>
+        <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">创建样式</div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -169,7 +177,14 @@ onUnmounted(() => {
         }
     }
 
-    .list-header {
+    .data-panel {
+        width: 100%;
+        height: fit-content;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .list-header {
         height: 32px;
         display: flex;
         align-items: center;
@@ -194,38 +209,36 @@ onUnmounted(() => {
                 margin: auto;
             }
         }
+        }
+
+        .fills-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            width: 100%;
+            height: fit-content;
+            padding: 6px 12px;
+            box-sizing: border-box;
+        }
     }
 
-    .fills-container {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-
-        width: 100%;
-        height: fit-content;
-        padding: 6px 12px;
-        box-sizing: border-box;
-    }
-
-    .create-bnt {
+    .create-style {
+        width: 100px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 12px;
+        margin: 8px auto;
         font-size: 12px;
-        width: 100px;
-        height: 40px;
+        color: #fff;
         border-radius: 6px;
         background-color: #1878f5;
-        color: #fff;
+    }
 
-        &:hover {
-            background-color: #429AFF;
-        }
-
-        &:active {
-            background-color: #0A59CF;
-        }
+    .disabled {
+        opacity: 0.3;
+        pointer-events: none;
     }
 }
 </style>

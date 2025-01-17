@@ -59,7 +59,6 @@ function stringifyGradient(g: Gradient) {
     }
 }
 
-
 export type FillCatch = {
     fill: Fill;
 }
@@ -149,6 +148,10 @@ export class FillContextMgr {
 
     private m_panel: Set<ElementManager> = new Set();
     private m_panel_map: Map<string, ElementManager> = new Map();
+
+    private kill() {
+        this.m_panel.forEach(i => i.close());
+    }
     catchPanel(ele: ElementManager) {
         this.m_panel.add(ele);
     }
@@ -238,7 +241,7 @@ export class FillContextMgr {
     modifyFillMask(id: string) {
         const actions = get_actions_add_mask(this.selected, id);
         this.editor.shapesSetFillMask(actions);
-        this.m_panel.forEach(i => i.close());
+        this.kill();
         this.hiddenCtrl();
     }
 
@@ -256,5 +259,12 @@ export class FillContextMgr {
 
     modifyMaskDesc(sheet: string, fillMaskID: string, desc: string) {
         this.editor4Doc.modifyStyleDescription(sheet, fillMaskID, desc);
+    }
+
+    createStyleLib(name: string, desc: string) {
+        const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
+        const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);
+        this.editor4Doc.insertStyleLib(fillMask, this.context.selection.selectedPage!, this.selected);
+        this.kill();
     }
 }
