@@ -1,6 +1,6 @@
 <template>
     <div id="radius-lib-panel" class="radius-lib-panel">
-        <PopoverHeader :title="t('stylelib.radius')" @create="showCreatePanel" @close="emits('close')"/>
+        <PopoverHeader :title="t('stylelib.radius')" @create="showCreatePanel" @close="emits('close')" />
         <div class="search">
             <div class="icon">
                 <SvgIcon :icon="search_icon" />
@@ -8,8 +8,9 @@
             <div class="filter" @click="showLibList($event)">
                 <SvgIcon :icon="arrow_icon" />
             </div>
-            <input v-focus type="text" :placeholder="t('stylelib.search')" v-model="keyword" @keydown.esc="emits('close')">
-            <div v-if="libListStatus.visible" id="radius-lib-list" class="filter-list">
+            <input v-focus type="text" :placeholder="t('stylelib.search')" v-model="keyword"
+                @keydown.esc="emits('close')">
+            <div v-if="libListStatus.visible" id="radius-lib-list" class="radius-lib-list">
                 <div class="list-item" v-for="item in libList" :key="item[0]" @click.stop="filter(item[1])">
                     <div class="choose" :style="{ visibility: filterWord === item[1] ? 'visible' : 'hidden' }">
                         <SvgIcon :icon="choose_icon" />
@@ -30,8 +31,8 @@
                         <div class="styles"
                             :class="{ 'active': modifyPanelStatus.visible && maskID === mask.id, 'target': mask.id === props.id }"
                             v-for="mask in (sheet.variables as RadiusMask[])" :key="mask.id">
-                            <div class="left"  @click="createBlurMask(mask.id)">
-                                <div class="border" :style="{borderRadius:mask}">
+                            <div class="left" @click="createRadiusMask(mask.id)">
+                                <div class="border">
                                 </div>
                                 <div class="name">{{ mask.name }}</div>
                             </div>
@@ -42,8 +43,8 @@
                         </div>
                     </template>
                 </div>
-                <div v-if="!data.length && keyword" class="null">{{t('stylelib.null_search')}}</div>
-                <div v-if="!data.length && !keyword" class="null">{{t('stylelib.null_data')}}</div>
+                <div v-if="!data.length && keyword" class="null">{{ t('stylelib.null_search') }}</div>
+                <div v-if="!data.length && !keyword" class="null">{{ t('stylelib.null_data') }}</div>
             </div>
         </el-scrollbar>
         <NewRadiusStyle v-if="createPanelStatus.visible" :context="props.context" :shapes="props.shapes"
@@ -147,7 +148,7 @@ const libListStatusMgr = new ElementManager(
     libListStatus,
     {
         offsetTop: 32,
-        whiteList: ['.blur-lib-list', '.filter']
+        whiteList: ['.radius-lib-list', '.filter']
     }
 );
 
@@ -196,13 +197,13 @@ watchEffect(() => {
     data.push(...new_arr.filter(s => s.variables.length !== 0))
 })
 
-const createBlurMask = (id: string) => {
+const createRadiusMask = (id: string) => {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
     const shapes = getShapesForStyle(selected);
     const actions = get_actions_add_mask(shapes, id);
     const editor = props.context.editor4Page(page);
-    editor.shapesSetBlurMask(actions);
+    editor.shapesSetRadiusMask(actions);
     emits('close')
 }
 
@@ -365,14 +366,12 @@ onUnmounted(() => {
         border: 1px solid #1878F5;
     }
 
-    .filter-list {
-        position: absolute;
-        top: 36px;
-        width: 60%;
-        left: 0;
+    .radius-lib-list {
+        width: 186px;
         background-color: #fff;
         border: 1px solid #e5e5e5e5;
         border-radius: 4px;
+        padding: 4px 0;
         box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
         box-sizing: border-box;
         z-index: 9;
@@ -380,9 +379,7 @@ onUnmounted(() => {
         .list-item {
             display: flex;
             align-items: center;
-            justify-content: center;
             height: 32px;
-            border-radius: 6px;
             box-sizing: border-box;
 
             .choose {
@@ -441,9 +438,9 @@ onUnmounted(() => {
         justify-content: space-between;
         gap: 8px;
         height: 32px;
-        padding: 0 8px;
         border-radius: 6px;
         box-sizing: border-box;
+        overflow: hidden;
 
         &:hover {
             background-color: #f5f5f5;
@@ -455,8 +452,11 @@ onUnmounted(() => {
     }
 
     .style-item .styles .left {
+        flex: 1;
         display: flex;
         align-items: center;
+        height: 100%;
+        padding-left: 8px;
         gap: 8px;
 
         .border {
@@ -475,9 +475,8 @@ onUnmounted(() => {
 
     .style-item .styles .editor {
         display: flex;
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
+        width: 32px;
+        height: 100%;
 
         &:hover {
             background-color: #e5e5e5;
@@ -498,10 +497,13 @@ onUnmounted(() => {
 
 .active {
     background-color: #f5f5f5;
+}
 
-    .editor {
-        visibility: visible !important;
-        background-color: #e5e5e5;
+.target {
+    background-color: rgba(24, 120, 245, 0.2) !important;
+
+    .editor:hover {
+        background-color: rgba(24, 120, 245, 0.3) !important;
     }
 }
 </style>

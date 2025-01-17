@@ -20,7 +20,7 @@
         </div>
         <div class="radius">
             <div class="title">{{ t('stylelib.round') }}</div>
-            <input type="text" v-model="radius" @change="setRadius">
+            <input type="text" v-model="radius" @change="setRadius" @keydown.esc="props.context.escstack.execute()">
         </div>
     </div>
 
@@ -31,7 +31,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 
 import { Context } from '@/context';
 import { RadiusMask, ShapeView, } from '@kcdesign/data';
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { FillRenderer } from '../StyleLib/fillRenderer';
 
@@ -71,7 +71,7 @@ const setRadius = () => {
     if (!props.maskid) return;
     const mask = props.reder.currentTarget(props.maskid) as RadiusMask
     const editor = props.context.editor4Doc()
-    editor.modifyBorderMaskBorderSideSetting(mask.sheet, mask.id, side)
+    editor.modifyRadiusMaskRadiusSetting(mask.sheet, mask.id, num)
 }
 
 const setSheetName = () => {
@@ -88,8 +88,33 @@ const setSheetDes = () => {
     editor.modifyStyleDescription(mask.sheet, mask.id, styledes.value)
 }
 
-onMounted(() => {
+const update = () => {
+    radius.value = '';
+    if (props.reder && props.maskid) {
+        const mask = props.reder.currentTarget(props.maskid) as RadiusMask;
+        stylename.value = mask.name ?? '';
+        styledes.value = mask.description ?? '';
+        radius.value = mask.radius.join(', ')
+    }
+}
 
+watch(() => props.maskid, () => {
+    update();
+})
+
+function stylelib_watcher(t: number | string) {
+    if (t === 'stylelib') {
+        update();
+    }
+}
+
+onMounted(() => {
+    update();
+    props.context.data.watch(stylelib_watcher)
+})
+
+onUnmounted(() => {
+    props.context.data.unwatch(stylelib_watcher)
 })
 
 </script>
@@ -124,7 +149,7 @@ onMounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
