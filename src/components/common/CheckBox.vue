@@ -14,6 +14,7 @@ const emits = defineEmits<{
 </template>
 <style lang="scss" scoped>
 div {
+    flex: 0 0 14px;
     width: 14px;
     height: 14px;
     border-radius: 4px;

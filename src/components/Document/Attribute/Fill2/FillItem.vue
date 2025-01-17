@@ -73,8 +73,7 @@ onUnmounted(watch(() => props.data, () => {
 </script>
 <template>
     <div class="fill-item-container">
-        <CheckBox :check="data.fill.isEnabled" style="flex: 0 0 14px;"
-                  @change="() => manager.modifyVisible(data.fill)"/>
+        <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)"/>
         <div :class="{'value-panel-wrapper': true, disabled: !data.fill.isEnabled}">
             <ColorBlock :colors="colors as Fill[]"/>
             <component :is="compo"/>

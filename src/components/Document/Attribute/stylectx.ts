@@ -11,9 +11,11 @@ export type SheetCatch = {
 }
 
 export class StyleCtx {
+    private m_shapes: ShapeView[];
     private m_selected: ShapeView[];
 
     constructor(protected context: Context) {
+        this.m_shapes = [];
         this.m_selected = [];
     }
 
@@ -30,7 +32,16 @@ export class StyleCtx {
     }
 
     protected getSelected() {
+        this.shapes = this.context.selection.selectedShapes;
         this.selected = getShapesForStyle(this.context.selection.selectedShapes);
+    }
+
+    get shapes() {
+        return this.m_shapes;
+    }
+
+    set shapes(ss) {
+        this.m_shapes = ss;
     }
 
     protected get editor() {
@@ -62,5 +73,13 @@ export class StyleCtx {
         const exist = this.m_panel_map.get(type);
         if (exist && exist !== ele) exist.close();
         this.m_panel_map.set(type, ele);
+    }
+
+    modifyMaskName(sheet: string, maskID: string, name: string) {
+        this.editor4Doc.modifyStyleName(sheet, maskID, name);
+    }
+
+    modifyMaskDesc(sheet: string, maskID: string, desc: string) {
+        this.editor4Doc.modifyStyleDescription(sheet, maskID, desc);
     }
 }

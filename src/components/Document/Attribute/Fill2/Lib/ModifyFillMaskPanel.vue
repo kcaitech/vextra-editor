@@ -2,12 +2,12 @@
 import { Context } from "@/context";
 import { FillMask } from "@kcdesign/data";
 import { FillCatch, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import close_icon from "@/assets/icons/svg/close.svg";
-import add_icon from "@/assets/icons/svg/add.svg";
-import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted, onUnmounted, ref } from "vue";
 import FillItem from "@/components/Document/Attribute/Fill2/FillItem.vue";
 import { useI18n } from "vue-i18n";
+import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
+import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";
+import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
 
 const {context, manager, data} = defineProps<{
     context: Context;
@@ -18,8 +18,7 @@ const emits = defineEmits<{
     (e: 'close'): void;
 }>();
 
-const {t}=useI18n()
-const firstInput = ref<HTMLInputElement>();
+const {t} = useI18n();
 const name = ref<string>(data?.name ?? '颜色样式');
 const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>(getFills());
@@ -38,35 +37,22 @@ function update() {
     fills.value = getFills();
 }
 
-function modifyName(event: Event) {
+function modifyName(value: string) {
     if (!data) return;
-    const target = event.target as HTMLInputElement;
-    manager.modifyMaskName(data.sheet, data.id, target.value);
-    target.blur();
+    manager.modifyMaskName(data.sheet, data.id, value);
 }
 
-function modifyDesc(event: Event) {
+function modifyDesc(value: string) {
     if (!data) return;
-    const target = event.target as HTMLInputElement;
-    manager.modifyMaskDesc(data.sheet, data.id, target.value);
-    target.blur();
+    manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
 function createStyle() {
     manager.createStyleLib(name.value, desc.value);
 }
 
-function blur(event: KeyboardEvent) {
-    (event.target as HTMLInputElement).blur();
-}
-
 onMounted(() => {
-    if (data) {
-        data.watch(update);
-    } else {
-        firstInput.value!.focus();
-        firstInput.value!.select();
-    }
+    data?.watch(update);
 });
 onUnmounted(() => {
     data?.unwatch(update);
@@ -74,29 +60,11 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="modify-fill-style-panel" id="modify-fill-style-panel">
-        <div class="header">
-            <div class="title">{{ data ? t('stylelib.editor_color') : t('stylelib.create_color') }}</div>
-            <div class="close" @click.stop="emits('close')">
-                <SvgIcon :icon="close_icon"/>
-            </div>
-        </div>
-        <div class="detail">
-            <div class="name">
-                <label for="name">名称</label>
-                <input ref="firstInput" type="text" id="name" v-model="name" @change="modifyName" @keydown.esc="blur">
-            </div>
-            <div class="des">
-                <label for="des">描述</label>
-                <input type="text" id="des" v-model="desc" @change="modifyDesc">
-            </div>
-        </div>
-        <div class="data-panel" v-if="data">
-            <div class="list-header">
-                <div class="title">颜色</div>
-                <div class="create" @click.stop="">
-                    <SvgIcon :icon="add_icon"/>
-                </div>
-            </div>
+        <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')"/>
+        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data"
+                      @modify-name="modifyName" @modify-desc="modifyDesc"/>
+        <div v-if="data" class="data-panel">
+            <ListHeader title="颜色" @create=""/>
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
                           :data="fill as FillCatch"/>
@@ -117,66 +85,6 @@ onUnmounted(() => {
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
     box-sizing: border-box;
 
-    .header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 40px;
-        padding: 0 12px;
-        border-bottom: 1px solid #f0f0f0;
-        box-sizing: border-box;
-
-        .close {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            border-radius: 4px;
-
-            &:hover {
-                background-color: #F5F5F5;
-            }
-
-            img {
-                width: 16px;
-                height: 16px;
-                margin: auto;
-                padding: 2px;
-                box-sizing: border-box;
-            }
-        }
-    }
-
-    .detail {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 0 12px;
-        box-sizing: border-box;
-
-        .name, .des {
-            display: flex;
-            align-items: center;
-            height: 32px;
-            gap: 8px;
-
-            input {
-                flex: 1;
-                outline: none;
-                font-size: 12px;
-                padding: 10px 8px;
-                height: 32px;
-                border-radius: 6px;
-                border: 1px solid transparent;
-                background-color: #F5F5F5;
-                box-sizing: border-box;
-
-                &:focus {
-                    border: 1px solid #1878f5;
-                }
-            }
-        }
-    }
-
     .data-panel {
         width: 100%;
         height: fit-content;
@@ -184,38 +92,10 @@ onUnmounted(() => {
         flex-direction: column;
         gap: 8px;
 
-        .list-header {
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 0 12px;
-        box-sizing: border-box;
-
-        .create {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            border-radius: 4px;
-
-            &:hover {
-                background-color: #F5F5F5;
-            }
-
-            img {
-                width: 16px;
-                height: 16px;
-                margin: auto;
-            }
-        }
-        }
-
         .fills-container {
             display: flex;
             flex-direction: column;
             gap: 6px;
-
             width: 100%;
             height: fit-content;
             padding: 6px 12px;

@@ -5,10 +5,9 @@ import down_icon from "@/assets/icons/svg/triangle-down.svg";
 import right_icon from "@/assets/icons/svg/triangle-right.svg";
 import { Context } from "@/context";
 import { SheetCatch, StyleCtx } from "@/components/Document/Attribute/stylectx";
-
 defineProps<{
     context: Context;
-    manager?: StyleCtx;
+    manager: StyleCtx;
     data: SheetCatch;
     item: any;
 }>();

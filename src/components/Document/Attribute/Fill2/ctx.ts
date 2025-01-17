@@ -207,14 +207,6 @@ export class FillContextMgr extends StyleCtx {
         this.editor.shapesDelStyleFill(get_actions_fill_mask(this.selected));
     }
 
-    modifyMaskName(sheet: string, fillMaskID: string, name: string) {
-        this.editor4Doc.modifyStyleName(sheet, fillMaskID, name);
-    }
-
-    modifyMaskDesc(sheet: string, fillMaskID: string, desc: string) {
-        this.editor4Doc.modifyStyleDescription(sheet, fillMaskID, desc);
-    }
-
     createStyleLib(name: string, desc: string) {
         const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
         const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);

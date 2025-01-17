@@ -5,7 +5,7 @@
             <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword"/>
             <el-scrollbar>
                 <div class="content">
-                    <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context"
+                    <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager"
                                 :item="BlurMaskPanelItem" :data="sheet"/>
                     <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
                     <div v-if="!sheets?.length && !keyword" class="data-null">暂无模糊样式</div>
@@ -28,11 +28,12 @@ import SearchInput from "@/components/common/SearchInput.vue";
 import BlurMaskPanelItem from "@/components/Document/Attribute/Blur/Lib/BlurMaskPanelItem.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
+import { BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
 
 const props = defineProps<{
     context: Context;
+    manager: BlurContextMgr;
     shapes: ShapeView[];
-    id?: string;
 }>()
 const emits = defineEmits<{
     (e: 'close'): void
@@ -111,7 +112,6 @@ onMounted(() => {
     update();
     props.context.data.watch(stylelib_watcher);
 })
-
 onUnmounted(() => {
     props.context.data.unwatch(stylelib_watcher);
     createPanelStatusMgr.unmounted();

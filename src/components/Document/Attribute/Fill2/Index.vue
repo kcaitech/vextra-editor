@@ -2,6 +2,7 @@
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import style_icon from "@/assets/icons/svg/styles.svg";
 import add_icon from "@/assets/icons/svg/add.svg";
+
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { FillCatch, FillContext, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";

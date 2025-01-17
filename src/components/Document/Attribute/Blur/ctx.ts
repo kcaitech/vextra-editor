@@ -1,7 +1,8 @@
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
-import { Blur, BlurMask, BlurType, Style } from "@kcdesign/data";
+import { BasicArray, Blur, BlurMask, BlurType, Point2D, Style } from "@kcdesign/data";
 import { MaskInfo } from "@/components/Document/Attribute/Fill2/basic";
 import { Context } from "@/context";
+import { get_actions_add_blur, get_actions_add_mask, get_actions_blur_delete, get_actions_blur_enabled, get_actions_blur_mask, get_actions_blur_modify, get_actions_blur_unify } from "@/utils/shape_style";
 
 export type BlurCatch = {
     enable: boolean;
@@ -30,7 +31,6 @@ export class BlurContextMgr extends StyleCtx {
     constructor(protected context: Context, public blurCtx: BlurContext) {
         super(context);
     }
-
 
     private modifyMixedStatus() {
         const selected = this.selected;
@@ -74,5 +74,62 @@ export class BlurContextMgr extends StyleCtx {
         this.getSelected();
         this.modifyMixedStatus();
         this.updateBlur();
+    }
+
+    init() {
+        if (this.blurCtx.blur || this.blurCtx.mask) return;
+        this.create();
+    }
+
+    create() {
+        if (this.blurCtx.mixed) this.unify();
+        const blur = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
+        this.editor.shapesAddBlur(get_actions_add_blur(this.shapes, blur));
+        this.hiddenCtrl();
+    }
+
+    unify() {
+        if (this.shapes[0].style.blursMask) {
+            const actions = get_actions_add_mask(this.shapes, this.shapes[0].style.blursMask);
+            this.editor.shapesSetBlurMask(actions);
+        } else {
+            const actions = get_actions_blur_unify(this.shapes);
+            this.editor.shapesBlurUnify(actions);
+        }
+        this.hiddenCtrl();
+    }
+
+    modifyBlurType(type: BlurType) {
+        this.editor.setShapeBlurType(get_actions_blur_modify(this.selected, type));
+        this.hiddenCtrl();
+    }
+
+    modifyEnable() {
+        const actions = get_actions_blur_enabled(this.shapes, !this.blurCtx.blur!.enable);
+        this.editor.setShapeBlurEnabled(actions);
+        this.hiddenCtrl();
+    }
+
+    removeBlur() {
+        const actions = get_actions_blur_delete(this.shapes);
+        this.editor.shapeDeleteBlur(actions);
+        this.hiddenCtrl();
+    }
+
+    unbind() {
+        const actions = get_actions_blur_mask(this.shapes);
+        this.editor.shapesDelBlurMask(actions);
+    }
+
+    removeMask() {
+        const actions = get_actions_blur_mask(this.shapes);
+        this.editor.shapesDelStyleBlur(actions);
+    }
+
+    modifyBlurMask(maskID: string) {
+        const actions = get_actions_add_mask(this.shapes, maskID);
+        this.editor.shapesSetBlurMask(actions);
+        this.hiddenCtrl();
+        this.kill();
     }
 }
