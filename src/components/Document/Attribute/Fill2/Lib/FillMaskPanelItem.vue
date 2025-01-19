@@ -8,6 +8,11 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import PanelItem from "@/components/Document/Attribute/StyleLib/PanelItem.vue";
 
+/**
+ * 用于展示样式表中单个样式的组件
+ * data: 样式信息
+ * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
+ */
 const {data, context, manager} = defineProps<{ context: Context; manager: FillContextMgr; data: FillMask; }>();
 
 const name = ref<string>(data.name);

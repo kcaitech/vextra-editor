@@ -21,6 +21,10 @@ import { StyleSheet } from "@kcdesign/data"
 import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 
+/**
+ * 样式列表：该组件可以展示样式、筛选样式
+ * 该组件把每个表用一个SheetPanel组件展示，遍历了所有表
+ */
 const props = defineProps<{
     context: Context;
     manager: FillContextMgr;

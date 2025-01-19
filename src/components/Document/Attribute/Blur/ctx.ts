@@ -1,6 +1,6 @@
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import { BasicArray, Blur, BlurMask, BlurType, Point2D, Style } from "@kcdesign/data";
-import { MaskInfo } from "@/components/Document/Attribute/Fill2/basic";
+import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
 import { get_actions_add_blur, get_actions_add_mask, get_actions_blur_delete, get_actions_blur_enabled, get_actions_blur_mask, get_actions_blur_modify, get_actions_blur_unify } from "@/utils/shape_style";
 

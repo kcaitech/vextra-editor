@@ -9,6 +9,9 @@ import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vu
 import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
 
+/**
+ * 修改样式弹框
+ */
 const {context, manager, data} = defineProps<{
     context: Context;
     manager: FillContextMgr;
@@ -38,11 +41,13 @@ function update() {
 }
 
 function modifyName(value: string) {
+    name.value = value;
     if (!data) return;
     manager.modifyMaskName(data.sheet, data.id, value);
 }
 
 function modifyDesc(value: string) {
+    desc.value = value;
     if (!data) return;
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }

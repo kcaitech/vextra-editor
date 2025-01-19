@@ -5,6 +5,10 @@ import down_icon from "@/assets/icons/svg/triangle-down.svg";
 import right_icon from "@/assets/icons/svg/triangle-right.svg";
 import { Context } from "@/context";
 import { SheetCatch, StyleCtx } from "@/components/Document/Attribute/stylectx";
+
+/**
+ * 样式表面板：用于以列表形式展示一个样式表内所有的样式，其中item为表中容纳子元素的组件
+ */
 defineProps<{
     context: Context;
     manager: StyleCtx;

@@ -5,12 +5,15 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 import { Context } from "@/context";
 import { FillCatch, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { h, onUnmounted, ref, watch } from "vue";
-import { selectAllOnFocus } from "@/components/Document/Attribute/Fill2/basic";
+import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
 
+/**
+ * 用于展示和修改一条填充的属性
+ */
 const props = defineProps<{
     context: Context;
     manager: FillContextMgr;

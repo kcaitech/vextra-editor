@@ -23,6 +23,26 @@ export class StyleCtx {
         return this.context.selection.selectedPage!;
     }
 
+
+    protected getSelected() {
+        this.shapes = this.context.selection.selectedShapes;
+        this.selected = getShapesForStyle(this.context.selection.selectedShapes);
+    }
+
+    /**
+     * 选区内的选中图层：相当与context.selection.selectedShapes
+     */
+    get shapes() {
+        return this.m_shapes;
+    }
+
+    set shapes(ss) {
+        this.m_shapes = ss;
+    }
+
+    /**
+     * 选区内的选中图层的基础上，把编组打平。
+     */
     get selected() {
         return this.m_selected;
     }
@@ -31,18 +51,6 @@ export class StyleCtx {
         this.m_selected = ss;
     }
 
-    protected getSelected() {
-        this.shapes = this.context.selection.selectedShapes;
-        this.selected = getShapesForStyle(this.context.selection.selectedShapes);
-    }
-
-    get shapes() {
-        return this.m_shapes;
-    }
-
-    set shapes(ss) {
-        this.m_shapes = ss;
-    }
 
     protected get editor() {
         return this.context.editor4Page(this.context.selection.selectedPage!);

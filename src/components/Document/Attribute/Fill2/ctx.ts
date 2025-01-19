@@ -1,7 +1,7 @@
 import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
-import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/Fill2/basic";
+import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 
@@ -69,6 +69,10 @@ export type FillContext = {
     maskInfo?: MaskInfo;
 }
 
+/**
+ * 填充模块核心状态管理器，修改填充的所有属性都有管理器完成；
+ * 另外还组合了弹框管理器，可以控制相关弹窗
+ */
 export class FillContextMgr extends StyleCtx {
     constructor(protected context: Context, public fillCtx: FillContext) {
         super(context);

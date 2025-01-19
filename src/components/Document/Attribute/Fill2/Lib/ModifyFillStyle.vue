@@ -110,6 +110,9 @@ import close_icon from '@/assets/icons/svg/close.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
+/**
+ * 将废弃组件
+ */
 interface FillItem {
     id: number,
     fill: Fill
