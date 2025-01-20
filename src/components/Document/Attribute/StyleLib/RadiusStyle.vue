@@ -418,14 +418,14 @@ onUnmounted(() => {
         border-radius: 6px;
         box-sizing: border-box;
 
+        img {
+            width: 14px;
+            height: 14px;
+        }
+
         &:hover {
             background-color: #f5f5f5;
         }
-    }
-
-    .style-item .type img {
-        width: 14px;
-        height: 14px;
     }
 
     .style-item .type span {

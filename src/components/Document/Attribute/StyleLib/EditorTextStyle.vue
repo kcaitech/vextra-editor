@@ -1,9 +1,9 @@
 <template>
-    <div class="new-style" :style="{ top: props.top + 'px', left: props.left + 'px' }" @click.stop @mousedown.stop>
+    <div id="modify-text-panel" class="editor-style">
         <div class="header">
             <div class="title">{{ t('stylelib.editor_text') }}</div>
             <div class="close" @click.stop="emits('close')">
-                <svg-icon icon-class="close"></svg-icon>
+                <SvgIcon :icon="close_icon"></SvgIcon>
             </div>
         </div>
         <div class="detail">
@@ -28,7 +28,7 @@
                     <div class="select-font" ref="fontNameEl" @click="onShowFont">
                         <span>{{ fontName }}</span>
                         <div class="down">
-                            <svg-icon icon-class="down"></svg-icon>
+                            <SvgIcon :icon="down_text_icon" />
                         </div>
                     </div>
                     <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
@@ -46,7 +46,7 @@
                                 @focus="selectSizeValue" @input="handleSize" @click="(e) => click(e, is_size_select)"
                                 @keydown="e => keydownSize(e)">
                             <div class="down" @click="onShowSize">
-                                <svg-icon icon-class="down" style=""></svg-icon>
+                                <SvgIcon :icon="down_text_icon" />
                             </div>
                         </div>
                         <div class="select-size" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
@@ -54,8 +54,8 @@
                             <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)"
                                 @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
                                 <div class="icon">
-                                    <svg-icon v-if="sizeSelectIndex === i"
-                                        :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
+                                    <SvgIcon v-if="sizeSelectIndex === i"
+                                        :icon="sizeHoverIndex === i ? white_select_icon : page_select_icon" />
                                 </div>
                             </div>
                         </div>
@@ -64,7 +64,7 @@
                 <div class="text-space">
                     <div class="row-height">
                         <div @mousedown="(e) => onMouseDown(e, 'row-height')">
-                            <svg-icon icon-class="word-space"></svg-icon>
+                            <SvgIcon :icon="word_space_icon" />
                         </div>
                         <input type="text" v-model="rowHeight" ref="lineHeight" class="input"
                             @change="() => setRowHeight()" :placeholder="row_height" @input="handleSize"
@@ -73,7 +73,7 @@
                     </div>
                     <div class="char-space">
                         <div @mousedown="(e) => onMouseDown(e, 'char-space')">
-                            <svg-icon icon-class="row-height"></svg-icon>
+                            <SvgIcon :icon="row_height_icon" />
                         </div>
                         <input type="text" v-model="wordSpace" ref="charSpacing" class="input"
                             @change="() => setWordSpace()" @input="handleSize"
@@ -87,6 +87,14 @@
 
 </template>
 <script setup lang="ts">
+import close_icon from '@/assets/icons/svg/close.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import down_text_icon from '@/assets/icons/svg/down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import word_space_icon from '@/assets/icons/svg/word-space.svg';
+import row_height_icon from '@/assets/icons/svg/row-height.svg';
+
 import { Context } from '@/context';
 import { ShapeType, Color, TextShapeView, FillType, Gradient, LinearApi, AttrGetter, AsyncTextAttrEditor, TextAttr } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
@@ -106,8 +114,6 @@ import { Attribute } from '@/context/atrribute';
 
 const props = defineProps<{
     context: Context;
-    top: number;
-    left: number;
     textShape: TextShapeView
     textShapes: TextShapeView[]
 }>();
@@ -850,7 +856,7 @@ onUnmounted(() => {
     opacity: 0.4;
 }
 
-.new-style {
+.editor-style {
     position: fixed;
     display: flex;
     flex-direction: column;
@@ -880,7 +886,7 @@ onUnmounted(() => {
                 background-color: #F5F5F5;
             }
 
-            svg {
+            img {
                 width: 16px;
                 height: 16px;
                 margin: auto;
@@ -947,7 +953,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                svg {
+                img {
                     width: 16px;
                     height: 16px;
                     margin: auto;
@@ -982,7 +988,7 @@ onUnmounted(() => {
                         width: 12px;
                         height: 12px;
 
-                        svg {
+                        img {
                             width: 100%;
                             height: 100%;
                         }
@@ -1040,7 +1046,7 @@ onUnmounted(() => {
                             justify-content: center;
                             border-radius: 4px;
 
-                            >svg {
+                            >img {
                                 width: 12px;
                                 height: 12px;
                             }
@@ -1083,7 +1089,7 @@ onUnmounted(() => {
                             align-items: center;
                             justify-content: center;
 
-                            >svg {
+                            >img {
                                 width: 12px;
                                 height: 12px;
                             }
@@ -1120,7 +1126,7 @@ onUnmounted(() => {
                         align-items: center;
                         justify-content: flex-end;
 
-                        >svg {
+                        >img {
                             cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                             width: 14px;
                             height: 14px;

@@ -52,7 +52,7 @@ onUnmounted(watch(() => colors, update));
 </script>
 <template>
     <div :class="{'color-wrapper': true, round}">
-        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="compos[c.type]" :params="c as any"/>
+        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="(compos[c.type])" :params="(c as any)"/>
     </div>
 </template>
 <style scoped lang="scss">
