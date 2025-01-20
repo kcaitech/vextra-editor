@@ -10,6 +10,7 @@ import {
     Matrix,
     Path,
     ShapeView,
+    SymbolRefView,
     XYsBounding
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
@@ -82,6 +83,7 @@ function hoverDottedPaths() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
     if (!hoveredShape) return;
     if (!(hoveredShape as ArtboardView).autoLayout) return;
+    if (hoveredShape instanceof SymbolRefView && !hoveredShape.symData?.autoLayout) return;
     if (is_shape_in_selected(props.context.selection.selectedShapes, hoveredShape)) return;
     const bordersTakeSpace = (hoveredShape as ArtboardView).autoLayout?.bordersTakeSpace;
     const childs = hoveredShape.childs;
@@ -91,7 +93,7 @@ function hoverDottedPaths() {
         const ps: { x: number, y: number }[] = getPoint(child, bordersTakeSpace);
         points.push(...ps);
         const b = XYsBounding(points);
-        const framePoint = [
+        const framePoint = [                                                                                                                                                                                                             
             { x: b.left, y: b.top },
             { x: b.right, y: b.top },
             { x: b.right, y: b.bottom },
@@ -145,6 +147,7 @@ function selectDottedPaths() {
     if (!shapes.length) return;
     const parent = shapes[0].parent;
     if (!parent || !(parent as ArtboardView).autoLayout) return;
+    if (parent instanceof SymbolRefView && !parent.symData?.autoLayout) return;
     const every = shapes.every(item => item.parent?.id === parent.id);
     if (!every) return;
     const points: { x: number, y: number }[] = [];

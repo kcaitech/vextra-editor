@@ -67,6 +67,7 @@ function assemble() {
     const dom: PageDom = new PageDom(domCtx, { data: page });
 
     pageDom = { dom, ctx: domCtx };
+    
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();

@@ -4,7 +4,7 @@
  */
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { ArtboardView, PolygonShapeView, ShapeView, PathShapeView } from '@kcdesign/data';
+import { ArtboardView, PolygonShapeView, ShapeView, PathShapeView, SymbolRefView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -182,15 +182,15 @@ onUnmounted(() => {
         :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
         fill="transparent"/>
     <ShapesStrokeContainer :context="props.context"/>
-    <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
+    <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboardView).autoLayout && !(shape instanceof SymbolRefView)" :context="props.context"
                        :paddingIndex="paddingIndex"/>
     <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
                    :theme="theme"/>
     <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
                      :c-frame="props.controllerFrame" :theme="theme"/>
-    <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
+    <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboardView).autoLayout && !(shape instanceof SymbolRefView)" :context="props.context"
                      :controllerFrame="controllerFrame"/>
-    <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboardView).autoLayout" :context="props.context"
+    <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboardView).autoLayout && !(shape instanceof SymbolRefView)" :context="props.context"
                            @hoverPaddint="hoverPaddingIndex"/>
     <component v-if="pointVisible" :is="point_map.get(shape.type)" :context="props.context"
                :shape="props.shape as PolygonShapeView"/>

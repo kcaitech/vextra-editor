@@ -113,8 +113,8 @@ export class ViewUpdater {
         svgEl.style.zIndex = '0';
         svgEl.style.opacity = '1';
         this.m_context.preview.setScale(this.getScale(m));
-        this.overlayBox();
         this.matrix.reset(m);
+        this.overlayBox();
         this.m_context.preview.notify(Preview.MATRIX_CHANGE);
     }
 

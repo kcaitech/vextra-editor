@@ -127,6 +127,9 @@ function _selection_change() {
         if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(shape.type)) {
             autoLayout.value = true;
         }
+        if (shape instanceof SymbolRefView && (!shape.autoLayout || !shape.symData?.autoLayout)) {
+            autoLayout.value = false;
+        }
     }
 
     shapes.value = [];
