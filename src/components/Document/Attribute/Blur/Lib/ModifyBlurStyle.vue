@@ -34,7 +34,7 @@
                     </div>
                     <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" :entry="'style'"
                         :reflush="reflush" @select="positionSelect" />
-                    <BlurDetail :context="props.context" :blur="blurInfo" :shapes="props.shapes" :entry="'style'"
+                    <BlurDetail :context="props.context" :blur="blurInfo as any" :shapes="props.shapes" :entry="'style'"
                         @set-blur-saturation="setBlurSaturation" @key-down-saturation="keyDownSaturation"
                         @drag-blur-saturation="dragBlurSaturation" />
                     <div class="delete" :class="{ disable }">
@@ -62,6 +62,7 @@ import delete_icon from '@/assets/icons/svg/delete.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { BlurCatch } from "@/components/Document/Attribute/Blur/ctx";
 
 const props = defineProps<{
     context: Context;

@@ -21,6 +21,7 @@ export class Menu extends WatchableObject {
     static SHADOW_POSITION_MENU = 11;
     static SHADOW_CUTOUT_ARGS_MENU = 12;
     static CLOSE_INSTANCE_ATTR_MENU = 13;
+    static TOGGLE_PROTOTYPE = 14;
     static WRITE_MEDIA = 15;
     static UPDATE_LOCATE = 16;
     static EXPORT_DIALOG = 17;

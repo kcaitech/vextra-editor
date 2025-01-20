@@ -1,6 +1,7 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
 import {
+    ArtboardView,
     AutoLayoutModify,
     GroupShapeView,
     PaddingDir,
@@ -41,8 +42,8 @@ export class AutoLayoutHandler extends TransformHandler {
 
     executePadding(padding: number, direction: PaddingDir, padding2 = 0) {
         if (this.shapes.length !== 1) return;
-        const shape = this.shapes[0];
-        if (!(shape instanceof GroupShapeView)) return;
+        const shape = this.shapes[0] as ArtboardView;
+        if (!shape.autoLayout) return;
         if (direction === 'hor') {
             (this.asyncApiCaller as AutoLayoutModify).executeHorPadding(shape, padding, padding2);
         } else if (direction === 'ver') {
@@ -54,13 +55,13 @@ export class AutoLayoutHandler extends TransformHandler {
 
     executeSpace(space: number, direction: PaddingDir) {
         if (this.shapes.length !== 1) return;
-        const shape = this.shapes[0];
-        if (!(shape instanceof GroupShapeView)) return;
+        const shape = this.shapes[0] as ArtboardView;
+        if (!shape.autoLayout) return;
         (this.asyncApiCaller as AutoLayoutModify).executeSpace(shape, space, direction);
     }
 
     executeSwap(shape: ShapeView, target: ShapeView[], x: number, y: number) {
-        if (!(shape instanceof GroupShapeView)) return;
-        (this.asyncApiCaller as AutoLayoutModify).swapShapeLayout(shape, target, x, y);
+        if (!(shape as ArtboardView).autoLayout) return;
+        (this.asyncApiCaller as AutoLayoutModify).swapShapeLayout(shape as ArtboardView, target, x, y);
     }
 }

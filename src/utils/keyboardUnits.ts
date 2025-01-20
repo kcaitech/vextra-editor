@@ -98,8 +98,8 @@ keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
         select_all(context, true);
         return;
     }
-    
-    if(shiftKey && altKey) {
+
+    if (shiftKey && altKey) {
         event.preventDefault();
         unAutoLayoutFn(context);
         return;
@@ -111,7 +111,7 @@ keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
 
-    if(shiftKey) {
+    if (shiftKey) {
         event.preventDefault();
         context.menu.notify(Menu.AUTO_LAYOUT);
         return;
@@ -178,6 +178,8 @@ keydownHandler['KeyE'] = function (event: KeyboardEvent, context: Context) {
     } else if (is_ctrl) {
         event.preventDefault();
         flattenSelection(context);
+    } else if (event.shiftKey) {
+        context.menu.notify(Menu.TOGGLE_PROTOTYPE);
     }
 }
 

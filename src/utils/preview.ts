@@ -427,7 +427,7 @@ export const getAtrboardInnerOffset = (atrboard: ArtboardView) => {
     return { top: -offsetT, right: size.width - offsetR, bottom: size.height - offsetB, left: -offsetL }
 }
 
-export const scrollAtrboard = (context:Context, atrboard: ArtboardView, trans: { x: number, y: number }) => {
+export const scrollAtrboard = (context: Context, atrboard: ArtboardView, trans: { x: number, y: number }) => {
     const offset = getAtrboardInnerOffset(atrboard);
     const transform = atrboard.innerTransform || new TransformRaw();
     const tx = transform.translateX;

@@ -8,9 +8,12 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { useI18n } from "vue-i18n";
 
+/**
+ * 填充样式库面板。用于展示样式列表、创建样式
+ */
 const {context, manager} = defineProps<{ context: Context, manager: FillContextMgr }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
-const {t}=useI18n()
+const {t} = useI18n()
 const panelStatus = reactive<ElementStatus>({id: '#modify-fill-style-panel', visible: false});
 const panelStatusMgr = new ElementManager(
     context,
@@ -18,6 +21,7 @@ const panelStatusMgr = new ElementManager(
     {whiteList: ['.modify-fill-style-panel', '.add']}
 );
 manager.catchPanel(panelStatusMgr);
+
 function showCreatePanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {

@@ -2,8 +2,8 @@ import { BoundHandler } from "@/transform/handler";
 import {
     ArtboardView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
     ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
-    adapt2Shape, layoutShapesOrder, makeShapeTransform1By2, PathShapeView,
-    makeShapeTransform2By1
+    makeShapeTransform1By2, PathShapeView, makeShapeTransform2By1, layoutShapesOrder2, GroupShapeView,
+    getShapeFrame
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -11,7 +11,7 @@ import { Tool } from "@/context/tool";
 import { Assist } from "@/context/assist";
 import { isTarget } from "@/utils/scout";
 import { debounce, throttle } from "lodash";
-import { compare_layer_3 } from "@/utils/group_ungroup";
+import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { isShapeOut } from "@/utils/assist";
 import { StyleManager } from "@/transform/style";
 import { WorkSpace } from "@/context/workspace";
@@ -724,52 +724,15 @@ class Jumper {
         this.inited = false;
     }
 
-    private __rows: Shape[][] | undefined;
-    private __flat: Shape[] | undefined;
-    private __sort: Map<string, number> | undefined;
+    private __rows: ShapeView[] | undefined;
 
-    set rows(shapes: Shape[][]) {
+    set rows(shapes: ShapeView[]) {
         this.__rows = shapes;
-        const flat = shapes.flat();
-        this.__flat = flat;
-        const map = new Map<string, number>();
-        const selected = this.translate.selManager.shapes;
-        for (let i = 0; i < selected.length; i++) {
-            const s = selected[i];
-            const index = flat.findIndex(item => s.id === item.id);
-            if (index !== -1) map.set(s.id, index);
-        }
-        this.__sort = map;
-    }
-
-    private __target_frame(shape: Shape) {
-        let f = shape.frame;
-        const m = shape.transform;
-        if (shape.isNoTransform()) {
-            f.x = f.x + m.translateX;
-            f.y = f.y + m.translateY
-        } else {
-            const corners = [
-                { x: f.x, y: f.y },
-                { x: f.x + f.width, y: f.y },
-                { x: f.x + f.width, y: f.y + f.height },
-                { x: f.x, y: f.y + f.height }]
-                .map((p) => m.computeCoord(p));
-            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-            f.x = minx;
-            f.y = miny;
-            f.width = maxx - minx;
-            f.height = maxy - miny;
-        }
-        return f;
     }
 
     private __layout() {
         const env = this.__env!;
-        this.rows = layoutShapesOrder(env.childs.map(s => adapt2Shape(s)), !!env.autoLayout?.bordersTakeSpace);
+        this.rows = env.childs;
     }
 
     private __last_target: ShapeView | undefined;
@@ -784,20 +747,14 @@ class Jumper {
         const children = env.childs;
         if (!this.__rows) this.__layout();
 
-        const flat = this.__flat!;
-        const sort = this.__sort!;
+        const flat = this.__rows!;
         const scout = this.context.selection.scout;
 
         for (const view of children) {
             if (shapeIdsSet.has(view.id) || !isTarget(scout, view, living)) continue;
             if (view !== this.__last_target) {
-                const alpha = shapes[0];
-                const cur_index = flat.findIndex(item => item.id === alpha.id);
                 const tar_index = flat.findIndex(item => item.id === view.id);
-                const targetFrame = this.__target_frame(adapt2Shape(view));
-                const transX = cur_index > tar_index ? targetFrame.x - 1 : targetFrame.x + 1;
-                const transY = cur_index > tar_index ? targetFrame.y - 1 : targetFrame.y + 1;
-                api.swap(env, shapes, transX, transY, sort);
+                api.swap(env, sort_by_layer(this.context, shapes, -1), tar_index);
                 this.__layout();
                 this.__last_target = view;
             }
@@ -813,34 +770,39 @@ class Jumper {
     }
 }
 
-function boundingBox(shape: Shape, includedBorder: boolean): ShapeFrame {
-    let frame = { ...shape.frame };
+function boundingBox(shape: ShapeView, includedBorder?: boolean): ShapeFrame {
+    let frame = { ...getShapeFrame(shape) };
+    frame.height = Math.max(frame.height, 1);
+    frame.width = Math.max(frame.width, 1);
     if (includedBorder) {
         const border = shape.getBorders();
-        let max_top_border = 0;
-        let max_left_border = 0;
-        let max_right_border = 0;
-        let max_bottom_border = 0;
-        const isEnabled = border.strokePaints.some(p => p.isEnabled);
-        if (isEnabled) {
-            const outer = border.position === BorderPosition.Outer;
-            max_top_border = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
-            max_left_border = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
-            max_right_border = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
-            max_bottom_border = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
+        let maxtopborder = 0;
+        let maxleftborder = 0;
+        let maxrightborder = 0;
+        let maxbottomborder = 0;
+        if (border) {
+            const isEnabled = border.strokePaints.some(p => p.isEnabled);
+            if (isEnabled) {
+                const outer = border.position === BorderPosition.Outer;
+                maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+                maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+                maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+                maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
+            }
+
         }
-        frame.x -= max_left_border;
-        frame.y -= max_top_border;
-        frame.width += max_left_border + max_right_border;
-        frame.height += max_top_border + max_bottom_border;
+        frame.x -= maxleftborder;
+        frame.y -= maxtopborder;
+        frame.width += maxleftborder + maxrightborder;
+        frame.height += maxtopborder + maxbottomborder;
     }
     const m = shape.transform;
     const corners = [
         { x: frame.x, y: frame.y },
         { x: frame.x + frame.width, y: frame.y },
         { x: frame.x + frame.width, y: frame.y + frame.height },
-        { x: frame.x, y: frame.y + frame.height }
-    ].map((p) => m.computeCoord(p));
+        { x: frame.x, y: frame.y + frame.height }]
+        .map((p) => m.computeCoord(p));
     const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
     const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
     const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
@@ -898,7 +860,7 @@ class Inserter {
 
         const views = env.childs;
         const viewsMap = new Map<string, ShapeView>(views.map(i => ([i.id, i])));
-        const __rows = layoutShapesOrder(views.map(s => adapt2Shape(s)), !!layout.bordersTakeSpace);
+        const __rows = layoutShapesOrder2(views, !!layout.bordersTakeSpace);
         const rows: Row[] = [];
         let lastRowEnd = 0;
         const mode = layout.stackMode || StackMode.Horizontal;

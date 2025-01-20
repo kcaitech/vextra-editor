@@ -35,7 +35,7 @@
                         :source="positionOptionsSource"
                         :selected="positionOptionsSource.find(i => i.data.value === blurInfo?.type)?.data"
                         @select="(value) => positionSelect(value)"></Select>
-                    <BlurDetail ref="detail" :context="props.context" :blur="blurInfo" :shapes="props.shapes"
+                    <BlurDetail ref="detail" :context="props.context" :blur="blurInfo as any" :shapes="props.shapes"
                         :isMask="isMask" />
                     <div class="delete" :class="{ disable }">
                         <SvgIcon :icon="delete_icon"></SvgIcon>

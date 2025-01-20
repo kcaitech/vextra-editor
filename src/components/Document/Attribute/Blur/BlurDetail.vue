@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { nextTick, reactive, ref } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
-import { Blur, LinearApi, ShapeView } from '@kcdesign/data';
+import { LinearApi, ShapeView } from '@kcdesign/data';
 import { Menu } from "@/context/menu";
 import { hidden_selection } from '@/utils/content';
 import { get_actions_blur_modify } from '@/utils/shape_style';
@@ -11,15 +11,17 @@ import { watchEffect } from 'vue';
 import { BlurHandler } from '@/transform/blur';
 import { sortValue } from '../BaseAttr/oval';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import gear_icon from '@/assets/icons/svg/gear.svg';
+import { BlurCatch } from "@/components/Document/Attribute/Blur/ctx";
 
 const { t } = useI18n();
 
 interface Props {
-    context: Context
-    blur: Blur | undefined
-    shapes: ShapeView[]
-    entry?: string
-    isMask?: boolean
+    context: Context;
+    blur: BlurCatch | undefined;
+
+    entry?: string;
+    isMask?: boolean;
 }
 
 interface Emits {
@@ -85,7 +87,6 @@ const onMouseUP = () => {
         document.removeEventListener('mouseup', onMouseUP)
     }
 }
-
 function down(e: MouseEvent) {
     if (props.isMask) return;
     blurModifyHandler = new BlurHandler(props.context, e);
@@ -98,7 +99,6 @@ function down(e: MouseEvent) {
         blurModifyHandler.executeSaturation(blurValue.value);
     }
 }
-
 function mouseup() {
     blurModifyHandler?.fulfil();
     blurModifyHandler = undefined;
@@ -143,7 +143,7 @@ function changeBlurInput(e: Event) {
     if (props.entry === 'style') {
         emits('setBlurSaturation', value);
     } else {
-        const actions = get_actions_blur_modify(props.shapes, value);
+        const actions = get_actions_blur_modify(props.context.selection.selectedShapes, value);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -169,7 +169,7 @@ const text_keyboard = (e: KeyboardEvent, val: string | number) => {
         if (props.entry === 'style') {
             emits('keyDownSaturation', linearApi, value);
         } else {
-            const actions = get_actions_blur_modify(props.shapes, value);
+            const actions = get_actions_blur_modify(props.context.selection.selectedShapes, value);
             const page = props.context.selection.selectedPage;
             if (page) {
                 linearApi.modifyShapeBlurSaturation(actions)
@@ -191,7 +191,6 @@ watchEffect(() => {
     blurValue.value = props.blur.saturation;
     update();
 })
-import gear_icon from '@/assets/icons/svg/gear.svg';
 </script>
 
 <template>

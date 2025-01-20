@@ -203,7 +203,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
 
         const exceedW = clientWidth - (left + rect.width);
         if (exceedW < 0) left = Math.max(0, left + exceedW);
-        const exceedH = clientHeight - (top + rect.height);
+        const exceedH = clientHeight - 4 - (top + rect.height);
         if (exceedH < 0) top = Math.max(0, top + exceedH);
 
         this.clientX = left;

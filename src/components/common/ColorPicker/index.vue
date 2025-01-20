@@ -1552,9 +1552,9 @@ onUnmounted(() => {
                     @changeScale="(s) => emit('changeScale', s)" @imagefilter="(color,type,v)=>color.execute_fillmask_ImageFilter(props.style?.sheet!,props.style?.id!,type,v,props.locat?.index!)"/>
             </div>
             <div v-if="custom === 'style' && !props.entrance" class="color-style">
-                <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
-                    :fill="props.fillslist" @close="EditorStyle = false" :locat="props.locat">
-                </ColorStyle>
+<!--                <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"-->
+<!--                    :fill="props.fillslist" @close="EditorStyle = false" :locat="props.locat">-->
+<!--                </ColorStyle>-->
             </div>
         </div>
     </div>
@@ -1582,7 +1582,8 @@ onUnmounted(() => {
     height: 16px;
     border-radius: 3px;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
-
+    border: 1px solid rgb(215, 215, 215);
+    box-sizing: border-box;
     img {
         border-radius: 3px;
         width: 16px;

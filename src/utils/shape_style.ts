@@ -253,8 +253,7 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
             const { isEnabled, fillType, color, contextSettings, imageRef, imageScaleMode, rotation, scale, originalImageWidth, originalImageHeight, paintFilter, transform } = fill;
             const new_fill = new Fill(new BasicArray(), v4(), isEnabled, fillType, color);
             if (fill.gradient) {
-                const _g = cloneGradient(fill.gradient);
-                new_fill.gradient = _g;
+                new_fill.gradient = cloneGradient(fill.gradient);
             }
             new_fill.imageRef = imageRef;
             new_fill.imageScaleMode = imageScaleMode;
