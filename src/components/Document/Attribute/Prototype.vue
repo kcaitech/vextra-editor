@@ -361,8 +361,6 @@ const actions: SelectSource[] = genOptions([
     [PrototypeConnectionType.INTERNALNODE, t('prototype.action_swap'), change_float_layer_icon, PrototypeNavigationType.SWAP],
 ])
 
-
-
 const icon = new Map([
     [PrototypeConnectionType.INTERNALNODE, 'jump-page'],
     [PrototypeConnectionType.BACK, 'retrun-page'],
@@ -405,8 +403,6 @@ const easingFn = new Map([
     [PrototypeEasingType.INOUTBACKCUBIC, [0.7, -0.4, 0.4, 1.4]],
     [PrototypeEasingType.CUSTOMCUBIC, [0, 0, 1, 1]]
 ]);
-
-
 
 const animations = new Map([
     [PrototypeTransitionType.INSTANTTRANSITION, t('prototype.animation_instant')],

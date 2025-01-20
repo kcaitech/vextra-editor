@@ -1582,7 +1582,8 @@ onUnmounted(() => {
     height: 16px;
     border-radius: 3px;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
-
+    border: 1px solid rgb(215, 215, 215);
+    box-sizing: border-box;
     img {
         border-radius: 3px;
         width: 16px;

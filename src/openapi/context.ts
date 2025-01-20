@@ -1,4 +1,4 @@
-import { Document, IWatchable } from "@kcdesign/data";
+import { Document, IWatchable, PageView } from "@kcdesign/data";
 import { INet } from "./net";
 import { IPluginsMgr } from "./plugins";
 import { ISelection } from "./selection";
@@ -50,6 +50,8 @@ export interface IContext extends IWatchable {
     get documentInfo(): { name: string };
 
     rename(name: string): void;
+    
+    nextTick(page: PageView, cb: () => void): void;
 
     setCustomLoading(show: boolean): void;
 }

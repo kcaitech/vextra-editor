@@ -72,7 +72,7 @@ function page_watcher() {
     if (cur_shape[0]?.id !== shape.id) {
         cur_shape = toRaw([shape]);
     }
-
+    
     viewUpdater.atPage(page.data);
     viewUpdater.atTarget(shape);
 
@@ -298,6 +298,7 @@ const selectionWatcher = (v: number | string) => {
             ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
             props.context.selection.selectShape(undefined);
         }
+        
         watch_shapes();
         if (!viewUpdater.pageCard?.pageSvg || !viewUpdater.currentPage) {
             changePage();
@@ -905,7 +906,8 @@ const viewUpdater = new ViewUpdater(props.context);
 const is_overlay = ref(true);
 
 function startLoop() {
-    const dom = props.context.getPageDom(props.page);
+    const page = props.context.selection.selectedPage;
+    const dom = props.context.getPageDom(page!);
     if (dom && pageCard.value?.pageSvg) {
         dom.ctx.loop(window.requestAnimationFrame);
     }
@@ -969,11 +971,14 @@ onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.preview.watch(previewWatcher);
     // 等cur_shape触发pageCard的挂载
+    const page = props.context.selection.selectedPage!
+    page_watcher();
     nextTick(() => {
         // 然后初始化视图渲染管理器
-        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
+        viewUpdater.mount(preview.value!, page.data, props.context.selection.selectedShapes[0], pageCard.value as any);
         watch_shapes();
     })
+
     if (preview.value) {
         observer.observe(preview.value);
     }
@@ -1027,7 +1032,7 @@ import right_arrow_icon from "@/assets/icons/svg/right-arrow.svg"
         <div class="toggleBox" @mouseenter="showToggleBox" @mouseleave="hideToggleBox" @mousedown.stop>
             <div class="toggle" v-if="showToggle && listLength && previewMode">
                 <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-                    <SvgIcon :icon="left_arrow_icon"/>
+                    <SvgIcon :icon="left_arrow_icon" />
                 </div>
                 <div class="page">{{ curPage }} / {{ listLength }}</div>
                 <div class="next" @click.stop="togglePage(1)" @mouseup.stop

@@ -1267,10 +1267,10 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
         <TypeHeader :title="t('attr.stroke_color')" class="mt-24" :active="hasStroke" v-if="hasStroke">
             <template #tool>
-                <div v-if="!mask && !mixed" class="color-style" @click="colorPanel($event)">
+                <div v-if="!mask && !mixed" class="color-style" @click.stop="colorPanel($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
-                <div v-if="!mask" class="add" @click="addBorder">
+                <div v-if="!mask" class="add" @click.stop="addBorder">
                     <SvgIcon :icon="add_icon" />
                 </div>
             </template>

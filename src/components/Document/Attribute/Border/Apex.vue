@@ -10,8 +10,8 @@ import { hidden_selection } from '@/utils/content';
 import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_Apex, get_actions_border_endpoint, get_actions_border_exchange } from '@/utils/shape_style';
 import { useI18n } from 'vue-i18n';
-import SvgIcon from '@/components/common/SvgIcon.vue';
 
+import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context
     shapes: ShapeView[]

@@ -20,7 +20,7 @@ export class StyleManager {
     private __elements_with_slide: Set<Element> = new Set();
 
     slidifyEnv(env: SymbolView | ArtboardView) {
-        const children = env.childs;
+        const children = env.childs.filter(c => c.isVisible);
         for (const shape of children) {
             const el = (shape as ShapeDom).el;
             if (!el) return;
