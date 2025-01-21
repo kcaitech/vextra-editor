@@ -13,7 +13,7 @@ const compos = {
     'pattern': ImagePreview
 };
 
-const {colors, round, disabledAlpha} = defineProps<{
+const props = defineProps<{
     colors: (Color | Fill | Border)[];
     round?: boolean,
     disabledAlpha?: boolean
@@ -29,7 +29,7 @@ const fillsPreview = ref<{
 function update() {
     const container = fillsPreview.value;
     container.length = 0;
-
+    const {colors, disabledAlpha} = props;
     for (const c of colors) {
         if (c instanceof Color) {
             container.push({type: "solid", data: c, disabledAlpha});
@@ -48,7 +48,7 @@ function update() {
 }
 
 update();
-onUnmounted(watch(() => colors, update));
+onUnmounted(watch(() => props.colors, update));
 </script>
 <template>
     <div :class="{'color-wrapper': true, round}">

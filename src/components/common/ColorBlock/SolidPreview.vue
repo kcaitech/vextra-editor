@@ -2,14 +2,15 @@
 import { Color } from "@kcdesign/data";
 import { onUnmounted, ref, watch } from "vue";
 
-const {params} = defineProps<{ params: { data: Color, disabledAlpha: boolean } }>();
-const rgb = ref<string>(`rgb(${params.data.red}, ${params.data.green}, ${params.data.blue})`);
-const rgba = ref<string>(`rgba(${params.data.red}, ${params.data.green}, ${params.data.blue}, ${params.data.alpha})`);
+const props = defineProps<{ params: { data: Color, disabledAlpha: boolean } }>();
+const d = props.params.data;
+const rgb = ref<string>(`rgb(${d.red}, ${d.green}, ${d.blue})`);
+const rgba = ref<string>(`rgba(${d.red}, ${d.green}, ${d.blue}, ${d.alpha})`);
 
-onUnmounted(watch(() => params, () => {
-    const data = params.data;
-    rgb.value = `rgb(${data.red}, ${data.green}, ${data.blue})`;
-    rgba.value = `rgba(${data.red}, ${data.green}, ${data.blue}, ${data.alpha})`;
+onUnmounted(watch(() => props.params, () => {
+    const d = props.params.data;
+    rgb.value = `rgb(${d.red}, ${d.green}, ${d.blue})`;
+    rgba.value = `rgba(${d.red}, ${d.green}, ${d.blue}, ${d.alpha})`;
 }));
 </script>
 <template>
