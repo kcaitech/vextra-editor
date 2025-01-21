@@ -802,7 +802,7 @@ export class TranslateHandler extends TransformHandler {
         } else {
             this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
         }
-        const algin = this.context.selection.tidyUpAlgin;
+        const algin = this.context.selection.tidyUpAlign;
         (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, algin, this.tidy_up_start);
         this.__trans();
         this.m_adjusted_shape_rows = shape_rows;
@@ -849,7 +849,7 @@ export class TranslateHandler extends TransformHandler {
     // 拖动结束后进行一次整理
     _tidyUp() {
         if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
-            const algin = this.context.selection.tidyUpAlgin;
+            const algin = this.context.selection.tidyUpAlign;
             if (this.m_adjusted_shape_rows.length === 0) this.m_adjusted_shape_rows = [...this.m_shape_rows];
             (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, algin, this.tidy_up_start);
         }

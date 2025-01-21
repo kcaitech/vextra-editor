@@ -1,44 +1,36 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { DragKit } from "@/components/common/draggable";
+
+const props = defineProps<{
+    type: string;
+    value: number;
+    range?: [number, number];
+}>();
 const emits = defineEmits<{
     (e: 'change', value: number): void;
     (e: 'down', event: MouseEvent): void;
-    (e: 'onUp', event: MouseEvent): void;
+    (e: 'onUp'): void;
 }>();
-const props = defineProps<{ type: string, value: number, range?: [number, number] }>();
 const MAX_SIDE_LENGTH = 160;
 const MAX_SIDE_LENGTH_CSS = `${MAX_SIDE_LENGTH}px`;
-
 const valLength = ref<number>((() => {
     const val = props.value;
-    if (!val) {
-        return 0;
-    } else {
+    if (!val) return 0; else {
         const max = (props.range || [-100, 100])[1];
         return (Math.abs(val) / max) * MAX_SIDE_LENGTH / 2;
     }
 })());
-
-const valStart = ref<number>((() => {
-    const val = props.value;
-    if (val < 0) {
-        return (MAX_SIDE_LENGTH / 2) - valLength.value;
-    } else {
-        return MAX_SIDE_LENGTH / 2;
-    }
-})());
-
+const valStart = ref<number>((() => props.value < 0 ? (MAX_SIDE_LENGTH / 2) - valLength.value : MAX_SIDE_LENGTH / 2)());
 const position = ref<number>((() => {
     const val = props.value;
-    if (!val) {
-        return MAX_SIDE_LENGTH / 2;
-
-    } else {
+    if (val) {
         const max = (props.range || [-100, 100])[1];
         return (MAX_SIDE_LENGTH / 2) + (val / max) * MAX_SIDE_LENGTH / 2
+    } else {
+        return MAX_SIDE_LENGTH / 2;
     }
 })());
-
 const rangeEl = ref<HTMLDivElement>();
 
 let center: number = 0;
@@ -47,34 +39,35 @@ let end: number = 0;
 let downX = 0;
 let isDrag = false;
 
+const dragKit = new DragKit(
+    (event) => {
+        if (!rangeEl.value) return;
+        downX = event.clientX;
+        const box = rangeEl.value.getBoundingClientRect();
+        start = box.left;
+        end = box.right;
+        center = (start + end) / 2;
+        emits('down', event);
+    },
+    (event) => {
+        if (isDrag) {
+            modify(event);
+        } else if (Math.abs(event.clientX - downX) > 4) {
+            isDrag = true;
+        }
+    },
+    () => {
+        emits('onUp');
+    }
+)
+
 function down(e: MouseEvent) {
-    if (!rangeEl.value || e.button !== 0) return;
-    e.stopPropagation();
-    downX = e.clientX;
-    const box = rangeEl.value.getBoundingClientRect();
-    start = box.left;
-    end = box.right;
-    center = (start + end) / 2;
-    emits('down', e);
-    document.addEventListener('mousemove', move);
-    document.addEventListener('mouseup', up);
-    window.addEventListener('blur', blur);
+    dragKit.start(e);
 }
 
 function downSlider(e: MouseEvent) {
-    if (!rangeEl.value || e.button !== 0) return;
-    e.stopPropagation();
-    downX = e.clientX;
-    const box = rangeEl.value.getBoundingClientRect();
-    start = box.left;
-    end = box.right;
-    center = (start + end) / 2;
-    emits('down', e);
+    dragKit.start(e);
     modify(e);
-
-    document.addEventListener('mousemove', move);
-    document.addEventListener('mouseup', up);
-    window.addEventListener('blur', blur);
 }
 
 function modify(e: MouseEvent) {
@@ -98,31 +91,11 @@ function modify(e: MouseEvent) {
         if (center - x < 3) {
             x = center;
         }
-
         valLength.value = center - x;
         valStart.value = x - start;
         position.value = x - start;
     }
     emits('change', position.value);
-}
-
-function move(e: MouseEvent) {
-    if (isDrag) {
-        modify(e);
-    } else if (Math.abs(e.clientX - downX) > 4) {
-        isDrag = true;
-    }
-}
-
-function up(e: MouseEvent) {
-    emits('onUp', e);
-    
-    document.removeEventListener('mousemove', move);
-    document.removeEventListener('mouseup', up);
-}
-
-function blur() {
-    window.removeEventListener('blur', blur);
 }
 </script>
 <template>
@@ -188,7 +161,7 @@ function blur() {
             border: 1.5px solid #262626;
             border-radius: 50%;
             background-color: #fff;
-            box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.12);
         }
 
         .fill-dot {

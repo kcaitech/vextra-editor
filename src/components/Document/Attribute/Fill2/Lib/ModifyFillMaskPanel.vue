@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { FillMask } from "@kcdesign/data";
-import { FillCatch, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { onMounted, onUnmounted, ref } from "vue";
 import FillItem from "@/components/Document/Attribute/Fill2/FillItem.vue";
 import { useI18n } from "vue-i18n";
@@ -14,7 +14,7 @@ import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue"
  */
 const {context, manager, data} = defineProps<{
     context: Context;
-    manager: FillContextMgr;
+    manager: FillsContextMgr;
     data?: FillMask;
 }>();
 const emits = defineEmits<{

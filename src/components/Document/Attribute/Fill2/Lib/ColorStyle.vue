@@ -18,7 +18,7 @@ import SearchInput from "@/components/common/SearchInput.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import FillMaskPanelItem from './FillMaskPanelItem.vue';
 import { StyleSheet } from "@kcdesign/data"
-import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 
 /**
@@ -27,7 +27,7 @@ import { SheetCatch } from "@/components/Document/Attribute/stylectx";
  */
 const props = defineProps<{
     context: Context;
-    manager: FillContextMgr;
+    manager: FillsContextMgr;
 }>();
 const keyword = ref<string>('')
 const libs = ref<{ label: string, value: string }[]>([]);

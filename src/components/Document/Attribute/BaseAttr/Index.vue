@@ -691,7 +691,7 @@ function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
     }
 
     disalbeTidyup(orderShapes, d);
-    const algin = props.context.selection.tidyUpAlgin;
+    const algin = props.context.selection.tidyUpAlign;
     lockMouseHandler.executeTidyup(orderShapes, Math.max(hor, -minHor), Math.max(ver, -minVer), d, algin);
 }
 
@@ -737,7 +737,7 @@ const changeHorTidyUp = (value: string) => {
     disalbeTidyup(shapes, dir);
     const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
     horSpace.value = Math.max(hor, -minHor);
-    const algin = props.context.selection.tidyUpAlgin;
+    const algin = props.context.selection.tidyUpAlign;
     editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir, algin);
 }
 
@@ -753,7 +753,7 @@ function keydownHorTidyUp(e: KeyboardEvent) {
         disalbeTidyup(shapes, dir);
         const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
         horSpace.value = Math.max(hor, -minHor);
-        const algin = props.context.selection.tidyUpAlgin;
+        const algin = props.context.selection.tidyUpAlign;
         linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir, algin)
         e.preventDefault();
     }
@@ -776,7 +776,7 @@ const changeVerTidyUp = (value: string) => {
     disalbeTidyup(shapes, dir);
     const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
     verSpace.value = Math.max(ver, -minVer);
-    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir, props.context.selection.tidyUpAlgin);
+    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir, props.context.selection.tidyUpAlign);
 }
 
 function keydownVerTidyUp(e: KeyboardEvent) {
@@ -791,7 +791,7 @@ function keydownVerTidyUp(e: KeyboardEvent) {
         disalbeTidyup(shapes, dir);
         const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
         verSpace.value = Math.max(ver, -minVer);
-        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, props.context.selection.tidyUpAlgin);
+        linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, props.context.selection.tidyUpAlign);
         e.preventDefault();
     }
 

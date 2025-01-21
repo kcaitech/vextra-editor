@@ -796,3 +796,7 @@ function get_angular_gradient(gradient: Gradient) {
     width: '-webkit-fill-available'
   }
 }
+
+export function verifiedVal(val: number, min: number, max: number) {
+    return Math.max(min, Math.min(val, max));
+}

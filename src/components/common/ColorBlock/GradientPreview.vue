@@ -4,7 +4,7 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 import { getHorizontalAngle } from "@/utils/common";
 import { toRGBA } from "@/components/common/ColorPicker/utils";
 
-const {params} = defineProps<{ params: { data: Gradient } }>();
+const props = defineProps<{ params: { data: Gradient } }>();
 const style = ref<any>({});
 
 function get_linear_gradient(gradient: Gradient) {
@@ -85,7 +85,7 @@ function get_angular_gradient(gradient: Gradient) {
 }
 
 function draw() {
-    const gradient = params.data;
+    const gradient = props.params.data;
     if (gradient.gradientType === GradientType.Linear) {
         style.value = get_linear_gradient(gradient);
     } else if (gradient.gradientType === GradientType.Radial) {
@@ -100,7 +100,7 @@ function draw() {
 }
 
 onMounted(draw);
-onUnmounted(watch(() => params, draw));
+onUnmounted(watch(() => props.params, draw));
 </script>
 <template>
     <div :style="style"/>

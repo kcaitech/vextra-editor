@@ -5,7 +5,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import { v4 } from "uuid";
 
-const {context, options, value} = defineProps<{
+const props = defineProps<{
     context: Context;
     options: { label: string; value: any } [];
     value: any;
@@ -14,10 +14,10 @@ const emits = defineEmits<{
     (e: "change", value: any): void;
 }>();
 
-const label = computed(() => options.find(i => i.value === value)?.label ?? '');
+const label = computed(() => props.options.find(i => i.value === props.value)?.label ?? '');
 
 function change(val: any) {
-    if (val !== value) emits("change", val);
+    if (val !== props.value) emits("change", val);
     popoverVisible.value = false;
 }
 
@@ -37,14 +37,14 @@ function locate() {
     let left: number = 0;
     let top: number = -6;
 
-    const index = options.findIndex(i => value === i.value);
+    const index = props.options.findIndex(i => props.value === i.value);
     index > -1 ? top -= index * 32 : top = 34;
 
     const el = popoverEl.value!;
     el.style.top = top + 'px';
     el.style.left = left + 'px';
 
-    context.escstack.save(v4(), () => {
+    props.context.escstack.save(v4(), () => {
         const achieve = popoverVisible.value;
         popoverVisible.value = false;
         return achieve;
@@ -70,9 +70,7 @@ onUnmounted(watch(() => popoverVisible.value, val => {
                  @click.stop="() => change(op.value)">
                 <span>{{ op.label }}</span>
                 <svg width="9" height="6" viewBox="0 0 15 10" :class="op.value === value ? 'check':'un-check'">
-                    <path
-                        d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
-                        fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
+                    <path d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z" fill-rule="evenodd" fill="inherit"/>
                 </svg>
             </div>
 
