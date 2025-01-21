@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import Saturation from "@/components/common/ColorPicker/Saturation.vue";
+import { ref } from "vue";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
+import Hue from "@/components/common/ColorPicker/Hue.vue";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
 const emits = defineEmits(["close"]);
+
+const rgba = ref<RGBACatch>({R: 255, G: 0, B: 0, A: 1, position: 1});
 
 </script>
 
@@ -12,9 +17,7 @@ const emits = defineEmits(["close"]);
     <div id="color-piker-gen-2-panel" :style="{width: WIDTH_CSS}">
         <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
         <Saturation/>
-<!--        <div style="width: 100%; height: 64px;">-->
-<!--            我爱说点实话，铁铁-->
-<!--        </div>-->
+        <Hue :stop="rgba"/>
     </div>
 </template>
 

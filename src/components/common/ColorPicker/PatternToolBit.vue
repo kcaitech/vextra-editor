@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { DragEventHandler } from "@/components/common/draggable";
+import { DragKit } from "@/components/common/draggable";
 
 const props = defineProps<{
     type: string;
@@ -39,7 +39,7 @@ let end: number = 0;
 let downX = 0;
 let isDrag = false;
 
-const dragKit = new DragEventHandler(
+const dragKit = new DragKit(
     (event) => {
         if (!rangeEl.value) return;
         downX = event.clientX;

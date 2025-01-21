@@ -1418,7 +1418,6 @@ onUnmounted(() => {
                 <div class="left">
                     <div class="color-type" :class="{ active: custom === 'custom' }" @click="custom = 'custom'">{{
                         t(`attr.fill`) }}</div>
-                    <!-- <svg-icon icon-class="down"></svg-icon> -->
                     <div v-if="fillType && is_gradient_selected() && !props.entrance" class="style" :class="{ active: custom === 'style' }"
                         @click="custom = 'style'">颜色样式</div>
                 </div>
