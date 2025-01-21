@@ -57,8 +57,7 @@ function change(e: Event) {
 }
 
 function selectImage() {
-    const filepicker = picker.value;
-    if (filepicker) filepicker.click();
+    if (picker.value) picker.value.click();
 }
 
 const changeImageRef = (urlRef: string, origin: ImgFrame, imageMgr: any) => {

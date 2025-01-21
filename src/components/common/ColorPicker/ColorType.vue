@@ -1,63 +1,46 @@
 <script setup lang="ts">
-import { Color, FillType, Gradient, GradientType, ImageScaleMode } from '@kcdesign/data';
-import { onMounted } from 'vue';
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-
-interface Props {
-    color: Color
-    gradient_type?: GradientType
-    angular: any
-    fillType: FillType
-    imageScaleMode: ImageScaleMode | undefined
-}
-
-interface Emits {
-    (e: 'change', value: GradientType, fillType: FillType): void;
-}
-
-const props = defineProps<Props>();
-const emits = defineEmits<Emits>();
-const t = useI18n().t;
-
-
-onMounted(() => {
-});
-
+import SvgIcon from '../SvgIcon.vue';
 import fill_gradient_icon from "@/assets/icons/svg/fill-gradient.svg";
 import linear_gradient_icon from "@/assets/icons/svg/linear-gradient.svg";
 import radial_gradient_icon from "@/assets/icons/svg/radial-gradient.svg";
-// import rhomb_gradient_icon from "@/assets/icons/svg/rhomb-gradient.svg";
 import fill_image_icon from "@/assets/icons/svg/fill-image.svg";
-import SvgIcon from '../SvgIcon.vue';
+
+import { FillType, GradientType } from '@kcdesign/data';
+
+type Props = {
+    value: string;
+    options: string[];
+}
+
+interface Emits {
+    (e: 'change', type: string): void;
+}
+
+defineProps<Props>();
+const emits = defineEmits<Emits>();
+
 </script>
 <template>
     <div class="color-type-wrapper">
-        <div class="item"
-            @click.stop="() => { emits('change', gradient_type || GradientType.Linear, FillType.SolidColor) }"
-            :class="{ selected: fillType === FillType.SolidColor }">
+        <div class="item" @click.stop="() => { emits('change',  FillType.SolidColor) }"
+             :class="{ selected: value === FillType.SolidColor }">
             <SvgIcon :icon="fill_gradient_icon"/>
         </div>
-        <div class="item" @click.stop="() => { emits('change', GradientType.Linear, FillType.Gradient) }"
-            :class="{ selected: gradient_type === GradientType.Linear && fillType === FillType.Gradient }">
+        <div class="item" @click.stop="() => { emits('change', GradientType.Linear) }"
+             :class="{ selected: value === GradientType.Linear }">
             <SvgIcon :icon="linear_gradient_icon"/>
         </div>
-        <div class="item" @click.stop="() => { emits('change', GradientType.Radial, FillType.Gradient) }"
-            :class="{ selected: gradient_type === GradientType.Radial && fillType === FillType.Gradient }">
+        <div class="item" @click.stop="() => { emits('change', GradientType.Radial) }"
+             :class="{ selected: value === GradientType.Radial }">
             <SvgIcon :icon="radial_gradient_icon"/>
         </div>
-        <div class="item" @click.stop="() => { emits('change', GradientType.Angular, FillType.Gradient) }"
-            :class="{ selected: gradient_type === GradientType.Angular && fillType === FillType.Gradient }">
-            <!-- <img :src="angular"> -->
+        <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
+             :class="{ selected: value === GradientType.Angular }">
             <div class="angular"></div>
         </div>
-        <!-- <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
-            :class="{ selected: is_checked === GradientType.Radial }">
-            <SvgIcon icon-class="rhomb-gradient"/>
-        </div> -->
-        <div class="item" v-if="imageScaleMode"
-            @click.stop="() => { emits('change', gradient_type || GradientType.Linear, FillType.Pattern) }"
-            :class="{ selected: fillType === FillType.Pattern }">
+        <div v-if="options.includes(FillType.Pattern)" class="item"
+             @click.stop="() => { emits('change',  FillType.Pattern) }"
+             :class="{ selected: value === FillType.Pattern }">
             <SvgIcon :icon="fill_image_icon" style="width: 15px; height: 15px;"/>
         </div>
     </div>
@@ -119,8 +102,7 @@ import SvgIcon from '../SvgIcon.vue';
         width: 12.5px;
         height: 12.5px;
         border-radius: 50%;
-        // border: 1.5px solid #434343;
-        box-shadow: 0px 0px 0px 1.3px #434343;
+        box-shadow: 0 0 0 1.3px #434343;
         box-sizing: border-box;
         background: conic-gradient(#9C9C9C, #FFFFFF);
     }

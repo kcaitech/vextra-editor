@@ -5,13 +5,13 @@ import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import CreateFillMaskPanel from "@/components/Document/Attribute/Fill2/Lib/ModifyFillMaskPanel.vue";
 import { onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
-import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { useI18n } from "vue-i18n";
 
 /**
  * 填充样式库面板。用于展示样式列表、创建样式
  */
-const {context, manager} = defineProps<{ context: Context, manager: FillContextMgr }>();
+const {context, manager} = defineProps<{ context: Context, manager: FillsContextMgr }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
 const {t} = useI18n()
 const panelStatus = reactive<ElementStatus>({id: '#modify-fill-style-panel', visible: false});

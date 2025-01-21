@@ -1433,9 +1433,9 @@ onUnmounted(() => {
             </div>
             <div v-if="custom === 'custom'" class="custom">
                 <div class="color_type_container" v-if="fillType && is_gradient_selected()">
-                    <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"
-                        :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">
-                    </ColorType>
+<!--                    <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"-->
+<!--                        :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">-->
+<!--                    </ColorType>-->
                 </div>
                 <!-- 渐变工具 -->
                 <div v-if="fill_type === FillType.Gradient && fillType === FillType.Gradient && is_gradient_selected()"

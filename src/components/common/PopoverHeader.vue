@@ -3,7 +3,12 @@ import add_icon from "@/assets/icons/svg/add.svg";
 import close_icon from "@/assets/icons/svg/close.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
-defineProps<{ title: string }>();
+const {create = true, close = true} = defineProps<{
+    title: string;
+    create?: boolean;
+    close?: boolean;
+}>();
+
 const emits = defineEmits<{
     (e: "create", event: MouseEvent): void;
     (e: "close"): void;
@@ -13,10 +18,10 @@ const emits = defineEmits<{
     <div class="header">
         <div class="title">{{ title }}</div>
         <div class="tool">
-            <div class="add" @click="(event) => emits('create', event)">
+            <div v-if="create" class="add" @click="(event) => emits('create', event)">
                 <SvgIcon :icon="add_icon"/>
             </div>
-            <div class="close" @click="emits('close')">
+            <div v-if="close" class="close" @click="emits('close')">
                 <SvgIcon :icon="close_icon"/>
             </div>
         </div>

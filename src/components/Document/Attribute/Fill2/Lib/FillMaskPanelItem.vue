@@ -5,7 +5,7 @@ import ColorBlock from "@/components/common/ColorBlock/Index.vue"
 import ModifyFillStyle from "@/components/Document/Attribute/Fill2/Lib/ModifyFillMaskPanel.vue";
 import { Context } from "@/context";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
-import { FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import PanelItem from "@/components/Document/Attribute/StyleLib/PanelItem.vue";
 
 /**
@@ -13,7 +13,7 @@ import PanelItem from "@/components/Document/Attribute/StyleLib/PanelItem.vue";
  * data: 样式信息
  * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
  */
-const {data, context, manager} = defineProps<{ context: Context; manager: FillContextMgr; data: FillMask; }>();
+const {data, context, manager} = defineProps<{ context: Context; manager: FillsContextMgr; data: FillMask; }>();
 
 const name = ref<string>(data.name);
 const fills = ref<Fill[]>(data.fills.map(i => i));
