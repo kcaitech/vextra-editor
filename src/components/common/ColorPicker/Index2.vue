@@ -4,6 +4,8 @@ import Saturation from "@/components/common/ColorPicker/Saturation.vue";
 import { ref } from "vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import Hue from "@/components/common/ColorPicker/Hue.vue";
+import Typical from "@/components/common/ColorPicker/Typical.vue";
+import ColorModels from "@/components/common/ColorPicker/Models/ColorModels.vue";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -18,6 +20,8 @@ const rgba = ref<RGBACatch>({R: 255, G: 0, B: 0, A: 1, position: 1});
         <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
         <Saturation/>
         <Hue :stop="rgba"/>
+        <ColorModels :stop="rgba"/>
+        <Typical/>
     </div>
 </template>
 
