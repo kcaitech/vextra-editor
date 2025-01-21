@@ -3,11 +3,14 @@ import add_icon from "@/assets/icons/svg/add.svg";
 import close_icon from "@/assets/icons/svg/close.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
-const {create = true, close = true} = defineProps<{
+withDefaults(defineProps<{
     title: string;
     create?: boolean;
     close?: boolean;
-}>();
+}>(), {
+    create: true,
+    close: true
+})
 
 const emits = defineEmits<{
     (e: "create", event: MouseEvent): void;
