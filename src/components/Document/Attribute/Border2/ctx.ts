@@ -4,7 +4,7 @@ import { get_actions_add_boder, get_actions_add_mask, get_actions_border_color, 
 import { getNumberFromInputEvent, getRGBFromInputEvent } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
-import { FillCatch, FillContext, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
+import { FillCatch, FillsContext, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     if (sye.style.fillsMask) return sye.style.fillsMask;
@@ -40,7 +40,7 @@ function stringifyFills(sye: { style: Style, fills: Fill[] }) {
  * 另外还组合了弹框管理器，可以控制相关弹窗
  */
 export class StrokeFillContextMgr extends StyleCtx {
-    constructor(protected context: Context, public fillCtx: FillContext) {
+    constructor(protected context: Context, public fillCtx: FillsContext) {
         super(context);
     }
 

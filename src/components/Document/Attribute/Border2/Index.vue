@@ -5,7 +5,7 @@ import add_icon from "@/assets/icons/svg/add.svg";
 
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { FillCatch, FillContext } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillCatch, FillsContext } from "@/components/Document/Attribute/Fill2/ctx";
 import TypeHeader from "@/components/Document/Attribute/TypeHeader.vue";
 import FillMaskView from "./FillMaskView.vue";
 import FillItem from "./FillItem.vue";
@@ -28,7 +28,7 @@ type Props = {
 const {t} = useI18n();
 
 const props = defineProps<Props>();
-const fillCtx = ref<FillContext>({  // 本组件的核心状态，改状态由vue进行劫持(注：选区和图层属于非vue劫持的状态，每个模块的状态由这两类状态共同组成)
+const fillCtx = ref<FillsContext>({  // 本组件的核心状态，改状态由vue进行劫持(注：选区和图层属于非vue劫持的状态，每个模块的状态由这两类状态共同组成)
     mixed: false,                        // 选区内是否存在不一样的填充样式
 
     fills: [],                           // 填充样式，有可能是样式库里拿出来的，也有可能是图层自带的。注：特别注意，这个数据本身属于由vue劫持的状态，
@@ -37,7 +37,7 @@ const fillCtx = ref<FillContext>({  // 本组件的核心状态，改状态由vu
     mask: undefined,                     // 当选区内使用的样式库内的填充样式时，mask为该样式库的id，否则为undefined
     maskInfo: undefined                  // 当选区内使用的样式库内的填充样式时，maskInfo为改样式库的基本信息，包含名称和描述
 });
-const fillCtxMgr = new StrokeFillContextMgr(props.context, fillCtx.value as FillContext);                  // 核心状态管理器
+const fillCtxMgr = new StrokeFillContextMgr(props.context, fillCtx.value as FillsContext);                  // 核心状态管理器
 const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));   // 样式库入口四叶草🍀是否可用
 const fillLibStatus = reactive<ElementStatus>({id: '#fill-style-lib-panel', visible: false});  // 样式库面板弹框状态
 const fillPanelStatusMgr = new ElementManager(                                                       // 样式库面板弹框状态管理器，组件销毁时要调用其的unmounted事件
