@@ -14,6 +14,7 @@ import {
     Document,
     export_shape,
     export_text,
+    Fill,
     GroupShape,
     GroupShapeView,
     import_shape_from_clipboard,
@@ -26,7 +27,6 @@ import {
     ShapeFrame,
     ShapeType,
     ShapeView,
-    StrokePaint,
     TableCellType,
     Text,
     TextShape,
@@ -280,8 +280,8 @@ export class Clipboard {
             const data: any = {};
             if (fills !== "mixed" && fills!=='mask') data['fills'] = fills.map(i => exportFill(i.fill));
             if (typeof stroke_paints !== 'string' && !this.borderIsString(border)) {
-                const paints = new BasicArray<StrokePaint>();
-                (stroke_paints).forEach(i => paints.push(i.strokePaint));
+                const paints = new BasicArray<Fill>();
+                (stroke_paints).forEach(i => paints.push(i.fill));
                 const b = new Border(border.position as BorderPosition, border.borderStyle as BorderStyle, border.cornerType as CornerType, border.sideSetting as BorderSideSetting, paints);
                 data['borders'] = exportBorder(b);
             }

@@ -41,7 +41,6 @@ import {
     FillMask,
     ShadowMask,
     BlurMask,
-    StrokePaint,
     BorderSideSetting,
     BorderMask,
     BorderMaskType
@@ -50,13 +49,8 @@ import { v4 } from "uuid";
 import { scale_0 } from "./content";
 
 interface FillItem {
-    id: number,
-    fill: Fill
-}
-
-interface StrokePaintItem {
     id: number
-    strokePaint: StrokePaint
+    fill: Fill
 }
 export interface BorderData {
     position: BorderPosition | string
@@ -278,10 +272,10 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
     return actions;
 }
 
-export function get_actions_fill_mask(shapes: ShapeView[]) {
+export function get_actions_fill_mask(shapes: ShapeView[], mask_id?: string) {
     const actions: BatchAction2[] = [];
     let fills: Fill[] = [];
-    const id = shapes[0].style.fillsMask!
+    const id = mask_id ? mask_id : shapes[0].style.fillsMask!
     fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -370,9 +364,9 @@ const initBorder = {
     borderStyle: new BorderStyle(0, 0),
     sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
 }
-export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderData, stroke_paints: StrokePaintItem[] | 'mixed' | 'mask' } {
+export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderData, stroke_paints: FillItem[] | 'mixed' | 'mask' } {
     if (shapes.length === 0) return { border: initBorder, stroke_paints: [] };
-    const strokePaints: StrokePaintItem[] = [];
+    const strokePaints: FillItem[] = [];
 
     const shape = shapes[0];
     let styleborders1 = shape.getBorders();
@@ -394,7 +388,7 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
     }
     for (let i = 0, len = styleborders1.strokePaints.length; i < len; i++) {
         const strokePaint = styleborders1.strokePaints[i];
-        const b = { id: i, strokePaint };
+        const b = { id: i, fill: strokePaint };
         strokePaints.push(b);
         const str = [
             strokePaint.isEnabled,
@@ -502,12 +496,12 @@ const getDideStr = (side: BorderSideSetting, v: BorderSideSetting | string) => {
     return str === str2;
 }
 
-export function get_actions_add_boder(shapes: ShapeView[], strokePaint: StrokePaint) {
+export function get_actions_add_boder(shapes: ShapeView[], strokePaint: Fill) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, fillType, color } = strokePaint;
-        const newStrokePaint = new StrokePaint(new BasicArray(0), v4(), isEnabled, fillType, color);
+        const newStrokePaint = new Fill(new BasicArray(0), v4(), isEnabled, fillType, color);
         actions.push({ target: (shapes[i]), value: newStrokePaint });
     }
     return actions;
@@ -533,14 +527,7 @@ export function get_actions_border_fillmask(shapes: ShapeView[]) {
     const fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        const strokePaints = new BasicArray<StrokePaint>()
-        for (let i = 0; i < fills.length; i++) {
-            const { crdtidx, id, isEnabled, fillType, color } = fills[i]
-            const c = new Color(color.alpha, color.red, color.green, color.blue)
-            const strokePaint = new StrokePaint(crdtidx, id, isEnabled, fillType, c)
-            strokePaints.push(strokePaint)
-        }
-        actions.push({ target: (shapes[i]), value: strokePaints });
+        actions.push({ target: (shapes[i]), value: fills });
     }
     return actions;
 }
@@ -564,11 +551,11 @@ export function get_actions_border_unify(shapes: ShapeView[]) {
     }
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
-        const newStrokePaints: StrokePaint[] = [];
+        const newStrokePaints: Fill[] = [];
         for (let i = 0; i < borders!.strokePaints.length; i++) {
             const strokePaint = borders!.strokePaints[i];
             const { isEnabled, fillType, color } = strokePaint;
-            const newStrokePaint = new StrokePaint(new BasicArray(0), v4(), isEnabled, fillType, color);
+            const newStrokePaint = new Fill(new BasicArray(0), v4(), isEnabled, fillType, color);
             if (strokePaint.gradient) {
                 const _g = cloneGradient(strokePaint.gradient);
                 newStrokePaint.gradient = _g;

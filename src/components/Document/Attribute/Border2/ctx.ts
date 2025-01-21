@@ -1,9 +1,10 @@
-import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
+import { Fill, FillMask, FillType, Style, Color, BasicArray, BatchAction2, ContactLineView } from "@kcdesign/data";
 import { Context } from "@/context";
-import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
-import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
+import { get_actions_add_boder, get_actions_add_mask, get_actions_border_color, get_actions_border_delete, get_actions_border_enabled, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
+import { getNumberFromInputEvent, getRGBFromInputEvent } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
+import { FillCatch, FillContext, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     if (sye.style.fillsMask) return sye.style.fillsMask;
@@ -33,47 +34,12 @@ function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     }
 }
 
-export function stringifyFilter(filter: PaintFilter) {
-    return '' + filter.hue + filter.tint + filter.shadow + filter.saturation + filter.contrast + filter.exposure + filter.temperature;
-}
-
-export function stringifyPatternTransform(t: PatternTransform) {
-    return '' + t.m00 + t.m01 + t.m02 + t.m10 + t.m11 + t.m12;
-}
-
-export function stringifyGradient(g: Gradient) {
-    let str = '';
-    str += g.gradientType + g.from.x + g.from.y + g.to.x + g.to.y
-        + (g.elipseLength ?? 'null')
-        + (g.gradientOpacity ?? 'null')
-    ;
-
-    g.stops.forEach(s => str += stringifyStop(s));
-
-    return str;
-
-    function stringifyStop(s: Stop) {
-        return '' + s.position + s.color.red + ',' + s.color.green + ',' + s.color.blue + ',' + s.color.alpha;
-    }
-}
-
-export type FillCatch = {
-    fill: Fill;
-}
-
-export type FillContext = {
-    mixed: boolean;
-    fills: FillCatch[];
-
-    mask?: string;
-    maskInfo?: MaskInfo;
-}
 
 /**
  * 填充模块核心状态管理器，修改填充的所有属性都有管理器完成；
  * 另外还组合了弹框管理器，可以控制相关弹窗
  */
-export class FillContextMgr extends StyleCtx {
+export class StrokeFillContextMgr extends StyleCtx {
     constructor(protected context: Context, public fillCtx: FillContext) {
         super(context);
     }
@@ -82,7 +48,7 @@ export class FillContextMgr extends StyleCtx {
         const selected = this.selected;
 
         if (selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = selected.map(i => ({fills: i.getFills(), style: i.style}));
+        const allFills = selected.map(i => ({fills: i.getBorders().strokePaints, style: i.style}));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -99,7 +65,7 @@ export class FillContextMgr extends StyleCtx {
         if (this.fillCtx.mixed) return;
 
         const represent = this.selected[0];
-        this.fillCtx.mask = represent.style.fillsMask;
+        this.fillCtx.mask = represent.style.borders.fillsMask;
         if (this.fillCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.mask) as FillMask;
             this.fillCtx.maskInfo = {
@@ -110,7 +76,7 @@ export class FillContextMgr extends StyleCtx {
             this.fillCtx.maskInfo = undefined;
         }
 
-        const origin = represent.getFills();
+        const origin = represent.getBorders().strokePaints;
         const replace: FillCatch[] = [];
         for (let i = origin.length - 1; i > -1; i--) replace.push({fill: origin[i]});
         this.fillCtx.fills = replace;
@@ -120,7 +86,7 @@ export class FillContextMgr extends StyleCtx {
         return (fill.parent as unknown as Fill[])?.findIndex(i => i === fill) ?? -1;
     }
 
-    update() {
+    update() {        
         this.getSelected();
         this.modifyMixedStatus();
         this.updateFills();
@@ -133,39 +99,29 @@ export class FillContextMgr extends StyleCtx {
     create() {
         if (this.fillCtx.mixed) return this.unify();
 
-        const actions: BatchAction2[] = [];
         const selected = this.selected;
-        for (const view of selected) {
-            if (view instanceof ContactLineView) continue;
-            let color: Color;
-            if (view instanceof ArtboardView) {
-                color = new Color(1, 255, 255, 255);
-            } else {
-                color = new Color(0.2, 0, 0, 0);
-            }
-            const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-            actions.push({target: view, value: fill});
-        }
-
-        this.editor.shapesAddFill(actions);
+        const color = new Color(1, 0, 0, 0);
+        const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+        const actions = get_actions_add_boder(selected, strokePaint);
+        this.editor.shapesAddBorder(actions);
 
         this.hiddenCtrl();
     }
 
     unify() {
-        const actions = get_actions_fill_unify(this.selected);
-        this.editor.shapesFillsUnify(actions);
+        const actions = get_actions_border_unify(this.selected);
+        this.editor.shapesBordersUnify(actions);
         this.hiddenCtrl();
     }
 
     remove(fill: Fill) {
-        const actions = get_actions_fill_delete(this.selected, this.getIndexByFill(fill));
-        this.editor.shapesDeleteFill(actions);
+        const actions = get_actions_border_delete(this.selected, this.getIndexByFill(fill));
+        this.editor.shapesDeleteBorder(actions);
     }
 
     modifyVisible(fill: Fill) {
-        const actions = get_actions_fill_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
-        this.editor.setShapesFillEnabled(actions);
+        const actions = get_actions_border_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
+        this.editor.setShapesBorderEnabled(actions);
     }
 
     modifyFillHex(event: Event, fill: Fill) {
@@ -176,7 +132,7 @@ export class FillContextMgr extends StyleCtx {
         const index = this.getIndexByFill(fill);
         const selected = this.selected;
 
-        this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
+        this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
 
         this.hiddenCtrl(event);
     }
@@ -192,25 +148,27 @@ export class FillContextMgr extends StyleCtx {
         );
         const index = this.getIndexByFill(fill);
         const selected = this.selected;
-        this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
+        this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
         this.hiddenCtrl(event);
     }
 
     modifyFillMask(id: string) {
         const actions = get_actions_add_mask(this.selected, id);
-        this.editor.shapesSetFillMask(actions);
+        this.editor.shapesSetBorderFillMask(actions);
         this.kill();
         this.hiddenCtrl();
     }
 
     unbind() {
-        this.editor.shapesDelFillMask(get_actions_fill_mask(this.selected));
+        const id = this.selected[0].style.borders.fillsMask;
+        this.editor.shapesDelBorderFillMask(get_actions_fill_mask(this.selected, id));
     }
 
     removeMask() {
-        this.editor.shapesDelStyleFill(get_actions_fill_mask(this.selected));
+        const id = this.selected[0].style.borders.fillsMask;
+        this.editor.shapesDelStyleBorder(get_actions_fill_mask(this.selected, id));
     }
-
+    
     createStyleLib(name: string, desc: string) {
         const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
         const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);

@@ -10,13 +10,14 @@ import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
+import { StrokeFillContextMgr } from "./ctx";
 
 /**
  * 用于展示和修改一条填充的属性
  */
 const props = defineProps<{
     context: Context;
-    manager: FillContextMgr;
+    manager: StrokeFillContextMgr;
     data: FillCatch;
 }>();
 const {t} = useI18n();
