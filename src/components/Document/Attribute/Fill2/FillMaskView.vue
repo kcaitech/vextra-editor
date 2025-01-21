@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { FillCatch, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { Fill } from "@kcdesign/data";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { onUnmounted, ref, watchEffect } from "vue";
@@ -13,7 +13,7 @@ import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
  */
 const props = defineProps<{
     context: Context;
-    manager: FillContextMgr;
+    manager: FillsContextMgr;
     fills: FillCatch[];
     info: MaskInfo;
 }>();

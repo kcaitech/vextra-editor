@@ -61,7 +61,7 @@ export type FillCatch = {
     fill: Fill;
 }
 
-export type FillContext = {
+export type FillsContext = {
     mixed: boolean;
     fills: FillCatch[];
 
@@ -70,11 +70,11 @@ export type FillContext = {
 }
 
 /**
- * 填充模块核心状态管理器，修改填充的所有属性都有管理器完成；
+ * 填充模块核心状态管理器，修改填充的所有属性都由管理器完成；
  * 另外还组合了弹框管理器，可以控制相关弹窗
  */
-export class FillContextMgr extends StyleCtx {
-    constructor(protected context: Context, public fillCtx: FillContext) {
+export class FillsContextMgr extends StyleCtx {
+    constructor(protected context: Context, public fillCtx: FillsContext) {
         super(context);
     }
 

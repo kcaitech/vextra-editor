@@ -3,7 +3,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
-import { FillCatch, FillContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { h, onUnmounted, ref, watch } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
@@ -16,7 +16,7 @@ import CheckBox from "@/components/common/CheckBox.vue";
  */
 const props = defineProps<{
     context: Context;
-    manager: FillContextMgr;
+    manager: FillsContextMgr;
     data: FillCatch;
 }>();
 const {t} = useI18n();

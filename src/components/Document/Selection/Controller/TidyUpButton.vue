@@ -354,7 +354,7 @@ const mousemove = (e: MouseEvent) => {
         tidyUpVerSpace.value = ver;
         props.context.attr.notify(Attribute.TIDY_UP_SPACE_CHANGE, { hor, ver })
         selectedShapes.value = [...shapes_rows];
-        const algin = props.context.selection.tidyUpAlgin;
+        const algin = props.context.selection.tidyUpAlign;
         lockMouseHandler.executeTidyup([...shapes_rows], hor, ver, dir, algin);
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
