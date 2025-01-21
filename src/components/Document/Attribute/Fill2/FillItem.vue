@@ -4,12 +4,14 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
 import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, ref, watch } from "vue";
+import { h, onUnmounted, reactive, ref, watch } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 
 /**
  * 用于展示和修改一条填充的属性
@@ -51,6 +53,24 @@ const DescSpan = () => h('div', {
     innerText: innerText.value
 });
 
+const colorPanelStatus = reactive<ElementStatus>({id: '#color-piker-gen-2-panel', visible: false});
+const colorPanelStatusMgr = new ElementManager(
+    props.context,
+    colorPanelStatus,
+    {whiteList: ['#color-piker-gen-2-panel', '.color-wrapper']}
+);
+
+function showColorPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('color-wrapper')) {
+            colorPanelStatusMgr.showBy(e, {once: {offsetLeft: -290}});
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
 function assemble() {
     switch (props.data.fill.fillType) {
         case FillType.Gradient:
@@ -78,7 +98,7 @@ onUnmounted(watch(() => props.data, () => {
     <div class="fill-item-container">
         <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)"/>
         <div :class="{'value-panel-wrapper': true, disabled: !data.fill.isEnabled}">
-            <ColorBlock :colors="colors as Fill[]"/>
+            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel"/>
             <component :is="compo"/>
             <input class="alpha" type="text" :value="alpha"
                    @focus="selectAllOnFocus"
@@ -87,6 +107,7 @@ onUnmounted(watch(() => props.data, () => {
         <div class="delete" @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon"/>
         </div>
+        <ColorPicker v-if="colorPanelStatus.visible" @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>
 <style scoped lang="scss">

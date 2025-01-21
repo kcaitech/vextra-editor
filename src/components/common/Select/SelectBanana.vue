@@ -5,7 +5,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import { v4 } from "uuid";
 
-const {context, options, value} = defineProps<{
+const props = defineProps<{
     context: Context;
     options: { label: string; value: any } [];
     value: any;
@@ -14,10 +14,10 @@ const emits = defineEmits<{
     (e: "change", value: any): void;
 }>();
 
-const label = computed(() => options.find(i => i.value === value)?.label ?? '');
+const label = computed(() => props.options.find(i => i.value === props.value)?.label ?? '');
 
 function change(val: any) {
-    if (val !== value) emits("change", val);
+    if (val !== props.value) emits("change", val);
     popoverVisible.value = false;
 }
 
@@ -37,14 +37,14 @@ function locate() {
     let left: number = 0;
     let top: number = -6;
 
-    const index = options.findIndex(i => value === i.value);
+    const index = props.options.findIndex(i => props.value === i.value);
     index > -1 ? top -= index * 32 : top = 34;
 
     const el = popoverEl.value!;
     el.style.top = top + 'px';
     el.style.left = left + 'px';
 
-    context.escstack.save(v4(), () => {
+    props.context.escstack.save(v4(), () => {
         const achieve = popoverVisible.value;
         popoverVisible.value = false;
         return achieve;
