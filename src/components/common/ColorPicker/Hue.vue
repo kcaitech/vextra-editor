@@ -11,7 +11,7 @@ const DOT_SIZE = 12;
 const DOT_SIZE_CSS = `${DOT_SIZE}px`;
 const LINE_LENGTH_CSS = `${LINE_LENGTH}px`;
 
-const props = defineProps<{ stop: RGBACatch }>();
+defineProps<{ stop: RGBACatch }>();
 const hueX = ref<number>(0);
 const alphaX = ref<number>(LINE_LENGTH - DOT_SIZE);
 
