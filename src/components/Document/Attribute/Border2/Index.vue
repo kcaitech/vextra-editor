@@ -2,6 +2,7 @@
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import style_icon from "@/assets/icons/svg/styles.svg";
 import add_icon from "@/assets/icons/svg/add.svg";
+import delete_icon from '@/assets/icons/svg/delete.svg';
 
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
@@ -12,7 +13,7 @@ import FillItem from "./FillItem.vue";
 import { useI18n } from "vue-i18n";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import FillStylePanel from "./Lib/FillStylePanel.vue";
-import { StrokeFillContextMgr } from "./ctx";
+import { BorderFillsContext, StrokeFillContextMgr } from "./ctx";
 
 /**
  * 每个模块的Index.vue应该包含
@@ -25,25 +26,27 @@ type Props = {
     selectionChange: number;    // 选区变化
     trigger: any[];             // 选区内图层数据修改
 }
-const {t} = useI18n();
+const { t } = useI18n();
 
 const props = defineProps<Props>();
-const fillCtx = ref<FillsContext>({  // 本组件的核心状态，改状态由vue进行劫持(注：选区和图层属于非vue劫持的状态，每个模块的状态由这两类状态共同组成)
+const fillCtx = ref<BorderFillsContext>({  // 本组件的核心状态，改状态由vue进行劫持(注：选区和图层属于非vue劫持的状态，每个模块的状态由这两类状态共同组成)
     mixed: false,                        // 选区内是否存在不一样的填充样式
 
     fills: [],                           // 填充样式，有可能是样式库里拿出来的，也有可能是图层自带的。注：特别注意，这个数据本身属于由vue劫持的状态，
-                                         // 所以它并不是直接从图层上或样式库里取出来的数据，而是由该数据经过vue二次包装后数据
-
+    // 所以它并不是直接从图层上或样式库里取出来的数据，而是由该数据经过vue二次包装后数据
+    strokeInfo: undefined,
+    strokeMask: undefined,
+    strokeMaskInfo: undefined,
     mask: undefined,                     // 当选区内使用的样式库内的填充样式时，mask为该样式库的id，否则为undefined
     maskInfo: undefined                  // 当选区内使用的样式库内的填充样式时，maskInfo为改样式库的基本信息，包含名称和描述
 });
-const fillCtxMgr = new StrokeFillContextMgr(props.context, fillCtx.value as FillsContext);                  // 核心状态管理器
+const fillCtxMgr = new StrokeFillContextMgr(props.context, fillCtx.value as BorderFillsContext);                  // 核心状态管理器
 const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));   // 样式库入口四叶草🍀是否可用
-const fillLibStatus = reactive<ElementStatus>({id: '#fill-style-lib-panel', visible: false});  // 样式库面板弹框状态
+const fillLibStatus = reactive<ElementStatus>({ id: '#fill-style-lib-panel', visible: false });  // 样式库面板弹框状态
 const fillPanelStatusMgr = new ElementManager(                                                       // 样式库面板弹框状态管理器，组件销毁时要调用其的unmounted事件
     props.context,
     fillLibStatus,
-    {whiteList: ['.fill-style-lib-panel', '.clover', '.desc']}                                   // 弹框可点击区域，区域之外的点击将会关闭弹框
+    { whiteList: ['.fill-style-lib-panel', '.clover', '.desc'] }                                   // 弹框可点击区域，区域之外的点击将会关闭弹框
 );
 fillCtxMgr.catchPanel(fillPanelStatusMgr);                                                           // 将弹框状态管理器加入到核心状态管理器，使得核心状态管理器可以控制弹框
 
@@ -51,16 +54,22 @@ function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('clover')) {
-            fillPanelStatusMgr.showBy(e, {once: {offsetLeft: -164, offsetTop: 36}});
+            fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
             break;
         }
         if (e.classList.contains('desc')) {
-            fillPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 36}});
+            fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
         e = e.parentElement;
     }
 }
+
+const showBorderPanel = (event: MouseEvent) => {
+    let e: Element | null = event.target as Element;
+    
+}
+
 
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),                  // 监听选区变化
@@ -77,27 +86,39 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="fills-wrapper">
-        <TypeHeader :title="t('attr.stroke_color')" :active="!!fillCtx.fills.length"
-                    @click.stop="() => fillCtxMgr.init()">
+        <TypeHeader :title="t('attr.stroke')" class="mt-24" @click.stop="() => fillCtxMgr.init()"
+            :active="!!fillCtx.fills.length">
+            <template #tool>
+                <div v-if="!fillCtx.strokeMask" class="border-style" @click="showBorderPanel">
+                    <SvgIcon :icon="style_icon" />
+                </div>
+                <div class="add" @click.stop="() => fillCtxMgr.create()" v-if="!fillCtx.fills.length">
+                    <SvgIcon :icon="add_icon" />
+                </div>
+                <div class="add" @click.stop="() => fillCtxMgr.removeAll()" v-else>
+                    <SvgIcon :icon="delete_icon" />
+                </div>
+            </template>
+        </TypeHeader>
+        <TypeHeader :title="t('attr.stroke_color')" :active="!!fillCtx.fills.length">
             <template #tool>
                 <div v-if="cloverVisible" class="clover" @click="showFillLib">
-                    <SvgIcon :icon="style_icon"/>
+                    <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!fillCtx.mask" class="create" @click="() => fillCtxMgr.create()">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </template>
         </TypeHeader>
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
         <FillMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
-                      :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!"
-                      @show-style-lib="showFillLib"/>
+            :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!" @show-style-lib="showFillLib" />
         <div v-else class="fills-container">
-            <FillItem v-for="(fill, index) in fillCtx.fills" :key="index"
-                      :context="context" :manager="fillCtxMgr" :data="fill as FillCatch"/>
+            <FillItem v-for="(fill, index) in fillCtx.fills" :key="index" :context="context" :manager="fillCtxMgr"
+                :data="fill as FillCatch" />
         </div>
         <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr"
-                        @close="()=> fillPanelStatusMgr.close()"/>
+            @close="() => fillPanelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">
@@ -111,7 +132,8 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 8px;
 
-    .clover, .create {
+    .clover,
+    .create {
         width: 28px;
         height: 28px;
         display: flex;
@@ -125,12 +147,12 @@ onUnmounted(() => {
         }
     }
 
-    .clover > img {
+    .clover>img {
         width: 12px;
         height: 12px;
     }
 
-    .create > img {
+    .create>img {
         width: 16px;
         height: 16px;
     }

@@ -175,7 +175,7 @@ export class FillsContextMgr extends StyleCtx {
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
         const index = this.getIndexByFill(fill);
         const selected = this.selected;
-
+        
         this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
 
         this.hiddenCtrl(event);

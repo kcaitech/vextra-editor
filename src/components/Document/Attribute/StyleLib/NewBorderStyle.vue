@@ -61,7 +61,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface StrokePaintItem {
     id: number
-    strokePaint: Fill
+    fill: Fill
 }
 interface BorderData {
     position: BorderPosition | string

@@ -1,7 +1,7 @@
-import { Fill, FillMask, FillType, Style, Color, BasicArray, BatchAction2, ContactLineView } from "@kcdesign/data";
+import { Fill, FillMask, FillType, Style, Color, BasicArray, BatchAction2, ContactLineView, BorderMask } from "@kcdesign/data";
 import { Context } from "@/context";
-import { get_actions_add_boder, get_actions_add_mask, get_actions_border_color, get_actions_border_delete, get_actions_border_enabled, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
-import { getNumberFromInputEvent, getRGBFromInputEvent } from "@/components/Document/Attribute/basic";
+import { BorderData, get_actions_add_boder, get_actions_add_mask, get_actions_border_color, get_actions_border_delete, get_actions_border_enabled, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
+import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import { FillCatch, FillsContext, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
@@ -34,13 +34,22 @@ function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     }
 }
 
+export type BorderFillsContext = {
+    mixed: boolean;
+    fills: FillCatch[];
+    strokeInfo?: BorderData,
 
+    strokeMask?: string,
+    strokeMaskInfo?: MaskInfo;
+    mask?: string;
+    maskInfo?: MaskInfo;
+}
 /**
  * 填充模块核心状态管理器，修改填充的所有属性都有管理器完成；
  * 另外还组合了弹框管理器，可以控制相关弹窗
  */
 export class StrokeFillContextMgr extends StyleCtx {
-    constructor(protected context: Context, public fillCtx: FillsContext) {
+    constructor(protected context: Context, public fillCtx: BorderFillsContext) {
         super(context);
     }
 
@@ -48,7 +57,7 @@ export class StrokeFillContextMgr extends StyleCtx {
         const selected = this.selected;
 
         if (selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = selected.map(i => ({fills: i.getBorders().strokePaints, style: i.style}));
+        const allFills = selected.map(i => ({ fills: i.getBorders().strokePaints, style: i.style }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -78,15 +87,42 @@ export class StrokeFillContextMgr extends StyleCtx {
 
         const origin = represent.getBorders().strokePaints;
         const replace: FillCatch[] = [];
-        for (let i = origin.length - 1; i > -1; i--) replace.push({fill: origin[i]});
+        for (let i = origin.length - 1; i > -1; i--) replace.push({ fill: origin[i] });
         this.fillCtx.fills = replace;
+    }
+
+    private updateStroke() {
+        const represent = this.selected[0];
+        this.fillCtx.strokeMask = represent.style.bordersMask;
+        if (this.fillCtx.strokeMask) {
+            const mask = this.context.data.stylesMgr.getSync(this.fillCtx.strokeMask) as BorderMask;
+            this.fillCtx.strokeMaskInfo = {
+                name: mask.name,
+                desc: mask.description
+            }
+        } else {
+            this.fillCtx.strokeMaskInfo = undefined;
+        }
+        let origin = represent.getBorders();
+        let index = 0;
+        while (!origin.strokePaints && index < this.selected.length) {
+            origin = this.selected[index].getBorders();
+            index++;
+        }
+
+        const replace: BorderData = {
+            position: origin.position,
+            cornerType: origin.cornerType,
+            borderStyle: origin.borderStyle,
+            sideSetting: origin.sideSetting
+        }
     }
 
     private getIndexByFill(fill: Fill) {
         return (fill.parent as unknown as Fill[])?.findIndex(i => i === fill) ?? -1;
     }
 
-    update() {        
+    update() {
         this.getSelected();
         this.modifyMixedStatus();
         this.updateFills();
@@ -117,6 +153,10 @@ export class StrokeFillContextMgr extends StyleCtx {
     remove(fill: Fill) {
         const actions = get_actions_border_delete(this.selected, this.getIndexByFill(fill));
         this.editor.shapesDeleteBorder(actions);
+    }
+
+    removeAll() {
+        this.editor.shapesDeleteAllBorder(this.selected);
     }
 
     modifyVisible(fill: Fill) {
@@ -168,7 +208,7 @@ export class StrokeFillContextMgr extends StyleCtx {
         const id = this.selected[0].style.borders.fillsMask;
         this.editor.shapesDelStyleBorder(get_actions_fill_mask(this.selected, id));
     }
-    
+
     createStyleLib(name: string, desc: string) {
         const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
         const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);
