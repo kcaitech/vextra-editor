@@ -1,115 +1,84 @@
-import { FillContext, IFillModifier } from "@/components/common/ColorPicker/Editor/basic";
+import { SelectionCtx } from "@/components/common/ColorPicker/Editor/basic";
 import { Context } from "@/context";
-import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
-import { Fill, FillType } from "@kcdesign/data";
+import { IColorPicker, IGradientModifier, IPatternModifier } from "@/components/common/ColorPicker/Editor/basic/icolorpicker";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
+import { FillType, GradientType } from "@kcdesign/data";
 
-export class FilterModifier {
-    move: (ev: MouseEvent) => any;
-    up: (ev: MouseEvent) => any;
-    blur: () => any;
-
-    constructor(private modifier: FillModifier) {
-        this.type = 'exposure';
-        this.dragging = false;
-
-        this.move = this._move.bind(this);
-        this.up = this._up.bind(this);
-        this.blur = this._blur.bind(this);
-    }
-
-    private type: string;
-    private dragging: boolean;
-
-    down(event: MouseEvent, type: string) {
-        if (event.button) {
-            event.stopPropagation();
-            this.type = type;
-            document.addEventListener('mousemove', this.move);
-            document.addEventListener('mouseup', this.up);
-            window.addEventListener('blur', this.blur);
-        }
-    }
-
-    private _move(event: MouseEvent) {
-    }
-
-    private _up() {
-        this.shut();
-    }
-
-    private _blur() {
-        this.shut();
-    }
-
-    private shut() {
-        this.dragging = false;
-        document.removeEventListener('mousemove', this.move);
-        document.removeEventListener('mouseup', this.up);
-        window.removeEventListener('blur', this.blur);
-    }
-}
-
-export class FillModifier extends IFillModifier {
-    constructor(protected context: Context, private ctx: FillContext) {
+export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGradientModifier, IPatternModifier {
+    constructor(public context: Context) {
         super(context);
     }
 
-    update(raw: FillCatch | Fill) {
-        const fill = (raw as FillCatch).fill ?? raw;
-        let type: string = fill.fillType;
-        this.ctx.RGBAs = [];
-        if (type === FillType.Gradient) {
-            type = fill.gradient!.gradientType;
-            fill.gradient!.stops.forEach(s => {
-                this.ctx.RGBAs.push({
-                    R: s.color.red,
-                    G: s.color.green,
-                    B: s.color.blue,
-                    A: s.color.alpha,
-                    position: s.position
-                });
-            });
-        } else if (type === FillType.Pattern) {
-
-        } else {
-            this.ctx.RGBAs.push({
-                R: fill.color.red,
-                G: fill.color.green,
-                B: fill.color.blue,
-                A: fill.color.alpha,
-                position: 1
-            });
-        }
-        this.ctx.type = type;
+    setColor(rgbaCatch: RGBACatch): void {
+        console.log('--铁铁，哈哈哈哈哈！！！--', rgbaCatch);
     }
 
-    modifyRGBA() {
-        const views = this.flat;
+    createStop(position: number): void {
     }
 
-    modifyFillType() {
-        const views = this.flat;
+    dragBegin(): void {
     }
 
-    createStop(position: number) {
-        const views = this.flat;
+    dragEnd(): void {
     }
 
-    removeStop() {
-        const views = this.flat;
+    dragFromBegin(): void {
     }
 
-    reverseStops() {
-        const views = this.flat;
+    dragFromEnd(): void {
     }
 
-    rotateStops() {
-        const views = this.flat;
+    dragStopBegin(): void {
     }
 
-    modifyObjectFit() {
+    dragStopEnd(): void {
     }
 
-    rotateImage() {
+    dragToBegin(): void {
+    }
+
+    dragToEnd(): void {
+    }
+
+    dragging(rgbaCatch: RGBACatch): void {
+    }
+
+    draggingFrom(): void {
+    }
+
+    draggingStop(index: number, rgbaCatch: RGBACatch): void {
+    }
+
+    draggingTo(): void {
+    }
+
+    filterDragBegin(): void {
+    }
+
+    filterDragEnd(): void {
+    }
+
+    filterDragging(type: string, val: number): void {
+    }
+
+    modifyFillType(type: FillType | GradientType): void {
+    }
+
+    modifyObjectFit(type: string): void {
+    }
+
+    modifyRef(): void {
+    }
+
+    removeStop(index: number): void {
+    }
+
+    reverseStops(): void {
+    }
+
+    rotateImg(): void {
+    }
+
+    rotateStops(): void {
     }
 }

@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { DragKit } from "@/components/common/draggable";
 import { verifiedVal } from "@/components/common/ColorPicker/utils";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -13,6 +14,10 @@ const MIN_LEFT = -6;
 const MAX_LEFT = WIDTH - DOT_SIZE / 2;
 const MIN_TOP = -6;
 const MAX_TOP = HEIGHT - DOT_SIZE / 2;
+
+const emits = defineEmits<{
+    (e:"change", stop: RGBACatch): void;
+}>()
 
 const left = ref<number>(-6);
 const top = ref<number>(-6);

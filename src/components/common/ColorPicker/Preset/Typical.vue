@@ -1,13 +1,23 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Color } from "../../../../../../kcdesign-data";
+import { Color } from "@kcdesign/data";
 import { typical } from "@/components/common/ColorPicker/Preset/typical";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
-const emits = defineEmits(["change"]);
+const emits = defineEmits<{
+    (e: "change", stop: RGBACatch): void;
+}>();
 const typicalColor = ref<Color[]>(typical);
 
 function setColor(color: Color) {
-    emits("change", color);
+    const cc: RGBACatch = {
+        R: color.red,
+        G: color.green,
+        B: color.blue,
+        A: color.alpha,
+        position: 1
+    }
+    emits("change", cc);
 }
 </script>
 
@@ -27,11 +37,12 @@ function setColor(color: Color) {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 6px;
+    padding: 0 12px;
     box-sizing: border-box;
+    row-gap: 6px;
+    column-gap: 6px;
 
     > .block {
-        margin: 0 3px 6px 3px;
         width: 16px;
         height: 16px;
         border-radius: 3px;

@@ -3,16 +3,17 @@ import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorline
 import ColorModels from "@/components/common/ColorPicker/RGBAModel/Models/ColorModels.vue";
 import Hue from "@/components/common/ColorPicker/RGBAModel/Hue.vue";
 import Saturation from "@/components/common/ColorPicker/RGBAModel/Saturation.vue";
+import Typical from "@/components/common/ColorPicker/Preset/Typical.vue";
 
 const props = defineProps<{ stop: RGBACatch }>();
-const emits = defineEmits(["change"]);
 
 </script>
 
 <template>
     <Saturation/>
-    <Hue :stop="stop" @change="emits('change')"/>
-    <ColorModels :stop="stop" @change="emits('change')"/>
+    <Hue :stop="stop"/>
+    <ColorModels :stop="stop"/>
+    <Typical v-bind="$attrs"/>
 </template>
 
 <style scoped lang="scss">

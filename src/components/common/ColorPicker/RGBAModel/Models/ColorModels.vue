@@ -58,7 +58,7 @@ function colorChange(rgba: RGBACatch) {
 .models-container {
     width: 100%;
     height: fit-content;
-    padding: 12px;
+    padding: 0 12px;
     box-sizing: border-box;
     display: flex;
     gap: 8px;

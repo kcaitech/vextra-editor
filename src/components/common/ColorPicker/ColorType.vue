@@ -55,7 +55,7 @@ const emits = defineEmits<Emits>();
     outline: none;
     box-sizing: border-box;
     padding: 2px;
-    margin: 10px 12px;
+    margin: 0 12px;
 
     .item {
         flex: 1;

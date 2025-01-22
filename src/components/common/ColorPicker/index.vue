@@ -833,7 +833,6 @@ function enter() {
 }
 
 function showPanel() {
-    console.log('--show-panel--');
     picker_visible.value = true;
     // const menu = props.context.menu;
     // const exist = menu.isColorPickerMount;

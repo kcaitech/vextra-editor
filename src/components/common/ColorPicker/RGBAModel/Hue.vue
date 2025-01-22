@@ -84,11 +84,11 @@ function downAlphaSlider(event: MouseEvent) {
 <style scoped lang="scss">
 .controller {
     width: 100%;
-    height: 46px;
+    height: 32px;
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 8px 12px;
+    padding: 0 12px;
     box-sizing: border-box;
     justify-content: space-around;
 

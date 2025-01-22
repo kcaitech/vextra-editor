@@ -10,13 +10,9 @@ export type PatternFilter = {
     hue: number;
 }
 
-export type PatternContext = {
+export type PatternCatch = {
     objectFit: ImageScaleMode;
     media: string;
     filter: PatternFilter;
-}
-
-export class PatternLinearEditor {
-    constructor() {
-    }
+    transform: string;
 }

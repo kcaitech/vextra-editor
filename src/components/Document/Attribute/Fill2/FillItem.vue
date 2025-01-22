@@ -12,6 +12,8 @@ import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
+import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/fillmanager";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
 /**
  * 用于展示和修改一条填充的属性
@@ -27,6 +29,8 @@ const alpha = ref<string>(props.data.fill.color.alpha * 100 + '%');
 const colors = ref<Fill[]>([props.data.fill]);
 const innerText = ref<string>('');
 const compo = ref<any>();
+
+const rgba = ref<RGBACatch>({R: 255, G: 0, B: 0, A: 1, position: 1});
 
 const styleReplace = {
     flex: 1,
@@ -71,6 +75,8 @@ function showColorPanel(event: MouseEvent) {
     }
 }
 
+const colorPickerEditor = new ColorPickerEditor(props.context);
+
 function assemble() {
     switch (props.data.fill.fillType) {
         case FillType.Gradient:
@@ -107,7 +113,8 @@ onUnmounted(watch(() => props.data, () => {
         <div class="delete" @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon"/>
         </div>
-        <ColorPicker v-if="colorPanelStatus.visible" @close="() => colorPanelStatusMgr.close()"/>
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="colorPickerEditor" :type="FillType.SolidColor"
+                     :color="rgba" @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>
 <style scoped lang="scss">
