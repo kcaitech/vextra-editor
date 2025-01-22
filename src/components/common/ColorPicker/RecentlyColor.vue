@@ -1,0 +1,66 @@
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { Color } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
+import { key_storage, parseColorFormStorage } from "@/components/common/ColorPicker/utils";
+import ColorBlock from "@/components/common/ColorBlock/Index.vue"
+
+const emits = defineEmits(["change"])
+
+const {t} = useI18n();
+const recent = ref<Color[]>([]);
+
+function init_recent() {
+    let r = localStorage.getItem(key_storage);
+    r = JSON.parse(r || '[]');
+    if (!r || !r.length) {
+        return;
+    }
+    recent.value = [];
+    for (let i = 0; i < r.length; i++) {
+        recent.value.push(parseColorFormStorage(r[i]));
+    }
+}
+
+function modify(c: Color) {
+    emits('change', c);
+}
+
+onMounted(init_recent)
+</script>
+
+<template>
+    <div v-if="recent.length" class="recently-container">
+        <div class="header">{{ t('color.recently') }}</div>
+        <div class="typical-container">
+            <ColorBlock v-for="(c, idx) in recent" :key="idx" :colors="[c as Color]" @click="() => modify(c as Color)"/>
+        </div>
+    </div>
+</template>
+
+<style scoped lang="scss">
+.recently-container {
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+    border-top: 1px solid #EBEBEB;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .header {
+        width: 48px;
+        height: 14px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 14px;
+        color: #000000;
+    }
+
+    .typical-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+</style>

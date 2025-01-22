@@ -45,7 +45,7 @@ import {
     stops_generator,
     hexToX, RGB2SB,
 } from './utils';
-import { typical, model2label } from './typical';
+import { typical, model2label } from './Preset/typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 import { Menu } from "@/context/menu";

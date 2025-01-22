@@ -47,8 +47,6 @@ const emits = defineEmits<Emits>();
 </template>
 <style scoped lang="scss">
 .color-type-wrapper {
-    width: 100%;
-    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -56,7 +54,8 @@ const emits = defineEmits<Emits>();
     background-color: #F5F5F5;
     outline: none;
     box-sizing: border-box;
-    padding: 0 2px;
+    padding: 2px;
+    margin: 10px 12px;
 
     .item {
         flex: 1;

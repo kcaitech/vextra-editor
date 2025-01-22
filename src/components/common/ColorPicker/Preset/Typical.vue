@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Color } from "@kcdesign/data";
-import { typical } from "@/components/common/ColorPicker/typical";
+import { Color } from "../../../../../../kcdesign-data";
+import { typical } from "@/components/common/ColorPicker/Preset/typical";
 
+const emits = defineEmits(["change"]);
 const typicalColor = ref<Color[]>(typical);
 
 function setColor(color: Color) {
+    emits("change", color);
 }
 </script>
 

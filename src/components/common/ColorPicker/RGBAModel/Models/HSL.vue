@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { HSB2RGB, RGB2HSB, verifiedVal } from "@/components/common/ColorPicker/utils";
+import {  HSL2RGB, RGB2HSL, verifiedVal } from "@/components/common/ColorPicker/utils";
 import { onUnmounted, ref, watchEffect } from "vue";
-import { Color } from "@kcdesign/data";
+import { Color } from "../../../../../../../kcdesign-data";
 
 const props = defineProps<{ stop: RGBACatch }>();
 const emits = defineEmits(["change"]);
-const H = ref<number>(100);
+const H = ref<number>(360);
 const S = ref<number>(0);
-const B = ref<number>(0);
+const L = ref<number>(0);
 
 function update() {
-    const hsb = RGB2HSB({red: props.stop.R, green: props.stop.R, blue: props.stop.R} as unknown as Color);
-    H.value = hsb.h;
-    S.value = hsb.s * 100;
-    B.value = hsb.b * 100;
+    const hsl = RGB2HSL({red: props.stop.R, green: props.stop.R, blue: props.stop.R} as unknown as Color);
+    H.value = hsl.h;
+    S.value = hsl.s * 100;
+    L.value = hsl.l * 100;
 }
 
 function focus(event: Event) {
@@ -25,7 +25,7 @@ function focus(event: Event) {
 function changeH(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = verifiedVal(parseInt(target.value), 0, 360);
-    const rgb = HSB2RGB(value, S.value, B.value);
+    const rgb = HSL2RGB({h: value, s: S.value, l: L.value});
     emits('change', Object.assign({...props.stop}, {R: rgb.R, G: rgb.G, B: rgb.B}));
     target.blur();
 }
@@ -33,27 +33,28 @@ function changeH(event: Event) {
 function changeS(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = verifiedVal(parseInt(target.value), 0, 100);
-    const rgb = HSB2RGB(H.value, value, B.value);
+    const rgb = HSL2RGB({h: H.value, s: value, l: L.value});
     emits('change', Object.assign({...props.stop}, {R: rgb.R, G: rgb.G, B: rgb.B}));
     target.blur();
 }
 
-function changeB(event: Event) {
+function changeL(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = verifiedVal(parseInt(target.value), 0, 100);
-    const rgb = HSB2RGB(H.value, S.value, value);
+    const rgb = HSL2RGB({h: H.value, s: S.value, l: value});
     emits('change', Object.assign({...props.stop}, {R: rgb.R, G: rgb.G, B: rgb.B}));
     target.blur();
 }
 
 onUnmounted(watchEffect(update));
+
 </script>
 
 <template>
     <div class="inputs">
         <input :value="H" @focus="focus" @change="changeH"/>
         <input :value="S" @focus="focus" @change="changeS"/>
-        <input :value="B" @focus="focus" @change="changeB"/>
+        <input :value="L" @focus="focus" @change="changeL"/>
     </div>
 </template>
 

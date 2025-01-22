@@ -3,12 +3,13 @@ import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue
 import { genOptions } from "@/utils/common";
 import { computed, ref } from "vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import Hex from "@/components/common/ColorPicker/Models/Hex.vue";
-import RGB from "@/components/common/ColorPicker/Models/RGB.vue";
-import HSB from "@/components/common/ColorPicker/Models/HSB.vue";
-import HSL from "@/components/common/ColorPicker/Models/HSL.vue";
+import Hex from "@/components/common/ColorPicker/RGBAModel/Models/Hex.vue";
+import RGB from "@/components/common/ColorPicker/RGBAModel/Models/RGB.vue";
+import HSB from "@/components/common/ColorPicker/RGBAModel/Models/HSB.vue";
+import HSL from "@/components/common/ColorPicker/RGBAModel/Models/HSL.vue";
 
 defineProps<{ stop: RGBACatch }>();
+const emits = defineEmits(["change"]);
 
 const modelOptions: SelectSource[] = genOptions([['Hex', 'Hex'], ['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const model = ref<SelectItem>({value: 'Hex', content: 'Hex'});
@@ -38,7 +39,7 @@ function focus(event: Event) {
 }
 
 function colorChange(rgba: RGBACatch) {
-    console.log('--change--', rgba);
+    emits("change", rgba);
 }
 </script>
 <template>
