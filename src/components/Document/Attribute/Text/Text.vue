@@ -9,6 +9,7 @@ import {
     AsyncTextAttrEditor,
     AttrGetter,
     BasicArray,
+    Fill,
     FillType,
     Gradient,
     GradientType,
@@ -38,6 +39,7 @@ import { sortValue } from '../BaseAttr/oval';
 import TextStyle from '@/components/Document/Attribute/StyleLib/TextStyle.vue';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { v4 } from 'uuid';
+import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 
 interface Props {
     context: Context
@@ -88,7 +90,7 @@ const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
-
+const fills=ref<Fill[]>([])
 const textLibStatus = reactive<ElementStatus>({ id: '#text-lib-panel', visible: false });
 const textPanelStatusMgr = new ElementManager(
     props.context,
@@ -611,6 +613,8 @@ const _textFormat = () => {
         if (format.gradient === 'unlikeness') gradient.value = undefined;
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
+
+    fills.value=[new Fill(new BasicArray<number>,v4(),true,FillType.SolidColor,highlight.value!)]
     reflush.value++;
 }
 const textFormat = throttle(_textFormat, 0, { leading: true })
@@ -1365,6 +1369,7 @@ import text_autowidth_icon from '@/assets/icons/svg/text-autowidth.svg';
 import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
 import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
 import style_icon from '@/assets/icons/svg/styles.svg';
+import delete_icon from "@/assets/icons/svg/delete.svg";
 </script>
 
 <template>
@@ -1562,10 +1567,12 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px"
                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                 </div>
-                <div class="color">
+                <div>
+                    <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
+                     <!-- <ColorBlock :colors="(fills as Fill[])"/> -->
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
                         :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
                         @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput"
@@ -1577,8 +1584,10 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                         @keydown="e => keydownAlpha(e, highlight!.alpha, 'highlight')" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
-                    <SvgIcon class="svg" :icon="delete" />
+                    <SvgIcon class="svg" :icon="delete_icon" />
                 </div>
+                </div>
+           
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">

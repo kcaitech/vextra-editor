@@ -1,14 +1,14 @@
 <template>
     <div id="blur-lib-panel" class="blur-lib-panel">
-        <PopoverHeader title="模糊样式" @create="showCreatePanel" @close="emits('close')"/>
+        <PopoverHeader :title="t('stylelib.blurs')" @create="showCreatePanel" @close="emits('close')"/>
         <div style="padding: 8px 12px; box-sizing: border-box;" @wheel.stop>
             <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword"/>
             <el-scrollbar>
                 <div class="content">
                     <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager"
                                 :item="BlurMaskPanelItem" :data="sheet"/>
-                    <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
-                    <div v-if="!sheets?.length && !keyword" class="data-null">暂无模糊样式</div>
+                    <div v-if="!sheets?.length && keyword" class="search-null">{{t('stylelib.null_search')}}</div>
+                    <div v-if="!sheets?.length && !keyword" class="data-null">{{t('stylelib.null_data')}}</div>
                 </div>
             </el-scrollbar>
         </div>
@@ -29,6 +29,7 @@ import BlurMaskPanelItem from "@/components/Document/Attribute/Blur/Lib/BlurMask
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
     context: Context;
@@ -39,6 +40,7 @@ const emits = defineEmits<{
     (e: 'close'): void
 }>()
 
+const {t}=useI18n()
 const keyword = ref<string>('')
 const libs = ref<{ label: string, value: string }[]>([]);
 const currentLibs = ref<string>('all');

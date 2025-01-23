@@ -21,6 +21,8 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import { get_actions_add_mask } from '@/utils/shape_style';
 import unbind_icon from '@/assets/icons/svg/unbind.svg';
 import delete_icon from '@/assets/icons/svg/delete.svg';
+import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
+import TypeHeader from '../TypeHeader.vue';
 
 const { t } = useI18n();
 
@@ -40,6 +42,8 @@ const radius = reactive<{ lt: number | string, rt: number | string, rb: number |
     rb: 0,
     lb: 0
 });
+
+const new_radius = ref(new Map())
 const mixed = props.context.workspace.t('attr.mixed');
 const keyupdate = ref<boolean>(false)
 const isMask = ref<boolean>(false)
@@ -170,6 +174,7 @@ function reset_radius_value() {
 
 function get_radius_for_shape(shape: ShapeView) {
     if (shape.radiusType === RadiusType.Rect) {
+
         if (shape instanceof PathShapeView) {
             const s = shape as PathShapeView;
 
@@ -228,27 +233,35 @@ function get_all_values(shapes: ShapeView[]) {
     const first_shape = shapes[0];
     if (!first_shape) return;
     const f_r = get_rect_shape_all_value(first_shape);
+
     radius.lt = fixedZero(f_r.lt);
     radius.rt = fixedZero(f_r.rt);
     radius.rb = fixedZero(f_r.rb);
     radius.lb = fixedZero(f_r.lb);
 
+    new_radius.value.set('lt', radius.lt)
+    new_radius.value.set('rt', radius.rt)
+    new_radius.value.set('lb', radius.lb)
+    new_radius.value.set('rb', radius.rb)
+
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
         const rs = get_rect_shape_all_value(shape);
-        if (rs.lt !== radius.lt) {
+
+        if (Number(rs.lt) !== Number(radius.lt)) {
             radius.lt = mixed;
         }
-        if (rs.rt !== radius.rt) {
+        if (Number(rs.rt) !== Number(radius.rt)) {
             radius.rt = mixed;
         }
-        if (rs.rb !== radius.rb) {
+        if (Number(rs.rb) !== Number(radius.rb)) {
             radius.rb = mixed;
         }
-        if (rs.lb !== radius.lb) {
+        if (Number(rs.lb) !== Number(radius.lb)) {
             radius.lb = mixed;
         }
     }
+
 }
 
 function get_rect_shape_all_value(shape: ShapeView) {
@@ -289,7 +302,8 @@ function get_rect_shape_all_value(shape: ShapeView) {
 
 function modify_radius_value() {
     isMask.value = false;
-    radiusMask.value=undefined;
+    radiusMask.value = undefined;
+    new_radius.value.clear()
     reset_radius_value();
 
     const selected = noGroupShapesFrom(props.context.selection.selectedShapes);
@@ -316,6 +330,7 @@ function modify_radius_value() {
 
     if (typeof init === 'string') {
         radius.lt = init;
+        new_radius.value.set('lt', radius.lt)
         return;
     }
 
@@ -323,11 +338,13 @@ function modify_radius_value() {
         const __r = get_radius_for_shape(selected[i]);
         if (__r !== init) {
             radius.lt = mixed;
+            new_radius.value.set('lt', radius.lt)
             return;
         }
     }
 
     radius.lt = fixedZero(init);
+    new_radius.value.set('lt', radius.lt)
 }
 
 const watchedShapes = new Map();
@@ -446,7 +463,7 @@ function draggingRB(e: MouseEvent) {
     lockMouseHandler.executeRadius(values);
 }
 
-function draggingLB(e: MouseEvent) {
+function draggingLB(e: MouseEvent, type: string) {
     updatePosition(e.movementX, e.movementY);
 
     if (!lockMouseHandler) {
@@ -457,14 +474,33 @@ function draggingLB(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    if (isNaN(Number(radius.lb))) {
+    if (isNaN(Number(new_radius.value.get(type)))) {
         return;
     }
+    let values = [-1, -1, -1, -1];
 
-    const values = [-1, -1, -1, Number(radius.lb)];
-    values[3] += e.movementX;
+    if (type === 'lt') {
+        values = [Number(new_radius.value.get(type)), -1, -1, -1]
+        values[0] += e.movementX;
+        values[0] = values[0] < 0 ? 0 : values[0]
+    }
 
-    values[3] = values[3] < 0 ? 0 : values[3]
+    if (type === 'rt') {
+        values = [-1, Number(new_radius.value.get(type)), -1, -1]
+        values[1] += e.movementX;
+        values[1] = values[1] < 0 ? 0 : values[1]
+    }
+    if (type === 'rb') {
+        values = [-1, -1, Number(new_radius.value.get(type)), -1]
+        values[2] += e.movementX;
+        values[2] = values[2] < 0 ? 0 : values[2]
+    }
+
+    if (type === 'lb') {
+        values = [-1, -1, -1, Number(new_radius.value.get(type))]
+        values[3] += e.movementX;
+        values[3] = values[3] < 0 ? 0 : values[3]
+    }
 
     lockMouseHandler.executeRadius(values);
 }
@@ -491,7 +527,7 @@ const showRadiusPanel = (event: MouseEvent) => {
             e && radiusPanelStatusMgr.showBy(e, { once: { offsetLeft: -264 } });
             break;
         }
-        if (e.classList.contains('radius-left')) {
+        if (e.classList.contains('mask-port-wrapper')) {
             e && radiusPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
             break;
         }
@@ -505,7 +541,7 @@ const delRadiusMask = () => {
     const shapes = noGroupShapesFrom(selected);
     const actions = get_actions_add_mask(shapes, undefined)
     const editor = props.context.editor4Page(page);
-    editor.shapesModifyRadius(shapes,[...radiusMask.value?.radius!]);
+    editor.shapesModifyRadius(shapes, [...radiusMask.value?.radius!]);
 }
 
 const delStyleRadius = () => {
@@ -535,15 +571,23 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import white_for_radius_icon from "@/assets/icons/svg/white-for-radius.svg";
 import more_for_radius_icon from "@/assets/icons/svg/more-for-radius.svg";
 import style_icon from "@/assets/icons/svg/styles.svg"
+
 </script>
 <template>
-    <div class="header">
-        <div class="title">{{t('stylelib.round')}}</div>
+    <!-- <div class="header">
+        <div class="title">{{ t('stylelib.round') }}</div>
         <div v-if="!isMask" class="styles" @click="showRadiusPanel($event)">
             <SvgIcon :icon="style_icon"></SvgIcon>
         </div>
-    </div>
-    <div v-if="isMask" class="radius-mask">
+    </div> -->
+    <TypeHeader :title="t('stylelib.round')" :active="true">
+        <template #tool>
+            <div v-if="!isMask" class="clover" @click="showRadiusPanel($event)">
+                <SvgIcon :icon="style_icon" />
+            </div>
+        </template>
+    </TypeHeader>
+    <!-- <div v-if="isMask" class="radius-mask">
         <div class="info">
             <div class="radius-left" @click="showRadiusPanel($event)">
                 <div class="effect"></div>
@@ -555,8 +599,14 @@ import style_icon from "@/assets/icons/svg/styles.svg"
         </div>
         <div class="delete-style">
         </div>
-    </div>
-    <div v-if="!isMask" class="tr">
+    </div> -->
+    <MaskPort :delete="false" v-if="isMask" @unbind="delRadiusMask">
+        <div class="desc" @click="showRadiusPanel($event)">
+            <div class="effect" />
+            <div>{{ radiusMask!.name }}</div>
+        </div>
+    </MaskPort>
+    <!-- <div v-if="!isMask" class="tr">
         <MossInput2 :icon="radius_icon" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
             @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT" @dragend="dragend"
             @keydown="keydownRadius($event, 'lt')" @keyup="checkKeyup">
@@ -579,8 +629,26 @@ import style_icon from "@/assets/icons/svg/styles.svg"
             :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart" @dragging="draggingRB"
             @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"></MossInput2>
         <div style="width: 32px;height: 32px;"></div>
+    </div> -->
+    <div class="radius-container">
+        <div class="radius-set">
+            <MossInput2 :class="{ 'r-90': item[0] === 'rt', 'r-270': item[0] === 'lb', 'r-180': item[0] === 'rb' }"
+                v-for="item in new_radius" :icon="radius_icon" :draggable="item[1] !== mixed" :value="item[1]"
+                :disabled="disabled" @change="value => change(value, item[0])" @dragstart="dragstart"
+                @dragging="draggingLB($event, item[0])" @dragend="dragend" @keydown="keydownRadius($event, item[0])"
+                @keyup="checkKeyup">
+            </MossInput2>
+        </div>
+        <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
+            <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
+                <SvgIcon :icon="rect ? white_for_radius_icon : more_for_radius_icon" :class="{ 'active': rect }" />
+            </div>
+        </Tooltip>
     </div>
-    <RadiusStyle v-if="radiusLibStatus.visible" :context="props.context" :shapes="props.shapes" @close="closePanel" :id="radiusMask?.id">
+
+
+    <RadiusStyle v-if="radiusLibStatus.visible" :context="props.context" :shapes="props.shapes" @close="closePanel"
+        :id="radiusMask?.id">
     </RadiusStyle>
     <teleport to="body">
         <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
@@ -588,6 +656,98 @@ import style_icon from "@/assets/icons/svg/styles.svg"
     </teleport>
 </template>
 <style scoped lang="scss">
+.radius-container {
+    display: flex;
+    justify-content: space-between;
+
+    .radius-set {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+
+        .r-90 {
+            :deep(img) {
+                transform: rotate(90deg);
+            }
+        }
+
+        .r-180 {
+            :deep(img) {
+                transform: rotate(180deg);
+            }
+        }
+
+        .r-270 {
+            :deep(img) {
+                transform: rotate(270deg);
+            }
+        }
+    }
+
+    .more-for-radius {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        box-sizing: border-box;
+        border: 1px solid #F0F0F0;
+        padding: 9px;
+
+        >img {
+            transition: 0.3s;
+            color: #808080;
+            width: 13px;
+            height: 13px;
+        }
+
+        >img.active {
+            color: #FFFFFF;
+        }
+    }
+
+    .more-for-radius:hover {
+        background: #F4F5F5;
+    }
+
+    .more-for-radius.active {
+        background-color: var(--active-color);
+        border: 1px solid var(--active-color);
+    }
+}
+
+
+
+.desc {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+
+    .effect {
+        width: 16px;
+        height: 16px;
+        background-color: #fff;
+        border: 1px solid #000000e5;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .span {
+        display: inline-block;
+        flex: 1;
+        width: 32px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
 .radius-mask {
     display: flex;
     height: 32px;

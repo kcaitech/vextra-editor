@@ -78,6 +78,7 @@ function focus() {
 
 function keydown(event: KeyboardEvent) {
     if (event.key === "Escape") return inputEl.value?.blur();
+    if (event.key === "Enter") return inputEl.value?.blur();
     emits("keydown", event);
 }
 
@@ -86,7 +87,7 @@ function keydown(event: KeyboardEvent) {
 <template>
     <div :class="{ 'moss-input': true, disabled, active }" @click.stop="focus">
         <SvgIcon :icon="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down" />
-        <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown" />
+        <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown"/>
     </div>
 </template>
 
