@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView, BorderPosition, ShapeType, SideType, TableCellView, PathShapeView, StrokePaint, CornerType, BorderStyle, BorderSideSetting, BorderMaskType, BorderMask, BasicArray } from '@kcdesign/data';
+import { ShapeView, BorderPosition, ShapeType, SideType, TableCellView, PathShapeView, CornerType, BorderStyle, BorderSideSetting, BorderMaskType, BorderMask, BasicArray, Fill } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
@@ -61,7 +61,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 
 interface StrokePaintItem {
     id: number
-    strokePaint: StrokePaint
+    fill: Fill
 }
 interface BorderData {
     position: BorderPosition | string

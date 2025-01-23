@@ -33,15 +33,15 @@ function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     }
 }
 
-function stringifyFilter(filter: PaintFilter) {
+export function stringifyFilter(filter: PaintFilter) {
     return '' + filter.hue + filter.tint + filter.shadow + filter.saturation + filter.contrast + filter.exposure + filter.temperature;
 }
 
-function stringifyPatternTransform(t: PatternTransform) {
+export function stringifyPatternTransform(t: PatternTransform) {
     return '' + t.m00 + t.m01 + t.m02 + t.m10 + t.m11 + t.m12;
 }
 
-function stringifyGradient(g: Gradient) {
+export function stringifyGradient(g: Gradient) {
     let str = '';
     str += g.gradientType + g.from.x + g.from.y + g.to.x + g.to.y
         + (g.elipseLength ?? 'null')
@@ -175,7 +175,7 @@ export class FillsContextMgr extends StyleCtx {
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
         const index = this.getIndexByFill(fill);
         const selected = this.selected;
-
+        
         this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
 
         this.hiddenCtrl(event);

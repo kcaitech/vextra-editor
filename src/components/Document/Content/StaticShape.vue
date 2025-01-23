@@ -11,7 +11,6 @@ import {
     Style,
     Shadow, Page, ShapeType, TransformRaw, XYsBounding,
     BorderSideSetting,
-    StrokePaint,
     BorderPosition,
     BorderStyle,
     CornerType,
@@ -75,7 +74,7 @@ function mount() {
     const data = props.shape instanceof ShapeView ? adapt2Shape(props.shape) : props.shape;
     const fills = new BasicArray<Fill>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
+    const strokePaints = new BasicArray<Fill>();
     const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
     const page = new Page(

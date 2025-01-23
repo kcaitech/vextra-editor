@@ -15,11 +15,11 @@ import {
     PathShapeView,
     TableView,
     LinearApi,
-    StrokePaint,
     BorderMask,
     Fill,
     FillMask,
-    Gradient
+    Gradient,
+    exportFill
 } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
@@ -70,10 +70,6 @@ interface FillItem {
     fill: Fill
 }
 
-interface StrokePaintItem {
-    id: number
-    strokePaint: StrokePaint
-}
 interface BorderData {
     position: BorderPosition | string
     cornerType: CornerType | string
@@ -97,7 +93,7 @@ const initBorder = {
     sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
 }
 const borderData = ref<BorderData>({ ...initBorder })
-const data: { strokePaints: StrokePaintItem[] } = reactive({
+const data: { strokePaints: FillItem[] } = reactive({
     strokePaints: [],
 });
 const { strokePaints } = data;
@@ -246,12 +242,7 @@ function updateData() {
                     hasStroke.value = true;
                 } else {
                     strokePaints.push(...stroke_paints.reverse());
-                    strokePaints.forEach((i, index) => {
-                        const { crdtidx, id, isEnabled, fillType, color } = i.strokePaint
-                        const c = new Color(color.alpha, color.red, color.green, color.blue)
-                        const fill = new Fill(crdtidx, id, isEnabled, fillType, c)
-                        fills.push({ id: index, fill: fill })
-                    })
+                    fills.push(...stroke_paints.reverse());
                     if (stroke_paints.length) hasStroke.value = true;
                 }
             }
@@ -276,20 +267,14 @@ function updateData() {
             const libs = shapes[0].style.getStylesMgr()
             fillMask.value = libs?.getSync(id) as FillMask
             fillMask.value.fills.forEach((f) => {
-                const { isEnabled, fillType, color } = f
-                const new_fill = new Fill(new BasicArray<number>, v4(), isEnabled, fillType, color)
-                fill.value.unshift(new_fill)
+                const _fill = exportFill(f);
+                fill.value.unshift(_fill as Fill);
             })
             mask.value = true
 
         } else {
             strokePaints.push(...stroke_paints.reverse());
-            strokePaints.forEach((i, index) => {
-                const { crdtidx, id, isEnabled, fillType, color } = i.strokePaint
-                const c = new Color(color.alpha, color.red, color.green, color.blue)
-                const fill = new Fill(crdtidx, id, isEnabled, fillType, c)
-                fills.push({ id: index, fill: fill })
-            })
+            fills.push(...stroke_paints.reverse());
             if (stroke_paints.length) hasStroke.value = true;
         }
         borderData.value = border;
@@ -299,7 +284,7 @@ function updateData() {
 
 function addBorder() {
     const color = new Color(1, 0, 0, 0);
-    const strokePaint = new StrokePaint(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+    const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -373,7 +358,7 @@ function deleteBorder(idx: number) {
 }
 
 function toggleVisible(idx: number) {
-    const border = strokePaints[idx].strokePaint;
+    const border = strokePaints[idx].fill;
     const isEnabled = !border.isEnabled;
     const _idx = strokePaints.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -414,7 +399,7 @@ function onColorChange(e: Event, idx: number) {
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     const hex = value.match(Reg_HEX);
-    const border = strokePaints[idx].strokePaint;
+    const border = strokePaints[idx].fill;
     if (!hex) {
         message('danger', t('system.illegal_input'));
         if (!colorBorder.value) return;
@@ -429,7 +414,7 @@ function onColorChange(e: Event, idx: number) {
     hidden_selection(props.context);
 }
 
-function onAlphaChange(strokePaint: StrokePaint, idx: number) {
+function onAlphaChange(strokePaint: Fill, idx: number) {
     let alpha: any = alphaValue.value;
     if (!alphaBorder.value) return;
     if (alpha.slice(-1) === '%') {
@@ -441,7 +426,7 @@ function onAlphaChange(strokePaint: StrokePaint, idx: number) {
             alpha = 100;
         }
         alpha = alpha.toFixed(2) / 100
-        const border = strokePaints[idx].strokePaint;
+        const border = strokePaints[idx].fill;
         const { red, green, blue } = border.color
         const color = new Color(alpha, red, green, blue);
         if (strokePaint.fillType === FillType.SolidColor) {
@@ -455,7 +440,7 @@ function onAlphaChange(strokePaint: StrokePaint, idx: number) {
                 alpha = 100
             }
             alpha = Number((Number(alpha)).toFixed(2)) / 100;
-            const border = strokePaints[idx].strokePaint;
+            const border = strokePaints[idx].fill;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
             if (strokePaint.fillType === FillType.SolidColor) {
@@ -470,7 +455,7 @@ function onAlphaChange(strokePaint: StrokePaint, idx: number) {
     hidden_selection(props.context);
 }
 
-function keydownAlpha(event: KeyboardEvent, strokePaint: StrokePaint, idx: number, val: string) {
+function keydownAlpha(event: KeyboardEvent, strokePaint: Fill, idx: number, val: string) {
     let value: any = sortValue(val);
     if (!alphaBorder.value) return;
     if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
@@ -482,7 +467,7 @@ function keydownAlpha(event: KeyboardEvent, strokePaint: StrokePaint, idx: numbe
             value = value / 100 + (event.code === 'ArrowUp' ? 0.01 : -0.01)
             if (isNaN(value)) return;
             value = value <= 0 ? 0 : value <= 1 ? value : 1
-            const border = strokePaints[idx].strokePaint;
+            const border = strokePaints[idx].fill;
             const { red, green, blue } = border.color
             const color = new Color(value, red, green, blue);
             if (strokePaint.fillType === FillType.SolidColor) {
@@ -534,7 +519,7 @@ function setColor(idx: number, color: Color) {
     }
 }
 
-const alpha_message = (idx: number, strokePaint: StrokePaint) => {
+const alpha_message = (idx: number, strokePaint: Fill) => {
     if (!alphaBorder.value) return;
     message('danger', t('system.illegal_input'));
     let alpha = 1;
@@ -641,7 +626,7 @@ const alphaInput = (e: Event) => {
         alphaValue.value = value;
     }
 }
-const filterAlpha = (strokePaint: StrokePaint) => {
+const filterAlpha = (strokePaint: Fill) => {
     let a: number = 100;
     if (strokePaint.fillType === FillType.SolidColor || !isGradient()) {
         a = strokePaint.color.alpha * 100;
@@ -1060,8 +1045,6 @@ function onMouseUp() {
 }
 
 function setThickness(e: Event) {
-
-
     let thickness = Number((e.target as HTMLInputElement).value);
     (e.target as HTMLInputElement).blur();
     if (isNaN(thickness)) return;
@@ -1310,38 +1293,38 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
         <div class="borders-container colors" v-else-if="!mixed && !mask && !mixed_cell && strokePaints.length">
             <div class="border" v-for="(b, idx) in strokePaints" :key="b.id">
                 <div class="top">
-                    <div :class="b.strokePaint.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                        <SvgIcon v-if="b.strokePaint.isEnabled" :icon="select_icon" />
+                    <div :class="b.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                        <SvgIcon v-if="b.fill.isEnabled" :icon="select_icon" />
                     </div>
                     <div class="color">
-                        <ColorPicker :color="b.strokePaint.color" :fillslist="fills" :open="openstyle"
+                        <ColorPicker :color="b.fill.color" :fillslist="fills" :open="openstyle"
                             :styletop="styleTop" :styleleft="styleLeft" :context="props.context"
                             :auto_to_right_line="true"
                             :locat="{ index: strokePaints.length - idx - 1, type: 'borders' }"
-                            :op="b.strokePaint.isEnabled" @change="(c: Color) => getColorFromPicker(c, idx)"
+                            :op="b.fill.isEnabled" @change="(c: Color) => getColorFromPicker(c, idx)"
                             @gradient-reverse="() => gradient_reverse(idx)"
-                            :gradient="isGradient() ? b.strokePaint.gradient : undefined"
-                            :fillType="b.strokePaint.fillType" @gradient-rotate="() => gradient_rotate(idx)"
+                            :gradient="isGradient() ? b.fill.gradient : undefined"
+                            :fillType="b.fill.fillType" @gradient-rotate="() => gradient_rotate(idx)"
                             @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                             @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
                             @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                             @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" @close="initpanel"
                             @addfill="addBorder" />
-                        <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.strokePaint.isEnabled }"
-                            :spellcheck="false" v-if="b.strokePaint.fillType !== FillType.Gradient || !isGradient()"
-                            :value="(toHex(b.strokePaint.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                        <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.fill.isEnabled }"
+                            :spellcheck="false" v-if="b.fill.fillType !== FillType.Gradient || !isGradient()"
+                            :value="(toHex(b.fill.color)).slice(1)" @change="e => onColorChange(e, idx)"
                             @click="colorClick" @blur="is_color_select = false" @focus="selectColor($event)"
                             @input="colorInput($event)" />
-                        <span class="colorBorder" :class="{ showop: !b.strokePaint.isEnabled }"
+                        <span class="colorBorder" :class="{ showop: !b.fill.isEnabled }"
                             style="line-height: 14px;"
-                            v-else-if="b.strokePaint.fillType === FillType.Gradient && b.strokePaint.gradient && isGradient()">{{
-                                t(`color.${b.strokePaint.gradient.gradientType}`)
+                            v-else-if="b.fill.fillType === FillType.Gradient && b.fill.gradient && isGradient()">{{
+                                t(`color.${b.fill.gradient.gradientType}`)
                             }}</span>
-                        <input ref="alphaBorder" :class="{ showop: !b.strokePaint.isEnabled }" class="alphaBorder"
-                            style="text-align: center;" :value="filterAlpha(b.strokePaint) + '%'" @click="alphaClick"
-                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.strokePaint, idx)"
+                        <input ref="alphaBorder" :class="{ showop: !b.fill.isEnabled }" class="alphaBorder"
+                            style="text-align: center;" :value="filterAlpha(b.fill) + '%'" @click="alphaClick"
+                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.fill, idx)"
                             @focus="selectAlpha" @input="alphaInput"
-                            @keydown="(e) => keydownAlpha(e, b.strokePaint, idx, filterAlpha(b.strokePaint))" />
+                            @keydown="(e) => keydownAlpha(e, b.fill, idx, filterAlpha(b.fill))" />
                     </div>
                     <div class="delete" @click="deleteBorder(idx)">
                         <SvgIcon :icon="delete_icon" />
@@ -1660,7 +1643,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg'
 
             >img {
                 cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
-                width: 16px;
+                width: 14px;
                 height: 16px;
             }
 
