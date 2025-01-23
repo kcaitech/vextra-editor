@@ -250,8 +250,6 @@ onUnmounted(() => {
             gap: 8px;
             align-items: center;
 
-            .title {}
-
             .select {
                 flex: 1;
             }
@@ -263,8 +261,6 @@ onUnmounted(() => {
             align-items: center;
             gap: 8px;
             box-sizing: border-box;
-
-            .title {}
 
             input {
                 flex: 1;

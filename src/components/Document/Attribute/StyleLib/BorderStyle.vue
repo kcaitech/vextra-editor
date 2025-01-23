@@ -295,8 +295,6 @@ onUnmounted(() => {
     padding: 0 12px;
     border-bottom: 1px solid #F5F5F5;
 
-    .title {}
-
     .tool {
         display: flex;
         align-items: center;
@@ -499,11 +497,6 @@ onUnmounted(() => {
             overflow: hidden;
             box-sizing: border-box;
         }
-    }
-
-
-    .style-item .styles .name {
-        // color: #c8c8c8;
     }
 
     .style-item .styles .editor {
