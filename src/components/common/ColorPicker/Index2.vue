@@ -1,20 +1,60 @@
 <script setup lang="ts">
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
-import Saturation from "@/components/common/ColorPicker/Saturation.vue";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
+import RecentlyColor from "@/components/common/ColorPicker/RecentlyColor.vue";
+import RGBAModel from "@/components/common/ColorPicker/RGBAModel/Index.vue";
+import ColorType from "@/components/common/ColorPicker/ColorType.vue";
+import { FillType } from "@kcdesign/data";
+import Station from "@/components/common/ColorPicker/Gradient/Station.vue";
+import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
+import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
+import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
+
+const props = defineProps<{
+    editor: ColorPickerEditor;
+
+    type: string;
+    color: RGBACatch;
+
+    gradient?: GradientCatch;
+    pattern?: PatternCatch;
+}>();
 const emits = defineEmits(["close"]);
 
+const editor = props.editor;
+
+function setSolidColor(cc: RGBACatch) {
+    editor.setSolidColor(cc);
+}
+
+function modifyFillType(type: string) {
+    if (type !== props.type) editor.modifyFillType(type);
+}
+
+function dragSolidBegin() {
+    editor.dragSolidBegin();
+}
+
+function solidDragging(cc: RGBACatch) {
+    editor.solidDragging(cc);
+}
+
+function dragSolidEnd() {
+    editor.dragSolidEnd();
+}
 </script>
 
 <template>
     <div id="color-piker-gen-2-panel" :style="{width: WIDTH_CSS}">
         <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
-        <Saturation/>
-<!--        <div style="width: 100%; height: 64px;">-->
-<!--            我爱说点实话，铁铁-->
-<!--        </div>-->
+        <ColorType :options="[FillType.Pattern]" :value="type" @change="modifyFillType"/>
+        <Station v-if="gradient" :gradient="gradient"/>
+        <RGBAModel :stop="color" @change="setSolidColor" @drag-begin="dragSolidBegin"
+                   @dragging="solidDragging" @drag-end="dragSolidEnd"/>
+        <RecentlyColor @change="setSolidColor"/>
     </div>
 </template>
 
@@ -25,5 +65,9 @@ const emits = defineEmits(["close"]);
     background-color: var(--theme-color-anti);
     box-shadow: 0 4px 16px #0000002e;
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: space-between;
 }
 </style>

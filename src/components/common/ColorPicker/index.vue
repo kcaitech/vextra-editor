@@ -45,7 +45,7 @@ import {
     stops_generator,
     hexToX, RGB2SB,
 } from './utils';
-import { typical, model2label } from './typical';
+import { typical, model2label } from './Preset/typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 import { Menu } from "@/context/menu";
@@ -833,7 +833,6 @@ function enter() {
 }
 
 function showPanel() {
-    console.log('--show-panel--');
     picker_visible.value = true;
     // const menu = props.context.menu;
     // const exist = menu.isColorPickerMount;
@@ -1418,7 +1417,6 @@ onUnmounted(() => {
                 <div class="left">
                     <div class="color-type" :class="{ active: custom === 'custom' }" @click="custom = 'custom'">{{
                         t(`attr.fill`) }}</div>
-                    <!-- <svg-icon icon-class="down"></svg-icon> -->
                     <div v-if="fillType && is_gradient_selected() && !props.entrance" class="style" :class="{ active: custom === 'style' }"
                         @click="custom = 'style'">颜色样式</div>
                 </div>

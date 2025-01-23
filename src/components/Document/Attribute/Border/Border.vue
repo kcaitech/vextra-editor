@@ -1084,7 +1084,6 @@ function setThickness(e: Event) {
             editor.setShapesBorderThickness(actions);
         }
     }
-    console.log(thickness);
     reflush_side.value++;
 }
 

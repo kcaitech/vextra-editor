@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { DragEventHandler } from "@/components/common/draggable";
+import { DragKit } from "@/components/common/draggable";
 
 const props = defineProps<{
     type: string;
@@ -39,8 +39,8 @@ let end: number = 0;
 let downX = 0;
 let isDrag = false;
 
-const dragKit = new DragEventHandler(
-    (event) => {
+const dragKit = new DragKit({
+    down: (event: MouseEvent) => {
         if (!rangeEl.value) return;
         downX = event.clientX;
         const box = rangeEl.value.getBoundingClientRect();
@@ -48,18 +48,14 @@ const dragKit = new DragEventHandler(
         end = box.right;
         center = (start + end) / 2;
         emits('down', event);
-    },
-    (event) => {
+    }, move: (event: MouseEvent) => {
         if (isDrag) {
             modify(event);
         } else if (Math.abs(event.clientX - downX) > 4) {
             isDrag = true;
         }
-    },
-    () => {
-        emits('onUp');
     }
-)
+})
 
 function down(e: MouseEvent) {
     dragKit.start(e);
@@ -73,24 +69,14 @@ function downSlider(e: MouseEvent) {
 function modify(e: MouseEvent) {
     let x = e.x;
     if (x > center) {
-        if (x > end) {
-            x = end;
-        }
-
-        if (x - center < 3) {
-            x = center;
-        }
-
+        if (x > end) x = end;
+        if (x - center < 3) x = center;
         valLength.value = x - center;
         valStart.value = center - start;
         position.value = valStart.value + valLength.value;
     } else {
-        if (x < start) {
-            x = start;
-        }
-        if (center - x < 3) {
-            x = center;
-        }
+        if (x < start) x = start;
+        if (center - x < 3) x = center;
         valLength.value = center - x;
         valStart.value = x - start;
         position.value = x - start;
@@ -102,10 +88,10 @@ function modify(e: MouseEvent) {
     <div class="container">
         <div class="desc">{{ type }}</div>
         <div ref="rangeEl" class="range" :style="{ width: MAX_SIDE_LENGTH_CSS }" @mousedown="downSlider">
-            <div class="line" />
-            <div v-if="valLength" class="line-center" />
-            <div v-if="valLength" class="val-line" :style="{ left: `${valStart}px`, width: `${valLength}px` }" />
-            <div :style="{ left: `${position}px` }" :class="{ dot: true, 'fill-dot': valLength }" @mousedown="down" />
+            <div class="line"/>
+            <div v-if="valLength" class="line-center"/>
+            <div v-if="valLength" class="val-line" :style="{ left: `${valStart}px`, width: `${valLength}px` }"/>
+            <div :style="{ left: `${position}px` }" :class="{ dot: true, 'fill-dot': valLength }" @mousedown="down"/>
         </div>
     </div>
 </template>
@@ -118,6 +104,7 @@ function modify(e: MouseEvent) {
     justify-content: space-between;
     gap: 10px;
     position: relative;
+
     .desc {
         color: #3D3D3D;
     }

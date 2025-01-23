@@ -7,18 +7,14 @@ import fill_image_icon from "@/assets/icons/svg/fill-image.svg";
 
 import { FillType, GradientType } from '@kcdesign/data';
 
-type Props = {
+defineProps<{
     value: string;
     options: string[];
-}
+}>();
 
-interface Emits {
+const emits = defineEmits<{
     (e: 'change', type: string): void;
-}
-
-defineProps<Props>();
-const emits = defineEmits<Emits>();
-
+}>();
 </script>
 <template>
     <div class="color-type-wrapper">
@@ -36,7 +32,7 @@ const emits = defineEmits<Emits>();
         </div>
         <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
              :class="{ selected: value === GradientType.Angular }">
-            <div class="angular"></div>
+            <div class="angular"/>
         </div>
         <div v-if="options.includes(FillType.Pattern)" class="item"
              @click.stop="() => { emits('change',  FillType.Pattern) }"
@@ -47,8 +43,6 @@ const emits = defineEmits<Emits>();
 </template>
 <style scoped lang="scss">
 .color-type-wrapper {
-    width: 100%;
-    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -56,7 +50,8 @@ const emits = defineEmits<Emits>();
     background-color: #F5F5F5;
     outline: none;
     box-sizing: border-box;
-    padding: 0 2px;
+    padding: 2px;
+    margin: 0 12px;
 
     .item {
         flex: 1;
