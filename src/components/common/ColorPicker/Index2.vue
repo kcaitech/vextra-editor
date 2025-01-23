@@ -1,27 +1,60 @@
 <script setup lang="ts">
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
-import Saturation from "@/components/common/ColorPicker/Saturation.vue";
-import { ref } from "vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import Hue from "@/components/common/ColorPicker/Hue.vue";
-import Typical from "@/components/common/ColorPicker/Typical.vue";
-import ColorModels from "@/components/common/ColorPicker/Models/ColorModels.vue";
+import RecentlyColor from "@/components/common/ColorPicker/RecentlyColor.vue";
+import RGBAModel from "@/components/common/ColorPicker/RGBAModel/Index.vue";
+import ColorType from "@/components/common/ColorPicker/ColorType.vue";
+import { FillType } from "@kcdesign/data";
+import Station from "@/components/common/ColorPicker/Gradient/Station.vue";
+import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
+import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
+import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
+
+const props = defineProps<{
+    editor: ColorPickerEditor;
+
+    type: string;
+    color: RGBACatch;
+
+    gradient?: GradientCatch;
+    pattern?: PatternCatch;
+}>();
 const emits = defineEmits(["close"]);
 
-const rgba = ref<RGBACatch>({R: 255, G: 0, B: 0, A: 1, position: 1});
+const editor = props.editor;
 
+function setSolidColor(cc: RGBACatch) {
+    editor.setSolidColor(cc);
+}
+
+function modifyFillType(type: string) {
+    if (type !== props.type) editor.modifyFillType(type);
+}
+
+function dragSolidBegin() {
+    editor.dragSolidBegin();
+}
+
+function solidDragging(cc: RGBACatch) {
+    editor.solidDragging(cc);
+}
+
+function dragSolidEnd() {
+    editor.dragSolidEnd();
+}
 </script>
 
 <template>
     <div id="color-piker-gen-2-panel" :style="{width: WIDTH_CSS}">
         <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
-        <Saturation/>
-        <Hue :stop="rgba"/>
-        <ColorModels :stop="rgba"/>
-        <Typical/>
+        <ColorType :options="[FillType.Pattern]" :value="type" @change="modifyFillType"/>
+        <Station v-if="gradient" :gradient="gradient"/>
+        <RGBAModel :stop="color" @change="setSolidColor" @drag-begin="dragSolidBegin"
+                   @dragging="solidDragging" @drag-end="dragSolidEnd"/>
+        <RecentlyColor @change="setSolidColor"/>
     </div>
 </template>
 
@@ -32,5 +65,9 @@ const rgba = ref<RGBACatch>({R: 255, G: 0, B: 0, A: 1, position: 1});
     background-color: var(--theme-color-anti);
     box-shadow: 0 4px 16px #0000002e;
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: space-between;
 }
 </style>

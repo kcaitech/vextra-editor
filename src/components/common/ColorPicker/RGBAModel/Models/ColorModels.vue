@@ -3,12 +3,16 @@ import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue
 import { genOptions } from "@/utils/common";
 import { computed, ref } from "vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import Hex from "@/components/common/ColorPicker/Models/Hex.vue";
-import RGB from "@/components/common/ColorPicker/Models/RGB.vue";
-import HSB from "@/components/common/ColorPicker/Models/HSB.vue";
-import HSL from "@/components/common/ColorPicker/Models/HSL.vue";
+import Hex from "@/components/common/ColorPicker/RGBAModel/Models/Hex.vue";
+import RGB from "@/components/common/ColorPicker/RGBAModel/Models/RGB.vue";
+import HSB from "@/components/common/ColorPicker/RGBAModel/Models/HSB.vue";
+import HSL from "@/components/common/ColorPicker/RGBAModel/Models/HSL.vue";
+import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 
-defineProps<{ stop: RGBACatch }>();
+const props = defineProps<{ stop: RGBACatch }>();
+const emits = defineEmits<{
+    (e: "change", stop: RGBACatch): void;
+}>();
 
 const modelOptions: SelectSource[] = genOptions([['Hex', 'Hex'], ['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const model = ref<SelectItem>({value: 'Hex', content: 'Hex'});
@@ -38,7 +42,12 @@ function focus(event: Event) {
 }
 
 function colorChange(rgba: RGBACatch) {
-    console.log('--change--', rgba);
+    emits("change", rgba);
+}
+
+function changeAlpha(event: Event) {
+    const val = Math.round(getNumberFromInputEvent(event)) / 100;
+    emits("change", Object.assign({...props.stop}, {A: val}));
 }
 </script>
 <template>
@@ -47,7 +56,7 @@ function colorChange(rgba: RGBACatch) {
         <div class="values">
             <component :is="input" :stop="stop" @change="colorChange"/>
             <div class="alpha">
-                <input value="100" @focus="focus"/>
+                <input value="100" @focus="focus" @change="changeAlpha"/>
                 <span>%</span>
             </div>
         </div>
@@ -57,7 +66,7 @@ function colorChange(rgba: RGBACatch) {
 .models-container {
     width: 100%;
     height: fit-content;
-    padding: 12px;
+    padding: 0 12px;
     box-sizing: border-box;
     display: flex;
     gap: 8px;

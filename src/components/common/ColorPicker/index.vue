@@ -45,7 +45,7 @@ import {
     stops_generator,
     hexToX, RGB2SB,
 } from './utils';
-import { typical, model2label } from './typical';
+import { typical, model2label } from './Preset/typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 import { Menu } from "@/context/menu";
@@ -833,7 +833,6 @@ function enter() {
 }
 
 function showPanel() {
-    console.log('--show-panel--');
     picker_visible.value = true;
     // const menu = props.context.menu;
     // const exist = menu.isColorPickerMount;
