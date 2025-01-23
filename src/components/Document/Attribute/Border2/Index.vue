@@ -14,6 +14,9 @@ import { useI18n } from "vue-i18n";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import FillStylePanel from "./Lib/FillStylePanel.vue";
 import { BorderFillsContext, StrokeFillContextMgr } from "./ctx";
+import StrokeView from "./Stroke/StrokeView.vue";
+import StrokeMaskView from "./Stroke/StrokeMaskView.vue";
+import StrokeStylePanel from "./Lib/StrokeStylePanel.vue";
 
 /**
  * 每个模块的Index.vue应该包含
@@ -43,13 +46,19 @@ const fillCtx = ref<BorderFillsContext>({  // 本组件的核心状态，改状�
 const fillCtxMgr = new StrokeFillContextMgr(props.context, fillCtx.value as BorderFillsContext);                  // 核心状态管理器
 const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));   // 样式库入口四叶草🍀是否可用
 const fillLibStatus = reactive<ElementStatus>({ id: '#fill-style-lib-panel', visible: false });  // 样式库面板弹框状态
+const strokeLibStatus = reactive<ElementStatus>({ id: '#stroke-style-lib-panel', visible: false });  // 样式库面板弹框状态
 const fillPanelStatusMgr = new ElementManager(                                                       // 样式库面板弹框状态管理器，组件销毁时要调用其的unmounted事件
     props.context,
     fillLibStatus,
     { whiteList: ['.fill-style-lib-panel', '.clover', '.desc'] }                                   // 弹框可点击区域，区域之外的点击将会关闭弹框
 );
 fillCtxMgr.catchPanel(fillPanelStatusMgr);                                                           // 将弹框状态管理器加入到核心状态管理器，使得核心状态管理器可以控制弹框
-
+const strokePanelStatusMgr = new ElementManager(
+    props.context,
+    strokeLibStatus,
+    { whiteList: ['.stroke-style-lib-panel', '.border-style', '.border-left'] }
+);
+fillCtxMgr.catchPanel(strokePanelStatusMgr);
 function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
     let e: Element | null = event.target as Element;
     while (e) {
@@ -67,7 +76,17 @@ function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
 
 const showBorderPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
-    
+    while (e) {
+        if (e.classList.contains('border-style')) {
+            strokePanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
+            break;
+        }
+        if (e.classList.contains('border-left')) {
+            strokePanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
+            break;
+        }
+        e = e.parentElement;
+    }
 }
 
 
@@ -100,7 +119,14 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
-        <TypeHeader :title="t('attr.stroke_color')" :active="!!fillCtx.fills.length">
+        <StrokeView v-if="!fillCtx.strokeMask" :context="context" :manager="fillCtxMgr" :trigger="trigger"></StrokeView>
+        <StrokeMaskView v-else :context="context" :manager="fillCtxMgr" :trigger="trigger"
+            @showBorderPanel="showBorderPanel">
+        </StrokeMaskView>
+        <StrokeStylePanel v-if="strokeLibStatus.visible" :context="context" :manager="fillCtxMgr" i18n="borders"
+            @close="() => strokePanelStatusMgr.close()"></StrokeStylePanel>
+<!-- -------------------------------------------------------------------------------  -->
+        <TypeHeader v-if="fillCtx.fills.length" :title="t('attr.stroke_color')" :active="!!fillCtx.fills.length">
             <template #tool>
                 <div v-if="cloverVisible" class="clover" @click="showFillLib">
                     <SvgIcon :icon="style_icon" />
@@ -113,11 +139,11 @@ onUnmounted(() => {
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
         <FillMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
             :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!" @show-style-lib="showFillLib" />
-        <div v-else class="fills-container">
+        <div v-else-if="fillCtx.fills.length" class="fills-container">
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index" :context="context" :manager="fillCtxMgr"
                 :data="fill as FillCatch" />
         </div>
-        <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr"
+        <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr" i18n="colors"
             @close="() => fillPanelStatusMgr.close()" />
     </div>
 </template>
@@ -130,7 +156,37 @@ onUnmounted(() => {
     border-bottom: 1px solid #F0F0F0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
+
+    .add,
+    .border-style {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        border-radius: var(--default-radius);
+        transition: .2s;
+
+        >img {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .border-style img {
+        padding: 2px;
+        box-sizing: border-box;
+    }
+
+    .add:hover {
+        background-color: #F5F5F5;
+    }
+
+    .border-style:hover {
+        background-color: #F5F5F5;
+    }
 
     .clover,
     .create {

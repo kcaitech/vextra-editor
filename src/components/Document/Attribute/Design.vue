@@ -7,8 +7,7 @@ import { ArtboardView, ShapeType, ShapeView, SymbolRefView, TableCellView, Table
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill2/Index.vue'
-import Border from './Border/Border.vue';
-import Border2 from './Border2/Index.vue';
+import Border from './Border2/Index.vue';
 import Shadow from './Shadow/Shadows.vue';
 import PageBackground from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
@@ -362,8 +361,6 @@ onUnmounted(() => {
                     <Fill v-if="WITH_FILL.includes(shapeType)" :context="context"
                         :selection-change="reflush_by_selection" :trigger="reflush_trigger" />
                     <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="context"
-                        :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger" />
-                    <Border2 v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="context"
                         :selection-change="reflush_by_selection" :trigger="reflush_trigger" />
                     <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
                         :context="props.context" :selection-change="reflush_by_selection" :trigger="reflush_trigger" />

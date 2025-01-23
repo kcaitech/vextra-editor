@@ -1045,8 +1045,6 @@ function onMouseUp() {
 }
 
 function setThickness(e: Event) {
-
-
     let thickness = Number((e.target as HTMLInputElement).value);
     (e.target as HTMLInputElement).blur();
     if (isNaN(thickness)) return;
@@ -1069,7 +1067,6 @@ function setThickness(e: Event) {
             editor.setShapesBorderThickness(actions);
         }
     }
-    console.log(thickness);
     reflush_side.value++;
 }
 

@@ -477,7 +477,7 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
     return result;
 }
 
-const getDideStr = (side: BorderSideSetting, v: BorderSideSetting | string) => {
+export const getDideStr = (side: BorderSideSetting, v: BorderSideSetting | string) => {
     if (typeof v === 'string') return false;
     const str = [
         side.sideType,

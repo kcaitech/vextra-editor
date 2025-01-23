@@ -1,10 +1,10 @@
-import { Fill, FillMask, FillType, Style, Color, BasicArray, BatchAction2, ContactLineView, BorderMask } from "@kcdesign/data";
+import { Fill, FillMask, FillType, Style, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType } from "@kcdesign/data";
 import { Context } from "@/context";
-import { BorderData, get_actions_add_boder, get_actions_add_mask, get_actions_border_color, get_actions_border_delete, get_actions_border_enabled, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
+import { BorderData, get_actions_add_boder, get_actions_add_mask, get_actions_border_color, get_actions_border_delete, get_actions_border_enabled, get_actions_border_fillmask, get_actions_border_mask, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
-import { FillCatch, FillsContext, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
+import { FillCatch, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
     if (sye.style.fillsMask) return sye.style.fillsMask;
@@ -31,6 +31,30 @@ function stringifyFills(sye: { style: Style, fills: Fill[] }) {
             str += stringifyGradient(fill.gradient!);
         }
         return str;
+    }
+}
+
+function strokeMixedStatus(stroke: BorderData, shapes: ShapeView[]) {
+    for (let i = 1; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        const styleborders = shape.getBorders();
+        const len = styleborders.strokePaints.length;
+        if (len > 0 && styleborders.position !== stroke.position) {
+            stroke.position = 'mixed';
+        }
+        if (len > 0 && styleborders.cornerType !== stroke.cornerType) {
+            stroke.cornerType = 'mixed';
+        }
+        if (len > 0 && typeof stroke.borderStyle !== 'string' &&
+            styleborders.borderStyle.gap !== stroke.borderStyle.gap &&
+            styleborders.borderStyle.length !== stroke.borderStyle.length) {
+            stroke.borderStyle = 'mixed';
+        }
+        const sideStr = getDideStr(styleborders.sideSetting, stroke.sideSetting);
+        if (len > 0 && !sideStr) {
+            stroke.sideSetting = 'mixed';
+        }
     }
 }
 
@@ -116,6 +140,12 @@ export class StrokeFillContextMgr extends StyleCtx {
             borderStyle: origin.borderStyle,
             sideSetting: origin.sideSetting
         }
+        strokeMixedStatus(replace, this.selected);
+        if (replace.position === 'mixed' || replace.sideSetting === 'mixed') {
+            this.fillCtx.strokeMaskInfo = undefined;
+            this.fillCtx.strokeMask = undefined;
+        }
+        this.fillCtx.strokeInfo = replace;
     }
 
     private getIndexByFill(fill: Fill) {
@@ -126,6 +156,7 @@ export class StrokeFillContextMgr extends StyleCtx {
         this.getSelected();
         this.modifyMixedStatus();
         this.updateFills();
+        this.updateStroke();
     }
 
     init() {
@@ -199,9 +230,28 @@ export class StrokeFillContextMgr extends StyleCtx {
         this.hiddenCtrl();
     }
 
+    modifyStrokeMask(id: string) {
+        const actions = get_actions_add_mask(this.selected, id);
+        this.editor.shapesSetBorderMask(actions);
+        this.kill();
+        this.hiddenCtrl();
+    }
+
+    modifyBorderThicknessMask(sheet: string, id: string, side: BorderSideSetting) {
+        this.editor4Doc.modifyBorderMaskBorderSideSetting(sheet, id, side);
+    }
+
+    modifyBorderPositionMask(sheet: string, id: string, position: BorderPosition) {
+        this.editor4Doc.modifyBorderMaskBorderPosition(sheet, id, position);
+    }
+
     unbind() {
         const id = this.selected[0].style.borders.fillsMask;
         this.editor.shapesDelBorderFillMask(get_actions_fill_mask(this.selected, id));
+    }
+
+    unbindStroke() {
+        this.editor.shapesDelBorderMask(get_actions_border_mask(this.selected));
     }
 
     removeMask() {
@@ -213,6 +263,11 @@ export class StrokeFillContextMgr extends StyleCtx {
         const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
         const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);
         this.editor4Doc.insertStyleLib(fillMask, this.page, this.selected);
+        this.kill();
+    }
+    createStrokeStyleLib(name: string, desc: string, mask: BorderMaskType) {
+        const strokeMask = new BorderMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, mask);
+        this.editor4Doc.insertStyleLib(strokeMask, this.page, this.selected);
         this.kill();
     }
 }
