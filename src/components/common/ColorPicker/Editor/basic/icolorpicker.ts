@@ -3,23 +3,22 @@ import { FillType, GradientType } from "@kcdesign/data";
 
 export interface IColorPicker {
     /**
-     * @description 修改一次颜色
-     */
-    setColor(rgbaCatch: RGBACatch): void;
-
-    /**
      * @description 修改填充类型
      */
     modifyFillType(type: FillType | GradientType): void; /* 修改填充类型 */
+    /**
+     * @description 修改一次颜色
+     */
+    setSolidColor(rgbaCatch: RGBACatch): void;
 
     /**
      * @description 颜色修改拖拽事件
      */
-    dragBegin(): void;
+    dragSolidBegin(): void;
 
-    dragging(rgbaCatch: RGBACatch): void;
+    solidDragging(rgbaCatch: RGBACatch): void;
 
-    dragEnd(): void;
+    dragSolidEnd(): void;
 }
 
 export interface IGradientModifier {

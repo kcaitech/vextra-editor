@@ -15,4 +15,8 @@ export class SelectionCtx {
         this.selected = this.context.selection.selectedShapes;
         this.flat = this.context.selection.flat;
     }
+
+    get page() {
+        return this.context.selection.selectedPage!;
+    }
 }

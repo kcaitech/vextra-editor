@@ -4,7 +4,9 @@ import { getRGBFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ref } from "vue";
 
 const props = defineProps<{ stop: RGBACatch }>();
-const emits = defineEmits(["change"]);
+const emits = defineEmits<{
+    (e: "change", stop: RGBACatch): void;
+}>();
 
 function rgbToHex(R: number, G: number, B: number) {
     const toHex = (color: number) => {

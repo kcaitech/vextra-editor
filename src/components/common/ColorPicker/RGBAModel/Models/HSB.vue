@@ -2,10 +2,12 @@
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { HSB2RGB, RGB2HSB, verifiedVal } from "@/components/common/ColorPicker/utils";
 import { onUnmounted, ref, watchEffect } from "vue";
-import { Color } from "../../../../../../../kcdesign-data";
+import { Color } from "@kcdesign/data";
 
 const props = defineProps<{ stop: RGBACatch }>();
-const emits = defineEmits(["change"]);
+const emits = defineEmits<{
+    (e: "change", stop: RGBACatch): void;
+}>();
 const H = ref<number>(100);
 const S = ref<number>(0);
 const B = ref<number>(0);

@@ -12,8 +12,8 @@ import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
-import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/fillmanager";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
+import { FillsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/fillspicker";
 
 /**
  * 用于展示和修改一条填充的属性
@@ -25,12 +25,12 @@ const props = defineProps<{
 }>();
 const {t} = useI18n();
 const colorHex = ref<string>(props.data.fill.color.toHex().slice(1));
-const alpha = ref<string>(props.data.fill.color.alpha * 100 + '%');
+const alpha = ref<string>(Math.round(props.data.fill.color.alpha * 100) + '%');
 const colors = ref<Fill[]>([props.data.fill]);
 const innerText = ref<string>('');
 const compo = ref<any>();
 
-const rgba = ref<RGBACatch>({R: 255, G: 0, B: 0, A: 1, position: 1});
+const rgba = ref<RGBACatch>({R: 153, G: 43, B: 43, A: 0.52, position: 1});
 
 const styleReplace = {
     flex: 1,
@@ -75,7 +75,8 @@ function showColorPanel(event: MouseEvent) {
     }
 }
 
-const colorPickerEditor = new ColorPickerEditor(props.context);
+const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
+fillsPicker.fill = props.data.fill;
 
 function assemble() {
     switch (props.data.fill.fillType) {
@@ -95,8 +96,9 @@ function assemble() {
 assemble();
 onUnmounted(watch(() => props.data, () => {
     colorHex.value = props.data.fill.color.toHex().slice(1);
-    alpha.value = props.data.fill.color.alpha * 100 + '%';
+    alpha.value = Math.round(props.data.fill.color.alpha * 100) + '%';
     colors.value = [props.data.fill];
+    fillsPicker.fill = props.data.fill;
     assemble();
 }));
 </script>
@@ -113,7 +115,7 @@ onUnmounted(watch(() => props.data, () => {
         <div class="delete" @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon"/>
         </div>
-        <ColorPicker v-if="colorPanelStatus.visible" :editor="colorPickerEditor" :type="FillType.SolidColor"
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="data.fill.fillType"
                      :color="rgba" @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>

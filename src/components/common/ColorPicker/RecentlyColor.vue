@@ -4,6 +4,7 @@ import { Color } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import { key_storage, parseColorFormStorage } from "@/components/common/ColorPicker/utils";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue"
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
 const emits = defineEmits(["change"])
 
@@ -22,8 +23,15 @@ function init_recent() {
     }
 }
 
-function modify(c: Color) {
-    emits('change', c);
+function setColor(color: Color) {
+    const cc: RGBACatch = {
+        R: color.red,
+        G: color.green,
+        B: color.blue,
+        A: color.alpha,
+        position: 1
+    }
+    emits("change", cc);
 }
 
 onMounted(init_recent)
@@ -33,7 +41,7 @@ onMounted(init_recent)
     <div v-if="recent.length" class="recently-container">
         <div class="header">{{ t('color.recently') }}</div>
         <div class="typical-container">
-            <ColorBlock v-for="(c, idx) in recent" :key="idx" :colors="[c as Color]" @click="() => modify(c as Color)"/>
+            <ColorBlock v-for="(c, idx) in recent" :key="idx" :colors="[c as Color]" @click="() => setColor(c as Color)"/>
         </div>
     </div>
 </template>

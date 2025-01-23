@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watchEffect } from "vue";
 import { DragKit } from "@/components/common/draggable";
-import { verifiedVal } from "@/components/common/ColorPicker/utils";
+import { getHRGB, HSB2RGB, RGB2H2, RGB2HSB2, verifiedVal } from "@/components/common/ColorPicker/utils";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
+import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg";
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import { drawTooltip, hexToX } from "@/components/common/ColorPicker/utils";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -10,49 +13,183 @@ const HEIGHT = 200;
 const HEIGHT_CSS = `${HEIGHT}px`;
 const DOT_SIZE = 12;
 const DOT_SIZE_CSS = `${DOT_SIZE}px`;
-const MIN_LEFT = -6;
+const MIN_LEFT = -DOT_SIZE / 2;
 const MAX_LEFT = WIDTH - DOT_SIZE / 2;
-const MIN_TOP = -6;
+const MIN_TOP = -DOT_SIZE / 2;
 const MAX_TOP = HEIGHT - DOT_SIZE / 2;
+const LINE_LENGTH = 196;
+const LINE_LENGTH_CSS = `${LINE_LENGTH}px`;
 
 const emits = defineEmits<{
-    (e:"change", stop: RGBACatch): void;
+    (e: "change", stop: RGBACatch): void;
+    (e: "drag-begin"): void;
+    (e: "dragging", stop: RGBACatch): void;
+    (e: "drag-end"): void;
 }>()
+const props = defineProps<{ stop: RGBACatch }>();
+const left = ref<number>(-DOT_SIZE / 2);
+const top = ref<number>(-DOT_SIZE / 2);
+const hue = ref<RGBACatch>(props.stop);
+const hueX = ref<number>(0);
+const alphaX = ref<number>(LINE_LENGTH - DOT_SIZE);
 
-const left = ref<number>(-6);
-const top = ref<number>(-6);
+function modifySaturation(_s: number, _b: number) {
+    const stop = props.stop;
+    const h = RGB2H2(stop.R, stop.G, stop.B);
+    const s = (_s + DOT_SIZE / 2) / WIDTH;
+    const b = 1 - (_b + DOT_SIZE / 2) / HEIGHT;
+    const rgb = HSB2RGB(h, s, b);
+    emits("dragging", {
+        R: Math.round(rgb.R),
+        G: Math.round(rgb.G),
+        B: Math.round(rgb.B),
+        A: stop.A,
+        position: stop.position
+    });
+}
 
 const dragKit = new DragKit({
+    down: () => emits("drag-begin"),
     move: (event: MouseEvent, x: number, y: number) => {
         left.value = verifiedVal(x, MIN_LEFT, MAX_LEFT);
         top.value = verifiedVal(y, MIN_TOP, MAX_TOP);
-    }
-})
+        modifySaturation(left.value, top.value);
+    },
+    commit: () => emits("drag-end")
+});
 
 function downDot(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    dragKit.start(event, {x: target.offsetLeft,y: target.offsetTop} );
+    dragKit.start(event, {x: target.offsetLeft, y: target.offsetTop});
 }
 
 function downPanel(event: MouseEvent) {
     left.value = event.offsetX - 6;
     top.value = event.offsetY - 6;
     dragKit.start(event, {x: event.offsetX - 6, y: event.offsetY - 6});
+    modifySaturation(left.value, top.value);
 }
+
+function modifyHue(_h: number) {
+    const h = _h / (LINE_LENGTH - DOT_SIZE) * 360;
+    const {R, G, B} = HSB2RGB(h, (left.value + DOT_SIZE / 2) / WIDTH, 1 - (top.value + DOT_SIZE / 2) / HEIGHT);
+    emits("dragging", {
+        R: Math.round(R),
+        G: Math.round(G),
+        B: Math.round(B),
+        A: props.stop.A,
+        position: props.stop.position
+    })
+}
+
+const hueDragKit = new DragKit({
+    down: () => emits("drag-begin"),
+    move: (event: MouseEvent, x: number) => {
+        hueX.value = verifiedVal(x, 0, LINE_LENGTH - DOT_SIZE);
+        modifyHue(hueX.value);
+    },
+    commit: () => emits("drag-end")
+});
+
+function downHueDot(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    hueDragKit.start(event, {x: target.offsetLeft});
+}
+
+function downHueSlider(event: MouseEvent) {
+    hueX.value = event.offsetX - DOT_SIZE / 2;
+    hueDragKit.start(event, {x: hueX.value});
+    modifyHue(hueX.value);
+}
+
+function modifyAlpha(_a: number) {
+    const stop = props.stop;
+    emits("dragging", {
+        R: Math.round(stop.R),
+        G: Math.round(stop.G),
+        B: Math.round(stop.B),
+        A: Math.round(_a / (LINE_LENGTH - DOT_SIZE) * 100) / 100,
+        position: props.stop.position
+    });
+}
+
+const alphaDragKit = new DragKit({
+    down: () => emits("drag-begin"),
+    move: (event: MouseEvent, x: number) => {
+        alphaX.value = verifiedVal(x, 0, LINE_LENGTH - DOT_SIZE);
+        modifyAlpha(alphaX.value);
+    },
+    commit: () => emits("drag-end")
+});
+
+function downAlpha(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    alphaDragKit.start(event, {x: target.offsetLeft});
+}
+
+function downAlphaSlider(event: MouseEvent) {
+    alphaX.value = event.offsetX - DOT_SIZE / 2;
+    alphaDragKit.start(event, {x: alphaX.value});
+    modifyAlpha(alphaX.value);
+}
+
+function eyedropper() {
+    const System_EyeDropper = (window as any).EyeDropper;
+    const s_eye_dropper = new System_EyeDropper();
+    s_eye_dropper.open().then((result: any) => {
+        const rgb = hexToX(result.sRGBHex);
+        emits('change', {R: rgb[0], G: rgb[1], B: rgb[2], A: 1, position: 1});
+    }).catch((e: any) => {
+        console.error(e);
+    });
+    const tooltip = drawTooltip('按下Esc退出');
+    document.body.appendChild(tooltip);
+    setTimeout(() => tooltip.remove(), 2000);
+}
+
+function locate() {
+    const {R, G, B, A} = props.stop;
+    const hsb = RGB2HSB2(R, G, B);
+    hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
+    left.value = WIDTH * hsb.s - DOT_SIZE / 2;
+    top.value = HEIGHT * (1 - hsb.b) - DOT_SIZE / 2;
+    alphaX.value = (LINE_LENGTH - DOT_SIZE) * A;
+    hue.value = Object.assign({...props.stop}, getHRGB(RGB2H2(R, G, B)));
+}
+
+watchEffect(locate);
 </script>
 
 <template>
-    <div id="saturation" :style="{width: WIDTH_CSS, height: HEIGHT_CSS}">
+    <div id="saturation"
+         :style="{width: WIDTH_CSS, height: HEIGHT_CSS,  backgroundColor: `rgb(${hue.R}, ${hue.G}, ${hue.B})`}">
         <div class="white"/>
         <div class="black" @mousedown="downPanel"/>
-        <div class="dot" :style="{left: left + 'px', top: top + 'px'}" @mousedown="downDot"/>
+        <div class="dot"
+             :style="{left: left + 'px', top: top + 'px', backgroundColor: `rgb(${stop.R}, ${stop.G}, ${stop.B})`}"
+             @mousedown="downDot"/>
+    </div>
+    <div id="controller">
+        <div class="eyedropper">
+            <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper"/>
+        </div>
+        <div class="sliders-container">
+            <div class="hue" @mousedown="downHueSlider">
+                <div class="hue-indicator" :style="{ left: hueX + 'px' }" @mousedown="downHueDot"/>
+            </div>
+            <div class="alpha-background">
+                <div class="alpha" @mousedown="downAlphaSlider"
+                     :style="{ background: `linear-gradient(to right, rgba(${stop.R}, ${stop.G}, ${stop.B}, 0) 0%, rgb(${stop.R}, ${stop.G}, ${stop.B}) 100%)` }">
+                    <div class="alpha-indicator" :style="{ left: alphaX + 'px' }" @mousedown="downAlpha"/>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 #saturation {
     position: relative;
-    background-color: red;
 
     .white {
         position: absolute;
@@ -76,6 +213,92 @@ function downPanel(event: MouseEvent) {
         position: absolute;
         box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
         box-sizing: border-box;
+    }
+}
+
+#controller {
+    width: 100%;
+    height: 32px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 12px;
+    box-sizing: border-box;
+    justify-content: space-around;
+
+    > .sliders-container {
+        width: v-bind('LINE_LENGTH_CSS');
+        height: 32px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+
+        > .hue {
+            position: relative;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, #f00 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00);
+            border-radius: 5px 5px 5px 5px;
+            cursor: pointer;
+
+            > .hue-indicator {
+                top: -2px;
+                width: v-bind('DOT_SIZE_CSS');
+                height: v-bind('DOT_SIZE_CSS');
+                border-radius: 50%;
+                border: 2px solid #fff;
+                position: absolute;
+                box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                box-sizing: border-box;
+            }
+        }
+
+        > .alpha-background {
+            width: 100%;
+            height: 8px;
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
+            background-size: auto 75%;
+            border-radius: 5px 5px 5px 5px;
+            cursor: pointer;
+            box-sizing: border-box;
+
+            > .alpha {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                border-radius: 5px 5px 5px 5px;
+
+                > .alpha-indicator {
+                    top: -2px;
+                    width: v-bind('DOT_SIZE_CSS');
+                    height: v-bind('DOT_SIZE_CSS');
+                    border-radius: 50%;
+                    border: 2px solid #fff;
+                    position: absolute;
+                    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                    box-sizing: border-box;
+                }
+            }
+
+        }
+    }
+
+    > .eyedropper {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 2px;
+        transition: 0.1s;
+        padding: 6px;
+        box-sizing: border-box;
+
+        > svg {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
     }
 }
 </style>

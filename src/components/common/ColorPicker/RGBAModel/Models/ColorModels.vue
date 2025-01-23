@@ -7,9 +7,12 @@ import Hex from "@/components/common/ColorPicker/RGBAModel/Models/Hex.vue";
 import RGB from "@/components/common/ColorPicker/RGBAModel/Models/RGB.vue";
 import HSB from "@/components/common/ColorPicker/RGBAModel/Models/HSB.vue";
 import HSL from "@/components/common/ColorPicker/RGBAModel/Models/HSL.vue";
+import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 
-defineProps<{ stop: RGBACatch }>();
-const emits = defineEmits(["change"]);
+const props = defineProps<{ stop: RGBACatch }>();
+const emits = defineEmits<{
+    (e: "change", stop: RGBACatch): void;
+}>();
 
 const modelOptions: SelectSource[] = genOptions([['Hex', 'Hex'], ['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const model = ref<SelectItem>({value: 'Hex', content: 'Hex'});
@@ -41,6 +44,11 @@ function focus(event: Event) {
 function colorChange(rgba: RGBACatch) {
     emits("change", rgba);
 }
+
+function changeAlpha(event: Event) {
+    const val = Math.round(getNumberFromInputEvent(event)) / 100;
+    emits("change", Object.assign({...props.stop}, {A: val}));
+}
 </script>
 <template>
     <div class="models-container">
@@ -48,7 +56,7 @@ function colorChange(rgba: RGBACatch) {
         <div class="values">
             <component :is="input" :stop="stop" @change="colorChange"/>
             <div class="alpha">
-                <input value="100" @focus="focus"/>
+                <input value="100" @focus="focus" @change="changeAlpha"/>
                 <span>%</span>
             </div>
         </div>

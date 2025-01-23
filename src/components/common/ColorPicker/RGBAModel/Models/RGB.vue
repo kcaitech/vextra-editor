@@ -3,7 +3,9 @@ import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorline
 import { verifiedVal } from "@/components/common/ColorPicker/utils";
 
 const props = defineProps<{ stop: RGBACatch }>();
-const emits = defineEmits(["change"]);
+const emits = defineEmits<{
+    (e: "change", stop: RGBACatch): void;
+}>();
 
 function focus(event: Event) {
     const target = event.target as HTMLInputElement;

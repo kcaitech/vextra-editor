@@ -8,7 +8,7 @@ import { FillType } from "@kcdesign/data";
 import Station from "@/components/common/ColorPicker/Gradient/Station.vue";
 import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
-import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/fillmanager";
+import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -20,25 +20,41 @@ const props = defineProps<{
     color: RGBACatch;
 
     gradient?: GradientCatch;
-    media?: PatternCatch;
+    pattern?: PatternCatch;
 }>();
 const emits = defineEmits(["close"]);
 
 const editor = props.editor;
 
-function change(cc: RGBACatch) {
-    editor.setColor(cc);
+function setSolidColor(cc: RGBACatch) {
+    editor.setSolidColor(cc);
 }
 
+function modifyFillType(type: string) {
+    if (type !== props.type) editor.modifyFillType(type);
+}
+
+function dragSolidBegin() {
+    editor.dragSolidBegin();
+}
+
+function solidDragging(cc: RGBACatch) {
+    editor.solidDragging(cc);
+}
+
+function dragSolidEnd() {
+    editor.dragSolidEnd();
+}
 </script>
 
 <template>
     <div id="color-piker-gen-2-panel" :style="{width: WIDTH_CSS}">
         <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
-        <ColorType :options="[FillType.Pattern]" :value="type"/>
+        <ColorType :options="[FillType.Pattern]" :value="type" @change="modifyFillType"/>
         <Station v-if="gradient" :gradient="gradient"/>
-        <RGBAModel :stop="color" @change="change"/>
-        <RecentlyColor/>
+        <RGBAModel :stop="color" @change="setSolidColor" @drag-begin="dragSolidBegin"
+                   @dragging="solidDragging" @drag-end="dragSolidEnd"/>
+        <RecentlyColor @change="setSolidColor"/>
     </div>
 </template>
 

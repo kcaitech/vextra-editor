@@ -2,10 +2,12 @@
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import {  HSL2RGB, RGB2HSL, verifiedVal } from "@/components/common/ColorPicker/utils";
 import { onUnmounted, ref, watchEffect } from "vue";
-import { Color } from "../../../../../../../kcdesign-data";
+import { Color } from "@kcdesign/data";
 
 const props = defineProps<{ stop: RGBACatch }>();
-const emits = defineEmits(["change"]);
+const emits = defineEmits<{
+    (e: "change", stop: RGBACatch): void;
+}>();
 const H = ref<number>(360);
 const S = ref<number>(0);
 const L = ref<number>(0);
@@ -47,7 +49,6 @@ function changeL(event: Event) {
 }
 
 onUnmounted(watchEffect(update));
-
 </script>
 
 <template>
