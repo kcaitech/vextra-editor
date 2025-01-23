@@ -36,9 +36,9 @@ function changeB(event: Event) {
 
 <template>
     <div class="inputs">
-        <input :value="stop.R" @focus="focus" @change="changeR"/>
-        <input :value="stop.G" @focus="focus" @change="changeG"/>
-        <input :value="stop.B" @focus="focus" @change="changeB"/>
+        <input :value="Math.round(stop.R)" @focus="focus" @change="changeR"/>
+        <input :value="Math.round(stop.G)" @focus="focus" @change="changeG"/>
+        <input :value="Math.round(stop.B)" @focus="focus" @change="changeB"/>
     </div>
 </template>
 

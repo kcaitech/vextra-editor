@@ -10,10 +10,12 @@ export class FillsPicker extends ColorPickerEditor {
         super(context, type);
     }
 
+    private m_index: number | undefined;
     private get index(): number {
-        if (!this.fill) return 0;
+        if (this.m_index !== undefined) return this.m_index;
+        if (!this.fill) return this.m_index = 0;
         const parent = this.fill.parent as any;
-        return parent?.findIndex((i: any) => i === this.fill) ?? -1;
+        return this.m_index = parent?.findIndex((i: any) => i === this.fill) ?? -1;
     }
 
     private get api(): FillsAsyncApi {
@@ -32,10 +34,16 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     solidDragging(c: RGBACatch): void {
-        this.api.modifySolidColor(this.flat, 0, new Color(c.A, c.R, c.G, c.B));
+        this.api.modifySolidColor(this.flat, this.index, new Color(c.A, c.R, c.G, c.B));
     }
 
     dragSolidEnd(): void {
         this.commit();
+    }
+
+    protected commit() {
+        this.m_api?.commit();
+        this.m_api = undefined;
+        this.m_index = undefined;
     }
 }

@@ -4,7 +4,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
 import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, reactive, ref, watch } from "vue";
+import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType } from "@kcdesign/data";
@@ -29,8 +29,8 @@ const alpha = ref<string>(Math.round(props.data.fill.color.alpha * 100) + '%');
 const colors = ref<Fill[]>([props.data.fill]);
 const innerText = ref<string>('');
 const compo = ref<any>();
-
 const rgba = ref<RGBACatch>({R: 153, G: 43, B: 43, A: 0.52, position: 1});
+const fillType = ref<string>(FillType.SolidColor);
 
 const styleReplace = {
     flex: 1,
@@ -94,13 +94,20 @@ function assemble() {
 }
 
 assemble();
-onUnmounted(watch(() => props.data, () => {
-    colorHex.value = props.data.fill.color.toHex().slice(1);
-    alpha.value = Math.round(props.data.fill.color.alpha * 100) + '%';
-    colors.value = [props.data.fill];
-    fillsPicker.fill = props.data.fill;
+
+function update() {
+    const data = props.data;
+    const color = data.fill.color;
+    colorHex.value = color.toHex().slice(1);
+    alpha.value = Math.round(color.alpha * 100) + '%';
+    colors.value = [data.fill];
+    fillsPicker.fill = data.fill;
+    fillType.value = data.fill.fillType;
+    rgba.value = {R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1};
     assemble();
-}));
+}
+
+onUnmounted(watchEffect(update));
 </script>
 <template>
     <div class="fill-item-container">
@@ -115,8 +122,9 @@ onUnmounted(watch(() => props.data, () => {
         <div class="delete" @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon"/>
         </div>
-        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="data.fill.fillType"
-                     :color="rgba" @close="() => colorPanelStatusMgr.close()"/>
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker"
+                     :type="fillType" :color="rgba"
+                     @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>
 <style scoped lang="scss">
