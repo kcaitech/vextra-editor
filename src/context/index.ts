@@ -186,6 +186,8 @@ export class Context extends WatchableObject implements IContext {
         this.m_clip = new MossClipboard(this);
         this.m_layout = new EditorLayout(this);
         startLoadTask(data, this.m_taskMgr);
+
+        this.eventsMap = new Map();
     }
 
     private _storage: Map<string, string> = new Map();
@@ -442,4 +444,6 @@ export class Context extends WatchableObject implements IContext {
     get customLoading() {
         return this.m_custom_loading;
     }
+
+    eventsMap: Map<string, Function[]>;
 }
