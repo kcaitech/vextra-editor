@@ -78,23 +78,21 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private scope: Element | undefined;
     private m_target: HTMLDivElement | undefined;
 
-    private shutExist(keep: string) { /* 关闭已经打开的同类型弹框 */
-        if (keep !== 'no') {
-            let events = this.context.eventsMap.get(keep);
-            if (!events) {
-                events = [];
-                this.context.eventsMap.set(keep, events);
-            } else {
-                let f = events.pop();
-                while (f) {
-                    f();
-                    f = events.pop();
-                }
+    private shutExist() { /* 关闭已经打开的同类型弹框 */
+        let events = this.context.eventsMap.get(this.element.id);
+        if (!events) {
+            events = [];
+            this.context.eventsMap.set(this.element.id, events);
+        } else {
+            let f = events.pop();
+            while (f) {
+                f();
+                f = events.pop();
             }
-            events.push(() => {
-                this.element.visible = false;
-            });
         }
+        events.push(() => {
+            this.element.visible = false;
+        });
     }
 
     private get target() {
@@ -210,7 +208,6 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
                 offsetTop?: number;
             },
             fixed?: boolean;
-            keep?: string;
         }
     ) {
         if (this.element.visible) {
@@ -218,7 +215,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             return;
         }
 
-        this.shutExist(params?.keep ?? 'popover');
+        this.shutExist();
 
         this.m_target = undefined;
         this.trigger = getTriggerFromE(trigger);
@@ -263,5 +260,4 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.removeEvent();
         this.close();
     }
-
 }
