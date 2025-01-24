@@ -83,7 +83,7 @@ import {
     ShapeType,
     ShapeView,
     SideType,
-    Stop, StrokePaint, SymbolView,
+    Stop, SymbolView,
     TableView
 } from "@kcdesign/data";
 import { Context } from '@/context';

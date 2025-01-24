@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
     adapt2Shape, ArtboardView, BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Fill, Page, sessionRefIdKey, Shadow, Shape, ShapeType,
-    ShapeView, SideType, StrokePaint, Style,
+    ShapeView, SideType, Style,
     TransformRaw
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from "vue";
@@ -41,7 +41,7 @@ function assemble() {
 
     const fills = new BasicArray<Fill>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
+    const strokePaints = new BasicArray<Fill>();
     const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
     const trans = new TransformRaw();

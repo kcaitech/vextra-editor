@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { getRGBFromInputEvent } from "@/components/Document/Attribute/basic";
-import { ref } from "vue";
+import { onUnmounted, ref, watchEffect } from "vue";
 
 const props = defineProps<{ stop: RGBACatch }>();
 const emits = defineEmits<{
@@ -10,6 +10,7 @@ const emits = defineEmits<{
 
 function rgbToHex(R: number, G: number, B: number) {
     const toHex = (color: number) => {
+        color = Math.round(color);
         const hex = color.toString(16).toUpperCase();
         return hex.length === 1 ? "0" + hex : hex;
     };
@@ -30,6 +31,10 @@ function change(event: Event) {
     emits('change', Object.assign({...props.stop}, {R: rgb[0], G: rgb[1], B: rgb[2]}));
     target.blur();
 }
+
+onUnmounted(watchEffect(() => {
+    hex.value = rgbToHex(props.stop.R, props.stop.G, props.stop.B);
+}))
 </script>
 
 <template>

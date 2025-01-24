@@ -14,9 +14,9 @@ const L = ref<number>(0);
 
 function update() {
     const hsl = RGB2HSL({red: props.stop.R, green: props.stop.R, blue: props.stop.R} as unknown as Color);
-    H.value = hsl.h;
-    S.value = hsl.s * 100;
-    L.value = hsl.l * 100;
+    H.value = Math.round(hsl.h);
+    S.value = Math.round(hsl.s * 100);
+    L.value = Math.round(hsl.l * 100);
 }
 
 function focus(event: Event) {

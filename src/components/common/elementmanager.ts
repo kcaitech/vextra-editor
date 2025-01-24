@@ -11,6 +11,7 @@ export type ElementStatus = {
 /*以下是一段测试代码，记得删*/
 const counter = new Set<any>();
 (window as any).__event_counter = counter;
+
 /*==end==*/
 
 export class ElementManager { /* 可用于窗口状态处理，窗口应该要是一个DIV类型的元素 */
@@ -77,55 +78,21 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private scope: Element | undefined;
     private m_target: HTMLDivElement | undefined;
 
-    showBy(
-        trigger: Element | MouseEvent | null /*触发元素|事件*/,
-        params?: {
-            scope?: Element,
-            protect?: boolean,
-            once?: {
-                offsetLeft?: number;
-                offsetTop?: number;
-            },
-            fixed?: boolean;
+    private shutExist() { /* 关闭已经打开的同类型弹框 */
+        let events = this.context.eventsMap.get(this.element.id);
+        if (!events) {
+            events = [];
+            this.context.eventsMap.set(this.element.id, events);
+        } else {
+            let f = events.pop();
+            while (f) {
+                f();
+                f = events.pop();
+            }
         }
-    ) {
-        if (this.element.visible) {
+        events.push(() => {
             this.element.visible = false;
-            return;
-        }
-        this.m_target = undefined;
-        this.trigger = getTriggerFromE(trigger);
-        this.scope = params?.scope;
-        this.element.visible = true;
-
-        /*保护状态下只有关闭按钮可以直接将改弹窗关闭, 否则添加其他辅助关闭事件*/
-        if (!params?.protect) {
-            this.m_stop.push(this.context.selection.watch((t: any) => {
-                t === Selection.CHANGE_SHAPE && this.close();
-            }));
-            this.context.escstack.save(v4(), () => {
-                const achieve = this.element.visible;
-                this.element.visible = false;
-                return achieve;
-            });
-            document.addEventListener('mousedown', this.downCheck);
-
-            counter.add(this.downCheck); // todo 测试代码
-        }
-
-        nextTick(() => {
-            this.locate(params?.once);
-            if (!params?.fixed) this.initDragEvent();
         });
-
-        function getTriggerFromE(e: Element | MouseEvent | null) {
-            if (e instanceof MouseEvent) {
-                let tgr = e.target as Element;
-                if (!(tgr instanceof Element)) return null;
-                if (tgr.classList.contains('svg-icon')) tgr = tgr.parentElement as Element;
-                return tgr;
-            } else return e;
-        }
     }
 
     private get target() {
@@ -231,12 +198,66 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.m_stop.forEach(stop => stop());
     }
 
-    unmounted() {
-        this.removeEvent();
-        this.close();
+    showBy(
+        trigger: Element | MouseEvent | null /*触发元素|事件*/,
+        params?: {
+            scope?: Element,
+            protect?: boolean,
+            once?: {
+                offsetLeft?: number;
+                offsetTop?: number;
+            },
+            fixed?: boolean;
+        }
+    ) {
+        if (this.element.visible) {
+            this.element.visible = false;
+            return;
+        }
+
+        this.shutExist();
+
+        this.m_target = undefined;
+        this.trigger = getTriggerFromE(trigger);
+        this.scope = params?.scope;
+        this.element.visible = true;
+
+        /*保护状态下只有关闭按钮可以直接将改弹窗关闭, 否则添加其他辅助关闭事件*/
+        if (!params?.protect) {
+            this.m_stop.push(this.context.selection.watch((t: any) => {
+                t === Selection.CHANGE_SHAPE && this.close();
+            }));
+            this.context.escstack.save(v4(), () => {
+                const achieve = this.element.visible;
+                this.element.visible = false;
+                return achieve;
+            });
+            document.addEventListener('mousedown', this.downCheck);
+
+            counter.add(this.downCheck); // todo 测试代码
+        }
+
+        nextTick(() => {
+            this.locate(params?.once);
+            if (!params?.fixed) this.initDragEvent();
+        });
+
+        function getTriggerFromE(e: Element | MouseEvent | null) {
+            if (e instanceof MouseEvent) {
+                let tgr = e.target as Element;
+                if (!(tgr instanceof Element)) return null;
+                if (tgr.classList.contains('svg-icon')) tgr = tgr.parentElement as Element;
+                return tgr;
+            } else return e;
+        }
     }
 
     close() {
         this.element.visible = false;
+    }
+
+    unmounted() {
+        this.removeEvent();
+        this.close();
     }
 }

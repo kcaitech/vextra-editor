@@ -21,10 +21,13 @@ export class DragKit {
         this.m_stop = options.stop ?? true;
         this.m_origin_xy = {x: 0, y: 0};
         this.m_down_xy = {x: 0, y: 0};
+        this.m_is_dragging = false;
     }
 
+    private m_is_dragging: boolean;
     private _move(event: MouseEvent) {
         if (event.button) return;
+        this.m_is_dragging = true;
         const dx = event.clientX - this.m_down_xy.x;
         const dy = event.clientY - this.m_down_xy.y;
         this.m_move(event, this.m_origin_xy.x + dx, this.m_origin_xy.y + dy);
@@ -51,6 +54,10 @@ export class DragKit {
 
     private m_origin_xy: XY;
     private m_down_xy: XY;
+
+    get isDragging() {
+        return this.m_is_dragging;
+    }
 
     // params 中的xy接收start执行时某一变量[refVal]在对应维度的值。这个值会在move中加上clientXY的delta值作为参数传递出去，可用来更新[refVal]。
     start(event: MouseEvent, params?: { x?: number, y?: number }) {

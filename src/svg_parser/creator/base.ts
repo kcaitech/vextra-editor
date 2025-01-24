@@ -22,7 +22,6 @@ import {
     BorderSideSetting,
     SideType,
     ResourceMgr,
-    StrokePaint,
 } from "@kcdesign/data"
 import {v4 as uuid} from "uuid"
 import {
@@ -687,7 +686,7 @@ export class BaseCreator extends BaseTreeNode {
             else fill.fillRule = FillRule.Nonzero;
         }
 
-        const strokePaints = new BasicArray<StrokePaint>()
+        const strokePaints = new BasicArray<Fill>()
         const stroke = this.attributes.stroke
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
         const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
@@ -709,7 +708,7 @@ export class BaseCreator extends BaseTreeNode {
             }
             const borderStyle = new BorderStyle(stroke.dashArray[0], stroke.dashArray[1])
             const side = new BorderSideSetting(SideType.Normal, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
-            const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color))
+            const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color))
             border.position = position;
             border.borderStyle = borderStyle;
             border.cornerType = cornerType;
