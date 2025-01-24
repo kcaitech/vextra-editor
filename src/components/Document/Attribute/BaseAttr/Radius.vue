@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import {
     CutoutShapeView, PathShapeView, RadiusMask, RadiusType,
     ShapeType, ShapeView, SymbolView, TableView, TextShapeView
@@ -23,6 +23,7 @@ import unbind_icon from '@/assets/icons/svg/unbind.svg';
 import delete_icon from '@/assets/icons/svg/delete.svg';
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 import TypeHeader from '../TypeHeader.vue';
+import { RadiusContextMgr, RadiusContext } from "./ctx";
 
 const { t } = useI18n();
 
@@ -43,11 +44,20 @@ const radius = reactive<{ lt: number | string, rt: number | string, rb: number |
     lb: 0
 });
 
+const radiusCtx = ref<RadiusContext>({
+    isRect: false,
+    more:false,
+    radius: new Map(),
+    mask: undefined,
+    maskInfo: undefined
+})
+
 const new_radius = ref(new Map())
 const mixed = props.context.workspace.t('attr.mixed');
 const keyupdate = ref<boolean>(false)
 const isMask = ref<boolean>(false)
 const radiusMask = ref<RadiusMask>();
+const radiusCtxMgr = new RadiusContextMgr(props.context, radiusCtx.value as RadiusContext);
 
 const radiusLibStatus = reactive<ElementStatus>({ id: '#radius-lib-panel', visible: false });
 const radiusPanelStatusMgr = new ElementManager(
@@ -83,7 +93,7 @@ function noGroupShapesFrom(shapes: ShapeView[]) {
 function change(val: any, type: string) {
     const shapes = noGroupShapesFrom(props.context.selection.selectedShapes);
     val = get_value_from_input(val);
-    if (rect.value) {
+    if (radiusCtxMgr.radiusCtx.more) {
         setting_for_extend(val, type, shapes);
         return;
     }
@@ -138,9 +148,11 @@ function rectToggle() {
     rect.value = !rect.value;
     localStorage.setItem('radius-corner-display', rect.value ? 'all' : 'corner');
     modify_radius_value();
+
 }
 
 function update() {
+    radiusCtxMgr.update()
     modify_can_be_rect();
     modify_radius_value();
 }
@@ -557,6 +569,11 @@ const closePanel = () => {
     radiusPanelStatusMgr.close();
 }
 
+watch(radiusCtx,()=>{
+    console.log(radiusCtx,'***************');
+    
+})
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     update();
@@ -582,7 +599,7 @@ import style_icon from "@/assets/icons/svg/styles.svg"
     </div> -->
     <TypeHeader :title="t('stylelib.round')" :active="true">
         <template #tool>
-            <div v-if="!isMask" class="clover" @click="showRadiusPanel($event)">
+            <div v-if="!radiusCtxMgr.radiusCtx.mask" class="clover" @click="showRadiusPanel($event)">
                 <SvgIcon :icon="style_icon" />
             </div>
         </template>
@@ -600,10 +617,10 @@ import style_icon from "@/assets/icons/svg/styles.svg"
         <div class="delete-style">
         </div>
     </div> -->
-    <MaskPort :delete="false" v-if="isMask" @unbind="delRadiusMask">
+    <MaskPort :delete="false" v-if="radiusCtxMgr.radiusCtx.mask" @unbind="delRadiusMask">
         <div class="desc" @click="showRadiusPanel($event)">
             <div class="effect" />
-            <div>{{ radiusMask!.name }}</div>
+            <div>{{ radiusCtx.maskInfo?.name }}</div>
         </div>
     </MaskPort>
     <!-- <div v-if="!isMask" class="tr">
@@ -630,18 +647,18 @@ import style_icon from "@/assets/icons/svg/styles.svg"
             @dragend="dragend" @keydown="keydownRadius($event, 'rb')" @keyup="checkKeyup"></MossInput2>
         <div style="width: 32px;height: 32px;"></div>
     </div> -->
-    <div class="radius-container">
+    <div v-if="!radiusCtxMgr.radiusCtx.mask" class="radius-container">
         <div class="radius-set">
             <MossInput2 :class="{ 'r-90': item[0] === 'rt', 'r-270': item[0] === 'lb', 'r-180': item[0] === 'rb' }"
-                v-for="item in new_radius" :icon="radius_icon" :draggable="item[1] !== mixed" :value="item[1]"
-                :disabled="disabled" @change="value => change(value, item[0])" @dragstart="dragstart"
-                @dragging="draggingLB($event, item[0])" @dragend="dragend" @keydown="keydownRadius($event, item[0])"
-                @keyup="checkKeyup">
+                v-for="item in radiusCtxMgr.radiusCtx.radius" :icon="radius_icon"
+                :draggable="item[1] !== mixed" :value="item[1]" :disabled="disabled"
+                @change="value => change(value, item[0])" @dragstart="dragstart" @dragging="draggingLB($event, item[0])"
+                @dragend="dragend" @keydown="keydownRadius($event, item[0])" @keyup="checkKeyup">
             </MossInput2>
         </div>
-        <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
-            <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
-                <SvgIcon :icon="rect ? white_for_radius_icon : more_for_radius_icon" :class="{ 'active': rect }" />
+        <Tooltip v-if="radiusCtxMgr.radiusCtx.isRect" :content="t('attr.independentCorners')">
+            <div class="more-for-radius" @click="radiusCtxMgr.setmore()" :class="{ 'active': radiusCtxMgr.radiusCtx.more }">
+                <SvgIcon :icon="radiusCtxMgr.radiusCtx.more ? white_for_radius_icon : more_for_radius_icon" :class="{ 'active': radiusCtxMgr.radiusCtx.more }" />
             </div>
         </Tooltip>
     </div>
