@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import RecentlyColor from "@/components/common/ColorPicker/RecentlyColor.vue";
-import RGBAModel from "@/components/common/ColorPicker/RGBAModel/Index.vue";
 import ColorType from "@/components/common/ColorPicker/ColorType.vue";
 import { FillType } from "@kcdesign/data";
-import Station from "@/components/common/ColorPicker/Gradient/Station.vue";
 import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { onUnmounted, ref, watchEffect } from "vue";
+import Solid from "@/components/common/ColorPicker/Solid/Index.vue";
+import GradientView from "@/components/common/ColorPicker/Gradient/Index.vue";
+
+import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -25,41 +25,23 @@ const props = defineProps<{
 }>();
 const emits = defineEmits(["close"]);
 
-const gradientStopAt = ref<number>(0);
-const stop = ref<RGBACatch>(props.color);
+const compos = computed(() => {
+    if (props.gradient) return GradientView;
+    else return Solid;
+});
+
+const data = ref<RGBACatch | GradientCatch | PatternCatch>(props.color);
 
 const editor = props.editor;
-
-function setSolidColor(cc: RGBACatch) {
-    editor.setSolidColor(cc);
-}
 
 function modifyFillType(type: string) {
     if (type !== props.type) editor.modifyFillType(type);
 }
 
-function dragSolidBegin() {
-    editor.dragSolidBegin();
-}
-
-function solidDragging(cc: RGBACatch) {
-    editor.solidDragging(cc);
-}
-
-function dragSolidEnd() {
-    editor.dragSolidEnd();
-}
-
-function createStop(cc: RGBACatch) {
-    editor.createStop(cc);
-}
-
 function update() {
-    if (props.gradient) {
-        stop.value = props.gradient.RGBAs[gradientStopAt.value];
-    } else {
-        stop.value = {...props.color};
-    }
+    if (props.gradient) data.value = props.gradient;
+    else if (props.pattern) data.value = props.pattern;
+    else data.value = props.color;
 }
 
 onUnmounted(watchEffect(update));
@@ -69,10 +51,7 @@ onUnmounted(watchEffect(update));
     <div id="color-piker-gen-2-panel" :style="{width: WIDTH_CSS}">
         <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
         <ColorType :options="[FillType.Pattern]" :value="type" @change="modifyFillType"/>
-        <Station v-if="gradient" :gradient="gradient" v-model:at="gradientStopAt" @create-stop="createStop"/>
-        <RGBAModel :stop="stop" @change="setSolidColor" @drag-begin="dragSolidBegin"
-                   @dragging="solidDragging" @drag-end="dragSolidEnd"/>
-        <RecentlyColor @change="setSolidColor"/>
+        <component :is="compos" :editor="editor" :data="data as any"/>
     </div>
 </template>
 

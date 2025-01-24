@@ -4,7 +4,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
 import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
+import { h, onMounted, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType } from "@kcdesign/data";
@@ -111,6 +111,7 @@ function update() {
     } else {
         fillType.value = data.fill.fillType;
         rgba.value = {R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1};
+        gradient.value = undefined;
     }
 
     assemble();

@@ -30,7 +30,7 @@ const input = computed(() => {
         default:
             return Hex;
     }
-})
+});
 
 function switchModel(item: SelectItem) {
     model.value = item;
@@ -41,8 +41,8 @@ function focus(event: Event) {
     target.select();
 }
 
-function colorChange(rgba: RGBACatch) {
-    emits("change", rgba);
+function colorChange(cc: RGBACatch) {
+    emits("change", cc);
 }
 
 function changeAlpha(event: Event) {
@@ -56,7 +56,7 @@ function changeAlpha(event: Event) {
         <div class="values">
             <component :is="input" :stop="stop" @change="colorChange"/>
             <div class="alpha">
-                <input value="100" @focus="focus" @change="changeAlpha"/>
+                <input :value="Math.round(stop.A * 100)" @focus="focus" @change="changeAlpha"/>
                 <span>%</span>
             </div>
         </div>
@@ -96,7 +96,7 @@ function changeAlpha(event: Event) {
                 height: 100%;
                 border: none;
                 outline: none;
-                text-align: center;
+                text-align: right;
                 padding: 0;
                 background-color: transparent;
                 font-size: var(--default-font-size);

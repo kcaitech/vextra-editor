@@ -66,6 +66,9 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     dragStopBegin(): void {
     }
 
+    draggingStop(index: number, rgbaCatch: RGBACatch): void {
+    }
+
     dragStopEnd(): void {
     }
 
@@ -78,8 +81,6 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     draggingFrom(): void {
     }
 
-    draggingStop(index: number, rgbaCatch: RGBACatch): void {
-    }
 
     draggingTo(): void {
     }
