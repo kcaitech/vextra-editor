@@ -570,11 +570,11 @@ function modify_gradient_type(idx: number, type: GradientType, fillType: FillTyp
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    if (fillType !== FillType.Gradient) {
-        modify_fill_type(idx, fillType);
-    } else {
+    if (fillType === FillType.Gradient) {
         const actions = get_aciton_gradient_stop(shapes, _idx, type, 'fills');
-        editor.toggerShapeGradientType(actions);
+        editor.modifyShapeGradientType(actions);
+    } else {
+        modify_fill_type(idx, fillType);
     }
 }
 

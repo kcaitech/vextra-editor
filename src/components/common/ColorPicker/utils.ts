@@ -1,3 +1,5 @@
+import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
+
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
 import { Border, Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
@@ -710,8 +712,8 @@ export function block_style_generator(color: Color, gradient?: Gradient, fillTyp
     return style;
 }
 
-export function gradient_channel_generator(gradient: Gradient) {
-    const stops = gradient.stops;
+export function gradient_channel_generator(gradient: GradientCatch) {
+    const stops = gradient.RGBAs;
     const style: any = {};
     if (!stops?.length) {
         return style;
@@ -719,13 +721,14 @@ export function gradient_channel_generator(gradient: Gradient) {
     let lg = 'linear-gradient(to right, ';
     for (let i = 0, l = stops.length; i < l; i++) {
         const s = stops[i];
-        const c = toRGBA(s.color!);
+        const c = toRGBA({red: s.R, green: s.G, blue: s.B, alpha: s.A});
         lg += `${c} ${s.position * 100}%, `
     }
     lg = lg.slice(0, lg.length - 2);
     lg += ')';
     if (stops.length === 1) {
-        lg = toRGBA(stops[0].color!);
+        const s = stops[0];
+        lg = toRGBA({red: s.R, green: s.G, blue: s.B, alpha: s.A});
     }
     style['background'] = lg;
     return style;

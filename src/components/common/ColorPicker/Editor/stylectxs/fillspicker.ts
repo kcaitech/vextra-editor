@@ -1,7 +1,9 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { Color, Fill, FillsAsyncApi } from "@kcdesign/data";
+import { BasicArray, Color, Fill, FillsAsyncApi, FillType, Stop } from "@kcdesign/data";
+import { get_aciton_gradient_stop, get_actions_filltype } from "@/utils/shape_style";
+import { v4 } from "uuid";
 
 export class FillsPicker extends ColorPickerEditor {
     fill: Fill | undefined;
@@ -29,6 +31,19 @@ export class FillsPicker extends ColorPickerEditor {
         this.m_index = undefined;
     }
 
+    modifyFillType(type: string): void {
+        this.getSelection();
+        if (type === FillType.SolidColor || type === FillType.Pattern) {
+            const actions = get_actions_filltype(this.flat, this.index, type as FillType);
+            this.pageEditor.setShapesFillType(actions);
+        } else {
+            const actions = get_aciton_gradient_stop(this.flat, this.index, type, 'fills');
+            this.pageEditor.modifyShapeGradientType(actions);
+        }
+        super.modifyFillType(type);
+        this.hiddenCtrl();
+    }
+
     setSolidColor(c: RGBACatch): void {
         this.getSelection();
         this.api.modifySolidColor(this.flat, this.index, new Color(c.A, c.R, c.G, c.B));
@@ -47,5 +62,14 @@ export class FillsPicker extends ColorPickerEditor {
 
     dragSolidEnd(): void {
         this.commit();
+    }
+
+    createStop(c: RGBACatch) {
+        this.getSelection();
+        const color = new Color(c.A, c.R, c.G, c.B);
+        const stop = new Stop([0] as BasicArray<number>, v4(), c.position, color);
+        const actions = get_aciton_gradient_stop(this.flat, this.index, stop, "fills");
+        this.pageEditor.addShapesGradientStop(actions);
+        this.hiddenCtrl();
     }
 }

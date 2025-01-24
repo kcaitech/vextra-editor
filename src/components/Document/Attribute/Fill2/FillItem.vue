@@ -14,6 +14,7 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { FillsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/fillspicker";
+import { getGradientCatch, GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 
 /**
  * 用于展示和修改一条填充的属性
@@ -29,8 +30,9 @@ const alpha = ref<string>(Math.round(props.data.fill.color.alpha * 100) + '%');
 const colors = ref<Fill[]>([props.data.fill]);
 const innerText = ref<string>('');
 const compo = ref<any>();
-const rgba = ref<RGBACatch>({R: 153, G: 43, B: 43, A: 0.52, position: 1});
 const fillType = ref<string>(FillType.SolidColor);
+const rgba = ref<RGBACatch>({R: 153, G: 43, B: 43, A: 0.52, position: 1});
+const gradient = ref<GradientCatch | undefined>();
 
 const styleReplace = {
     flex: 1,
@@ -102,8 +104,15 @@ function update() {
     alpha.value = Math.round(color.alpha * 100) + '%';
     colors.value = [data.fill];
     fillsPicker.fill = data.fill;
-    fillType.value = data.fill.fillType;
-    rgba.value = {R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1};
+
+    if (data.fill.fillType === FillType.Gradient) {
+        fillType.value = data.fill.gradient!.gradientType;
+        gradient.value = getGradientCatch(data.fill.gradient!);
+    } else {
+        fillType.value = data.fill.fillType;
+        rgba.value = {R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1};
+    }
+
     assemble();
 }
 
@@ -123,7 +132,7 @@ onUnmounted(watchEffect(update));
             <SvgIcon :icon="delete_icon"/>
         </div>
         <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker"
-                     :type="fillType" :color="rgba"
+                     :type="fillType" :color="rgba" :gradient="gradient"
                      @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>

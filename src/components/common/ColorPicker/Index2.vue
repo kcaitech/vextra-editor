@@ -9,6 +9,7 @@ import Station from "@/components/common/ColorPicker/Gradient/Station.vue";
 import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
+import { onUnmounted, ref, watchEffect } from "vue";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -23,6 +24,9 @@ const props = defineProps<{
     pattern?: PatternCatch;
 }>();
 const emits = defineEmits(["close"]);
+
+const gradientStopAt = ref<number>(0);
+const stop = ref<RGBACatch>(props.color);
 
 const editor = props.editor;
 
@@ -45,14 +49,28 @@ function solidDragging(cc: RGBACatch) {
 function dragSolidEnd() {
     editor.dragSolidEnd();
 }
+
+function createStop(cc: RGBACatch) {
+    editor.createStop(cc);
+}
+
+function update() {
+    if (props.gradient) {
+        stop.value = props.gradient.RGBAs[gradientStopAt.value];
+    } else {
+        stop.value = {...props.color};
+    }
+}
+
+onUnmounted(watchEffect(update));
 </script>
 
 <template>
     <div id="color-piker-gen-2-panel" :style="{width: WIDTH_CSS}">
         <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
         <ColorType :options="[FillType.Pattern]" :value="type" @change="modifyFillType"/>
-        <Station v-if="gradient" :gradient="gradient"/>
-        <RGBAModel :stop="color" @change="setSolidColor" @drag-begin="dragSolidBegin"
+        <Station v-if="gradient" :gradient="gradient" v-model:at="gradientStopAt" @create-stop="createStop"/>
+        <RGBAModel :stop="stop" @change="setSolidColor" @drag-begin="dragSolidBegin"
                    @dragging="solidDragging" @drag-end="dragSolidEnd"/>
         <RecentlyColor @change="setSolidColor"/>
     </div>
