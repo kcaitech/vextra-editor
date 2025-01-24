@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, watchEffect } from "vue";
+import { ref, watchEffect } from "vue";
 import { DragKit } from "@/components/common/draggable";
 import { getHRGB, HSB2RGB, RGB2H2, RGB2HSB2, verifiedVal } from "@/components/common/ColorPicker/utils";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";

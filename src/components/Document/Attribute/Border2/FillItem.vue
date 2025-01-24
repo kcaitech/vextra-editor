@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import delete_icon from "@/assets/icons/svg/delete.svg";
-
 import { Context } from "@/context";
 import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, ref, watch } from "vue";
+import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
 import { StrokeFillContextMgr } from "./ctx";
+import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
+import { BorderColorPicker } from "@/components/common/ColorPicker/Editor/stylectxs/borderpicker";
 
 /**
  * 用于展示和修改一条填充的属性
@@ -26,7 +29,16 @@ const alpha = ref<string>(props.data.fill.color.alpha * 100 + '%');
 const colors = ref<(Fill)[]>([props.data.fill]);
 const innerText = ref<string>('');
 const compo = ref<any>();
-
+const rgba = ref<RGBACatch>({R: 153, G: 43, B: 43, A: 0.52, position: 1});
+const colorPanelStatus = reactive<ElementStatus>({id: '#color-piker-gen-2-panel', visible: false});
+const colorPanelStatusMgr = new ElementManager(
+    props.context,
+    colorPanelStatus,
+    {whiteList: ['#color-piker-gen-2-panel', '.color-wrapper']}
+);
+const fillsPicker = new BorderColorPicker(props.context, props.data.fill.fillType);
+fillsPicker.paint = props.data.fill;
+const fillType = ref<string>(FillType.SolidColor);
 const styleReplace = {
     flex: 1,
     width: '46px',
@@ -68,18 +80,37 @@ function assemble() {
 }
 
 assemble();
-onUnmounted(watch(() => props.data, () => {
-    colorHex.value = props.data.fill.color.toHex().slice(1);
-    alpha.value = props.data.fill.color.alpha * 100 + '%';
-    colors.value = [props.data.fill];
+
+function showColorPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('color-wrapper')) {
+            colorPanelStatusMgr.showBy(e, {once: {offsetLeft: -290}});
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
+function update() {
+    const data = props.data;
+    const color = data.fill.color;
+    colorHex.value = color.toHex().slice(1);
+    alpha.value = Math.round(color.alpha * 100) + '%';
+    colors.value = [data.fill];
+    fillsPicker.paint = data.fill;
+    fillType.value = data.fill.fillType;
+    rgba.value = {R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1};
     assemble();
-}));
+}
+
+onUnmounted(watchEffect(update));
 </script>
 <template>
     <div class="fill-item-container">
         <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)"/>
         <div :class="{'value-panel-wrapper': true, disabled: !data.fill.isEnabled}">
-            <ColorBlock :colors="colors as Fill[]"/>
+            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel"/>
             <component :is="compo"/>
             <input class="alpha" type="text" :value="alpha"
                    @focus="selectAllOnFocus"
@@ -88,6 +119,9 @@ onUnmounted(watch(() => props.data, () => {
         <div class="delete" @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon"/>
         </div>
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker"
+                     :type="fillType" :color="rgba"
+                     @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>
 <style scoped lang="scss">
