@@ -1,6 +1,6 @@
 import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView, Shadow, ShadowMask, ShadowPosition } from "@kcdesign/data";
 import { Context } from "@/context";
-import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify, get_actions_shadow_color, get_actions_shadow_delete, get_actions_shadow_enabled, get_actions_shadow_mask, get_actions_shadow_position, get_actions_shadow_unify } from "@/utils/shape_style";
+import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify, get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_delete, get_actions_shadow_enabled, get_actions_shadow_mask, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_position, get_actions_shadow_spread, get_actions_shadow_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
@@ -128,6 +128,30 @@ export class ShadowsContextMgr extends StyleCtx {
     modifyVisible(shadow: Shadow) {
         const actions = get_actions_shadow_enabled(this.selected, this.getIndexByShadow(shadow), !shadow.isEnabled);
         this.editor.setShapesShadowEnabled(actions);
+    }
+
+    modifyShadowOffsetX(offsetX: number, shadow: Shadow) {
+        if (isNaN(offsetX)) return;
+        const index = this.getIndexByShadow(shadow);
+        this.editor.setShapesShadowOffsetX(get_actions_shadow_offsetx(this.selected, index, offsetX));
+    }
+
+    modifyShadowOffsetY(offsetY: number, shadow: Shadow) {
+        if (isNaN(offsetY)) return;
+        const index = this.getIndexByShadow(shadow);
+        this.editor.setShapesShadowOffsetY(get_actions_shadow_offsety(this.selected, index, offsetY));
+    }
+
+    modifyShadowBlur(blur: number, shadow: Shadow) {
+        if (isNaN(blur)) return;
+        const index = this.getIndexByShadow(shadow);
+        this.editor.setShapesShadowBlurRadius(get_actions_shadow_blur(this.selected, index, blur));
+    }
+
+    modifyShadowSpread(spread: number, shadow: Shadow) {
+        if (isNaN(spread)) return;
+        const index = this.getIndexByShadow(shadow);
+        this.editor.setShapesShadowSpread(get_actions_shadow_spread(this.selected, index, spread));
     }
 
     modifyShadpwHex(event: Event, shadow: Shadow) {

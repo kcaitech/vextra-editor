@@ -8,13 +8,19 @@ import gear_icon from '@/assets/icons/svg/gear.svg';
 import ShadowInput from './ShadowInput.vue';
 import { format_value } from '@/utils/common';
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
-import { Color } from '@kcdesign/data';
+import { Color, Fill, FillType, LinearApi, Shadow, ShapeType } from '@kcdesign/data';
 import { selectAllOnFocus } from '../basic';
 import { toHex } from '@/utils/color';
-import { ref, watch, onUnmounted, reactive } from 'vue';
-import { FillsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/fillspicker";
+import { ref, watchEffect, onUnmounted, reactive } from 'vue';
 import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { ElementManager, ElementStatus } from '@/components/common/elementmanager';
+import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
+import { ShadowColorPicker } from '@/components/common/ColorPicker/Editor/stylectxs/shadowpicker';
+import { LockMouse } from '@/transform/lockMouse';
+import { get_actions_shadow_blur, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
+import { hidden_selection } from '@/utils/content';
+import { sortValue } from '../BaseAttr/oval';
+import { Menu } from '@/context/menu';
 
 const { t } = useI18n();
 
@@ -25,27 +31,312 @@ const props = defineProps<{
     manager: ShadowsContextMgr
 }>();
 
+function getIndexByShadow(shadow: Shadow) {
+    return (shadow.parent as unknown as Shadow[])?.findIndex(i => i === shadow) ?? -1;
+}
 const colorHex = ref<string>(toHex(props.data.shadow.color).slice(1));
 const alpha = ref<string>(Math.round(props.data.shadow.color.alpha * 100) + '%');
 const colors = ref<Color[]>([props.data.shadow.color] as Color[]);
+const rgba = ref<RGBACatch>({ R: 0, G: 0, B: 0, A: 0.3, position: 1 });
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
+const popover = ref();
 
-const colorPanelStatus = reactive<ElementStatus>({id: '#color-piker-gen-2-panel', visible: false});
+const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    {whiteList: ['#color-piker-gen-2-panel', '.color-wrapper']}
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
 );
+
+function showColorPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('color-wrapper')) {
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
+const setOffsetX = (value: number) => {
+    props.manager.modifyShadowOffsetX(value, props.data.shadow);
+    hidden_selection(props.context);
+}
+
+function keydownOffsetX(e: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    const _idx = getIndexByShadow(props.data.shadow);
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        const actions = get_actions_shadow_offsetx(props.manager.selected, _idx, value);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                linearApi.modifyShapesShadowOffsetX(actions)
+            }
+        }
+        e.preventDefault();
+        hidden_selection(props.context);
+    }
+}
+
+
+const setOffsetY = (value: number) => {
+    props.manager.modifyShadowOffsetY(value, props.data.shadow);
+    hidden_selection(props.context);
+}
+
+function keydownOffsetY(e: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    const _idx = getIndexByShadow(props.data.shadow);
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        const actions = get_actions_shadow_offsety(props.manager.selected, _idx, value);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                linearApi.modifyShapesShadowOffsetY(actions)
+            }
+        }
+        e.preventDefault();
+        hidden_selection(props.context);
+    }
+}
+
+const setBlurRadius = (value: number) => {
+    props.manager.modifyShadowBlur(value, props.data.shadow);
+    hidden_selection(props.context);
+}
+
+function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    const _idx = getIndexByShadow(props.data.shadow);
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = value <= 0 ? 0 : value <= 200 ? value : 200;
+        const actions = get_actions_shadow_blur(props.manager.selected, _idx, value);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                linearApi.modifyShapesShadowBlur(actions)
+            }
+        }
+        e.preventDefault();
+        hidden_selection(props.context);
+    }
+}
+
+const setSpread = (value: number) => {
+    props.manager.modifyShadowSpread(value, props.data.shadow);
+    hidden_selection(props.context);
+}
+
+function keydownSpread(e: KeyboardEvent, val: string | number) {
+    let value: any = sortValue(val.toString());
+    const _idx = getIndexByShadow(props.data.shadow);
+    if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
+        const actions = get_actions_shadow_spread(props.manager.selected, _idx, value);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                linearApi.modifyShapesShadowSpread(actions)
+            }
+        }
+        e.preventDefault();
+        hidden_selection(props.context);
+    }
+}
+
+
+const tel = ref<boolean>(false);
+const telX = ref<number>(0);
+const telY = ref<number>(0);
+let lockMouseHandler: LockMouse | undefined = undefined;
+
+function updatePosition(movementX: number, movementY: number) {
+    const clientHeight = document.documentElement.clientHeight;
+    const clientWidth = document.documentElement.clientWidth;
+    telX.value += movementX;
+    telY.value += movementY;
+    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
+    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
+}
+
+async function dragStart(e: MouseEvent) {
+    tel.value = true;
+    telX.value = e.clientX;
+    telY.value = e.clientY;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    lockMouseHandler = new LockMouse(props.context, e);
+    document.addEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        dragEnd();
+    }
+}
+
+function draggingX(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    let val = props.data.shadow.offsetX + e.movementX;
+    const _idx = getIndexByShadow(props.data.shadow);
+    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
+    if (!lockMouseHandler) {
+        return
+    }
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+    lockMouseHandler.executeShadowX(_idx, val);
+}
+
+function draggingY(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    let val = props.data.shadow.offsetY + e.movementX;
+    const _idx = getIndexByShadow(props.data.shadow);
+    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
+    if (!lockMouseHandler) {
+        return
+    }
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+    lockMouseHandler.executeShadowY(_idx, val);
+}
+
+function draggingB(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    let val = props.data.shadow.blurRadius + e.movementX;
+    const _idx = getIndexByShadow(props.data.shadow);
+    val = val < 0 ? 0 : val > 200 ? 200 : val;
+    if (!lockMouseHandler) {
+        return
+    }
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+    lockMouseHandler.executeShadowB(_idx, val);
+}
+
+function draggingS(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    let val = props.data.shadow.spread + e.movementX;
+    const _idx = getIndexByShadow(props.data.shadow);
+    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
+    if (!lockMouseHandler) {
+        return
+    }
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+    lockMouseHandler.executeShadowS(_idx, val);
+}
+
+function dragEnd() {
+    tel.value = false;
+    document.exitPointerLock();
+    lockMouseHandler?.fulfil();
+    lockMouseHandler = undefined;
+    document.removeEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+function showMenu() {
+    props.context.menu.notify(Menu.SHUTDOWN_MENU);
+    disable();
+    popover.value.show();
+}
+const disabled = ref(false);
+const spare_tip = ref('');
+const disable = () => {
+    const shapes = props.manager.selected;
+    if (shapes.length === 1) {
+        const type = shapes[0].type;
+        const fills = shapes[0].data.style.fills;
+        if (type === ShapeType.Artboard && !isFill(fills)) {
+            spare_tip.value = t('shadow.fill_is_visible');
+            disabled.value = true;
+        } else {
+            if (type !== ShapeType.Rectangle && type !== ShapeType.Artboard && type !== ShapeType.Oval) {
+                spare_tip.value = t('shadow.only_used');
+                disabled.value = true;
+            } else {
+                spare_tip.value = t('shadow.extend');
+                disabled.value = false;
+            }
+        }
+    } else if (shapes.length > 1) {
+        let artFills = false;
+        let notAllArtboard = false;
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            if (shape.type !== ShapeType.Rectangle && shape.type !== ShapeType.Artboard && shape.type !== ShapeType.Oval) {
+                spare_tip.value = t('shadow.only_used');
+                return disabled.value = true;
+            } else if (shape.type !== ShapeType.Artboard) {
+                notAllArtboard = true;
+            } else if (shape.type === ShapeType.Artboard && !isFill(shape.style.fills)) {
+                artFills = true;
+            }
+        }
+        if (notAllArtboard) {
+            spare_tip.value = t('shadow.extend');
+            disabled.value = false;
+        } else {
+            if (artFills) {
+                spare_tip.value = t('shadow.fill_is_visible');
+                disabled.value = true;
+            } else {
+                spare_tip.value = t('shadow.extend');
+                disabled.value = false;
+            }
+        }
+    }
+}
+
+const isFill = (fills: Fill[]) => {
+    for (let i = 0; i < fills.length; i++) {
+        const fill = fills[i];
+        if (fill.isEnabled && fill.color.alpha > 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 function extend(base: number) {
     return Number(format_value(base));
 }
 
+const shadowsPicker = new ShadowColorPicker(props.context, FillType.SolidColor);
+shadowsPicker.shadow = props.data.shadow;
 
-onUnmounted(watch(() => props.data, () => {
-    colorHex.value = toHex(props.data.shadow.color).slice(1);
-    alpha.value = Math.round(props.data.shadow.color.alpha * 100) + '%';
-    colors.value = [props.data.shadow.color] as Color[];
-}))
+function update() {
+    const data = props.data;
+    const color = data.shadow.color;
+    colorHex.value = toHex(color).slice(1);
+    alpha.value = Math.round(color.alpha * 100) + '%';
+    colors.value = [data.shadow.color] as Color[];
+    shadowsPicker.shadow = data.shadow;
+
+    rgba.value = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
+}
+
+onUnmounted(watchEffect(update));
 </script>
 
 <template>
@@ -53,7 +344,7 @@ onUnmounted(watch(() => props.data, () => {
         <Popover :context="context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
             :title="`${t('shadow.shadow_setting')}`">
             <template #trigger>
-                <div class="trigger">
+                <div class="trigger" @click="showMenu">
                     <SvgIcon :icon="gear_icon" />
                 </div>
             </template>
@@ -83,15 +374,16 @@ onUnmounted(watch(() => props.data, () => {
                     <div class="setting">
                         <div class="name-title">{{ t('shadow.color') }}</div>
                         <div :class="{ 'value-panel-wrapper': true }">
-                            <ColorBlock :colors="([data.shadow.color] as Color[])" @click="showColorPanel" />
-                            <input class="colorShadow" type="text" :value="alpha" @focus="selectAllOnFocus"
+                            <ColorBlock :colors="(colors as Color[])" @click="showColorPanel" />
+                            <input class="colorShadow" type="text" :value="colorHex" @focus="selectAllOnFocus"
                                 @change="(e) => manager.modifyShadpwHex(e, data.shadow)" />
                             <input class="alphaShadow" type="text" :value="alpha" @focus="selectAllOnFocus"
                                 @change="(e) => manager.modifyFillAlpha(e, data.shadow)" />
                         </div>
-                        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="data.fill.fillType"
+                        <ColorPicker v-if="colorPanelStatus.visible" :editor="shadowsPicker" :type="FillType.SolidColor"
                             :color="rgba" @close="() => colorPanelStatusMgr.close()" />
                     </div>
+                </div>
             </template>
         </Popover>
         <teleport to="body">
