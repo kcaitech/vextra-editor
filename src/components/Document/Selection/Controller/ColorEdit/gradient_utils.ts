@@ -15,6 +15,7 @@ import {
 } from "@kcdesign/data";
 import { importGradient } from "@kcdesign/data";
 import { v4 } from "uuid";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
 export type GradientFrom = 'fills' | 'borders' | 'text' | 'table_text';
 
@@ -55,7 +56,31 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
         }
     }
 }
-
+export const get_add_gradient_color2 = (stops: RGBACatch[], position: number) => {
+    for (let i = 0; i < stops.length; i++) {
+        const stop = stops[i];
+        if (position < stop.position) {
+            let n_alpha;
+            const c = i === 0 ? stop : stops[i - 1];
+            const {R: red, G: green, B: blue, A: alpha} = c;
+            if (i > 0) {
+                const position = stops[i - 1].position;
+                const a_len = alpha - stop.A;
+                const proportion = ((position - position) * a_len) / (stop.position - position);
+                if (a_len === 0) {
+                    n_alpha = alpha;
+                } else {
+                    n_alpha = a_len > 0 ? alpha - proportion : alpha + proportion;
+                }
+            } else {
+                n_alpha = alpha;
+            }
+            return {R: red, G: green, B: blue, A: n_alpha, position} as RGBACatch;
+        } else if (position > stops[i].position && i === stops.length - 1) {
+            return stop;
+        }
+    }
+}
 export const get_gradient = (context: Context, shape: ShapeView) => {
     const locat = context.color.locat;
     if (!locat || !shape || !shape.style) return;

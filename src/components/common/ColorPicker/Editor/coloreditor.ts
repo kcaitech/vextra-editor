@@ -2,11 +2,13 @@ import { SelectionCtx } from "@/components/common/ColorPicker/Editor/basic";
 import { Context } from "@/context";
 import { IColorPicker, IGradientModifier, IPatternModifier } from "@/components/common/ColorPicker/Editor/basic/icolorpicker";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { AsyncApiCaller} from "@kcdesign/data";
+import { AsyncApiCaller, PageEditor } from "@kcdesign/data";
+import { hidden_selection } from "@/utils/content";
 
 export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGradientModifier, IPatternModifier {
     private m_fill_type: string;
     protected m_api: AsyncApiCaller | undefined;
+    protected m_page_editor: PageEditor | undefined;
 
     constructor(public context: Context, type: string) {
         super(context);
@@ -18,6 +20,23 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
         this.m_api = undefined;
     }
 
+    protected get pageEditor() {
+        return this.m_page_editor ?? (this.m_page_editor = this.context.editor4Page(this.page));
+    }
+
+    protected get type() {
+        return this.m_fill_type;
+    }
+
+    protected set type(v) {
+        this.m_fill_type = v;
+    }
+
+    protected hiddenCtrl(event?: Event) {
+        hidden_selection(this.context);
+
+        if (event?.target instanceof HTMLInputElement) event.target.blur();
+    }
     modifyFillType(type: string): void {
         this.m_fill_type = type;
     }
@@ -35,7 +54,7 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     dragSolidEnd(): void {
     }
 
-    createStop(position: number): void {
+    createStop(c: RGBACatch): void {
     }
 
     dragFromBegin(): void {

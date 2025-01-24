@@ -1,3 +1,5 @@
+import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
+
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
 import { Border, Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
@@ -424,7 +426,10 @@ export function RGB2HSB(color: Color): HSB {
 export function RGB2HSB2(red: number, green: number, blue: number): HSB {
     const max = Math.max(red, green, blue);
     const min = Math.min(red, green, blue);
-    let h = 0, s = 0, b = 0;
+    let h = 0;
+    let s;
+    let b;
+
     if (max === min) {
         h = 0;
     } else if (max === red && green >= blue) {
@@ -436,7 +441,13 @@ export function RGB2HSB2(red: number, green: number, blue: number): HSB {
     } else if (max === blue) {
         h = 60 * ((red - green) / (max - min)) + 240;
     }
-    if (max === min && min === 0) s = 0; else s = (max - min) / max;
+
+    if (max === min && min === 0) {
+        s = 0;
+    } else {
+        s = (max - min) / max;
+    }
+
     b = max / 255;
     return {h: h / 360, s, b};
 }
@@ -648,7 +659,8 @@ function finder(context: Context, shape: ShapeView, init?: Map<string, Color[]>)
         if (!s) continue;
         const fills = s.getFills();
         const borders = s.getBorders().strokePaints;
-        const fbs: Array<Fill> = [...fills, ...borders];
+        // const fbs: Array<Fill> = [...fills, ...borders];
+        const fbs: Array<Fill> = [];
         for (let j = 0; j < fbs.length; j++) {
             const r = result.get(c2s(fbs[j].color));
             if (r) r.push(fbs[j].color);
@@ -700,8 +712,8 @@ export function block_style_generator(color: Color, gradient?: Gradient, fillTyp
     return style;
 }
 
-export function gradient_channel_generator(gradient: Gradient) {
-    const stops = gradient.stops;
+export function gradient_channel_generator(gradient: GradientCatch) {
+    const stops = gradient.RGBAs;
     const style: any = {};
     if (!stops?.length) {
         return style;
@@ -709,13 +721,14 @@ export function gradient_channel_generator(gradient: Gradient) {
     let lg = 'linear-gradient(to right, ';
     for (let i = 0, l = stops.length; i < l; i++) {
         const s = stops[i];
-        const c = toRGBA(s.color!);
+        const c = toRGBA({red: s.R, green: s.G, blue: s.B, alpha: s.A});
         lg += `${c} ${s.position * 100}%, `
     }
     lg = lg.slice(0, lg.length - 2);
     lg += ')';
     if (stops.length === 1) {
-        lg = toRGBA(stops[0].color!);
+        const s = stops[0];
+        lg = toRGBA({red: s.R, green: s.G, blue: s.B, alpha: s.A});
     }
     style['background'] = lg;
     return style;

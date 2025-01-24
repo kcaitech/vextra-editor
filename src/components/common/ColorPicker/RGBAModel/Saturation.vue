@@ -33,6 +33,11 @@ const hue = ref<RGBACatch>(props.stop);
 const hueX = ref<number>(0);
 const alphaX = ref<number>(LINE_LENGTH - DOT_SIZE);
 
+const lastHueDetail = {
+    x: hueX.value,
+    hue: hue.value
+};
+
 function modifySaturation(_s: number, _b: number) {
     const stop = props.stop;
     const h = RGB2H2(stop.R, stop.G, stop.B);
@@ -40,9 +45,9 @@ function modifySaturation(_s: number, _b: number) {
     const b = 1 - (_b + DOT_SIZE / 2) / HEIGHT;
     const rgb = HSB2RGB(h, s, b);
     emits("dragging", {
-        R: Math.round(rgb.R),
-        G: Math.round(rgb.G),
-        B: Math.round(rgb.B),
+        R: rgb.R,
+        G: rgb.G,
+        B: rgb.B,
         A: stop.A,
         position: stop.position
     });
@@ -50,10 +55,8 @@ function modifySaturation(_s: number, _b: number) {
 
 const dragKit = new DragKit({
     down: () => emits("drag-begin"),
-    move: (event: MouseEvent, x: number, y: number) => {
-        left.value = verifiedVal(x, MIN_LEFT, MAX_LEFT);
-        top.value = verifiedVal(y, MIN_TOP, MAX_TOP);
-        modifySaturation(left.value, top.value);
+    move: (_: MouseEvent, x: number, y: number) => {
+        modifySaturation(verifiedVal(x, MIN_LEFT, MAX_LEFT), verifiedVal(y, MIN_TOP, MAX_TOP));
     },
     commit: () => emits("drag-end")
 });
@@ -64,19 +67,19 @@ function downDot(event: MouseEvent) {
 }
 
 function downPanel(event: MouseEvent) {
-    left.value = event.offsetX - 6;
-    top.value = event.offsetY - 6;
     dragKit.start(event, {x: event.offsetX - 6, y: event.offsetY - 6});
-    modifySaturation(left.value, top.value);
+    modifySaturation(event.offsetX - 6, event.offsetY - 6);
 }
 
 function modifyHue(_h: number) {
     const h = _h / (LINE_LENGTH - DOT_SIZE) * 360;
+    if (_h) {
+        lastHueDetail.x = _h;
+        lastHueDetail.hue = Object.assign({...props.stop}, getHRGB(h));
+    }
     const {R, G, B} = HSB2RGB(h, (left.value + DOT_SIZE / 2) / WIDTH, 1 - (top.value + DOT_SIZE / 2) / HEIGHT);
     emits("dragging", {
-        R: Math.round(R),
-        G: Math.round(G),
-        B: Math.round(B),
+        R, G, B,
         A: props.stop.A,
         position: props.stop.position
     })
@@ -84,9 +87,8 @@ function modifyHue(_h: number) {
 
 const hueDragKit = new DragKit({
     down: () => emits("drag-begin"),
-    move: (event: MouseEvent, x: number) => {
-        hueX.value = verifiedVal(x, 0, LINE_LENGTH - DOT_SIZE);
-        modifyHue(hueX.value);
+    move: (_: MouseEvent, x: number) => {
+        modifyHue(verifiedVal(x, 0, LINE_LENGTH - DOT_SIZE - 0.1));
     },
     commit: () => emits("drag-end")
 });
@@ -97,27 +99,26 @@ function downHueDot(event: MouseEvent) {
 }
 
 function downHueSlider(event: MouseEvent) {
-    hueX.value = event.offsetX - DOT_SIZE / 2;
-    hueDragKit.start(event, {x: hueX.value});
-    modifyHue(hueX.value);
+    const x = event.offsetX - DOT_SIZE / 2;
+    hueDragKit.start(event, {x});
+    modifyHue(x);
 }
 
 function modifyAlpha(_a: number) {
     const stop = props.stop;
     emits("dragging", {
-        R: Math.round(stop.R),
-        G: Math.round(stop.G),
-        B: Math.round(stop.B),
-        A: Math.round(_a / (LINE_LENGTH - DOT_SIZE) * 100) / 100,
+        R: stop.R,
+        G: stop.G,
+        B: stop.B,
+        A: _a / (LINE_LENGTH - DOT_SIZE),
         position: props.stop.position
     });
 }
 
 const alphaDragKit = new DragKit({
     down: () => emits("drag-begin"),
-    move: (event: MouseEvent, x: number) => {
-        alphaX.value = verifiedVal(x, 0, LINE_LENGTH - DOT_SIZE);
-        modifyAlpha(alphaX.value);
+    move: (_: MouseEvent, x: number) => {
+        modifyAlpha(verifiedVal(x, 0, LINE_LENGTH - DOT_SIZE));
     },
     commit: () => emits("drag-end")
 });
@@ -128,9 +129,9 @@ function downAlpha(event: MouseEvent) {
 }
 
 function downAlphaSlider(event: MouseEvent) {
-    alphaX.value = event.offsetX - DOT_SIZE / 2;
-    alphaDragKit.start(event, {x: alphaX.value});
-    modifyAlpha(alphaX.value);
+    const x = event.offsetX - DOT_SIZE / 2;
+    alphaDragKit.start(event, {x});
+    modifyAlpha(x);
 }
 
 function eyedropper() {
@@ -150,11 +151,16 @@ function eyedropper() {
 function locate() {
     const {R, G, B, A} = props.stop;
     const hsb = RGB2HSB2(R, G, B);
-    hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
     left.value = WIDTH * hsb.s - DOT_SIZE / 2;
     top.value = HEIGHT * (1 - hsb.b) - DOT_SIZE / 2;
     alphaX.value = (LINE_LENGTH - DOT_SIZE) * A;
-    hue.value = Object.assign({...props.stop}, getHRGB(RGB2H2(R, G, B)));
+    if (hsb.h === 0 && lastHueDetail.x !== 0) {
+        hueX.value = lastHueDetail.x;
+        hue.value = lastHueDetail.hue;
+    } else {
+        hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
+        hue.value = Object.assign({...props.stop}, getHRGB(hsb.h * 360));
+    }
 }
 
 watchEffect(locate);

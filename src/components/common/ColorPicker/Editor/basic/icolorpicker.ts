@@ -25,7 +25,7 @@ export interface IGradientModifier {
     /**
      * @description 创建一个stop
      */
-    createStop(position: number): void;
+    createStop(c: RGBACatch): void;
 
     /**
      * @description 删除一个stop
