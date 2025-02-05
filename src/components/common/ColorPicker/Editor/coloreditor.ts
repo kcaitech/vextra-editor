@@ -70,7 +70,7 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     dragStopBegin(): void {
     }
 
-    draggingStop(index: number, rgbaCatch: RGBACatch): void {
+    draggingStop(c: RGBACatch, stopAt: number): void {
     }
 
     dragStopEnd(): void {
@@ -109,9 +109,9 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     reverseStops(): void {
     }
 
-    rotateImg(): void {
+    rotateStops(): void {
     }
 
-    rotateStops(): void {
+    rotateImg(): void {
     }
 }

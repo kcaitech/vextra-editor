@@ -16,6 +16,8 @@ const props = defineProps<{ gradient: GradientCatch, at: number }>()
 const emits = defineEmits<{
     (e: "update:at", val: number): void;
     (e: "create-stop", stop: RGBACatch): void;
+    (e: "reverse"): void;
+    (e: "rotate"): void;
 }>();
 
 const {t} = useI18n();
@@ -23,12 +25,6 @@ const channelStyle = ref<any>({});
 const circles = ref<{ x: number, stopStr: string, active?: boolean }[]>([]);
 const lineEl = ref<HTMLDivElement>();
 let lineL = 158;
-
-function reverse() {
-}
-
-function rotate() {
-}
 
 function createStop(event: MouseEvent) {
     const target = event.target as HTMLDivElement;
@@ -99,12 +95,12 @@ onUnmounted(watchEffect(update));
                 <div :class="item.active ? 'stop-active' : 'stop'" :style="{backgroundColor: item.stopStr}"/>
             </div>
         </div>
-        <div class="reverse" @click="reverse">
+        <div class="reverse" @click="emits('reverse')">
             <Tooltip :content="t('color.reverse')">
                 <SvgIcon :icon="exchange_icon"/>
             </Tooltip>
         </div>
-        <div class="rotate" @click="rotate">
+        <div class="rotate" @click="emits('rotate')">
             <Tooltip :content="t('color.rotate')">
                 <SvgIcon :icon="rotate90_icon"/>
             </Tooltip>

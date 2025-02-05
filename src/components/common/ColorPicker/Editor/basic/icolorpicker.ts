@@ -48,7 +48,7 @@ export interface IGradientModifier {
      */
     dragStopBegin(): void;
 
-    draggingStop(index: number, rgbaCatch: RGBACatch): void;
+    draggingStop(c: RGBACatch, stopAt: number): void;
 
     dragStopEnd(): void;
 

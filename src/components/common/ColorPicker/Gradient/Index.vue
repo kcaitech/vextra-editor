@@ -31,17 +31,26 @@ function dragBegin() {
 }
 
 function dragging(cc: RGBACatch) {
-    editor.draggingStop(gradientStopAt.value, cc);
+    editor.draggingStop(cc, gradientStopAt.value);
 }
 
 function dragEnd() {
     editor.dragStopEnd();
 }
 
+function reverse() {
+    editor.reverseStops();
+}
+
+function rotate() {
+    editor.rotateStops();
+}
+
 onUnmounted(watchEffect(update));
 </script>
 
 <template>
-    <Station :gradient="data" v-model:at="gradientStopAt" @create-stop="createStop"/>
+    <Station v-model:at="gradientStopAt" :gradient="data" @create-stop="createStop" @reverse="reverse"
+             @rotate="rotate"/>
     <RGBAModel :stop="stop" @change="setColor" @drag-begin="dragBegin" @dragging="dragging" @drag-end="dragEnd"/>
 </template>
