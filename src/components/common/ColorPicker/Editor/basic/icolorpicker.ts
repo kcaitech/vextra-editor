@@ -75,12 +75,17 @@ export interface IPatternModifier {
     /**
      * @description 修改图片资源的引用
      */
-    modifyRef(): void;
+    modifyRef(event: Event): void;
 
     /**
      * @description 修改图片填充规则
      */
     modifyObjectFit(type: string): void;
+
+    /**
+     * @description 修改平铺时每张图的缩放比例
+     */
+    modifyTileScale(event: Event): void;
 
     /**
      * @description 旋转图片

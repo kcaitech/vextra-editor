@@ -88,6 +88,14 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     draggingTo(): void {
     }
 
+    removeStop(index: number): void {
+    }
+
+    reverseStops(): void {
+    }
+
+    rotateStops(): void {
+    }
     filterDragBegin(): void {
     }
 
@@ -100,16 +108,11 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     modifyObjectFit(type: string): void {
     }
 
-    modifyRef(): void {
+    modifyRef(event: Event): void {
     }
 
-    removeStop(index: number): void {
-    }
+    modifyTileScale(event: Event): void {
 
-    reverseStops(): void {
-    }
-
-    rotateStops(): void {
     }
 
     rotateImg(): void {

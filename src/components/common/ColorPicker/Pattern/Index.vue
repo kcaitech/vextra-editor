@@ -2,13 +2,12 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
 import { useI18n } from "vue-i18n";
-import { ImagePack, ImageScaleMode } from "@kcdesign/data";
+import { ImageScaleMode } from "@kcdesign/data";
 import rotate90_icon from "@/assets/icons/svg/rotate90.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import SelectBanana from "@/components/common/Select/SelectBanana.vue";
 import { ref } from "vue";
 import { fixedZero } from "@/utils/common";
-import { ImageLoader } from "@/imageLoader";
 import PatternFilter from "@/components/common/ColorPicker/Pattern/PatternFilter.vue";
 
 const props = defineProps<{
@@ -22,50 +21,42 @@ const imageModeOptions = [
     {label: t(`pattern.${ImageScaleMode.Stretch}`), value: ImageScaleMode.Stretch},
     {label: t(`pattern.${ImageScaleMode.Tile}`), value: ImageScaleMode.Tile},
 ];
-const mode = ref<ImageScaleMode>(props.data.objectFit);
 const picker = ref<HTMLInputElement>();
 const accept = 'image/png, image/jpeg, image/gif, image/svg+xml';
 
+function modifyObjectFit(val: ImageScaleMode) {
+    props.editor.modifyObjectFit(val);
+}
 function selectImage() {
     if (picker.value) picker.value.click();
 }
 
 function pick(e: Event) {
-    if (!e.target) return;
-    const files = (e.target as HTMLInputElement).files;
-    if (!files?.length) return;
-    const file = files[0];
-    const imageLoader = new ImageLoader(props.editor.context);
-    imageLoader
-        .packFile(file, false)
-        .then(res => {
-            if (!res) return;
-            const result = res as ImagePack;
-            const {size, buff, base64} = result;
-            const media = {name: file.name || '', frame: result.size, buff, base64};
-            const container: any = {};
-            // modify_imgs(props.context, [media], container);
-            // const keys = Array.from(Object.keys(container) || []) as string[];
-            // const selected = props.context.selection.selectedShapes;
-            // const upload = selected.map(shape => ({shape, upload: [{buff, ref: keys[0]}]}));
-            // imageLoader.upload(upload)
-        });
-    if (picker.value) (picker.value as HTMLInputElement).value = '';
+    props.editor.modifyRef(e);
+    (picker.value as HTMLInputElement).value = '';
 }
+
 
 function rotate() {
+    props.editor.rotateImg();
 }
 
-function scale() {
+function scale(event: Event) {
+    props.editor.modifyTileScale(event);
+}
+
+function focus(event: Event) {
+    (event.target as HTMLInputElement).select();
 }
 </script>
 
 <template>
     <div class="pattern-modifier-wrapper">
         <div class="header">
-            <SelectBanana class="select" :context="editor.context" :options="imageModeOptions" :value="mode"/>
+            <SelectBanana class="select" :context="editor.context" :options="imageModeOptions" :value="data.objectFit"
+                          @change="modifyObjectFit"/>
             <div v-if="data.objectFit === ImageScaleMode.Tile" class="scale">
-                <input type="text" :value="fixedZero((data.scale ?? 0.5) * 100) + '%'" @change="scale">
+                <input type="text" :value="fixedZero((data.scale ?? 0.5) * 100) + '%'" @change="scale" @focus="focus">
             </div>
             <div class="rotate" @click="rotate">
                 <SvgIcon :icon="rotate90_icon"/>
@@ -78,7 +69,7 @@ function scale() {
                     <div> {{ t('attr.selected_picture') }}</div>
                 </div>
                 <input type="file" ref="picker" :accept="accept" :multiple="false" id="fill-file-picker"
-                       @change.stop="(e: Event) => { pick(e) }"/>
+                       @change.stop="pick"/>
             </div>
         </div>
         <PatternFilter :editor="editor" :data="data.filter"/>
@@ -109,6 +100,9 @@ function scale() {
             width: 60px;
             border-radius: 4px;
             background-color: #f4f5f5;
+            display: flex;
+            padding: 6px;
+            box-sizing: border-box;
 
             input {
                 width: 100%;

@@ -1,9 +1,12 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { BasicArray, Color, Fill, FillsAsyncApi, FillType, Stop } from "@kcdesign/data";
+import { BasicArray, Color, Fill, FillsAsyncApi, FillType, ImagePack, ImageScaleMode, Stop } from "@kcdesign/data";
 import { get_aciton_gradient_stop, get_actions_filltype } from "@/utils/shape_style";
 import { v4 } from "uuid";
+import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
+import { ImageLoader } from "@/imageLoader";
+import { modify_imgs } from "@/utils/content";
 
 export class FillsPicker extends ColorPickerEditor {
     fill: Fill | undefined;
@@ -106,5 +109,55 @@ export class FillsPicker extends ColorPickerEditor {
         this.api.rotateGradientStops(this.flat, this.index);
         this.hiddenCtrl();
         this.commit();
+    }
+
+    modifyObjectFit(type: ImageScaleMode): void {
+        this.getSelection();
+        this.api.modifyObjectFit(this.flat, this.index, type);
+        this.hiddenCtrl();
+        this.commit();
+    }
+
+    modifyTileScale(event: Event): void {
+        this.getSelection();
+        const val = getNumberFromInputEvent(event);
+        if (isNaN(val)) return;
+        this.api.modifyTileScale(this.index, Math.max(val / 100, 0.02), this.flat);
+        this.hiddenCtrl(event);
+        this.commit();
+    }
+
+    rotateImg(): void {
+        this.getSelection();
+        this.api.rotateImg(this.index, ((this.fill?.rotation ?? 0) + 90) % 360, this.flat);
+        this.hiddenCtrl();
+        this.commit();
+    }
+
+    modifyRef(event: Event): void {
+        if (!event.target) return;
+        const files = (event.target as HTMLInputElement).files;
+        if (!files?.length) return;
+        const file = files[0];
+        const imageLoader = new ImageLoader(this.context);
+        imageLoader
+            .packFile(file, false)
+            .then(res => {
+                if (!res) return;
+                const result = res as ImagePack;
+                const {buff, base64, size} = result;
+                const media = {name: file.name || '', frame: result.size, buff, base64};
+                const container: any = {};
+                modify_imgs(this.context, [media], container);
+                const keys = Array.from(Object.keys(container) || []) as string[];
+                this.getSelection();
+                this.api.modifyFillImageRef(this.index, keys[0], {buff, base64}, size.width, size.height, this.flat);
+                this.hiddenCtrl();
+                const upload = this.flat.map(shape => ({shape, upload: [{buff, ref: keys[0]}]}));
+                imageLoader.upload(upload)
+            })
+            .finally(() => {
+                this.commit();
+            });
     }
 }
