@@ -12,14 +12,16 @@ const props = defineProps<{
 const t = useI18n().t;
 
 function start() {
-
+    props.editor.filterDragBegin();
 }
 
 function modify(val: number, type: string) {
-    console.log(type, val);
+    const value = Math.round(type === "hue" ? val * 360 - 180 : val * 200 - 100);
+    props.editor.filterDragging(type, value);
 }
 
 function end() {
+    props.editor.filterDragEnd();
 }
 
 </script>

@@ -160,4 +160,17 @@ export class FillsPicker extends ColorPickerEditor {
                 this.commit();
             });
     }
+
+    filterDragBegin(): void {
+        this.getSelection();
+    }
+
+    filterDragging(type: string, val: number): void {
+        this.api.modifyFillImageFilter(type, val, this.index, this.flat);
+        this.hiddenCtrl();
+    }
+
+    filterDragEnd(): void {
+        this.commit();
+    }
 }
