@@ -50,9 +50,9 @@ const dragKit = new DragKit({
         center = (start + end) / 2;
         emits("drag-start");
     },
-    move: (event: MouseEvent, x: number) => {
+    move: (event: MouseEvent) => {
         if (isDrag) {
-            modify(event, x);
+            modify(event);
         } else if (Math.abs(event.clientX - downX) > 4) {
             isDrag = true;
         }
@@ -68,10 +68,10 @@ function down(e: MouseEvent) {
 
 function downSlider(e: MouseEvent) {
     dragKit.start(e);
-    modify(e, 0);
+    modify(e);
 }
 
-function modify(e: MouseEvent, val: number) {
+function modify(e: MouseEvent) {
     let x = e.x;
     if (x > center) {
         if (x > end) x = end;
@@ -86,7 +86,7 @@ function modify(e: MouseEvent, val: number) {
         valStart.value = x - start;
         position.value = x - start;
     }
-    emits("dragging", val)
+    emits("dragging", position.value / MAX_SIDE_LENGTH);
 }
 </script>
 <template>

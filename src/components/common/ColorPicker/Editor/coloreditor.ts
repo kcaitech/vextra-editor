@@ -99,10 +99,10 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     filterDragBegin(): void {
     }
 
-    filterDragEnd(): void {
+    filterDragging(type: string, val: number): void {
     }
 
-    filterDragging(type: string, val: number): void {
+    filterDragEnd(): void {
     }
 
     modifyObjectFit(type: string): void {
