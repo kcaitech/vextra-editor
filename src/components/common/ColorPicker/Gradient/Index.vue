@@ -23,7 +23,7 @@ function update() {
 }
 
 function setColor(cc: RGBACatch) {
-    editor.setSolidColor(cc);
+    editor.setStopColor(cc, gradientStopAt.value);
 }
 
 function dragBegin() {

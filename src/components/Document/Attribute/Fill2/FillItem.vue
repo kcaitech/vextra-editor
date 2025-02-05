@@ -97,8 +97,6 @@ function assemble() {
     }
 }
 
-assemble();
-
 function update() {
     const fill = props.data.fill;
     const color = fill.color;

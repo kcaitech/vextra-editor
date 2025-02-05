@@ -72,4 +72,12 @@ export class FillsPicker extends ColorPickerEditor {
         this.pageEditor.addShapesGradientStop(actions);
         this.hiddenCtrl();
     }
+
+    setStopColor(c: RGBACatch, stopAt: number) {
+        this.getSelection();
+        const color = new Color(c.A, c.R, c.G, c.B);
+        this.api.modifyStopColorOnce(this.flat, this.index, color, stopAt);
+        this.commit();
+        this.hiddenCtrl();
+    }
 }
