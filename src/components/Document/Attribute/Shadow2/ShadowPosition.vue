@@ -2,38 +2,27 @@
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
 import { hidden_selection } from '@/utils/content';
-import { get_actions_shadow_position } from '@/utils/shape_style';
-import { Shadow, ShadowPosition, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { ShadowPosition } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const props = defineProps<{
-    context: Context
-    shadow: Shadow
-    idx: number
-    length: number
-    shapes: ShapeView[]
+    context: Context;
+    manager: ShadowsContextMgr;
+    data: ShadowCatch;
 }>();
 const isMenu = ref(false);
-const activeItem = ref(props.shadow.position);
+const activeItem = ref(props.data.shadow.position);
 const showMenu = () => {
     if (isMenu.value) return isMenu.value = false;
-    activeItem.value = props.shadow.position;
+    activeItem.value = props.data.shadow.position;
     props.context.menu.shadowPositionMenu();
     isMenu.value = true;
     document.addEventListener('click', handleClick);
 }
 
 const togglePositinon = (position: ShadowPosition) => {
-    const _idx = props.length - props.idx - 1;
-    const actions = get_actions_shadow_position(props.shapes, _idx, position);
-    if (actions && actions.length) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesShadowPosition(actions);
-        }
-    }
+    props.manager.modifyShadowPosition(props.data.shadow, position);
     close();
     hidden_selection(props.context);
 }
@@ -65,23 +54,24 @@ import down_icon from '@/assets/icons/svg/down.svg';
 import white_select_icon from '@/assets/icons/svg/white-select.svg';
 import page_select_icon from '@/assets/icons/svg/page-select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { ShadowCatch, ShadowsContextMgr } from './ctx';
 
 </script>
 
 <template>
     <div class="shadow-position">
-        <div class="context" @click.stop="showMenu">{{ t(`shadow.${shadow.position}`) }}</div>
+        <div class="context" @click.stop="showMenu">{{ t(`shadow.${data.shadow.position}`) }}</div>
         <div class="down" @click.stop="showMenu" :class="{ 'active-down': isMenu }">
             <SvgIcon :icon="down_icon" />
         </div>
         <div class="select_menu" v-if="isMenu"
-            :style="{ top: shadow.position === ShadowPosition.Outer ? -4 + 'px' : -32 + 'px' }">
+            :style="{ top: data.shadow.position === ShadowPosition.Outer ? -4 + 'px' : -32 + 'px' }">
             <div class="item" @click="togglePositinon(ShadowPosition.Outer)"
                 @mouseenter="activeItem = ShadowPosition.Outer"
                 :class="{ 'active-item': activeItem === ShadowPosition.Outer }">
                 <div class="text">{{ t(`shadow.outer`) }}</div>
                 <div class="icon">
-                    <SvgIcon v-if="shadow.position === ShadowPosition.Outer"
+                    <SvgIcon v-if="data.shadow.position === ShadowPosition.Outer"
                         :icon="activeItem === ShadowPosition.Outer ? white_select_icon : page_select_icon" />
                 </div>
             </div>
@@ -90,7 +80,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
                 :class="{ 'active-item': activeItem === ShadowPosition.Inner }">
                 <div class="text">{{ t(`shadow.inner`) }}</div>
                 <div class="icon">
-                    <SvgIcon v-if="shadow.position === ShadowPosition.Inner"
+                    <SvgIcon v-if="data.shadow.position === ShadowPosition.Inner"
                         :icon="activeItem === ShadowPosition.Inner ? white_select_icon : page_select_icon" />
                 </div>
             </div>
