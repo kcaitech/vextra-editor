@@ -4,7 +4,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
 import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onMounted, onUnmounted, reactive, ref, watchEffect } from "vue";
+import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType } from "@kcdesign/data";
@@ -15,6 +15,7 @@ import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { FillsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/fillspicker";
 import { getGradientCatch, GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
+import { getPatternCatch, PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
 
 /**
  * 用于展示和修改一条填充的属性
@@ -33,6 +34,7 @@ const compo = ref<any>();
 const fillType = ref<string>(FillType.SolidColor);
 const rgba = ref<RGBACatch>({R: 153, G: 43, B: 43, A: 0.52, position: 1});
 const gradient = ref<GradientCatch | undefined>();
+const pattern = ref<PatternCatch | undefined>();
 
 const styleReplace = {
     flex: 1,
@@ -98,20 +100,25 @@ function assemble() {
 assemble();
 
 function update() {
-    const data = props.data;
-    const color = data.fill.color;
+    const fill = props.data.fill;
+    const color = fill.color;
     colorHex.value = color.toHex().slice(1);
     alpha.value = Math.round(color.alpha * 100) + '%';
-    colors.value = [data.fill];
-    fillsPicker.fill = data.fill;
+    colors.value = [fill];
+    fillsPicker.fill = fill;
 
-    if (data.fill.fillType === FillType.Gradient) {
-        fillType.value = data.fill.gradient!.gradientType;
-        gradient.value = getGradientCatch(data.fill.gradient!);
+    pattern.value = undefined;
+    gradient.value = undefined;
+
+    if (fill.fillType === FillType.Gradient) {
+        fillType.value = fill.gradient!.gradientType;
+        gradient.value = getGradientCatch(fill.gradient!);
+    } else if (fill.fillType === FillType.Pattern) {
+        fillType.value = fill.fillType;
+        pattern.value = getPatternCatch(fill);
     } else {
-        fillType.value = data.fill.fillType;
+        fillType.value = fill.fillType;
         rgba.value = {R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1};
-        gradient.value = undefined;
     }
 
     assemble();
@@ -132,8 +139,8 @@ onUnmounted(watchEffect(update));
         <div class="delete" @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon"/>
         </div>
-        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker"
-                     :type="fillType" :color="rgba" :gradient="gradient"
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType"
+                     :color="rgba" :gradient="gradient" :pattern="pattern"
                      @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>

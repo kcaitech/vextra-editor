@@ -2,7 +2,7 @@
 import Station from "@/components/common/ColorPicker/Gradient/Station.vue";
 import RGBAModel from "@/components/common/ColorPicker/RGBAModel/Index.vue";
 import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
-import { onMounted, onUnmounted, ref, watchEffect } from "vue";
+import { onUnmounted, ref, watchEffect } from "vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 

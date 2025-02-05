@@ -2,7 +2,6 @@
 import RGBAModel from "@/components/common/ColorPicker/RGBAModel/Index.vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { onMounted } from "vue";
 
 const props = defineProps<{
     editor: ColorPickerEditor;

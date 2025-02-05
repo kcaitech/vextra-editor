@@ -8,8 +8,9 @@ import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternline
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import Solid from "@/components/common/ColorPicker/Solid/Index.vue";
 import GradientView from "@/components/common/ColorPicker/Gradient/Index.vue";
+import Pattern from "@/components/common/ColorPicker/Pattern/Index.vue"
 
-import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
+import { computed, onUnmounted, ref, watchEffect } from "vue";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -27,6 +28,7 @@ const emits = defineEmits(["close"]);
 
 const compos = computed(() => {
     if (props.gradient) return GradientView;
+    else if (props.pattern) return Pattern;
     else return Solid;
 });
 

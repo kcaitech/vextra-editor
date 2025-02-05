@@ -1,6 +1,12 @@
-import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
+import {
+    Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
+    Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView
+} from "@kcdesign/data";
 import { Context } from "@/context";
-import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
+import {
+    get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete,
+    get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify
+} from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";

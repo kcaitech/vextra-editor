@@ -8,9 +8,10 @@ const props = defineProps<{
     range?: [number, number];
 }>();
 const emits = defineEmits<{
-    (e: 'change', value: number): void;
-    (e: 'down', event: MouseEvent): void;
-    (e: 'onUp'): void;
+    (e: "change", value: number): void;
+    (e: "drag-start"): void;
+    (e: "dragging", value: number): void;
+    (e: "drag-end"): void;
 }>();
 const MAX_SIDE_LENGTH = 160;
 const MAX_SIDE_LENGTH_CSS = `${MAX_SIDE_LENGTH}px`;
@@ -47,13 +48,17 @@ const dragKit = new DragKit({
         start = box.left;
         end = box.right;
         center = (start + end) / 2;
-        emits('down', event);
-    }, move: (event: MouseEvent) => {
+        emits("drag-start");
+    },
+    move: (event: MouseEvent, x: number) => {
         if (isDrag) {
-            modify(event);
+            modify(event, x);
         } else if (Math.abs(event.clientX - downX) > 4) {
             isDrag = true;
         }
+    },
+    commit: () => {
+        emits("drag-end");
     }
 })
 
@@ -63,10 +68,10 @@ function down(e: MouseEvent) {
 
 function downSlider(e: MouseEvent) {
     dragKit.start(e);
-    modify(e);
+    modify(e, 0);
 }
 
-function modify(e: MouseEvent) {
+function modify(e: MouseEvent, val: number) {
     let x = e.x;
     if (x > center) {
         if (x > end) x = end;
@@ -81,7 +86,7 @@ function modify(e: MouseEvent) {
         valStart.value = x - start;
         position.value = x - start;
     }
-    emits('change', position.value);
+    emits("dragging", val)
 }
 </script>
 <template>
@@ -106,6 +111,10 @@ function modify(e: MouseEvent) {
     position: relative;
 
     .desc {
+        max-width: 56px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
         color: #3D3D3D;
     }
 
