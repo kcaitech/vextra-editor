@@ -5,13 +5,12 @@ import add_icon from "@/assets/icons/svg/add.svg";
 
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { FillCatch, FillsContext, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import TypeHeader from "@/components/Document/Attribute/TypeHeader.vue";
 import ShadowMaskView from "./ShadowMaskView.vue";
 import ShadowItem from "./ShadowItem.vue";
 import { useI18n } from "vue-i18n";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
-import FillStylePanel from "@/components/Document/Attribute/Fill2/Lib/FillStylePanel.vue";
+import ShadowStylePanel from "@/components/Document/Attribute/Shadow2/Lib/ShadowStylePanel.vue";
 import { ShadowCatch, ShadowsContext, ShadowsContextMgr } from "./ctx";
 
 /**
@@ -36,11 +35,11 @@ const shadowCtx = ref<ShadowsContext>({
 });
 const shadowCtxMgr = new ShadowsContextMgr(props.context, shadowCtx.value as ShadowsContext);
 const cloverVisible = computed<boolean>(() => !(shadowCtx.value.mask || shadowCtx.value.mixed));
-const shadowLibStatus = reactive<ElementStatus>({ id: '#fill-style-lib-panel', visible: false });
+const shadowLibStatus = reactive<ElementStatus>({ id: '#shadow-style-lib-panel', visible: false });
 const shadowPanelStatusMgr = new ElementManager(
     props.context,
     shadowLibStatus,
-    { whiteList: ['.fill-style-lib-panel', '.clover', '.desc'] }
+    { whiteList: ['.shadow-style-lib-panel', '.clover', '.desc'] }
 );
 shadowCtxMgr.catchPanel(shadowPanelStatusMgr);
 
@@ -90,14 +89,14 @@ onUnmounted(() => {
             :shadows="(shadowCtx.shadows as ShadowCatch[])" :info="shadowCtx.maskInfo!"
             @show-style-lib="showShadowLib" />
 
-        <div v-else class="fills-container">
+        <div v-else-if="shadowCtx.shadows.length" class="fills-container">
             <ShadowItem v-for="(shadow, index) in shadowCtx.shadows" :key="index" :context="context"
                 :manager="shadowCtxMgr" :data="(shadow as ShadowCatch)" />
         </div>
-        <!-- 
-        <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr"
-                        @close="()=> fillPanelStatusMgr.close()"/>
-        -->
+
+        <ShadowStylePanel v-if="shadowLibStatus.visible" :context="context" :manager="shadowCtxMgr"
+            @close="() => shadowPanelStatusMgr.close()" />
+
     </div>
 </template>
 <style scoped lang="scss">

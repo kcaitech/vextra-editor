@@ -87,11 +87,11 @@ onUnmounted(() => {
         </TypeHeader>
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
         <FillMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
-                      :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!"
+                      :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!"
                       @show-style-lib="showFillLib"/>
-        <div v-else class="fills-container">
+        <div v-else-if="fillCtx.fills.length" class="fills-container">
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index"
-                      :context="context" :manager="fillCtxMgr" :data="fill as FillCatch"/>
+                      :context="context" :manager="fillCtxMgr" :data="(fill as FillCatch)"/>
         </div>
         <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr"
                         @close="()=> fillPanelStatusMgr.close()"/>

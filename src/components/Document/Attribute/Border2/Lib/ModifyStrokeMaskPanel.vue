@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { BasicArray, BorderMask, BorderMaskType, BorderPosition, BorderSideSetting, SideType } from "@kcdesign/data";
+import { BorderMask, BorderMaskType, BorderPosition, BorderSideSetting, SideType } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
@@ -8,7 +8,6 @@ import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.
 import { StrokeFillContextMgr } from "../ctx";
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from "@/utils/common";
-import { v4 } from "uuid";
 
 /**
  * 修改样式弹框

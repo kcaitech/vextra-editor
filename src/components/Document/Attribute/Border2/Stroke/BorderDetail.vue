@@ -6,11 +6,10 @@ import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { Border, BorderStyle, CornerType, ShapeType, ShapeView, TableView } from "@kcdesign/data";
+import { BorderStyle, CornerType, ShapeType, TableView } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import {
-    BorderData,
     get_actions_border,
     get_actions_border_style, get_borders_corner
 } from '@/utils/shape_style';

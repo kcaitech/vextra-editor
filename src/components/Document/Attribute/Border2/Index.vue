@@ -6,7 +6,7 @@ import delete_icon from '@/assets/icons/svg/delete.svg';
 
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { FillCatch, FillsContext } from "@/components/Document/Attribute/Fill2/ctx";
+import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
 import TypeHeader from "@/components/Document/Attribute/TypeHeader.vue";
 import FillMaskView from "./FillMaskView.vue";
 import FillItem from "./FillItem.vue";
@@ -138,10 +138,10 @@ onUnmounted(() => {
         </TypeHeader>
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
         <FillMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
-            :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!" @show-style-lib="showFillLib" />
+            :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!" @show-style-lib="showFillLib" />
         <div v-else-if="fillCtx.fills.length" class="fills-container">
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index" :context="context" :manager="fillCtxMgr"
-                :data="fill as FillCatch" />
+                :data="(fill as FillCatch)" />
         </div>
         <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr" i18n="colors"
             @close="() => fillPanelStatusMgr.close()" />

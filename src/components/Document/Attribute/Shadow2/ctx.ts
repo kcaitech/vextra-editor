@@ -1,6 +1,6 @@
-import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView, Shadow, ShadowMask, ShadowPosition } from "@kcdesign/data";
+import { Style, Color, BasicArray, BatchAction2, ContactLineView, Shadow, ShadowMask, ShadowPosition } from "@kcdesign/data";
 import { Context } from "@/context";
-import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify, get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_delete, get_actions_shadow_enabled, get_actions_shadow_mask, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_position, get_actions_shadow_spread, get_actions_shadow_unify } from "@/utils/shape_style";
+import { get_actions_add_mask, get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_delete, get_actions_shadow_enabled, get_actions_shadow_mask, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_position, get_actions_shadow_spread, get_actions_shadow_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
@@ -108,7 +108,7 @@ export class ShadowsContextMgr extends StyleCtx {
             const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
             actions.push({ target: view, value: shadow });
         }
-
+ 
         this.editor.shapesAddShadow(actions);
 
         this.hiddenCtrl();

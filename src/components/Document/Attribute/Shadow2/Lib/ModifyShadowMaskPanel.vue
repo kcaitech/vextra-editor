@@ -1,36 +1,35 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { FillMask } from "@kcdesign/data";
-import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
+import { ShadowMask } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref } from "vue";
-import FillItem from "../FillItem.vue";
+import ShadowItem from "@/components/Document/Attribute/Shadow2/ShadowItem.vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
 import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
-import { StrokeFillContextMgr } from "../ctx";
+import { ShadowsContextMgr, ShadowCatch } from "../ctx";
 
 /**
  * 修改样式弹框
  */
-const {context, manager, data} = defineProps<{
+const { context, manager, data } = defineProps<{
     context: Context;
-    manager: StrokeFillContextMgr;
-    data?: FillMask;
+    manager: ShadowsContextMgr;
+    data?: ShadowMask;
 }>();
 const emits = defineEmits<{
     (e: 'close'): void;
 }>();
 
-const {t} = useI18n();
-const name = ref<string>(data?.name ?? '颜色样式');
+const { t } = useI18n();
+const name = ref<string>(data?.name ?? '阴影样式');
 const desc = ref<string>(data?.description ?? '');
-const fills = ref<FillCatch[]>(getFills());
+const shadows = ref<ShadowCatch[]>(getShadows());
 
-function getFills() {
-    const container: FillCatch[] = [];
+function getShadows() {
+    const container: ShadowCatch[] = [];
     if (data) {
-        for (let i = data.fills.length - 1; i > -1; i--) container.push({fill: data.fills[i]});
+        for (let i = data.shadows.length - 1; i > -1; i--) container.push({ shadow: data.shadows[i] });
     }
     return container;
 }
@@ -38,7 +37,7 @@ function getFills() {
 function update() {
     name.value = data?.name ?? '';
     desc.value = data?.description ?? '';
-    fills.value = getFills();
+    shadows.value = getShadows();
 }
 
 function modifyName(value: string) {
@@ -65,22 +64,22 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="modify-fill-style-panel" id="modify-fill-style-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')"/>
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data"
-                      @modify-name="modifyName" @modify-desc="modifyDesc"/>
+    <div class="modify-shadow-style-panel" id="modify-shadow-style-panel">
+        <PanelHeader :title="data ? t('stylelib.editor_shadow') : t('stylelib.create_shadow')" @close="emits('close')" />
+        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
+            @modify-desc="modifyDesc" />
         <div v-if="data" class="data-panel">
-            <ListHeader title="颜色" @create="manager.create()"/>
+            <ListHeader title="阴影" @create="manager.create()" />
             <div class="fills-container">
-                <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                          :data="(fill as FillCatch)"/>
+                <ShadowItem v-for="(shadow, index) in shadows" :key="index" :context="context" :manager="manager"
+                    :data="(shadow as ShadowCatch)" />
             </div>
         </div>
-        <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">创建样式</div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
     </div>
 </template>
 <style scoped lang="scss">
-.modify-fill-style-panel {
+.modify-shadow-style-panel {
     position: fixed;
     display: flex;
     flex-direction: column;

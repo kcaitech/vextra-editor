@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { ShadowCatch, ShadowsContextMgr } from './ctx';
-import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import gear_icon from '@/assets/icons/svg/gear.svg';
@@ -20,7 +19,7 @@ import { LockMouse } from '@/transform/lockMouse';
 import { get_actions_shadow_blur, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
 import { sortValue } from '../BaseAttr/oval';
-import { Menu } from '@/context/menu';
+import PopoverHeader from "@/components/common/PopoverHeader.vue";
 
 const { t } = useI18n();
 
@@ -48,6 +47,13 @@ const colorPanelStatusMgr = new ElementManager(
     { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
 );
 
+const panelStatus = reactive<ElementStatus>({ id: '#shadow-detail-container', visible: false });
+const panelStatusMgr = new ElementManager(
+    props.context,
+    panelStatus,
+    { whiteList: ['.shadow-detail-container', 'shadow-trigger'] }
+);
+
 function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
@@ -58,6 +64,19 @@ function showColorPanel(event: MouseEvent) {
         e = e.parentElement;
     }
 }
+
+function showDetailPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    disable();
+    while (e) {
+        if (e.classList.contains('shadow-trigger')) {
+            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -306 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
 
 const setOffsetX = (value: number) => {
     props.manager.modifyShadowOffsetX(value, props.data.shadow);
@@ -255,11 +274,6 @@ function dragEnd() {
     document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
-function showMenu() {
-    props.context.menu.notify(Menu.SHUTDOWN_MENU);
-    disable();
-    popover.value.show();
-}
 const disabled = ref(false);
 const spare_tip = ref('');
 const disable = () => {
@@ -340,52 +354,45 @@ onUnmounted(watchEffect(update));
 </script>
 
 <template>
-    <div class="border-detail-container">
-        <Popover :context="context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
-            :title="`${t('shadow.shadow_setting')}`">
-            <template #trigger>
-                <div class="trigger" @click="showMenu">
-                    <SvgIcon :icon="gear_icon" />
+    <div class="shadow-trigger" @click="showDetailPanel">
+        <SvgIcon :icon="gear_icon" />
+    </div>
+    <div id="shadow-detail-container" class="shadow-detail-container" v-if="panelStatus.visible">
+        <PopoverHeader :title="t('shadow.shadow_setting')" :create="false" @close="panelStatusMgr.close()" />
+        <div class="options-container">
+            <div class="setting">
+                <div class="name-title">{{ t('shadow.position') }}</div>
+                <ShadowInput ticon="X" :shadow-v="extend(data.shadow.offsetX)" @on-change="setOffsetX"
+                    @key-down="keydownOffsetX" @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd">
+                </ShadowInput>
+                <ShadowInput ticon="Y" :shadow-v="extend(data.shadow.offsetY)" @on-change="setOffsetY"
+                    @key-down="keydownOffsetY" @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd">
+                </ShadowInput>
+            </div>
+            <div class="setting">
+                <div class="name-title">{{ t('shadow.effect') }}</div>
+                <ShadowInput ticon="B" :shadow-v="extend(data.shadow.blurRadius)" @on-change="setBlurRadius"
+                    :tootip="`${t('shadow.blur')}`" @key-down="keydownBlurRadius" @dragstart="dragStart"
+                    @dragging="draggingB" @dragend="dragEnd">
+                </ShadowInput>
+                <ShadowInput ticon="S" :shadow-v="extend(data.shadow.spread)" @on-change="setSpread"
+                    :disabled="disabled" :tootip="spare_tip" @dragstart="dragStart" @dragging="draggingS"
+                    @dragend="dragEnd" @key-down="keydownSpread">
+                </ShadowInput>
+            </div>
+            <div class="setting">
+                <div class="name-title">{{ t('shadow.color') }}</div>
+                <div :class="{ 'value-panel-wrapper': true }">
+                    <ColorBlock :colors="(colors as Color[])" @click="showColorPanel" />
+                    <input class="colorShadow" type="text" :value="colorHex" @focus="selectAllOnFocus"
+                        @change="(e) => manager.modifyShadpwHex(e, data.shadow)" />
+                    <input class="alphaShadow" type="text" :value="alpha" @focus="selectAllOnFocus"
+                        @change="(e) => manager.modifyFillAlpha(e, data.shadow)" />
                 </div>
-            </template>
-
-            <template #body>
-                <div class="options-container">
-                    <div class="setting">
-                        <div class="name-title">{{ t('shadow.position') }}</div>
-                        <ShadowInput ticon="X" :shadow-v="extend(data.shadow.offsetX)" @on-change="setOffsetX"
-                            @key-down="keydownOffsetX" @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd">
-                        </ShadowInput>
-                        <ShadowInput ticon="Y" :shadow-v="extend(data.shadow.offsetY)" @on-change="setOffsetY"
-                            @key-down="keydownOffsetY" @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd">
-                        </ShadowInput>
-                    </div>
-                    <div class="setting">
-                        <div class="name-title">{{ t('shadow.effect') }}</div>
-                        <ShadowInput ticon="B" :shadow-v="extend(data.shadow.blurRadius)" @on-change="setBlurRadius"
-                            :tootip="`${t('shadow.blur')}`" @key-down="keydownBlurRadius" @dragstart="dragStart"
-                            @dragging="draggingB" @dragend="dragEnd">
-                        </ShadowInput>
-                        <ShadowInput ticon="S" :shadow-v="extend(data.shadow.spread)" @on-change="setSpread"
-                            :disabled="disabled" :tootip="spare_tip" @dragstart="dragStart" @dragging="draggingS"
-                            @dragend="dragEnd" @key-down="keydownSpread">
-                        </ShadowInput>
-                    </div>
-                    <div class="setting">
-                        <div class="name-title">{{ t('shadow.color') }}</div>
-                        <div :class="{ 'value-panel-wrapper': true }">
-                            <ColorBlock :colors="(colors as Color[])" @click="showColorPanel" />
-                            <input class="colorShadow" type="text" :value="colorHex" @focus="selectAllOnFocus"
-                                @change="(e) => manager.modifyShadpwHex(e, data.shadow)" />
-                            <input class="alphaShadow" type="text" :value="alpha" @focus="selectAllOnFocus"
-                                @change="(e) => manager.modifyFillAlpha(e, data.shadow)" />
-                        </div>
-                        <ColorPicker v-if="colorPanelStatus.visible" :editor="shadowsPicker" :type="FillType.SolidColor"
-                            :color="rgba" @close="() => colorPanelStatusMgr.close()" />
-                    </div>
-                </div>
-            </template>
-        </Popover>
+                <ColorPicker v-if="colorPanelStatus.visible" :editor="shadowsPicker" :type="FillType.SolidColor"
+                    :color="rgba" @close="() => colorPanelStatusMgr.close()" />
+            </div>
+        </div>
         <teleport to="body">
             <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
             </div>
@@ -394,42 +401,45 @@ onUnmounted(watchEffect(update));
 </template>
 
 <style scoped lang="scss">
-.border-detail-container {
-    >.popover {
-        width: 28px;
-        height: 28px;
+.shadow-trigger {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--default-radius);
 
-        .trigger {
-            width: 100%;
-            height: 100%;
+    >img {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.shadow-trigger:hover {
+    background-color: #F5F5F5;
+}
+
+.shadow-detail-container {
+    width: 254px;
+    height: fit-content;
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-sizing: border-box;
+    z-index: 99;
+
+    .options-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 12px 12px 0 12px;
+        box-sizing: border-box;
+        height: 100%;
+
+        >div {
             display: flex;
-            justify-content: center;
             align-items: center;
-            border-radius: var(--default-radius);
-
-            >img {
-                width: 16px;
-                height: 16px;
-            }
-        }
-
-        .trigger:hover {
-            background-color: #F5F5F5;
-        }
-
-        .options-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 12px 12px 0 12px;
-            box-sizing: border-box;
-            height: 100%;
-
-            >div {
-                display: flex;
-                align-items: center;
-                margin-bottom: 12px;
-            }
+            margin-bottom: 12px;
         }
     }
 }

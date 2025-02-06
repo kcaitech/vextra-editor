@@ -5,9 +5,10 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 import { Context } from "@/context";
 import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
-import ShadowPosition from "./ShadowPosition.vue";
 import ShadowDetail from "./ShadowDetail.vue";
 import { ShadowCatch, ShadowsContextMgr } from "./ctx";
+import { ShadowPosition } from "@kcdesign/data";
+import SelectBanana from "@/components/common/Select/SelectBanana.vue";
 
 /**
  * 用于展示和修改一条填充的属性
@@ -18,19 +19,19 @@ const props = defineProps<{
     data: ShadowCatch;
 }>();
 const { t } = useI18n();
-
+const shadowPositionOptions = [
+    { label: t(`shadow.${ShadowPosition.Outer}`), value: ShadowPosition.Outer },
+    { label: t(`shadow.${ShadowPosition.Inner}`), value: ShadowPosition.Inner }
+];
 
 </script>
 <template>
     <div class="fill-item-container">
         <CheckBox :check="data.shadow.isEnabled" @change="() => manager.modifyVisible(data.shadow)" />
-        <div :class="{ 'value-panel-wrapper': true, disabled: !data.shadow.isEnabled }">
-            <div class="shadow-position">
-                <ShadowPosition :context="context" :data="data" :manager="manager" />
-            </div>
-            <div class="detail">
-                <ShadowDetail  :context="context" :data="data" :manager="manager"/>
-            </div>
+        <SelectBanana :context="context" :options="shadowPositionOptions" :value="data.shadow.position"
+            @change="(val) => manager.modifyShadowPosition(data.shadow, val)" />
+        <div class="detail">
+            <ShadowDetail :context="context" :data="data" :manager="manager" />
         </div>
         <div class="delete" @click="() => manager.remove(data.shadow)">
             <SvgIcon :icon="delete_icon" />
@@ -43,7 +44,7 @@ const { t } = useI18n();
     height: 32px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
 
     .value-panel-wrapper {
         display: flex;
@@ -60,17 +61,8 @@ const { t } = useI18n();
         .shadow-position {
             flex: 1;
             height: 100%;
-            margin-right: 5px;
+            margin-right: -2px;
             box-sizing: border-box;
-        }
-
-        .detail {
-            flex: 0 0 28px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 28px;
-            height: 28px;
         }
 
 
@@ -93,6 +85,15 @@ const { t } = useI18n();
             pointer-events: none;
         }
 
+    }
+
+    .detail {
+        flex: 0 0 28px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 28px;
+        height: 28px;
     }
 
     .delete {

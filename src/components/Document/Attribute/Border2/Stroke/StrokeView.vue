@@ -2,13 +2,13 @@
 import { Context } from '@/context';
 import { StrokeFillContextMgr } from '../ctx';
 import BorderDetail from './BorderDetail.vue';
-import { AsyncBorderThickness, BorderPosition, BorderSideSetting, LinearApi, ShapeType } from '@kcdesign/data';
+import { AsyncBorderThickness, BorderPosition, LinearApi, ShapeType } from '@kcdesign/data';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { getShapesForStyle } from '@/utils/style';
 import { get_actions_border, get_actions_border_position, get_actions_border_thickness } from '@/utils/shape_style';
 import { getSideThickness } from '../index';

@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { nextTick, reactive, ref } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
-import { LinearApi, ShapeView } from '@kcdesign/data';
+import { LinearApi } from '@kcdesign/data';
 import { Menu } from "@/context/menu";
 import { hidden_selection } from '@/utils/content';
 import { get_actions_blur_modify } from '@/utils/shape_style';

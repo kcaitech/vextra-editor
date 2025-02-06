@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { Fill, Shadow } from "@kcdesign/data";
-import ColorBlock from "@/components/common/ColorBlock/Index.vue";
+import { Shadow } from "@kcdesign/data";
 import { onUnmounted, ref, watchEffect } from "vue";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
@@ -58,13 +56,12 @@ onUnmounted(watchEffect(() => {
     padding: 0 8px;
 
     .effect {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         background-color: #fff;
         border: 1px solid #000000e5;
         border-radius: 3px;
         overflow: hidden;
-        margin: 0 8px;
     }
 
     .span {
