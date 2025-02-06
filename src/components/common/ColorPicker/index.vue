@@ -856,7 +856,7 @@ function colorPickerMount() {
     props.context.menu.setupColorPicker(blockId);
 
     if (props.locat) {
-        props.context.color.gradinet_locat(props.locat);
+        props.context.color.gradient_locate(props.locat);
     }
 
     init();
@@ -878,7 +878,7 @@ function blockUnmount() {
     const menu = props.context.menu;
     const e = menu.isColorPickerMount;
     if (e === blockId) menu.clearColorPickerId();
-    props.context.color.clear_locat();
+    props.context.color.clear_locate();
     props.context.color.switch_editor_mode(false);
 }
 
@@ -888,7 +888,7 @@ function removeCurColorPicker() {
         need_update_recent.value = false;
     }
     props.context.menu.clearColorPickerId();
-    props.context.color.clear_locat();
+    props.context.color.clear_locate();
     props.context.color.switch_editor_mode(false);
     picker_visible.value = false;
     emit('close')
@@ -1168,7 +1168,7 @@ function color_type_change(val: GradientType, type: FillType) {
     update_gradient_type(val, type);
     nextTick(() => {
         set_gradient(val, type);
-        if (props.locat) props.context.color.gradinet_locat(props.locat);
+        if (props.locat) props.context.color.gradient_locate(props.locat);
         init();
         locate();
         if (type === FillType.Pattern) {
@@ -1180,7 +1180,7 @@ function color_type_change(val: GradientType, type: FillType) {
 const set_gradient = (val: GradientType, fillType: FillType) => {
     if (fillType !== FillType.Gradient) {
         props.context.color.set_gradient_type(undefined);
-        props.context.color.clear_locat();
+        props.context.color.clear_locate();
         props.context.color.switch_editor_mode(false);
         props.context.color.setImageScale(undefined);
         props.context.color.setImageScaleMode(undefined);
@@ -1194,7 +1194,7 @@ const set_gradient = (val: GradientType, fillType: FillType) => {
             if (props.locat) props.context.color.switch_editor_mode(true, props.gradient);
         }, 100)
     }
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
+    if (props.locat) props.context.color.gradient_locate(props.locat);
 }
 
 // 切换渐变类型
@@ -1229,7 +1229,7 @@ const get_gradient_type = () => {
         props.context.color.switch_editor_mode(false);
         if (props.fillType === FillType.SolidColor) {
             fill_type.value = FillType.SolidColor;
-            props.context.color.clear_locat();
+            props.context.color.clear_locate();
             props.context.color.setImageScale(undefined);
             props.context.color.setImageScaleMode(undefined);
         } else if (props.fillType === FillType.Pattern) {
@@ -1242,7 +1242,7 @@ const get_gradient_type = () => {
     }
 
     if (props.locat) {
-        props.context.color.gradinet_locat(props.locat);
+        props.context.color.gradient_locate(props.locat);
     }
 }
 
@@ -1403,7 +1403,7 @@ onUnmounted(() => {
     document.removeEventListener('mousedown', quit);
     blockUnmount();
     props.context.color.select_stop(undefined);
-    props.context.color.clear_locat();
+    props.context.color.clear_locate();
     props.context.color.switch_editor_mode(false);
 })
 </script>
