@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onUnmounted, watchEffect } from "vue";
 import { DragKit } from "@/components/common/draggable";
 
 const props = defineProps<{
@@ -15,23 +15,9 @@ const emits = defineEmits<{
 }>();
 const MAX_SIDE_LENGTH = 160;
 const MAX_SIDE_LENGTH_CSS = `${MAX_SIDE_LENGTH}px`;
-const valLength = ref<number>((() => {
-    const val = props.value;
-    if (!val) return 0; else {
-        const max = (props.range || [-100, 100])[1];
-        return (Math.abs(val) / max) * MAX_SIDE_LENGTH / 2;
-    }
-})());
-const valStart = ref<number>((() => props.value < 0 ? (MAX_SIDE_LENGTH / 2) - valLength.value : MAX_SIDE_LENGTH / 2)());
-const position = ref<number>((() => {
-    const val = props.value;
-    if (val) {
-        const max = (props.range || [-100, 100])[1];
-        return (MAX_SIDE_LENGTH / 2) + (val / max) * MAX_SIDE_LENGTH / 2
-    } else {
-        return MAX_SIDE_LENGTH / 2;
-    }
-})());
+const valLength = ref<number>(0);
+const valStart = ref<number>(0);
+const position = ref<number>(0);
 const rangeEl = ref<HTMLDivElement>();
 
 let center: number = 0;
@@ -39,6 +25,27 @@ let start: number = 0;
 let end: number = 0;
 let downX = 0;
 let isDrag = false;
+
+function update() {
+    const val = props.value;
+    if (!val) {
+        valLength.value = 0;
+    } else {
+        const max = (props.range || [-100, 100])[1];
+        valLength.value = (Math.abs(val) / max) * MAX_SIDE_LENGTH / 2;
+    }
+    if (val < 0) {
+        valStart.value = (MAX_SIDE_LENGTH / 2) - valLength.value;
+    } else {
+        valStart.value = MAX_SIDE_LENGTH / 2;
+    }
+    if (val) {
+        const max = (props.range || [-100, 100])[1];
+        position.value = (MAX_SIDE_LENGTH / 2) + (val / max) * MAX_SIDE_LENGTH / 2;
+    } else {
+        position.value = MAX_SIDE_LENGTH / 2;
+    }
+}
 
 const dragKit = new DragKit({
     down: (event: MouseEvent) => {
@@ -73,21 +80,22 @@ function downSlider(e: MouseEvent) {
 
 function modify(e: MouseEvent) {
     let x = e.x;
+    let position;
     if (x > center) {
         if (x > end) x = end;
         if (x - center < 3) x = center;
-        valLength.value = x - center;
-        valStart.value = center - start;
-        position.value = valStart.value + valLength.value;
+        const valLength = x - center;
+        const valStart = center - start;
+        position = valStart + valLength;
     } else {
         if (x < start) x = start;
         if (center - x < 3) x = center;
-        valLength.value = center - x;
-        valStart.value = x - start;
-        position.value = x - start;
+        position = x - start;
     }
-    emits("dragging", position.value / MAX_SIDE_LENGTH);
+    emits("dragging", position / MAX_SIDE_LENGTH);
 }
+
+onUnmounted(watchEffect(update));
 </script>
 <template>
     <div class="container">
