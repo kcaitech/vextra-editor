@@ -34,7 +34,7 @@ let need_reset_cursor_after_transform = true;
 let isDragging = false;
 const dragActiveDis = 3;
 const update_frame = () => {
-    const locat = props.context.color.locat;
+    const locat = props.context.color.locate;
     if (!locat) return;
     const frame = props.context.color.imageOriginFrame;
     if (frame) {
@@ -87,7 +87,7 @@ const onMouseMove = (e: MouseEvent) => {
         if (!colorEditor) {
             return;
         }
-        const locat = props.context.color.locat;
+        const locat = props.context.color.locate;
         if (!locat) return;
         setImageScale(e, locat.index, direction);
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
@@ -96,7 +96,7 @@ const onMouseMove = (e: MouseEvent) => {
 }
 
 const setImageScale = (e: MouseEvent, index: number, direction: Direction) => {
-    const locat = props.context.color.locat;
+    const locat = props.context.color.locate;
     if (!locat) return;
 
     const { x, y } = props.context.workspace.getContentXY(e);
@@ -225,7 +225,7 @@ function watchShapes() { // 监听相关shape的变化
 }
 
 const editImage = (edit: boolean) => {
-    const locat = props.context.color.locat;
+    const locat = props.context.color.locate;
     if (!locat) return;
     const shape = cur_shape.value!;
     const page = props.context.selection.selectedPage;

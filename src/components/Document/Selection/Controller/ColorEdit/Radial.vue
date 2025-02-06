@@ -4,7 +4,21 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { getTextIndexAndLen, get_add_gradient_color, get_gradient, get_temporary_stop, isSelectText, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, ShapeFrame, ShapeType, ShapeView, Stop, TableCell, TableView, TextShapeView, TransformRaw, adapt2Shape, cloneGradient } from '@kcdesign/data';
+import {
+    AsyncGradientEditor,
+    BasicArray,
+    Color,
+    GradientType,
+    Matrix,
+    ShapeFrame,
+    ShapeType,
+    ShapeView,
+    Stop,
+    TableView,
+    TextShapeView,
+    TransformRaw,
+    cloneGradient
+} from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -14,11 +28,11 @@ import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
 import { computed } from 'vue';
 import { flattenShapes } from '@/utils/cutout';
-interface Props {
+
+const props = defineProps<{
     context: Context
     matrix: Matrix
-}
-const props = defineProps<Props>();
+}>();
 const matrix = new Matrix();
 type DotType = 'from' | 'to' | 'ellipse';
 interface Dot {
@@ -27,7 +41,6 @@ interface Dot {
 interface Stops {
     x: number, y: number, color: Color, id?: string
 }
-
 const dot1 = ref<Dot>({ x: 0, y: 0, type: 'from' });
 const dot2 = ref<Dot>({ x: 0, y: 0, type: 'to' });
 const dot3 = ref<Dot>({ x: 0, y: 0, type: 'ellipse' });
@@ -108,7 +121,7 @@ const get_linear_points = () => {
     dot2.value = { x: d2.x, y: d2.y, type: 'to' }
     line_length.value = Math.sqrt(Math.pow(d2.x - d1.x, 2) + Math.pow(d2.y - d1.y, 2));
     rotate.value = getHorizontalAngle({ x: d1.x, y: d1.y }, { x: d2.x, y: d2.y });
-    dot3.value = { type: 'ellipse', ...get_elipse_point2(Math.abs(gradient.elipseLength || 0), line_length.value, d1, frame) };
+    dot3.value = { type: 'ellipse', ...get_ellipse_point2(Math.abs(gradient.elipseLength || 0), line_length.value, d1, frame) };
 
     ellipseL.value = Math.abs(gradient.elipseLength || 0);
     ellipse_length.value = Math.sqrt(Math.pow(dot3.value.x - dot1.value.x, 2) + Math.pow(dot3.value.y - dot1.value.y, 2));
@@ -122,7 +135,10 @@ const get_linear_points = () => {
     dot.value = true;
 }
 
-function get_elipse_point2(ellipseLength: number, main_apex_length: number, from: { x: number, y: number }, frame: ShapeFrame) {
+function get_ellipse_point2(ellipseLength: number, main_apex_length: number, from: {
+    x: number,
+    y: number
+}, frame: ShapeFrame) {
     const ellipse = { x: main_apex_length * ellipseLength * (frame.width / frame.height), y: 0 };
 
     const m = new Matrix();
@@ -148,8 +164,8 @@ const dot_mousedown = (e: MouseEvent, type: DotType) => {
 
 const dot_mousemove = (e: MouseEvent) => {
     if (!is_dot_down.value) return;
-    const locat = props.context.color.locat;
-    if (!locat) return;
+    const locate = props.context.color.locate;
+    if (!locate) return;
     const { x, y } = props.context.workspace.getContentXY(e);
     const { x: sx, y: sy } = startPosition;
     const dx = x - sx;
@@ -158,7 +174,8 @@ const dot_mousemove = (e: MouseEvent) => {
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     if (isDragging && gradientEditor) {
-        startPosition.x = x, startPosition.y = y;
+        startPosition.x = x;
+        startPosition.y = y;
         const matrix = new TransformRaw();
         let frame = shape.frame;
         if (shape.type === ShapeType.Table) {
@@ -198,18 +215,18 @@ const dot_mousemove = (e: MouseEvent) => {
             update_ellipse_dot(e, Math.abs(p));
             gradientEditor.execute_elipselength(p);
         }
-        if (locat.type === 'table_text') {
+        if (locate.type === 'table_text') {
             get_linear_points();
         }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
-            if (locat.type !== 'text' && locat.type !== 'table_text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value as ShapeView[], page!, locat.index, locat.type);
+            if (locate.type !== 'text' && locate.type !== 'table_text') {
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value as ShapeView[], page!, locate.index, locate.type);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                if (locat.type === 'text') {
+                if (locate.type === 'text') {
                     const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
                     const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
                     if (isSelectText(props.context)) {
@@ -296,7 +313,7 @@ const stop_enter = (e: MouseEvent, index: number) => {
     percent.value = +(position * 100).toFixed(0);
     enter_stop.value = true;
 }
-const updata_percent = (e: MouseEvent) => {
+const update_percent = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
     const r_p = props.context.workspace.getContentXY(e);
     percent_posi.value.x = r_p.x + 20;
@@ -305,7 +322,7 @@ const updata_percent = (e: MouseEvent) => {
 const down_stop_id = ref<string>('');
 const add_stop = (e: MouseEvent) => {
     const posi = get_stop_position(e);
-    const locat = props.context.color.locat;
+    const locat = props.context.color.locate;
     const shape = shapes.value[0] as ShapeView;
     startPosition = props.context.workspace.getContentXY(e);
     if (!locat) return;
@@ -383,8 +400,7 @@ const get_stop_position = (e: MouseEvent) => {
     m.trans(-dot1.value.x, -dot1.value.y);
     m.rotate(-rotate_r.value);
     const p = m.computeCoord3(m_p).x / line_length.value
-    const posi = Math.min(Math.max(p, 0), 1);
-    return posi;
+    return Math.min(Math.max(p, 0), 1);
 }
 const stop_mousedown = (e: MouseEvent, id: string) => {
     if (e.button !== 0) return;
@@ -408,8 +424,8 @@ const down_stop = (e: MouseEvent, id: string) => {
 
 const stop_mousemove = (e: MouseEvent) => {
     if (!is_stop_down.value) return;
-    const locat = props.context.color.locat;
-    if (!locat) return;
+    const locate = props.context.color.locate;
+    if (!locate) return;
     const { x, y } = props.context.workspace.getContentXY(e);
     const { x: sx, y: sy } = startPosition;
     const dx = x - sx;
@@ -418,7 +434,8 @@ const stop_mousemove = (e: MouseEvent) => {
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     if (isDragging && gradientEditor) {
-        startPosition.x = x, startPosition.y = y;
+        startPosition.x = x;
+        startPosition.y = y;
         const posi = get_stop_position(e);
         get_percent_posi(e);
         percent.value = +(posi * 100).toFixed(0);
@@ -427,11 +444,11 @@ const stop_mousemove = (e: MouseEvent) => {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
-            if (locat.type !== 'text' && locat.type !== 'table_text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value as ShapeView[], page!, locat.index, locat.type);
+            if (locate.type !== 'text' && locate.type !== 'table_text') {
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value as ShapeView[], page!, locate.index, locate.type);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                if (locat.type === 'text') {
+                if (locate.type === 'text') {
                     const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
                     const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
                     if (isSelectText(props.context)) {
@@ -579,11 +596,10 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
+<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
         <g v-if="dot">
-            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate - 90"></TemporaryStop>
+            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate - 90"/>
             <rect width="20" :height="line_length" ref="stop_container"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }" fill="transparent"
                 @mousemove="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)" @mouseenter="rect_enter"
@@ -597,16 +613,16 @@ onUnmounted(() => {
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg) translate(${-dot1.x}px, ${-dot1.y}px)` }" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="black" stroke-width="3" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="white" stroke-width="2" />
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"></circle>
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"/>
             <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"
-                @mousedown.stop="(e) => dot_mousedown(e, dot1.type)"></circle>
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"></circle>
+                    @mousedown.stop="(e) => dot_mousedown(e, dot1.type)"/>
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"/>
             <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
-                @mousedown.stop="(e) => dot_mousedown(e, dot2.type)"></circle>
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"></circle>
+                    @mousedown.stop="(e) => dot_mousedown(e, dot2.type)"/>
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"/>
             <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot3.type)" @mouseenter="ellipse_dot"
-                @mouseleave="leave_ellipse_dot"></circle>
+                    @mouseleave="leave_ellipse_dot"/>
             <g v-for="(stop, index) in stops" :key="index" @mouseenter="(e) => stop_content_enter(e, index)"
                 @mouseleave="stop_content_leave"
                 :style="{ transform: `translate(${stop.x + 3.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
@@ -622,17 +638,16 @@ onUnmounted(() => {
                         clip-rule="evenodd" />
                 </clippath>
                 <image :xlink:href="trans_bgc" width="22" height="22" x="0" y="0" clip-path="url(#avatar)"
-                    preserveAspectRatio="none meet"></image>
+                       preserveAspectRatio="none meet"/>
                 <g
                     transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)">
                     <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
                         :fill="to_rgba(stop.color)" @mouseenter="(e) => stop_enter(e, index)" @mouseleave="stop_leave"
-                        @mousedown.stop="(e) => stop_mousedown(e, stop.id!)" @mousemove="updata_percent" />
+                             @mousedown.stop="(e) => stop_mousedown(e, stop.id!)" @mousemove="update_percent"/>
                 </g>
             </g>
         </g>
     </svg>
-    <Percent v-if="percent_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"></Percent>
-    <Percent v-if="ellipse_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"></Percent>
+<Percent v-if="percent_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"/>
+<Percent v-if="ellipse_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"/>
 </template>
-<style scoped lang="scss"></style>

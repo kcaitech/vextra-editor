@@ -15,7 +15,7 @@ export class ColorCtx extends WatchableObject {
     private editor_mode: boolean = false;
     private m_gradient: undefined | Gradient = undefined;
     private m_gradient_type: GradientType | undefined = undefined;
-    private m_locat: { index: number, type: GradientFrom } | undefined;
+    private m_locate: { index: number, type: GradientFrom } | undefined;
     private m_image_scale_mode: ImageScaleMode | undefined;
     private m_image_scale: number | undefined;
     private m_image_origin_frame: { width: number, height: number } | undefined;
@@ -48,14 +48,17 @@ export class ColorCtx extends WatchableObject {
     get gradient() {
         return this.m_gradient
     }
-    gradinet_locat(locat: { index: number, type: GradientFrom } | undefined) {
-        this.m_locat = locat;
+
+    gradient_locate(locate: { index: number, type: GradientFrom } | undefined) {
+        this.m_locate = locate;
     }
-    get locat() {
-        return this.m_locat;
+
+    get locate() {
+        return this.m_locate;
     }
-    clear_locat() {
-        this.m_locat = undefined;
+
+    clear_locate() {
+        this.m_locate = undefined;
     }
 
     setImageScaleMode(mode?: ImageScaleMode) {

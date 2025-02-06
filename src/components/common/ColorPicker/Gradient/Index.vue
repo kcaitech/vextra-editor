@@ -5,6 +5,7 @@ import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientli
 import { onUnmounted, ref, watchEffect } from "vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
+import { ColorCtx } from "@/context/color";
 
 const props = defineProps<{
     editor: ColorPickerEditor;
@@ -19,6 +20,7 @@ function createStop(cc: RGBACatch) {
 }
 
 function update() {
+    editor.context.color.select_stop(props.data.stopIds[gradientStopAt.value]);
     stop.value = props.data.RGBAs[gradientStopAt.value];
 }
 
@@ -46,7 +48,19 @@ function rotate() {
     editor.rotateStops();
 }
 
-onUnmounted(watchEffect(update));
+function colorCtxWatcher(t: any) {
+    if (t === ColorCtx.CHANGE_STOP) {
+        const id = editor.context.color.selected_stop;
+        gradientStopAt.value = props.data.stopIds.findIndex(i => i === id);
+    }
+}
+
+const stop1 = editor.context.color.watch(colorCtxWatcher);
+const stop2 = watchEffect(update);
+onUnmounted(() => {
+    stop1();
+    stop2();
+});
 </script>
 
 <template>

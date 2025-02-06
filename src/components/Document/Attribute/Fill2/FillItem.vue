@@ -7,7 +7,7 @@ import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill
 import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
-import { Fill, FillType } from "@kcdesign/data";
+import { Fill, FillType, GradientType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
@@ -122,7 +122,23 @@ function update() {
     assemble();
 }
 
-onUnmounted(watchEffect(update));
+const stop1 = watchEffect(update);
+const stop2 = watchEffect(() => {
+    const color = props.context.color;
+    if (!colorPanelStatus.visible || fillType.value === FillType.SolidColor || fillType.value === FillType.Pattern) {
+        color.set_gradient_type(undefined);
+        color.gradient_locate(undefined);
+        color.switch_editor_mode(false);
+    } else {
+        color.set_gradient_type(fillType.value as GradientType);
+        color.gradient_locate({ index: fillsPicker.index, type: "fills" });
+        color.switch_editor_mode(true, props.data.fill.gradient);
+    }
+})
+onUnmounted(() => {
+    stop1();
+    stop2();
+});
 </script>
 <template>
     <div class="fill-item-container">

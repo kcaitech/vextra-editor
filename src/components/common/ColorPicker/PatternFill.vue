@@ -71,7 +71,7 @@ const changePaint = (value: number, type: PaintFilterType) => {
         if (!page) return;
         colorEditor = new ColorPicker(props.context.coopRepo, props.context.data, page);
     }
-    const locat = props.context.color.locat;
+    const locat = props.context.color.locate;
     if (!locat) return;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
