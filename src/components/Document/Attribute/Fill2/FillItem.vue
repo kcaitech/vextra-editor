@@ -124,6 +124,7 @@ function update() {
 
 const stop1 = watchEffect(update);
 const stop2 = watchEffect(() => {
+    const fill = props.data.fill;
     const color = props.context.color;
     if (!colorPanelStatus.visible || fillType.value === FillType.SolidColor || fillType.value === FillType.Pattern) {
         color.set_gradient_type(undefined);
@@ -132,7 +133,16 @@ const stop2 = watchEffect(() => {
     } else {
         color.set_gradient_type(fillType.value as GradientType);
         color.gradient_locate({ index: fillsPicker.index, type: "fills" });
-        color.switch_editor_mode(true, props.data.fill.gradient);
+        color.switch_editor_mode(true, fill.gradient);
+    }
+    if (!colorPanelStatus.visible || fillType.value !== FillType.Pattern) {
+        color.gradient_locate(undefined);
+        color.setImageScaleMode(undefined);
+    } else {
+        color.gradient_locate({ index: fillsPicker.index, type: "fills" });
+        color.setImageScaleMode(fill.imageScaleMode);
+        color.setImageOriginFrame({ width: fill.originalImageWidth ?? 100, height: fill.originalImageHeight ?? 100 });
+        color.setImageScale(fill.scale);
     }
 })
 onUnmounted(() => {
