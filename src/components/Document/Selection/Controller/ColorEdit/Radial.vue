@@ -22,7 +22,7 @@ import {
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
-import { get_aciton_gradient_stop } from '@/utils/shape_style';
+import { get_action_gradient_stop } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
@@ -337,7 +337,7 @@ const add_stop = (e: MouseEvent) => {
     if (locat.type !== 'text' && locat.type !== 'table_text') {
         const idx = locat.index;
         const editor = props.context.editor4Page(page);
-        const actions = get_aciton_gradient_stop(s, idx, stop, locat.type);
+        const actions = get_action_gradient_stop(s, idx, stop, locat.type);
         editor.addShapesGradientStop(actions);
     } else {
         const { textIndex, selectLength } = getTextIndexAndLen(props.context);

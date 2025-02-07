@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { FillMask } from "@kcdesign/data";
 import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
 import { onMounted, onUnmounted, ref } from "vue";
-import FillItem from "../FillItem.vue";
+import FillItem from "../PaintItem.vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
 import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";

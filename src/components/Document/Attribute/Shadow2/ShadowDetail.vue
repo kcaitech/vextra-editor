@@ -23,7 +23,6 @@ import PopoverHeader from "@/components/common/PopoverHeader.vue";
 
 const { t } = useI18n();
 
-
 const props = defineProps<{
     context: Context
     data: ShadowCatch
@@ -38,7 +37,6 @@ const alpha = ref<string>(Math.round(props.data.shadow.color.alpha * 100) + '%')
 const colors = ref<Color[]>([props.data.shadow.color] as Color[]);
 const rgba = ref<RGBACatch>({ R: 0, G: 0, B: 0, A: 0.3, position: 1 });
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
-const popover = ref();
 
 const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
 const colorPanelStatusMgr = new ElementManager(
@@ -51,14 +49,14 @@ const panelStatus = reactive<ElementStatus>({ id: '#shadow-detail-container', vi
 const panelStatusMgr = new ElementManager(
     props.context,
     panelStatus,
-    { whiteList: ['.shadow-detail-container', 'shadow-trigger'] }
+    { whiteList: ['#shadow-detail-container', '.shadow-trigger'] }
 );
 
 function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('color-wrapper')) {
-            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -312 } });
             break;
         }
         e = e.parentElement;
@@ -76,7 +74,6 @@ function showDetailPanel(event: MouseEvent) {
         e = e.parentElement;
     }
 }
-
 
 const setOffsetX = (value: number) => {
     props.manager.modifyShadowOffsetX(value, props.data.shadow);
@@ -101,7 +98,6 @@ function keydownOffsetX(e: KeyboardEvent, val: string | number) {
         hidden_selection(props.context);
     }
 }
-
 
 const setOffsetY = (value: number) => {
     props.manager.modifyShadowOffsetY(value, props.data.shadow);
@@ -175,7 +171,6 @@ function keydownSpread(e: KeyboardEvent, val: string | number) {
     }
 }
 
-
 const tel = ref<boolean>(false);
 const telX = ref<number>(0);
 const telY = ref<number>(0);
@@ -205,9 +200,7 @@ async function dragStart(e: MouseEvent) {
 }
 
 const pointerLockChange = () => {
-    if (!document.pointerLockElement) {
-        dragEnd();
-    }
+    if (!document.pointerLockElement) dragEnd();
 }
 
 function draggingX(e: MouseEvent) {
@@ -215,9 +208,7 @@ function draggingX(e: MouseEvent) {
     let val = props.data.shadow.offsetX + e.movementX;
     const _idx = getIndexByShadow(props.data.shadow);
     val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
-    if (!lockMouseHandler) {
-        return
-    }
+    if (!lockMouseHandler) return;
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
@@ -229,9 +220,7 @@ function draggingY(e: MouseEvent) {
     let val = props.data.shadow.offsetY + e.movementX;
     const _idx = getIndexByShadow(props.data.shadow);
     val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
-    if (!lockMouseHandler) {
-        return
-    }
+    if (!lockMouseHandler) return
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
@@ -243,9 +232,7 @@ function draggingB(e: MouseEvent) {
     let val = props.data.shadow.blurRadius + e.movementX;
     const _idx = getIndexByShadow(props.data.shadow);
     val = val < 0 ? 0 : val > 200 ? 200 : val;
-    if (!lockMouseHandler) {
-        return
-    }
+    if (!lockMouseHandler) return;
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
@@ -257,9 +244,7 @@ function draggingS(e: MouseEvent) {
     let val = props.data.shadow.spread + e.movementX;
     const _idx = getIndexByShadow(props.data.shadow);
     val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
-    if (!lockMouseHandler) {
-        return
-    }
+    if (!lockMouseHandler) return;
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
@@ -325,9 +310,7 @@ const disable = () => {
 const isFill = (fills: Fill[]) => {
     for (let i = 0; i < fills.length; i++) {
         const fill = fills[i];
-        if (fill.isEnabled && fill.color.alpha > 0) {
-            return true;
-        }
+        if (fill.isEnabled && fill.color.alpha > 0) return true;
     }
     return false;
 }
@@ -337,7 +320,6 @@ function extend(base: number) {
 }
 
 const shadowsPicker = new ShadowColorPicker(props.context, FillType.SolidColor);
-shadowsPicker.shadow = props.data.shadow;
 
 function update() {
     const data = props.data;
@@ -357,7 +339,7 @@ onUnmounted(watchEffect(update));
     <div class="shadow-trigger" @click="showDetailPanel">
         <SvgIcon :icon="gear_icon" />
     </div>
-    <div id="shadow-detail-container" class="shadow-detail-container" v-if="panelStatus.visible">
+    <div v-if="panelStatus.visible" id="shadow-detail-container">
         <PopoverHeader :title="t('shadow.shadow_setting')" :create="false" @close="panelStatusMgr.close()" />
         <div class="options-container">
             <div class="setting">
@@ -390,12 +372,11 @@ onUnmounted(watchEffect(update));
                         @change="(e) => manager.modifyFillAlpha(e, data.shadow)" />
                 </div>
                 <ColorPicker v-if="colorPanelStatus.visible" :editor="shadowsPicker" :type="FillType.SolidColor"
-                    :color="rgba" @close="() => colorPanelStatusMgr.close()" />
+                             :include="[]" :color="rgba" @close="() => colorPanelStatusMgr.close()"/>
             </div>
         </div>
         <teleport to="body">
-            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
-            </div>
+            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }"/>
         </teleport>
     </div>
 </template>
@@ -419,7 +400,7 @@ onUnmounted(watchEffect(update));
     background-color: #F5F5F5;
 }
 
-.shadow-detail-container {
+#shadow-detail-container {
     width: 254px;
     height: fit-content;
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
@@ -450,12 +431,10 @@ onUnmounted(watchEffect(update));
     display: flex;
     box-sizing: border-box;
     align-items: center;
-    //justify-content: space-between;
 
     .name-title {
         width: 24px;
         height: 14px;
-        font-family: HarmonyOS Sans;
         font-size: 12px;
         color: #737373;
         margin-right: 14px;

@@ -8,8 +8,8 @@ import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
 import TypeHeader from "@/components/Document/Attribute/TypeHeader.vue";
-import FillMaskView from "./FillMaskView.vue";
-import FillItem from "./FillItem.vue";
+import PaintMaskView from "./PaintMaskView.vue";
+import PaintItem from "./PaintItem.vue";
 import { useI18n } from "vue-i18n";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import FillStylePanel from "./Lib/FillStylePanel.vue";
@@ -18,48 +18,42 @@ import StrokeView from "./Stroke/StrokeView.vue";
 import StrokeMaskView from "./Stroke/StrokeMaskView.vue";
 import StrokeStylePanel from "./Lib/StrokeStylePanel.vue";
 
-/**
- * 每个模块的Index.vue应该包含
- *      Header
- *      Mask 或 自定义样式List
- *      样式库
- */
-type Props = {
-    context: Context;
-    selectionChange: number;    // 选区变化
-    trigger: any[];             // 选区内图层数据修改
-}
 const { t } = useI18n();
 
-const props = defineProps<Props>();
-const fillCtx = ref<BorderFillsContext>({  // 本组件的核心状态，改状态由vue进行劫持(注：选区和图层属于非vue劫持的状态，每个模块的状态由这两类状态共同组成)
-    mixed: false,                        // 选区内是否存在不一样的填充样式
-
-    fills: [],                           // 填充样式，有可能是样式库里拿出来的，也有可能是图层自带的。注：特别注意，这个数据本身属于由vue劫持的状态，
-    // 所以它并不是直接从图层上或样式库里取出来的数据，而是由该数据经过vue二次包装后数据
+const props = defineProps<{
+    context: Context;
+    selectionChange: number;
+    trigger: any[];
+}>();
+const fillCtx = ref<BorderFillsContext>({
+    mixed: false,
+    fills: [],
     strokeInfo: undefined,
     strokeMask: undefined,
     strokeMaskInfo: undefined,
-    mask: undefined,                     // 当选区内使用的样式库内的填充样式时，mask为该样式库的id，否则为undefined
-    maskInfo: undefined                  // 当选区内使用的样式库内的填充样式时，maskInfo为改样式库的基本信息，包含名称和描述
+    mask: undefined,
+    maskInfo: undefined
 });
-const fillCtxMgr = new StrokeFillContextMgr(props.context, fillCtx.value as BorderFillsContext);                  // 核心状态管理器
-const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));   // 样式库入口四叶草🍀是否可用
-const fillLibStatus = reactive<ElementStatus>({ id: '#fill-style-lib-panel', visible: false });  // 样式库面板弹框状态
-const strokeLibStatus = reactive<ElementStatus>({ id: '#stroke-style-lib-panel', visible: false });  // 样式库面板弹框状态
-const fillPanelStatusMgr = new ElementManager(                                                       // 样式库面板弹框状态管理器，组件销毁时要调用其的unmounted事件
+const fillCtxMgr = new StrokeFillContextMgr(props.context, fillCtx.value as BorderFillsContext);
+const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));
+
+const fillLibStatus = reactive<ElementStatus>({ id: '#fill-style-lib-panel', visible: false });
+const fillPanelStatusMgr = new ElementManager(
     props.context,
     fillLibStatus,
-    { whiteList: ['.fill-style-lib-panel', '.clover', '.desc'] }                                   // 弹框可点击区域，区域之外的点击将会关闭弹框
+    { whiteList: ['.fill-style-lib-panel', '.clover', '.desc'] }
 );
-fillCtxMgr.catchPanel(fillPanelStatusMgr);                                                           // 将弹框状态管理器加入到核心状态管理器，使得核心状态管理器可以控制弹框
+fillCtxMgr.catchPanel(fillPanelStatusMgr);
+
+const strokeLibStatus = reactive<ElementStatus>({ id: '#stroke-style-lib-panel', visible: false });
 const strokePanelStatusMgr = new ElementManager(
     props.context,
     strokeLibStatus,
     { whiteList: ['.stroke-style-lib-panel', '.border-style', '.border-left'] }
 );
 fillCtxMgr.catchPanel(strokePanelStatusMgr);
-function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
+
+function showFillLib(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('clover')) {
@@ -89,7 +83,6 @@ const showBorderPanel = (event: MouseEvent) => {
     }
 }
 
-
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),                  // 监听选区变化
     watch(() => props.trigger, v => v?.includes('style') && fillCtxMgr.update())    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态
@@ -104,51 +97,52 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <div class="fills-wrapper">
-        <TypeHeader :title="t('attr.stroke')" class="mt-24" @click.stop="() => fillCtxMgr.init()"
-            :active="!!fillCtx.fills.length">
-            <template #tool>
-                <div v-if="!fillCtx.strokeMask" class="border-style" @click="showBorderPanel">
-                    <SvgIcon :icon="style_icon" />
-                </div>
-                <div class="add" @click.stop="() => fillCtxMgr.create()" v-if="!fillCtx.fills.length">
-                    <SvgIcon :icon="add_icon" />
-                </div>
-                <div class="add" @click.stop="() => fillCtxMgr.removeAll()" v-else>
-                    <SvgIcon :icon="delete_icon" />
-                </div>
-            </template>
-        </TypeHeader>
-        <StrokeView v-if="!fillCtx.strokeMask" :context="context" :manager="fillCtxMgr" :trigger="trigger"></StrokeView>
-        <StrokeMaskView v-else :context="context" :manager="fillCtxMgr" :trigger="trigger"
-            @showBorderPanel="showBorderPanel">
-        </StrokeMaskView>
-        <StrokeStylePanel v-if="strokeLibStatus.visible" :context="context" :manager="fillCtxMgr" i18n="borders"
-            @close="() => strokePanelStatusMgr.close()"></StrokeStylePanel>
-<!-- -------------------------------------------------------------------------------  -->
-        <TypeHeader v-if="fillCtx.fills.length" :title="t('attr.stroke_color')" :active="!!fillCtx.fills.length">
-            <template #tool>
-                <div v-if="cloverVisible" class="clover" @click="showFillLib">
-                    <SvgIcon :icon="style_icon" />
-                </div>
-                <div v-if="!fillCtx.mask || fillCtx.mixed" class="create" @click="() => fillCtxMgr.create()">
-                    <SvgIcon :icon="add_icon" />
-                </div>
-            </template>
-        </TypeHeader>
-        <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <FillMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
-            :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!" @show-style-lib="showFillLib" />
-        <div v-else-if="fillCtx.fills.length" class="fills-container">
-            <FillItem v-for="(fill, index) in fillCtx.fills" :key="index" :context="context" :manager="fillCtxMgr"
-                :data="(fill as FillCatch)" />
-        </div>
-        <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr" i18n="colors"
-            @close="() => fillPanelStatusMgr.close()" />
+<div class="borders-wrapper">
+    <TypeHeader :title="t('attr.stroke')" @click.stop="() => fillCtxMgr.init()"
+                :active="!!fillCtx.fills.length">
+        <template #tool>
+            <div v-if="!fillCtx.strokeMask" class="border-style" @click="showBorderPanel">
+                <SvgIcon :icon="style_icon"/>
+            </div>
+            <div v-if="!fillCtx.fills.length" class="add" @click.stop="() => fillCtxMgr.create()">
+                <SvgIcon :icon="add_icon"/>
+            </div>
+            <div v-else class="add" @click.stop="() => fillCtxMgr.removeAll()">
+                <SvgIcon :icon="delete_icon"/>
+            </div>
+        </template>
+    </TypeHeader>
+    <StrokeView v-if="!fillCtx.strokeMask" :context="context" :manager="fillCtxMgr" :trigger="trigger"/>
+    <StrokeMaskView v-else :context="context" :manager="fillCtxMgr" :trigger="trigger"
+                    @showBorderPanel="showBorderPanel">
+    </StrokeMaskView>
+    <StrokeStylePanel v-if="strokeLibStatus.visible" :context="context" :manager="fillCtxMgr"
+                      @close="() => strokePanelStatusMgr.close()" :title="t('stylelib.borders')"/>
+    <!---------------------------------------------------------------------------------->
+    <TypeHeader v-if="fillCtx.fills.length" :title="t('attr.stroke_color')" :active="!!fillCtx.fills.length">
+        <template #tool>
+            <div v-if="cloverVisible" class="clover" @click="showFillLib">
+                <SvgIcon :icon="style_icon"/>
+            </div>
+            <div v-if="!fillCtx.mask || fillCtx.mixed" class="create" @click="() => fillCtxMgr.create()">
+                <SvgIcon :icon="add_icon"/>
+            </div>
+        </template>
+    </TypeHeader>
+    <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
+    <PaintMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
+                   :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!" @show-style-lib="showFillLib"/>
+    <div v-else-if="fillCtx.fills.length" class="fills-container">
+        <PaintItem v-for="(fill, index) in fillCtx.fills" :key="index" :context="context" :manager="fillCtxMgr"
+                   :data="(fill as FillCatch)"/>
     </div>
+    <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr"
+                    :title="t('stylelib.colors')"
+                    @close="() => fillPanelStatusMgr.close()"/>
+</div>
 </template>
 <style scoped lang="scss">
-.fills-wrapper {
+.borders-wrapper {
     width: 100%;
     height: fit-content;
     padding: 12px 8px;
@@ -169,7 +163,7 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        >img {
+        > img {
             width: 16px;
             height: 16px;
         }
@@ -203,12 +197,12 @@ onUnmounted(() => {
         }
     }
 
-    .clover>img {
+    .clover > img {
         width: 12px;
         height: 12px;
     }
 
-    .create>img {
+    .create > img {
         width: 16px;
         height: 16px;
     }

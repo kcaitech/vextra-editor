@@ -9,7 +9,7 @@ import { FillType, GradientType } from '@kcdesign/data';
 
 defineProps<{
     value: string;
-    options: string[];
+    options: FillType[];
 }>();
 
 const emits = defineEmits<{
@@ -18,25 +18,25 @@ const emits = defineEmits<{
 </script>
 <template>
     <div class="color-type-wrapper">
-        <div class="item" @click.stop="() => { emits('change',  FillType.SolidColor) }"
-             :class="{ selected: value === FillType.SolidColor }">
+        <div v-if="options.includes(FillType.SolidColor)"
+             :class="{item : true, selected: value === FillType.SolidColor }"
+             @click.stop="() => { emits('change',  FillType.SolidColor) }">
             <SvgIcon :icon="fill_gradient_icon"/>
         </div>
-        <div class="item" @click.stop="() => { emits('change', GradientType.Linear) }"
-             :class="{ selected: value === GradientType.Linear }">
+        <div v-if="options.includes(FillType.Gradient)" :class="{ item: true,selected: value === GradientType.Linear }"
+             @click.stop="() => { emits('change', GradientType.Linear) }">
             <SvgIcon :icon="linear_gradient_icon"/>
         </div>
-        <div class="item" @click.stop="() => { emits('change', GradientType.Radial) }"
-             :class="{ selected: value === GradientType.Radial }">
+        <div v-if="options.includes(FillType.Gradient)" :class="{item: true, selected: value === GradientType.Radial }"
+             @click.stop="() => { emits('change', GradientType.Radial) }">
             <SvgIcon :icon="radial_gradient_icon"/>
         </div>
-        <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
-             :class="{ selected: value === GradientType.Angular }">
+        <div v-if="options.includes(FillType.Gradient)" :class="{item: true, selected: value === GradientType.Angular }"
+             @click.stop="() => { emits('change', GradientType.Angular) }">
             <div class="angular"/>
         </div>
-        <div v-if="options.includes(FillType.Pattern)" class="item"
-             @click.stop="() => { emits('change',  FillType.Pattern) }"
-             :class="{ selected: value === FillType.Pattern }">
+        <div v-if="options.includes(FillType.Pattern)" :class="{item:true, selected: value === FillType.Pattern }"
+             @click.stop="() => { emits('change',  FillType.Pattern) }">
             <SvgIcon :icon="fill_image_icon" style="width: 15px; height: 15px;"/>
         </div>
     </div>

@@ -53,6 +53,5 @@ onUnmounted(() => {
     background-color: #FFFFFF;
     border-radius: 8px;
     box-sizing: border-box;
-    z-index: 9;
 }
 </style>

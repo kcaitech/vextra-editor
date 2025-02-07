@@ -61,6 +61,21 @@ const DescSpan = () => h('div', {
     innerText: innerText.value
 });
 
+function assemble() {
+    switch (props.data.fill.fillType) {
+        case FillType.Gradient:
+            innerText.value = t(`color.${props.data.fill.gradient!.gradientType}`);
+            compo.value = DescSpan();
+            break;
+        case FillType.Pattern:
+            innerText.value = t('pattern.image');
+            compo.value = DescSpan();
+            break;
+        default:
+            compo.value = HexInput();
+    }
+}
+
 const colorPanelStatus = reactive<ElementStatus>({id: '#color-piker-gen-2-panel', visible: false});
 const colorPanelStatusMgr = new ElementManager(
     props.context,
@@ -80,22 +95,6 @@ function showColorPanel(event: MouseEvent) {
 }
 
 const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
-fillsPicker.fill = props.data.fill;
-
-function assemble() {
-    switch (props.data.fill.fillType) {
-        case FillType.Gradient:
-            innerText.value = t(`color.${props.data.fill.gradient!.gradientType}`);
-            compo.value = DescSpan();
-            break;
-        case FillType.Pattern:
-            innerText.value = t('pattern.image');
-            compo.value = DescSpan();
-            break;
-        default:
-            compo.value = HexInput();
-    }
-}
 
 function update() {
     const fill = props.data.fill;
@@ -126,25 +125,28 @@ const stop1 = watchEffect(update);
 const stop2 = watchEffect(() => {
     const fill = props.data.fill;
     const color = props.context.color;
-    if (!colorPanelStatus.visible || fillType.value === FillType.SolidColor || fillType.value === FillType.Pattern) {
-        color.set_gradient_type(undefined);
-        color.gradient_locate(undefined);
+
+    if (!colorPanelStatus.visible || fillType.value === FillType.SolidColor) {
+        if (color.gradient_type) color.set_gradient_type(undefined);
+        if (color.locate) color.gradient_locate(undefined);
+        if (color.mode) color.switch_editor_mode(false);
+        if (color.imageScaleMode) color.setImageScaleMode(undefined);
+    } else if (fillType.value === FillType.Pattern) {
+        color.gradient_locate({ index: fillsPicker.index, type: "fills" });
+        color.setImageScaleMode(fill.imageScaleMode);
+        color.setImageOriginFrame({
+            width: fill.originalImageWidth ?? 100,
+            height: fill.originalImageHeight ?? 100
+        });
+        color.setImageScale(fill.scale);
         color.switch_editor_mode(false);
     } else {
         color.set_gradient_type(fillType.value as GradientType);
         color.gradient_locate({ index: fillsPicker.index, type: "fills" });
         color.switch_editor_mode(true, fill.gradient);
-    }
-    if (!colorPanelStatus.visible || fillType.value !== FillType.Pattern) {
-        color.gradient_locate(undefined);
         color.setImageScaleMode(undefined);
-    } else {
-        color.gradient_locate({ index: fillsPicker.index, type: "fills" });
-        color.setImageScaleMode(fill.imageScaleMode);
-        color.setImageOriginFrame({ width: fill.originalImageWidth ?? 100, height: fill.originalImageHeight ?? 100 });
-        color.setImageScale(fill.scale);
     }
-})
+});
 onUnmounted(() => {
     stop1();
     stop2();
@@ -164,7 +166,7 @@ onUnmounted(() => {
             <SvgIcon :icon="delete_icon"/>
         </div>
         <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType"
-                     :color="rgba" :gradient="gradient" :pattern="pattern"
+                     :color="rgba!" :gradient="gradient" :pattern="pattern"
                      @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>

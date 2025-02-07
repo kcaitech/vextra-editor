@@ -1,5 +1,5 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { BorderPaintsAsyncApi, Color, Shadow } from "@kcdesign/data";
+import {  Color, Shadow, ShadowAsyncApi } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
@@ -12,7 +12,7 @@ export class ShadowColorPicker extends ColorPickerEditor {
 
     private m_index: number | undefined;
 
-    private get index(): number {
+    get index(): number {
         if (this.m_index !== undefined) return this.m_index;
         if (!this.shadow) return this.m_index = 0;
         const parent = this.shadow.parent as any;
@@ -25,9 +25,9 @@ export class ShadowColorPicker extends ColorPickerEditor {
         this.m_index = undefined;
     }
 
-    private get api(): BorderPaintsAsyncApi {
-        return (this.m_api as unknown as BorderPaintsAsyncApi)
-            ?? (this.m_api = new BorderPaintsAsyncApi(this.context.coopRepo, this.context.data, this.page));
+    private get api(): ShadowAsyncApi {
+        return (this.m_api as unknown as ShadowAsyncApi)
+            ?? (this.m_api = new ShadowAsyncApi(this.context.coopRepo, this.context.data, this.page));
     }
 
     setSolidColor(c: RGBACatch): void {
