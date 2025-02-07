@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
+import down_icon from '@/assets/icons/svg/down.svg';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import { ref } from 'vue';
 
 const props = defineProps<{
     ticon: string
@@ -19,9 +18,9 @@ const emits = defineEmits<{
     (e: 'keyDown', event: KeyboardEvent, val: string | number): void;
 }>();
 const input = ref<HTMLInputElement>();
-const isActived = ref(false)
+const isActive = ref(false)
 const selectValue = () => {
-    isActived.value = true
+    isActive.value = true
 }
 
 const onChange = () => {
@@ -73,22 +72,6 @@ const onMouseDown = (e: MouseEvent) => {
     window.addEventListener('blur', windowBlur);
 }
 const onMouseMove = (e: MouseEvent) => {
-    // let mx = e.screenX - curpt.x;
-    // const diff = e.screenX - _curpt.x;
-    // if ((diff > 3 || diff < 3) && input.value) {
-    //     curpt.x = e.screenX
-    //     let value = input.value.value;
-    //     if (mx > 0) {
-    //         if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
-    //         const result = +value + 1;
-    //         emits('onChange', result);
-    //     } else if (mx < 0) {
-    //         if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
-    //         const result = +value - 1;
-    //         emits('onChange', result);
-    //     }
-    // }
-
     emits('dragging', e);
 }
 const onMouseUp = (e: MouseEvent) => {
@@ -113,7 +96,7 @@ function windowBlur() {
 }
 
 function blur2() {
-    isActived.value = false
+    isActive.value = false
     is_select.value = false;
 }
 const is_select = ref(false);
@@ -127,14 +110,10 @@ function click() {
     el.select();
     is_select.value = true;
 }
-
-import down_icon from '@/assets/icons/svg/down.svg';
-import SvgIcon from '@/components/common/SvgIcon.vue';
-
 </script>
 
 <template>
-    <div class="input-container" :class="{ disabled: props.disabled, actived: isActived }">
+<div class="input-container" :class="{ disabled: props.disabled, active: isActive }">
         <Tooltip v-if="props.tootip && !props.disabled" :content="props.tootip" :offset="12">
             <span class="icon" ref="icon" @mousedown="onMouseDown">{{ ticon }}</span>
         </Tooltip>
@@ -147,7 +126,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
             :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click"
             @keydown="e=>emits('keyDown',e,props.shadowV)">
-        <div class="adjust" :class="{ active: isActived }">
+    <div class="adjust" :class="{ active: isActive }">
             <SvgIcon :icon="down_icon" style="transform: rotate(180deg);"
                 :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"/>
             <SvgIcon :icon="down_icon" :style="{ cursor: props.disabled ? 'default' : 'pointer' }"
@@ -165,8 +144,6 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
     overflow: hidden;
     padding: 3px 3px 3px 12px;
     align-items: center;
-    //padding-left: 12px;
-    //padding-right: 3px;
     border: 1px solid transparent;
     box-sizing: border-box;
     background-color: var(--input-background);
@@ -179,7 +156,6 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         text-align: center;
         width: 8px;
         height: 16px;
-        font-family: HarmonyOS Sans;
         font-size: 12px;
         color: #8C8C8C;
     }
@@ -190,7 +166,6 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         align-content: center;
         margin-left: 8px;
         color: #000000;
-        font-family: HarmonyOS Sans;
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;
@@ -212,8 +187,6 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         width: 19px;
         height: 100%;
         flex: 0 0 19px;
-        //background-color: #fff;
-        //margin-left: 5px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -236,17 +209,13 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
     .adjust.active {
         background-color: #EBEBEB;
     }
-
-    //.adjust.active {
-    //    background-color: #EBEBEB !important;
-    //}
 }
 
 .disabled {
     opacity: 0.4;
 }
 
-.actived {
+.active {
     border: 1px solid #1878F5;
 }
 
