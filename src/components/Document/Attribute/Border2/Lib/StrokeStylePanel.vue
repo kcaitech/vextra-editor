@@ -36,7 +36,6 @@ function showCreatePanel(event: MouseEvent) {
 onUnmounted(() => {
     panelStatusMgr.unmounted();
 });
-
 </script>
 <template>
     <div id="stroke-style-lib-panel" class="stroke-style-lib-panel">

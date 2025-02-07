@@ -38,40 +38,35 @@ function strokeMixedStatus(stroke: BorderData, shapes: ShapeView[]) {
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shapes[i].type === ShapeType.Cutout) continue;
-        const styleborders = shape.getBorders();
-        const len = styleborders.strokePaints.length;
-        if (len > 0 && styleborders.position !== stroke.position) {
+        const paints = shape.getBorders();
+        const len = paints.strokePaints.length;
+        if (len > 0 && paints.position !== stroke.position) {
             stroke.position = 'mixed';
         }
-        if (len > 0 && styleborders.cornerType !== stroke.cornerType) {
+        if (len > 0 && paints.cornerType !== stroke.cornerType) {
             stroke.cornerType = 'mixed';
         }
         if (len > 0 && typeof stroke.borderStyle !== 'string' &&
-            styleborders.borderStyle.gap !== stroke.borderStyle.gap &&
-            styleborders.borderStyle.length !== stroke.borderStyle.length) {
+            paints.borderStyle.gap !== stroke.borderStyle.gap &&
+            paints.borderStyle.length !== stroke.borderStyle.length) {
             stroke.borderStyle = 'mixed';
         }
-        const sideStr = getDideStr(styleborders.sideSetting, stroke.sideSetting);
-        if (len > 0 && !sideStr) {
-            stroke.sideSetting = 'mixed';
-        }
+        const sideStr = getDideStr(paints.sideSetting, stroke.sideSetting);
+        if (len > 0 && !sideStr) stroke.sideSetting = 'mixed';
     }
 }
 
 export type BorderFillsContext = {
     mixed: boolean;
     fills: FillCatch[];
-    strokeInfo?: BorderData,
 
-    strokeMask?: string,
+    strokeInfo?: BorderData;
+    strokeMask?: string;
     strokeMaskInfo?: MaskInfo;
     mask?: string;
     maskInfo?: MaskInfo;
 }
-/**
- * 填充模块核心状态管理器，修改填充的所有属性都有管理器完成；
- * 另外还组合了弹框管理器，可以控制相关弹窗
- */
+
 export class StrokeFillContextMgr extends StyleCtx {
     constructor(protected context: Context, public fillCtx: BorderFillsContext) {
         super(context);

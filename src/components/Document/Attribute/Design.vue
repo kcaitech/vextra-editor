@@ -246,8 +246,6 @@ const need_instance_attr_show = () => {
         }
 
         v = !!(result.variables.length || result.visible_variables.length);
-    } else if (shapes.value.length > 1) {
-        // todo
     }
     return v;
 }
@@ -370,7 +368,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </el-scrollbar>
-        <artboard-template v-if="frame" :context="props.context" />
+        <artboard-template v-if="frame" :context="context"/>
     </section>
 </template>
 

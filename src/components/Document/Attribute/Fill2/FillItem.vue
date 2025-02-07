@@ -150,6 +150,7 @@ const stop2 = watchEffect(() => {
 onUnmounted(() => {
     stop1();
     stop2();
+    colorPanelStatusMgr.unmounted();
 });
 </script>
 <template>

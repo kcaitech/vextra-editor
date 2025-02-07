@@ -24,9 +24,9 @@ import PopoverHeader from "@/components/common/PopoverHeader.vue";
 const { t } = useI18n();
 
 const props = defineProps<{
-    context: Context
-    data: ShadowCatch
-    manager: ShadowsContextMgr
+    context: Context;
+    data: ShadowCatch;
+    manager: ShadowsContextMgr;
 }>();
 
 function getIndexByShadow(shadow: Shadow) {
@@ -332,7 +332,12 @@ function update() {
     rgba.value = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
 }
 
-onUnmounted(watchEffect(update));
+const stop1 = watchEffect(update);
+onUnmounted(() => {
+    stop1();
+    panelStatusMgr.unmounted();
+    colorPanelStatusMgr.unmounted();
+});
 </script>
 
 <template>
