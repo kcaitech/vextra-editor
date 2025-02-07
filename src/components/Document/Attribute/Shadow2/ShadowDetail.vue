@@ -24,9 +24,9 @@ import PopoverHeader from "@/components/common/PopoverHeader.vue";
 const { t } = useI18n();
 
 const props = defineProps<{
-    context: Context
-    data: ShadowCatch
-    manager: ShadowsContextMgr
+    context: Context;
+    data: ShadowCatch;
+    manager: ShadowsContextMgr;
 }>();
 
 function getIndexByShadow(shadow: Shadow) {

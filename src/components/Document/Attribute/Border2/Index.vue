@@ -84,8 +84,8 @@ const showBorderPanel = (event: MouseEvent) => {
 }
 
 const watchList: any[] = [
-    watch(() => props.selectionChange, () => fillCtxMgr.update()),                  // 监听选区变化
-    watch(() => props.trigger, v => v?.includes('style') && fillCtxMgr.update())    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态
+    watch(() => props.selectionChange, () => fillCtxMgr.update()),
+    watch(() => props.trigger, v => v?.includes('style') && fillCtxMgr.update())
 ];
 
 onMounted(() => {
