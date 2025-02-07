@@ -20,7 +20,7 @@ function createStop(cc: RGBACatch) {
 }
 
 function update() {
-    editor.context.color.select_stop(props.data.stopIds[gradientStopAt.value]);
+    editor.context.color.select_stop(props.data.stopIds[gradientStopAt.value] ?? props.data.stopIds[0]);
     stop.value = props.data.RGBAs[gradientStopAt.value];
 }
 
@@ -52,6 +52,9 @@ function colorCtxWatcher(t: any) {
     if (t === ColorCtx.CHANGE_STOP) {
         const id = editor.context.color.selected_stop;
         gradientStopAt.value = props.data.stopIds.findIndex(i => i === id);
+    } else if (t === ColorCtx.STOP_DELETE) {
+        if (props.data.RGBAs.length < 2) return;
+        editor.removeStop(gradientStopAt.value);
     }
 }
 

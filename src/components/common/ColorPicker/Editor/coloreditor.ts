@@ -88,7 +88,7 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     draggingTo(): void {
     }
 
-    removeStop(index: number): void {
+    removeStop(stopAt: number): void {
     }
 
     reverseStops(): void {
