@@ -21,7 +21,7 @@ const props = defineProps<{
     manager: StrokeFillContextMgr;
     data: FillCatch;
 }>();
-const {t} = useI18n();
+const { t } = useI18n();
 const fillTypes = [FillType.SolidColor, FillType.Gradient];
 const colorHex = ref<string>(props.data.fill.color.toHex().slice(1));
 const alpha = ref<string>(props.data.fill.color.alpha * 100 + '%');
@@ -136,20 +136,19 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="fill-item-container">
-        <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)"/>
-        <div :class="{'value-panel-wrapper': true, disabled: !data.fill.isEnabled}">
-            <ColorBlock :colors="(colors as Fill[])" @click="showColorPanel"/>
-            <component :is="compo"/>
-            <input class="alpha" type="text" :value="alpha"
-                   @focus="selectAllOnFocus"
-                   @change="(e) => manager.modifyFillAlpha(e, data.fill)"/>
+        <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)" />
+        <div :class="{ 'value-panel-wrapper': true, disabled: !data.fill.isEnabled }">
+            <ColorBlock :colors="(colors as Fill[])" @click="showColorPanel" />
+            <component :is="compo" />
+            <input class="alpha" type="text" :value="alpha" @focus="selectAllOnFocus"
+                @change="(e) => manager.modifyFillAlpha(e, data.fill)" />
         </div>
-        <div class="delete" @click="() => manager.remove(data.fill)">
-            <SvgIcon :icon="delete_icon"/>
+        <div class="delete" :class="{ disabled: manager.fillCtx.mask && manager.fillCtx.fills.length === 1 }"
+            @click="() => manager.remove(data.fill)">
+            <SvgIcon :icon="delete_icon" />
         </div>
         <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType" :include="fillTypes"
-                     :color="rgba!" :gradient="gradient"
-                     @close="() => colorPanelStatusMgr.close()"/>
+            :color="rgba!" :gradient="gradient" @close="() => colorPanelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">
@@ -186,7 +185,7 @@ onUnmounted(() => {
     }
 
     .disabled {
-        > * {
+        >* {
             opacity: 0.3;
             pointer-events: none;
         }
@@ -203,7 +202,7 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > img {
+        >img {
             width: 16px;
             height: 16px;
         }

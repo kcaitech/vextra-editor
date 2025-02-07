@@ -25,14 +25,14 @@ const props = defineProps<{
     manager: FillsContextMgr;
     data: FillCatch;
 }>();
-const {t} = useI18n();
+const { t } = useI18n();
 const colorHex = ref<string>(props.data.fill.color.toHex().slice(1));
 const alpha = ref<string>(Math.round(props.data.fill.color.alpha * 100) + '%');
 const colors = ref<Fill[]>([props.data.fill]);
 const innerText = ref<string>('');
 const compo = ref<any>();
 const fillType = ref<string>(FillType.SolidColor);
-const rgba = ref<RGBACatch>({R: 153, G: 43, B: 43, A: 0.52, position: 1});
+const rgba = ref<RGBACatch>({ R: 153, G: 43, B: 43, A: 0.52, position: 1 });
 const gradient = ref<GradientCatch | undefined>();
 const pattern = ref<PatternCatch | undefined>();
 
@@ -76,18 +76,18 @@ function assemble() {
     }
 }
 
-const colorPanelStatus = reactive<ElementStatus>({id: '#color-piker-gen-2-panel', visible: false});
+const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    {whiteList: ['#color-piker-gen-2-panel', '.color-wrapper']}
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
 );
 
 function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('color-wrapper')) {
-            colorPanelStatusMgr.showBy(e, {once: {offsetLeft: -290}});
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
             break;
         }
         e = e.parentElement;
@@ -115,7 +115,7 @@ function update() {
         pattern.value = getPatternCatch(fill);
     } else {
         fillType.value = fill.fillType;
-        rgba.value = {R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1};
+        rgba.value = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
     }
 
     assemble();
@@ -155,20 +155,19 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="fill-item-container">
-        <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)"/>
-        <div :class="{'value-panel-wrapper': true, disabled: !data.fill.isEnabled}">
-            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel"/>
-            <component :is="compo"/>
-            <input class="alpha" type="text" :value="alpha"
-                   @focus="selectAllOnFocus"
-                   @change="(e) => manager.modifyFillAlpha(e, data.fill)"/>
+        <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)" />
+        <div :class="{ 'value-panel-wrapper': true, disabled: !data.fill.isEnabled }">
+            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel" />
+            <component :is="compo" />
+            <input class="alpha" type="text" :value="alpha" @focus="selectAllOnFocus"
+                @change="(e) => manager.modifyFillAlpha(e, data.fill)" />
         </div>
-        <div class="delete" @click="() => manager.remove(data.fill)">
-            <SvgIcon :icon="delete_icon"/>
+        <div class="delete" :class="{ disabled: manager.fillCtx.mask && manager.fillCtx.fills.length === 1 }"
+            @click="() => manager.remove(data.fill)">
+            <SvgIcon :icon="delete_icon" />
         </div>
-        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType"
-                     :color="rgba!" :gradient="gradient" :pattern="pattern"
-                     @close="() => colorPanelStatusMgr.close()"/>
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType" :color="rgba!"
+            :gradient="gradient" :pattern="pattern" @close="() => colorPanelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">
@@ -205,7 +204,7 @@ onUnmounted(() => {
     }
 
     .disabled {
-        > * {
+        >* {
             opacity: 0.3;
             pointer-events: none;
         }
@@ -222,7 +221,7 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > img {
+        >img {
             width: 16px;
             height: 16px;
         }

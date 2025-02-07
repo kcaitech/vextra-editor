@@ -38,6 +38,7 @@ function update() {
     name.value = data?.name ?? '';
     desc.value = data?.description ?? '';
     shadows.value = getShadows();
+    
 }
 
 function modifyName(value: string) {
