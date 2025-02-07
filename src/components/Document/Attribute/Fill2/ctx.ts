@@ -169,13 +169,23 @@ export class FillsContextMgr extends StyleCtx {
     }
 
     remove(fill: Fill) {
-        const actions = get_actions_fill_delete(this.selected, this.getIndexByFill(fill));
-        this.editor.shapesDeleteFill(actions);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor4Doc.modifyFillMaskFillDelFill(mask.sheet, mask.id, this.getIndexByFill(fill));
+        } else {
+            const actions = get_actions_fill_delete(this.selected, this.getIndexByFill(fill));
+            this.editor.shapesDeleteFill(actions);
+        }
     }
 
     modifyVisible(fill: Fill) {
-        const actions = get_actions_fill_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
-        this.editor.setShapesFillEnabled(actions);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor4Doc.modifyFillMaskFillEnabled(mask.sheet, mask.id, this.getIndexByFill(fill), !fill.isEnabled);
+        } else {
+            const actions = get_actions_fill_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
+            this.editor.setShapesFillEnabled(actions);
+        }
     }
 
     modifyFillHex(event: Event, fill: Fill) {
@@ -185,10 +195,13 @@ export class FillsContextMgr extends StyleCtx {
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
         const index = this.getIndexByFill(fill);
         const selected = this.selected;
-
-        this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
-
-        this.hiddenCtrl(event);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor4Doc.modifyFillMaskFillColor(mask.sheet, mask.id, index, color);
+        } else {
+            this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
+            this.hiddenCtrl(event);
+        }
     }
 
     modifyFillAlpha(event: Event, fill: Fill) {
@@ -201,9 +214,14 @@ export class FillsContextMgr extends StyleCtx {
             fill.color.blue
         );
         const index = this.getIndexByFill(fill);
-        const selected = this.selected;
-        this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
-        this.hiddenCtrl(event);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor4Doc.modifyFillMaskFillColor(mask.sheet, mask.id, index, color);
+        } else {
+            const selected = this.selected;
+            this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
+            this.hiddenCtrl(event);
+        }
     }
 
     modifyFillMask(id: string) {

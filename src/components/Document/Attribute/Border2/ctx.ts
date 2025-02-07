@@ -158,10 +158,10 @@ export class StrokeFillContextMgr extends StyleCtx {
         if (!this.fillCtx.fills.length && !this.fillCtx.mixed) this.create();
     }
 
-    create(mask? : FillMask) {
+    create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
 
-        if(mask) {
+        if (mask) {
             const color = new Color(1, 0, 0, 0);
             const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
             this.editor4Doc.modifyFillMaskFillAddFill(mask.sheet, mask.id, strokePaint);
@@ -171,7 +171,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
             const actions = get_actions_add_boder(selected, strokePaint);
             this.editor.shapesAddBorder(actions);
-    
+
             this.hiddenCtrl();
         }
     }
@@ -183,8 +183,13 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     remove(fill: Fill) {
-        const actions = get_actions_border_delete(this.selected, this.getIndexByFill(fill));
-        this.editor.shapesDeleteBorder(actions);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor4Doc.modifyFillMaskFillDelFill(mask.sheet, mask.id, this.getIndexByFill(fill));
+        } else {
+            const actions = get_actions_border_delete(this.selected, this.getIndexByFill(fill));
+            this.editor.shapesDeleteBorder(actions);
+        }
     }
 
     removeAll() {
@@ -192,8 +197,13 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     modifyVisible(fill: Fill) {
-        const actions = get_actions_border_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
-        this.editor.setShapesBorderEnabled(actions);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor4Doc.modifyFillMaskFillEnabled(mask.sheet, mask.id, this.getIndexByFill(fill), !fill.isEnabled);
+        } else {
+            const actions = get_actions_border_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
+            this.editor.setShapesBorderEnabled(actions);
+        }
     }
 
     modifyFillHex(event: Event, fill: Fill) {
@@ -203,10 +213,13 @@ export class StrokeFillContextMgr extends StyleCtx {
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
         const index = this.getIndexByFill(fill);
         const selected = this.selected;
-
-        this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
-
-        this.hiddenCtrl(event);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor4Doc.modifyFillMaskFillColor(mask.sheet, mask.id, index, color);
+        } else {
+            this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
+            this.hiddenCtrl(event);
+        }
     }
 
     modifyFillAlpha(event: Event, fill: Fill) {
@@ -219,9 +232,14 @@ export class StrokeFillContextMgr extends StyleCtx {
             fill.color.blue
         );
         const index = this.getIndexByFill(fill);
-        const selected = this.selected;
-        this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
-        this.hiddenCtrl(event);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor4Doc.modifyFillMaskFillColor(mask.sheet, mask.id, index, color);
+        } else {
+            const selected = this.selected;
+            this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
+            this.hiddenCtrl(event);
+        }
     }
 
     modifyFillMask(id: string) {
