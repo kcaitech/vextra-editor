@@ -30,7 +30,8 @@ const shadowPositionOptions = [
         <div class="detail">
             <ShadowDetail :context="context" :data="data" :manager="manager" />
         </div>
-        <div class="delete" @click="() => manager.remove(data.shadow)">
+        <div class="delete" :class="{ disabled: manager.shadowCtx.mask && manager.shadowCtx.shadows.length === 1 }"
+            @click="() => manager.remove(data.shadow)">
             <SvgIcon :icon="delete_icon" />
         </div>
     </div>

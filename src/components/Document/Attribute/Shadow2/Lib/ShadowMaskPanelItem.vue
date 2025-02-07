@@ -56,7 +56,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel">
+    <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel" v-if="shadows.length">
         <template #preview>
             <div class="content" @click="modifyShadowMask">
                 <div class="effect" :style="{
