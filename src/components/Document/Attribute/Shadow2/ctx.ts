@@ -97,21 +97,24 @@ export class ShadowsContextMgr extends StyleCtx {
         if (!this.shadowCtx.shadows.length && !this.shadowCtx.mixed) this.create();
     }
 
-    create() {
+    create(mask?: ShadowMask) {
         if (this.shadowCtx.mixed) return this.unify();
-
-        const actions: BatchAction2[] = [];
-        const selected = this.selected;
-        for (const view of selected) {
-            if (view instanceof ContactLineView) continue;
+        if (mask) {
             const color = new Color(0.3, 0, 0, 0);
             const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
-            actions.push({ target: view, value: shadow });
+            this.editor4Doc.modifyShadowMaskShadowAddShadow(mask.sheet, mask.id, shadow);
+        } else {
+            const actions: BatchAction2[] = [];
+            const selected = this.selected;
+            for (const view of selected) {
+                if (view instanceof ContactLineView) continue;
+                const color = new Color(0.3, 0, 0, 0);
+                const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
+                actions.push({ target: view, value: shadow });
+            }
+            this.editor.shapesAddShadow(actions);
+            this.hiddenCtrl();
         }
- 
-        this.editor.shapesAddShadow(actions);
-
-        this.hiddenCtrl();
     }
 
     unify() {

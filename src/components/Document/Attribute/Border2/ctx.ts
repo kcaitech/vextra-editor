@@ -163,16 +163,22 @@ export class StrokeFillContextMgr extends StyleCtx {
         if (!this.fillCtx.fills.length && !this.fillCtx.mixed) this.create();
     }
 
-    create() {
+    create(mask? : FillMask) {
         if (this.fillCtx.mixed) return this.unify();
 
-        const selected = this.selected;
-        const color = new Color(1, 0, 0, 0);
-        const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
-        const actions = get_actions_add_boder(selected, strokePaint);
-        this.editor.shapesAddBorder(actions);
-
-        this.hiddenCtrl();
+        if(mask) {
+            const color = new Color(1, 0, 0, 0);
+            const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+            this.editor4Doc.modifyFillMaskFillAddFill(mask.sheet, mask.id, strokePaint);
+        } else {
+            const selected = this.selected;
+            const color = new Color(1, 0, 0, 0);
+            const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+            const actions = get_actions_add_boder(selected, strokePaint);
+            this.editor.shapesAddBorder(actions);
+    
+            this.hiddenCtrl();
+        }
     }
 
     unify() {

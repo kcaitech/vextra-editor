@@ -69,7 +69,7 @@ onUnmounted(() => {
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
             @modify-desc="modifyDesc" />
         <div v-if="data" class="data-panel">
-            <ListHeader title="阴影" @create="manager.create()" />
+            <ListHeader title="阴影" @create="manager.create(data)" />
             <div class="fills-container">
                 <ShadowItem v-for="(shadow, index) in shadows" :key="index" :context="context" :manager="manager"
                     :data="(shadow as ShadowCatch)" />

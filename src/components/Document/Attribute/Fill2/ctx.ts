@@ -52,7 +52,7 @@ export function stringifyGradient(g: Gradient) {
     str += g.gradientType + g.from.x + g.from.y + g.to.x + g.to.y
         + (g.elipseLength ?? 'null')
         + (g.gradientOpacity ?? 'null')
-    ;
+        ;
 
     g.stops.forEach(s => str += stringifyStop(s));
 
@@ -88,7 +88,7 @@ export class FillsContextMgr extends StyleCtx {
         const selected = this.selected;
 
         if (selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = selected.map(i => ({fills: i.getFills(), style: i.style}));
+        const allFills = selected.map(i => ({ fills: i.getFills(), style: i.style }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -118,7 +118,7 @@ export class FillsContextMgr extends StyleCtx {
 
         const origin = represent.getFills();
         const replace: FillCatch[] = [];
-        for (let i = origin.length - 1; i > -1; i--) replace.push({fill: origin[i]});
+        for (let i = origin.length - 1; i > -1; i--) replace.push({ fill: origin[i] });
         this.fillCtx.fills = replace;
     }
 
@@ -136,26 +136,30 @@ export class FillsContextMgr extends StyleCtx {
         if (!this.fillCtx.fills.length && !this.fillCtx.mixed) this.create();
     }
 
-    create() {
+    create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
 
-        const actions: BatchAction2[] = [];
-        const selected = this.selected;
-        for (const view of selected) {
-            if (view instanceof ContactLineView) continue;
-            let color: Color;
-            if (view instanceof ArtboardView) {
-                color = new Color(1, 255, 255, 255);
-            } else {
-                color = new Color(0.2, 0, 0, 0);
-            }
+        if (mask) {
+            const color = new Color(0.2, 0, 0, 0);
             const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-            actions.push({target: view, value: fill});
+            this.editor4Doc.modifyFillMaskFillAddFill(mask.sheet, mask.id, fill);
+        } else {
+            const actions: BatchAction2[] = [];
+            const selected = this.selected;
+            for (const view of selected) {
+                if (view instanceof ContactLineView) continue;
+                let color: Color;
+                if (view instanceof ArtboardView) {
+                    color = new Color(1, 255, 255, 255);
+                } else {
+                    color = new Color(0.2, 0, 0, 0);
+                }
+                const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
+                actions.push({ target: view, value: fill });
+            }
+            this.editor.shapesAddFill(actions);
+            this.hiddenCtrl();
         }
-
-        this.editor.shapesAddFill(actions);
-
-        this.hiddenCtrl();
     }
 
     unify() {
@@ -181,7 +185,7 @@ export class FillsContextMgr extends StyleCtx {
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
         const index = this.getIndexByFill(fill);
         const selected = this.selected;
-        
+
         this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
 
         this.hiddenCtrl(event);
