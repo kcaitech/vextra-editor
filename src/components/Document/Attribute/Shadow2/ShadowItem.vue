@@ -10,10 +10,7 @@ import { ShadowCatch, ShadowsContextMgr } from "./ctx";
 import { ShadowPosition } from "@kcdesign/data";
 import SelectBanana from "@/components/common/Select/SelectBanana.vue";
 
-/**
- * 用于展示和修改一条填充的属性
- */
-const props = defineProps<{
+defineProps<{
     context: Context;
     manager: ShadowsContextMgr;
     data: ShadowCatch;

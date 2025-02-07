@@ -94,6 +94,7 @@ onMounted(() => {
 onUnmounted(() => {
     watchList.forEach(stop => stop());
     fillPanelStatusMgr.unmounted();
+    strokePanelStatusMgr.unmounted();
 });
 </script>
 <template>

@@ -107,7 +107,7 @@ function update() {
         fillType.value = fill.fillType;
         rgba.value = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
     }
-    console.log()
+
     assemble();
 }
 
@@ -131,6 +131,7 @@ const stop2 = watchEffect(() => {
 onUnmounted(() => {
     stop1();
     stop2();
+    colorPanelStatusMgr.unmounted();
 });
 </script>
 <template>

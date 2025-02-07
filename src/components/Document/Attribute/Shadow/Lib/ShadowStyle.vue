@@ -227,6 +227,7 @@ onUnmounted(() => {
     props.context.data.unwatch(stylelib_watcher);
     createPanelStatusMgr.unmounted();
     modifyPanelStatusMgr.unmounted();
+    libListStatusMgr.unmounted();
 })
 </script>
 <style lang="scss" scoped>
