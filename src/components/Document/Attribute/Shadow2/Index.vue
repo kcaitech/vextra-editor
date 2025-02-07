@@ -78,7 +78,7 @@ onUnmounted(() => {
                 <div v-if="cloverVisible" class="clover" @click="showShadowLib">
                     <SvgIcon :icon="style_icon" />
                 </div>
-                <div v-if="!shadowCtx.mask" class="create" @click="() => shadowCtxMgr.create()">
+                <div v-if="!shadowCtx.mask || shadowCtx.mixed" class="create" @click="() => shadowCtxMgr.create()">
                     <SvgIcon :icon="add_icon" />
                 </div>
             </template>

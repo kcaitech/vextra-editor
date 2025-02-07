@@ -80,7 +80,7 @@ onUnmounted(() => {
                 <div v-if="cloverVisible" class="clover" @click="showFillLib">
                     <SvgIcon :icon="style_icon"/>
                 </div>
-                <div v-if="!fillCtx.mask" class="create" @click="() => fillCtxMgr.create()">
+                <div v-if="!fillCtx.mask || fillCtx.mixed" class="create" @click="() => fillCtxMgr.create()">
                     <SvgIcon :icon="add_icon"/>
                 </div>
             </template>

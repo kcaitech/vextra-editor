@@ -41,18 +41,7 @@ import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, genOptions } from '@/utils/common';
 import { FillRenderer } from './fillRenderer';
-import add_icon from '@/assets/icons/svg/add.svg';
-import editor_icon from '@/assets/icons/svg/export-menu.svg';
-import down_icon from '@/assets/icons/svg/triangle-down.svg';
-import right_icon from '@/assets/icons/svg/triangle-right.svg';
-import delete_icon from '@/assets/icons/svg/delete.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
-import search_icon from '@/assets/icons/svg/search.svg';
-import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
-import choose_icon from '@/assets/icons/svg/choose.svg';
-import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps<{
