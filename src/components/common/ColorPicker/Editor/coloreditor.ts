@@ -34,87 +34,68 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
 
     protected hiddenCtrl(event?: Event) {
         hidden_selection(this.context);
-
         if (event?.target instanceof HTMLInputElement) event.target.blur();
     }
+
     modifyFillType(type: string): void {
         this.m_fill_type = type;
     }
 
-    setSolidColor(c: RGBACatch): void {
-    }
+    setSolidColor(c: RGBACatch): void {}
 
     dragSolidBegin(): void {
         this.getSelection();
     }
 
-    solidDragging(c: RGBACatch): void {
-    }
+    solidDragging(c: RGBACatch): void {}
 
-    dragSolidEnd(): void {
-    }
+    dragSolidEnd(): void {}
 
-    createStop(c: RGBACatch): void {
-    }
+    createStop(c: RGBACatch): void {}
 
-    setStopColor(c: RGBACatch, stopAt: number) {
+    setStopColor(c: RGBACatch, stopAt: number) {}
 
-    }
+    dragFromBegin(): void {}
 
-    dragFromBegin(): void {
-    }
+    dragFromEnd(): void {}
 
-    dragFromEnd(): void {
-    }
+    dragStopBegin(): void {}
 
-    dragStopBegin(): void {
-    }
+    draggingStop(c: RGBACatch, stopAt: number): void {}
 
-    draggingStop(c: RGBACatch, stopAt: number): void {
-    }
+    dragStopEnd(): void {}
 
-    dragStopEnd(): void {
-    }
+    dragStopPositionBegin() {}
 
-    dragToBegin(): void {
-    }
+    draggingStopPosition(position: number, stopAt: number) {}
 
-    dragToEnd(): void {
-    }
+    dragStopPositionEnd() {}
 
-    draggingFrom(): void {
-    }
+    dragToBegin(): void {}
 
-    draggingTo(): void {
-    }
+    dragToEnd(): void {}
 
-    removeStop(stopAt: number): void {
-    }
+    draggingFrom(): void {}
 
-    reverseStops(): void {
-    }
+    draggingTo(): void {}
 
-    rotateStops(): void {
-    }
-    filterDragBegin(): void {
-    }
+    removeStop(stopAt: number): void {}
 
-    filterDragging(type: string, val: number): void {
-    }
+    reverseStops(): void {}
 
-    filterDragEnd(): void {
-    }
+    rotateStops(): void {}
 
-    modifyObjectFit(type: string): void {
-    }
+    filterDragBegin(): void {}
 
-    modifyRef(event: Event): void {
-    }
+    filterDragging(type: string, val: number): void {}
 
-    modifyTileScale(event: Event): void {
+    filterDragEnd(): void {}
 
-    }
+    modifyObjectFit(type: string): void {}
 
-    rotateImg(): void {
-    }
+    modifyRef(event: Event): void {}
+
+    modifyTileScale(event: Event): void {}
+
+    rotateImg(): void {}
 }

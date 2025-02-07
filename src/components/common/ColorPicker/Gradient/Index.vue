@@ -20,7 +20,8 @@ function createStop(cc: RGBACatch) {
 }
 
 function update() {
-    editor.context.color.select_stop(props.data.stopIds[gradientStopAt.value] ?? props.data.stopIds[0]);
+    const id = editor.context.color.selected_stop ?? props.data.stopIds[0];
+    gradientStopAt.value = props.data.stopIds.findIndex(i => i === id);
     stop.value = props.data.RGBAs[gradientStopAt.value];
 }
 
@@ -48,6 +49,18 @@ function rotate() {
     editor.rotateStops();
 }
 
+function dragStopBegin() {
+    editor.dragStopPositionBegin();
+}
+
+function draggingStop(position: number) {
+    editor.draggingStopPosition(position, gradientStopAt.value);
+}
+
+function dragStopEnd() {
+    editor.dragStopPositionEnd();
+}
+
 function colorCtxWatcher(t: any) {
     if (t === ColorCtx.CHANGE_STOP) {
         const id = editor.context.color.selected_stop;
@@ -58,6 +71,9 @@ function colorCtxWatcher(t: any) {
     }
 }
 
+function changeStop(stopAt: number) {
+    editor.context.color.select_stop(props.data.stopIds[stopAt]);
+}
 const stop1 = editor.context.color.watch(colorCtxWatcher);
 const stop2 = watchEffect(update);
 onUnmounted(() => {
@@ -67,7 +83,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Station v-model:at="gradientStopAt" :gradient="data" @create-stop="createStop" @reverse="reverse"
-             @rotate="rotate"/>
-    <RGBAModel :stop="stop" @change="setColor" @drag-begin="dragBegin" @dragging="dragging" @drag-end="dragEnd"/>
+<Station :at="gradientStopAt" :gradient="data"
+         @change-stop="changeStop"
+         @create-stop="createStop" @reverse="reverse" @rotate="rotate"
+         @drag-start="dragStopBegin" @dragging="draggingStop" @drag-end="dragStopEnd"/>
+<RGBAModel :stop="stop" @change="setColor" @drag-begin="dragBegin" @dragging="dragging" @drag-end="dragEnd"/>
 </template>

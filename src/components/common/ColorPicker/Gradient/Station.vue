@@ -14,10 +14,13 @@ import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorline
 
 const props = defineProps<{ gradient: GradientCatch, at: number }>()
 const emits = defineEmits<{
-    (e: "update:at", val: number): void;
+    (e: "change-stop", val: number): void;
     (e: "create-stop", stop: RGBACatch): void;
     (e: "reverse"): void;
     (e: "rotate"): void;
+    (e: "drag-start"): void;
+    (e: "dragging", position: number): void;
+    (e: "drag-end"): void;
 }>();
 
 const {t} = useI18n();
@@ -40,7 +43,7 @@ function createStop(event: MouseEvent) {
             break;
         }
     }
-    emits("update:at", index ?? alStops.length);
+    emits("change-stop", index ?? alStops.length);
 }
 
 function drawCircles() {
@@ -49,12 +52,7 @@ function drawCircles() {
     for (const stop of stops) {
         css.push({
             x: stop.position * lineL,
-            stopStr: toRGBA({
-                red: stop.R,
-                green: stop.G,
-                blue: stop.B,
-                alpha: stop.A
-            })
+            stopStr: toRGBA({ red: stop.R, green: stop.G, blue: stop.B, alpha: stop.A })
         });
     }
     css[props.at].active = true;
@@ -62,14 +60,16 @@ function drawCircles() {
 }
 
 const dragKit = new DragKit({
+    down: () => emits("drag-start"),
     move: (event: MouseEvent, x: number) => {
-        circles.value[props.at].x = verifiedVal(x, 0, lineL);
-    }
+        emits("dragging", verifiedVal(x, 0, lineL) / lineL)
+    },
+    commit: () => emits("drag-end")
 })
 
 function downStop(event: MouseEvent, index: number) {
     if (index !== props.at) delete circles.value[props.at].active;
-    emits("update:at", index);
+    emits("change-stop", index);
 
     const target = (event.target as Element).closest('.stops') as HTMLDivElement;
     dragKit.start(event, {x: target.offsetLeft});

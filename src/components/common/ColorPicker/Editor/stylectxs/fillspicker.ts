@@ -105,6 +105,19 @@ export class FillsPicker extends ColorPickerEditor {
         this.commit();
     }
 
+    dragStopPositionBegin() {
+        this.getSelection();
+    }
+
+    draggingStopPosition(position: number, stopAt: number) {
+        this.api.modifyStopPosition(this.index, stopAt, position, this.flat);
+        this.hiddenCtrl();
+    }
+
+    dragStopPositionEnd() {
+        this.commit();
+    }
+
     reverseStops() {
         this.getSelection();
         this.api.reverseGradientStops(this.flat, this.index);

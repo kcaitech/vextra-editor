@@ -44,13 +44,22 @@ export interface IGradientModifier {
     rotateStops(): void;
 
     /**
-     * @description stop 拖拽事件
+     * @description stop 颜色拖拽事件
      */
     dragStopBegin(): void;
 
     draggingStop(c: RGBACatch, stopAt: number): void;
 
     dragStopEnd(): void;
+
+    /**
+     * @description stop 位置拖拽事件
+     */
+    dragStopPositionBegin(): void;
+
+    draggingStopPosition(position: number, stopAt: number): void;
+
+    dragStopPositionEnd(): void;
 
     /**
      * @description from拖拽事件
