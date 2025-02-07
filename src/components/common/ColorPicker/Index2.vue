@@ -23,6 +23,7 @@ const props = defineProps<{
 
     gradient?: GradientCatch;
     pattern?: PatternCatch;
+    include?: FillType[];
 }>();
 const emits = defineEmits(["close"]);
 
@@ -33,6 +34,12 @@ const compos = computed(() => {
 });
 
 const data = ref<RGBACatch | GradientCatch | PatternCatch>(props.color);
+const options = computed(() => {
+    if (!props.include) return [FillType.SolidColor, FillType.Gradient, FillType.Pattern];
+    else {
+        return [...props.include];
+    }
+});
 
 const editor = props.editor;
 
@@ -52,7 +59,7 @@ onUnmounted(watchEffect(update));
 <template>
     <div id="color-piker-gen-2-panel" :style="{width: WIDTH_CSS}">
         <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
-        <ColorType :options="[FillType.Pattern]" :value="type" @change="modifyFillType"/>
+        <ColorType v-if="options.length" :options="options" :value="type" @change="modifyFillType"/>
         <component :is="compos" :editor="editor" :data="data as any"/>
     </div>
 </template>

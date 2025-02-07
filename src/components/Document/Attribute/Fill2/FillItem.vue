@@ -61,6 +61,21 @@ const DescSpan = () => h('div', {
     innerText: innerText.value
 });
 
+function assemble() {
+    switch (props.data.fill.fillType) {
+        case FillType.Gradient:
+            innerText.value = t(`color.${props.data.fill.gradient!.gradientType}`);
+            compo.value = DescSpan();
+            break;
+        case FillType.Pattern:
+            innerText.value = t('pattern.image');
+            compo.value = DescSpan();
+            break;
+        default:
+            compo.value = HexInput();
+    }
+}
+
 const colorPanelStatus = reactive<ElementStatus>({id: '#color-piker-gen-2-panel', visible: false});
 const colorPanelStatusMgr = new ElementManager(
     props.context,
@@ -80,22 +95,6 @@ function showColorPanel(event: MouseEvent) {
 }
 
 const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
-fillsPicker.fill = props.data.fill;
-
-function assemble() {
-    switch (props.data.fill.fillType) {
-        case FillType.Gradient:
-            innerText.value = t(`color.${props.data.fill.gradient!.gradientType}`);
-            compo.value = DescSpan();
-            break;
-        case FillType.Pattern:
-            innerText.value = t('pattern.image');
-            compo.value = DescSpan();
-            break;
-        default:
-            compo.value = HexInput();
-    }
-}
 
 function update() {
     const fill = props.data.fill;
@@ -167,7 +166,7 @@ onUnmounted(() => {
             <SvgIcon :icon="delete_icon"/>
         </div>
         <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType"
-                     :color="rgba" :gradient="gradient" :pattern="pattern"
+                     :color="rgba!" :gradient="gradient" :pattern="pattern"
                      @close="() => colorPanelStatusMgr.close()"/>
     </div>
 </template>

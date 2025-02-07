@@ -37,8 +37,8 @@ import {
     get_actions_border_unify,
     get_actions_border_enabled,
     get_actions_border_delete,
-    get_aciton_gradient,
-    get_aciton_gradient_stop,
+    get_action_gradient,
+    get_action_gradient_stop,
     get_actions_filltype,
     get_actions_border,
     get_actions_add_mask,
@@ -538,7 +538,7 @@ const set_gradient_opacity = (idx: number, opacity: number) => {
     const shapes = getShapesForStyle(props.shapes);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'borders');
+    const actions = get_action_gradient_stop(shapes, _idx, opacity, 'borders');
     if (keydownval.value) {
         linearApi.modifyGradientOpacity(actions)
         keydownval.value = false
@@ -654,7 +654,7 @@ function gradient_reverse(idx: number) {
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient(shapes, _idx, 'borders');
+    const actions = get_action_gradient(shapes, _idx, 'borders');
     editor.reverseShapesGradient(actions);
 }
 
@@ -668,7 +668,7 @@ function gradient_rotate(idx: number) {
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient(shapes, _idx, 'borders');
+    const actions = get_action_gradient(shapes, _idx, 'borders');
     editor.rotateShapesGradient(actions);
 }
 
@@ -685,7 +685,7 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const stop = new Stop(new BasicArray(), id, position, color);
-    const actions = get_aciton_gradient_stop(shapes, _idx, stop, 'borders');
+    const actions = get_action_gradient_stop(shapes, _idx, stop, 'borders');
     editor.addShapesGradientStop(actions);
 }
 
@@ -702,7 +702,7 @@ function togger_gradient_type(idx: number, type: GradientType, fillType: FillTyp
     if (fillType !== FillType.Gradient) {
         toggle_fill_type(idx, fillType);
     } else {
-        const actions = get_aciton_gradient_stop(shapes, _idx, type, 'borders');
+        const actions = get_action_gradient_stop(shapes, _idx, type, 'borders');
         editor.toggerShapeGradientType(actions);
     }
 }
@@ -718,7 +718,7 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(shapes, _idx, { color, stop_i: index }, 'borders');
+    const actions = get_action_gradient_stop(shapes, _idx, { color, stop_i: index }, 'borders');
     editor.setShapesGradientStopColor(actions);
 }
 
@@ -733,7 +733,7 @@ function gradient_stop_delete(idx: number, index: any) {
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(shapes, _idx, index, 'borders');
+    const actions = get_action_gradient_stop(shapes, _idx, index, 'borders');
     editor.deleteShapesGradientStop(actions);
 }
 

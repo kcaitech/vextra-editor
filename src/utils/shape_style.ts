@@ -179,15 +179,6 @@ export function get_actions_add_mask(shapes: ShapeView[], id: string | undefined
     return actions;
 }
 
-// export function get_actions_add_shadowmask(shapes: ShapeView[], id: string) {
-//     const actions: BatchAction2[] = [];
-//     for (let i = 0; i < shapes.length; i++) {
-//         if (shapes[i].type === ShapeType.Cutout) continue;
-//         actions.push({ target: (shapes[i]), value: id });
-//     }
-//     return actions;
-// }
-
 export function get_actions_del_mask(shapes: ShapeView[], value: undefined) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -198,7 +189,7 @@ export function get_actions_del_mask(shapes: ShapeView[], value: undefined) {
 }
 
 
-export function get_aciton_gradient(shapes: ShapeView[], index: number, type: 'fills' | 'borders') {
+export function get_action_gradient(shapes: ShapeView[], index: number, type: 'fills' | 'borders') {
     const actions: BatchAction4[] = [];
     for (let i = 0, l = shapes.length; i < l; i++) {
         actions.push({ target: shapes[i], index, type });
@@ -206,7 +197,7 @@ export function get_aciton_gradient(shapes: ShapeView[], index: number, type: 'f
     return actions;
 }
 
-export function get_aciton_gradient_stop(shapes: ShapeView[], index: number, value: any, type: 'fills' | 'borders') {
+export function get_action_gradient_stop(shapes: ShapeView[], index: number, value: any, type: 'fills' | 'borders') {
     const actions: BatchAction5[] = [];
     for (let i = 0, l = shapes.length; i < l; i++) {
         actions.push({ target: shapes[i], index, value, type });

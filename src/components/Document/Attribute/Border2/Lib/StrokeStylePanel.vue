@@ -11,7 +11,7 @@ import { StrokeFillContextMgr } from "../ctx";
 /**
  * 填充样式库面板。用于展示样式列表、创建样式
  */
-const { context, manager, i18n } = defineProps<{ context: Context, manager: StrokeFillContextMgr, i18n: string }>();
+const { context, manager, title } = defineProps<{ context: Context, manager: StrokeFillContextMgr, title: string }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
 const { t } = useI18n()
 const panelStatus = reactive<ElementStatus>({ id: '#modify-stroke-style-panel', visible: false });
@@ -40,7 +40,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="stroke-style-lib-panel" class="stroke-style-lib-panel">
-        <PopoverHeader :title="t(`stylelib.${i18n}`)" @create="showCreatePanel" @close="emits('close')" />
+        <PopoverHeader :title="title" @create="showCreatePanel" @close="emits('close')" />
         <StrokeStyle :context="context" :manager="manager" />
         <CreateStrokeMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
             @close="() => panelStatusMgr.close()" />

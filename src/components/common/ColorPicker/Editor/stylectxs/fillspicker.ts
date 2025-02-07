@@ -2,7 +2,7 @@ import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/colore
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { BasicArray, Color, Fill, FillsAsyncApi, FillType, ImagePack, ImageScaleMode, Stop } from "@kcdesign/data";
-import { get_aciton_gradient_stop, get_actions_filltype } from "@/utils/shape_style";
+import { get_action_gradient_stop, get_actions_filltype } from "@/utils/shape_style";
 import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
@@ -41,7 +41,7 @@ export class FillsPicker extends ColorPickerEditor {
             const actions = get_actions_filltype(this.flat, this.index, type as FillType);
             this.pageEditor.setShapesFillType(actions);
         } else {
-            const actions = get_aciton_gradient_stop(this.flat, this.index, type, 'fills');
+            const actions = get_action_gradient_stop(this.flat, this.index, type, 'fills');
             this.pageEditor.modifyShapeGradientType(actions);
         }
         super.modifyFillType(type);
@@ -72,7 +72,7 @@ export class FillsPicker extends ColorPickerEditor {
         this.getSelection();
         const color = new Color(c.A, c.R, c.G, c.B);
         const stop = new Stop([0] as BasicArray<number>, v4(), c.position, color);
-        const actions = get_aciton_gradient_stop(this.flat, this.index, stop, "fills");
+        const actions = get_action_gradient_stop(this.flat, this.index, stop, "fills");
         this.pageEditor.addShapesGradientStop(actions);
         this.hiddenCtrl();
     }
