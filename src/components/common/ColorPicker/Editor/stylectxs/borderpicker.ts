@@ -73,6 +73,7 @@ export class BorderColorPicker extends ColorPickerEditor {
         const actions = get_action_gradient_stop(this.flat, this.index, stop, "borders");
         this.pageEditor.addShapesGradientStop(actions);
         this.hiddenCtrl();
+        return stop.id;
     }
 
     removeStop(stopAt: number) {
