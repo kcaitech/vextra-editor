@@ -147,7 +147,7 @@ const stop2 = watchEffect(() => {
         color.switch_editor_mode(true, fill.gradient);
         color.setImageScaleMode(undefined);
     }
-})
+});
 onUnmounted(() => {
     stop1();
     stop2();
