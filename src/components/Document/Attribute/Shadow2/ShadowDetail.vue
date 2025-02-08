@@ -7,7 +7,7 @@ import gear_icon from '@/assets/icons/svg/gear.svg';
 import ShadowInput from './ShadowInput.vue';
 import { format_value } from '@/utils/common';
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
-import { Color, Fill, FillType, LinearApi, Shadow, ShapeType } from '@kcdesign/data';
+import { Color, Fill, FillType, LinearApi, Shadow, ShadowMask, ShapeType } from '@kcdesign/data';
 import { selectAllOnFocus } from '../basic';
 import { toHex } from '@/utils/color';
 import { ref, watchEffect, onUnmounted, reactive } from 'vue';
@@ -86,14 +86,17 @@ function keydownOffsetX(e: KeyboardEvent, val: string | number) {
     if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
+        const actions: { shadow: Shadow, value: number }[] = [];
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
-        const actions = get_actions_shadow_offsetx(props.manager.selected, _idx, value);
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                linearApi.modifyShapesShadowOffsetX(actions)
+        if (props.data.shadow.parent?.parent instanceof ShadowMask) {
+            actions.push({ shadow: props.data.shadow, value });
+        } else {
+            for (const view of props.manager.selected) {
+                const shadow = view.getShadows()[_idx];
+                actions.push({ shadow, value });
             }
         }
+        linearApi.modifyShapesShadowOffsetX(actions);
         e.preventDefault();
         hidden_selection(props.context);
     }
@@ -111,13 +114,16 @@ function keydownOffsetY(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
-        const actions = get_actions_shadow_offsety(props.manager.selected, _idx, value);
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                linearApi.modifyShapesShadowOffsetY(actions)
+        const actions: { shadow: Shadow, value: number }[] = [];
+        if (props.data.shadow.parent?.parent instanceof ShadowMask) {
+            actions.push({ shadow: props.data.shadow, value });
+        } else {
+            for (const view of props.manager.selected) {
+                const shadow = view.getShadows()[_idx];
+                actions.push({ shadow, value });
             }
         }
+        linearApi.modifyShapesShadowOffsetY(actions)
         e.preventDefault();
         hidden_selection(props.context);
     }
@@ -135,13 +141,16 @@ function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= 0 ? 0 : value <= 200 ? value : 200;
-        const actions = get_actions_shadow_blur(props.manager.selected, _idx, value);
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                linearApi.modifyShapesShadowBlur(actions)
+        const actions: { shadow: Shadow, value: number }[] = [];
+        if (props.data.shadow.parent?.parent instanceof ShadowMask) {
+            actions.push({ shadow: props.data.shadow, value });
+        } else {
+            for (const view of props.manager.selected) {
+                const shadow = view.getShadows()[_idx];
+                actions.push({ shadow, value });
             }
         }
+        linearApi.modifyShapesShadowBlur(actions)
         e.preventDefault();
         hidden_selection(props.context);
     }
@@ -159,13 +168,16 @@ function keydownSpread(e: KeyboardEvent, val: string | number) {
         value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = value <= -3000 ? -3000 : value <= 3000 ? value : 3000;
-        const actions = get_actions_shadow_spread(props.manager.selected, _idx, value);
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                linearApi.modifyShapesShadowSpread(actions)
+        const actions: { shadow: Shadow, value: number }[] = [];
+        if (props.data.shadow.parent?.parent instanceof ShadowMask) {
+            actions.push({ shadow: props.data.shadow, value });
+        } else {
+            for (const view of props.manager.selected) {
+                const shadow = view.getShadows()[_idx];
+                actions.push({ shadow, value });
             }
         }
+        linearApi.modifyShapesShadowSpread(actions)
         e.preventDefault();
         hidden_selection(props.context);
     }
@@ -205,50 +217,86 @@ const pointerLockChange = () => {
 
 function draggingX(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
-    let val = props.data.shadow.offsetX + e.movementX;
+    let value = props.data.shadow.offsetX + e.movementX;
     const _idx = getIndexByShadow(props.data.shadow);
-    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
+    value = value < -3000 ? -3000 : value > 3000 ? 3000 : value;
     if (!lockMouseHandler) return;
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-    lockMouseHandler.executeShadowX(_idx, val);
+    const actions: { shadow: Shadow, value: number }[] = [];
+    if (props.data.shadow.parent?.parent instanceof ShadowMask) {
+        actions.push({ shadow: props.data.shadow, value });
+    } else {
+        for (const view of props.manager.selected) {
+            const shadow = view.getShadows()[_idx];
+            actions.push({ shadow, value });
+        }
+    }
+    lockMouseHandler.executeShadowX(actions);
 }
 
 function draggingY(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
-    let val = props.data.shadow.offsetY + e.movementX;
+    let value = props.data.shadow.offsetY + e.movementX;
     const _idx = getIndexByShadow(props.data.shadow);
-    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
+    value = value < -3000 ? -3000 : value > 3000 ? 3000 : value;
     if (!lockMouseHandler) return
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-    lockMouseHandler.executeShadowY(_idx, val);
+    const actions: { shadow: Shadow, value: number }[] = [];
+    if (props.data.shadow.parent?.parent instanceof ShadowMask) {
+        actions.push({ shadow: props.data.shadow, value });
+    } else {
+        for (const view of props.manager.selected) {
+            const shadow = view.getShadows()[_idx];
+            actions.push({ shadow, value });
+        }
+    }
+    lockMouseHandler.executeShadowY(actions);
 }
 
 function draggingB(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
-    let val = props.data.shadow.blurRadius + e.movementX;
+    let value = props.data.shadow.blurRadius + e.movementX;
     const _idx = getIndexByShadow(props.data.shadow);
-    val = val < 0 ? 0 : val > 200 ? 200 : val;
+    value = value < 0 ? 0 : value > 200 ? 200 : value;
     if (!lockMouseHandler) return;
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-    lockMouseHandler.executeShadowB(_idx, val);
+    const actions: { shadow: Shadow, value: number }[] = [];
+    if (props.data.shadow.parent?.parent instanceof ShadowMask) {
+        actions.push({ shadow: props.data.shadow, value });
+    } else {
+        for (const view of props.manager.selected) {
+            const shadow = view.getShadows()[_idx];
+            actions.push({ shadow, value });
+        }
+    }
+    lockMouseHandler.executeShadowB(actions);
 }
 
 function draggingS(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
-    let val = props.data.shadow.spread + e.movementX;
+    let value = props.data.shadow.spread + e.movementX;
     const _idx = getIndexByShadow(props.data.shadow);
-    val = val < -3000 ? -3000 : val > 3000 ? 3000 : val;
+    value = value < -3000 ? -3000 : value > 3000 ? 3000 : value;
     if (!lockMouseHandler) return;
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-    lockMouseHandler.executeShadowS(_idx, val);
+    const actions: { shadow: Shadow, value: number }[] = [];
+    if (props.data.shadow.parent?.parent instanceof ShadowMask) {
+        actions.push({ shadow: props.data.shadow, value });
+    } else {
+        for (const view of props.manager.selected) {
+            const shadow = view.getShadows()[_idx];
+            actions.push({ shadow, value });
+        }
+    }
+    lockMouseHandler.executeShadowS(actions);
 }
 
 function dragEnd() {
@@ -377,11 +425,11 @@ onUnmounted(() => {
                         @change="(e) => manager.modifyFillAlpha(e, data.shadow)" />
                 </div>
                 <ColorPicker v-if="colorPanelStatus.visible" :editor="shadowsPicker" :type="FillType.SolidColor"
-                             :include="[]" :color="rgba" @close="() => colorPanelStatusMgr.close()"/>
+                    :include="[]" :color="rgba" @close="() => colorPanelStatusMgr.close()" />
             </div>
         </div>
         <teleport to="body">
-            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }"/>
+            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }" />
         </teleport>
     </div>
 </template>

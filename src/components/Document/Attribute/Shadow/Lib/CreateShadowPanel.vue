@@ -143,7 +143,7 @@ function positionSelect(selected: SelectItem, id: number) {
     if (len === 1) {
         if (shadows[id].shadow.position === selected.value) return;
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.setShadowPosition(_idx, selected.value as ShadowPosition);
+        // e.setShadowPosition(_idx, selected.value as ShadowPosition);
     } else if (len > 1) {
         const actions = get_actions_shadow_position(props.shapes, _idx, selected.value as ShadowPosition);
         if (actions && actions.length) {
@@ -181,7 +181,7 @@ function addShadow(): void {
     const s = new Shadow(new BasicArray(), v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
     if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.addShadow(s);
+        // e.addShadow(s);
     } else if (len > 1) {
         if (mixed.value) {
             const actions = get_actions_shadow_unify(props.shapes);
@@ -207,7 +207,7 @@ function deleteFill(idx: number) {
     const len = props.shapes.length;
     if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.deleteShadow(_idx)
+        // e.deleteShadow(_idx)
     } else if (len > 1) {
         const actions = get_actions_shadow_delete(props.shapes, _idx);
         const page = props.context.selection.selectedPage;

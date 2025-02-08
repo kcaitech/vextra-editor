@@ -11,14 +11,14 @@ import { ShadowsContextMgr } from "../ctx";
 /**
  * 填充样式库面板。用于展示样式列表、创建样式
  */
-const {context, manager} = defineProps<{ context: Context, manager: ShadowsContextMgr }>();
+const { context, manager } = defineProps<{ context: Context, manager: ShadowsContextMgr }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
-const {t} = useI18n()
-const panelStatus = reactive<ElementStatus>({id: '#modify-shadow-style-panel', visible: false});
+const { t } = useI18n()
+const panelStatus = reactive<ElementStatus>({ id: '#modify-shadow-style-panel', visible: false });
 const panelStatusMgr = new ElementManager(
     context,
     panelStatus,
-    {whiteList: ['.modify-shadow-style-panel', '.add']}
+    { whiteList: ['.modify-shadow-style-panel', '.add'] }
 );
 manager.catchPanel(panelStatusMgr);
 
@@ -26,7 +26,7 @@ function showCreatePanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('add')) {
-            e && panelStatusMgr.showBy(e, {once: {offsetLeft: -422}});
+            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -422 } });
             break;
         }
         e = e.parentElement;
@@ -39,10 +39,10 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="shadow-style-lib-panel" class="shadow-style-lib-panel">
-        <PopoverHeader :title="t('stylelib.shadows')" @create="showCreatePanel" @close="emits('close')"/>
-        <ShadowStyle :context="context" :manager="manager"/>
+        <PopoverHeader :title="t('stylelib.shadows')" @create="showCreatePanel" @close="emits('close')" />
+        <ShadowStyle :context="context" :manager="manager" />
         <CreateFillMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
-                             @close="() => panelStatusMgr.close()"/>
+            @close="() => panelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">

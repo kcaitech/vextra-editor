@@ -151,7 +151,7 @@ const keydowncolor = (color: Color, idx: number) => {
     const _idx = shadows.length - idx - 1;
     if (!props.maskid) return
     const mask = props.reder.currentTarget(props.maskid) as ShadowMask
-    linearApi.modifyShadowMaskShadowColor(mask.sheet, mask.id, _idx, color)
+    // linearApi.modifyShadowMaskShadowColor(mask.sheet, mask.id, _idx, color)
 }
 
 const keydownblurRadius = (value: number, idx: number) => {
@@ -187,7 +187,7 @@ const setShadowColor = (color: Color, idx: number) => {
     if (!props.maskid) return
     const mask = props.reder.currentTarget(props.maskid) as ShadowMask
     const editor = props.context.editor4Doc()
-    editor.modifyShadowMaskShadowColor(mask.sheet, mask.id, _idx, color)
+    // editor.modifyShadowMaskShadowColor(mask.sheet, mask.id, _idx, color)
 }
 
 const setSpread = (value: number, idx: number) => {
@@ -227,7 +227,7 @@ function positionSelect(selected: SelectItem, idx: number) {
     if (!props.maskid) return
     const mask = props.reder.currentTarget(props.maskid) as ShadowMask
     const editor = props.context.editor4Doc()
-    editor.modifyShadowMaskShadowPosition(mask.sheet, mask.id, _idx, selected.value as ShadowPosition)
+    // editor.modifyShadowMaskShadowPosition(mask.sheet, mask.id, _idx, selected.value as ShadowPosition)
 }
 
 const addshadow = () => {
@@ -236,7 +236,7 @@ const addshadow = () => {
     if (!props.maskid) return
     const color = new Color(0.2, 0, 0, 0);
     const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
-    editor.modifyShadowMaskShadowAddShadow(mask.sheet, mask.id, shadow)
+    // editor.modifyShadowMaskShadowAddShadow(mask.sheet, mask.id, shadow)
 }
 
 const deleteShadow = (idx: number) => {
@@ -244,7 +244,7 @@ const deleteShadow = (idx: number) => {
     if (!props.maskid) return
     const mask = props.reder.currentTarget(props.maskid) as ShadowMask
     const editor = props.context.editor4Doc()
-    editor.modifyShadowMaskShadowRemoveShadow(mask.sheet, mask.id, _idx)
+    // editor.modifyShadowMaskShadowRemoveShadow(mask.sheet, mask.id, _idx)
 }
 
 const toggleVisible = (idx: number) => {
@@ -253,7 +253,7 @@ const toggleVisible = (idx: number) => {
     const editor = props.context.editor4Doc()
     if (!props.maskid) return
     const value = !shadows[idx].shadow.isEnabled;
-    editor.modifyShadowMaskShadowEnabled(mask.sheet, mask.id, _idx, value)
+    // editor.modifyShadowMaskShadowEnabled(mask.sheet, mask.id, _idx, value)
 
 }
 
