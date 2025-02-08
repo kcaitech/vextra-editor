@@ -223,7 +223,7 @@ export function get_actions_fill_opacity(shapes: ShapeView[], index: number, opa
 }
 
 export function get_actions_fill_unify(shapes: ShapeView[]) {
-    const actions: BatchAction2[] = [];
+    const actions: { fills: BasicArray<Fill>, value: Fill[] }[] = [];
     let fills: Fill[] = [];
     let s = 0;
     while (fills.length < 1 && s < shapes.length) {
@@ -258,7 +258,7 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
             new_fill.contextSettings = contextSettings;
             new_fills.push(new_fill);
         }
-        actions.push({ target: (shapes[i]), value: new_fills });
+        actions.push({ fills: shapes[i].style.fills, value: new_fills });
     }
     return actions;
 }

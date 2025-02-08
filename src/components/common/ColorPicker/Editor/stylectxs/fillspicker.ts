@@ -1,7 +1,7 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { BasicArray, Color, Fill, FillsAsyncApi, ImagePack, ImageScaleMode, Stop, FillMask } from "@kcdesign/data";
+import { BasicArray, Color, Fill, FillsAsyncApi, ImagePack, ImageScaleMode, Stop, FillMask, PaintFilterType } from "@kcdesign/data";
 import { get_action_gradient_stop } from "@/utils/shape_style";
 import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
@@ -162,9 +162,10 @@ export class FillsPicker extends ColorPickerEditor {
         this.commit();
     }
 
+    /* 当一个填充以图片作为填充物并以平铺方式填充时，用于旋转图片 */
     rotateImg(): void {
         this.getSelection();
-        this.api.rotateImg(this.index, ((this.fill?.rotation ?? 0) + 90) % 360, this.flat);
+        this.api.rotateImg(this.targetFills, ((this.fill?.rotation ?? 0) + 90) % 360);
         this.hiddenCtrl();
         this.commit();
     }
@@ -202,7 +203,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     filterDragging(type: string, val: number): void {
-        this.api.modifyFillImageFilter(type as any, val, this.index, this.flat);
+        this.api.modifyFillImageFilter(this.targetFills, type as PaintFilterType, val);
         this.hiddenCtrl();
     }
 

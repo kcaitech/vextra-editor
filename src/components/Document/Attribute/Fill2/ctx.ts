@@ -142,12 +142,11 @@ export class FillsContextMgr extends StyleCtx {
         if (mask) {
             const color = new Color(0.2, 0, 0, 0);
             const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-            this.editor4Doc.modifyFillMaskFillAddFill(mask.sheet, mask.id, fill);
+            this.editor.createFill([{ fills: mask.fills, fill, index: mask.fills.length }]);
         } else {
-            const actions: BatchAction2[] = [];
+            const actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[] = [];
             const selected = this.selected;
             for (const view of selected) {
-                if (view instanceof ContactLineView) continue;
                 let color: Color;
                 if (view instanceof ArtboardView) {
                     color = new Color(1, 255, 255, 255);
@@ -155,9 +154,9 @@ export class FillsContextMgr extends StyleCtx {
                     color = new Color(0.2, 0, 0, 0);
                 }
                 const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-                actions.push({ target: view, value: fill });
+                actions.push({ fills: view.style.fills, fill: fill, index: view.style.fills.length });
             }
-            this.editor.shapesAddFill(actions);
+            this.editor.createFill(actions);
             this.hiddenCtrl();
         }
     }
@@ -171,10 +170,10 @@ export class FillsContextMgr extends StyleCtx {
     remove(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
-            this.editor4Doc.modifyFillMaskFillDelFill(mask.sheet, mask.id, this.getIndexByFill(fill));
+            this.editor.shapesDeleteFill([{ fills: mask.fills, index: this.getIndexByFill(fill) }]);
         } else {
-            const actions = get_actions_fill_delete(this.selected, this.getIndexByFill(fill));
-            this.editor.shapesDeleteFill(actions);
+            const index = this.getIndexByFill(fill);
+            this.editor.shapesDeleteFill(this.selected.map(v => ({ fills: v.style.fills, index })));
         }
     }
 
