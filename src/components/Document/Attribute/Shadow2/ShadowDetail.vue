@@ -377,11 +377,11 @@ onUnmounted(() => {
                         @change="(e) => manager.modifyFillAlpha(e, data.shadow)" />
                 </div>
                 <ColorPicker v-if="colorPanelStatus.visible" :editor="shadowsPicker" :type="FillType.SolidColor"
-                             :include="[]" :color="rgba" @close="() => colorPanelStatusMgr.close()"/>
+                    :include="[]" :color="rgba" @close="() => colorPanelStatusMgr.close()" />
             </div>
         </div>
         <teleport to="body">
-            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }"/>
+            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }" />
         </teleport>
     </div>
 </template>
