@@ -39,6 +39,9 @@ interface FillItem {
     fill: Fill
 }
 
+/**
+ * 将废弃的组件
+ */
 interface Props {
     context: Context;
     shapes: ShapeView[];
@@ -613,7 +616,7 @@ function modify_fill_type(idx: number, fillType: FillType) {
         const actions = get_actions_filltype(shapes, _idx, fillType);
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setShapesFillType(actions);
+            // editor.setShapesFillType(actions);
         }
     }
 }

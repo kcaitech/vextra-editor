@@ -302,15 +302,6 @@ export function get_actions_fill_mask(shapes: ShapeView[], mask_id?: string) {
     return actions;
 }
 
-export function get_actions_fill_enabled(shapes: ShapeView[], index: number, value: boolean) {
-    const actions: BatchAction[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: shapes[i], index, value });
-    }
-    return actions;
-}
-
 export function get_actions_filltype(shapes: ShapeView[], index: number, value: FillType) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {

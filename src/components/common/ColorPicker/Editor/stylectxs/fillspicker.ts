@@ -1,8 +1,8 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { BasicArray, Color, Fill, FillsAsyncApi, FillType, ImagePack, ImageScaleMode, Stop } from "@kcdesign/data";
-import { get_action_gradient_stop, get_actions_filltype } from "@/utils/shape_style";
+import { BasicArray, Color, Fill, FillsAsyncApi, ImagePack, ImageScaleMode, Stop, FillMask } from "@kcdesign/data";
+import { get_action_gradient_stop } from "@/utils/shape_style";
 import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
@@ -33,37 +33,51 @@ export class FillsPicker extends ColorPickerEditor {
         this.m_api?.commit();
         this.m_api = undefined;
         this.m_index = undefined;
+        this.m_target_fills = undefined;
     }
 
+    private m_target_fills: Fill[] | undefined;
+
+    /* 获取目标填充，获取的结果可能来自不同类型的载体 */
+    private get targetFills(): Fill[] {
+        return this.m_target_fills ?? (this.m_target_fills = (() => {
+            if (!this.fill) return [];
+            if (this.fill.parent?.parent instanceof FillMask) {
+                return [this.fill];
+            } else {
+                return this.flat.map(i => i.getFills()[this.index]);
+            }
+        })());
+    }
+
+    /* 修改填充类型 */
     modifyFillType(type: string): void {
         this.getSelection();
-        if (type === FillType.SolidColor || type === FillType.Pattern) {
-            const actions = get_actions_filltype(this.flat, this.index, type as FillType);
-            this.pageEditor.setShapesFillType(actions);
-        } else {
-            const actions = get_action_gradient_stop(this.flat, this.index, type, 'fills');
-            this.pageEditor.modifyShapeGradientType(actions);
-        }
+        this.pageEditor.setFillsType(this.targetFills.map(fill => ({ fill, type })));
         super.modifyFillType(type);
         this.hiddenCtrl();
     }
 
+    /* 修改填充纯色 */
     setSolidColor(c: RGBACatch): void {
         this.getSelection();
-        this.api.modifySolidColor(this.flat, this.index, new Color(c.A, c.R, c.G, c.B));
+        this.api.modifySolidColor(this.targetFills.map(i => ({ fill: i, color: new Color(c.A, c.R, c.G, c.B) })));
         this.hiddenCtrl();
         this.commit();
     }
 
+    /* 拖拽修改纯色前置 */
     dragSolidBegin(): void {
         this.getSelection();
     }
 
+    /* 拖拽修改纯色 */
     solidDragging(c: RGBACatch): void {
-        this.api.modifySolidColor(this.flat, this.index, new Color(c.A, c.R, c.G, c.B));
+        this.api.modifySolidColor(this.targetFills.map(i => ({ fill: i, color: new Color(c.A, c.R, c.G, c.B) })));
         this.hiddenCtrl();
     }
 
+    /* 拖拽修改纯色后置 */
     dragSolidEnd(): void {
         this.commit();
     }
@@ -80,15 +94,14 @@ export class FillsPicker extends ColorPickerEditor {
 
     removeStop(stopAt: number) {
         this.getSelection();
-        this.api.removeGradientStop(this.index, stopAt, this.flat);
+        this.api.removeGradientStop(this.targetFills.map(fill => ({ fill, stopAt })));
         this.commit();
         this.hiddenCtrl();
     }
 
     setStopColor(c: RGBACatch, stopAt: number) {
         this.getSelection();
-        const color = new Color(c.A, c.R, c.G, c.B);
-        this.api.modifyStopColorOnce(this.flat, this.index, color, stopAt);
+        this.api.modifyStopColorOnce(this.targetFills.map(i => ({ fill: i, color: new Color(c.A, c.R, c.G, c.B), stopAt })));
         this.commit();
         this.hiddenCtrl();
     }
@@ -98,7 +111,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     draggingStop(c: RGBACatch, stopAt: number): void {
-        this.api.modifyStopColor(this.flat, this.index, new Color(c.A, c.R, c.G, c.B), stopAt);
+        this.api.modifyStopColor(this.targetFills.map(i => ({ fill: i, color: new Color(c.A, c.R, c.G, c.B), stopAt })));
         this.hiddenCtrl();
     }
 
@@ -111,7 +124,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     draggingStopPosition(position: number, stopAt: number) {
-        this.api.modifyStopPosition(this.index, stopAt, position, this.flat);
+        this.api.modifyStopPosition(this.targetFills.map(i => ({ fill: i, position, stopAt })));
         this.hiddenCtrl();
     }
 
@@ -121,21 +134,21 @@ export class FillsPicker extends ColorPickerEditor {
 
     reverseStops() {
         this.getSelection();
-        this.api.reverseGradientStops(this.flat, this.index);
+        this.api.reverseGradientStops(this.targetFills);
         this.hiddenCtrl();
         this.commit();
     }
 
     rotateStops() {
         this.getSelection();
-        this.api.rotateGradientStops(this.flat, this.index);
+        this.api.rotateGradientStops(this.targetFills);
         this.hiddenCtrl();
         this.commit();
     }
 
     modifyObjectFit(type: ImageScaleMode): void {
         this.getSelection();
-        this.api.modifyObjectFit(this.flat, this.index, type);
+        this.api.modifyObjectFit(this.targetFills, type);
         this.hiddenCtrl();
         this.commit();
     }
@@ -144,7 +157,7 @@ export class FillsPicker extends ColorPickerEditor {
         this.getSelection();
         const val = getNumberFromInputEvent(event);
         if (isNaN(val)) return;
-        this.api.modifyTileScale(this.index, Math.max(val / 100, 0.02), this.flat);
+        this.api.modifyTileScale(this.targetFills, Math.max(val / 100, 0.02));
         this.hiddenCtrl(event);
         this.commit();
     }
@@ -156,6 +169,7 @@ export class FillsPicker extends ColorPickerEditor {
         this.commit();
     }
 
+    /* 当一个填充以图片作为填充物的时，用于修改图片的资源链接 */
     modifyRef(event: Event): void {
         if (!event.target) return;
         const files = (event.target as HTMLInputElement).files;
@@ -173,7 +187,7 @@ export class FillsPicker extends ColorPickerEditor {
                 modify_imgs(this.context, [media], container);
                 const keys = Array.from(Object.keys(container) || []) as string[];
                 this.getSelection();
-                this.api.modifyFillImageRef(this.index, keys[0], {buff, base64}, size.width, size.height, this.flat);
+                this.api.modifyFillImageRef(this.targetFills, keys[0], {buff, base64}, size.width, size.height);
                 this.hiddenCtrl();
                 const upload = this.flat.map(shape => ({shape, upload: [{buff, ref: keys[0]}]}));
                 imageLoader.upload(upload)
