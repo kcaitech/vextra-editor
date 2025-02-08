@@ -11,24 +11,32 @@ const props = defineProps<{
     editor: ColorPickerEditor;
     data: GradientCatch;
 }>();
-const gradientStopAt = ref<number>(0);
 const editor = props.editor;
+
+const gradientStopAt = ref<number>((() => {
+    const id = editor.context.color.selected_stop ?? props.data.stopIds[0];
+    return props.data.stopIds.findIndex(i => i === id)
+})());
+
 const stop = ref<RGBACatch>(props.data.RGBAs[gradientStopAt.value]);
 
 function update() {
-    const id = editor.context.color.selected_stop ?? props.data.stopIds[0];
-    gradientStopAt.value = props.data.stopIds.findIndex(i => i === id);
     stop.value = props.data.RGBAs[gradientStopAt.value];
 }
 
 function colorCtxWatcher(t: any) {
     if (t === ColorCtx.CHANGE_STOP) {
         const id = editor.context.color.selected_stop;
-        gradientStopAt.value = props.data.stopIds.findIndex(i => i === id);
+        let index = props.data.stopIds.findIndex(i => i === id);
+        if (index === -1) {
+            index = Math.min(props.data.stopIds.length - 1, 1);
+            editor.context.color.select_stop(props.data.stopIds[index]);
+        }
+        gradientStopAt.value = index;
     } else if (t === ColorCtx.STOP_DELETE) {
-        if (props.data.RGBAs.length < 2) return;
+        if (props.data.RGBAs.length < 3) return;
         editor.removeStop(gradientStopAt.value);
-        editor.context.color.select_stop(props.data.stopIds[gradientStopAt.value] ?? props.data.stopIds[0]);
+        editor.context.color.select_stop(undefined);
     }
 }
 

@@ -35,15 +35,6 @@ function createStop(event: MouseEvent) {
     const position = event.offsetX / target.offsetWidth;
     const stop = get_add_gradient_color2(props.gradient.RGBAs, position)!;
     emits("create-stop", stop);
-    let index;
-    const alStops = props.gradient.RGBAs;
-    for (let i = 0; i < alStops.length; i++) {
-        if (stop.position < alStops[i].position) {
-            index = i;
-            break;
-        }
-    }
-    emits("change-stop", index ?? alStops.length);
 }
 
 function drawCircles() {
