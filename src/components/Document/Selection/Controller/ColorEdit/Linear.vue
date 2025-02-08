@@ -271,9 +271,7 @@ const rect_leave = (e: MouseEvent) => {
 }
 
 const rect_mousemove = (e: MouseEvent) => {
-    if (e.buttons !== 0) {
-        return;
-    }
+    if (e.buttons !== 0) return;
     e.stopPropagation();
     const posi = get_stop_position(e);
     const shape = shapes.value[0] as ShapeView;
@@ -546,9 +544,7 @@ const color_watcher = (t: number) => {
     }
 }
 const selected_watcher = (t: number | string) => {
-    if (t === Selection.CHANGE_SHAPE) {
-        watcher();
-    }
+    if (t === Selection.CHANGE_SHAPE) watcher();
 }
 
 onMounted(() => {
