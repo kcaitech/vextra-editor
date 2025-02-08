@@ -99,18 +99,19 @@ export class ShadowsContextMgr extends StyleCtx {
 
     create(mask?: ShadowMask) {
         if (this.shadowCtx.mixed) return this.unify();
+        const actions: { shadows: Shadow[], shadow: Shadow }[] = [];
         if (mask) {
             const color = new Color(0.3, 0, 0, 0);
             const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
-            this.editor4Doc.modifyShadowMaskShadowAddShadow(mask.sheet, mask.id, shadow);
+            actions.push({ shadows: mask.shadows, shadow });
+            this.editor.shapesAddShadow(actions);
         } else {
-            const actions: BatchAction2[] = [];
             const selected = this.selected;
             for (const view of selected) {
-                if (view instanceof ContactLineView) continue;
                 const color = new Color(0.3, 0, 0, 0);
                 const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
-                actions.push({ target: view, value: shadow });
+                const shadows = view.getShadows();
+                actions.push({ shadows, shadow });
             }
             this.editor.shapesAddShadow(actions);
             this.hiddenCtrl();
@@ -125,68 +126,93 @@ export class ShadowsContextMgr extends StyleCtx {
 
     remove(shadow: Shadow) {
         const index = this.getIndexByShadow(shadow);
+        const actions: { shadows: Shadow[], index: number }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
             const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowRemoveShadow(mask.sheet, mask.id, index);
+            actions.push({ shadows: mask.shadows, index });
         } else {
-            const actions = get_actions_shadow_delete(this.selected, index);
-            this.editor.shapesDeleteShadow(actions);
+            const selected = this.selected;
+            for (const view of selected) {
+                const shadows = view.getShadows();
+                actions.push({ shadows, index });
+            }
         }
+        this.editor.shapesDeleteShadow(actions);
     }
 
     modifyVisible(shadow: Shadow) {
         const index = this.getIndexByShadow(shadow);
+        const actions: { shadow: Shadow, value: boolean }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowEnabled(mask.sheet, mask.id, index, !shadow.isEnabled);
+            actions.push({ shadow, value: !shadow.isEnabled });
         } else {
-            const actions = get_actions_shadow_enabled(this.selected, index, !shadow.isEnabled);
-            this.editor.setShapesShadowEnabled(actions);
+            const selected = this.selected;
+            for (const view of selected) {
+                const shadow = view.getShadows()[index];
+                actions.push({ shadow, value: !shadow.isEnabled });
+            }
         }
+        this.editor.setShapesShadowEnabled(actions);
     }
 
     modifyShadowOffsetX(offsetX: number, shadow: Shadow) {
         if (isNaN(offsetX)) return;
         const index = this.getIndexByShadow(shadow);
+        const actions: { shadow: Shadow, value: number }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowOffsetX(mask.sheet, mask.id, index, offsetX);
+            actions.push({ shadow, value: offsetX });
         } else {
-            this.editor.setShapesShadowOffsetX(get_actions_shadow_offsetx(this.selected, index, offsetX));
+            for (const view of this.selected) {
+                const shadow = view.getShadows()[index];
+                actions.push({ shadow, value: offsetX });
+            }
         }
+        this.editor.setShapesShadowOffsetX(actions);
     }
 
     modifyShadowOffsetY(offsetY: number, shadow: Shadow) {
         if (isNaN(offsetY)) return;
         const index = this.getIndexByShadow(shadow);
+        const actions: { shadow: Shadow, value: number }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowOffsetY(mask.sheet, mask.id, index, offsetY);
+            actions.push({ shadow, value: offsetY });
         } else {
-            this.editor.setShapesShadowOffsetY(get_actions_shadow_offsety(this.selected, index, offsetY));
+            for (const view of this.selected) {
+                const shadow = view.getShadows()[index];
+                actions.push({ shadow, value: offsetY });
+            }
         }
+        this.editor.setShapesShadowOffsetY(actions);
     }
 
     modifyShadowBlur(blur: number, shadow: Shadow) {
         if (isNaN(blur)) return;
         const index = this.getIndexByShadow(shadow);
+        const actions: { shadow: Shadow, value: number }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowBlur(mask.sheet, mask.id, index, blur);
+            actions.push({ shadow, value: blur });
         } else {
-            this.editor.setShapesShadowBlurRadius(get_actions_shadow_blur(this.selected, index, blur));
+            for (const view of this.selected) {
+                const shadow = view.getShadows()[index];
+                actions.push({ shadow, value: blur });
+            }
         }
+        this.editor.setShapesShadowBlurRadius(actions);
     }
 
     modifyShadowSpread(spread: number, shadow: Shadow) {
         if (isNaN(spread)) return;
         const index = this.getIndexByShadow(shadow);
+        const actions: { shadow: Shadow, value: number }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowSpread(mask.sheet, mask.id, index, spread);
+            actions.push({ shadow, value: spread });
         } else {
-            this.editor.setShapesShadowSpread(get_actions_shadow_spread(this.selected, index, spread));
+            for (const view of this.selected) {
+                const shadow = view.getShadows()[index];
+                actions.push({ shadow, value: spread });
+            }
         }
+        this.editor.setShapesShadowSpread(actions);
     }
 
     modifyShadpwHex(event: Event, shadow: Shadow) {
@@ -195,14 +221,17 @@ export class ShadowsContextMgr extends StyleCtx {
 
         const color = new Color(shadow.color.alpha, rgb[0], rgb[1], rgb[2]);
         const index = this.getIndexByShadow(shadow);
-        const selected = this.selected;
+        const actions: { shadow: Shadow, color: Color }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowColor(mask.sheet, mask.id, index, color);
+            actions.push({ shadow, color });
         } else {
-            this.editor.setShapesShadowColor(get_actions_shadow_color(selected, index, color));
+            for (const view of this.selected) {
+                const shadow = view.getShadows()[index];
+                actions.push({ shadow, color });
+            }
             this.hiddenCtrl(event);
         }
+        this.editor.setShapesShadowColor(actions);
     }
 
     modifyFillAlpha(event: Event, shadow: Shadow) {
@@ -215,25 +244,32 @@ export class ShadowsContextMgr extends StyleCtx {
             shadow.color.blue
         );
         const index = this.getIndexByShadow(shadow);
-        const selected = this.selected;
+        const actions: { shadow: Shadow, color: Color }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowColor(mask.sheet, mask.id, index, color);
+            actions.push({ shadow, color });
         } else {
-            this.editor.setShapesShadowColor(get_actions_shadow_color(selected, index, color));
+            for (const view of this.selected) {
+                const shadow = view.getShadows()[index];
+                actions.push({ shadow, color });
+            }
             this.hiddenCtrl(event);
         }
+        this.editor.setShapesShadowColor(actions);
     }
 
     modifyShadowPosition(shadow: Shadow, position: ShadowPosition) {
         const index = this.getIndexByShadow(shadow);
+        const actions: { shadow: Shadow, position: ShadowPosition }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            const mask = shadow.parent.parent as ShadowMask;
-            this.editor4Doc.modifyShadowMaskShadowPosition(mask.sheet, mask.id, index, position);
+            actions.push({ shadow, position });
         } else {
-            const actions = get_actions_shadow_position(this.selected, index, position);
-            this.editor.setShapesShadowPosition(actions);
+            for (const view of this.selected) {
+                const shadow = view.getShadows()[index];
+                actions.push({ shadow, position });
+            }
+            this.hiddenCtrl();
         }
+        this.editor.setShapesShadowPosition(actions);
     }
 
     modifyShadowMask(id: string) {

@@ -1,5 +1,5 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import {  Color, Shadow, ShadowAsyncApi } from "@kcdesign/data";
+import { Color, Shadow, ShadowAsyncApi, ShadowMask } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
@@ -32,7 +32,9 @@ export class ShadowColorPicker extends ColorPickerEditor {
 
     setSolidColor(c: RGBACatch): void {
         this.getSelection();
-        this.api.modifySolidColor(this.flat, this.index, new Color(c.A, c.R, c.G, c.B));
+        if (!this.shadow) return;
+        const actions = this.getApiParams(this.shadow, c);
+        this.api.modifySolidColor(actions);
         this.hiddenCtrl();
         this.commit();
     }
@@ -42,8 +44,23 @@ export class ShadowColorPicker extends ColorPickerEditor {
     }
 
     solidDragging(c: RGBACatch): void {
-        this.api.modifySolidColor(this.flat, this.index, new Color(c.A, c.R, c.G, c.B));
+        if (!this.shadow) return;
+        const actions = this.getApiParams(this.shadow, c);
+        this.api.modifySolidColor(actions);
         this.hiddenCtrl();
+    }
+
+    getApiParams(shadow: Shadow, c: RGBACatch): { shadow: Shadow, color: Color }[] {
+        const actions: { shadow: Shadow, color: Color }[] = [];
+        if (shadow.parent?.parent instanceof ShadowMask) {
+            actions.push({ shadow, color: new Color(c.A, c.R, c.G, c.B) });
+        } else {
+            for (const view of this.flat) {
+                const shadow = view.getShadows()[this.index];
+                actions.push({ shadow, color: new Color(c.A, c.R, c.G, c.B) });
+            }
+        }
+        return actions;
     }
 
     dragSolidEnd(): void {

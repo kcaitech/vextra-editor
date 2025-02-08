@@ -1,6 +1,6 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { LockMouseHandler, ShapeView, TidyUpAlgin, UniformScaleUnit } from "@kcdesign/data";
+import { LockMouseHandler, Shadow, ShapeView, TidyUpAlgin, UniformScaleUnit } from "@kcdesign/data";
 
 export class LockMouse extends TransformHandler {
     private transType: 'scaling' | 'translating' | 'rotating' = 'translating';
@@ -65,38 +65,21 @@ export class LockMouse extends TransformHandler {
         (this.asyncApiCaller as LockMouseHandler).executeRadius(this.shapes, values);
     }
 
-    executeShadowX(idx: number, x: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeShadowX(this.shapes, idx, x);
+    executeShadowX(actions: { shadow: Shadow, value: number }[]) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowX(actions);
     }
 
-    executeShadowY(idx: number, y: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeShadowY(this.shapes, idx, y);
+    executeShadowY(actions: { shadow: Shadow, value: number }[]) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowY(actions);
     }
 
-    executeShadowB(idx: number, b: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeShadowB(this.shapes, idx, b);
+    executeShadowB(actions: { shadow: Shadow, value: number }[]) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowB(actions);
     }
 
-    executeShadowS(idx: number, s: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeShadowS(this.shapes, idx, s);
+    executeShadowS(actions: { shadow: Shadow, value: number }[]) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowS(actions);
     }
-
-    executeShadowMaskX(sheetid: string, maskid: string, index: number, offsetX: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeShadowMaskX(sheetid, maskid, index, offsetX);
-    }
-
-    executeShadowMaskY(sheetid: string, maskid: string, index: number, offsetY: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeShadowMaskY(sheetid, maskid, index, offsetY);
-    }
-
-    executeShadowMaskB(sheetid: string, maskid: string, index: number, blur: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeShadowMaskB(sheetid, maskid, index, blur);
-    }
-
-    executeShadowMaskS(sheetid: string, maskid: string, index: number, spread: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeShadowMaskS(sheetid, maskid, index, spread);
-    }
-
     executeTidyup(shapes_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
         (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver, dir, algin);
     }
