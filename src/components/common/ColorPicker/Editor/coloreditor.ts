@@ -51,7 +51,9 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
 
     dragSolidEnd(): void {}
 
-    createStop(c: RGBACatch): void {}
+    createStop(c: RGBACatch): string {
+        return '';
+    }
 
     setStopColor(c: RGBACatch, stopAt: number) {}
 

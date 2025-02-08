@@ -75,6 +75,7 @@ export class FillsPicker extends ColorPickerEditor {
         const actions = get_action_gradient_stop(this.flat, this.index, stop, "fills");
         this.pageEditor.addShapesGradientStop(actions);
         this.hiddenCtrl();
+        return stop.id;
     }
 
     removeStop(stopAt: number) {
