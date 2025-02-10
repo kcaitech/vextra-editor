@@ -47,14 +47,13 @@ const close = () => {
 }
 
 const toggleType = (type: BlurType) => {
-    const actions = get_actions_blur_modify(props.shapes, type);
     if (props.entry === 'style') {
         emits('select', type);
     } else {
         const page = props.context.selection.selectedPage
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setShapeBlurType(actions);
+            editor.setShapeBlurType(props.shapes.map(i => i.style.blur!), type);
         }
     }
     close();

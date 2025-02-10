@@ -101,7 +101,6 @@ const invalid = computed(() => {
 })
 
 function positionSelect(selected: SelectItem) {
-    const actions = get_actions_blur_modify(props.shapes, selected.value);
     const page = props.context.selection.selectedPage;
     if (isMask.value && blurInfo.value) {
         const _blur = { ...blurInfo.value }
@@ -111,7 +110,7 @@ function positionSelect(selected: SelectItem) {
     }
     if (page) {
         const editor = props.context.editor4Page(page);
-        editor.setShapeBlurType(actions);
+        editor.setShapeBlurType(props.shapes.map(s => s.style.blur!), selected.value as BlurType);
     }
     hidden_selection(props.context);
 }
@@ -159,12 +158,9 @@ function toggleVisible() {
         return
     }
     if (len < 1) return;
-    const actions = get_actions_blur_enabled(props.shapes, isEnabled);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapeBlurEnabled(actions);
-    }
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.setShapeBlurEnabled(props.shapes.map(i => i.style.blur!), isEnabled);
     hidden_selection(props.context);
 }
 

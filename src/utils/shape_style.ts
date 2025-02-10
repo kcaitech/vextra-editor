@@ -33,7 +33,6 @@ import {
     CornerType,
     SideType,
     Blur,
-    BlurType,
     Point2D,
     ImageScaleMode,
     PaintFilter,
@@ -43,10 +42,10 @@ import {
     BlurMask,
     BorderSideSetting,
     BorderMask,
-    BorderMaskType
+    BorderMaskType,
+    Basic
 } from "@kcdesign/data";
 import { v4 } from "uuid";
-import { scale_0 } from "./content";
 
 interface FillItem {
     id: number
@@ -1034,12 +1033,11 @@ export function get_blur(shapes: ShapeView[]): Blur | undefined | 'mixed' | 'mas
 }
 
 export function get_actions_add_blur(shapes: ShapeView[], blur: Blur) {
-    const actions: BatchAction2[] = [];
+    const actions: { style: Basic & { blur?: Blur; }, blur: Blur }[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, saturation, type, center } = blur;
         const new_blur = new Blur(new BasicArray(), isEnabled, new Point2D(center.x, center.y), saturation, type);
-        actions.push({ target: (shapes[i]), value: new_blur });
+        actions.push({ style: shapes[i].style, blur: new_blur });
     }
     return actions;
 }
@@ -1049,7 +1047,6 @@ export function get_actions_blur_mask(shapes: ShapeView[]) {
     const id = shapes[0].style.blursMask!;
     const blur = (shapes[0].style.getStylesMgr()?.getSync(id) as BlurMask).blur
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, saturation, type, center } = blur;
         const new_blur = new Blur(new BasicArray(), isEnabled, new Point2D(center.x, center.y), saturation, type);
         actions.push({ target: (shapes[i]), value: new_blur });
@@ -1058,14 +1055,13 @@ export function get_actions_blur_mask(shapes: ShapeView[]) {
 }
 
 export function get_actions_blur_unify(shapes: ShapeView[]) {
-    const actions: BatchAction2[] = [];
+    const actions: { style: Basic & { blur: Blur | undefined; }, blur: Blur }[] = [];
     let blur: Blur;
     blur = shapes.findLast(shape => shape.style.blur !== undefined)?.style.blur as Blur;
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, saturation, type, center, motionAngle, radius } = blur;
         const new_blur = new Blur(new BasicArray(), isEnabled, new Point2D(center.x, center.y), saturation, type, motionAngle, radius);
-        actions.push({ target: shapes[i], value: new_blur });
+        actions.push({ style: shapes[i].style as any, blur: new_blur });
     }
     return actions;
 }
@@ -1082,7 +1078,6 @@ export function get_actions_blur_enabled(shapes: ShapeView[], value: boolean) {
 export function get_actions_blur_delete(shapes: ShapeView[]) {
     const actions: ShapeView[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
         actions.push(shapes[i]);
     }
     return actions;
@@ -1091,7 +1086,6 @@ export function get_actions_blur_delete(shapes: ShapeView[]) {
 export function get_actions_blur_modify(shapes: ShapeView[], value: any) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
         actions.push({ target: shapes[i], value });
     }
     return actions;
