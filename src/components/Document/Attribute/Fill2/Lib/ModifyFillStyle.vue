@@ -111,7 +111,7 @@ import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
 /**
- * 将废弃组件
+ * 将废弃组件，不需要再对这个组件进行维护了
  */
 interface FillItem {
     id: number,

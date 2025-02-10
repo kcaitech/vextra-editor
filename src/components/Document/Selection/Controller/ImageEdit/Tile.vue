@@ -219,7 +219,7 @@ const editImage = (edit: boolean) => {
     const page = props.context.selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        editor.setShapesFillEdit(shape, locate.index, edit);
+        // editor.setShapesFillEdit(shape, locate.index, edit);
     }
 }
 const selectShape = () => {

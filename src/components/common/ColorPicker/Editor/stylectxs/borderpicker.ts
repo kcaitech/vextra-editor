@@ -1,9 +1,9 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { Color, Fill, FillType, Stop, BasicArray } from "@kcdesign/data";
+import { Color, Fill, Stop, BasicArray } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { BorderPaintsAsyncApi } from "@kcdesign/data";
-import { get_actions_filltype, get_action_gradient_stop } from "@/utils/shape_style";
+import { get_action_gradient_stop } from "@/utils/shape_style";
 import { v4 } from "uuid";
 
 export class BorderColorPicker extends ColorPickerEditor {
@@ -35,13 +35,14 @@ export class BorderColorPicker extends ColorPickerEditor {
 
     modifyFillType(type: string): void {
         this.getSelection();
-        if (type === FillType.SolidColor) {
-            const actions = get_actions_filltype(this.flat, this.index, type as FillType);
-            this.pageEditor.setShapesBorderType(actions);
-        } else {
-            const actions = get_action_gradient_stop(this.flat, this.index, type, 'borders');
-            this.pageEditor.modifyShapeGradientType(actions);
-        }
+        // todo 参考fillspicker
+        // if (type === FillType.SolidColor) {
+        //     const actions = get_actions_filltype(this.flat, this.index, type as FillType);
+        //     this.pageEditor.setShapesBorderType(actions);
+        // } else {
+        //     const actions = get_action_gradient_stop(this.flat, this.index, type, 'borders');
+        //     this.pageEditor.modifyShapeGradientType(actions);
+        // }
         super.modifyFillType(type);
         this.hiddenCtrl();
     }

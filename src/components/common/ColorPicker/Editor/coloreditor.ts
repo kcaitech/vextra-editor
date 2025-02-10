@@ -32,6 +32,7 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
         this.m_fill_type = v;
     }
 
+    /* 隐藏控件一段时间 */
     protected hiddenCtrl(event?: Event) {
         hidden_selection(this.context);
         if (event?.target instanceof HTMLInputElement) event.target.blur();

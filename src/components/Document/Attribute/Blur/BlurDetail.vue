@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { nextTick, reactive, ref } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
-import { LinearApi } from '@kcdesign/data';
+import { LinearApi, Blur } from '@kcdesign/data';
 import { Menu } from "@/context/menu";
 import { hidden_selection } from '@/utils/content';
 import { get_actions_blur_modify } from '@/utils/shape_style';
@@ -143,12 +143,12 @@ function changeBlurInput(e: Event) {
     if (props.entry === 'style') {
         emits('setBlurSaturation', value);
     } else {
-        const actions = get_actions_blur_modify(props.context.selection.selectedShapes, value);
         const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapeBlurSaturation(actions);
-        }
+        const editor = props.context.editor4Page(page!);
+        const actions: { blur: Blur, value: number }[] = props.context.selection.selectedShapes.map(s => {
+            return { blur: s.style.blur!, value };
+        });
+        editor.setShapeBlurSaturation(actions);
     }
 
     update();
