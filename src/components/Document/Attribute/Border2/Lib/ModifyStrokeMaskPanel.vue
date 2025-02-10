@@ -94,14 +94,14 @@ const setThickness = (event: Event) => {
     if (!data) return;
     const sideType = data.border.sideSetting.sideType;
     const side = new BorderSideSetting(sideType, num[0], num[3], num[2], num[1]);
-    manager.modifyBorderThicknessMask(data.sheet, data.id, side);
+    manager.modifyBorderThicknessMask(data.border, side);
 }
 
 function positionSelect(selected: SelectItem) {
     positonValue.value = selected.value as BorderPosition;
     if (!data) return;
     if (data?.border.position === selected.value) return;
-    manager.modifyBorderPositionMask(data.sheet, data.id, selected.value as BorderPosition);
+    manager.modifyBorderPositionMask(data.border, selected.value as BorderPosition);
 }
 
 onMounted(() => {

@@ -43,7 +43,8 @@ import {
     BlurMask,
     BorderSideSetting,
     BorderMask,
-    BorderMaskType
+    BorderMaskType,
+    Style
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { scale_0 } from "./content";
@@ -499,15 +500,12 @@ export function get_actions_add_boder(shapes: ShapeView[], strokePaint: Fill) {
 }
 
 export function get_actions_border_mask(shapes: ShapeView[]) {
-    const actions: BatchAction2[] = [];
+    const actions: { border: BorderMaskType, type: ShapeType, style: Style }[] = [];
     const id = shapes[0].style.bordersMask!;
     const border = (shapes[0].style.getStylesMgr()?.getSync(id) as BorderMask).border
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        const { position, sideSetting } = border;
-        const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight)
-        const new_border = new BorderMaskType(position, side)
-        actions.push({ target: (shapes[i]), value: new_border });
+        actions.push({ border, type: shapes[i].type, style: shapes[i].style });
     }
     return actions;
 }
@@ -585,11 +583,11 @@ export function get_actions_border_thickness(shapes: ShapeView[], thickness: num
     return actions;
 }
 
-export function get_actions_border_position(shapes: ShapeView[], index: number, position: BorderPosition) {
-    const actions: BatchAction[] = [];
+export function get_actions_border_position(shapes: ShapeView[], position: BorderPosition) {
+    const actions: { shape: ShapeView, position: BorderPosition }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: (shapes[i]), index, value: position });
+        actions.push({ shape: shapes[i], position });
     }
     return actions;
 }

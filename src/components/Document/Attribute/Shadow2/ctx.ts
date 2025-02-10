@@ -104,18 +104,16 @@ export class ShadowsContextMgr extends StyleCtx {
             const color = new Color(0.3, 0, 0, 0);
             const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
             actions.push({ shadows: mask.shadows, shadow });
-            this.editor.shapesAddShadow(actions);
         } else {
-            const selected = this.selected;
-            for (const view of selected) {
+            for (const view of this.selected) {
                 const color = new Color(0.3, 0, 0, 0);
                 const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
                 const shadows = view.getShadows();
                 actions.push({ shadows, shadow });
             }
-            this.editor.shapesAddShadow(actions);
             this.hiddenCtrl();
         }
+        this.editor.shapesAddShadow(actions);
     }
 
     unify() {
@@ -131,8 +129,7 @@ export class ShadowsContextMgr extends StyleCtx {
             const mask = shadow.parent.parent as ShadowMask;
             actions.push({ shadows: mask.shadows, index });
         } else {
-            const selected = this.selected;
-            for (const view of selected) {
+            for (const view of this.selected) {
                 const shadows = view.getShadows();
                 actions.push({ shadows, index });
             }

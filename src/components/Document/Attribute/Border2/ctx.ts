@@ -1,6 +1,6 @@
 import { Fill, FillMask, FillType, Style, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType } from "@kcdesign/data";
 import { Context } from "@/context";
-import { BorderData, get_actions_add_boder, get_actions_add_mask, get_actions_border_color, get_actions_border_delete, get_actions_border_enabled, get_actions_border_fillmask, get_actions_border_mask, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify, getDideStr } from "@/utils/shape_style";
+import { BorderData, get_actions_add_mask, get_actions_border_color, get_actions_border_enabled, get_actions_border_mask, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
@@ -160,20 +160,21 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
-
+        const actions: { fills: BasicArray<Fill>, fill: Fill }[] = [];
         if (mask) {
             const color = new Color(1, 0, 0, 0);
-            const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
-            this.editor4Doc.modifyFillMaskFillAddFill(mask.sheet, mask.id, strokePaint);
+            const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+            actions.push({ fills: mask.fills, fill });
         } else {
-            const selected = this.selected;
             const color = new Color(1, 0, 0, 0);
-            const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
-            const actions = get_actions_add_boder(selected, strokePaint);
-            this.editor.shapesAddBorder(actions);
-
+            for (const view of this.selected) {
+                const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+                const fills = view.getBorders().strokePaints as BasicArray<Fill>;
+                actions.push({ fills, fill });
+            }
             this.hiddenCtrl();
         }
+        this.editor.shapesAddBorder(actions);
     }
 
     unify() {
@@ -183,13 +184,18 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     remove(fill: Fill) {
+        const index = this.getIndexByFill(fill);
+        const actions: { fills: BasicArray<Fill>, index: number }[] = [];
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
-            this.editor4Doc.modifyFillMaskFillDelFill(mask.sheet, mask.id, this.getIndexByFill(fill));
+            actions.push({ fills: mask.fills, index });
         } else {
-            const actions = get_actions_border_delete(this.selected, this.getIndexByFill(fill));
-            this.editor.shapesDeleteBorder(actions);
+            for (const view of this.selected) {
+                const fills = view.getBorders().strokePaints as BasicArray<Fill>;
+                actions.push({ fills, index });
+            }
         }
+        this.editor.shapesDeleteBorder(actions);
     }
 
     removeAll() {
@@ -256,12 +262,12 @@ export class StrokeFillContextMgr extends StyleCtx {
         this.hiddenCtrl();
     }
 
-    modifyBorderThicknessMask(sheet: string, id: string, side: BorderSideSetting) {
-        this.editor4Doc.modifyBorderMaskBorderSideSetting(sheet, id, side);
+    modifyBorderThicknessMask(border: BorderMaskType, side: BorderSideSetting) {
+        this.editor.setShapesBorderSide([{border, side}]);
     }
 
-    modifyBorderPositionMask(sheet: string, id: string, position: BorderPosition) {
-        this.editor4Doc.modifyBorderMaskBorderPosition(sheet, id, position);
+    modifyBorderPositionMask(border: BorderMaskType, position: BorderPosition) {
+        this.editor.setShapesBorderMaskPosition([{border, position}]);
     }
 
     unbind() {

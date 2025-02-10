@@ -940,7 +940,7 @@ function positionSelect(selected: SelectItem, id: number | undefined) {
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
     const shapes = getShapesForStyle(selecteds).filter(s => s.type !== ShapeType.Line);
-    const actions = get_actions_border_position(shapes, id!, selected.value as BorderPosition);
+    const actions = get_actions_border_position(shapes, selected.value as BorderPosition);
     if (actions && actions.length) {
         const editor = props.context.editor4Page(page);
         editor.setShapesBorderPosition(actions);
