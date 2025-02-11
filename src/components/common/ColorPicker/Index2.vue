@@ -11,6 +11,7 @@ import GradientView from "@/components/common/ColorPicker/Gradient/Index.vue";
 import Pattern from "@/components/common/ColorPicker/Pattern/Index.vue"
 
 import { computed, onUnmounted, ref, watchEffect } from "vue";
+import { useI18n } from "vue-i18n";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -24,8 +25,12 @@ const props = defineProps<{
     gradient?: GradientCatch;
     pattern?: PatternCatch;
     include?: FillType[];
+    title?: string;
 }>();
 const emits = defineEmits(["close"]);
+
+const t = useI18n().t;
+const title = ref<string>(props.title || t("attr.fill"));
 
 const compos = computed(() => {
     if (props.gradient) return GradientView;
@@ -58,7 +63,7 @@ onUnmounted(watchEffect(update));
 
 <template>
     <div id="color-piker-gen-2-panel" :style="{width: WIDTH_CSS}">
-        <PopoverHeader title="新颜色面板" :create="false" @close="emits('close')"/>
+        <PopoverHeader :title="title" :create="false" @close="emits('close')"/>
         <ColorType v-if="options.length" :options="options" :value="type" @change="modifyFillType"/>
         <component :is="compos" :editor="editor" :data="data as any"/>
     </div>
