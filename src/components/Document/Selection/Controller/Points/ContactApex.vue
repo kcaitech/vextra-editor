@@ -91,10 +91,10 @@ function update_contact_apex() {
 
         m2r.multiAtLeft(wm);
         const points: { type: ContactType, point: ClientXY }[] = [
-            { type: ContactType.Top, point: { x: f.width / 2, y: 0 } },
-            { type: ContactType.Right, point: { x: f.width, y: f.height / 2 } },
-            { type: ContactType.Bottom, point: { x: f.width / 2, y: f.height } },
-            { type: ContactType.Left, point: { x: 0, y: f.height / 2 } },
+            {type: ContactType.Top, point: {x: f.x + f.width / 2, y: f.y}},
+            {type: ContactType.Right, point: {x: f.x + f.width, y: f.y + f.height / 2}},
+            {type: ContactType.Bottom, point: {x: f.x + f.width / 2, y: f.y + f.height}},
+            {type: ContactType.Left, point: {x: f.x, y: f.y + f.height / 2}},
         ]
         for (let i = 0; i < 4; i++) {
             points[i].point = m2r.computeCoord3(points[i].point);
