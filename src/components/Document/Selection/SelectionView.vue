@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection, SelectionTheme } from "@/context/selection";
-import { CtrlElementType, Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
+import { ContactLineView, CtrlElementType, Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
@@ -272,8 +272,9 @@ function modify_controller_frame(shapes: ShapeView[]) {
     const points: { x: number, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
-        // if (s.type === ShapeType.Contact) continue;
-        const m = s.matrix2Root(), f = s.frame;
+        const m = s.matrix2Root()
+        let f = s.frame;
+        if (s instanceof ContactLineView) f = s.visibleFrame;
         m.multiAtLeft(props.params.matrix);
         const ps: { x: number, y: number }[] = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, {
             x: f.x + f.width,
