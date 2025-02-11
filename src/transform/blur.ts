@@ -24,6 +24,5 @@ export class BlurHandler extends TransformHandler {
     }
 
     executeBlurMaskSaturation(sheetid: string, maskid: string, s: number) {
-        (this.asyncApiCaller as blurModifyHandler).executeBlurMaskSaturation(sheetid, maskid, s);
     }
 }

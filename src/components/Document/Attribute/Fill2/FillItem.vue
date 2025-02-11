@@ -94,7 +94,7 @@ function showColorPanel(event: MouseEvent) {
     }
 }
 
-const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
+const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType, "fills");
 
 function update() {
     const fill = props.data.fill;

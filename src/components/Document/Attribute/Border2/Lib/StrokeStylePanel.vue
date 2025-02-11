@@ -8,7 +8,7 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import { useI18n } from "vue-i18n";
 import { StrokeFillContextMgr } from "../ctx";
 
-/**
+/** 
  * 填充样式库面板。用于展示样式列表、创建样式
  */
 const { context, manager, title } = defineProps<{ context: Context, manager: StrokeFillContextMgr, title: string }>();
