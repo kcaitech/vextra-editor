@@ -21,6 +21,7 @@ import {
 } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
+import { XY } from "@/context/selection";
 
 export function get_actions_constrainer_proportions(shapes: ShapeView[], value: boolean): BatchAction2[] {
     const actions: BatchAction2[] = [];
@@ -38,7 +39,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
         const parent = shape.parent!;
         let x = value;
         let dx = 0;
-        const box = get_box(shape);
+        const box = getXY(shape);
         if ((parent as ArtboardView).autoLayout) continue;
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
@@ -62,7 +63,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
         const parent = shape.parent!;
         let y = value;
         let dy = 0;
-        const box = get_box(shape);
+        const box = getXY(shape);
         if ((parent as ArtboardView).autoLayout) continue;
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
@@ -151,8 +152,8 @@ export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
     return result;
 }
 
-export function get_box(shape: ShapeView) {
-    return shape._p_frame
+function getXY(shape: ShapeView): XY {
+    return {x: shape.clientX, y: shape.clientY};
 }
 
 export function get_xy(shapes: ShapeView[], mixed: string) {
@@ -165,39 +166,18 @@ export function get_xy(shapes: ShapeView[], mixed: string) {
 
     if (!fp) return { x: fx, y: fy };
 
-    if (fp.type === ShapeType.Page) {
-        const m = fp.matrix2Root();
-
-        const fbox = get_box(first_shape);
-
-        const xy = m.computeCoord3(fbox);
-        fx = xy.x;
-        fy = xy.y;
-    } else {
-        const xy = get_box(first_shape);
-        fx = xy.x;
-        fy = xy.y;
-    }
+    const xy = getXY(first_shape);
+    fx = xy.x;
+    fy = xy.y;
 
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
         let x = 0;
         let y = 0;
 
-        const parent = shape.parent;
-        if (!parent) continue;
-
-        if (parent.type === ShapeType.Page) {
-            const m = parent.matrix2Root();
-            const box = get_box(shape);
-            const xy = m.computeCoord2(box.x, box.y);
-            x = xy.x;
-            y = xy.y;
-        } else {
-            const xy = get_box(shape);
-            x = xy.x;
-            y = xy.y;
-        }
+        const xy = getXY(shape);
+        x = xy.x;
+        y = xy.y;
 
         if (typeof fx === 'number' && !is_equal(x, fx)) fx = mixed;
         if (typeof fy === 'number' && !is_equal(y, fy)) fy = mixed;
