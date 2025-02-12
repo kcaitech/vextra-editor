@@ -7,7 +7,7 @@ import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import { FillCatch, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
-    if (sye.style.fillsMask) return sye.style.fillsMask;
+    if (sye.style.borders.fillsMask) return sye.style.borders.fillsMask;
     return sye.fills.reduce((p, c) => p + stringifyFill(c), '')
 
     function stringifyFill(fill: Fill) {

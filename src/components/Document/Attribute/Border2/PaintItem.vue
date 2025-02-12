@@ -15,6 +15,7 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 import { FillsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/fillspicker";
+import { fi } from "element-plus/es/locale";
 
 const props = defineProps<{
     context: Context;
@@ -90,7 +91,7 @@ function showColorPanel(event: MouseEvent) {
     }
 }
 
-const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType, 'borders');
+const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
 
 function update() {
     const fill = props.data.fill;
@@ -99,6 +100,7 @@ function update() {
     alpha.value = Math.round(color.alpha * 100) + '%';
     colors.value = [fill];
     fillsPicker.fill = fill;
+    fillsPicker.fill_type = "borders";
 
     gradient.value = undefined;
 

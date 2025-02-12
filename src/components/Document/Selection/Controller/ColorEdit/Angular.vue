@@ -70,10 +70,13 @@ const get_linear_points = () => {
     dot.value = false;
     stops.value = [];
     shapes.value = [...props.context.selection.flat];
-    const shape = shapes.value[0] as ShapeView;
+    const shape = shapes.value[0] as ShapeView; 
     const gradient = get_gradient(props.context, shape);
     if (!gradient || gradient.gradientType !== GradientType.Angular) return;
-    active.value = props.context.color.selected_stop;
+    let id = props.context.color.selected_stop ?? gradient.stops[0].id;
+    const index = (gradient.stops as any[]).findIndex(i => i.id === id);
+    if (index === -1) id = gradient.stops[0].id;
+    active.value = id;
     let frame = shape.frame;
     let d1;
     let d2;
@@ -581,10 +584,10 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
+    <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
         <g v-if="dot">
-            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="slope_r"/>
+            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="slope_r" />
             <ellipse :cx="dot1.x" :cy="dot1.y" :rx="line_length + 10" :ry="line_length + 10" fill="none"
                 stroke="transparent" stroke-width="20" @mousedown="add_stop" @mousemove="hover_ellipse_move"
                 @mouseenter="hover_ellipse_enter" @mouseleave="hover_ellipse_leave"
@@ -597,12 +600,12 @@ onUnmounted(() => {
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg) translate(${-dot1.x}px, ${-dot1.y}px)` }" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="black" stroke-width="3" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="white" stroke-width="2" />
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"/>
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y" />
             <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"
-                    @mousedown.stop="(e) => dot_mousedown(e, dot1.type)"/>
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"/>
+                @mousedown.stop="(e) => dot_mousedown(e, dot1.type)" />
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y" />
             <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
-                    @mousedown.stop="(e) => dot_mousedown(e, dot2.type)"/>
+                @mousedown.stop="(e) => dot_mousedown(e, dot2.type)" />
             <g v-for="(stop, index) in stops" :key="index" @mouseenter="(e) => stop_content_enter(e, index)"
                 @mouseleave="stop_content_leave"
                 :style="{ transform: `translate(${stop.x}px, ${stop.y}px) rotate(${stop.r}deg) translate(3px, -11px)` }">
@@ -618,16 +621,16 @@ onUnmounted(() => {
                         clip-rule="evenodd" />
                 </clippath>
                 <image :xlink:href="trans_bgc" width="22" height="22" x="0" y="0" clip-path="url(#avatar)"
-                       preserveAspectRatio="none meet"/>
+                    preserveAspectRatio="none meet" />
                 <g
                     transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)">
                     <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
                         :fill="to_rgba(stop.color)" @mouseenter="(e) => stop_enter(e, index)" @mouseleave="stop_leave"
-                             @mousedown.stop="(e) => stop_mousedown(e, stop.id!)" @mousemove="update_percent"/>
+                        @mousedown.stop="(e) => stop_mousedown(e, stop.id!)" @mousemove="update_percent" />
                 </g>
             </g>
         </g>
     </svg>
-<Percent v-if="percent_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"/>
-<Percent v-if="ellipse_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"/>
+    <Percent v-if="percent_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent" />
+    <Percent v-if="ellipse_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent" />
 </template>

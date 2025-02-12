@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
-import { BlurMask } from "@kcdesign/data";
-import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
+import { Blur, BlurMask } from "@kcdesign/data";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { ref } from "vue";
+import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
 import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
+import { BlurCatch, BlurContextMgr } from "../ctx";
+import BlurPanel from "@/components/Document/Attribute/Blur/BlurPanel.vue"
 
-const {context, manager, data} = defineProps<{
+/**
+ * 修改样式弹框
+ */
+const { context, manager, data } = defineProps<{
     context: Context;
     manager: BlurContextMgr;
     data?: BlurMask;
@@ -16,34 +20,68 @@ const {context, manager, data} = defineProps<{
 const emits = defineEmits<{
     (e: 'close'): void;
 }>();
-const {t} = useI18n();
+
+const { t } = useI18n();
 const name = ref<string>(data?.name ?? '模糊样式');
 const desc = ref<string>(data?.description ?? '');
+const blur = ref<BlurCatch | undefined>(getBlur());
+
+function getBlur() {
+    if (data) {
+        return {
+            enable: data.blur.isEnabled,
+            type: data.blur.type,
+            saturation: data.blur.saturation,
+            blur: data.blur
+        }
+    }
+}
+
+function update() {
+    name.value = data?.name ?? '';
+    desc.value = data?.description ?? '';
+    blur.value = getBlur();
+}
 
 function modifyName(value: string) {
+    name.value = value;
     if (!data) return;
     manager.modifyMaskName(data.sheet, data.id, value);
 }
 
 function modifyDesc(value: string) {
+    desc.value = value;
     if (!data) return;
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
-</script>
 
+function createStyle() {
+    manager.createStyleLib(name.value, desc.value);
+}
+
+onMounted(() => {
+    data?.watch(update);
+});
+onUnmounted(() => {
+    data?.unwatch(update);
+})
+</script>
 <template>
-    <div id="modify-blur-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_blur') : t('stylelib.create_blur')" @close="emits('close')"/>
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data"
-                      @modify-name="modifyName" @modify-desc="modifyDesc"/>
+    <div class="modify-blur-panel" id="modify-blur-panel">
+        <PanelHeader :title="data ? t('stylelib.editor_blur') : t('stylelib.create_blur')" @close="emits('close')" />
+        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
+            @modify-desc="modifyDesc" />
         <div v-if="data" class="data-panel">
-            <ListHeader title="模糊" @create=""/>
+            <ListHeader title="模糊" create />
+            <div class="fills-container">
+                <BlurPanel :manager="manager" :context="context" :blur="(blur as BlurCatch)" del />
+            </div>
         </div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
     </div>
 </template>
-
 <style scoped lang="scss">
-#modify-blur-panel {
+.modify-blur-panel {
     position: fixed;
     display: flex;
     flex-direction: column;
@@ -60,6 +98,34 @@ function modifyDesc(value: string) {
         display: flex;
         flex-direction: column;
         gap: 8px;
+
+        .fills-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            height: fit-content;
+            padding: 6px 12px;
+            box-sizing: border-box;
+        }
+    }
+
+    .create-style {
+        width: 100px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px auto;
+        font-size: 12px;
+        color: #fff;
+        border-radius: 6px;
+        background-color: #1878f5;
+    }
+
+    .disabled {
+        opacity: 0.3;
+        pointer-events: none;
     }
 }
 </style>

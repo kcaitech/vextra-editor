@@ -14,9 +14,8 @@ export class FillsPicker extends ColorPickerEditor {
     fill: Fill | undefined;
     fill_type: ColorFillType = 'fills';
 
-    constructor(public context: Context, type: string, fill_type: ColorFillType) {
+    constructor(public context: Context, type: string) {
         super(context, type);
-        this.fill_type = fill_type;
     }
 
     private m_index: number | undefined;
@@ -64,6 +63,7 @@ export class FillsPicker extends ColorPickerEditor {
         this.pageEditor.setFillsType(this.targetFills.map(fill => ({ fill, type })));
         super.modifyFillType(type);
         this.hiddenCtrl();
+        this.commit();
     }
 
     /* 修改填充纯色 */
@@ -94,8 +94,8 @@ export class FillsPicker extends ColorPickerEditor {
         this.getSelection();
         const color = new Color(c.A, c.R, c.G, c.B);
         const stop = new Stop([0] as BasicArray<number>, v4(), c.position, color);
-        const actions = get_action_gradient_stop(this.flat, this.index, stop, this.fill_type);
-        this.pageEditor.addShapesGradientStop(actions);
+        this.pageEditor.addShapesGradientStop(this.targetFills.map(fill => ({ fill, stop })));
+        this.commit();
         this.hiddenCtrl();
         return stop.id;
     }

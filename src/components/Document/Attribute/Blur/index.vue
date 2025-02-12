@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { ShapeView } from "@kcdesign/data";
+import { Blur, ShapeView } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import BlurStyle from '@/components/Document/Attribute/Blur/Lib/BlurStyle.vue';
@@ -9,7 +9,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import add_icon from '@/assets/icons/svg/add.svg';
 import style_icon from '@/assets/icons/svg/styles.svg';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
-import { BlurContext, BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
+import { BlurCatch, BlurContext, BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 import BlurPanel from "@/components/Document/Attribute/Blur/BlurPanel.vue"
 
@@ -90,8 +90,8 @@ onUnmounted(() => {
                 <div>{{ blurCtx.maskInfo.name }}</div>
             </div>
         </MaskPort>
-        <BlurPanel v-else-if="blurCtx.blur" :manager="blurCtxMgr" :context="context" :blur="blurCtx.blur"/>
-        <BlurStyle v-if="blurLibStatus.visible" :context="props.context" :manager="blurCtxMgr" :shapes="props.shapes"
+        <BlurPanel v-else-if="blurCtx.blur" :manager="blurCtxMgr" :context="context" :blur="(blurCtx.blur as BlurCatch)"/>
+        <BlurStyle v-if="blurLibStatus.visible" :context="props.context" :manager="blurCtxMgr"
                    @close="closePanel"/>
     </div>
 </template>
