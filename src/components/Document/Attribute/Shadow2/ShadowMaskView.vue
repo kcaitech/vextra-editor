@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
-import { Fill } from "@kcdesign/data";
-import ColorBlock from "@/components/common/ColorBlock/Index.vue";
+import { Shadow } from "@kcdesign/data";
 import { onUnmounted, ref, watchEffect } from "vue";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
-import { StrokeFillContextMgr } from "./ctx";
+import { ShadowCatch, ShadowsContextMgr } from "./ctx";
 
 /**
  * 当图层使用样式库里的样式之后，属性面板不再展示详细的样式信息，取而代之的是该样式库里对应样式的基本信息
@@ -14,26 +12,35 @@ import { StrokeFillContextMgr } from "./ctx";
  */
 const props = defineProps<{
     context: Context;
-    manager: StrokeFillContextMgr;
-    fills: FillCatch[];
+    manager: ShadowsContextMgr;
+    shadows: ShadowCatch[];
     info: MaskInfo;
 }>();
 const emits = defineEmits<{
     (e: "show-style-lib", event: MouseEvent): void;
 }>();
 
-const colors = ref<Fill[]>(props.fills.map(i => i.fill).reverse());
+const colors = ref<Shadow[]>(props.shadows.map(i => i.shadow).reverse());
 const name = ref<string>(props.info.name);
 
 onUnmounted(watchEffect(() => {
-    colors.value = props.fills.map(i => i.fill).reverse();
+    colors.value = props.shadows.map(i => i.shadow).reverse();
     name.value = props.info.name;
 }));
 </script>
 <template>
     <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()">
         <div class="desc" @click="event => emits('show-style-lib', event)">
-            <ColorBlock :colors="colors as Fill[]" round disabled-alpha/>
+            <div class="effect" :style="{
+                boxShadow: `
+                        ${colors[0].position.includes('in') ? 'inset' : ''} 
+                        ${colors[0].offsetX > 0 ? '1px' : colors[0].offsetX < 0 ? '-1px' : '0'} 
+                        ${colors[0].offsetY > 0 ? '1px' : colors[0].offsetY < 0 ? '-1px' : '0'} 
+                        ${colors[0].blurRadius > 0 ? '1px' : '0'}
+                        ${colors[0].spread > 0 ? '1px' : '0'}
+                        #0000004d
+                        `}">
+            </div>
             <span>{{ name }}</span>
         </div>
     </MaskPort>
@@ -47,6 +54,15 @@ onUnmounted(watchEffect(() => {
     align-items: center;
     gap: 8px;
     padding: 0 8px;
+
+    .effect {
+        width: 14px;
+        height: 14px;
+        background-color: #fff;
+        border: 1px solid #000000e5;
+        border-radius: 3px;
+        overflow: hidden;
+    }
 
     .span {
         display: inline-block;

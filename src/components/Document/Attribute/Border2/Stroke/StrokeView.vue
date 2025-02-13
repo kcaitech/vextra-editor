@@ -2,13 +2,13 @@
 import { Context } from '@/context';
 import { StrokeFillContextMgr } from '../ctx';
 import BorderDetail from './BorderDetail.vue';
-import { AsyncBorderThickness, BorderPosition, BorderSideSetting, LinearApi, ShapeType } from '@kcdesign/data';
+import { AsyncBorderThickness, BorderPosition, LinearApi, ShapeType } from '@kcdesign/data';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { getShapesForStyle } from '@/utils/style';
 import { get_actions_border, get_actions_border_position, get_actions_border_thickness } from '@/utils/shape_style';
 import { getSideThickness } from '../index';
@@ -50,12 +50,12 @@ const strokeClick = (e: Event) => {
 }
 
 
-function positionSelect(selected: SelectItem, id: number | undefined) {
+function positionSelect(selected: SelectItem) {
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
     const shapes = getShapesForStyle(selecteds).filter(s => s.type !== ShapeType.Line);
-    const actions = get_actions_border_position(shapes, id!, selected.value as BorderPosition);
+    const actions = get_actions_border_position(shapes, selected.value as BorderPosition);
     if (actions && actions.length) {
         const editor = props.context.editor4Page(page);
         editor.setShapesBorderPosition(actions);

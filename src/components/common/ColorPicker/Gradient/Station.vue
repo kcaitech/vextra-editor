@@ -4,51 +4,78 @@ import exchange_icon from "@/assets/icons/svg/exchange.svg";
 import rotate90_icon from "@/assets/icons/svg/rotate90.svg";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { useI18n } from "vue-i18n";
-import { onMounted, ref } from "vue";
-import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
+import { onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { DragKit } from "@/components/common/draggable";
-import { verifiedVal } from "@/components/common/ColorPicker/utils";
+import { gradient_channel_generator, verifiedVal } from "@/components/common/ColorPicker/utils";
 import { GradientCatch } from "../Editor/gradientlineareditor";
+import { toRGBA } from "@/utils/color";
+import { get_add_gradient_color2 } from "@/components/Document/Selection/Controller/ColorEdit/gradient_utils";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
-const props = defineProps<{ gradient: GradientCatch }>()
+const props = defineProps<{ gradient: GradientCatch, at: number }>()
+const emits = defineEmits<{
+    (e: "change-stop", val: number): void;
+    (e: "create-stop", stop: RGBACatch): void;
+    (e: "reverse"): void;
+    (e: "rotate"): void;
+    (e: "drag-start"): void;
+    (e: "dragging", position: number): void;
+    (e: "drag-end"): void;
+}>();
 
 const {t} = useI18n();
 const channelStyle = ref<any>({});
-const stops = ref<RGBACatch[]>([]);
-const circles = ref<{ x: number, active?: boolean }[]>([{x: 0, active: true}, {x: 40}, {x: 100}]);
-const stopAt = ref<number>(0);
+const circles = ref<{ x: number, stopStr: string, active?: boolean }[]>([]);
 const lineEl = ref<HTMLDivElement>();
 let lineL = 158;
 
-function reverse() {
-}
-
-function rotate() {
-}
-
-function createStop() {
+function createStop(event: MouseEvent) {
+    const target = event.target as HTMLDivElement;
+    if (target !== lineEl.value) return;
+    const position = event.offsetX / target.offsetWidth;
+    const stop = get_add_gradient_color2(props.gradient.RGBAs, position)!;
+    emits("create-stop", stop);
 }
 
 function drawCircles() {
+    const stops = props.gradient.RGBAs;
+    const css: { x: number, stopStr: string, active?: boolean }[] = [];
+    for (const stop of stops) {
+        css.push({
+            x: stop.position * lineL,
+            stopStr: toRGBA({ red: stop.R, green: stop.G, blue: stop.B, alpha: stop.A })
+        });
+    }
+    css[props.at].active = true;
+    
+    circles.value = css;
 }
 
 const dragKit = new DragKit({
+    down: () => emits("drag-start"),
     move: (event: MouseEvent, x: number) => {
-        circles.value[stopAt.value].x = verifiedVal(x, 0, lineL);
-    }
+        emits("dragging", verifiedVal(x, 0, lineL) / lineL)
+    },
+    commit: () => emits("drag-end")
 })
 
 function downStop(event: MouseEvent, index: number) {
-    delete circles.value[stopAt.value].active;
-    stopAt.value = index;
-    circles.value[index].active = true;
+    if (index !== props.at) delete circles.value[props.at].active;
+    emits("change-stop", index);
+
     const target = (event.target as Element).closest('.stops') as HTMLDivElement;
     dragKit.start(event, {x: target.offsetLeft});
+}
+
+function update() {
+    channelStyle.value = gradient_channel_generator(props.gradient);
+    drawCircles();
 }
 
 onMounted(() => {
     if (lineEl.value) lineL = lineEl.value.offsetWidth;
 })
+onUnmounted(watchEffect(update));
 </script>
 
 <template>
@@ -57,15 +84,15 @@ onMounted(() => {
             <div ref="lineEl" class="line" :style="channelStyle" @mousedown="createStop"/>
             <div class="stops" v-for="(item, idx) in circles" :key="idx" :style="{ left: item.x + 'px' }"
                  @mousedown="(e) => downStop(e, idx)">
-                <div :class="item.active ? 'stop-active' : 'stop'"/>
+                <div :class="item.active ? 'stop-active' : 'stop'" :style="{backgroundColor: item.stopStr}"/>
             </div>
         </div>
-        <div class="reverse" @click="reverse">
+        <div class="reverse" @click="emits('reverse')">
             <Tooltip :content="t('color.reverse')">
                 <SvgIcon :icon="exchange_icon"/>
             </Tooltip>
         </div>
-        <div class="rotate" @click="rotate">
+        <div class="rotate" @click="emits('rotate')">
             <Tooltip :content="t('color.rotate')">
                 <SvgIcon :icon="rotate90_icon"/>
             </Tooltip>

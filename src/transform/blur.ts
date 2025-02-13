@@ -1,6 +1,7 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { blurModifyHandler, ShapeView } from "@kcdesign/data";
+import { Blur, BlurMask, blurModifyHandler, ShapeView } from "@kcdesign/data";
+import { getShapesForStyle } from "@/utils/style";
 
 export class BlurHandler extends TransformHandler {
     readonly shapes: ShapeView[] = [];
@@ -8,7 +9,7 @@ export class BlurHandler extends TransformHandler {
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
 
-        this.shapes = context.selection.selectedShapes;
+        this.shapes = getShapesForStyle(context.selection.selectedShapes);
     }
 
     createApiCaller() {
@@ -19,11 +20,19 @@ export class BlurHandler extends TransformHandler {
         super.fulfil();
     }
 
-    executeSaturation(s: number) {
-        (this.asyncApiCaller as blurModifyHandler).executeSaturation(this.shapes, s);
+    executeSaturation(blur: Blur, value: number) {
+        const actions: { blur: Blur, value: number }[] = [];
+        if (blur!.parent instanceof BlurMask) {
+            actions.push({ blur: blur!, value });
+        } else {
+            for (let i = 0; i < this.shapes.length; i++) {
+                const shape = this.shapes[i];
+                if (shape.style.blur) actions.push({ blur: shape.style.blur, value });
+            }
+        }
+        (this.asyncApiCaller as blurModifyHandler).executeSaturation(actions);
     }
 
     executeBlurMaskSaturation(sheetid: string, maskid: string, s: number) {
-        (this.asyncApiCaller as blurModifyHandler).executeBlurMaskSaturation(sheetid, maskid, s);
     }
 }

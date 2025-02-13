@@ -8,7 +8,6 @@ import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill2/Index.vue'
 import Border from './Border2/Index.vue';
-import Shadow from './Shadow/Shadows.vue';
 import PageBackground from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
@@ -27,7 +26,8 @@ import ArtboardTemplate from "@/components/Document/Attribute/Artboard/ArtboardT
 import { Action, Tool } from "@/context/tool";
 import AutoLayout from "./AutoLayout/index.vue"
 import BlurVue from "./Blur/index.vue";
-import Scale from "./Scale/index.vue"
+import Scale from "./Scale/index.vue";
+import Shadow2 from "./Shadow2/Index.vue";
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -246,8 +246,6 @@ const need_instance_attr_show = () => {
         }
 
         v = !!(result.variables.length || result.visible_variables.length);
-    } else if (shapes.value.length > 1) {
-        // todo
     }
     return v;
 }
@@ -362,15 +360,15 @@ onUnmounted(() => {
                         :selection-change="reflush_by_selection" :trigger="reflush_trigger" />
                     <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="context"
                         :selection-change="reflush_by_selection" :trigger="reflush_trigger" />
-                    <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
-                        :context="props.context" :selection-change="reflush_by_selection" :trigger="reflush_trigger" />
+                    <Shadow2 v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :context="props.context"
+                        :selection-change="reflush_by_selection" :trigger="reflush_trigger" />
                     <BlurVue v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes"
                         :selection-change="reflush_by_selection" :trigger="reflush_trigger" :context="props.context" />
                     <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger" />
                 </div>
             </div>
         </el-scrollbar>
-        <artboard-template v-if="frame" :context="props.context" />
+        <artboard-template v-if="frame" :context="context"/>
     </section>
 </template>
 

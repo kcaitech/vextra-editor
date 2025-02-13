@@ -26,19 +26,12 @@ const showMenu = () => {
 
 const togglePositinon = (position: ShadowPosition) => {
     const _idx = props.length - props.idx - 1;
-    const len = props.shapes.length;
-    if (len === 1) {
-        if (props.shadow.position === position) return close();
-        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.setShadowPosition(_idx, position);
-    } else if (len > 1) {
-        const actions = get_actions_shadow_position(props.shapes, _idx, position);
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesShadowPosition(actions);
-            }
+    const actions = get_actions_shadow_position(props.shapes, _idx, position);
+    if (actions && actions.length) {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesShadowPosition(actions);
         }
     }
     close();
@@ -83,20 +76,22 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         </div>
         <div class="select_menu" v-if="isMenu"
             :style="{ top: shadow.position === ShadowPosition.Outer ? -4 + 'px' : -32 + 'px' }">
-            <div class="item" @click="togglePositinon(ShadowPosition.Outer)" @mouseenter="activeItem = ShadowPosition.Outer"
+            <div class="item" @click="togglePositinon(ShadowPosition.Outer)"
+                @mouseenter="activeItem = ShadowPosition.Outer"
                 :class="{ 'active-item': activeItem === ShadowPosition.Outer }">
                 <div class="text">{{ t(`shadow.outer`) }}</div>
                 <div class="icon">
                     <SvgIcon v-if="shadow.position === ShadowPosition.Outer"
-                        :icon="activeItem === ShadowPosition.Outer ? white_select_icon : page_select_icon"/>
+                        :icon="activeItem === ShadowPosition.Outer ? white_select_icon : page_select_icon" />
                 </div>
             </div>
-            <div class="item" @click="togglePositinon(ShadowPosition.Inner)" @mouseenter="activeItem = ShadowPosition.Inner"
+            <div class="item" @click="togglePositinon(ShadowPosition.Inner)"
+                @mouseenter="activeItem = ShadowPosition.Inner"
                 :class="{ 'active-item': activeItem === ShadowPosition.Inner }">
                 <div class="text">{{ t(`shadow.inner`) }}</div>
                 <div class="icon">
                     <SvgIcon v-if="shadow.position === ShadowPosition.Inner"
-                        :icon="activeItem === ShadowPosition.Inner ? white_select_icon : page_select_icon"/>
+                        :icon="activeItem === ShadowPosition.Inner ? white_select_icon : page_select_icon" />
                 </div>
             </div>
         </div>
@@ -196,4 +191,5 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
     .text {
         color: #fff;
     }
-}</style>
+}
+</style>

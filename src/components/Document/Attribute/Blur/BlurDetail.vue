@@ -3,25 +3,22 @@ import { Context } from '@/context';
 import { nextTick, reactive, ref } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
-import { LinearApi, ShapeView } from '@kcdesign/data';
+import { LinearApi, Blur, BlurMask } from '@kcdesign/data';
 import { Menu } from "@/context/menu";
 import { hidden_selection } from '@/utils/content';
-import { get_actions_blur_modify } from '@/utils/shape_style';
 import { watchEffect } from 'vue';
 import { BlurHandler } from '@/transform/blur';
 import { sortValue } from '../BaseAttr/oval';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import gear_icon from '@/assets/icons/svg/gear.svg';
-import { BlurCatch } from "@/components/Document/Attribute/Blur/ctx";
+import { BlurCatch, BlurContextMgr } from './ctx';
 
 const { t } = useI18n();
 
 interface Props {
     context: Context;
-    blur: BlurCatch | undefined;
-
-    entry?: string;
-    isMask?: boolean;
+    blur: BlurCatch;
+    manager: BlurContextMgr;
 }
 
 interface Emits {
@@ -42,11 +39,11 @@ function showMenu() {
     props.context.menu.notify(Menu.SHUTDOWN_MENU);
     popover.value.show();
 }
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
 
-const progressBar = ref<HTMLDivElement>()
-const progress = ref<HTMLDivElement>()
-const progressBtn = ref<HTMLDivElement>()
+const progressBar = ref<HTMLDivElement>();
+const progress = ref<HTMLDivElement>();
+const progressBtn = ref<HTMLDivElement>();
 
 defineExpose({ Detail })
 
@@ -65,39 +62,29 @@ const onMouseDown = (e: MouseEvent) => {
 const onMouseMove = (e: MouseEvent) => {
     if (isDragging) {
         updateProgress(e.clientX);
-        if (props.isMask) return;
         if (!blurModifyHandler) {
             return
         }
         if (!blurModifyHandler.asyncApiCaller) {
             blurModifyHandler.createApiCaller();
         }
-        if (props.entry === 'style') {
-            emits('dragBlurSaturation', blurModifyHandler, blurValue.value);
-        } else {
-            blurModifyHandler.executeSaturation(blurValue.value);
-        }
+        blurModifyHandler.executeSaturation(props.blur.blur, blurValue.value);
     }
 }
 const onMouseUP = () => {
     isDragging = false;
     if (progressBtn.value) {
         mouseup();
-        document.removeEventListener('mousemove', onMouseMove)
-        document.removeEventListener('mouseup', onMouseUP)
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUP);
     }
 }
 function down(e: MouseEvent) {
-    if (props.isMask) return;
     blurModifyHandler = new BlurHandler(props.context, e);
     if (!blurModifyHandler.asyncApiCaller) {
         blurModifyHandler.createApiCaller();
     }
-    if (props.entry === 'style') {
-        emits('dragBlurSaturation', blurModifyHandler, blurValue.value);
-    } else {
-        blurModifyHandler.executeSaturation(blurValue.value);
-    }
+    blurModifyHandler.executeSaturation(props.blur.blur, blurValue.value);
 }
 function mouseup() {
     blurModifyHandler?.fulfil();
@@ -139,17 +126,7 @@ function changeBlurInput(e: Event) {
     if (value < 0) value = 0;
     if (value > 200) value = 200;
     blurValue.value = value;
-    if (props.isMask) return;
-    if (props.entry === 'style') {
-        emits('setBlurSaturation', value);
-    } else {
-        const actions = get_actions_blur_modify(props.context.selection.selectedShapes, value);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapeBlurSaturation(actions);
-        }
-    }
+    props.manager.modifyBlurSaturation(props.blur.blur, value);
 
     update();
     hidden_selection(props.context);
@@ -161,20 +138,20 @@ const text_keyboard = (e: KeyboardEvent, val: string | number) => {
     }
     if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
         let value: any = sortValue(val.toString());
-        value = value + (e.code === 'ArrowUp' ? 1 : -1)
+        value = value + (e.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        value = value <= 0 ? 0 : value <= 200 ? value : 200
-        blurValue.value = value
-        if (props.isMask) return;
-        if (props.entry === 'style') {
-            emits('keyDownSaturation', linearApi, value);
+        value = value <= 0 ? 0 : value <= 200 ? value : 200;
+        blurValue.value = value;
+        const actions: { blur: Blur, value: number }[] = [];
+        if (props.blur.blur.parent instanceof BlurMask) {
+            actions.push({ blur: props.blur.blur, value });
         } else {
-            const actions = get_actions_blur_modify(props.context.selection.selectedShapes, value);
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                linearApi.modifyShapeBlurSaturation(actions)
+            for (let i = 0; i < props.manager.selected.length; i++) {
+                const shape = props.manager.selected[i];
+                if (shape.style.blur) actions.push({ blur: shape.style.blur, value });
             }
         }
+        linearApi.modifyShapeBlurSaturation(actions);
         e.preventDefault();
     }
 }
@@ -199,7 +176,7 @@ watchEffect(() => {
             :title="`${t('blur.blur_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
-                    <SvgIcon :icon="gear_icon"/>
+                    <SvgIcon :icon="gear_icon" />
                 </div>
             </template>
             <template #body>

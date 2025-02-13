@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { FillMask } from "@kcdesign/data";
 import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
 import { onMounted, onUnmounted, ref } from "vue";
-import FillItem from "../FillItem.vue";
+import FillItem from "../PaintItem.vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
 import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";
@@ -70,10 +70,10 @@ onUnmounted(() => {
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data"
                       @modify-name="modifyName" @modify-desc="modifyDesc"/>
         <div v-if="data" class="data-panel">
-            <ListHeader title="颜色" @create=""/>
+            <ListHeader title="颜色" @create="manager.create(data)"/>
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                          :data="fill as FillCatch"/>
+                          :data="(fill as FillCatch)"/>
             </div>
         </div>
         <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">创建样式</div>

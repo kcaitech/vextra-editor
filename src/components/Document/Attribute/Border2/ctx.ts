@@ -1,13 +1,13 @@
 import { Fill, FillMask, FillType, Style, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType } from "@kcdesign/data";
 import { Context } from "@/context";
-import { BorderData, get_actions_add_boder, get_actions_add_mask, get_actions_border_color, get_actions_border_delete, get_actions_border_enabled, get_actions_border_fillmask, get_actions_border_mask, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify, getDideStr } from "@/utils/shape_style";
+import { BorderData, get_actions_add_mask, get_actions_border_color, get_actions_border_enabled, get_actions_border_mask, get_actions_border_unify, get_actions_fill_mask, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import { FillCatch, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
-    if (sye.style.fillsMask) return sye.style.fillsMask;
+    if (sye.style.borders.fillsMask) return sye.style.borders.fillsMask;
     return sye.fills.reduce((p, c) => p + stringifyFill(c), '')
 
     function stringifyFill(fill: Fill) {
@@ -38,40 +38,35 @@ function strokeMixedStatus(stroke: BorderData, shapes: ShapeView[]) {
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shapes[i].type === ShapeType.Cutout) continue;
-        const styleborders = shape.getBorders();
-        const len = styleborders.strokePaints.length;
-        if (len > 0 && styleborders.position !== stroke.position) {
+        const paints = shape.getBorders();
+        const len = paints.strokePaints.length;
+        if (len > 0 && paints.position !== stroke.position) {
             stroke.position = 'mixed';
         }
-        if (len > 0 && styleborders.cornerType !== stroke.cornerType) {
+        if (len > 0 && paints.cornerType !== stroke.cornerType) {
             stroke.cornerType = 'mixed';
         }
         if (len > 0 && typeof stroke.borderStyle !== 'string' &&
-            styleborders.borderStyle.gap !== stroke.borderStyle.gap &&
-            styleborders.borderStyle.length !== stroke.borderStyle.length) {
+            paints.borderStyle.gap !== stroke.borderStyle.gap &&
+            paints.borderStyle.length !== stroke.borderStyle.length) {
             stroke.borderStyle = 'mixed';
         }
-        const sideStr = getDideStr(styleborders.sideSetting, stroke.sideSetting);
-        if (len > 0 && !sideStr) {
-            stroke.sideSetting = 'mixed';
-        }
+        const sideStr = getDideStr(paints.sideSetting, stroke.sideSetting);
+        if (len > 0 && !sideStr) stroke.sideSetting = 'mixed';
     }
 }
 
 export type BorderFillsContext = {
     mixed: boolean;
     fills: FillCatch[];
-    strokeInfo?: BorderData,
 
-    strokeMask?: string,
+    strokeInfo?: BorderData;
+    strokeMask?: string;
     strokeMaskInfo?: MaskInfo;
     mask?: string;
     maskInfo?: MaskInfo;
 }
-/**
- * 填充模块核心状态管理器，修改填充的所有属性都有管理器完成；
- * 另外还组合了弹框管理器，可以控制相关弹窗
- */
+
 export class StrokeFillContextMgr extends StyleCtx {
     constructor(protected context: Context, public fillCtx: BorderFillsContext) {
         super(context);
@@ -163,16 +158,23 @@ export class StrokeFillContextMgr extends StyleCtx {
         if (!this.fillCtx.fills.length && !this.fillCtx.mixed) this.create();
     }
 
-    create() {
+    create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
-
-        const selected = this.selected;
-        const color = new Color(1, 0, 0, 0);
-        const strokePaint = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
-        const actions = get_actions_add_boder(selected, strokePaint);
-        this.editor.shapesAddBorder(actions);
-
-        this.hiddenCtrl();
+        const actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[] = [];
+        if (mask) {
+            const color = new Color(1, 0, 0, 0);
+            const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+            actions.push({ fills: mask.fills, fill, index: mask.fills.length });
+        } else {
+            const color = new Color(1, 0, 0, 0);
+            for (const view of this.selected) {
+                const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+                const fills = view.getBorders().strokePaints as BasicArray<Fill>;
+                actions.push({ fills, fill, index: fills.length  });
+            }
+            this.hiddenCtrl();
+        }
+        this.editor.createFill(actions);
     }
 
     unify() {
@@ -182,8 +184,18 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     remove(fill: Fill) {
-        const actions = get_actions_border_delete(this.selected, this.getIndexByFill(fill));
-        this.editor.shapesDeleteBorder(actions);
+        const index = this.getIndexByFill(fill);
+        const actions: { fills: BasicArray<Fill>, index: number }[] = [];
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            actions.push({ fills: mask.fills, index });
+        } else {
+            for (const view of this.selected) {
+                const fills = view.getBorders().strokePaints as BasicArray<Fill>;
+                actions.push({ fills, index });
+            }
+        }
+        this.editor.shapesDeleteFill(actions);
     }
 
     removeAll() {
@@ -191,21 +203,26 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     modifyVisible(fill: Fill) {
-        const actions = get_actions_border_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
-        this.editor.setShapesBorderEnabled(actions);
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setFillsEnabled([fill], !fill.isEnabled);
+        } else {
+            const index = this.getIndexByFill(fill);
+            this.editor.setFillsEnabled(this.selected.map(v => v.getBorders().strokePaints[index]), !fill.isEnabled);
+            this.hiddenCtrl();
+        }
     }
 
     modifyFillHex(event: Event, fill: Fill) {
         const rgb = getRGBFromInputEvent(event);
         if (!rgb) return;
-
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
         const index = this.getIndexByFill(fill);
-        const selected = this.selected;
-
-        this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
-
-        this.hiddenCtrl(event);
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setFillsColor([{ fill, color }]);
+        } else {
+            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getBorders().strokePaints[index], color })));
+            this.hiddenCtrl(event);
+        }
     }
 
     modifyFillAlpha(event: Event, fill: Fill) {
@@ -218,9 +235,12 @@ export class StrokeFillContextMgr extends StyleCtx {
             fill.color.blue
         );
         const index = this.getIndexByFill(fill);
-        const selected = this.selected;
-        this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
-        this.hiddenCtrl(event);
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setFillsColor([{ fill, color }]);
+        } else {
+            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getBorders().strokePaints[index], color })));
+            this.hiddenCtrl(event);
+        }
     }
 
     modifyFillMask(id: string) {
@@ -237,12 +257,12 @@ export class StrokeFillContextMgr extends StyleCtx {
         this.hiddenCtrl();
     }
 
-    modifyBorderThicknessMask(sheet: string, id: string, side: BorderSideSetting) {
-        this.editor4Doc.modifyBorderMaskBorderSideSetting(sheet, id, side);
+    modifyBorderThicknessMask(border: BorderMaskType, side: BorderSideSetting) {
+        this.editor.setShapesBorderSide([{border, side}]);
     }
 
-    modifyBorderPositionMask(sheet: string, id: string, position: BorderPosition) {
-        this.editor4Doc.modifyBorderMaskBorderPosition(sheet, id, position);
+    modifyBorderPositionMask(border: BorderMaskType, position: BorderPosition) {
+        this.editor.setShapesBorderMaskPosition([{border, position}]);
     }
 
     unbind() {

@@ -15,6 +15,7 @@ import {
 } from "@kcdesign/data";
 import { importGradient } from "@kcdesign/data";
 import { v4 } from "uuid";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
 export type GradientFrom = 'fills' | 'borders' | 'text' | 'table_text';
 
@@ -55,21 +56,44 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
         }
     }
 }
-
+export const get_add_gradient_color2 = (stops: RGBACatch[], position: number) => {
+    for (let i = 0; i < stops.length; i++) {
+        const stop = stops[i];
+        if (position < stop.position) {
+            let n_alpha;
+            const c = i === 0 ? stop : stops[i - 1];
+            const {R: red, G: green, B: blue, A: alpha} = c;
+            if (i > 0) {
+                const position = stops[i - 1].position;
+                const a_len = alpha - stop.A;
+                const proportion = ((position - position) * a_len) / (stop.position - position);
+                if (a_len === 0) {
+                    n_alpha = alpha;
+                } else {
+                    n_alpha = a_len > 0 ? alpha - proportion : alpha + proportion;
+                }
+            } else {
+                n_alpha = alpha;
+            }
+            return {R: red, G: green, B: blue, A: n_alpha, position} as RGBACatch;
+        } else if (position > stops[i].position && i === stops.length - 1) {
+            return stop;
+        }
+    }
+}
 export const get_gradient = (context: Context, shape: ShapeView) => {
-    const locat = context.color.locat;
-    if (!locat || !shape || !shape.style) return;
-    if (locat.type !== 'text' && locat.type !== 'table_text') {
-        let gradient_type = locat.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
+    const locate = context.color.locate;
+    if (!locate || !shape || !shape.style) return;
+    if (locate.type !== 'text' && locate.type !== 'table_text') {
+        let gradient_type = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
         if (shape.type === ShapeType.Group) {
             const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group);
-            gradient_type = locat.type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders().strokePaints;
+            gradient_type = locate.type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders().strokePaints;
         }
-        if (!gradient_type[locat.index]) return;
-        const gradient = gradient_type[locat.index].gradient;
-        return gradient;
+        if (!gradient_type[locate.index]) return;
+        return gradient_type[locate.index].gradient;
     } else {
-        if (locat.type === 'text') {
+        if (locate.type === 'text') {
             if (shape.type !== ShapeType.Text) return;
             const { textIndex, selectLength } = getTextIndexAndLen(context);
             const editor = context.editor4TextShape(shape as TextShapeView)
@@ -110,8 +134,8 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
                     const cell = cells[i];
                     if (cell && cell.text) {
                         const editor = context.editor4TextShape(cell as any);
-                        const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-                        formats.push(forma);
+                        const format = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+                        formats.push(format);
                     }
                 }
                 return formats[0].gradient;
@@ -175,11 +199,11 @@ export function getGradient(gradient: Gradient | undefined, grad_type: GradientT
         stops.push(new Stop(new BasicArray(0), v4(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(1), v4(), 1, new Color(0, red, green, blue)))
         const from = grad_type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
         const to = { x: 0.5, y: 1 };
-        let elipseLength = undefined;
+        let ellipseLength = undefined;
         if (grad_type === GradientType.Radial) {
-            elipseLength = 1;
+            ellipseLength = 1;
         }
-        new_gradient = new Gradient(from as Point2D, to as Point2D, grad_type, stops, elipseLength);
+        new_gradient = new Gradient(from as Point2D, to as Point2D, grad_type, stops, ellipseLength);
     }
     return new_gradient;
 }

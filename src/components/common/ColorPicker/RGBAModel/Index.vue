@@ -3,6 +3,7 @@ import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorline
 import ColorModels from "@/components/common/ColorPicker/RGBAModel/Models/ColorModels.vue";
 import Saturation from "@/components/common/ColorPicker/RGBAModel/Saturation.vue";
 import Typical from "@/components/common/ColorPicker/Preset/Typical.vue";
+import RecentlyColor from "@/components/common/ColorPicker/RecentlyColor.vue";
 defineProps<{ stop: RGBACatch}>();
 </script>
 
@@ -10,4 +11,5 @@ defineProps<{ stop: RGBACatch}>();
     <Saturation :stop="stop" v-bind="$attrs"/>
     <ColorModels :stop="stop" v-bind="$attrs"/>
     <Typical v-bind="$attrs"/>
+    <RecentlyColor v-bind="$attrs"/>
 </template>

@@ -177,7 +177,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.clientY = top;
 
         target.style.position = "fixed";
-        target.style.zIndex = '1';
+        target.style.zIndex = '9';
         target.style.left = `${left}px`;
         target.style.top = `${top}px`;
     }

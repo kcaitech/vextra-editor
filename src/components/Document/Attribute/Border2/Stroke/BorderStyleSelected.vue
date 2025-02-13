@@ -3,7 +3,6 @@ import { SelectItem } from '@/components/common/Select.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import solid_icon from '@/assets/icons/svg/solid.svg';
 import dash_icon from '@/assets/icons/svg/dash.svg';
-import { watch } from 'vue';
 const props = defineProps<{
     data: SelectItem | null
 }>();

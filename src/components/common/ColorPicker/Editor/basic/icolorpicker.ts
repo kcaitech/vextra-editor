@@ -25,7 +25,7 @@ export interface IGradientModifier {
     /**
      * @description 创建一个stop
      */
-    createStop(position: number): void;
+    createStop(c: RGBACatch): string;
 
     /**
      * @description 删除一个stop
@@ -44,13 +44,22 @@ export interface IGradientModifier {
     rotateStops(): void;
 
     /**
-     * @description stop 拖拽事件
+     * @description stop 颜色拖拽事件
      */
     dragStopBegin(): void;
 
-    draggingStop(index: number, rgbaCatch: RGBACatch): void;
+    draggingStop(c: RGBACatch, stopAt: number): void;
 
     dragStopEnd(): void;
+
+    /**
+     * @description stop 位置拖拽事件
+     */
+    dragStopPositionBegin(): void;
+
+    draggingStopPosition(position: number, stopAt: number): void;
+
+    dragStopPositionEnd(): void;
 
     /**
      * @description from拖拽事件
@@ -75,12 +84,17 @@ export interface IPatternModifier {
     /**
      * @description 修改图片资源的引用
      */
-    modifyRef(): void;
+    modifyRef(event: Event): void;
 
     /**
      * @description 修改图片填充规则
      */
     modifyObjectFit(type: string): void;
+
+    /**
+     * @description 修改平铺时每张图的缩放比例
+     */
+    modifyTileScale(event: Event): void;
 
     /**
      * @description 旋转图片

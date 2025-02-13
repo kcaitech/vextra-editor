@@ -3,6 +3,8 @@ import { Context } from '@/context';
 import BorderCustomInput from './BorderCustomInput.vue';
 import {
   AsyncBorderThickness,
+  Border,
+  BorderSideSetting,
   LinearApi,
   ShapeType,
   ShapeView,
@@ -54,14 +56,18 @@ const setSideType = (type: SideType) => {
   select_side.value = type;
   const page = props.context.selection.selectedPage;
   if (!page) return;
-  const border = shapes.value[0].style.borders;
-  const data = getSideInfo(border, type);
+  const b = shapes.value[0].getBorders();
+  const data = getSideInfo(b, type);
   if (!data) return;
-  const actions = get_actions_border_side_info(shapes.value, data);
-  if (actions && actions.length) {
-    const editor = props.context.editor4Page(page);
-    editor.setShapesBorderSide(actions);
+  
+  const actions: { border: Border, side: BorderSideSetting }[] = [];
+  for (const view of shapes.value) {
+    const border = view.getBorders();
+    actions.push({ border, side: data });
   }
+
+  const editor = props.context.editor4Page(page);
+  editor.setShapesBorderSide(actions);
   hidden_selection(props.context);
   getSideThickness();
 }

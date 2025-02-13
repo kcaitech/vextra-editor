@@ -4,7 +4,7 @@ import { ColorCtx } from '@/context/color';
 import { fixedZero } from '@/utils/common';
 import { ImageScaleMode } from '@kcdesign/data';
 import { v4 } from 'uuid';
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
@@ -314,7 +314,7 @@ import choose_icon from "@/assets/icons/svg/choose.svg"
         position: absolute;
         left: 0;
         width: 126px;
-        padding: 4px 0px;
+        padding: 4px 0;
         background-color: #ffffff;
         border-radius: 6px;
         box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import SvgIcon from '@/components/common/SvgIcon.vue';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 const props = defineProps<{
     ticon: string

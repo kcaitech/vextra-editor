@@ -62,7 +62,6 @@ import delete_icon from '@/assets/icons/svg/delete.svg';
 import close_icon from '@/assets/icons/svg/close.svg';
 import select_icon from '@/assets/icons/svg/select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
-import { BlurCatch } from "@/components/Document/Attribute/Blur/ctx";
 
 const props = defineProps<{
     context: Context;

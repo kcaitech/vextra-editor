@@ -1,6 +1,12 @@
-import { Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, ShapeView, Stop, Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView } from "@kcdesign/data";
+import {
+    Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
+    Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView
+} from "@kcdesign/data";
 import { Context } from "@/context";
-import { get_actions_add_mask, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify } from "@/utils/shape_style";
+import {
+    get_actions_add_mask, get_actions_fill_delete,
+    get_actions_fill_mask, get_actions_fill_unify
+} from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
@@ -46,7 +52,7 @@ export function stringifyGradient(g: Gradient) {
     str += g.gradientType + g.from.x + g.from.y + g.to.x + g.to.y
         + (g.elipseLength ?? 'null')
         + (g.gradientOpacity ?? 'null')
-    ;
+        ;
 
     g.stops.forEach(s => str += stringifyStop(s));
 
@@ -82,7 +88,7 @@ export class FillsContextMgr extends StyleCtx {
         const selected = this.selected;
 
         if (selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = selected.map(i => ({fills: i.getFills(), style: i.style}));
+        const allFills = selected.map(i => ({ fills: i.getFills(), style: i.style }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -112,7 +118,7 @@ export class FillsContextMgr extends StyleCtx {
 
         const origin = represent.getFills();
         const replace: FillCatch[] = [];
-        for (let i = origin.length - 1; i > -1; i--) replace.push({fill: origin[i]});
+        for (let i = origin.length - 1; i > -1; i--) replace.push({ fill: origin[i] });
         this.fillCtx.fills = replace;
     }
 
@@ -130,26 +136,29 @@ export class FillsContextMgr extends StyleCtx {
         if (!this.fillCtx.fills.length && !this.fillCtx.mixed) this.create();
     }
 
-    create() {
+    create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
 
-        const actions: BatchAction2[] = [];
-        const selected = this.selected;
-        for (const view of selected) {
-            if (view instanceof ContactLineView) continue;
-            let color: Color;
-            if (view instanceof ArtboardView) {
-                color = new Color(1, 255, 255, 255);
-            } else {
-                color = new Color(0.2, 0, 0, 0);
-            }
+        if (mask) {
+            const color = new Color(0.2, 0, 0, 0);
             const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-            actions.push({target: view, value: fill});
+            this.editor.createFill([{ fills: mask.fills, fill, index: mask.fills.length }]);
+        } else {
+            const actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[] = [];
+            const selected = this.selected;
+            for (const view of selected) {
+                let color: Color;
+                if (view instanceof ArtboardView) {
+                    color = new Color(1, 255, 255, 255);
+                } else {
+                    color = new Color(0.2, 0, 0, 0);
+                }
+                const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
+                actions.push({ fills: view.style.fills, fill: fill, index: view.style.fills.length });
+            }
+            this.editor.createFill(actions);
+            this.hiddenCtrl();
         }
-
-        this.editor.shapesAddFill(actions);
-
-        this.hiddenCtrl();
     }
 
     unify() {
@@ -159,28 +168,40 @@ export class FillsContextMgr extends StyleCtx {
     }
 
     remove(fill: Fill) {
-        const actions = get_actions_fill_delete(this.selected, this.getIndexByFill(fill));
-        this.editor.shapesDeleteFill(actions);
+        if (fill.parent?.parent instanceof FillMask) {
+            const mask = fill.parent.parent as FillMask;
+            this.editor.shapesDeleteFill([{ fills: mask.fills, index: this.getIndexByFill(fill) }]);
+        } else {
+            const index = this.getIndexByFill(fill);
+            this.editor.shapesDeleteFill(this.selected.map(v => ({ fills: v.style.fills, index })));
+        }
     }
 
     modifyVisible(fill: Fill) {
-        const actions = get_actions_fill_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
-        this.editor.setShapesFillEnabled(actions);
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setFillsEnabled([fill], !fill.isEnabled);
+        } else {
+            const index = this.getIndexByFill(fill);
+            this.editor.setFillsEnabled(this.selected.map(v => v.getFills()[index]), !fill.isEnabled);
+            this.hiddenCtrl();
+        }
     }
 
+    /* 修改一条纯色填充的颜色 */
     modifyFillHex(event: Event, fill: Fill) {
         const rgb = getRGBFromInputEvent(event);
         if (!rgb) return;
-
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
-        const index = this.getIndexByFill(fill);
-        const selected = this.selected;
-        
-        this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
-
-        this.hiddenCtrl(event);
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setFillsColor([{ fill, color }]);
+        } else {
+            const index = this.getIndexByFill(fill);
+            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getFills()[index], color })));
+            this.hiddenCtrl(event);
+        }
     }
 
+    /* 修改一条纯色填充的透明度 */
     modifyFillAlpha(event: Event, fill: Fill) {
         const alpha = getNumberFromInputEvent(event);
         if (isNaN(alpha)) return;
@@ -190,10 +211,13 @@ export class FillsContextMgr extends StyleCtx {
             fill.color.green,
             fill.color.blue
         );
-        const index = this.getIndexByFill(fill);
-        const selected = this.selected;
-        this.editor.setShapesFillColor(get_actions_fill_color(selected, index, color));
-        this.hiddenCtrl(event);
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setFillsColor([{ fill, color }]);
+        } else {
+            const index = this.getIndexByFill(fill);
+            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getFills()[index], color })));
+            this.hiddenCtrl(event);
+        }
     }
 
     modifyFillMask(id: string) {

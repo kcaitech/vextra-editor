@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue'
 import SvgIcon from '@/components/common/SvgIcon.vue';
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 interface Props {
     data: SelectItem;
     isCurValue: boolean;

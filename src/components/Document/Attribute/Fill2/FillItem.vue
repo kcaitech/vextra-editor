@@ -7,13 +7,15 @@ import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill
 import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
-import { Fill, FillType } from "@kcdesign/data";
+import { Fill, FillType, GradientType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { FillsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/fillspicker";
+import { getGradientCatch, GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
+import { getPatternCatch, PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
 
 /**
  * 用于展示和修改一条填充的属性
@@ -23,14 +25,16 @@ const props = defineProps<{
     manager: FillsContextMgr;
     data: FillCatch;
 }>();
-const {t} = useI18n();
+const { t } = useI18n();
 const colorHex = ref<string>(props.data.fill.color.toHex().slice(1));
 const alpha = ref<string>(Math.round(props.data.fill.color.alpha * 100) + '%');
 const colors = ref<Fill[]>([props.data.fill]);
 const innerText = ref<string>('');
 const compo = ref<any>();
-const rgba = ref<RGBACatch>({R: 153, G: 43, B: 43, A: 0.52, position: 1});
 const fillType = ref<string>(FillType.SolidColor);
+const rgba = ref<RGBACatch>({ R: 153, G: 43, B: 43, A: 0.52, position: 1 });
+const gradient = ref<GradientCatch | undefined>();
+const pattern = ref<PatternCatch | undefined>();
 
 const styleReplace = {
     flex: 1,
@@ -57,27 +61,6 @@ const DescSpan = () => h('div', {
     innerText: innerText.value
 });
 
-const colorPanelStatus = reactive<ElementStatus>({id: '#color-piker-gen-2-panel', visible: false});
-const colorPanelStatusMgr = new ElementManager(
-    props.context,
-    colorPanelStatus,
-    {whiteList: ['#color-piker-gen-2-panel', '.color-wrapper']}
-);
-
-function showColorPanel(event: MouseEvent) {
-    let e: Element | null = event.target as Element;
-    while (e) {
-        if (e.classList.contains('color-wrapper')) {
-            colorPanelStatusMgr.showBy(e, {once: {offsetLeft: -290}});
-            break;
-        }
-        e = e.parentElement;
-    }
-}
-
-const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
-fillsPicker.fill = props.data.fill;
-
 function assemble() {
     switch (props.data.fill.fillType) {
         case FillType.Gradient:
@@ -93,38 +76,99 @@ function assemble() {
     }
 }
 
-assemble();
+const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
+const colorPanelStatusMgr = new ElementManager(
+    props.context,
+    colorPanelStatus,
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
+);
+
+function showColorPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('color-wrapper')) {
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
+const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
 
 function update() {
-    const data = props.data;
-    const color = data.fill.color;
+    const fill = props.data.fill;
+    const color = fill.color;
     colorHex.value = color.toHex().slice(1);
     alpha.value = Math.round(color.alpha * 100) + '%';
-    colors.value = [data.fill];
-    fillsPicker.fill = data.fill;
-    fillType.value = data.fill.fillType;
-    rgba.value = {R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1};
+    colors.value = [fill];
+    fillsPicker.fill = fill;
+    fillsPicker.fill_type = "fills"
+
+    pattern.value = undefined;
+    gradient.value = undefined;
+
+    if (fill.fillType === FillType.Gradient) {
+        fillType.value = fill.gradient!.gradientType;
+        gradient.value = getGradientCatch(fill.gradient!);
+    } else if (fill.fillType === FillType.Pattern) {
+        fillType.value = fill.fillType;
+        pattern.value = getPatternCatch(fill);
+    } else {
+        fillType.value = fill.fillType;
+        rgba.value = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
+    }
+
     assemble();
 }
 
-onUnmounted(watchEffect(update));
+const stop1 = watchEffect(update);
+const stop2 = watchEffect(() => {
+    const fill = props.data.fill;
+    const color = props.context.color;
+
+    if (!colorPanelStatus.visible || fillType.value === FillType.SolidColor) {
+        if (color.gradient_type) color.set_gradient_type(undefined);
+        if (color.locate) color.gradient_locate(undefined);
+        if (color.mode) color.switch_editor_mode(false);
+        if (color.imageScaleMode) color.setImageScaleMode(undefined);
+    } else if (fillType.value === FillType.Pattern) {
+        color.gradient_locate({ index: fillsPicker.index, type: "fills" });
+        color.setImageScaleMode(fill.imageScaleMode);
+        color.setImageOriginFrame({
+            width: fill.originalImageWidth ?? 100,
+            height: fill.originalImageHeight ?? 100
+        });
+        color.setImageScale(fill.scale);
+        color.switch_editor_mode(false);
+    } else {
+        color.set_gradient_type(fillType.value as GradientType);
+        color.gradient_locate({ index: fillsPicker.index, type: "fills" });
+        color.switch_editor_mode(true, fill.gradient);
+        color.setImageScaleMode(undefined);
+    }
+});
+onUnmounted(() => {
+    stop1();
+    stop2();
+    colorPanelStatusMgr.unmounted();
+});
 </script>
 <template>
     <div class="fill-item-container">
-        <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)"/>
-        <div :class="{'value-panel-wrapper': true, disabled: !data.fill.isEnabled}">
-            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel"/>
-            <component :is="compo"/>
-            <input class="alpha" type="text" :value="alpha"
-                   @focus="selectAllOnFocus"
-                   @change="(e) => manager.modifyFillAlpha(e, data.fill)"/>
+        <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)" />
+        <div :class="{ 'value-panel-wrapper': true, disabled: !data.fill.isEnabled }">
+            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel" />
+            <component :is="compo" />
+            <input class="alpha" type="text" :value="alpha" @focus="selectAllOnFocus"
+                @change="(e) => manager.modifyFillAlpha(e, data.fill)" />
         </div>
-        <div class="delete" @click="() => manager.remove(data.fill)">
-            <SvgIcon :icon="delete_icon"/>
+        <div class="delete" :class="{ disabled: manager.fillCtx.mask && manager.fillCtx.fills.length === 1 }"
+            @click="() => manager.remove(data.fill)">
+            <SvgIcon :icon="delete_icon" />
         </div>
-        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker"
-                     :type="fillType" :color="rgba"
-                     @close="() => colorPanelStatusMgr.close()"/>
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType" :color="rgba!"
+            :gradient="gradient" :pattern="pattern" @close="() => colorPanelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">
@@ -161,7 +205,7 @@ onUnmounted(watchEffect(update));
     }
 
     .disabled {
-        > * {
+        >* {
             opacity: 0.3;
             pointer-events: none;
         }
@@ -178,7 +222,7 @@ onUnmounted(watchEffect(update));
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > img {
+        >img {
             width: 16px;
             height: 16px;
         }

@@ -581,6 +581,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    radiusPanelStatusMgr.unmounted();
 })
 
 import radius_icon from "@/assets/icons/svg/radius.svg";

@@ -2,7 +2,7 @@
     <div id="blur-lib-panel" class="blur-lib-panel">
         <PopoverHeader :title="t('stylelib.blurs')" @create="showCreatePanel" @close="emits('close')"/>
         <div style="padding: 8px 12px; box-sizing: border-box;" @wheel.stop>
-            <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword"/>
+            <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword" />
             <el-scrollbar>
                 <div class="content">
                     <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager"
@@ -12,15 +12,15 @@
                 </div>
             </el-scrollbar>
         </div>
-        <CreateBlurStyle v-if="createPanelStatus.visible" :context="props.context" :shapes="props.shapes"
-                         @close="closeCreatePanel"/>
+        <CreateBlurStyle v-if="createPanelStatus.visible" :manager="manager" :context="context"
+            @close="closeCreatePanel" />
     </div>
 </template>
 <script setup lang="ts">
 import { ShapeView } from "@kcdesign/data";
 import { Context } from '@/context';
 import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
-import CreateBlurStyle from './CreateBlurStyle.vue';
+import CreateBlurStyle from './ModifyBlurMaskPanel.vue';
 import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
@@ -34,7 +34,6 @@ import { useI18n } from "vue-i18n";
 const props = defineProps<{
     context: Context;
     manager: BlurContextMgr;
-    shapes: ShapeView[];
 }>()
 const emits = defineEmits<{
     (e: 'close'): void
@@ -46,13 +45,13 @@ const libs = ref<{ label: string, value: string }[]>([]);
 const currentLibs = ref<string>('all');
 const sheets = ref<SheetCatch[]>([]);
 
-const createPanelStatus = reactive<ElementStatus>({id: '#create-blur-panel', visible: false});
+const createPanelStatus = reactive<ElementStatus>({ id: '#modify-blur-panel', visible: false });
 const createPanelStatusMgr = new ElementManager(
     props.context,
     createPanelStatus,
     {
         offsetLeft: -442,
-        whiteList: ['.new-style', '.add']
+        whiteList: ['.modify-blur-panel', '.add']
     }
 );
 
@@ -66,12 +65,12 @@ const closeCreatePanel = () => {
 function updateLib() {
     libs.value.length = 0;
     if (!props.context.data.stylelib) return;
-    libs.value.push({label: '全部样式', value: 'all'});
+    libs.value.push({ label: '全部样式', value: 'all' });
     props.context.data.stylelib.map(lib => {
         if (lib.id === props.context.data.id) {
-            libs.value.push({label: '此文件样式', value: lib.id});
+            libs.value.push({ label: '此文件样式', value: lib.id });
         } else {
-            libs.value.push({label: lib.name, value: lib.id});
+            libs.value.push({ label: lib.name, value: lib.id });
         }
     })
 }
@@ -82,7 +81,7 @@ function update() {
     const sheet = currentLibs.value;
     const word = keyword.value;
 
-    let _sheets: StyleSheet [] = [...props.context.data.stylelib ?? []] as StyleSheet[];
+    let _sheets: StyleSheet[] = [...props.context.data.stylelib ?? []] as StyleSheet[];
     if (sheet !== 'all') _sheets = _sheets.filter(i => i.id === sheet);
 
     sheets.value = _sheets.map(sts => {

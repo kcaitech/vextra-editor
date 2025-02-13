@@ -1,13 +1,15 @@
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
-import { BasicArray, Blur, BlurMask, BlurType, Point2D, Style } from "@kcdesign/data";
+import { Basic, BasicArray, Blur, BlurMask, BlurType, Point2D, Style } from "@kcdesign/data";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
-import { get_actions_add_blur, get_actions_add_mask, get_actions_blur_delete, get_actions_blur_enabled, get_actions_blur_mask, get_actions_blur_modify, get_actions_blur_unify } from "@/utils/shape_style";
+import { get_actions_add_blur, get_actions_add_mask, get_actions_blur_mask, get_actions_blur_unify } from "@/utils/shape_style";
+import { v4 } from "uuid";
 
 export type BlurCatch = {
     enable: boolean;
     type: BlurType;
     saturation: number;
+    blur: Blur;
 }
 export type BlurContext = {
     mixed: boolean;
@@ -22,7 +24,7 @@ function stringifyBlur(sye: { style: Style, blur: Blur | undefined }) {
     let str = '';
     if (sye.style.blur) {
         const b = sye.style.blur;
-        str += b.type + b.saturation + b.isEnabled
+        str += b.type + b.saturation + b.isEnabled;
     }
     return str;
 }
@@ -35,7 +37,7 @@ export class BlurContextMgr extends StyleCtx {
     private modifyMixedStatus() {
         const selected = this.selected;
         if (selected.length < 2) return this.blurCtx.mixed = false;
-        const allBlur = selected.map(i => ({blur: i.blur, style: i.style}));
+        const allBlur = selected.map(i => ({ blur: i.style.blur, style: i.style }));
         const stringF = stringifyBlur(allBlur[0]);
         for (let i = 1; i < allBlur.length; i++) {
             const str = stringifyBlur(allBlur[i]);
@@ -54,19 +56,16 @@ export class BlurContextMgr extends StyleCtx {
                 name: mask.name,
                 desc: mask.description
             }
+            const b = mask.blur;
+            this.blurCtx.blur = { enable: b.isEnabled, type: b.type, saturation: b.saturation, blur: b };
         } else {
             this.blurCtx.maskInfo = undefined;
-        }
-
-        if (represent.blur) {
-            const b = represent.blur;
-            this.blurCtx.blur = {
-                enable: b.isEnabled,
-                type: b.type,
-                saturation: b.saturation
-            };
-        } else {
-            this.blurCtx.blur = undefined;
+            if (represent.style.blur) {
+                const b = represent.style.blur;
+                this.blurCtx.blur = { enable: b.isEnabled, type: b.type, saturation: b.saturation, blur: b };
+            } else {
+                this.blurCtx.blur = undefined;
+            }
         }
     }
 
@@ -89,29 +88,58 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     unify() {
-        if (this.shapes[0].style.blursMask) {
-            const actions = get_actions_add_mask(this.shapes, this.shapes[0].style.blursMask);
-            this.editor.shapesSetBlurMask(actions);
+        const actions = get_actions_blur_unify(this.shapes);
+        this.editor.shapesBlurUnify(actions);
+        this.hiddenCtrl();
+    }
+
+    modifyBlurType(blur: Blur, type: BlurType) {
+        const actions: { blur: Blur, value: BlurType }[] = [];
+        if (blur.parent instanceof BlurMask) {
+            actions.push({ blur: blur, value: type });
         } else {
-            const actions = get_actions_blur_unify(this.shapes);
-            this.editor.shapesBlurUnify(actions);
+            for (let i = 0; i < this.selected.length; i++) {
+                const shape = this.selected[i];
+                if (shape.style.blur) actions.push({ blur: shape.style.blur, value: type });
+            }
         }
+        this.editor.setShapeBlurType(actions);
         this.hiddenCtrl();
     }
 
-    modifyBlurType(type: BlurType) {
-        this.editor.setShapeBlurType(get_actions_blur_modify(this.selected, type));
-        this.hiddenCtrl();
-    }
-
-    modifyEnable() {
-        const actions = get_actions_blur_enabled(this.shapes, !this.blurCtx.blur!.enable);
+    modifyEnable(blur: Blur) {
+        const actions: { blur: Blur, value: boolean }[] = [];
+        if (blur.parent instanceof BlurMask) {
+            actions.push({ blur: blur, value: !blur.isEnabled });
+        } else {
+            for (let i = 0; i < this.selected.length; i++) {
+                const shape = this.selected[i];
+                if (shape.style.blur) actions.push({ blur: shape.style.blur, value: !blur.isEnabled });
+            }
+        }
         this.editor.setShapeBlurEnabled(actions);
         this.hiddenCtrl();
     }
 
+    modifyBlurSaturation(blur: Blur, value: number) {
+        const actions: { blur: Blur, value: number }[] = [];
+        if (blur!.parent instanceof BlurMask) {
+            actions.push({ blur: blur!, value });
+        } else {
+            for (let i = 0; i < this.selected.length; i++) {
+                const shape = this.selected[i];
+                if (shape.style.blur) actions.push({ blur: shape.style.blur, value });
+            }
+        }
+        this.editor.setShapeBlurSaturation(actions);
+        this.hiddenCtrl();
+    }
+
     removeBlur() {
-        const actions = get_actions_blur_delete(this.shapes);
+        const actions: { style: Basic & { blur?: Blur; } }[] = [];
+        for (let i = 0; i < this.shapes.length; i++) {
+            actions.push({ style: this.shapes[i].style });
+        }
         this.editor.shapeDeleteBlur(actions);
         this.hiddenCtrl();
     }
@@ -122,8 +150,7 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     removeMask() {
-        const actions = get_actions_blur_mask(this.shapes);
-        this.editor.shapesDelStyleBlur(actions);
+        this.editor.shapesDelStyleBlur(this.shapes);
     }
 
     modifyBlurMask(maskID: string) {
@@ -132,4 +159,11 @@ export class BlurContextMgr extends StyleCtx {
         this.hiddenCtrl();
         this.kill();
     }
+    createStyleLib(name: string, desc: string) {
+        const blur = new Blur([0] as BasicArray<number>, true, new Point2D(0, 0), 10, BlurType.Gaussian);
+        const blurMask = new BlurMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, blur);
+        this.editor4Doc.insertStyleLib(blurMask, this.page, this.selected);
+        this.kill();
+    }
+
 }

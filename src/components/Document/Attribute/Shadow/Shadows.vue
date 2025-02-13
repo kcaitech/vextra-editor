@@ -99,7 +99,7 @@ function addShadow(): void {
     const s = new Shadow(new BasicArray(), v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
     if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.addShadow(s);
+        // e.addShadow(s);
     } else if (len > 1) {
         const page = props.context.selection.selectedPage;
         const mask = props.shapes.some(s => s.style.shadowsMask)
@@ -132,7 +132,7 @@ function deleteFill(idx: number) {
     const len = props.shapes.length;
     if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.deleteShadow(_idx)
+        // e.deleteShadow(_idx)
     } else if (len > 1) {
         const actions = get_actions_shadow_delete(props.shapes, _idx);
         const page = props.context.selection.selectedPage;
@@ -151,7 +151,7 @@ function toggleVisible(idx: number) {
     const isEnabled = !shadow.isEnabled;
     if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.setShadowEnable(_idx, isEnabled)
+        // e.setShadowEnable(_idx, isEnabled)
     } else if (len > 1) {
         const actions = get_actions_shadow_enabled(props.shapes, _idx, isEnabled);
         const page = props.context.selection.selectedPage;

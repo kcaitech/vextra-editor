@@ -3,22 +3,17 @@ import { Context } from '@/context';
 import { ColorCtx } from '@/context/color';
 import { ClientXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { ColorHandler } from '@/transform/color';
-import { getHorizontalAngle, XYsBounding } from '@/utils/common';
+import { getHorizontalAngle } from '@/utils/common';
 import { CursorType } from '@/utils/cursor2';
-import { ColorPicker, ColVector3D, CtrlElementType, makeShapeTransform2By1, Matrix, ShapeView, TransformRaw } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { ColorPicker, ColVector3D, CtrlElementType, Matrix, ShapeView, TransformRaw } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
 interface Props {
-    context: Context
-    matrix: Matrix
+    context: Context;
+    matrix: Matrix;
 }
 
-enum Direction {
-    X,
-    Y,
-    Angle
-}
+enum Direction {X, Y, Angle}
 
 const props = defineProps<Props>();
 const image_width = ref(0);
@@ -30,12 +25,11 @@ let startPosition: ClientXY = { x: 0, y: 0 };
 const cur_shape = ref<ShapeView>();
 let need_reset_cursor_after_transform = true;
 
-
 let isDragging = false;
 const dragActiveDis = 3;
 const update_frame = () => {
-    const locat = props.context.color.locat;
-    if (!locat) return;
+    const locate = props.context.color.locate;
+    if (!locate) return;
     const frame = props.context.color.imageOriginFrame;
     if (frame) {
         const shapes = props.context.selection.selectedShapes;
@@ -44,7 +38,7 @@ const update_frame = () => {
         const scale = props.context.color.imageScale;
         image_width.value = frame.width * (scale || 0.5);
         image_height.value = frame.height * (scale || 0.5);
-        const fill = shape.getFills()[locat.index];
+        const fill = shape.getFills()[locate.index];
         if (!fill) return;
         if (fill.rotation === 90 || fill.rotation === 270) {
             image_width.value = frame.height * (scale || 0.5);
@@ -84,28 +78,25 @@ const onMouseMove = (e: MouseEvent) => {
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = workspace.getContentXY(e)
     if (isDragging) {
-        if (!colorEditor) {
-            return;
-        }
-        const locat = props.context.color.locat;
-        if (!locat) return;
-        setImageScale(e, locat.index, direction);
+        if (!colorEditor) return;
+        const locate = props.context.color.locate;
+        if (!locate) return;
+        setImageScale(e, locate.index, direction);
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
         isDragging = true;
     }
 }
 
 const setImageScale = (e: MouseEvent, index: number, direction: Direction) => {
-    const locat = props.context.color.locat;
-    if (!locat) return;
-
+    const locate = props.context.color.locate;
+    if (!locate) return;
     const { x, y } = props.context.workspace.getContentXY(e);
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) return;
     const shape = shapes[0];
     const image_frame = props.context.color.imageOriginFrame;
     if (!image_frame) return;
-    const fill = shape.getFills()[locat.index];
+    const fill = shape.getFills()[locate.index];
     if (!fill) return;
     const matrix = new TransformRaw();
     if (fill.rotation === 90 || fill.rotation === 270) {
@@ -117,7 +108,7 @@ const setImageScale = (e: MouseEvent, index: number, direction: Direction) => {
     matrix.multiAtLeft(props.context.workspace.matrix); // 页面转视图
     const m = (matrix.inverse); // 视图转图形
     const trans = m.computeCoord(x, y);
-    let scale = trans.x;
+    let scale;
     if (direction === Direction.X) {
         scale = trans.x;
     } else if (direction === Direction.Y) {
@@ -177,6 +168,7 @@ function setCursor(t: CtrlElementType) {
 
     cursor.setType(CursorType.Scale, deg);
 }
+
 function bar_mouseenter(type: CtrlElementType) {
     need_reset_cursor_after_transform = false;
     setCursor(type);
@@ -188,9 +180,7 @@ function bar_mouseleave() {
 }
 
 const colorWatcher = (t: number) => {
-    if (t === ColorCtx.IMAGE_ORIGIN_CHANGE) {
-        update_frame();
-    }
+    if (t === ColorCtx.IMAGE_ORIGIN_CHANGE) update_frame();
 }
 const watcher = () => {
     matrix.reset(props.matrix);
@@ -198,9 +188,7 @@ const watcher = () => {
 }
 
 const workspace_watcher = (t: number | string) => {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        watcher();
-    }
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) watcher();
 }
 const watchedShapes = new Map();
 
@@ -225,13 +213,13 @@ function watchShapes() { // 监听相关shape的变化
 }
 
 const editImage = (edit: boolean) => {
-    const locat = props.context.color.locat;
-    if (!locat) return;
+    const locate = props.context.color.locate;
+    if (!locate) return;
     const shape = cur_shape.value!;
     const page = props.context.selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        editor.setShapesFillEdit(shape, locat.index, edit);
+        // editor.setShapesFillEdit(shape, locate.index, edit);
     }
 }
 const selectShape = () => {
@@ -241,9 +229,7 @@ onMounted(() => {
     watcher();
     update_frame();
     watchShapes();
-    nextTick(() => {
-        update_position();
-    })
+    update_position();
     selectShape();
     editImage(true);
     props.context.workspace.watch(workspace_watcher);
@@ -257,57 +243,57 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
-        :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
-        <g :style="{ transform: transform }">
-            <rect x="0" y="0" :width="image_width" :height="image_height" fill="rgba(0,0,0,0.35)"></rect>
-            <g v-if="Math.max(image_width, image_height) > 20">
-                <!-- 左上 -->
-                <path :d="`M 16 2.5 L 2.5 2.5 L 2.5 16`" stroke="#1878f5" stroke-width="5" fill="none"></path>
-                <!-- 中上 -->
-                <path :d="`M ${(image_width / 2) - 8} 2.5 L ${(image_width / 2) + 8} 2.5`" stroke="#1878f5"
-                    stroke-width="5" fill="none"></path>
-                <!-- 右上 -->
-                <path :d="`M ${image_width - 16} 2.5 L ${image_width - 2.5} 2.5 L ${image_width - 2.5} 16`"
-                    stroke="#1878f5" stroke-width="5" fill="none"></path>
-                <!-- 中左 -->
-                <path :d="`M 2.5 ${(image_height / 2) - 8} L 2.5 ${(image_height / 2) + 8}`" stroke="#1878f5"
-                    stroke-width="5" fill="none"></path>
-                <!-- 中右 -->
-                <path
-                    :d="`M ${image_width - 2.5} ${(image_height / 2) - 8} L ${image_width - 2.5} ${(image_height / 2) + 8}`"
-                    stroke="#1878f5" stroke-width="5" fill="none"></path>
-                <!-- 左下 -->
-                <path :d="`M 2.5 ${image_height - 16} L 2.5 ${image_height - 2.5} L 16 ${image_height - 2.5}`"
-                    stroke="#1878f5" stroke-width="5" fill="none"></path>
-                <!-- 中下 -->
-                <path
-                    :d="`M ${(image_width / 2) - 8} ${image_height - 2.5} L ${(image_width / 2) + 8} ${image_height - 2.5}`"
-                    stroke="#1878f5" stroke-width="5" fill="none"></path>
-                <!-- 右下 -->
-                <path
-                    :d="`M ${image_width - 2.5} ${image_height - 16} L ${image_width - 2.5} ${image_height - 2.5} L ${image_width - 16} ${image_height - 2.5}`"
-                    stroke="#1878f5" stroke-width="5" fill="none"></path>
-            </g>
-            <g v-else>
-                <rect x="2.5" y="2.5" :width="Math.max(image_width - 5, 1)" :height="Math.max(image_height - 5, 1)"
-                    fill="transparent" stroke="#1878f5" stroke-width="5"></rect>
-            </g>
-            <!-- 中下 -->
-            <rect :x="0" :y="image_height - 6" :width="Math.abs(image_width - 16)" :height="12" fill="transparent"
-                @mousedown="(e) => onMouseDown(e, Direction.Y)" @mouseenter="() => bar_mouseenter(CtrlElementType.RectBottom)"
-                @mouseleave="bar_mouseleave"></rect>
+<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
+     :height="100" viewBox="0 0 100 100" style="position: absolute;">
+    <g :style="{ transform: transform }">
+        <rect x="0" y="0" :width="image_width" :height="image_height" fill="rgba(0,0,0,0.35)"></rect>
+        <g v-if="Math.max(image_width, image_height) > 20">
+            <!-- 左上 -->
+            <path :d="`M 16 2.5 L 2.5 2.5 L 2.5 16`" stroke="#1878f5" stroke-width="5" fill="none"></path>
+            <!-- 中上 -->
+            <path :d="`M ${(image_width / 2) - 8} 2.5 L ${(image_width / 2) + 8} 2.5`" stroke="#1878f5"
+                  stroke-width="5" fill="none"></path>
+            <!-- 右上 -->
+            <path :d="`M ${image_width - 16} 2.5 L ${image_width - 2.5} 2.5 L ${image_width - 2.5} 16`"
+                  stroke="#1878f5" stroke-width="5" fill="none"></path>
+            <!-- 中左 -->
+            <path :d="`M 2.5 ${(image_height / 2) - 8} L 2.5 ${(image_height / 2) + 8}`" stroke="#1878f5"
+                  stroke-width="5" fill="none"></path>
             <!-- 中右 -->
-            <rect :x="image_width - 6" y="0" :width="12" :height="Math.abs(image_height - 16)" fill="transparent"
-                @mousedown="(e) => onMouseDown(e, Direction.X)" @mouseenter="() => bar_mouseenter(CtrlElementType.RectRight)"
-                @mouseleave="bar_mouseleave"></rect>
+            <path
+                :d="`M ${image_width - 2.5} ${(image_height / 2) - 8} L ${image_width - 2.5} ${(image_height / 2) + 8}`"
+                stroke="#1878f5" stroke-width="5" fill="none"></path>
+            <!-- 左下 -->
+            <path :d="`M 2.5 ${image_height - 16} L 2.5 ${image_height - 2.5} L 16 ${image_height - 2.5}`"
+                  stroke="#1878f5" stroke-width="5" fill="none"></path>
+            <!-- 中下 -->
+            <path
+                :d="`M ${(image_width / 2) - 8} ${image_height - 2.5} L ${(image_width / 2) + 8} ${image_height - 2.5}`"
+                stroke="#1878f5" stroke-width="5" fill="none"></path>
             <!-- 右下 -->
-            <rect :x="image_width - 16" :y="image_height - 16" width="22" height="22" fill="transparent"
-                @mousedown="(e) => onMouseDown(e, Direction.Angle)" @mouseenter="() => bar_mouseenter(CtrlElementType.RectRB)"
-                @mouseleave="bar_mouseleave"></rect>
+            <path
+                :d="`M ${image_width - 2.5} ${image_height - 16} L ${image_width - 2.5} ${image_height - 2.5} L ${image_width - 16} ${image_height - 2.5}`"
+                stroke="#1878f5" stroke-width="5" fill="none"></path>
         </g>
-    </svg>
+        <g v-else>
+            <rect x="2.5" y="2.5" :width="Math.max(image_width - 5, 1)" :height="Math.max(image_height - 5, 1)"
+                  fill="transparent" stroke="#1878f5" stroke-width="5"></rect>
+        </g>
+        <!-- 中下 -->
+        <rect :x="0" :y="image_height - 6" :width="Math.abs(image_width - 16)" :height="12" fill="transparent"
+              @mousedown="(e) => onMouseDown(e, Direction.Y)"
+              @mouseenter="() => bar_mouseenter(CtrlElementType.RectBottom)"
+              @mouseleave="bar_mouseleave"></rect>
+        <!-- 中右 -->
+        <rect :x="image_width - 6" y="0" :width="12" :height="Math.abs(image_height - 16)" fill="transparent"
+              @mousedown="(e) => onMouseDown(e, Direction.X)"
+              @mouseenter="() => bar_mouseenter(CtrlElementType.RectRight)"
+              @mouseleave="bar_mouseleave"></rect>
+        <!-- 右下 -->
+        <rect :x="image_width - 16" :y="image_height - 16" width="22" height="22" fill="transparent"
+              @mousedown="(e) => onMouseDown(e, Direction.Angle)"
+              @mouseenter="() => bar_mouseenter(CtrlElementType.RectRB)"
+              @mouseleave="bar_mouseleave"></rect>
+    </g>
+</svg>
 </template>
-
-<style scoped lang="scss"></style>
