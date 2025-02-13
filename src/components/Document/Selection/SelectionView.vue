@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection, SelectionTheme } from "@/context/selection";
-import { ContactLineView, CtrlElementType, Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
+import { CtrlElementType, Matrix, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
@@ -48,7 +48,6 @@ interface PathView {
 
 const props = defineProps<Props>();
 const controllerType = ref<ControllerType>(ControllerType.Rect);
-// const matrix = new Matrix();
 const controllerFrame = ref<Point[]>([]);
 const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
@@ -116,7 +115,6 @@ function update_by_matrix() {
 
 function workspace_watcher(t?: any) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) { // 由workspace主动触发更新，可跳过是否可以更新的检查
-        // matrix.reset(props.params.matrix);
         createShapeTracing();
         createController();
     }
@@ -144,7 +142,6 @@ function selectionWatcher(t: string | number) { // selection的部分动作可�
 
 function tool_watcher(t: number) {
     if (t === Tool.LABLE_CHANGE) {
-        // matrix.reset(props.params.matrix);
         createController();
         watchShapes();
         labelLineStatus();
@@ -273,13 +270,13 @@ function modify_controller_frame(shapes: ShapeView[]) {
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
         const m = s.matrix2Root()
-        let f = s.frame;
-        if (s instanceof ContactLineView) f = s.visibleFrame;
+        const f = s.frame;
         m.multiAtLeft(props.params.matrix);
-        const ps: { x: number, y: number }[] = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, {
-            x: f.x + f.width,
-            y: f.y + f.height
-        }, { x: f.x, y: f.y + f.height }];
+        const ps: { x: number, y: number }[] = [
+            { x: f.x, y: f.y },
+            { x: f.x + f.width, y: f.y },
+            { x: f.x + f.width, y: f.y + f.height },
+            { x: f.x, y: f.y + f.height }];
         for (let j = 0; j < 4; j++) ps[j] = m.computeCoord3(ps[j]);
         points.push(...ps);
     }

@@ -13,7 +13,7 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-    adapt_page, color2string, drop, init_insert_table, root_scale, root_trans, selectShapes
+    adapt_page, color2string, drop, root_scale, root_trans, selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import TextSelection from './Selection/TextSelection.vue';
@@ -464,8 +464,6 @@ function tool_watcher(type: number) {
         creatorMode.value = isCreatorSupportAction(props.context.curAction);
     } else if (type === Tool.INSERT_FRAME) {
         insertFrame();
-    } else if (type === Tool.INSERT_TABLE) {
-        init_insert_table(props.context, t);
     }
 }
 

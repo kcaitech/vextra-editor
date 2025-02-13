@@ -2,21 +2,18 @@
 import { Context } from '@/context';
 import {
     adapt2Shape,
-    AsyncContactEditor,
     ContactForm,
     ContactLineView,
-    ContactShape,
     ContactType,
     GroupShape,
     Matrix,
-    Shape,
     ShapeType,
-    ShapeView
+    ShapeView,
+    ContactLineModifier
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
-import { get_apexs } from './common';
 import { Tool } from '@/context/tool';
 import { get_contact_environment } from '@/utils/contact';
 
@@ -32,11 +29,6 @@ interface Apex {
     type: 'from' | 'to'
 }
 
-interface FAT {
-    from: Shape | undefined,
-    to: Shape | undefined
-}
-
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const apex = ref<boolean>(false);
@@ -46,15 +38,18 @@ const data: { apex1: Apex, apex2: Apex } = reactive({
     apex2: { point: { x: 0, y: 0 }, type: 'to' }
 });
 const contact_points = ref<{ type: ContactType, point: ClientXY }[]>([]);
-const fromOrTo = ref<FAT>()
+const fromOrTo = ref<{
+    from: ShapeView | undefined,
+    to: ShapeView | undefined
+}>({ from: props.shape.from, to: props.shape.to });
 
 let { apex1, apex2 } = data;
 let isDragging = false;
-let contactEditor: AsyncContactEditor | undefined;
+let modifier: ContactLineModifier | undefined;
 let move: any;
 let search: boolean = false;
 let move_type: 'from' | 'to' = 'to';
-let clear_target: { apex: ContactForm, p: PageXY } | undefined;
+let clear_target: { apex: ContactForm, point: { x: number, y: number } } | undefined;
 
 const dragActiveDis = 3;
 let downXY = { x: 0, y: 0 };
@@ -62,21 +57,31 @@ let downXY = { x: 0, y: 0 };
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
-    fromOrTo.value = props.shape.apexes as FAT
+    fromOrTo.value = { from: props.shape.from, to: props.shape.to };
 }
 
 function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
     apex.value = false;
-    const result = get_apexs(props.shape as ContactLineView, matrix);
-    if (!result) {
-        return;
-    }
+    const result = get_apexes();
+    if (!result) return;
     apex.value = true;
     apex1 = result.apex1;
     apex2 = result.apex2;
+}
+
+function get_apexes() {
+    const raw_p = props.shape.getPoints();
+    if (!raw_p || raw_p.length < 2) return false;
+    const apex1: {
+        point: { x: number, y: number }
+        type: 'from' | 'to'
+    } = { point: matrix.computeCoord(raw_p[0]), type: 'from' };
+    const apex2: {
+        point: { x: number, y: number }
+        type: 'from' | 'to'
+    } = { point: matrix.computeCoord(raw_p[raw_p.length - 1]), type: 'to' };
+    return { apex1, apex2 };
 }
 
 function update_contact_apex() {
@@ -105,13 +110,9 @@ function update_contact_apex() {
 }
 
 function point_mousedown(event: MouseEvent, type: 'from' | 'to') {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
 
-    if (props.shape.isLocked) {
-        return;
-    }
+    if (props.shape.isLocked) return;
 
     event.stopPropagation();
 
@@ -130,15 +131,13 @@ function point_mousedown(event: MouseEvent, type: 'from' | 'to') {
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
 
-    if (isDragging && contactEditor) {
-        if (search) {
-            search_apex(event);
-        }
+    if (isDragging && modifier) {
+        if (search) search_apex(event);
         const p = workspace.getRootXY(event);
         if (move_type === 'from') {
-            contactEditor.modify_contact_from(p, clear_target);
+            modifier.modifyFrom(p, clear_target);
         } else if (move_type === 'to') {
-            contactEditor.modify_contact_to(p, clear_target);
+            modifier.modifyTo(p, clear_target);
         }
 
         migrate(props.shape);
@@ -149,13 +148,8 @@ function point_mousemove(event: MouseEvent) {
             search = true;
             workspace.scaling(true);
             const page = props.context.selection.selectedPage!;
-
-            contactEditor = props.context
-                .editor
-                .controller()
-                .asyncContactEditor(adapt2Shape(props.shape) as ContactShape, page);
-
-            contactEditor.pre();
+            modifier = new ContactLineModifier(props.context.coopRepo, page, props.shape);
+            modifier.simplify();
         }
     }
 }
@@ -172,18 +166,14 @@ function migrate(shape: ContactLineView) {
         __s = __s.parent;
     }
 
-    if (!existSliceShape) {
-        return;
-    }
+    if (!existSliceShape) return;
 
     const points = shape.getPoints();
     const environment = get_contact_environment(props.context, shape, points);
-    if (!environment) {
-        return;
-    }
+    if (!environment) return;
 
-    if (shape.parent?.id !== environment.id && contactEditor) {
-        contactEditor.migrate(adapt2Shape(environment) as GroupShape);
+    if (shape.parent?.id !== environment.id && modifier) {
+        modifier.migrate(adapt2Shape(environment) as GroupShape);
     }
 }
 
@@ -195,9 +185,9 @@ function point_mouseup(event: MouseEvent) {
     if (search) {
         search = false;
     }
-    if (contactEditor) {
-        contactEditor.close();
-        contactEditor = undefined;
+    if (modifier) {
+        modifier.commit();
+        modifier = undefined;
     }
     if (contact.value) {
         contact.value = false;
@@ -223,29 +213,27 @@ function search_apex(e: MouseEvent) {
 
 function enter_new_node(contactType: ContactType, p: PageXY) {
     const contactApex = props.context.tool.contactApex;
-    if (!contactApex) {
-        return;
-    }
+    if (!contactApex) return;
 
     const cf = new ContactForm(contactType, contactApex.id);
-    clear_target = { apex: cf, p };
+    clear_target = { apex: cf, point: p };
 
-    if (contactEditor) {
+    if (modifier) {
         if (move_type === 'from') {
-            contactEditor.modify_contact_from(p, clear_target);
+            modifier.modifyFrom(p, clear_target);
         } else if (move_type === 'to') {
-            contactEditor.modify_contact_to(p, clear_target);
+            modifier.modifyTo(p, clear_target);
         }
     }
 }
 
 function leave_new_node(p: PageXY) {
     clear_target = undefined;
-    if (contactEditor) {
+    if (modifier) {
         if (move_type === 'from') {
-            contactEditor.modify_contact_from(p, undefined);
+            modifier.modifyFrom(p, undefined);
         } else if (move_type === 'to') {
-            contactEditor.modify_contact_to(p, undefined);
+            modifier.modifyTo(p, undefined);
         }
     }
 }
@@ -256,19 +244,13 @@ function tool_watcher(t: number) {
 
 function window_blur() {
     const workspace = props.context.workspace;
-    if (isDragging) {
-        isDragging = false;
+    if (isDragging) isDragging = false;
+    if (search) search = false;
+    if (modifier) {
+        modifier.commit();
+        modifier = undefined;
     }
-    if (search) {
-        search = false;
-    }
-    if (contactEditor) {
-        contactEditor.close();
-        contactEditor = undefined;
-    }
-    if (contact.value) {
-        contact.value = false;
-    }
+    if (contact.value) contact.value = false;
     workspace.scaling(false);
     workspace.setCtrl('page');
     props.context.cursor.reset();

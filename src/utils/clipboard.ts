@@ -1,14 +1,12 @@
 import {
     adapt2Shape,
-    AsyncCreator,
     BasicArray,
     Blur,
     Border,
     BorderPosition,
     BorderSideSetting,
     BorderStyle,
-    ColVector3D,
-    ContactShape,
+    ColVector3D, ContactLineView,
     CornerType,
     CurvePoint,
     Document,
@@ -19,7 +17,7 @@ import {
     import_shape_from_clipboard,
     import_text,
     makeShapeTransform1By2,
-    makeShapeTransform2By1, Matrix, MossError,
+    makeShapeTransform2By1, MossError,
     Page,
     PathShape,
     Shape,
@@ -207,7 +205,7 @@ export class Clipboard {
 
             position_map.set(shape.id, (shape.matrix2Root()));
 
-            if (shape instanceof ContactShape) {
+            if (shape instanceof ContactLineView) {
                 points_map.set(shape.id, shape.getPoints());
             }
 
@@ -1319,64 +1317,64 @@ export function adjust_content_xy(context: Context, m: { width: number, height: 
 }
 
 /**
- * 将图片插入文档
+ * @deprecated
  */
 export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media, origin: {
     width: number,
     height: number
 }) {
-    const selection = context.selection;
-    const workspace = context.workspace;
-    const page = selection.selectedPage;
-    const parent = selection.selectedPage;
-    let asyncCreator: AsyncCreator | undefined;
-    let new_shape: Shape | undefined;
-    const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-    if (page && parent) {
-        const editor = context.editor.controller();
-        const name = getName(ShapeType.Image, parent.childs, t);
-        asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-        frame.height = media.frame.height;
-        frame.width = media.frame.width;
-        new_shape = asyncCreator.init_media(page.data, (parent.data), name, frame, media, origin);
-    }
-    if (asyncCreator && new_shape) {
-        asyncCreator.close();
-        page && context.nextTick(page, () => {
-            new_shape && selection.selectShape(page.shapes.get(new_shape.id));
-        })
-        const fills = new_shape.style.getFills();
-        context.net?.upload(fills[0].imageRef || '', media.buff.buffer.slice(0));
-    }
-    context.tool.setAction(Action.AutoV);
-    workspace.creating(false);
+    // const selection = context.selection;
+    // const workspace = context.workspace;
+    // const page = selection.selectedPage;
+    // const parent = selection.selectedPage;
+    // let asyncCreator: AsyncCreator | undefined;
+    // let new_shape: Shape | undefined;
+    // const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+    // if (page && parent) {
+    //     const editor = context.editor.controller();
+    //     const name = getName(ShapeType.Image, parent.childs, t);
+    //     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+    //     frame.height = media.frame.height;
+    //     frame.width = media.frame.width;
+    //     new_shape = asyncCreator.init_media(page.data, (parent.data), name, frame, media, origin);
+    // }
+    // if (asyncCreator && new_shape) {
+    //     asyncCreator.close();
+    //     page && context.nextTick(page, () => {
+    //         new_shape && selection.selectShape(page.shapes.get(new_shape.id));
+    //     })
+    //     const fills = new_shape.style.getFills();
+    //     context.net?.upload(fills[0].imageRef || '', media.buff.buffer.slice(0));
+    // }
+    // context.tool.setAction(Action.AutoV);
+    // workspace.creating(false);
 }
 
 /**
- * 将文字插入文档
+ * @deprecated
  */
 function paster_text(context: Context, mousedownOnPageXY: PageXY, content: string) {
-    const selection = context.selection;
-    const workspace = context.workspace;
-    const page = selection.selectedPage;
-    const parent = selection.selectedPage;
-    let asyncCreator: AsyncCreator | undefined;
-    let new_shape: Shape | undefined;
-    const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 400, 40);
-    if (page && parent) {
-        const editor = context.editor.controller();
-        asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-
-        new_shape = asyncCreator.init_text(page.data, parent.data, frame, content);
-    }
-    if (asyncCreator && new_shape) {
-        asyncCreator = asyncCreator.close();
-        page && context.nextTick(page, () => {
-            new_shape && selection.selectShape(page.shapes.get(new_shape.id));
-        })
-    }
-    context.tool.setAction(Action.AutoV);
-    workspace.creating(false);
+    // const selection = context.selection;
+    // const workspace = context.workspace;
+    // const page = selection.selectedPage;
+    // const parent = selection.selectedPage;
+    // let asyncCreator: AsyncCreator | undefined;
+    // let new_shape: Shape | undefined;
+    // const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 400, 40);
+    // if (page && parent) {
+    //     const editor = context.editor.controller();
+    //     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+    //
+    //     new_shape = asyncCreator.init_text(page.data, parent.data, frame, content);
+    // }
+    // if (asyncCreator && new_shape) {
+    //     asyncCreator = asyncCreator.close();
+    //     page && context.nextTick(page, () => {
+    //         new_shape && selection.selectShape(page.shapes.get(new_shape.id));
+    //     })
+    // }
+    // context.tool.setAction(Action.AutoV);
+    // workspace.creating(false);
 }
 
 /***
