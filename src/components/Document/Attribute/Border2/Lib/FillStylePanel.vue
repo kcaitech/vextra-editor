@@ -3,7 +3,7 @@ import ColorStyle from "./ColorStyle.vue";
 import { Context } from "@/context";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import CreateFillMaskPanel from "./ModifyFillMaskPanel.vue";
-import { onUnmounted, reactive } from "vue";
+import { onMounted, onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { StrokeFillContextMgr } from "../ctx";
 

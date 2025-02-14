@@ -25,6 +25,7 @@ const { t } = useI18n();
 const name = ref<string>(data?.name ?? '边框样式');
 const desc = ref<string>(data?.description ?? '');
 const thickness = ref<string>('');
+const oldvalue = ref<string>('');
 const border = ref<BorderMaskType | undefined>(data?.border);
 const positonValue = ref<BorderPosition>(data?.border.position ?? BorderPosition.Inner);
 
@@ -41,9 +42,18 @@ function update() {
     if (data) {
         const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = data.border.sideSetting;
         thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
+       
     } else {
-        thickness.value = '1, 1, 1, 1';
+        const sideSetting = manager.fillCtx.strokeInfo?.sideSetting;
+        const position = manager.fillCtx.strokeInfo?.position;
+        if (typeof sideSetting === 'undefined') return;
+        if (typeof sideSetting === 'string') return;
+        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = sideSetting;
+        thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
+        if (position === undefined) return;
+        positonValue.value = position as BorderPosition;
     }
+    oldvalue.value = thickness.value;
 }
 
 function modifyName(value: string) {
@@ -67,18 +77,9 @@ function createStyle() {
 }
 
 const setThickness = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    let arrs = thickness.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
+    let arrs = thickness.value.replaceAll(/，/g, ',').replaceAll(/-/g, '').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
     const b = arrs.every(i => isNaN(Number(i)) === false);
-    target.blur();
-    if (!b) {
-        if (data) {
-            const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = data.border.sideSetting;
-            return thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
-        } else {
-            return thickness.value = '1, 1, 1, 1';
-        }
-    }
+    if (!b||!arrs.length) return thickness.value = oldvalue.value;
     if (arrs.length === 1) {
         arrs = arrs.concat(...arrs, ...arrs, ...arrs);
     }
@@ -88,11 +89,12 @@ const setThickness = (event: Event) => {
     if (arrs.length === 3) {
         arrs = arrs.concat(arrs[1]);
     }
-
-    const num = thickness.value.split(', ').map(i => Math.min(Number(i), 300));
-    thickness.value = num.join(', ');
+    thickness.value = arrs.join(', ')
+    if(thickness.value === oldvalue.value) return;
+    oldvalue.value = thickness.value;
+    const num = thickness.value.split(', ').map(i => Number(i))
     if (!data) return;
-    const sideType = data.border.sideSetting.sideType;
+    const sideType = num.every(i => i == num[0]) ? SideType.Normal : SideType.Custom;
     const side = new BorderSideSetting(sideType, num[0], num[3], num[2], num[1]);
     manager.modifyBorderThicknessMask(data.border, side);
 }
@@ -121,12 +123,12 @@ onUnmounted(() => {
         <div class="type">
             <div class="title">{{ t('stylelib.position') }}</div>
             <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
-                :selected="positonOptionsSource.find(i => i.data.value === (border?.position || BorderPosition.Inner))?.data"
+                :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
                 @select="positionSelect" :entry="'style'"></Select>
         </div>
         <div class="thickness">
             <div class="title">{{ t('stylelib.thickness') }}</div>
-            <input type="text" v-model="thickness" @change="setThickness">
+            <input type="text" v-focus v-model="thickness" @change="setThickness">
         </div>
         <div v-if="!data" :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
     </div>
