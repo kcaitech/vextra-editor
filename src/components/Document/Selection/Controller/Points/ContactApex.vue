@@ -9,7 +9,7 @@ import {
     Matrix,
     ShapeType,
     ShapeView,
-    ContactLineModifier
+    ContactLineModifier, Shape
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
@@ -39,9 +39,9 @@ const data: { apex1: Apex, apex2: Apex } = reactive({
 });
 const contact_points = ref<{ type: ContactType, point: ClientXY }[]>([]);
 const fromOrTo = ref<{
-    from: ShapeView | undefined,
-    to: ShapeView | undefined
-}>({ from: props.shape.from, to: props.shape.to });
+    from: Shape | undefined,
+    to: Shape | undefined
+}>({ from: props.shape.fromShape, to: props.shape.toShape });
 
 let { apex1, apex2 } = data;
 let isDragging = false;
@@ -57,7 +57,7 @@ let downXY = { x: 0, y: 0 };
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
-    fromOrTo.value = { from: props.shape.from, to: props.shape.to };
+    fromOrTo.value = { from: props.shape.fromShape, to: props.shape.toShape };
 }
 
 function update_dot_path() {

@@ -73,7 +73,6 @@ function update_slice_path() {
         if (!pre || !cur) continue;
 
         if (get_length(pre, cur) <= 30) continue;
-
         const r_p1 = points[i - 1];
         const r_p2 = points[i];
 

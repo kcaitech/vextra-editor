@@ -21,7 +21,6 @@ import {
     Page,
     PathShape,
     Shape,
-    ShapeFrame,
     ShapeType,
     ShapeView,
     StrokePaint,
@@ -34,9 +33,8 @@ import {
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
-import { getName, hidden_selection, Media, SVGReader } from '@/utils/content';
+import { hidden_selection, Media, SVGReader } from '@/utils/content';
 import { message } from './message';
-import { Action } from '@/context/tool';
 import { XYsBounding } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { v4 } from 'uuid';
