@@ -161,7 +161,7 @@ onUnmounted(() => {
     height: 32px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
 
     .value-panel-wrapper {
         display: flex;

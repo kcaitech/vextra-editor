@@ -155,7 +155,7 @@ function keydownRadius(event: KeyboardEvent, index: number) {
         </Tooltip>
     </div>
     <div class="tr" v-if="manager.radiusCtx.rect">
-        <MossInput2 class=" r-270" :icon="radius_icon" :draggable="typeof data[3] === 'number'" :value="data[3]"
+        <MossInput2 class="r-270" :icon="radius_icon" :draggable="typeof data[3] === 'number'" :value="data[3]"
             :disabled="disabled" @change="value => change(value, 3)" @dragstart="dragstart"
             @dragging="(e) => dragging(e, 3)" @dragend="dragend" @keydown="keydownRadius($event, 3)"
             @keyup="checkKeyup">
@@ -238,19 +238,19 @@ function keydownRadius(event: KeyboardEvent, index: number) {
     }
 
     .r-90 {
-        :deep(svg) {
+        :deep(img) {
             transform: rotate(90deg);
         }
     }
 
     .r-180 {
-        :deep(svg) {
+        :deep(img) {
             transform: rotate(180deg);
         }
     }
 
     .r-270 {
-        :deep(svg) {
+        :deep(img) {
             transform: rotate(270deg);
         }
     }
