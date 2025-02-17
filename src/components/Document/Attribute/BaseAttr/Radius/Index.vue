@@ -34,14 +34,14 @@ const radiusLibStatus = reactive<ElementStatus>({ id: '#radius-style-lib-panel',
 const radiusPanelStatusMgr = new ElementManager(
     props.context,
     radiusLibStatus,
-    { whiteList: ['.radius-style-lib-panel', '.clover', '.radius-left'] }
+    { whiteList: ['.radius-style-lib-panel', '.radius_clover', '.radius-left'] }
 );
 radiusCtxMgr.catchPanel(radiusPanelStatusMgr);
 
 function showRadiusPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('clover')) {
+        if (e.classList.contains('radius_clover')) {
             radiusPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
             break;
         }
@@ -86,7 +86,7 @@ onUnmounted(() => {
 <template>
     <div class="header">
         <div class="title">{{ t('stylelib.round') }}</div>
-        <div v-if="cloverVisible" class="clover" @click="showRadiusPanel($event)">
+        <div v-if="cloverVisible" class="radius_clover" @click="showRadiusPanel($event)">
             <SvgIcon :icon="style_icon"></SvgIcon>
         </div>
     </div>

@@ -33,7 +33,7 @@ const blurLibStatus = reactive<ElementStatus>({id: '#blur-lib-panel', visible: f
 const blurPanelStatusMgr = new ElementManager(
     props.context,
     blurLibStatus,
-    {whiteList: ['.blur-container', '.blur-lib-panel', '.mask-port-wrapper']}
+    {whiteList: ['.blur_clover', '.blur-lib-panel', '.blur_desc']}
 );
 blurCtxMgr.catchPanel(blurPanelStatusMgr);
 
@@ -42,12 +42,12 @@ const active = computed<boolean>(() => !!(blurCtx.value.mask || blurCtx.value.bl
 const showBlurPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('mask-port-wrapper')) {
+        if (e.classList.contains('blur_desc')) {
             e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 42}});
             break;
         }
-        if (e.classList.contains('blur-panel')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: 4, offsetTop: 42}});
+        if (e.classList.contains('blur_clover')) {
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -164, offsetTop: 42}});
             break;
         }
         e = e.parentElement;
@@ -74,7 +74,7 @@ onUnmounted(() => {
     <div class="blur-panel" ref="blurPanelTrigger">
         <TypeHeader :title="t('blur.blur')" @click="() => blurCtxMgr.init()" :active="active">
             <template #tool>
-                <div v-if="cloverVisible" class="clover" @click="showBlurPanel($event)">
+                <div v-if="cloverVisible" class="blur_clover" @click="showBlurPanel($event)">
                     <SvgIcon :icon="style_icon"/>
                 </div>
                 <div v-if="!blurCtx.blur || blurCtx.mixed" class="add" @click.stop="() => blurCtxMgr.create()">
@@ -85,7 +85,7 @@ onUnmounted(() => {
         <div v-if="blurCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
         <MaskPort v-else-if="blurCtx.maskInfo" @unbind="() => blurCtxMgr.unbind()"
                   @delete="() => blurCtxMgr.removeMask()">
-            <div class="desc" @click="showBlurPanel($event)">
+            <div class="blur_desc" @click="showBlurPanel($event)">
                 <div class="effect"/>
                 <div>{{ blurCtx.maskInfo.name }}</div>
             </div>
@@ -112,7 +112,7 @@ onUnmounted(() => {
         font-size: var(--font-default-fontsize);
     }
 
-    .add, .clover {
+    .add, .blur_clover {
         width: 28px;
         height: 28px;
         display: flex;
@@ -128,12 +128,12 @@ onUnmounted(() => {
         }
     }
 
-    .clover img {
+    .blur_clover img {
         padding: 2px;
         box-sizing: border-box;
     }
 
-    .clover:hover {
+    .blur_clover:hover {
         background-color: #F5F5F5;
     }
 
@@ -141,7 +141,7 @@ onUnmounted(() => {
         background-color: #F5F5F5;
     }
 
-    .desc {
+    .blur_desc {
         flex: 1;
         width: 100%;
         height: 100%;

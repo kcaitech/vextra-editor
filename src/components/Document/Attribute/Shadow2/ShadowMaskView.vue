@@ -30,7 +30,7 @@ onUnmounted(watchEffect(() => {
 </script>
 <template>
     <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()">
-        <div class="desc" @click="event => emits('show-style-lib', event)">
+        <div class="shadow_desc" @click="event => emits('show-style-lib', event)">
             <div class="effect" :style="{
                 boxShadow: `
                         ${colors[0].position.includes('in') ? 'inset' : ''} 
@@ -46,7 +46,7 @@ onUnmounted(watchEffect(() => {
     </MaskPort>
 </template>
 <style scoped lang="scss">
-.desc {
+.shadow_desc {
     flex: 1;
     width: 100%;
     height: 100%;

@@ -39,18 +39,18 @@ const shadowLibStatus = reactive<ElementStatus>({ id: '#shadow-style-lib-panel',
 const shadowPanelStatusMgr = new ElementManager(
     props.context,
     shadowLibStatus,
-    { whiteList: ['.shadow-style-lib-panel', '.clover', '.desc'] }
+    { whiteList: ['.shadow-style-lib-panel', '.shadow_clover', '.shadow_desc'] }
 );
 shadowCtxMgr.catchPanel(shadowPanelStatusMgr);
 
 function showShadowLib(event: MouseEvent) { /*打开填充样式库面板*/
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('clover')) {
+        if (e.classList.contains('shadow_clover')) {
             shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('desc')) {
+        if (e.classList.contains('shadow_desc')) {
             shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
@@ -75,7 +75,7 @@ onUnmounted(() => {
         <TypeHeader :title="t('attr.shadow')" :active="!!shadowCtx.shadows.length"
             @click.stop="() => shadowCtxMgr.init()">
             <template #tool>
-                <div v-if="cloverVisible" class="clover" @click="showShadowLib">
+                <div v-if="cloverVisible" class="shadow_clover" @click="showShadowLib">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!shadowCtx.mask || shadowCtx.mixed" class="create" @click="() => shadowCtxMgr.create()">
@@ -110,7 +110,7 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 8px;
 
-    .clover,
+    .shadow_clover,
     .create {
         width: 28px;
         height: 28px;
@@ -125,7 +125,7 @@ onUnmounted(() => {
         }
     }
 
-    .clover>img {
+    .shadow_clover>img {
         width: 12px;
         height: 12px;
     }

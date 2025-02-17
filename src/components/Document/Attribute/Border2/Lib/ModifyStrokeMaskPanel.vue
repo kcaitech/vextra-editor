@@ -93,10 +93,9 @@ const setThickness = (event: Event) => {
     if (arrs.length === 3) {
         arrs = arrs.concat(arrs[1]);
     }
-    thickness.value = arrs.join(', ')
-    if(thickness.value === oldvalue.value) return;
-    oldvalue.value = thickness.value;
-    const num = thickness.value.split(', ').map(i => Number(i))
+    if(arrs.join(', ') === oldvalue.value) return;
+    oldvalue.value = arrs.join(', ');
+    const num = arrs.map(i => Number(i))
     if (!data) return;
     const sideType = num.every(i => i == num[0]) ? SideType.Normal : SideType.Custom;
     const side = new BorderSideSetting(sideType, num[0], num[3], num[2], num[1]);

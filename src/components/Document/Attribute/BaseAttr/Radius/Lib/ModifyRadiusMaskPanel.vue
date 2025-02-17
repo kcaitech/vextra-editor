@@ -61,11 +61,7 @@ const setRadius = (event: Event) => {
     const b = arrs.every(i => isNaN(Number(i)) === false);
     target.blur();
     if (!b) {
-        if (data) {
-            return radius.value = [...data.radius].join(', ');
-        } else {
-            return radius.value = '0, 0, 0, 0';
-        }
+        update();
     }
     if (arrs.length === 1) {
         arrs = arrs.concat(...arrs, ...arrs, ...arrs);
@@ -78,7 +74,6 @@ const setRadius = (event: Event) => {
     }
 
     const num = arrs.map(i => Math.max(Number(i), 0));
-    radius.value = num.join(', ');
     if (!data) return;
     manager.modifyRadiusMask(data, num);
 }

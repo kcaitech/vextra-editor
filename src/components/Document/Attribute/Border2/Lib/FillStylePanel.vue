@@ -36,7 +36,7 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <div id="fill-style-lib-panel" class="fill-style-lib-panel">
+    <div id="border_fill-style-lib-panel" class="border_fill-style-lib-panel">
         <PopoverHeader :title="title" @create="showCreatePanel" @close="emits('close')" />
         <ColorStyle :context="context" :manager="manager" />
         <CreateFillMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
@@ -44,7 +44,7 @@ onUnmounted(() => {
     </div>
 </template>
 <style scoped lang="scss">
-.fill-style-lib-panel {
+.border_fill-style-lib-panel {
     width: 230px;
     height: fit-content;
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);

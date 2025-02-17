@@ -37,11 +37,11 @@ const fillCtx = ref<BorderFillsContext>({
 const fillCtxMgr = new StrokeFillContextMgr(props.context, fillCtx.value as BorderFillsContext);
 const cloverVisible = computed<boolean>(() => !(fillCtx.value.mask || fillCtx.value.mixed));
 
-const fillLibStatus = reactive<ElementStatus>({ id: '#fill-style-lib-panel', visible: false });
+const fillLibStatus = reactive<ElementStatus>({ id: '#border_fill-style-lib-panel', visible: false });
 const fillPanelStatusMgr = new ElementManager(
     props.context,
     fillLibStatus,
-    { whiteList: ['.fill-style-lib-panel', '.clover', '.desc'] }
+    { whiteList: ['.border_fill-style-lib-panel', '.border_clover', '.border_desc'] }
 );
 fillCtxMgr.catchPanel(fillPanelStatusMgr);
 
@@ -56,11 +56,11 @@ fillCtxMgr.catchPanel(strokePanelStatusMgr);
 function showFillLib(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('clover')) {
+        if (e.classList.contains('border_clover')) {
             fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('desc')) {
+        if (e.classList.contains('border_desc')) {
             fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
@@ -122,7 +122,7 @@ onUnmounted(() => {
     <!---------------------------------------------------------------------------------->
     <TypeHeader v-if="fillCtx.fills.length" :title="t('attr.stroke_color')" :active="!!fillCtx.fills.length">
         <template #tool>
-            <div v-if="cloverVisible" class="clover" @click="showFillLib">
+            <div v-if="cloverVisible" class="border_clover" @click="showFillLib">
                 <SvgIcon :icon="style_icon"/>
             </div>
             <div v-if="!fillCtx.mask || fillCtx.mixed" class="create" @click="() => fillCtxMgr.create()">
@@ -183,7 +183,7 @@ onUnmounted(() => {
         background-color: #F5F5F5;
     }
 
-    .clover,
+    .border_clover,
     .create {
         width: 28px;
         height: 28px;
@@ -198,7 +198,7 @@ onUnmounted(() => {
         }
     }
 
-    .clover > img {
+    .border_clover > img {
         width: 12px;
         height: 12px;
     }

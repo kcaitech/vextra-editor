@@ -31,14 +31,14 @@ onUnmounted(watchEffect(() => {
 </script>
 <template>
     <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()">
-        <div class="desc" @click="event => emits('show-style-lib', event)">
-            <ColorBlock :colors="colors as Fill[]" round disabled-alpha/>
+        <div class="fill_desc" @click="event => emits('show-style-lib', event)">
+            <ColorBlock :colors="(colors as Fill[])" round disabled-alpha/>
             <span>{{ name }}</span>
         </div>
     </MaskPort>
 </template>
 <style scoped lang="scss">
-.desc {
+.fill_desc {
     flex: 1;
     width: 100%;
     height: 100%;
