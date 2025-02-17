@@ -4,7 +4,7 @@
         <el-scrollbar>
             <div class="content">
                 <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager"
-                    :item="StrokeMaskPanelItem" :data="sheet" />
+                    :item="RadiusMaskPanelItem" :data="sheet" />
                 <div v-if="!sheets.length && keyword" class="null">{{ t('stylelib.null_search') }}</div>
                 <div v-if="!sheets.length && !keyword" class="null">{{ t('stylelib.null_data') }}</div>
             </div>
@@ -16,10 +16,10 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
 import SearchInput from "@/components/common/SearchInput.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
-import StrokeMaskPanelItem from './StrokeMaskPanelItem.vue';
+import RadiusMaskPanelItem from './RadiusMaskPanelItem.vue';
 import { StyleSheet } from "@kcdesign/data"
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
-import { StrokeFillContextMgr } from '../ctx';
+import { RadiusContextMgr } from '../ctx';
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -30,7 +30,7 @@ const { t } = useI18n();
  */
 const props = defineProps<{
     context: Context;
-    manager: StrokeFillContextMgr;
+    manager: RadiusContextMgr;
 }>();
 const keyword = ref<string>('')
 const libs = ref<{ label: string, value: string }[]>([]);
@@ -67,7 +67,7 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = '此文件样式';
 
         for (const v of sts.variables) {
-            if (v.typeId === "border-mask-living") cat.variables.push(v);
+            if (v.typeId === "radius-mask-living") cat.variables.push(v);
         }
         if (word) {
             const reg = new RegExp(`${word}`, 'img');

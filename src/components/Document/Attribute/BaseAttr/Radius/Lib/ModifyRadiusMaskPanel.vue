@@ -1,21 +1,19 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { BorderMask, BorderMaskType, BorderPosition, BorderSideSetting, SideType } from "@kcdesign/data";
+import { RadiusMask } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
 import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";
-import { StrokeFillContextMgr } from "../ctx";
-import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
-import { genOptions } from "@/utils/common";
+import { RadiusContextMgr } from "../ctx";
 
 /**
  * 修改样式弹框
  */
 const { context, manager, data } = defineProps<{
     context: Context;
-    manager: StrokeFillContextMgr;
-    data?: BorderMask;
+    manager: RadiusContextMgr;
+    data?: RadiusMask;
 }>();
 const emits = defineEmits<{
     (e: 'close'): void;
@@ -24,25 +22,15 @@ const emits = defineEmits<{
 const { t } = useI18n();
 const name = ref<string>(data?.name ?? '边框样式');
 const desc = ref<string>(data?.description ?? '');
-const thickness = ref<string>('');
-const border = ref<BorderMaskType | undefined>(data?.border);
-const positonValue = ref<BorderPosition>(data?.border.position ?? BorderPosition.Inner);
-
-const positonOptionsSource: SelectSource[] = genOptions([
-    [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
-    [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
-    [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
-]);
+const radius = ref<string>('');
 
 function update() {
     name.value = data?.name ?? '';
     desc.value = data?.description ?? '';
-    border.value = data?.border;
     if (data) {
-        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = data.border.sideSetting;
-        thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
+        radius.value = [...data.radius].join(', ');
     } else {
-        thickness.value = '1, 1, 1, 1';
+        radius.value = '0, 0, 0, 0';
     }
 }
 
@@ -63,24 +51,20 @@ function changeInput(value: string) {
 }
 
 function createStyle() {
-    if (!thickness.value || !positonValue.value) return;
-    const value = thickness.value.split(', ').map(i => Number(i));
-    const side = new BorderSideSetting(SideType.Custom, value[0], value[3], value[2], value[1]);
-    const border = new BorderMaskType(positonValue.value, side);
-    manager.createStrokeStyleLib(name.value, desc.value, border);
+    if (!radius.value) return;
+    manager.createStyleLib(name.value, desc.value);
 }
 
-const setThickness = (event: Event) => {
+const setRadius = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    let arrs = thickness.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
+    let arrs = radius.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
     const b = arrs.every(i => isNaN(Number(i)) === false);
     target.blur();
     if (!b) {
         if (data) {
-            const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = data.border.sideSetting;
-            return thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
+            return radius.value = [...data.radius].join(', ');
         } else {
-            return thickness.value = '1, 1, 1, 1';
+            return radius.value = '0, 0, 0, 0';
         }
     }
     if (arrs.length === 1) {
@@ -93,19 +77,10 @@ const setThickness = (event: Event) => {
         arrs = arrs.concat(arrs[1]);
     }
 
-    const num = arrs.map(i => Math.min(Number(i), 300));
-    thickness.value = num.join(', ');
+    const num = arrs.map(i => Math.max(Number(i), 0));
+    radius.value = num.join(', ');
     if (!data) return;
-    const sideType = data.border.sideSetting.sideType;
-    const side = new BorderSideSetting(sideType, num[0], num[3], num[2], num[1]);
-    manager.modifyBorderThicknessMask(data.border, side);
-}
-
-function positionSelect(selected: SelectItem) {
-    positonValue.value = selected.value as BorderPosition;
-    if (!data) return;
-    if (data?.border.position === selected.value) return;
-    manager.modifyBorderPositionMask(data.border, selected.value as BorderPosition);
+    manager.modifyRadiusMask(data, num);
 }
 
 onMounted(() => {
@@ -118,25 +93,20 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="modify-stroke-style-panel" id="modify-stroke-style-panel">
+    <div class="modify-radius-style-panel" id="modify-radius-style-panel">
         <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" @changeInput="changeInput" />
-        <div class="type" v-if="data">
-            <div class="title">{{ t('stylelib.position') }}</div>
-            <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
-                :selected="positonOptionsSource.find(i => i.data.value === (border?.position || BorderPosition.Inner))?.data"
-                @select="positionSelect" :entry="'style'"></Select>
-        </div>
-        <div class="thickness" v-if="data">
-            <div class="title">{{ t('stylelib.thickness') }}</div>
-            <input type="text" v-model="thickness" @change="setThickness">
+            @modify-desc="modifyDesc" @changeInput="changeInput"/>
+
+        <div class="radius" v-if="data">
+            <div class="title">{{ t('stylelib.round') }}</div>
+            <input type="text" v-model="radius" @change="setRadius">
         </div>
         <div v-if="!data" :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
     </div>
 </template>
 <style scoped lang="scss">
-.modify-stroke-style-panel {
+.modify-radius-style-panel {
     position: fixed;
     display: flex;
     flex-direction: column;
@@ -161,7 +131,7 @@ onUnmounted(() => {
     }
 
 
-    .thickness {
+    .radius {
 
         display: flex;
         align-items: center;

@@ -520,7 +520,7 @@ const delStyleRadius = () => {
 const closePanel = () => {
     radiusPanelStatusMgr.close();
 }
-
+ 
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     update();

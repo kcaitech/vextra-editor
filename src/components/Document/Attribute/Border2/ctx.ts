@@ -1,6 +1,6 @@
 import { Fill, FillMask, FillType, Style, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType } from "@kcdesign/data";
 import { Context } from "@/context";
-import { BorderData, get_actions_add_mask, get_actions_border_color, get_actions_border_enabled, get_actions_border_mask, get_actions_border_unify, get_actions_fill_mask, getDideStr } from "@/utils/shape_style";
+import { BorderData, get_actions_add_mask, get_actions_border_mask, get_actions_border_unify, get_actions_fill_mask, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";

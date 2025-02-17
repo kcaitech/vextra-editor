@@ -1,10 +1,10 @@
 import {
     Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
-    Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView
+    Style, Color, BasicArray, ArtboardView
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import {
-    get_actions_add_mask, get_actions_fill_delete,
+    get_actions_add_mask,
     get_actions_fill_mask, get_actions_fill_unify
 } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
