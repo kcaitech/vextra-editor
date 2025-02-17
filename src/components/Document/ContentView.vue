@@ -70,14 +70,14 @@ const cursor = ref<string>('');
 const rootId = ref<string>('content');
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>(color2string(Page.defaultBGColor));
-const avatarVisi = ref(props.context.menu.isUserCursorVisible);
+const avatarVisible = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
 const cellStatus = ref();
 const creatorMode = ref<boolean>(false);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 const image_tile_mode = ref<boolean>(false);
-const isvisible = ref(false);
+const isExportPanelVisible = ref(false);
 const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 });
 const mouse = new Mouse(props.context);
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
@@ -435,13 +435,13 @@ function updateBackground(page?: PageView) {
 function menu_watcher(type: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
     if (type === Menu.CHANGE_USER_CURSOR) {
-        avatarVisi.value = props.context.menu.isUserCursorVisible;
+        avatarVisible.value = props.context.menu.isUserCursorVisible;
     } else if (type === Menu.OPEN_SPLIT_CELL) {
         cellStatus.value = mount;
         cellSetting.value = true;
     }
     if (type === Menu.EXPORT_DIALOG) {
-        isvisible.value = props.context.menu.isExportDialog;
+        isExportPanelVisible.value = props.context.menu.isExportDialog;
         props.context.escstack.save(v4(), export_dialog_show);
     } else if (type === Menu.AUTO_LAYOUT) {
         autoLayoutFn(props.context, t);
@@ -449,8 +449,8 @@ function menu_watcher(type: number, mount?: string) {
 }
 
 const export_dialog_show = () => {
-    const is_achieve_expected_results = isvisible.value;
-    isvisible.value = false;
+    const is_achieve_expected_results = isExportPanelVisible.value;
+    isExportPanelVisible.value = false;
     return is_achieve_expected_results;
 }
 
@@ -575,7 +575,7 @@ comps.push(
                 return matrix
             },
             get visible() {
-                return avatarVisi.value
+                return avatarVisible.value
             }
         }
     },
@@ -670,7 +670,7 @@ comps.push(
     // 图层导出载体
     {
         component: () => {
-            if (isvisible.value) {
+            if (isExportPanelVisible.value) {
                 return h(BatchExport, {
                     context: props.context
                 });
