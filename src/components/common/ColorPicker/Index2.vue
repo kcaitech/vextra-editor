@@ -39,12 +39,7 @@ const compos = computed(() => {
 });
 
 const data = ref<RGBACatch | GradientCatch | PatternCatch>(props.color);
-const options = computed(() => {
-    if (!props.include) return [FillType.SolidColor, FillType.Gradient, FillType.Pattern];
-    else {
-        return [...props.include];
-    }
-});
+const options = computed(() => props.include ? [...props.include] : [FillType.SolidColor, FillType.Gradient, FillType.Pattern]);
 
 const editor = props.editor;
 
@@ -80,5 +75,6 @@ onUnmounted(watchEffect(update));
     flex-direction: column;
     gap: 10px;
     justify-content: space-between;
+    padding-bottom: 10px;
 }
 </style>
