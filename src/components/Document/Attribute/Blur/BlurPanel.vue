@@ -9,26 +9,27 @@ import BlurDetail from "@/components/Document/Attribute/Blur/BlurDetail.vue";
 import { BlurType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 
-const {context, blur, manager} = defineProps<{
+const { context, blur, manager } = defineProps<{
     context: Context;
     blur: BlurCatch;
     manager: BlurContextMgr;
+    del?: boolean
 }>();
-const {t} = useI18n();
+const { t } = useI18n();
 const blurTypeOptions = [
-    {label: t(`blur.${BlurType.Gaussian}`), value: BlurType.Gaussian},
-    {label: t(`blur.${BlurType.Background}`), value: BlurType.Background}
+    { label: t(`blur.${BlurType.Gaussian}`), value: BlurType.Gaussian },
+    { label: t(`blur.${BlurType.Background}`), value: BlurType.Background }
 ];
 </script>
 
 <template>
     <div class="blur-container">
-        <CheckBox :check="blur.enable" @change="() => manager.modifyEnable()"/>
+        <CheckBox :check="blur.enable" @change="() => manager.modifyEnable(blur.blur)" />
         <SelectBanana :context="context" :options="blurTypeOptions" :value="blur.type"
-                      @change="(val) => manager.modifyBlurType(val)"/>
-        <BlurDetail :context="context" :blur="blur"/>
-        <div class="delete" @click="() => manager.removeBlur()">
-            <SvgIcon :icon="delete_icon"/>
+            @change="(val) => manager.modifyBlurType(blur.blur, val)" />
+        <BlurDetail :context="context" :blur="blur" :manager="manager" />
+        <div :class="{ 'delete': true, disabled: del }" @click="() => manager.removeBlur()">
+            <SvgIcon :icon="delete_icon" />
         </div>
     </div>
 </template>
@@ -53,7 +54,7 @@ const blurTypeOptions = [
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > img {
+        >img {
             width: 16px;
             height: 16px;
         }
@@ -70,6 +71,11 @@ const blurTypeOptions = [
 
     .delete:hover {
         background-color: #F5F5F5;
+    }
+
+    .disabled {
+        opacity: 0.3;
+        pointer-events: none;
     }
 }
 </style>

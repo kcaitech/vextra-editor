@@ -8,8 +8,11 @@ import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
 import { modify_imgs } from "@/utils/content";
 
+type ColorFillType = "fills" | "borders";
+
 export class FillsPicker extends ColorPickerEditor {
     fill: Fill | undefined;
+    fill_type: ColorFillType = 'fills';
 
     constructor(public context: Context, type: string) {
         super(context, type);
@@ -45,7 +48,11 @@ export class FillsPicker extends ColorPickerEditor {
             if (this.fill.parent?.parent instanceof FillMask) {
                 return [this.fill];
             } else {
-                return this.flat.map(i => i.getFills()[this.index]);
+                if (this.fill_type === 'fills') {
+                    return this.flat.map(i => i.getFills()[this.index]);
+                } else {
+                    return this.flat.map(i => i.getBorders().strokePaints[this.index]);
+                }
             }
         })());
     }
@@ -56,6 +63,7 @@ export class FillsPicker extends ColorPickerEditor {
         this.pageEditor.setFillsType(this.targetFills.map(fill => ({ fill, type })));
         super.modifyFillType(type);
         this.hiddenCtrl();
+        this.commit();
     }
 
     /* 修改填充纯色 */
@@ -86,8 +94,8 @@ export class FillsPicker extends ColorPickerEditor {
         this.getSelection();
         const color = new Color(c.A, c.R, c.G, c.B);
         const stop = new Stop([0] as BasicArray<number>, v4(), c.position, color);
-        const actions = get_action_gradient_stop(this.flat, this.index, stop, "fills");
-        this.pageEditor.addShapesGradientStop(actions);
+        this.pageEditor.addShapesGradientStop(this.targetFills.map(fill => ({ fill, stop })));
+        this.commit();
         this.hiddenCtrl();
         return stop.id;
     }
@@ -182,15 +190,15 @@ export class FillsPicker extends ColorPickerEditor {
             .then(res => {
                 if (!res) return;
                 const result = res as ImagePack;
-                const {buff, base64, size} = result;
-                const media = {name: file.name || '', frame: result.size, buff, base64};
+                const { buff, base64, size } = result;
+                const media = { name: file.name || '', frame: result.size, buff, base64 };
                 const container: any = {};
                 modify_imgs(this.context, [media], container);
                 const keys = Array.from(Object.keys(container) || []) as string[];
                 this.getSelection();
-                this.api.modifyFillImageRef(this.targetFills, keys[0], {buff, base64}, size.width, size.height);
+                this.api.modifyFillImageRef(this.targetFills, keys[0], { buff, base64 }, size.width, size.height);
                 this.hiddenCtrl();
-                const upload = this.flat.map(shape => ({shape, upload: [{buff, ref: keys[0]}]}));
+                const upload = this.flat.map(shape => ({ shape, upload: [{ buff, ref: keys[0] }] }));
                 imageLoader.upload(upload)
             })
             .finally(() => {

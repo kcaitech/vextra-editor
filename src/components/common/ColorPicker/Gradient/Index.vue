@@ -15,7 +15,8 @@ const editor = props.editor;
 
 const gradientStopAt = ref<number>((() => {
     const id = editor.context.color.selected_stop ?? props.data.stopIds[0];
-    return props.data.stopIds.findIndex(i => i === id)
+    const index = props.data.stopIds.findIndex(i => i === id);
+    return Math.max(0, index);
 })());
 
 const stop = ref<RGBACatch>(props.data.RGBAs[gradientStopAt.value]);
@@ -29,14 +30,16 @@ function colorCtxWatcher(t: any) {
         const id = editor.context.color.selected_stop;
         let index = props.data.stopIds.findIndex(i => i === id);
         if (index === -1) {
-            index = Math.min(props.data.stopIds.length - 1, 1);
+            index = Math.min(props.data.stopIds.length - 1, 0);
             editor.context.color.select_stop(props.data.stopIds[index]);
         }
         gradientStopAt.value = index;
     } else if (t === ColorCtx.STOP_DELETE) {
-        if (props.data.RGBAs.length < 3) return;
+        if (props.data.RGBAs.length < 2) return;
         editor.removeStop(gradientStopAt.value);
-        editor.context.color.select_stop(undefined);
+        const index = gradientStopAt.value === props.data.stopIds.length - 1 ? 0 : gradientStopAt.value;
+        const id = props.data.stopIds[index];
+        editor.context.color.select_stop(id);
     }
 }
 
@@ -45,7 +48,11 @@ function changeStop(stopAt: number) {
 }
 
 function createStop(cc: RGBACatch) {
-    editor.context.color.select_stop(editor.createStop(cc));
+    const page = editor.context.selection.selectedPage!;
+    const id = editor.createStop(cc);
+    editor.context.nextTick(page, () => {
+        editor.context.color.select_stop(id);
+    })
 }
 
 function setColor(cc: RGBACatch) {
@@ -93,9 +100,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-<Station :at="gradientStopAt" :gradient="data"
-         @change-stop="changeStop"
-         @create-stop="createStop" @reverse="reverse" @rotate="rotate"
-         @drag-start="dragStopBegin" @dragging="draggingStop" @drag-end="dragStopEnd"/>
-<RGBAModel :stop="stop" @change="setColor" @drag-begin="dragBegin" @dragging="dragging" @drag-end="dragEnd"/>
+    <Station :at="gradientStopAt" :gradient="data" @change-stop="changeStop" @create-stop="createStop"
+        @reverse="reverse" @rotate="rotate" @drag-start="dragStopBegin" @dragging="draggingStop"
+        @drag-end="dragStopEnd" />
+    <RGBAModel :stop="stop" @change="setColor" @drag-begin="dragBegin" @dragging="dragging" @drag-end="dragEnd" />
 </template>

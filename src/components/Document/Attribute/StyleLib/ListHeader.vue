@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import add_icon from "@/assets/icons/svg/add.svg";
-defineProps<{ title: string }>();
+defineProps<{ title: string, create?: boolean }>();
 const emits = defineEmits(["create"]);
 </script>
 <template>
     <div class="list-header">
-        <div class="title">{{ title}}</div>
-        <div class="create" @click.stop="emits('create')">
-            <SvgIcon :icon="add_icon"/>
+        <div class="title">{{ title }}</div>
+        <div v-if="!create" class="create" @click.stop="emits('create')">
+            <SvgIcon :icon="add_icon" />
         </div>
     </div>
 </template>

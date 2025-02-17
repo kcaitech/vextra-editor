@@ -223,15 +223,19 @@ export function get_actions_fill_opacity(shapes: ShapeView[], index: number, opa
 }
 
 export function get_actions_fill_unify(shapes: ShapeView[]) {
-    const actions: { fills: BasicArray<Fill>, value: Fill[] }[] = [];
+    const actions: { shape: ShapeView, fills: BasicArray<Fill>, value: Fill[] }[] = [];
     let fills: Fill[] = [];
     let s = 0;
     while (fills.length < 1 && s < shapes.length) {
         fills = shapes[s]?.getFills();
         s++;
     }
+    if (fills.length < 1) {
+        const id = shapes[0].style.fillsMask!;
+        fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills;
+    }
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
+        if (shapes[i].type === ShapeType.Cutout) continue;
         const new_fills: Fill[] = [];
         for (let i = 0; i < fills.length; i++) {
             const fill = fills[i];
@@ -258,7 +262,7 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
             new_fill.contextSettings = contextSettings;
             new_fills.push(new_fill);
         }
-        actions.push({ fills: shapes[i].style.fills, value: new_fills });
+        actions.push({ shape: shapes[i], fills: shapes[i].style.fills, value: new_fills });
     }
     return actions;
 }
@@ -462,14 +466,14 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
 export const getDideStr = (side: BorderSideSetting, v: BorderSideSetting | string) => {
     if (typeof v === 'string') return false;
     const str = [
-        side.sideType,
+        // side.sideType,
         side.thicknessTop,
         side.thicknessRight,
         side.thicknessBottom,
         side.thicknessLeft
     ].join('-');
     const str2 = [
-        v.sideType,
+        // v.sideType,
         v.thicknessTop,
         v.thicknessRight,
         v.thicknessBottom,
@@ -490,12 +494,12 @@ export function get_actions_add_boder(shapes: ShapeView[], strokePaint: Fill) {
 }
 
 export function get_actions_border_mask(shapes: ShapeView[]) {
-    const actions: { border: BorderMaskType, type: ShapeType, style: Style }[] = [];
+    const actions: { target: ShapeView, border: BorderMaskType, type: ShapeType, style: Style }[] = [];
     const id = shapes[0].style.bordersMask!;
     const border = (shapes[0].style.getStylesMgr()?.getSync(id) as BorderMask).border
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ border, type: shapes[i].type, style: shapes[i].style });
+        actions.push({ target: shapes[i], border, type: shapes[i].type, style: shapes[i].style });
     }
     return actions;
 }
@@ -522,17 +526,21 @@ export function get_actions_border_color(shapes: ShapeView[], index: number, col
 
 export function get_actions_border_unify(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
-    let borders: Border | undefined;
+    let fills: Fill[] = [];
     let s = 0;
-    while (!borders && s < shapes.length) {
-        borders = shapes[s]?.getBorders();
+    while (!fills.length && s < shapes.length) {
+        fills = shapes[s]?.getBorders().strokePaints;
         s++;
     }
+    if (!fills.length) {
+        const id = shapes[0].style.borders.fillsMask!
+        fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
+    }
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
+        if (shapes[i].type === ShapeType.Cutout) continue;
         const newStrokePaints: Fill[] = [];
-        for (let i = 0; i < borders!.strokePaints.length; i++) {
-            const strokePaint = borders!.strokePaints[i];
+        for (let i = 0; i < fills.length; i++) {
+            const strokePaint = fills[i];
             const { isEnabled, fillType, color } = strokePaint;
             const newStrokePaint = new Fill(new BasicArray(0), v4(), isEnabled, fillType, color);
             if (strokePaint.gradient) {
@@ -713,7 +721,7 @@ export function get_actions_shadow_mask(shapes: ShapeView[]) {
     shadows = (shapes[0].style.getStylesMgr()?.getSync(id) as ShadowMask).shadows
 
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
+        if (shapes[i].type === ShapeType.Cutout) continue;
         const new_shadows: Shadow[] = [];
         for (let i = 0; i < shadows.length; i++) {
             const shadow = shadows[i];
@@ -735,8 +743,12 @@ export function get_actions_shadow_unify(shapes: ShapeView[]) {
         shadows = shapes[s]?.getShadows();
         s++;
     }
+    if (shadows.length < 1) {
+        const id = shapes[0].style.shadowsMask!
+        shadows = (shapes[0].style.getStylesMgr()?.getSync(id) as ShadowMask).shadows
+    }
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
+        if (shapes[i].type === ShapeType.Cutout) continue;
         const new_shadows: Shadow[] = [];
         for (let i = 0; i < shadows.length; i++) {
             const shadow = shadows[i];
@@ -1053,13 +1065,17 @@ export function get_actions_blur_mask(shapes: ShapeView[]) {
 }
 
 export function get_actions_blur_unify(shapes: ShapeView[]) {
-    const actions: { style: Basic & { blur: Blur | undefined; }, blur: Blur }[] = [];
+    const actions: { shape: ShapeView, style: Basic & { blur: Blur | undefined; }, blur: Blur }[] = [];
     let blur: Blur;
     blur = shapes.findLast(shape => shape.style.blur !== undefined)?.style.blur as Blur;
+    if (!blur) {
+        const id = shapes[0].style.blursMask!;
+        blur = (shapes[0].style.getStylesMgr()?.getSync(id) as BlurMask).blur
+    }
     for (let i = 0; i < shapes.length; i++) {
         const { isEnabled, saturation, type, center, motionAngle, radius } = blur;
         const new_blur = new Blur(new BasicArray(), isEnabled, new Point2D(center.x, center.y), saturation, type, motionAngle, radius);
-        actions.push({ style: shapes[i].style as any, blur: new_blur });
+        actions.push({ shape: shapes[i], style: shapes[i].style as any, blur: new_blur });
     }
     return actions;
 }

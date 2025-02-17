@@ -1,13 +1,13 @@
 import { Fill, FillMask, FillType, Style, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType } from "@kcdesign/data";
 import { Context } from "@/context";
-import { BorderData, get_actions_add_mask, get_actions_border_color, get_actions_border_enabled, get_actions_border_mask, get_actions_border_unify, get_actions_fill_color, get_actions_fill_delete, get_actions_fill_enabled, get_actions_fill_mask, get_actions_fill_unify, getDideStr } from "@/utils/shape_style";
+import { BorderData, get_actions_add_mask, get_actions_border_color, get_actions_border_enabled, get_actions_border_mask, get_actions_border_unify, get_actions_fill_mask, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import { FillCatch, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
 
 function stringifyFills(sye: { style: Style, fills: Fill[] }) {
-    if (sye.style.fillsMask) return sye.style.fillsMask;
+    if (sye.style.borders.fillsMask) return sye.style.borders.fillsMask;
     return sye.fills.reduce((p, c) => p + stringifyFill(c), '')
 
     function stringifyFill(fill: Fill) {
@@ -160,21 +160,21 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
-        const actions: { fills: BasicArray<Fill>, fill: Fill }[] = [];
+        const actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[] = [];
         if (mask) {
             const color = new Color(1, 0, 0, 0);
             const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
-            actions.push({ fills: mask.fills, fill });
+            actions.push({ fills: mask.fills, fill, index: mask.fills.length });
         } else {
             const color = new Color(1, 0, 0, 0);
             for (const view of this.selected) {
                 const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
                 const fills = view.getBorders().strokePaints as BasicArray<Fill>;
-                actions.push({ fills, fill });
+                actions.push({ fills, fill, index: fills.length  });
             }
             this.hiddenCtrl();
         }
-        this.editor.shapesAddBorder(actions);
+        this.editor.createFill(actions);
     }
 
     unify() {
@@ -195,7 +195,7 @@ export class StrokeFillContextMgr extends StyleCtx {
                 actions.push({ fills, index });
             }
         }
-        this.editor.shapesDeleteBorder(actions);
+        this.editor.shapesDeleteFill(actions);
     }
 
     removeAll() {
@@ -204,26 +204,23 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     modifyVisible(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
-            const mask = fill.parent.parent as FillMask;
-            this.editor4Doc.modifyFillMaskFillEnabled(mask.sheet, mask.id, this.getIndexByFill(fill), !fill.isEnabled);
+            this.editor.setFillsEnabled([fill], !fill.isEnabled);
         } else {
-            const actions = get_actions_border_enabled(this.selected, this.getIndexByFill(fill), !fill.isEnabled);
-            this.editor.setShapesBorderEnabled(actions);
+            const index = this.getIndexByFill(fill);
+            this.editor.setFillsEnabled(this.selected.map(v => v.getBorders().strokePaints[index]), !fill.isEnabled);
+            this.hiddenCtrl();
         }
     }
 
     modifyFillHex(event: Event, fill: Fill) {
         const rgb = getRGBFromInputEvent(event);
         if (!rgb) return;
-
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
         const index = this.getIndexByFill(fill);
-        const selected = this.selected;
         if (fill.parent?.parent instanceof FillMask) {
-            const mask = fill.parent.parent as FillMask;
-            this.editor4Doc.modifyFillMaskFillColor(mask.sheet, mask.id, index, color);
+            this.editor.setFillsColor([{ fill, color }]);
         } else {
-            this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
+            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getBorders().strokePaints[index], color })));
             this.hiddenCtrl(event);
         }
     }
@@ -239,11 +236,9 @@ export class StrokeFillContextMgr extends StyleCtx {
         );
         const index = this.getIndexByFill(fill);
         if (fill.parent?.parent instanceof FillMask) {
-            const mask = fill.parent.parent as FillMask;
-            this.editor4Doc.modifyFillMaskFillColor(mask.sheet, mask.id, index, color);
+            this.editor.setFillsColor([{ fill, color }]);
         } else {
-            const selected = this.selected;
-            this.editor.setShapesBorderColor(get_actions_border_color(selected, index, color));
+            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getBorders().strokePaints[index], color })));
             this.hiddenCtrl(event);
         }
     }

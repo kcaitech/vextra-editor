@@ -82,7 +82,10 @@ const get_linear_points = () => {
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
     if (!gradient || gradient.gradientType !== GradientType.Linear) return;
-    active.value = props.context.color.selected_stop;
+    let id = props.context.color.selected_stop ?? gradient.stops[0].id;
+    const index = (gradient.stops as any[]).findIndex(i => i.id === id);
+    if (index === -1) id = gradient.stops[0].id;
+    active.value = id;
     let frame = shape.frame;
     let d1;
     let d2;
@@ -561,45 +564,46 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
-     :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
-    <g v-if="dot">
-        <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate - 90"/>
-        <rect width="20" :height="line_length" ref="stop_container"
-              :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }" fill="transparent"
-              @mousemove="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)" @mouseenter="rect_enter"
-              @mouseleave="rect_leave"/>
-        <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="black" stroke-width="3"/>
-        <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="white" stroke-width="2"/>
-        <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"/>
-        <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"
-                @mousedown.stop="(e) => dot_mousedown(e, dot1.type)"/>
-        <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"/>
-        <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
-                @mousedown.stop="(e) => dot_mousedown(e, dot2.type)"/>
-        <g v-for="(stop, index) in stops" :key="index" @mouseenter="stop_content_enter" @mouseleave="stop_content_leave"
-           :style="{ transform: `translate(${stop.x + 3.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
-            <g
-                transform="matrix(0.70710688829422,0.7071067094802856,-0.7071066498756409,0.70710688829422,3.2218211561925614,-7.778166386438556)">
-                <path
-                    d="M10.99998950958252 7.77817440032959C10.99998950958252 3.48240729750328 14.4823968070858 0 18.77816390991211 0L18.77816390991211 0C23.07393101273842 0 26.5563383102417 3.482407297503281 26.5563383102417 7.77817440032959L26.5563383102417 7.77817440032959C26.5563383102417 12.073941503155899 23.07393101273842 15.55634880065918 18.77816390991211 15.55634880065918L10.99998950958252 15.55634880065918C10.99998950958252 15.55634880065918 10.99998950958252 15.55634880065918 10.99998950958252 15.55634880065918Z"
-                    :fill="active === stop.id ? '#1878f5' : '#fff'"/>
-            </g>
-            <clipPath id="avatar">
-                <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
-                         transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)"
-                         clip-rule="evenodd"/>
-            </clippath>
-            <image :xlink:href="trans_bgc" width="22" height="22" x="0" y="0" clip-path="url(#avatar)"
-                   preserveAspectRatio="none meet"/>
-            <g
-                transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)">
-                <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
-                         :fill="to_rgba(stop.color)" @mouseenter="(e) => stop_enter(e, index)" @mouseleave="stop_leave"
-                         @mousedown.stop="(e) => stop_mousedown(e, stop.id!)" @mousemove="update_percent"/>
+    <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
+        :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
+        <g v-if="dot">
+            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate - 90" />
+            <rect width="20" :height="line_length" ref="stop_container"
+                :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }"
+                fill="transparent" @mousemove="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"
+                @mouseenter="rect_enter" @mouseleave="rect_leave" />
+            <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="black" stroke-width="3" />
+            <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="white" stroke-width="2" />
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y" />
+            <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"
+                @mousedown.stop="(e) => dot_mousedown(e, dot1.type)" />
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y" />
+            <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
+                @mousedown.stop="(e) => dot_mousedown(e, dot2.type)" />
+            <g v-for="(stop, index) in stops" :key="index" @mouseenter="stop_content_enter"
+                @mouseleave="stop_content_leave"
+                :style="{ transform: `translate(${stop.x + 3.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
+                <g
+                    transform="matrix(0.70710688829422,0.7071067094802856,-0.7071066498756409,0.70710688829422,3.2218211561925614,-7.778166386438556)">
+                    <path
+                        d="M10.99998950958252 7.77817440032959C10.99998950958252 3.48240729750328 14.4823968070858 0 18.77816390991211 0L18.77816390991211 0C23.07393101273842 0 26.5563383102417 3.482407297503281 26.5563383102417 7.77817440032959L26.5563383102417 7.77817440032959C26.5563383102417 12.073941503155899 23.07393101273842 15.55634880065918 18.77816390991211 15.55634880065918L10.99998950958252 15.55634880065918C10.99998950958252 15.55634880065918 10.99998950958252 15.55634880065918 10.99998950958252 15.55634880065918Z"
+                        :fill="active === stop.id ? '#1878f5' : '#fff'" />
+                </g>
+                <clipPath id="avatar">
+                    <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
+                        transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)"
+                        clip-rule="evenodd" />
+                </clippath>
+                <image :xlink:href="trans_bgc" width="22" height="22" x="0" y="0" clip-path="url(#avatar)"
+                    preserveAspectRatio="none meet" />
+                <g
+                    transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)">
+                    <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
+                        :fill="to_rgba(stop.color)" @mouseenter="(e) => stop_enter(e, index)" @mouseleave="stop_leave"
+                        @mousedown.stop="(e) => stop_mousedown(e, stop.id!)" @mousemove="update_percent" />
+                </g>
             </g>
         </g>
-    </g>
-</svg>
-<Percent v-if="percent_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"/>
+    </svg>
+    <Percent v-if="percent_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent" />
 </template>

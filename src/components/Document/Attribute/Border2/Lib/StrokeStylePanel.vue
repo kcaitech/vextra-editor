@@ -3,12 +3,12 @@ import StrokeStyle from "./StrokeStyle.vue";
 import { Context } from "@/context";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import CreateStrokeMaskPanel from "./ModifyStrokeMaskPanel.vue";
-import { onUnmounted, reactive } from "vue";
+import { computed, onMounted, onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { useI18n } from "vue-i18n";
 import { StrokeFillContextMgr } from "../ctx";
 
-/**
+/** 
  * 填充样式库面板。用于展示样式列表、创建样式
  */
 const { context, manager, title } = defineProps<{ context: Context, manager: StrokeFillContextMgr, title: string }>();
@@ -33,13 +33,17 @@ function showCreatePanel(event: MouseEvent) {
     }
 }
 
+const create = computed(() => {
+    return manager.fillCtx.strokeInfo?.position !== 'mixed' && manager.fillCtx.strokeInfo?.sideSetting !== 'mixed';
+})
+
 onUnmounted(() => {
     panelStatusMgr.unmounted();
 });
 </script>
 <template>
     <div id="stroke-style-lib-panel" class="stroke-style-lib-panel">
-        <PopoverHeader :title="title" @create="showCreatePanel" @close="emits('close')" />
+        <PopoverHeader :title="title" :create="create" @create="showCreatePanel" @close="emits('close')" />
         <StrokeStyle :context="context" :manager="manager" />
         <CreateStrokeMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
             @close="() => panelStatusMgr.close()" />

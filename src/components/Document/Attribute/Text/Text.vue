@@ -2,13 +2,14 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed, shallowRef } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef, reactive } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
     AsyncTextAttrEditor,
     AttrGetter,
     BasicArray,
+    Fill,
     FillType,
     Gradient,
     GradientType,
@@ -36,7 +37,9 @@ import { Attribute } from '@/context/atrribute';
 import { format_value, is_mac } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
 import TextStyle from '@/components/Document/Attribute/StyleLib/TextStyle.vue';
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { v4 } from 'uuid';
+import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 
 interface Props {
     context: Context
@@ -87,6 +90,16 @@ const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
+const fills=ref<Fill[]>([])
+const textLibStatus = reactive<ElementStatus>({ id: '#text-lib-panel', visible: false });
+const textPanelStatusMgr = new ElementManager(
+    props.context,
+    textLibStatus,
+    {
+        offsetLeft: -250,
+        whiteList: ['.text-lib-panel', '.text-left']
+    }
+);
 
 function toHex(r: number, g: number, b: number, prefix = true) {
     const hex = (n: number) => n.toString(16)
@@ -214,7 +227,7 @@ const changeTextSize = (size: number) => {
     showSize.value = false;
     const shape = props.textShapes[0] as TextShapeView
     const editor = props.context.editor4TextShape(shape)
-    
+
     if (shapes.value.length === 1) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
@@ -600,6 +613,8 @@ const _textFormat = () => {
         if (format.gradient === 'unlikeness') gradient.value = undefined;
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
+
+    fills.value=[new Fill(new BasicArray<number>,v4(),true,FillType.SolidColor,highlight.value!)]
     reflush.value++;
 }
 const textFormat = throttle(_textFormat, 0, { leading: true })
@@ -1290,50 +1305,23 @@ function click(e: Event, variate: boolean) {
     variate = true;
 }
 
-const Top=ref<number>(0)
-const Left=ref<number>(0)
-const showtext=ref<boolean>(false)
-const openTextPanel=(e: MouseEvent)=>{
-    let el = e.target as HTMLElement;
-    while (el.className !== 'text-panel') {
-        if (el.parentElement) {
-            el = el.parentElement;
+const showTextPanel = (event: MouseEvent) => {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('text-panel')) {
+            e && textPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
+            break;
         }
-    }
-    const { top, left } = el.getBoundingClientRect();
-    Top.value = top;
-    Left.value = left - 250;
-    showtext.value = !showtext.value
-    props.context.escstack.save(v4(), close);
-    if (showtext.value) {
-        document.addEventListener('click', checktargetlist)
-    }else{
-        document.removeEventListener('click', checktargetlist)
+        if (e.classList.contains('text-left')) {
+            e && textPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
+            break;
+        }
+        e = e.parentElement;
     }
 }
 
-function close() {
-    const is_achieve_expected_results = showtext.value;
-    showtext.value = false;
-    document.removeEventListener('click', checktargetlist)
-    return is_achieve_expected_results;
-}
-
-function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelector('.shadow-style')
-    const muen2 = document.querySelector('.shadow-container')
-    if (!muen) return;
-    if (!muen2) return;
-    if (!muen.contains(e.target as HTMLElement) && !muen2.contains(e.target as HTMLElement)) {
-        showtext.value = false
-        document.removeEventListener('click', checktargetlist)
-    }
-}
-
-const closepanel=()=>{
-    props.context.escstack.execute()
-    showtext.value=false
-    document.removeEventListener('click', checktargetlist)
+const closePanel = () => {
+    textPanelStatusMgr.close();
 }
 
 // const stop = watch(() => props.dataChange, textFormat);
@@ -1381,14 +1369,15 @@ import text_autowidth_icon from '@/assets/icons/svg/text-autowidth.svg';
 import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
 import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
 import style_icon from '@/assets/icons/svg/styles.svg';
+import delete_icon from "@/assets/icons/svg/delete.svg";
 </script>
 
 <template>
-    <div class="text-panel" @mousedown.stop>
+    <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
-                <div class="text-style" @click="openTextPanel($event)">
-                    <SvgIcon :icon="style_icon"/>
+                <div class="text-style" @click="showTextPanel($event)">
+                    <SvgIcon :icon="style_icon" />
                 </div>
                 <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
@@ -1399,7 +1388,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                 <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ fontName }}</span>
                     <div class="down">
-                        <SvgIcon :icon="down_icon" style="width: 12px;height: 12px"/>
+                        <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
                 </div>
                 <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
@@ -1417,7 +1406,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                             @focus="selectSizeValue" @input="handleSize" @click="(e) => click(e, is_size_select)"
                             @keydown="e => keydownSize(e)">
                         <div class="down" @click="onShowSize">
-                            <SvgIcon :icon="down_icon" style=""/>
+                            <SvgIcon :icon="down_icon" style="" />
                         </div>
                     </div>
                     <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
@@ -1426,7 +1415,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                             @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
                             <div class="icon">
                                 <SvgIcon v-if="sizeSelectIndex === i"
-                                    :icon="sizeHoverIndex === i ? white_select_icon : page_select_icon"/>
+                                    :icon="sizeHoverIndex === i ? white_select_icon : page_select_icon" />
                             </div>
                         </div>
                     </div>
@@ -1435,7 +1424,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
             <div class="text-middle">
                 <div class="interval jointly-text" style="margin-right: 8px;">
                     <div @mousedown="(e) => onMouseDown(e, 'row-height')">
-                        <SvgIcon :icon="word_space_icon"/>
+                        <SvgIcon :icon="word_space_icon" />
                     </div>
                     <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="() => setRowHeight()"
                         :placeholder="row_height" @input="handleSize" @click="(e) => click(e, is_row_height_select)"
@@ -1443,7 +1432,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                 </div>
                 <div class="interval jointly-text" style="padding-right: 0;">
                     <div @mousedown="(e) => onMouseDown(e, 'char-space')">
-                        <SvgIcon :icon="row_height_icon"/>
+                        <SvgIcon :icon="row_height_icon" />
                     </div>
                     <input type="text" v-model="wordSpace" ref="charSpacing" class="input"
                         @change="() => setWordSpace()" @input="handleSize"
@@ -1456,25 +1445,25 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'left' }"
                         @click="onSelectLevel(TextHorAlign.Left)">
                         <Tooltip :content="t('attr.align_left')" :offset="15">
-                            <SvgIcon :icon="text_left_icon"/>
+                            <SvgIcon :icon="text_left_icon" />
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'centered' }"
                         @click="onSelectLevel(TextHorAlign.Centered)">
                         <Tooltip :content="t('attr.align_center')" :offset="15">
-                            <SvgIcon :icon="text_center_icon"/>
+                            <SvgIcon :icon="text_center_icon" />
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'right' }"
                         @click="onSelectLevel(TextHorAlign.Right)">
                         <Tooltip :content="t('attr.align_right')" :offset="15">
-                            <SvgIcon :icon="text_right_icon"/>
+                            <SvgIcon :icon="text_right_icon" />
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'natural' }"
                         @click="onSelectLevel(TextHorAlign.Natural)">
                         <Tooltip :content="t('attr.align_the_sides')" :offset="15">
-                            <SvgIcon :icon="text_justify_icon"/>
+                            <SvgIcon :icon="text_justify_icon" />
                         </Tooltip>
                     </i>
                 </div>
@@ -1485,19 +1474,19 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'top' }"
                             @click="onSelectVertical(TextVerAlign.Top)">
                             <Tooltip :content="t('attr.align_top')" :offset="15">
-                                <SvgIcon :icon="align_top_icon"/>
+                                <SvgIcon :icon="align_top_icon" />
                             </Tooltip>
                         </i>
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'middle' }"
                             @click="onSelectVertical(TextVerAlign.Middle)">
                             <Tooltip :content="t('attr.align_middle')" :offset="15">
-                                <SvgIcon :icon="align_middle_icon"/>
+                                <SvgIcon :icon="align_middle_icon" />
                             </Tooltip>
                         </i>
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'bottom' }"
                             @click="onSelectVertical(TextVerAlign.Bottom)">
                             <Tooltip :content="t('attr.align_bottom')" :offset="15">
-                                <SvgIcon :icon="align_bottom_icon"/>
+                                <SvgIcon :icon="align_bottom_icon" />
                             </Tooltip>
                         </i>
                     </div>
@@ -1505,19 +1494,19 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'flexible' }"
                             @click="onSelectText(TextBehaviour.Flexible)">
                             <Tooltip :content="t('attr.autowidth')" :offset="15">
-                                <SvgIcon :icon="text_autowidth_icon"/>
+                                <SvgIcon :icon="text_autowidth_icon" />
                             </Tooltip>
                         </i>
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixed' }"
                             @click="onSelectText(TextBehaviour.Fixed)">
                             <Tooltip :content="t('attr.autoheight')" :offset="15">
-                                <SvgIcon :icon="text_autoheight_icon"/>
+                                <SvgIcon :icon="text_autoheight_icon" />
                             </Tooltip>
                         </i>
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
                             @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
                             <Tooltip :content="t('attr.fixedsize')" :offset="15">
-                                <SvgIcon :icon="text_fixedsize_icon"/>
+                                <SvgIcon :icon="text_fixedsize_icon" />
                             </Tooltip>
                         </i>
                     </div>
@@ -1528,7 +1517,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
                     t('attr.font_color')
-                    }}
+                }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
@@ -1558,10 +1547,10 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
                         t('attr.font_color')
-                        }}
+                    }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
@@ -1569,7 +1558,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
             <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div class="add" @click="addTextColor">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                 </div>
             </div>
@@ -1578,10 +1567,12 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px"
                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                 </div>
-                <div class="color">
+                <div>
+                    <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
+                     <!-- <ColorBlock :colors="(fills as Fill[])"/> -->
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
                         :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
                         @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput"
@@ -1593,8 +1584,10 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                         @keydown="e => keydownAlpha(e, highlight!.alpha, 'highlight')" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
-                    <SvgIcon class="svg" :icon="delete"/>
+                    <SvgIcon class="svg" :icon="delete_icon" />
                 </div>
+                </div>
+           
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
@@ -1602,7 +1595,7 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                     </div>
                     <div class="add" @click="setMixedHighlight">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
@@ -1614,13 +1607,13 @@ import style_icon from '@/assets/icons/svg/styles.svg';
                     </div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                 </div>
             </div>
         </div>
-        <TextStyle v-if="showtext" :context="props.context" :textShape="props.shape" :textShapes="props.textShapes" :top="Top"
-        :left="Left" @close="closepanel"></TextStyle>
+        <TextStyle v-if="textLibStatus.visible" :context="props.context" :textShape="props.shape"
+            :textShapes="props.textShapes" @close="closePanel"></TextStyle>
         <teleport to="body">
             <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
             </div>

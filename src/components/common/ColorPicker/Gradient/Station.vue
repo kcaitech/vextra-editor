@@ -47,6 +47,7 @@ function drawCircles() {
         });
     }
     css[props.at].active = true;
+    
     circles.value = css;
 }
 

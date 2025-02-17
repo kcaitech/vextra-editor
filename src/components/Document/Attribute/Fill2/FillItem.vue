@@ -103,6 +103,7 @@ function update() {
     alpha.value = Math.round(color.alpha * 100) + '%';
     colors.value = [fill];
     fillsPicker.fill = fill;
+    fillsPicker.fill_type = "fills"
 
     pattern.value = undefined;
     gradient.value = undefined;

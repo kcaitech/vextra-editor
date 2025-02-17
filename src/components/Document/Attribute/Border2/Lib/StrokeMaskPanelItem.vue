@@ -17,7 +17,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 const { data, context, manager } = defineProps<{ context: Context; manager: StrokeFillContextMgr; data: BorderMask; }>();
 
 const name = ref<string>(data.name);
-const selected = ref<boolean>(manager.fillCtx.mask === data.id);
+const selected = ref<boolean>(manager.fillCtx.strokeMask === data.id);
 
 const modifyPanelStatus = reactive<ElementStatus>({ id: '#modify-stroke-style-panel', visible: false });
 const modifyPanelStatusMgr = new ElementManager(
@@ -28,7 +28,7 @@ const modifyPanelStatusMgr = new ElementManager(
 
 function update() {
     name.value = data.name;
-    selected.value = manager.fillCtx.mask === data.id;
+    selected.value = manager.fillCtx.strokeMask === data.id;
 }
 
 function showModifyPanel(event: MouseEvent) {

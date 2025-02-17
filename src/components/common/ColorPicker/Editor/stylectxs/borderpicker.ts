@@ -1,5 +1,5 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { Color, Fill, Stop, BasicArray } from "@kcdesign/data";
+import { Color, Fill, Stop, BasicArray, FillMask } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { BorderPaintsAsyncApi } from "@kcdesign/data";
@@ -26,6 +26,20 @@ export class BorderColorPicker extends ColorPickerEditor {
         this.m_api?.commit();
         this.m_api = undefined;
         this.m_index = undefined;
+        this.m_target_fills = undefined;
+    }
+    private m_target_fills: Fill[] | undefined;
+
+    /* 获取目标填充，获取的结果可能来自不同类型的载体 */
+    private get targetFills(): Fill[] {
+        return this.m_target_fills ?? (this.m_target_fills = (() => {
+            if (!this.paint) return [];
+            if (this.paint.parent?.parent instanceof FillMask) {
+                return [this.paint];
+            } else {
+                return this.flat.map(i => i.getFills()[this.index]);
+            }
+        })());
     }
 
     private get api(): BorderPaintsAsyncApi {
@@ -35,14 +49,7 @@ export class BorderColorPicker extends ColorPickerEditor {
 
     modifyFillType(type: string): void {
         this.getSelection();
-        // todo 参考fillspicker
-        // if (type === FillType.SolidColor) {
-        //     const actions = get_actions_filltype(this.flat, this.index, type as FillType);
-        //     this.pageEditor.setShapesBorderType(actions);
-        // } else {
-        //     const actions = get_action_gradient_stop(this.flat, this.index, type, 'borders');
-        //     this.pageEditor.modifyShapeGradientType(actions);
-        // }
+        this.pageEditor.setFillsType(this.targetFills.map(fill => ({ fill, type })));
         super.modifyFillType(type);
         this.hiddenCtrl();
     }
