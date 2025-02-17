@@ -21,9 +21,11 @@ const modifyPanelStatusMgr = new ElementManager(
     modifyPanelStatus,
     {whiteList: ['#modify-blur-panel', '.modify']}
 );
+const selected = ref<boolean>(manager.blurCtx.mask === data.id);
 
 function update() {
     name.value = data.name;
+    selected.value = manager.blurCtx.mask === data.id;
 }
 
 function showModifyPanel(event: MouseEvent) {
@@ -47,7 +49,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <PanelItem :extend="modifyPanelStatus.visible" :selected="false" @modify="showModifyPanel">
+    <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel">
         <template #preview>
             <div class="content" @click="() => manager.modifyBlurMask(data.id)">
                 <span>{{ name }}</span>

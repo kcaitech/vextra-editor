@@ -3,6 +3,14 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import unbind_icon from "@/assets/icons/svg/unbind.svg";
 import delete_icon from "@/assets/icons/svg/delete.svg";
 
+interface Props {
+    delete?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    delete: true
+})
+
 const emits = defineEmits<{
     (e: "delete"): void;
     (e: "unbind"): void;
@@ -13,15 +21,16 @@ const emits = defineEmits<{
     <div class="mask-port-wrapper">
         <div class="info-container">
             <div class="info">
-                <slot/>
+                <slot />
             </div>
             <div class="unbind" @click="emits('unbind')">
-                <SvgIcon :icon="unbind_icon"/>
+                <SvgIcon :icon="unbind_icon" />
             </div>
         </div>
-        <div class="delete" @click="emits('delete')">
-            <SvgIcon :icon="delete_icon"/>
+        <div v-if="props.delete" class="delete" @click="emits('delete')">
+            <SvgIcon :icon="delete_icon" />
         </div>
+        <div v-if="!props.delete" class="space"></div>
     </div>
 </template>
 
@@ -65,7 +74,7 @@ const emits = defineEmits<{
             transition: 50ms;
             background-color: var(--input-background);
 
-            > img {
+            >img {
                 width: 16px;
                 height: 16px;
             }
@@ -87,7 +96,7 @@ const emits = defineEmits<{
         overflow: hidden;
         transition: 50ms;
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -95,6 +104,12 @@ const emits = defineEmits<{
         &:hover {
             background-color: var(--input-background);
         }
+    }
+
+    .space {
+        flex: 0 0 28px;
+        width: 28px;
+        height: 28px;
     }
 }
 </style>

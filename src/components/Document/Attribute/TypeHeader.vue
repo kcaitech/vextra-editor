@@ -1,12 +1,19 @@
 <script setup lang="ts">
-const props = defineProps<{ title: string, active: boolean }>();
+interface Props {
+    title: string
+    active: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    active: true
+})
 </script>
 <template>
     <div class="header-container">
         <div class="header">
             <div :class="{ title: true, active }">{{ props.title }}</div>
             <div class="tool">
-                <slot name="tool"/>
+                <slot name="tool" />
             </div>
         </div>
     </div>
@@ -44,7 +51,7 @@ const props = defineProps<{ title: string, active: boolean }>();
             display: flex;
             align-items: center;
             flex: 0 0 auto;
-            gap:8px;
+            gap: 8px;
         }
     }
 

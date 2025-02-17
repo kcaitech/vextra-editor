@@ -1549,11 +1549,11 @@ onUnmounted(() => {
                     @setImageRef="setImageRef" @changeRotate="emit('changeRotate')"
                     @changeScale="(s) => emit('changeScale', s)" @imagefilter="(color,type,v)=>color.execute_fillmask_ImageFilter(props.style?.sheet!,props.style?.id!,type,v,props.locat?.index!)"/>
             </div>
-            <div v-if="custom === 'style' && !props.entrance" class="color-style">
-<!--                <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"-->
-<!--                    :fill="props.fillslist" @close="EditorStyle = false" :locat="props.locat">-->
-<!--                </ColorStyle>-->
-            </div>
+            <!-- <div v-if="custom === 'style' && !props.entrance" class="color-style">
+               <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
+                   :fill="props.fillslist" @close="EditorStyle = false" :locat="props.locat">
+               </ColorStyle>
+            </div> -->
         </div>
     </div>
 </template>

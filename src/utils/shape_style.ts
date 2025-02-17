@@ -466,14 +466,14 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
 export const getDideStr = (side: BorderSideSetting, v: BorderSideSetting | string) => {
     if (typeof v === 'string') return false;
     const str = [
-        side.sideType,
+        // side.sideType,
         side.thicknessTop,
         side.thicknessRight,
         side.thicknessBottom,
         side.thicknessLeft
     ].join('-');
     const str2 = [
-        v.sideType,
+        // v.sideType,
         v.thicknessTop,
         v.thicknessRight,
         v.thicknessBottom,
@@ -494,12 +494,12 @@ export function get_actions_add_boder(shapes: ShapeView[], strokePaint: Fill) {
 }
 
 export function get_actions_border_mask(shapes: ShapeView[]) {
-    const actions: { border: BorderMaskType, type: ShapeType, style: Style }[] = [];
+    const actions: { target: ShapeView, border: BorderMaskType, type: ShapeType, style: Style }[] = [];
     const id = shapes[0].style.bordersMask!;
     const border = (shapes[0].style.getStylesMgr()?.getSync(id) as BorderMask).border
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ border, type: shapes[i].type, style: shapes[i].style });
+        actions.push({ target: shapes[i], border, type: shapes[i].type, style: shapes[i].style });
     }
     return actions;
 }
