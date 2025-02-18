@@ -2,7 +2,6 @@ import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/colore
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { BasicArray, Color, Fill, FillsAsyncApi, ImagePack, ImageScaleMode, Stop, FillMask, PaintFilterType } from "@kcdesign/data";
-import { get_action_gradient_stop } from "@/utils/shape_style";
 import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
