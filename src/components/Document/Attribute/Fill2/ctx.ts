@@ -192,31 +192,43 @@ export class FillsContextMgr extends StyleCtx {
         const rgb = getRGBFromInputEvent(event);
         if (!rgb) return;
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
-        if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsColor([{ fill, color }]);
-        } else {
-            const index = this.getIndexByFill(fill);
-            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getFills()[index], color })));
-            this.hiddenCtrl(event);
-        }
+        this.modifyFillColor(color, fill);
     }
 
     /* 修改一条纯色填充的透明度 */
     modifyFillAlpha(event: Event, fill: Fill) {
         const alpha = getNumberFromInputEvent(event);
         if (isNaN(alpha)) return;
-        const color = new Color(
-            Math.max(0, Math.min(1, alpha / 100)),
-            fill.color.red,
-            fill.color.green,
-            fill.color.blue
-        );
+        if (fill.fillType === FillType.Gradient) {
+            this.modifyGradientOpacity(fill, alpha / 100);
+        } else {
+            const color = new Color(
+                Math.max(0, Math.min(1, alpha / 100)),
+                fill.color.red,
+                fill.color.green,
+                fill.color.blue
+            );
+            this.modifyFillColor(color, fill);
+        }
+    }
+
+    modifyFillColor(color: Color, fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
             this.editor.setFillsColor([{ fill, color }]);
         } else {
             const index = this.getIndexByFill(fill);
             this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getFills()[index], color })));
-            this.hiddenCtrl(event);
+            this.hiddenCtrl();
+        }
+    }
+
+    modifyGradientOpacity(fill: Fill, opacity: number) {
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setGradientOpacity([{ fill, opacity }]);
+        } else {
+            const index = this.getIndexByFill(fill);
+            this.editor.setGradientOpacity(this.selected.map(i => ({ fill: i.getFills()[index], opacity })));
+            this.hiddenCtrl();
         }
     }
 

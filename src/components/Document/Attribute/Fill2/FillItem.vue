@@ -111,6 +111,8 @@ function update() {
     if (fill.fillType === FillType.Gradient) {
         fillType.value = fill.gradient!.gradientType;
         gradient.value = getGradientCatch(fill.gradient!);
+        const opacity = fill.gradient?.gradientOpacity ?? 1;
+        alpha.value = Math.round(opacity * 100) + '%';
     } else if (fill.fillType === FillType.Pattern) {
         fillType.value = fill.fillType;
         pattern.value = getPatternCatch(fill);
