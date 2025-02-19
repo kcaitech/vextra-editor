@@ -11,7 +11,9 @@ import {
     Point2D,
     TextShapeView,
     AttrGetter,
-    TableCellView
+    TableCellView,
+    Fill,
+    FillMask
 } from "@kcdesign/data";
 import { importGradient } from "@kcdesign/data";
 import { v4 } from "uuid";
@@ -86,13 +88,16 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
     const locate = context.color.locate;
     if (!locate || !shape || !shape.style) return;
     if (locate.type !== 'text') {
-        let gradient_type = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
-        if (shape.type === ShapeType.Group) {
-            const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group);
-            gradient_type = locate.type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders().strokePaints;
+        let fills: Fill[] = [];
+        let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+        if (maskId) {
+            const mask =context.data.stylesMgr.getSync(maskId) as FillMask;
+            fills = mask.fills;
+        } else {
+            fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
         }
-        if (!gradient_type[locate.index]) return;
-        return gradient_type[locate.index].gradient;
+        if (!fills[locate.index]) return;
+        return fills[locate.index].gradient;
     } else {
         if (shape.type !== ShapeType.Text) return;
         const { textIndex, selectLength } = getTextIndexAndLen(context);

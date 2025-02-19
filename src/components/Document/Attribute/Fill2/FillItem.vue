@@ -120,7 +120,6 @@ function update() {
         fillType.value = fill.fillType;
         rgba.value = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
     }
-
     assemble();
 }
 

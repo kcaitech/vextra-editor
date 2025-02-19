@@ -367,6 +367,7 @@ const stop_mouseup = (e: MouseEvent) => {
     document.removeEventListener('mousemove', stop_mousemove);
     document.removeEventListener('mouseup', stop_mouseup);
 }
+
 const stop_content_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
     get_percent_posi(e);
