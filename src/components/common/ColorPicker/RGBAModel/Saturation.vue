@@ -182,11 +182,9 @@ function locate() {
     //     hue.value = Object.assign({ ...props.stop }, getHRGB(hsb.h * 360));
     // }
     if ((R === 0 && G === 0 && B === 0) || hsb.s === 0) {
-        console.log('1');
         hueX.value = valueH.value / 360 * (LINE_LENGTH - DOT_SIZE);
         hue.value = Object.assign({ ...props.stop }, getHRGB(valueH.value));
     } else {
-        console.log('2');
         hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
         hue.value = Object.assign({ ...props.stop }, getHRGB(hsb.h * 360));
         changeValueH(hsb.h * 360);
