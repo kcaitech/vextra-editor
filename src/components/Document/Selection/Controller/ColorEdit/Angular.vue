@@ -82,42 +82,10 @@ const get_linear_points = () => {
     let d1;
     let d2;
     const m = shape.matrix2Root();
-    if (shape.type === ShapeType.Table) {
-        const tableSelection = props.context.tableSelection;
-        if (tableSelection.editingCell) {
-            const cell = tableSelection.editingCell;
-            const grid = (shape as TableView).getLayout().grid;
-            frame = grid.get(cell.index.row, cell.index.col).frame;
-            m.trans(frame.x, frame.y)
-            m.preScale(frame.width, frame.height);
-            m.multiAtLeft(matrix);
-            d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
-            d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
-        } else {
-            if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
-                m.preScale(frame.width, frame.height);
-                m.multiAtLeft(matrix);
-                d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
-                d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
-            } else {
-                const cells = tableSelection.getSelectedCells(true);
-                const cell_start = cells[0];
-                const grid = (shape as TableView).getLayout().grid;
-                frame = grid.get(cell_start.rowIdx, cell_start.colIdx).frame;
-                m.trans(frame.x, frame.y)
-                m.preScale(frame.width, frame.height);
-                m.multiAtLeft(matrix);
-                d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
-                d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
-            }
-        }
-        props.context.workspace.notify(WorkSpace.TABLE_TEXT_GRADIENT_UPDATE);
-    } else {
-        m.preScale(frame.width, frame.height);
-        m.multiAtLeft(matrix);
-        d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
-        d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
-    }
+    m.preScale(frame.width, frame.height);
+    m.multiAtLeft(matrix);
+    d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
+    d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
     dot1.value = { x: d1.x, y: d1.y, type: 'from' }
     dot2.value = { x: d2.x, y: d2.y, type: 'to' }
     line_length.value = Math.sqrt(Math.pow(d2.x - d1.x, 2) + Math.pow(d2.y - d1.y, 2));
@@ -176,25 +144,6 @@ const dot_mousemove = (e: MouseEvent) => {
         startPosition.y = y;
         const matrix = new TransformRaw();
         let frame = shape.frame;
-        if (shape.type === ShapeType.Table) {
-            const tableSelection = props.context.tableSelection;
-            if (tableSelection.editingCell) {
-                const cell = tableSelection.editingCell;
-                const grid = (shape as TableView).getLayout().grid;
-                frame = grid.get(cell.index.row, cell.index.col).frame;
-                matrix.trans(frame.x, frame.y);
-            } else {
-                if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
-                    frame = shape.frame;
-                } else {
-                    const cells = tableSelection.getSelectedCells(true);
-                    const cell_start = cells[0];
-                    const grid = (shape as TableView).getLayout().grid;
-                    frame = grid.get(cell_start.rowIdx, cell_start.colIdx).frame;
-                    matrix.trans(frame.x, frame.y);
-                }
-            }
-        }
         matrix.preScale(frame.width, frame.height);
         matrix.multiAtLeft(shape.matrix2Root());
         matrix.multiAtLeft(props.context.workspace.matrix);
@@ -205,15 +154,12 @@ const dot_mousemove = (e: MouseEvent) => {
         } else if (dot_type === 'to') {
             gradientEditor.execute_to(posi);
         }
-        if (locate.type === 'table_text') {
-            get_linear_points();
-        }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
             const shapes = getShapesForStyle(props.context.selection.selectedShapes);
-            if (locate.type !== 'text' && locate.type !== 'table_text') {
+            if (locate.type !== 'text') {
                 let fills: Fill[] = [];
                 let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
                 if (maskId) {
@@ -225,33 +171,12 @@ const dot_mousemove = (e: MouseEvent) => {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(fills[locate.index], page!);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                if (locate.type === "text") {
-                    const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
-                    const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-                    if (isSelectText(props.context)) {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, 0, Infinity);
-                    } else {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, textIndex, selectLength);
-                    }
+                const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
+                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                if (isSelectText(props.context)) {
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, 0, Infinity);
                 } else {
-                    const tableSelection = props.context.tableSelection;
-                    const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
-                    if (tableSelection.editingCell) {
-                        const table_cell = tableSelection.editingCell;
-                        const editor_text = props.context.editor4TextShape(table_cell);
-                        if (isSelectText(props.context)) {
-                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, 0, Infinity);
-                        } else {
-                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, textIndex, selectLength);
-                        }
-                    } else {
-                        const editor = props.context.editor4Table(table_shape);
-                        if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
-                            gradientEditor = editor.asyncSetTextGradient(gradient);
-                        } else {
-                            gradientEditor = editor.asyncSetTextGradient(gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
-                        }
-                    }
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, textIndex, selectLength);
                 }
             }
         }
@@ -298,20 +223,18 @@ const add_stop = (e: MouseEvent) => {
     if (!gradient) return;
     const _stop = get_add_gradient_color(gradient.stops, posi);
     if (!_stop) return;
-    const selected = props.context.selection.selectedShapes;
-    const s = getShapesForStyle(selected)[0];
     const page = props.context.selection.selectedPage!;
     const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
-    if (locate.type !== 'text' && locate.type !== 'table_text') {
+    if (locate.type !== 'text') {
         const idx = locate.index;
         const editor = props.context.editor4Page(page);
         let fills: Fill[] = [];
-        let maskId = locate.type === 'fills' ? s.style.fillsMask : s.style.borders.fillsMask;
+        let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
         if (maskId) {
             const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
             fills = mask.fills;
         } else {
-            fills = locate.type === 'fills' ? s.getFills() : s.getBorders().strokePaints;
+            fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
         }
         editor.addShapesGradientStop([{ fill: fills[idx], stop }]);
     } else {
@@ -329,45 +252,21 @@ const add_stop = (e: MouseEvent) => {
             }
         })
         const shapes = getShapesForStyle(props.context.selection.selectedShapes);
-        if (locate.type === 'text') {
-            const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
-            const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-            if (text_shapes.length === 1) {
-                if (isSelectText(props.context)) {
-                    editor.setTextGradient(new_gradient, 0, Infinity);
-                } else {
-                    editor.setTextGradient(new_gradient, textIndex, selectLength);
-                }
+        const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
+        const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+        if (text_shapes.length === 1) {
+            if (isSelectText(props.context)) {
+                editor.setTextGradient(new_gradient, 0, Infinity);
             } else {
-                editor.setTextGradientMulti(text_shapes as TextShapeView[], new_gradient);
+                editor.setTextGradient(new_gradient, textIndex, selectLength);
             }
         } else {
-            const tableSelection = props.context.tableSelection;
-            const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
-            if (tableSelection.editingCell) {
-                const table_cell = tableSelection.editingCell;
-                const editor_text = props.context.editor4TextShape(table_cell);
-                if (isSelectText(props.context)) {
-                    editor_text.setTextGradient(new_gradient, 0, Infinity);
-                } else {
-                    editor_text.setTextGradient(new_gradient, textIndex, selectLength);
-                }
-            } else {
-                const editor = props.context.editor4Table(table_shape)
-                if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
-                    editor.setTextGradient(new_gradient);
-                } else {
-                    editor.setTextGradient(new_gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
-                }
-            }
+            editor.setTextGradientMulti(text_shapes as TextShapeView[], new_gradient);
         }
     }
     nextTick(() => {
         down_stop(e, stop.id);
         temporary.value = false;
-        if (locate.type === 'table_text') {
-            get_linear_points();
-        }
     })
 }
 
@@ -422,15 +321,12 @@ const stop_mousemove = (e: MouseEvent) => {
         const posi = get_stop_position(e);
         percent.value = +(posi * 100).toFixed(0);
         gradientEditor.execute_stop_position(posi, down_stop_id.value);
-        if (locate.type === 'table_text') {
-            get_linear_points();
-        }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
             const shapes = getShapesForStyle(props.context.selection.selectedShapes);
-            if (locate.type !== 'text' && locate.type !== 'table_text') {
+            if (locate.type !== 'text') {
                 let fills: Fill[] = [];
                 let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
                 if (maskId) {
@@ -442,33 +338,12 @@ const stop_mousemove = (e: MouseEvent) => {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(fills[locate.index], page!);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                if (locate.type === 'text') {
-                    const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
-                    const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-                    if (isSelectText(props.context)) {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, 0, Infinity);
-                    } else {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, textIndex, selectLength);
-                    }
+                const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
+                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                if (isSelectText(props.context)) {
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, 0, Infinity);
                 } else {
-                    const tableSelection = props.context.tableSelection;
-                    const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
-                    if (tableSelection.editingCell) {
-                        const table_cell = tableSelection.editingCell;
-                        const editor_text = props.context.editor4TextShape(table_cell);
-                        if (isSelectText(props.context)) {
-                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, 0, Infinity);
-                        } else {
-                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, textIndex, selectLength);
-                        }
-                    } else {
-                        const editor = props.context.editor4Table(table_shape);
-                        if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
-                            gradientEditor = editor.asyncSetTextGradient(gradient);
-                        } else {
-                            gradientEditor = editor.asyncSetTextGradient(gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
-                        }
-                    }
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, textIndex, selectLength);
                 }
             }
         }

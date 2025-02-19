@@ -17,7 +17,7 @@ import { importGradient } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
-export type GradientFrom = 'fills' | 'borders' | 'text' | 'table_text';
+export type GradientFrom = 'fills' | 'borders' | 'text';
 
 export function to_rgba(options: {
     red: number,
@@ -85,7 +85,7 @@ export const get_add_gradient_color2 = (stops: RGBACatch[], position: number) =>
 export const get_gradient = (context: Context, shape: ShapeView) => {
     const locate = context.color.locate;
     if (!locate || !shape || !shape.style) return;
-    if (locate.type !== 'text' && locate.type !== 'table_text') {
+    if (locate.type !== 'text') {
         let gradient_type = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
         if (shape.type === ShapeType.Group) {
             const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group);
@@ -94,54 +94,18 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
         if (!gradient_type[locate.index]) return;
         return gradient_type[locate.index].gradient;
     } else {
-        if (locate.type === 'text') {
-            if (shape.type !== ShapeType.Text) return;
-            const { textIndex, selectLength } = getTextIndexAndLen(context);
-            const editor = context.editor4TextShape(shape as TextShapeView)
-            let format: AttrGetter
-            const __text = (shape as TextShapeView).getText();
-            if (textIndex === -1) {
-                format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-            } else {
-                format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
-            }
-            return format.gradient;
+        if (shape.type !== ShapeType.Text) return;
+        const { textIndex, selectLength } = getTextIndexAndLen(context);
+        const editor = context.editor4TextShape(shape as TextShapeView)
+        let format: AttrGetter
+        const __text = (shape as TextShapeView).getText();
+        if (textIndex === -1) {
+            format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
         } else {
-            if (shape.type !== ShapeType.Table) return;
-            const table_s = context.tableSelection;
-            if (table_s.editingCell) {
-                const cell = table_s.editingCell;
-                const { textIndex, selectLength } = getTextIndexAndLen(context);
-                const editor = context.editor4TextShape(cell);
-                let format: AttrGetter;
-                if (textIndex === -1) {
-                    format = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-                } else {
-                    format = cell.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
-                }
-                return format.gradient;
-            } else {
-                let cells: (TableCellView)[];
-                if (table_s.tableRowStart < 0 || table_s.tableColStart < 0) {
-                    cells = shape.childs as (TableCellView)[];
-                } else {
-                    cells = table_s.getSelectedCells(true).reduce((cells, item) => {
-                        if (item.cell) cells.push(item.cell);
-                        return cells;
-                    }, [] as (TableCellView[]));
-                }
-                const formats: any[] = [];
-                for (let i = 0; i < cells.length; i++) {
-                    const cell = cells[i];
-                    if (cell && cell.text) {
-                        const editor = context.editor4TextShape(cell as any);
-                        const format = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-                        formats.push(format);
-                    }
-                }
-                return formats[0].gradient;
-            }
+            format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
         }
+        return format.gradient;
+
     }
 }
 
