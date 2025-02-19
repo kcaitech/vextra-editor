@@ -155,8 +155,6 @@ function stylelib_watcher(t: number | string) {
 
 onMounted(() => {
     update();
-    console.log('mounted');
-    
     props.context.data.watch(stylelib_watcher)
 })
 
