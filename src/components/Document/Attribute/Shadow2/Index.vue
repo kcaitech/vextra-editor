@@ -79,7 +79,7 @@ onUnmounted(() => {
         <TypeHeader :title="t('attr.shadow')" :active="!!shadowCtx.shadows.length"
             @click.stop="() => shadowCtxMgr.init()">
             <template #tool>
-                <div v-if="cloverVisible" class="clover" @click="showShadowLib($event)">
+                <div v-if="cloverVisible" class="shadow_clover" @click="showShadowLib($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!shadowCtx.mask || shadowCtx.mixed" class="create" @click="() => shadowCtxMgr.create()">
