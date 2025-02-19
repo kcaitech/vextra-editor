@@ -4,7 +4,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
 import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
+import { h, nextTick, onUnmounted, reactive, ref, watch, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType, GradientType } from "@kcdesign/data";
@@ -111,6 +111,8 @@ function update() {
     if (fill.fillType === FillType.Gradient) {
         fillType.value = fill.gradient!.gradientType;
         gradient.value = getGradientCatch(fill.gradient!);
+        const opacity = fill.gradient?.gradientOpacity ?? 1;
+        alpha.value = Math.round(opacity * 100) + '%';
     } else if (fill.fillType === FillType.Pattern) {
         fillType.value = fill.fillType;
         pattern.value = getPatternCatch(fill);
@@ -118,16 +120,24 @@ function update() {
         fillType.value = fill.fillType;
         rgba.value = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
     }
-
     assemble();
+}
+
+const close = () => {
+    colorPanelStatusMgr.close();
+    const color = props.context.color;
+    if (color.gradient_type) color.set_gradient_type(undefined);
+    if (color.locate) color.gradient_locate(undefined);
+    if (color.mode) color.switch_editor_mode(false);
+    if (color.imageScaleMode) color.setImageScaleMode(undefined);
 }
 
 const stop1 = watchEffect(update);
 const stop2 = watchEffect(() => {
     const fill = props.data.fill;
     const color = props.context.color;
-
-    if (!colorPanelStatus.visible || fillType.value === FillType.SolidColor) {
+    if (!colorPanelStatus.visible) return;
+    if (fillType.value === FillType.SolidColor) {
         if (color.gradient_type) color.set_gradient_type(undefined);
         if (color.locate) color.gradient_locate(undefined);
         if (color.mode) color.switch_editor_mode(false);
@@ -148,6 +158,7 @@ const stop2 = watchEffect(() => {
         color.setImageScaleMode(undefined);
     }
 });
+
 onUnmounted(() => {
     stop1();
     stop2();
@@ -168,7 +179,7 @@ onUnmounted(() => {
             <SvgIcon :icon="delete_icon" />
         </div>
         <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType" :color="rgba!"
-            :gradient="gradient" :pattern="pattern" @close="() => colorPanelStatusMgr.close()" />
+            :gradient="gradient" :pattern="pattern" @close="close" />
     </div>
 </template>
 <style scoped lang="scss">
@@ -177,7 +188,7 @@ onUnmounted(() => {
     height: 32px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
 
     .value-panel-wrapper {
         display: flex;

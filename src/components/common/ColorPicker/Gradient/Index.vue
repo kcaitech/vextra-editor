@@ -43,8 +43,8 @@ function colorCtxWatcher(t: any) {
     }
 }
 
-function changeStop(stopAt: number) {
-    editor.context.color.select_stop(props.data.stopIds[stopAt]);
+function changeStop(id: string) {
+    editor.context.color.select_stop(id);
 }
 
 function createStop(cc: RGBACatch) {
@@ -64,6 +64,10 @@ function dragBegin() {
 }
 
 function dragging(cc: RGBACatch) {
+    const id = editor.context.color.selected_stop;
+    let index = props.data.stopIds.findIndex(i => i === id);
+    if (index === -1) index = 0;
+    gradientStopAt.value = index;
     editor.draggingStop(cc, gradientStopAt.value);
 }
 
@@ -84,6 +88,10 @@ function dragStopBegin() {
 }
 
 function draggingStop(position: number) {
+    const id = editor.context.color.selected_stop;
+    let index = props.data.stopIds.findIndex(i => i === id);
+    if (index === -1) index = 0;
+    gradientStopAt.value = index;
     editor.draggingStopPosition(position, gradientStopAt.value);
 }
 

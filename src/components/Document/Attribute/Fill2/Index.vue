@@ -42,18 +42,18 @@ const fillLibStatus = reactive<ElementStatus>({ id: '#fill-style-lib-panel', vis
 const fillPanelStatusMgr = new ElementManager(                                                       // 样式库面板弹框状态管理器，组件销毁时要调用其的unmounted事件
     props.context,
     fillLibStatus,
-    { whiteList: ['.fill-style-lib-panel', '.clover', '.desc'] }                                   // 弹框可点击区域，区域之外的点击将会关闭弹框
+    { whiteList: ['.fill-style-lib-panel', '.fill_clover', '.fill_desc'] }                                   // 弹框可点击区域，区域之外的点击将会关闭弹框
 );
 fillCtxMgr.catchPanel(fillPanelStatusMgr);                                                           // 将弹框状态管理器加入到核心状态管理器，使得核心状态管理器可以控制弹框
 
 function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('clover')) {
+        if (e.classList.contains('fill_clover')) {
             fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('desc')) {
+        if (e.classList.contains('fill_desc')) {
             fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
@@ -63,7 +63,11 @@ function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
 
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),                  // 监听选区变化
-    watch(() => props.trigger, v => v?.includes('style') && fillCtxMgr.update())    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态
+    watch(() => props.trigger, (v) => {
+        if (v?.includes('fillsMask') || v?.includes('fills')) {
+            fillCtxMgr.update();
+        }
+    })    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态
 ];
 
 onMounted(fillCtxMgr.update.bind(fillCtxMgr));
@@ -76,7 +80,7 @@ onUnmounted(() => {
     <div class="fills-wrapper">
         <TypeHeader :title="t('attr.fill')" :active="!!fillCtx.fills.length" @click.stop="() => fillCtxMgr.init()">
             <template #tool>
-                <div v-if="cloverVisible" class="clover" @click="showFillLib">
+                <div v-if="cloverVisible" class="fill_clover" @click="showFillLib">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!fillCtx.mask || fillCtx.mixed" class="create" @click="() => fillCtxMgr.create()">
@@ -106,7 +110,7 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 8px;
 
-    .clover,
+    .fill_clover,
     .create {
         width: 28px;
         height: 28px;
@@ -121,7 +125,7 @@ onUnmounted(() => {
         }
     }
 
-    .clover>img {
+    .fill_clover>img {
         width: 12px;
         height: 12px;
     }

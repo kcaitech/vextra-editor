@@ -53,6 +53,10 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
+function changeInput(value: string) {
+    name.value = value;
+}
+
 function createStyle() {
     manager.createStyleLib(name.value, desc.value);
 }
@@ -67,7 +71,7 @@ onUnmounted(() => {
 <template>
     <div class="modify-fill-style-panel" id="modify-fill-style-panel">
         <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')"/>
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data"
+        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @changeInput="changeInput"
                       @modify-name="modifyName" @modify-desc="modifyDesc"/>
         <div v-if="data" class="data-panel">
             <ListHeader title="颜色" @create="manager.create(data)"/>

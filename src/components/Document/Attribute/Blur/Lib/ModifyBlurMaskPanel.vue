@@ -56,6 +56,10 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
+function changeInput(value: string) {
+    name.value = value;
+}
+
 function createStyle() {
     manager.createStyleLib(name.value, desc.value);
 }
@@ -71,7 +75,7 @@ onUnmounted(() => {
     <div class="modify-blur-panel" id="modify-blur-panel">
         <PanelHeader :title="data ? t('stylelib.editor_blur') : t('stylelib.create_blur')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" />
+            @modify-desc="modifyDesc" @changeInput="changeInput"/>
         <div v-if="data" class="data-panel">
             <ListHeader title="模糊" create />
             <div class="fills-container">

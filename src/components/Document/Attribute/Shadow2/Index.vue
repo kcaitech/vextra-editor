@@ -60,7 +60,11 @@ function showShadowLib(event: MouseEvent) { /*打开填充样式库面板*/
 
 const watchList: any[] = [
     watch(() => props.selectionChange, () => shadowCtxMgr.update()),                  // 监听选区变化
-    watch(() => props.trigger, v => v?.includes('style') && shadowCtxMgr.update())    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态
+    watch(() => props.trigger, (v) => {
+        if (v?.includes('shadows') || v?.includes('shadowsMask')) {
+            shadowCtxMgr.update()
+        }
+    })    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态
 ];
 
 onMounted(shadowCtxMgr.update.bind(shadowCtxMgr));
@@ -110,7 +114,7 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 8px;
 
-    .clover,
+    .shadow_clover,
     .create {
         width: 28px;
         height: 28px;
@@ -125,7 +129,7 @@ onUnmounted(() => {
         }
     }
 
-    .clover>img {
+    .shadow_clover>img {
         width: 12px;
         height: 12px;
     }

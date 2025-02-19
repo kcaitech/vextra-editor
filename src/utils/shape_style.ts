@@ -173,7 +173,6 @@ export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
 export function get_actions_add_mask(shapes: ShapeView[], id: string | undefined) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
         actions.push({ target: (shapes[i]), value: id });
     }
     return actions;

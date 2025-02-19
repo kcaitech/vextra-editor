@@ -469,8 +469,6 @@ function modify_gradient_type(idx: number, type: GradientType, fillType: FillTyp
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    console.log('fillType', fillType);
-
     if (fillType !== FillType.Gradient) {
         toggle_fill_type(idx, fillType);
     } else {

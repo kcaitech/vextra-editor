@@ -1,67 +1,12 @@
 import {
     Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
-    Style, Color, BasicArray, BatchAction2, ContactLineView, ArtboardView
+    Style, Color, BasicArray, ArtboardView, FillModifier
 } from "@kcdesign/data";
 import { Context } from "@/context";
-import {
-    get_actions_add_mask, get_actions_fill_delete,
-    get_actions_fill_mask, get_actions_fill_unify
-} from "@/utils/shape_style";
+import { get_actions_fill_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
-
-function stringifyFills(sye: { style: Style, fills: Fill[] }) {
-    if (sye.style.fillsMask) return sye.style.fillsMask;
-    return sye.fills.reduce((p, c) => p + stringifyFill(c), '')
-
-    function stringifyFill(fill: Fill) {
-        const type = fill.fillType;
-        let str = '';
-        if (type === FillType.SolidColor) {
-            str += fill.color.red + ','
-                + fill.color.green + ','
-                + fill.color.blue + ','
-                + fill.color.alpha;
-        } else if (type === FillType.Pattern) {
-            str += fill.imageRef ?? 'null'
-                + fill.imageScaleMode ?? 'null'
-                + fill.originalImageHeight ?? 'null'
-                + fill.originalImageWidth ?? 'null'
-                + (fill.paintFilter ? stringifyFilter(fill.paintFilter) : 'null')
-                + fill.rotation ?? 'null'
-                + fill.scale ?? 'null'
-                + (fill.transform ? stringifyPatternTransform(fill.transform) : 'null')
-        } else if (type === FillType.Gradient) {
-            str += stringifyGradient(fill.gradient!);
-        }
-        return str;
-    }
-}
-
-export function stringifyFilter(filter: PaintFilter) {
-    return '' + filter.hue + filter.tint + filter.shadow + filter.saturation + filter.contrast + filter.exposure + filter.temperature;
-}
-
-export function stringifyPatternTransform(t: PatternTransform) {
-    return '' + t.m00 + t.m01 + t.m02 + t.m10 + t.m11 + t.m12;
-}
-
-export function stringifyGradient(g: Gradient) {
-    let str = '';
-    str += g.gradientType + g.from.x + g.from.y + g.to.x + g.to.y
-        + (g.elipseLength ?? 'null')
-        + (g.gradientOpacity ?? 'null')
-        ;
-
-    g.stops.forEach(s => str += stringifyStop(s));
-
-    return str;
-
-    function stringifyStop(s: Stop) {
-        return '' + s.position + s.color.red + ',' + s.color.green + ',' + s.color.blue + ',' + s.color.alpha;
-    }
-}
 
 export type FillCatch = {
     fill: Fill;
@@ -105,7 +50,7 @@ export class FillsContextMgr extends StyleCtx {
         if (this.fillCtx.mixed) return;
 
         const represent = this.selected[0];
-        this.fillCtx.mask = represent.style.fillsMask;
+        this.fillCtx.mask = represent.fillsMask;
         if (this.fillCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.mask) as FillMask;
             this.fillCtx.maskInfo = {
@@ -126,23 +71,33 @@ export class FillsContextMgr extends StyleCtx {
         return (fill.parent as unknown as Fill[])?.findIndex(i => i === fill) ?? -1;
     }
 
+    private m_editor: FillModifier | undefined;
+
+    protected get editor(): FillModifier {
+        return this.m_editor ?? (this.m_editor = new FillModifier(this.repo));
+    }
+
     update() {
         this.getSelected();
         this.modifyMixedStatus();
         this.updateFills();
     }
 
+    /* 初始化一个填充 */
     init() {
         if (!this.fillCtx.fills.length && !this.fillCtx.mixed) this.create();
     }
 
+    /* 创建一个填充 */
     create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
+        const editor = new FillModifier(this.repo);
 
         if (mask) {
             const color = new Color(0.2, 0, 0, 0);
             const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-            this.editor.createFill([{ fills: mask.fills, fill, index: mask.fills.length }]);
+            editor.createFill([{ fills: mask.fills, fill, index: mask.fills.length }])
+            // this.editor.createFill([{ fills: mask.fills, fill, index: mask.fills.length }]);
         } else {
             const actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[] = [];
             const selected = this.selected;
@@ -156,27 +111,35 @@ export class FillsContextMgr extends StyleCtx {
                 const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
                 actions.push({ fills: view.style.fills, fill: fill, index: view.style.fills.length });
             }
-            this.editor.createFill(actions);
+            editor.createFill(actions);
+            // this.editor.createFill(actions);
             this.hiddenCtrl();
         }
     }
 
+    /* 统一多个图层的填充 */
     unify() {
-        const actions = get_actions_fill_unify(this.selected);
-        this.editor.shapesFillsUnify(actions);
+        const fillsMaskView = this.selected.find(i => i.fillsMask);
+        if (fillsMaskView) {
+            this.editor.unifyShapesFillsMask(this.document, this.selected, fillsMaskView.fillsMask!);
+        } else {
+            this.editor.unifyShapesFills(this.selected.map(i => i.getFills()));
+        }
         this.hiddenCtrl();
     }
 
+    /* 移除一条填充 */
     remove(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
-            this.editor.shapesDeleteFill([{ fills: mask.fills, index: this.getIndexByFill(fill) }]);
+            this.editor.removeFill([{ fills: mask.fills, index: this.getIndexByFill(fill) }]);
         } else {
             const index = this.getIndexByFill(fill);
-            this.editor.shapesDeleteFill(this.selected.map(v => ({ fills: v.style.fills, index })));
+            this.editor.removeFill(this.selected.map(v => ({ fills: v.style.fills, index })));
         }
     }
 
+    /* 隐藏或显示一条填充 */
     modifyVisible(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
             this.editor.setFillsEnabled([fill], !fill.isEnabled);
@@ -187,58 +150,127 @@ export class FillsContextMgr extends StyleCtx {
         }
     }
 
-    /* 修改一条纯色填充的颜色 */
+    /* 修改一条纯色填充的颜色(看起来可以和modifyFillColor合并) */
     modifyFillHex(event: Event, fill: Fill) {
         const rgb = getRGBFromInputEvent(event);
         if (!rgb) return;
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
-        if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsColor([{ fill, color }]);
-        } else {
-            const index = this.getIndexByFill(fill);
-            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getFills()[index], color })));
-            this.hiddenCtrl(event);
-        }
+        this.modifyFillColor(color, fill);
     }
 
     /* 修改一条纯色填充的透明度 */
     modifyFillAlpha(event: Event, fill: Fill) {
         const alpha = getNumberFromInputEvent(event);
         if (isNaN(alpha)) return;
-        const color = new Color(
-            Math.max(0, Math.min(1, alpha / 100)),
-            fill.color.red,
-            fill.color.green,
-            fill.color.blue
-        );
+        if (fill.fillType === FillType.Gradient) {
+            this.modifyGradientOpacity(fill, alpha / 100);
+        } else {
+            const color = new Color(
+                Math.max(0, Math.min(1, alpha / 100)),
+                fill.color.red,
+                fill.color.green,
+                fill.color.blue
+            );
+            this.modifyFillColor(color, fill);
+        }
+    }
+
+    /* 修改一条纯色填充的颜色 */
+    modifyFillColor(color: Color, fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
             this.editor.setFillsColor([{ fill, color }]);
         } else {
             const index = this.getIndexByFill(fill);
             this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getFills()[index], color })));
-            this.hiddenCtrl(event);
+            this.hiddenCtrl();
         }
     }
 
+    /* 修改渐变色的透明度 */
+    modifyGradientOpacity(fill: Fill, opacity: number) {
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setGradientOpacity([{ fill, opacity }]);
+        } else {
+            const index = this.getIndexByFill(fill);
+            this.editor.setGradientOpacity(this.selected.map(i => ({ fill: i.getFills()[index], opacity })));
+            this.hiddenCtrl();
+        }
+    }
+
+    /* 修改图层填充遮罩的绑定值 */
     modifyFillMask(id: string) {
-        const actions = get_actions_add_mask(this.selected, id);
-        this.editor.shapesSetFillMask(actions);
+        this.editor.setShapesFillMask(this.document, this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();
     }
 
+    /* 解绑填充遮罩 */
     unbind() {
-        this.editor.shapesDelFillMask(get_actions_fill_mask(this.selected));
+        this.editor.unbindShapesFillMask(this.document, this.page, this.selected);
     }
 
+    /* 删除遮罩 */
     removeMask() {
-        this.editor.shapesDelStyleFill(get_actions_fill_mask(this.selected));
+        this.editor.removeShapesFillMask(this.document, this.page, this.selected);
     }
 
+    /* 创建一个填充遮罩 */
     createStyleLib(name: string, desc: string) {
         const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
         const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);
-        this.editor4Doc.insertStyleLib(fillMask, this.page, this.selected);
+        this.editor.createFillsMask(this.document, fillMask, this.page, this.selected);
         this.kill();
+    }
+}
+
+function stringifyFills(sye: { style: Style, fills: Fill[] }) {
+    if (sye.style.fillsMask) return sye.style.fillsMask;
+    return sye.fills.reduce((p, c) => p + stringifyFill(c), '')
+
+    function stringifyFill(fill: Fill) {
+        const type = fill.fillType;
+        let str = '';
+        if (type === FillType.SolidColor) {
+            str += fill.color.red + ','
+                + fill.color.green + ','
+                + fill.color.blue + ','
+                + fill.color.alpha;
+        } else if (type === FillType.Pattern) {
+            str += fill.imageRef ?? 'null'
+                + fill.imageScaleMode ?? 'null'
+                + fill.originalImageHeight ?? 'null'
+                + fill.originalImageWidth ?? 'null'
+                + (fill.paintFilter ? stringifyFilter(fill.paintFilter) : 'null')
+                + fill.rotation ?? 'null'
+                + fill.scale ?? 'null'
+                + (fill.transform ? stringifyPatternTransform(fill.transform) : 'null')
+        } else if (type === FillType.Gradient) {
+            str += stringifyGradient(fill.gradient!);
+        }
+        return str;
+    }
+}
+
+export function stringifyFilter(filter: PaintFilter) {
+    return '' + filter.hue + filter.tint + filter.shadow + filter.saturation + filter.contrast + filter.exposure + filter.temperature;
+}
+
+export function stringifyPatternTransform(t: PatternTransform) {
+    return '' + t.m00 + t.m01 + t.m02 + t.m10 + t.m11 + t.m12;
+}
+
+export function stringifyGradient(g: Gradient) {
+    let str = '';
+    str += g.gradientType + g.from.x + g.from.y + g.to.x + g.to.y
+        + (g.elipseLength ?? 'null')
+        + (g.gradientOpacity ?? 'null')
+    ;
+
+    g.stops.forEach(s => str += stringifyStop(s));
+
+    return str;
+
+    function stringifyStop(s: Stop) {
+        return '' + s.position + s.color.red + ',' + s.color.green + ',' + s.color.blue + ',' + s.color.alpha;
     }
 }

@@ -1,22 +1,24 @@
 <script lang="ts" setup>
-import ColorStyle from "./ColorStyle.vue";
+import RadiusStyle from "./RadiusStyle.vue";
 import { Context } from "@/context";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
-import CreateFillMaskPanel from "./ModifyFillMaskPanel.vue";
-import { onMounted, onUnmounted, reactive } from "vue";
+import CreateRadiusMaskPanel from "./ModifyRadiusMaskPanel.vue";
+import { onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
-import { StrokeFillContextMgr } from "../ctx";
+import { useI18n } from "vue-i18n";
+import { RadiusContextMgr } from "../ctx";
 
-/**
+/** 
  * 填充样式库面板。用于展示样式列表、创建样式
  */
-const { context, manager, title } = defineProps<{ context: Context, manager: StrokeFillContextMgr, title: string }>();
+const { context, manager, title } = defineProps<{ context: Context, manager: RadiusContextMgr, title: string }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
-const panelStatus = reactive<ElementStatus>({ id: '#modify-fill-style-panel', visible: false });
+const { t } = useI18n()
+const panelStatus = reactive<ElementStatus>({ id: '#modify-radius-style-panel', visible: false });
 const panelStatusMgr = new ElementManager(
     context,
     panelStatus,
-    { whiteList: ['.modify-fill-style-panel', '.add'] }
+    { whiteList: ['.modify-radius-style-panel', '.add'] }
 );
 manager.catchPanel(panelStatusMgr);
 
@@ -36,15 +38,15 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <div id="border_fill-style-lib-panel" class="border_fill-style-lib-panel">
+    <div id="radius-style-lib-panel" class="radius-style-lib-panel">
         <PopoverHeader :title="title" @create="showCreatePanel" @close="emits('close')" />
-        <ColorStyle :context="context" :manager="manager" />
-        <CreateFillMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
+        <RadiusStyle :context="context" :manager="manager" />
+        <CreateRadiusMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
             @close="() => panelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">
-.border_fill-style-lib-panel {
+.radius-style-lib-panel {
     width: 230px;
     height: fit-content;
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);

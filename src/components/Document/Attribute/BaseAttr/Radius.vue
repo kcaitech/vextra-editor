@@ -568,12 +568,7 @@ const delStyleRadius = () => {
 const closePanel = () => {
     radiusPanelStatusMgr.close();
 }
-
-watch(radiusCtx,()=>{
-    console.log(radiusCtx,'***************');
-    
-})
-
+ 
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     update();

@@ -1,4 +1,4 @@
-import { ShapeView } from "@kcdesign/data";
+import { CoopRepository, ShapeView, Document } from "@kcdesign/data";
 import { Context } from "@/context";
 import { hidden_selection } from "@/utils/content";
 import { ElementManager } from "@/components/common/elementmanager";
@@ -19,14 +19,21 @@ export class StyleCtx {
         this.m_selected = [];
     }
 
+    get repo() {
+        return this.context.coopRepo;
+    }
+
     get page() {
         return this.context.selection.selectedPage!;
     }
 
+    get document() {
+        return this.context.data;
+    }
 
     protected getSelected() {
         this.shapes = this.context.selection.selectedShapes;
-        this.selected = getShapesForStyle(this.context.selection.selectedShapes);
+        this.selected = this.context.selection.flat;
     }
 
     /**
@@ -52,7 +59,7 @@ export class StyleCtx {
     }
 
 
-    protected get editor() {
+    protected get editor(): any { /* any要趋近与Modifier */
         return this.context.editor4Page(this.context.selection.selectedPage!);
     }
 

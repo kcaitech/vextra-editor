@@ -2,12 +2,12 @@
 import { onMounted, ref } from "vue";
 
 const firstInput = ref<HTMLInputElement>();
-const {name, desc, focusAtOnce} = defineProps<{
+const { name, desc, focusAtOnce } = defineProps<{
     name: string;
     desc: string;
     focusAtOnce?: boolean;
 }>();
-const emits = defineEmits(["modifyName", "modifyDesc"]);
+const emits = defineEmits(["modifyName", "modifyDesc", "changeInput"]);
 
 function blur(event: KeyboardEvent) {
     (event.target as HTMLInputElement).blur();
@@ -25,6 +25,10 @@ function modifyDesc(event: Event) {
     target.blur();
 }
 
+function changeInput(event: Event) {
+    emits("changeInput", (event.target as HTMLInputElement).value);
+}
+
 onMounted(() => {
     if (focusAtOnce) {
         firstInput.value!.focus();
@@ -36,7 +40,8 @@ onMounted(() => {
     <div class="detail">
         <div class="name">
             <label for="name">名称</label>
-            <input ref="firstInput" type="text" id="name" :value="name" @change="modifyName" @keydown.esc="blur">
+            <input ref="firstInput" type="text" id="name" :value="name" @change="modifyName" @input="changeInput"
+                @keydown.esc="blur">
         </div>
         <div class="des">
             <label for="des">描述</label>
@@ -52,7 +57,8 @@ onMounted(() => {
     padding: 0 12px;
     box-sizing: border-box;
 
-    .name, .des {
+    .name,
+    .des {
         display: flex;
         align-items: center;
         height: 32px;

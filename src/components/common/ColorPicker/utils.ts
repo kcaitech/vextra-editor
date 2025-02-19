@@ -1,7 +1,6 @@
 import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 
-export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
+import { Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';
@@ -25,27 +24,6 @@ export function toRGBA(options: {
     alpha: number
 }): string {
     return "rgba(" + options.red + "," + options.green + "," + options.blue + "," + options.alpha + ")";
-}
-
-export function toRGB(options: {
-    red: number,
-    green: number,
-    blue: number,
-    alpha: number
-}): string {
-    return "rgb(" + options.red + "," + options.green + "," + options.blue + ")";
-}
-
-export function toHex(options: {
-    red: number,
-    green: number,
-    blue: number,
-    alpha: number
-}): string {
-    const toHex = (n: number) => {
-        return n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
-    }
-    return "#" + toHex(options.red) + toHex(options.green) + toHex(options.blue);
 }
 
 export type Model = 'RGB' | 'HSL' | 'HSB' | 'Hex';
@@ -81,16 +59,6 @@ export const rbgaObjToHex = (rgba: IRgba) => {
     g = Math.floor(g * a);
     b = Math.floor(b * a);
     return `#${hex(r)}${hex(g)}${hex(b)}`;
-};
-
-/**
- * rbga对象转化为rgba css颜色字符串
- * @param rgba
- * @returns
- */
-export const rbgaObjToRgba = (rgba: IRgba) => {
-    const {r, g, b, a} = rgba;
-    return `rgba(${r},${g},${b},${a})`;
 };
 
 // 显示颜色信息，包括放大镜和颜色值
@@ -298,8 +266,7 @@ export const getCanvasRectColor = (ctx: any, rect: Rect, scale: number = 1) => {
     const {x, y, width, height} = rect;
     const image = ctx.getImageData(x * scale, y * scale, width * scale, height * scale);
     const {data} = image;
-    const colors = getImageColor(data, rect, scale);
-    return colors;
+    return getImageColor(data, rect, scale);
 }
 
 // store
@@ -380,21 +347,6 @@ export function RGB2H2(red: number, green: number, blue: number) {
         h = 60 * ((red - green) / (max - min)) + 240;
     }
     return h;
-}
-
-// RGB => S
-export function RGB2S(color: Color) {
-    const {red, green, blue} = color;
-    const max = Math.max(red, green, blue);
-    const min = Math.min(red, green, blue);
-    return (max - min) / max;
-}
-
-// RGB => B
-export function RGB2B(color: Color) {
-    const {red, green, blue} = color;
-    const max = Math.max(red, green, blue);
-    return max / 255;
 }
 
 // RGB => HSB

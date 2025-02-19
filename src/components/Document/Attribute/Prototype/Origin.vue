@@ -58,7 +58,6 @@ const maxnumber = (page: PageView) => {
     let start: PrototypeStartingPoint[] = [];
     const name = t('prototype.origin_default_name')
     const regex = new RegExp(name + " \\d")
-    console.log(regex);
 
     let number = 0
     for (let index = 0; index < shapes.length; index++) {

@@ -38,7 +38,7 @@ function update() {
     name.value = data?.name ?? '';
     desc.value = data?.description ?? '';
     shadows.value = getShadows();
-    
+
 }
 
 function modifyName(value: string) {
@@ -51,6 +51,10 @@ function modifyDesc(value: string) {
     desc.value = value;
     if (!data) return;
     manager.modifyMaskDesc(data.sheet, data.id, value);
+}
+
+function changeInput(value: string) {
+    name.value = value;
 }
 
 function createStyle() {
@@ -66,9 +70,10 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="modify-shadow-style-panel" id="modify-shadow-style-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_shadow') : t('stylelib.create_shadow')" @close="emits('close')" />
+        <PanelHeader :title="data ? t('stylelib.editor_shadow') : t('stylelib.create_shadow')"
+            @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" />
+            @modify-desc="modifyDesc" @changeInput="changeInput" />
         <div v-if="data" class="data-panel">
             <ListHeader title="阴影" @create="manager.create(data)" />
             <div class="fills-container">

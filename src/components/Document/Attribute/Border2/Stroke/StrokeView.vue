@@ -234,7 +234,7 @@ function onMouseMove(e: MouseEvent) {
         display: flex;
         align-items: center;
         height: 32px;
-        gap: 5px;
+        gap: 8px;
 
         >.select {
             height: 100%;

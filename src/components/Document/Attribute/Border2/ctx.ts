@@ -1,6 +1,6 @@
 import { Fill, FillMask, FillType, Style, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType } from "@kcdesign/data";
 import { Context } from "@/context";
-import { BorderData, get_actions_add_mask, get_actions_border_color, get_actions_border_enabled, get_actions_border_mask, get_actions_border_unify, get_actions_fill_mask, getDideStr } from "@/utils/shape_style";
+import { BorderData, get_actions_add_mask, get_actions_border_mask, get_actions_border_unify, get_actions_fill_mask, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
@@ -216,30 +216,43 @@ export class StrokeFillContextMgr extends StyleCtx {
         const rgb = getRGBFromInputEvent(event);
         if (!rgb) return;
         const color = new Color(fill.color.alpha, rgb[0], rgb[1], rgb[2]);
-        const index = this.getIndexByFill(fill);
-        if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsColor([{ fill, color }]);
+        this.modifyFillColor(color, fill);
+    }
+
+     /* 修改一条纯色填充的透明度 */
+     modifyFillAlpha(event: Event, fill: Fill) {
+        const alpha = getNumberFromInputEvent(event);
+        if (isNaN(alpha)) return;
+        if (fill.fillType === FillType.Gradient) {
+            this.modifyGradientOpacity(fill, alpha / 100);
         } else {
-            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getBorders().strokePaints[index], color })));
-            this.hiddenCtrl(event);
+            const color = new Color(
+                Math.max(0, Math.min(1, alpha / 100)),
+                fill.color.red,
+                fill.color.green,
+                fill.color.blue
+            );
+            this.modifyFillColor(color, fill);
         }
     }
 
-    modifyFillAlpha(event: Event, fill: Fill) {
-        const alpha = getNumberFromInputEvent(event);
-        if (isNaN(alpha)) return;
-        const color = new Color(
-            Math.max(0, Math.min(1, alpha / 100)),
-            fill.color.red,
-            fill.color.green,
-            fill.color.blue
-        );
+    modifyFillColor(color: Color, fill: Fill) {
         const index = this.getIndexByFill(fill);
         if (fill.parent?.parent instanceof FillMask) {
             this.editor.setFillsColor([{ fill, color }]);
         } else {
             this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getBorders().strokePaints[index], color })));
-            this.hiddenCtrl(event);
+            this.hiddenCtrl();
+        }
+    }
+
+    modifyGradientOpacity(fill: Fill, opacity: number) {
+        if (fill.parent?.parent instanceof FillMask) {
+            this.editor.setGradientOpacity([{ fill, opacity }]);
+        } else {
+            const index = this.getIndexByFill(fill);
+            this.editor.setGradientOpacity(this.selected.map(i => ({ fill: i.getFills()[index], opacity })));
+            this.hiddenCtrl();
         }
     }
 

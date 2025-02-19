@@ -68,6 +68,10 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
+function changeInput(value: string) {
+    name.value = value;
+}
+
 function createStyle() {
     if (!thickness.value || !positonValue.value) return;
     const value = thickness.value.split(', ').map(i => Number(i));
