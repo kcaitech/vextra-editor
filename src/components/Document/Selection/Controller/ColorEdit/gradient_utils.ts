@@ -62,11 +62,11 @@ export const get_add_gradient_color2 = (stops: RGBACatch[], position: number) =>
         if (position < stop.position) {
             let n_alpha;
             const c = i === 0 ? stop : stops[i - 1];
-            const {R: red, G: green, B: blue, A: alpha} = c;
+            const { R: red, G: green, B: blue, A: alpha } = c;
             if (i > 0) {
-                const position = stops[i - 1].position;
+                const after_position = stops[i - 1].position;
                 const a_len = alpha - stop.A;
-                const proportion = ((position - position) * a_len) / (stop.position - position);
+                const proportion = ((position - after_position) * a_len) / (stop.position - after_position);
                 if (a_len === 0) {
                     n_alpha = alpha;
                 } else {
@@ -75,9 +75,10 @@ export const get_add_gradient_color2 = (stops: RGBACatch[], position: number) =>
             } else {
                 n_alpha = alpha;
             }
-            return {R: red, G: green, B: blue, A: n_alpha, position} as RGBACatch;
+            return { R: red, G: green, B: blue, A: n_alpha, position } as RGBACatch;
         } else if (position > stops[i].position && i === stops.length - 1) {
-            return stop;
+            const { R: red, G: green, B: blue, A: alpha } = stop;
+            return { R: red, G: green, B: blue, A: alpha, position } as RGBACatch;;
         }
     }
 }

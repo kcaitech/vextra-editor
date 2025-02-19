@@ -20,7 +20,7 @@ type Props = {
     trigger: any[];
 }
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 const blurCtx = ref<BlurContext>({
     mixed: false,
     blur: undefined,
@@ -29,11 +29,11 @@ const blurCtx = ref<BlurContext>({
 })
 const blurCtxMgr = new BlurContextMgr(props.context, blurCtx.value as BlurContext);
 const cloverVisible = computed<boolean>(() => !(blurCtx.value.mask || blurCtx.value.mixed));
-const blurLibStatus = reactive<ElementStatus>({id: '#blur-lib-panel', visible: false});
+const blurLibStatus = reactive<ElementStatus>({ id: '#blur-lib-panel', visible: false });
 const blurPanelStatusMgr = new ElementManager(
     props.context,
     blurLibStatus,
-    {whiteList: ['.blur_clover', '.blur-lib-panel', '.blur_desc']}
+    { whiteList: ['.blur_clover', '.blur-lib-panel', '.blur_desc'] }
 );
 blurCtxMgr.catchPanel(blurPanelStatusMgr);
 
@@ -43,11 +43,11 @@ const showBlurPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('blur_desc')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 42}});
+            e && blurPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 42 } });
             break;
         }
         if (e.classList.contains('blur_clover')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -164, offsetTop: 42}});
+            e && blurPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 42 } });
             break;
         }
         e = e.parentElement;
@@ -60,7 +60,11 @@ const closePanel = () => {
 
 const watchList: any[] = [
     watch(() => props.selectionChange, () => blurCtxMgr.update()),
-    watch(() => props.trigger, v => v?.includes('style') && blurCtxMgr.update())
+    watch(() => props.trigger, (v) => {
+        if (v?.includes('blur') || v?.includes('blursMask')) {
+            blurCtxMgr.update();
+        }
+    })
 ]
 onMounted(() => {
     blurCtxMgr.update();
@@ -75,24 +79,24 @@ onUnmounted(() => {
         <TypeHeader :title="t('blur.blur')" @click="() => blurCtxMgr.init()" :active="active">
             <template #tool>
                 <div v-if="cloverVisible" class="blur_clover" @click="showBlurPanel($event)">
-                    <SvgIcon :icon="style_icon"/>
+                    <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!blurCtx.blur || blurCtx.mixed" class="add" @click.stop="() => blurCtxMgr.create()">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </template>
         </TypeHeader>
         <div v-if="blurCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
         <MaskPort v-else-if="blurCtx.maskInfo" @unbind="() => blurCtxMgr.unbind()"
-                  @delete="() => blurCtxMgr.removeMask()">
+            @delete="() => blurCtxMgr.removeMask()">
             <div class="blur_desc" @click="showBlurPanel($event)">
-                <div class="effect"/>
+                <div class="effect" />
                 <div>{{ blurCtx.maskInfo.name }}</div>
             </div>
         </MaskPort>
-        <BlurPanel v-else-if="blurCtx.blur" :manager="blurCtxMgr" :context="context" :blur="(blurCtx.blur as BlurCatch)"/>
-        <BlurStyle v-if="blurLibStatus.visible" :context="props.context" :manager="blurCtxMgr"
-                   @close="closePanel"/>
+        <BlurPanel v-else-if="blurCtx.blur" :manager="blurCtxMgr" :context="context"
+            :blur="(blurCtx.blur as BlurCatch)" />
+        <BlurStyle v-if="blurLibStatus.visible" :context="props.context" :manager="blurCtxMgr" @close="closePanel" />
     </div>
 </template>
 <style scoped lang="scss">
@@ -112,7 +116,8 @@ onUnmounted(() => {
         font-size: var(--font-default-fontsize);
     }
 
-    .add, .blur_clover {
+    .add,
+    .blur_clover {
         width: 28px;
         height: 28px;
         display: flex;
@@ -122,7 +127,7 @@ onUnmounted(() => {
         border-radius: var(--default-radius);
         transition: .2s;
 
-        > img {
+        >img {
             width: 16px;
             height: 16px;
         }

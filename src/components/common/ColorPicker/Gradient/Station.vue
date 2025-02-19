@@ -14,7 +14,7 @@ import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorline
 
 const props = defineProps<{ gradient: GradientCatch, at: number }>()
 const emits = defineEmits<{
-    (e: "change-stop", val: number): void;
+    (e: "change-stop", id: string): void;
     (e: "create-stop", stop: RGBACatch): void;
     (e: "reverse"): void;
     (e: "rotate"): void;
@@ -23,9 +23,9 @@ const emits = defineEmits<{
     (e: "drag-end"): void;
 }>();
 
-const {t} = useI18n();
+const { t } = useI18n();
 const channelStyle = ref<any>({});
-const circles = ref<{ x: number, stopStr: string, active?: boolean }[]>([]);
+const circles = ref<{ x: number, stopStr: string, id: string, active?: boolean }[]>([]);
 const lineEl = ref<HTMLDivElement>();
 let lineL = 158;
 
@@ -39,15 +39,18 @@ function createStop(event: MouseEvent) {
 
 function drawCircles() {
     const stops = props.gradient.RGBAs;
-    const css: { x: number, stopStr: string, active?: boolean }[] = [];
-    for (const stop of stops) {
+    const ids = props.gradient.stopIds;
+    const css: { x: number, stopStr: string, id: string, active?: boolean }[] = [];
+    for (let i = 0; i < stops.length; i++) {
+        const stop = stops[i];
         css.push({
             x: stop.position * lineL,
-            stopStr: toRGBA({ red: stop.R, green: stop.G, blue: stop.B, alpha: stop.A })
+            stopStr: toRGBA({ red: stop.R, green: stop.G, blue: stop.B, alpha: stop.A }),
+            id: ids[i]
         });
     }
     css[props.at].active = true;
-    
+
     circles.value = css;
 }
 
@@ -59,12 +62,14 @@ const dragKit = new DragKit({
     commit: () => emits("drag-end")
 })
 
-function downStop(event: MouseEvent, index: number) {
+function downStop(event: MouseEvent, id: string) {
+    const index = props.gradient.stopIds.findIndex(s => s === id);
+    
     if (index !== props.at) delete circles.value[props.at].active;
-    emits("change-stop", index);
+    emits("change-stop", id);
 
     const target = (event.target as Element).closest('.stops') as HTMLDivElement;
-    dragKit.start(event, {x: target.offsetLeft});
+    dragKit.start(event, { x: target.offsetLeft });
 }
 
 function update() {
@@ -81,20 +86,20 @@ onUnmounted(watchEffect(update));
 <template>
     <div class="gradient-container">
         <div class="line-container">
-            <div ref="lineEl" class="line" :style="channelStyle" @mousedown="createStop"/>
+            <div ref="lineEl" class="line" :style="channelStyle" @mousedown="createStop" />
             <div class="stops" v-for="(item, idx) in circles" :key="idx" :style="{ left: item.x + 'px' }"
-                 @mousedown="(e) => downStop(e, idx)">
-                <div :class="item.active ? 'stop-active' : 'stop'" :style="{backgroundColor: item.stopStr}"/>
+                @mousedown="(e) => downStop(e, item.id)">
+                <div :class="item.active ? 'stop-active' : 'stop'" :style="{ backgroundColor: item.stopStr }" />
             </div>
         </div>
         <div class="reverse" @click="emits('reverse')">
             <Tooltip :content="t('color.reverse')">
-                <SvgIcon :icon="exchange_icon"/>
+                <SvgIcon :icon="exchange_icon" />
             </Tooltip>
         </div>
         <div class="rotate" @click="emits('rotate')">
             <Tooltip :content="t('color.rotate')">
-                <SvgIcon :icon="rotate90_icon"/>
+                <SvgIcon :icon="rotate90_icon" />
             </Tooltip>
         </div>
     </div>

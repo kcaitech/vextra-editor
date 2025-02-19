@@ -8,6 +8,8 @@ import {
     AsyncGradientEditor,
     BasicArray,
     Color,
+    Fill,
+    FillMask,
     GradientType,
     Matrix,
     ShapeType,
@@ -27,6 +29,7 @@ import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
 import { computed } from 'vue';
 import { flattenShapes } from '@/utils/cutout';
+import { getShapesForStyle } from '@/utils/style';
 interface Props {
     context: Context
     matrix: Matrix
@@ -51,7 +54,6 @@ let isDragging = false;
 let gradientEditor: AsyncGradientEditor | undefined;
 const dragActiveDis = 3;
 const active = ref();
-const shapes = ref<ShapeView[]>([]);
 const rotate = ref(0);
 const rotate_r = computed<number>(() => {
     return rotate.value * Math.PI / 180;
@@ -69,8 +71,7 @@ const slope_r = ref(0);
 const get_linear_points = () => {
     dot.value = false;
     stops.value = [];
-    shapes.value = [...props.context.selection.flat];
-    const shape = shapes.value[0] as ShapeView; 
+    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient || gradient.gradientType !== GradientType.Angular) return;
     let id = props.context.color.selected_stop ?? gradient.stops[0].id;
@@ -167,7 +168,7 @@ const dot_mousemove = (e: MouseEvent) => {
     const { x: sx, y: sy } = startPosition;
     const dx = x - sx;
     const dy = y - sy;
-    const shape = shapes.value[0] as ShapeView;
+    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     if (isDragging && gradientEditor) {
@@ -211,12 +212,21 @@ const dot_mousemove = (e: MouseEvent) => {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
+            const shapes = getShapesForStyle(props.context.selection.selectedShapes);
             if (locate.type !== 'text' && locate.type !== 'table_text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value as ShapeView[], page!, locate.index, locate.type);
+                let fills: Fill[] = [];
+                let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+                if (maskId) {
+                    const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
+                    fills = mask.fills;
+                } else {
+                    fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
+                }
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(fills[locate.index], page!);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
                 if (locate.type === "text") {
-                    const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
+                    const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
                     const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
                     if (isSelectText(props.context)) {
                         gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, 0, Infinity);
@@ -225,7 +235,7 @@ const dot_mousemove = (e: MouseEvent) => {
                     }
                 } else {
                     const tableSelection = props.context.tableSelection;
-                    const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
+                    const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
                     if (tableSelection.editingCell) {
                         const table_cell = tableSelection.editingCell;
                         const editor_text = props.context.editor4TextShape(table_cell);
@@ -264,7 +274,7 @@ const dot_mouseup = (e: MouseEvent) => {
 const stop_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
     e.stopPropagation();
-    const shape = shapes.value[0] as ShapeView;
+    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     const position = gradient.stops[index].position;
@@ -281,7 +291,7 @@ const down_stop_id = ref<string>('');
 const add_stop = (e: MouseEvent) => {
     const posi = get_stop_position(e);
     const locate = props.context.color.locate;
-    const shape = shapes.value[0] as ShapeView;
+    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     startPosition = props.context.workspace.getContentXY(e);
     if (!locate) return;
     const gradient = get_gradient(props.context, shape);
@@ -289,14 +299,21 @@ const add_stop = (e: MouseEvent) => {
     const _stop = get_add_gradient_color(gradient.stops, posi);
     if (!_stop) return;
     const selected = props.context.selection.selectedShapes;
-    const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+    const s = getShapesForStyle(selected)[0];
     const page = props.context.selection.selectedPage!;
     const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
     if (locate.type !== 'text' && locate.type !== 'table_text') {
         const idx = locate.index;
         const editor = props.context.editor4Page(page);
-        const actions = get_action_gradient_stop(s, idx, stop, locate.type);
-        editor.addShapesGradientStop(actions);
+        let fills: Fill[] = [];
+        let maskId = locate.type === 'fills' ? s.style.fillsMask : s.style.borders.fillsMask;
+        if (maskId) {
+            const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
+            fills = mask.fills;
+        } else {
+            fills = locate.type === 'fills' ? s.getFills() : s.getBorders().strokePaints;
+        }
+        editor.addShapesGradientStop([{ fill: fills[idx], stop }]);
     } else {
         const { textIndex, selectLength } = getTextIndexAndLen(props.context);
         const new_gradient = cloneGradient(gradient);
@@ -311,8 +328,9 @@ const add_stop = (e: MouseEvent) => {
                 return 0;
             }
         })
+        const shapes = getShapesForStyle(props.context.selection.selectedShapes);
         if (locate.type === 'text') {
-            const text_shapes = (shapes.value as ShapeView[]).filter((s) => s.type === ShapeType.Text);
+            const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
             const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
             if (text_shapes.length === 1) {
                 if (isSelectText(props.context)) {
@@ -325,7 +343,7 @@ const add_stop = (e: MouseEvent) => {
             }
         } else {
             const tableSelection = props.context.tableSelection;
-            const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
+            const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
             if (tableSelection.editingCell) {
                 const table_cell = tableSelection.editingCell;
                 const editor_text = props.context.editor4TextShape(table_cell);
@@ -373,7 +391,7 @@ const stop_mousedown = (e: MouseEvent, id: string) => {
 }
 const is_stop_down = ref(false);
 const down_stop = (e: MouseEvent, id: string) => {
-    const shape = shapes.value[0] as ShapeView;
+    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     temporary.value = false;
@@ -394,7 +412,7 @@ const stop_mousemove = (e: MouseEvent) => {
     const { x: sx, y: sy } = startPosition;
     const dx = x - sx;
     const dy = y - sy;
-    const shape = shapes.value[0] as ShapeView;
+    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     if (isDragging && gradientEditor) {
@@ -411,12 +429,21 @@ const stop_mousemove = (e: MouseEvent) => {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
+            const shapes = getShapesForStyle(props.context.selection.selectedShapes);
             if (locate.type !== 'text' && locate.type !== 'table_text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value as ShapeView[], page!, locate.index, locate.type);
+                let fills: Fill[] = [];
+                let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+                if (maskId) {
+                    const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
+                    fills = mask.fills;
+                } else {
+                    fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
+                }
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(fills[locate.index], page!);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
                 if (locate.type === 'text') {
-                    const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
+                    const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
                     const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
                     if (isSelectText(props.context)) {
                         gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, 0, Infinity);
@@ -425,7 +452,7 @@ const stop_mousemove = (e: MouseEvent) => {
                     }
                 } else {
                     const tableSelection = props.context.tableSelection;
-                    const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
+                    const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
                     if (tableSelection.editingCell) {
                         const table_cell = tableSelection.editingCell;
                         const editor_text = props.context.editor4TextShape(table_cell);
@@ -469,7 +496,7 @@ const stop_content_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
     get_percent_posi(e);
     temporary.value = false;
-    const shape = shapes.value[0] as ShapeView;
+    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     const position = gradient.stops[index].position;
@@ -496,7 +523,7 @@ const hover_ellipse_enter = (e: MouseEvent) => {
 
 const get_temporary_stop = (e: MouseEvent) => {
     const posi = get_stop_position(e);
-    const shape = shapes.value[0] as ShapeView;
+    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     get_percent_posi(e);
     const theta = posi * 360;
     const gradient = get_gradient(props.context, shape);
