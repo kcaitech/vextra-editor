@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { HSB2RGB, RGB2HSB, verifiedVal } from "@/components/common/ColorPicker/utils";
-import { onUnmounted, ref, watchEffect } from "vue";
+import { onUnmounted, Ref, ref, watchEffect } from "vue";
 import { Color } from "@kcdesign/data";
-
+import { inject } from "vue";
 const props = defineProps<{ stop: RGBACatch }>();
 const emits = defineEmits<{
     (e: "change", stop: RGBACatch): void;
@@ -11,11 +11,18 @@ const emits = defineEmits<{
 const H = ref<number>(100);
 const S = ref<number>(0);
 const B = ref<number>(0);
+const { valueS, valueH, changeValueS, changeValueH } = inject('HSB') as { valueS: Ref<number>, valueH: Ref<number>, changeValueS: (v: number) => void, changeValueH: (v: number) => void };
 
 function update() {
-    const hsb = RGB2HSB({red: props.stop.R, green: props.stop.R, blue: props.stop.R} as unknown as Color);
-    H.value = Math.round(hsb.h);
-    S.value = Math.round(hsb.s * 100);
+    const hsb = RGB2HSB({ red: props.stop.R, green: props.stop.G, blue: props.stop.B } as unknown as Color);
+    if ((props.stop.R === 0 && props.stop.G === 0 && props.stop.B === 0) || hsb.s === 0) {
+        S.value = Math.round(valueS.value * 100);
+        H.value = Math.round(valueH.value);
+    } else {
+        S.value = Math.round(hsb.s * 100);
+        H.value = Math.round(hsb.h);
+        changeValueH(H.value)
+    }
     B.value = Math.round(hsb.b * 100);
 }
 
@@ -27,24 +34,28 @@ function focus(event: Event) {
 function changeH(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = verifiedVal(parseInt(target.value), 0, 360);
-    const rgb = HSB2RGB(value, S.value, B.value);
-    emits('change', Object.assign({...props.stop}, {R: rgb.R, G: rgb.G, B: rgb.B}));
+    changeValueH(value);
+    const rgb = HSB2RGB(value, S.value * 0.01, B.value * 0.01);
+    emits('change', Object.assign({ ...props.stop }, { R: rgb.R, G: rgb.G, B: rgb.B }));
     target.blur();
 }
 
 function changeS(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = verifiedVal(parseInt(target.value), 0, 100);
-    const rgb = HSB2RGB(H.value, value, B.value);
-    emits('change', Object.assign({...props.stop}, {R: rgb.R, G: rgb.G, B: rgb.B}));
+    S.value = value;
+    changeValueS(value * 0.01);
+    const rgb = HSB2RGB(H.value, value * 0.01, B.value * 0.01);
+    emits('change', Object.assign({ ...props.stop }, { R: rgb.R, G: rgb.G, B: rgb.B }));
     target.blur();
 }
 
 function changeB(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = verifiedVal(parseInt(target.value), 0, 100);
-    const rgb = HSB2RGB(H.value, S.value, value);
-    emits('change', Object.assign({...props.stop}, {R: rgb.R, G: rgb.G, B: rgb.B}));
+    B.value = value;
+    const rgb = HSB2RGB(H.value, S.value * 0.01, value * 0.01);
+    emits('change', Object.assign({ ...props.stop }, { R: rgb.R, G: rgb.G, B: rgb.B }));
     target.blur();
 }
 
@@ -53,9 +64,9 @@ onUnmounted(watchEffect(update));
 
 <template>
     <div class="inputs">
-        <input :value="H" @focus="focus" @change="changeH"/>
-        <input :value="S" @focus="focus" @change="changeS"/>
-        <input :value="B" @focus="focus" @change="changeB"/>
+        <input :value="H" @focus="focus" @change="changeH" />
+        <input :value="S" @focus="focus" @change="changeS" />
+        <input :value="B" @focus="focus" @change="changeB" />
     </div>
 </template>
 

@@ -107,5 +107,9 @@ onUnmounted(() => {
     .data-null {
         margin: auto;
     }
+
+    .null{
+        margin: auto;
+    }
 }
 </style>

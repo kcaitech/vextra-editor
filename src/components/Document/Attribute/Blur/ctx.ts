@@ -160,7 +160,8 @@ export class BlurContextMgr extends StyleCtx {
         this.kill();
     }
     createStyleLib(name: string, desc: string) {
-        const blur = new Blur([0] as BasicArray<number>, true, new Point2D(0, 0), 10, BlurType.Gaussian);
+        const {isEnabled,motionAngle,saturation,type}=this.blurCtx.blur?.blur!;
+        const blur = new Blur([0] as BasicArray<number>, isEnabled, new Point2D(0, 0), saturation, type);
         const blurMask = new BlurMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, blur);
         this.editor4Doc.insertStyleLib(blurMask, this.page, this.selected);
         this.kill();

@@ -43,11 +43,11 @@ const showBlurPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('mask-port-wrapper')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 42}});
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 36}});
             break;
         }
         if (e.classList.contains('blur-panel')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: 4, offsetTop: 42}});
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: 4, offsetTop: 36}});
             break;
         }
         e = e.parentElement;

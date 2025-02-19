@@ -420,7 +420,7 @@ export function RGB2HSB(color: Color): HSB {
         s = (max - min) / max;
     }
     b = max / 255;
-    return {h: h / 360, s, b};
+    return {h: h, s, b};
 }
 
 export function RGB2HSB2(red: number, green: number, blue: number): HSB {

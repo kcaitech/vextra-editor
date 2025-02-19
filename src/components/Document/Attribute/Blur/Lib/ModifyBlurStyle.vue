@@ -34,7 +34,7 @@
                     </div>
                     <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" :entry="'style'"
                         :reflush="reflush" @select="positionSelect" />
-                    <BlurDetail :context="props.context" :blur="blurInfo as any" :shapes="props.shapes" :entry="'style'"
+                    <BlurDetail :manager="manager" :context="props.context" :blur="(blurInfo as any)" :shapes="props.shapes"
                         @set-blur-saturation="setBlurSaturation" @key-down-saturation="keyDownSaturation"
                         @drag-blur-saturation="dragBlurSaturation" />
                     <div class="delete" :class="{ disable }">
@@ -155,6 +155,8 @@ function stylelib_watcher(t: number | string) {
 
 onMounted(() => {
     update();
+    console.log('mounted');
+    
     props.context.data.watch(stylelib_watcher)
 })
 
