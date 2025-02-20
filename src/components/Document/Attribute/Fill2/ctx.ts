@@ -1,6 +1,6 @@
 import {
     Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
-    Style, Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView,
+    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView,
     RefFillModifier
 } from "@kcdesign/data";
 import { Context } from "@/context";
@@ -33,7 +33,7 @@ export class FillsContextMgr extends StyleCtx {
         const selected = this.selected;
 
         if (selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = selected.map(i => ({ fills: i.getFills(), style: i.style }));
+        const allFills = selected.map(i => ({ fills: i.getFills(), shape: i }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -281,8 +281,8 @@ export class FillsContextMgr extends StyleCtx {
     }
 }
 
-function stringifyFills(sye: { style: Style, fills: Fill[] }) {
-    if (sye.style.fillsMask) return sye.style.fillsMask;
+function stringifyFills(sye: { shape: ShapeView, fills: Fill[] }) {
+    if (sye.shape.fillsMask) return sye.shape.fillsMask;
     return sye.fills.reduce((p, c) => p + stringifyFill(c), '')
 
     function stringifyFill(fill: Fill) {

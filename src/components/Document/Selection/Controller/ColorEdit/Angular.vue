@@ -152,7 +152,7 @@ const dot_mousemove = (e: MouseEvent) => {
         const posi = m.computeCoord(x, y);
         let fill: Fill[] = [];
         if (locate.type !== 'text') {
-            let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+            let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
             if (maskId) {
                 const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
                 fill = [mask.fills[locate.index]];
@@ -219,7 +219,7 @@ const add_stop = (e: MouseEvent) => {
         const idx = locate.index;
         const editor = props.context.editor4Page(page);
         let fills: Fill[] = [];
-        let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+        let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
         if (maskId) {
             const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
             fills = mask.fills;
@@ -312,7 +312,7 @@ const stop_mousemove = (e: MouseEvent) => {
         percent.value = +(posi * 100).toFixed(0);
         let fill: Fill[] = [];
         if (locate.type !== 'text') {
-            let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+            let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
             if (maskId) {
                 const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
                 fill = [mask.fills[locate.index]];

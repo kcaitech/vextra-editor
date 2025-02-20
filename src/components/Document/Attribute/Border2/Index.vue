@@ -108,11 +108,12 @@ onUnmounted(() => {
                 <div v-if="!fillCtx.strokeMask" class="border-style" @click="showBorderPanel">
                     <SvgIcon :icon="style_icon" />
                 </div>
-                <div v-if="!fillCtx.fills.length" class="add" @click.stop="() => fillCtxMgr.create()">
-                    <SvgIcon :icon="add_icon" />
-                </div>
-                <div v-else class="add" @click.stop="() => fillCtxMgr.removeAll()">
+                <div v-if="fillCtx.fills.length || fillCtx.mixed" class="add"
+                    @click.stop="() => fillCtxMgr.removeAll()">
                     <SvgIcon :icon="delete_icon" />
+                </div>
+                <div v-else class="add" @click.stop="() => fillCtxMgr.create()">
+                    <SvgIcon :icon="add_icon" />
                 </div>
             </template>
         </TypeHeader>
@@ -123,7 +124,8 @@ onUnmounted(() => {
         <StrokeStylePanel v-if="strokeLibStatus.visible" :context="context" :manager="fillCtxMgr"
             @close="() => strokePanelStatusMgr.close()" :title="t('stylelib.borders')" />
         <!---------------------------------------------------------------------------------->
-        <TypeHeader v-if="fillCtx.fills.length" :title="t('attr.stroke_color')" :active="!!fillCtx.fills.length">
+        <TypeHeader v-if="fillCtx.fills.length || fillCtx.mixed" :title="t('attr.stroke_color')"
+            :active="!!fillCtx.fills.length">
             <template #tool>
                 <div v-if="cloverVisible" class="border_clover" @click="showFillLib">
                     <SvgIcon :icon="style_icon" />

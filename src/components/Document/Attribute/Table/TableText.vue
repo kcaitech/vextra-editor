@@ -1300,7 +1300,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
-                        :locat="{ index: 0, type: 'table_text' }" :fill-type="fillType"
+                        :locat="{ index: 0, type: 'text' }" :fill-type="fillType"
                         :gradient="gradient instanceof Gradient ? gradient : undefined"
                         @gradient-type="(type, fillType) => togger_gradient_type(type, fillType)"
                         @change="c => getColorFromPicker(c, 'color')"

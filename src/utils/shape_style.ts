@@ -70,14 +70,14 @@ interface FormatItems {
 }
 
 // fills
-export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' | 'mask' {
+export function get_fills(shapes: ShapeView[]): FillItem[] | 'mixed' | 'mask' {
     const fills: FillItem[] = [];
     const shape = shapes[0];
     const stylefills = shape?.getFills() || [];
     const compare_str: string[] = [];
     const has_g_str: string[] = [];
     const image_str: string[] = [];
-    const mask = shape.style.fillsMask ?? 'undefined';
+    const mask = shape.fillsMask ?? 'undefined';
     const fill_mask: string[] = [];
     fill_mask.push(mask)
 
@@ -104,8 +104,8 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' |
         if (shape.type === ShapeType.Cutout) continue;
         const stylefills = shape.getFills();
         const len = stylefills.length;
-        if (shape.style.fillsMask) {
-            fill_mask.push(shape.style.fillsMask)
+        if (shape.fillsMask) {
+            fill_mask.push(shape.fillsMask)
         } else {
             fill_mask.push('undefined')
         }
@@ -230,7 +230,7 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
         s++;
     }
     if (fills.length < 1) {
-        const id = shapes[0].style.fillsMask!;
+        const id = shapes[0].fillsMask!;
         fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills;
     }
     for (let i = 0; i < shapes.length; i++) {
@@ -269,7 +269,7 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
 export function get_actions_fill_mask(shapes: ShapeView[], mask_id?: string) {
     const actions: BatchAction2[] = [];
     let fills: Fill[] = [];
-    const id = mask_id ? mask_id : shapes[0].style.fillsMask!
+    const id = mask_id ? mask_id : shapes[0].fillsMask!
     fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -349,13 +349,13 @@ const initBorder = {
     borderStyle: new BorderStyle(0, 0),
     sideSetting: new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)
 }
-export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderData, stroke_paints: FillItem[] | 'mixed' | 'mask' } {
+export function get_borders(shapes: (ShapeView[])): { border: BorderData, stroke_paints: FillItem[] | 'mixed' | 'mask' } {
     if (shapes.length === 0) return { border: initBorder, stroke_paints: [] };
     const strokePaints: FillItem[] = [];
 
     const shape = shapes[0];
     let styleborders1 = shape.getBorders();
-    const mask = styleborders1.fillsMask ?? 'undefined';
+    const mask = shape.borderFillsMask ?? 'undefined';
     const fill_mask: string[] = [];
     fill_mask.push(mask)
     let s = 0;
@@ -399,8 +399,8 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): { border: BorderDa
         const len = styleborders.strokePaints.length;
         const s_bs = styleborders.strokePaints;
 
-        if (shape.style.borders.fillsMask) {
-            fill_mask.push(shape.style.borders.fillsMask)
+        if (shape.borderFillsMask) {
+            fill_mask.push(shape.borderFillsMask)
         } else {
             fill_mask.push('undefined')
         }
@@ -494,7 +494,7 @@ export function get_actions_add_boder(shapes: ShapeView[], strokePaint: Fill) {
 
 export function get_actions_border_mask(shapes: ShapeView[]) {
     const actions: { target: ShapeView, border: BorderMaskType, type: ShapeType, style: Style }[] = [];
-    const id = shapes[0].style.bordersMask!;
+    const id = shapes[0].bordersMask!;
     const border = (shapes[0].style.getStylesMgr()?.getSync(id) as BorderMask).border
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -505,7 +505,7 @@ export function get_actions_border_mask(shapes: ShapeView[]) {
 
 export function get_actions_border_fillmask(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
-    const id = shapes[0].style.borders.fillsMask!;
+    const id = shapes[0].borderFillsMask!;
     const fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -532,7 +532,7 @@ export function get_actions_border_unify(shapes: ShapeView[]) {
         s++;
     }
     if (!fills.length) {
-        const id = shapes[0].style.borders.fillsMask!
+        const id = shapes[0].borderFillsMask!
         fills = (shapes[0].style.getStylesMgr()?.getSync(id) as FillMask).fills
     }
     for (let i = 0; i < shapes.length; i++) {

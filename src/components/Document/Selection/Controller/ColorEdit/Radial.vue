@@ -153,7 +153,7 @@ const dot_mousemove = (e: MouseEvent) => {
         const posi = m.computeCoord(x, y);
         let fill: Fill[] = [];
         if (locate.type !== 'text') {
-            let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+            let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
             if (maskId) {
                 const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
                 fill = [mask.fills[locate.index]];
@@ -245,26 +245,26 @@ const update_percent = (e: MouseEvent) => {
 const down_stop_id = ref<string>('');
 const add_stop = (e: MouseEvent) => {
     const posi = get_stop_position(e);
-    const locat = props.context.color.locate;
+    const locate = props.context.color.locate;
     const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     startPosition = props.context.workspace.getContentXY(e);
-    if (!locat) return;
+    if (!locate) return;
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     const _stop = get_add_gradient_color(gradient.stops, posi);
     if (!_stop) return;
     const page = props.context.selection.selectedPage!;
     const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
-    if (locat.type !== 'text') {
-        const idx = locat.index;
+    if (locate.type !== 'text') {
+        const idx = locate.index;
         const editor = props.context.editor4Page(page);
         let fills: Fill[] = [];
-        let maskId = locat.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+        let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
         if (maskId) {
             const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
             fills = mask.fills;
         } else {
-            fills = locat.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
+            fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
         }
         editor.addShapesGradientStop([{ fill: fills[idx], stop }]);
     } else {
@@ -346,7 +346,7 @@ const stop_mousemove = (e: MouseEvent) => {
         percent.value = +(posi * 100).toFixed(0);
         let fill: Fill[] = [];
         if (locate.type !== 'text') {
-            let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+            let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
             if (maskId) {
                 const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
                 fill = [mask.fills[locate.index]];

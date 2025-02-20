@@ -1,6 +1,6 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { LockMouseHandler, Shadow, ShapeView, TidyUpAlgin, UniformScaleUnit } from "@kcdesign/data";
+import { LockMouseHandler, Shadow, ShapeView, SideType, TidyUpAlgin, UniformScaleUnit } from "@kcdesign/data";
 
 export class LockMouse extends TransformHandler {
     private transType: 'scaling' | 'translating' | 'rotating' = 'translating';
@@ -14,10 +14,10 @@ export class LockMouse extends TransformHandler {
 
     createApiCaller(transType?: 'scaling' | 'translating' | 'rotating') {
         this.asyncApiCaller = new LockMouseHandler(this.context.coopRepo, this.context.data, this.page);
-        if(transType) {
+        if (transType) {
             this.workspace[transType](true);
             this.workspace.setSelectionViewUpdater(false);
-    
+
             this.transType = transType;
             this.workspace.translating(true); // 借用一下translating的特性
         }
@@ -97,5 +97,12 @@ export class LockMouse extends TransformHandler {
     }
     modifyInnerRadiusBy(shapes: ShapeView[], delta: number) {
         (this.asyncApiCaller as LockMouseHandler).modifyInnerRadiusBy(shapes, delta);
+    }
+    modifyBorderThickness(shapes: ShapeView[], thickness: number) {
+        (this.asyncApiCaller as LockMouseHandler).modifyBorderThickness(shapes, thickness);
+    }
+
+    modifyBorderCustomThickness(shapes: ShapeView[], thickness: number, type: SideType) {
+        (this.asyncApiCaller as LockMouseHandler).modifyBorderCustomThickness(shapes, thickness, type);
     }
 }
