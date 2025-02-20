@@ -2,18 +2,16 @@
 import { Context } from '@/context';
 import { StrokeFillContextMgr } from '../ctx';
 import BorderDetail from './BorderDetail.vue';
-import { AsyncBorderThickness, BorderPosition, LinearApi, ShapeType } from '@kcdesign/data';
+import { BorderPosition, LinearApi, ShapeType } from '@kcdesign/data';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
 import { ref } from 'vue';
-import { getShapesForStyle } from '@/utils/style';
-import { get_actions_border, get_actions_border_position, get_actions_border_thickness } from '@/utils/shape_style';
 import { getSideThickness } from '../index';
 import { sortValue } from '../../BaseAttr/oval';
-import { flattenShapes } from '@/utils/cutout';
+import { LockMouse } from '@/transform/lockMouse';
 
 const { t } = useI18n();
 
@@ -51,15 +49,7 @@ const strokeClick = (e: Event) => {
 
 
 function positionSelect(selected: SelectItem) {
-    const selecteds = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
-    const shapes = getShapesForStyle(selecteds).filter(s => s.type !== ShapeType.Line);
-    const actions = get_actions_border_position(shapes, selected.value as BorderPosition);
-    if (actions && actions.length) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesBorderPosition(actions);
-    }
+    props.manager.modifyBorderPosition(selected.value as BorderPosition);
 }
 
 const thickness_value = () => {
@@ -83,25 +73,14 @@ function setThickness(e: Event) {
     let thickness = Number((e.target as HTMLInputElement).value);
     (e.target as HTMLInputElement).blur();
     if (isNaN(thickness)) return;
-    const selecteds = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
     if (thickness > 300) thickness = 300;
-    const shapes = getShapesForStyle(selecteds);
     const t = thickness < 0 ? 0 : thickness;
-    const actions = get_actions_border(shapes, t);
-    if (actions && actions.length) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesBorderThickness(actions);
-    }
+    props.manager.modifyBorderThickness(t);
 }
 
 function keydownThickness(event: KeyboardEvent, val: string | number) {
     let value: any = sortValue(val.toString());
     let old = value;
-    const selecteds = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
     if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
         if (value >= 0) {
             if (value >= 300) {
@@ -110,11 +89,7 @@ function keydownThickness(event: KeyboardEvent, val: string | number) {
             value = value + (event.code === 'ArrowUp' ? 1 : -1);
             if (isNaN(value)) return;
             value = value <= 0 ? 0 : value <= 300 ? value : 300;
-            const shapes = getShapesForStyle(selecteds);
-            const actions = get_actions_border(shapes, value);
-            if (actions && actions.length) {
-                if (old !== value) linearApi.modifyShapesBorderThickness(actions);
-            }
+            if (old !== value) linearApi.modifyShapesBorderThickness(props.manager.selected, value);
         }
         event.preventDefault();
     }
@@ -125,12 +100,9 @@ const pointY = ref<number>();
 const showpoint = ref<boolean>(false);
 const rotate = ref<boolean>();
 const borderThickness = ref<HTMLInputElement>();
-let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
+let lockMouseHandler: LockMouse | undefined = undefined;
 
 async function onMouseDown(e: MouseEvent) {
-    const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-    const page = props.context.selection.selectedPage;
     pointX.value = e.clientX;
     pointY.value = e.clientY;
 
@@ -143,7 +115,7 @@ async function onMouseDown(e: MouseEvent) {
         });
     }
     e.stopPropagation();
-    borderthickness_editor = props.context.editor.controller().asyncBorderThickness(shapes, page!);
+    lockMouseHandler = new LockMouse(props.context, e);
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove, false);
     document.addEventListener("pointerlockchange", pointerLockChange, false);
@@ -161,9 +133,9 @@ function onMouseUp() {
     showpoint.value = false
     document.removeEventListener("mousemove", onMouseMove, false);
     document.removeEventListener('mouseup', onMouseUp);
-    if (borderthickness_editor) {
-        borderthickness_editor.close();
-        borderthickness_editor = undefined;
+    if (lockMouseHandler) {
+        lockMouseHandler.fulfil();
+        lockMouseHandler = undefined;
     }
     document.removeEventListener("pointerlockchange", pointerLockChange, false);
 }
@@ -182,18 +154,16 @@ function updatePosition(movementX: number, movementY: number, isRotating: boolea
 function onMouseMove(e: MouseEvent) {
     const isRotating = e.movementX > 0;
     updatePosition(e.movementX, e.movementY, isRotating);
-    const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-    const page = props.context.selection.selectedPage;
-    if (!page || shapes.length < 1) return;
+    if (!lockMouseHandler) return;
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
     const strokeInfo = props.manager.fillCtx.strokeInfo!;
     if (borderThickness.value && typeof strokeInfo.sideSetting !== 'string') {
         let thickness = (getSideThickness(strokeInfo.sideSetting) || 0) + e.movementX;
         if (thickness > 300) thickness = 300;
-        const actions = get_actions_border_thickness(shapes, thickness < 0 ? 0 : thickness);
-        if (actions && actions.length && borderthickness_editor) {
-            borderthickness_editor.execute(thickness < 0 ? 0 : thickness);
-        }
+
+        lockMouseHandler?.modifyBorderThickness(props.manager.selected, thickness < 0 ? 0 : thickness);
     }
 }
 

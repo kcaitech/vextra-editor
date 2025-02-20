@@ -89,7 +89,7 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
     if (!locate || !shape || !shape.style) return;
     if (locate.type !== 'text') {
         let fills: Fill[] = [];
-        let maskId = locate.type === 'fills' ? shape.style.fillsMask : shape.style.borders.fillsMask;
+        let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
         if (maskId) {
             const mask =context.data.stylesMgr.getSync(maskId) as FillMask;
             fills = mask.fills;

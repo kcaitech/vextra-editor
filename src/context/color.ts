@@ -33,8 +33,6 @@ export class ColorCtx extends WatchableObject {
     switch_editor_mode(val: boolean, gradient?: Gradient) {
         this.editor_mode = val && !!gradient;
         this.m_gradient = gradient;
-        console.log(val, gradient);
-        
         this.notify(ColorCtx.COLOR_EDITOR);
     }
     set_gradient_type(type: GradientType | undefined) {

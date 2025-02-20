@@ -2,7 +2,6 @@
 import { Context } from '@/context';
 import BorderCustomInput from './BorderCustomInput.vue';
 import {
-  AsyncBorderThickness,
   Border,
   BorderSideSetting,
   LinearApi,
@@ -12,11 +11,11 @@ import {
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { flattenShapes } from '@/utils/cutout';
-import { get_actions_border, get_borders_side } from '@/utils/shape_style';
+import { get_borders_side } from '@/utils/shape_style';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';
 import { useI18n } from 'vue-i18n';
-import { can_custom, getSideInfo, get_actions_border_side_info, get_borders_side_thickness } from "../index"
+import { can_custom, getSideInfo, get_borders_side_thickness } from "../index"
 import { Menu } from '@/context/menu';
 import { format_value } from "@/utils/common";
 import SvgIcon from '@/components/common/SvgIcon.vue';
@@ -25,6 +24,7 @@ const { t } = useI18n();
 
 interface Props {
   context: Context
+  manager: StrokeFillContextMgr
   trigger: any[]
 }
 
@@ -59,7 +59,7 @@ const setSideType = (type: SideType) => {
   const b = shapes.value[0].getBorders();
   const data = getSideInfo(b, type);
   if (!data) return;
-  
+
   const actions: { border: Border, side: BorderSideSetting }[] = [];
   for (const view of shapes.value) {
     const border = view.getBorders();
@@ -81,29 +81,7 @@ watch(() => select_side.value, (v, o) => {
 })
 
 const setSideThickness = (thickness: number, type: SideType) => {
-  if (!shapes.value) return;
-  const page = props.context.selection.selectedPage;
-  if (!page) return;
-  const actions = get_actions_border(shapes.value, thickness);
-  if (actions && actions.length) {
-    const editor = props.context.editor4Page(page);
-    switch (type) {
-      case SideType.Top:
-        editor.setShapeBorderThicknessTop(actions);
-        break;
-      case SideType.Left:
-        editor.setShapeBorderThicknessLeft(actions);
-        break;
-      case SideType.Right:
-        editor.setShapeBorderThicknessRight(actions);
-        break;
-      case SideType.Bottom:
-        editor.setShapeBorderThicknessBottom(actions);
-        break;
-    }
-  }
-  hidden_selection(props.context);
-  getSideThickness();
+  props.manager.modifyBorderCustomThickness(thickness, type);
 }
 
 function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType) {
@@ -113,25 +91,8 @@ function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType
     value = value + (e.code === 'ArrowUp' ? 1 : -1)
     if (isNaN(value)) return;
     value = value <= 0 ? 0 : value <= 300 ? value : 300
-    const actions = get_actions_border(shapes.value, value);
-    if (actions && actions.length) {
-      switch (type) {
-        case SideType.Top:
-          linearApi.modifyBorderThicknessTop(actions)
-          break;
-        case SideType.Left:
-          linearApi.modifyBorderThicknessLeft(actions)
-          break;
-        case SideType.Right:
-          linearApi.modifyBorderThicknessRight(actions)
-          break;
-        case SideType.Bottom:
-          linearApi.modifyBorderThicknessBottom(actions)
-          break;
-      }
-    }
+    linearApi.modifyBorderCustomThickness(props.manager.selected, value, type);
     hidden_selection(props.context);
-    getSideThickness();
     e.preventDefault();
   }
 }
@@ -154,7 +115,7 @@ const getSideThickness = () => {
 const tel = ref<boolean>(false);
 const telX = ref<number>(0);
 const telY = ref<number>(0);
-let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
+let lockMouse: LockMouse | undefined = undefined;
 
 function updatePosition(movementX: number, movementY: number) {
   const clientHeight = document.documentElement.clientHeight;
@@ -165,7 +126,7 @@ function updatePosition(movementX: number, movementY: number) {
   telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
 }
 
-async function dragStart(e: MouseEvent, type: SideType) {
+async function dragStart(e: MouseEvent) {
   tel.value = true;
   telX.value = e.clientX;
   telY.value = e.clientY;
@@ -175,10 +136,7 @@ async function dragStart(e: MouseEvent, type: SideType) {
       unadjustedMovement: true
     })
   }
-  const selected = props.context.selection.selectedShapes;
-  const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-  const page = props.context.selection.selectedPage;
-  borderthickness_editor = props.context.editor.controller().asyncBorderSideThickness(shapes, page!, type);
+  lockMouse = new LockMouse(props.context, e);
   document.addEventListener('pointerlockchange', pointerLockChange, false);
 }
 
@@ -188,27 +146,29 @@ const pointerLockChange = () => {
   }
 }
 
-const dragging = (e: MouseEvent, thickness: number | string) => {
+const dragging = (e: MouseEvent, thickness: number | string, type: SideType) => {
   if (typeof thickness === 'string') return;
   updatePosition(e.movementX, e.movementY);
+  if (!lockMouse) return;
+  if (!lockMouse.asyncApiCaller) {
+    lockMouse.createApiCaller('translating');
+  }
   let val = thickness + e.movementX;
   if (val < 0) {
     val = 0;
   } else if (val > 300) {
     val = 300;
   }
-  if (borderthickness_editor) {
-    borderthickness_editor.execute(val);
-  }
+  lockMouse.modifyBorderCustomThickness(props.manager.selected, val, type);
   getSideThickness();
 }
 
 const dragEnd = () => {
   tel.value = false;
   document.exitPointerLock();
-  if (borderthickness_editor) {
-    borderthickness_editor.close();
-    borderthickness_editor = undefined;
+  if (lockMouse) {
+    lockMouse.fulfil();
+    lockMouse = undefined;
   }
   document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
@@ -235,6 +195,8 @@ import border_left_icon from '@/assets/icons/svg/border-left.svg';
 import border_right_icon from '@/assets/icons/svg/border-right.svg';
 import border_custom_icon from '@/assets/icons/svg/border-custom.svg';
 import { sortValue } from '../../BaseAttr/oval';
+import { LockMouse } from '@/transform/lockMouse';
+import { StrokeFillContextMgr } from '../ctx';
 
 </script>
 
@@ -269,11 +231,11 @@ import { sortValue } from '../../BaseAttr/oval';
       <div class="border"></div>
       <div class="border-custom">
         <BorderCustomInput ticon="top" :shadowV="thickness_top" @onChange="(v) => setSideThickness(v, SideType.Top)"
-          @dragstart="(e) => dragStart(e, SideType.Top)" @dragging="(e) => dragging(e, thickness_top)"
+          @dragstart="(e) => dragStart(e)" @dragging="(e) => dragging(e, thickness_top, SideType.Top)"
           @dragend="dragEnd" @keydown="(e, val) => keydownThickness(e, val, SideType.Top)"></BorderCustomInput>
         <BorderCustomInput ticon="bottom" :shadowV="thickness_bottom"
-          @onChange="(v) => setSideThickness(v, SideType.Bottom)" @dragstart="(e) => dragStart(e, SideType.Bottom)"
-          @dragging="(e) => dragging(e, thickness_bottom)" @dragend="dragEnd"
+          @onChange="(v) => setSideThickness(v, SideType.Bottom)" @dragstart="(e) => dragStart(e)"
+          @dragging="(e) => dragging(e, thickness_bottom, SideType.Bottom)" @dragend="dragEnd"
           @keydown="(e, val) => keydownThickness(e, val, SideType.Bottom)">
         </BorderCustomInput>
       </div>
@@ -282,12 +244,12 @@ import { sortValue } from '../../BaseAttr/oval';
       <div class="border"></div>
       <div class="border-custom">
         <BorderCustomInput ticon="left" :shadowV="thickness_left" @onChange="(v) => setSideThickness(v, SideType.Left)"
-          @dragstart="(e) => dragStart(e, SideType.Left)" @dragging="(e) => dragging(e, thickness_left)"
+          @dragstart="(e) => dragStart(e)" @dragging="(e) => dragging(e, thickness_left, SideType.Left)"
           @dragend="dragEnd" @keydown="(e, val) => keydownThickness(e, val, SideType.Left)">
         </BorderCustomInput>
         <BorderCustomInput ticon="right" :shadowV="thickness_right"
-          @onChange="(v) => setSideThickness(v, SideType.Right)" @dragstart="(e) => dragStart(e, SideType.Right)"
-          @dragging="(e) => dragging(e, thickness_right)" @dragend="dragEnd"
+          @onChange="(v) => setSideThickness(v, SideType.Right)" @dragstart="(e) => dragStart(e)"
+          @dragging="(e) => dragging(e, thickness_right, SideType.Right)" @dragend="dragEnd"
           @keydown="(e, val) => keydownThickness(e, val, SideType.Right)">
         </BorderCustomInput>
       </div>
