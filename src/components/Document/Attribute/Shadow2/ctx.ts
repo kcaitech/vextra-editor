@@ -66,7 +66,7 @@ export class ShadowsContextMgr extends StyleCtx {
         if (this.shadowCtx.mixed) return;
 
         const represent = this.selected[0];
-        this.shadowCtx.mask = represent.style.shadowsMask;
+        this.shadowCtx.mask = represent.shadowsMask;
         if (this.shadowCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.shadowCtx.mask) as ShadowMask;
             this.shadowCtx.maskInfo = {
