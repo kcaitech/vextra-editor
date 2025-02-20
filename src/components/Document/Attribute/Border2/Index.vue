@@ -86,7 +86,7 @@ const showBorderPanel = (event: MouseEvent) => {
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),
     watch(() => props.trigger, (v) => {
-        if (v?.includes('bordersMask') || v?.includes('borders')) {
+        if (v?.includes('bordersMask') || v?.includes('borders') || v?.includes('variables')) {
             fillCtxMgr.update();
         }
     })

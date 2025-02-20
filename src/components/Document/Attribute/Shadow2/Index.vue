@@ -39,19 +39,19 @@ const shadowLibStatus = reactive<ElementStatus>({ id: '#shadow-style-lib-panel',
 const shadowPanelStatusMgr = new ElementManager(
     props.context,
     shadowLibStatus,
-    { whiteList: ['.shadow-style-lib-panel', '.shadow_clover', '.shadow_desc'] }
+    { whiteList: ['.shadow-style-lib-panel', '.shadows-container', '.mask-port-wrapper'] }
 );
 shadowCtxMgr.catchPanel(shadowPanelStatusMgr);
 
 function showShadowLib(event: MouseEvent) { /*打开填充样式库面板*/
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('shadow_clover')) {
-            shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
+        if (e.classList.contains('mask-port-wrapper')) {
+            shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('shadow_desc')) {
-            shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
+        if (e.classList.contains('shadows-wrapper')) {
+            shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: 4, offsetTop: 36 } });
             break;
         }
         e = e.parentElement;
@@ -61,7 +61,7 @@ function showShadowLib(event: MouseEvent) { /*打开填充样式库面板*/
 const watchList: any[] = [
     watch(() => props.selectionChange, () => shadowCtxMgr.update()),                  // 监听选区变化
     watch(() => props.trigger, (v) => {
-        if (v?.includes('shadows') || v?.includes('shadowsMask')) {
+        if (v?.includes('shadows') || v?.includes('shadowsMask') || v?.includes('variables')) {
             shadowCtxMgr.update()
         }
     })    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态
@@ -79,7 +79,7 @@ onUnmounted(() => {
         <TypeHeader :title="t('attr.shadow')" :active="!!shadowCtx.shadows.length"
             @click.stop="() => shadowCtxMgr.init()">
             <template #tool>
-                <div v-if="cloverVisible" class="shadow_clover" @click="showShadowLib">
+                <div v-if="cloverVisible" class="shadow_clover" @click="showShadowLib($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!shadowCtx.mask || shadowCtx.mixed" class="create" @click="() => shadowCtxMgr.create()">
@@ -91,9 +91,9 @@ onUnmounted(() => {
         <div v-if="shadowCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
         <ShadowMaskView v-else-if="shadowCtx.mask" :context="context" :manager="shadowCtxMgr"
             :shadows="(shadowCtx.shadows as ShadowCatch[])" :info="shadowCtx.maskInfo!"
-            @show-style-lib="showShadowLib" />
+            @show-style-lib="e=>showShadowLib(e)" />
 
-        <div v-else-if="shadowCtx.shadows.length" class="fills-container">
+        <div v-else-if="shadowCtx.shadows.length" class="shadows-container">
             <ShadowItem v-for="(shadow, index) in shadowCtx.shadows" :key="index" :context="context"
                 :manager="shadowCtxMgr" :data="(shadow as ShadowCatch)" />
         </div>
@@ -146,7 +146,7 @@ onUnmounted(() => {
         font-size: var(--font-default-fontsize);
     }
 
-    .fills-container {
+    .shadows-container {
         display: flex;
         flex-direction: column;
         gap: 6px;

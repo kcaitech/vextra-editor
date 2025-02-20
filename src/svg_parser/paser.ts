@@ -1,6 +1,6 @@
 import {
     Shape,
-    ResourceMgr,
+    ResourceMgr, StyleMangerMember,
 } from "@kcdesign/data"
 import {v4 as uuid} from "uuid"
 import {BaseCreator, ContextType, SvgCreator} from "./creator/base"
@@ -22,6 +22,7 @@ export class Parser {
     constructor(root: Element) {
         this.svgRoot = root
         this.context = {
+            styleMgr: new ResourceMgr<StyleMangerMember>([uuid(), "styles"]),
             mediaResourceMgr: new ResourceMgr<{ buff: Uint8Array, base64: string }>([uuid(), "medias"]),
             styleMap: this.styleMap,
         }

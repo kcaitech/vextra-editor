@@ -42,12 +42,12 @@ const active = computed<boolean>(() => !!(blurCtx.value.mask || blurCtx.value.bl
 const showBlurPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('blur_desc')) {
-            e && blurPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 42 } });
+        if (e.classList.contains('mask-port-wrapper')) {
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 36}});
             break;
         }
-        if (e.classList.contains('blur_clover')) {
-            e && blurPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 42 } });
+        if (e.classList.contains('blur-panel')) {
+            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: 4, offsetTop: 36}});
             break;
         }
         e = e.parentElement;
@@ -61,7 +61,7 @@ const closePanel = () => {
 const watchList: any[] = [
     watch(() => props.selectionChange, () => blurCtxMgr.update()),
     watch(() => props.trigger, (v) => {
-        if (v?.includes('blur') || v?.includes('blursMask')) {
+        if (v?.includes('blur') || v?.includes('blursMask') || v?.includes('variables')) {
             blurCtxMgr.update();
         }
     })

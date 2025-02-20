@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
+import { Ref, ref, watchEffect } from "vue";
 import { DragKit } from "@/components/common/draggable";
-import { getHRGB, HSB2RGB, RGB2H2, RGB2HSB2, verifiedVal } from "@/components/common/ColorPicker/utils";
+import { getHRGB, HSB2RGB, RGB, RGB2H2, RGB2HSB2, verifiedVal } from "@/components/common/ColorPicker/utils";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { drawTooltip, hexToX } from "@/components/common/ColorPicker/utils";
+import { inject } from "vue";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -19,6 +20,7 @@ const MIN_TOP = -DOT_SIZE / 2;
 const MAX_TOP = HEIGHT - DOT_SIZE / 2;
 const LINE_LENGTH = 196;
 const LINE_LENGTH_CSS = `${LINE_LENGTH}px`;
+const { valueS, valueH, changeValueS, changeValueH } = inject('HSB') as { valueS: Ref<number>, valueH: Ref<number>, changeValueS: (v: number) => void, changeValueH: (v: number) => void };
 
 const emits = defineEmits<{
     (e: "change", stop: RGBACatch): void;
@@ -42,8 +44,19 @@ function modifySaturation(_s: number, _b: number) {
     const stop = props.stop;
     const h = RGB2H2(stop.R, stop.G, stop.B);
     const s = (_s + DOT_SIZE / 2) / WIDTH;
+    changeValueS(s)
     const b = 1 - (_b + DOT_SIZE / 2) / HEIGHT;
-    const rgb = HSB2RGB(h, s, b);
+    let rgb: RGB;
+    if (valueH.value) {
+        rgb = HSB2RGB(valueH.value, s, b);
+    } else {
+        rgb = HSB2RGB(h, s, b);
+
+    }
+
+    // if (rgb.R === 255 && rgb.G === 0 && rgb.B === 0) {
+    //     return;
+    // }
     emits("dragging", {
         R: rgb.R,
         G: rgb.G,
@@ -63,21 +76,20 @@ const dragKit = new DragKit({
 
 function downDot(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    dragKit.start(event, {x: target.offsetLeft, y: target.offsetTop});
+    dragKit.start(event, { x: target.offsetLeft, y: target.offsetTop });
 }
 
 function downPanel(event: MouseEvent) {
-    dragKit.start(event, {x: event.offsetX - 6, y: event.offsetY - 6});
+    dragKit.start(event, { x: event.offsetX - 6, y: event.offsetY - 6 });
     modifySaturation(event.offsetX - 6, event.offsetY - 6);
 }
 
 function modifyHue(_h: number) {
     const h = _h / (LINE_LENGTH - DOT_SIZE) * 360;
-    if (_h) {
-        lastHueDetail.x = _h;
-        lastHueDetail.hue = Object.assign({...props.stop}, getHRGB(h));
-    }
-    const {R, G, B} = HSB2RGB(h, (left.value + DOT_SIZE / 2) / WIDTH, 1 - (top.value + DOT_SIZE / 2) / HEIGHT);
+    changeValueH(h);
+    lastHueDetail.x = _h;
+    lastHueDetail.hue = Object.assign({ ...props.stop }, getHRGB(h));
+    const { R, G, B } = HSB2RGB(h, (left.value + DOT_SIZE / 2) / WIDTH, 1 - (top.value + DOT_SIZE / 2) / HEIGHT);
     emits("dragging", {
         R, G, B,
         A: props.stop.A,
@@ -95,12 +107,12 @@ const hueDragKit = new DragKit({
 
 function downHueDot(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    hueDragKit.start(event, {x: target.offsetLeft});
+    hueDragKit.start(event, { x: target.offsetLeft });
 }
 
 function downHueSlider(event: MouseEvent) {
     const x = event.offsetX - DOT_SIZE / 2;
-    hueDragKit.start(event, {x});
+    hueDragKit.start(event, { x });
     modifyHue(x);
 }
 
@@ -113,6 +125,8 @@ function modifyAlpha(_a: number) {
         A: _a / (LINE_LENGTH - DOT_SIZE),
         position: props.stop.position
     });
+
+
 }
 
 const alphaDragKit = new DragKit({
@@ -125,12 +139,12 @@ const alphaDragKit = new DragKit({
 
 function downAlpha(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    alphaDragKit.start(event, {x: target.offsetLeft});
+    alphaDragKit.start(event, { x: target.offsetLeft });
 }
 
 function downAlphaSlider(event: MouseEvent) {
     const x = event.offsetX - DOT_SIZE / 2;
-    alphaDragKit.start(event, {x});
+    alphaDragKit.start(event, { x });
     modifyAlpha(x);
 }
 
@@ -139,7 +153,7 @@ function eyedropper() {
     const s_eye_dropper = new System_EyeDropper();
     s_eye_dropper.open().then((result: any) => {
         const rgb = hexToX(result.sRGBHex);
-        emits('change', {R: rgb[0], G: rgb[1], B: rgb[2], A: 1, position: 1});
+        emits('change', { R: rgb[0], G: rgb[1], B: rgb[2], A: 1, position: 1 });
     }).catch((e: any) => {
         console.error(e);
     });
@@ -149,18 +163,34 @@ function eyedropper() {
 }
 
 function locate() {
-    const {R, G, B, A} = props.stop;
+    const { R, G, B, A } = props.stop;
     const hsb = RGB2HSB2(R, G, B);
-    left.value = WIDTH * hsb.s - DOT_SIZE / 2;
+    if (R === 0 && G === 0 && B === 0) {
+        left.value = WIDTH * valueS.value - DOT_SIZE / 2;
+    } else {
+        left.value = WIDTH * hsb.s - DOT_SIZE / 2;
+    }
     top.value = HEIGHT * (1 - hsb.b) - DOT_SIZE / 2;
     alphaX.value = (LINE_LENGTH - DOT_SIZE) * A;
-    if (hsb.h === 0 && lastHueDetail.x !== 0) {
-        hueX.value = lastHueDetail.x;
-        hue.value = lastHueDetail.hue;
+    // if (hsb.h === 0 && lastHueDetail.x !== 0) {
+    //     console.log(lastHueDetail.x);
+
+    //     hueX.value = lastHueDetail.x;
+    //     hue.value = lastHueDetail.hue;
+    // } else {
+    //     hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
+    //     hue.value = Object.assign({ ...props.stop }, getHRGB(hsb.h * 360));
+    // }
+    if ((R === 0 && G === 0 && B === 0) || hsb.s === 0) {
+        hueX.value = valueH.value / 360 * (LINE_LENGTH - DOT_SIZE);
+        hue.value = Object.assign({ ...props.stop }, getHRGB(valueH.value));
     } else {
         hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
-        hue.value = Object.assign({...props.stop}, getHRGB(hsb.h * 360));
+        hue.value = Object.assign({ ...props.stop }, getHRGB(hsb.h * 360));
+        changeValueH(hsb.h * 360);
     }
+    // hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
+    // hue.value = Object.assign({ ...props.stop }, getHRGB(hsb.h * 360));
 }
 
 watchEffect(locate);
@@ -168,25 +198,25 @@ watchEffect(locate);
 
 <template>
     <div id="saturation"
-         :style="{width: WIDTH_CSS, height: HEIGHT_CSS,  backgroundColor: `rgb(${hue.R}, ${hue.G}, ${hue.B})`}">
-        <div class="white"/>
-        <div class="black" @mousedown="downPanel"/>
+        :style="{ width: WIDTH_CSS, height: HEIGHT_CSS, backgroundColor: `rgb(${hue.R}, ${hue.G}, ${hue.B})` }">
+        <div class="white" />
+        <div class="black" @mousedown="downPanel" />
         <div class="dot"
-             :style="{left: left + 'px', top: top + 'px', backgroundColor: `rgb(${stop.R}, ${stop.G}, ${stop.B})`}"
-             @mousedown="downDot"/>
+            :style="{ left: left + 'px', top: top + 'px', backgroundColor: `rgb(${stop.R}, ${stop.G}, ${stop.B})` }"
+            @mousedown="downDot" />
     </div>
     <div id="controller">
         <div class="eyedropper">
-            <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper"/>
+            <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper" />
         </div>
         <div class="sliders-container">
             <div class="hue" @mousedown="downHueSlider">
-                <div class="hue-indicator" :style="{ left: hueX + 'px' }" @mousedown="downHueDot"/>
+                <div class="hue-indicator" :style="{ left: hueX + 'px' }" @mousedown="downHueDot" />
             </div>
             <div class="alpha-background">
                 <div class="alpha" @mousedown="downAlphaSlider"
-                     :style="{ background: `linear-gradient(to right, rgba(${stop.R}, ${stop.G}, ${stop.B}, 0) 0%, rgb(${stop.R}, ${stop.G}, ${stop.B}) 100%)` }">
-                    <div class="alpha-indicator" :style="{ left: alphaX + 'px' }" @mousedown="downAlpha"/>
+                    :style="{ background: `linear-gradient(to right, rgba(${stop.R}, ${stop.G}, ${stop.B}, 0) 0%, rgb(${stop.R}, ${stop.G}, ${stop.B}) 100%)` }">
+                    <div class="alpha-indicator" :style="{ left: alphaX + 'px' }" @mousedown="downAlpha" />
                 </div>
             </div>
         </div>
@@ -232,14 +262,14 @@ watchEffect(locate);
     box-sizing: border-box;
     justify-content: space-around;
 
-    > .sliders-container {
+    >.sliders-container {
         width: v-bind('LINE_LENGTH_CSS');
         height: 32px;
         display: flex;
         flex-direction: column;
         justify-content: space-around;
 
-        > .hue {
+        >.hue {
             position: relative;
             width: 100%;
             height: 8px;
@@ -247,7 +277,7 @@ watchEffect(locate);
             border-radius: 5px 5px 5px 5px;
             cursor: pointer;
 
-            > .hue-indicator {
+            >.hue-indicator {
                 top: -2px;
                 width: v-bind('DOT_SIZE_CSS');
                 height: v-bind('DOT_SIZE_CSS');
@@ -259,7 +289,7 @@ watchEffect(locate);
             }
         }
 
-        > .alpha-background {
+        >.alpha-background {
             width: 100%;
             height: 8px;
             background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
@@ -268,13 +298,13 @@ watchEffect(locate);
             cursor: pointer;
             box-sizing: border-box;
 
-            > .alpha {
+            >.alpha {
                 position: relative;
                 width: 100%;
                 height: 100%;
                 border-radius: 5px 5px 5px 5px;
 
-                > .alpha-indicator {
+                >.alpha-indicator {
                     top: -2px;
                     width: v-bind('DOT_SIZE_CSS');
                     height: v-bind('DOT_SIZE_CSS');
@@ -289,7 +319,7 @@ watchEffect(locate);
         }
     }
 
-    > .eyedropper {
+    >.eyedropper {
         width: 30px;
         height: 30px;
         display: flex;
@@ -300,7 +330,7 @@ watchEffect(locate);
         padding: 6px;
         box-sizing: border-box;
 
-        > svg {
+        >svg {
             width: 18px;
             height: 18px;
             cursor: pointer;

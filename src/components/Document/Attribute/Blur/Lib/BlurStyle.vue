@@ -50,7 +50,7 @@ const createPanelStatusMgr = new ElementManager(
     props.context,
     createPanelStatus,
     {
-        offsetLeft: -442,
+        offsetLeft: -422,
         whiteList: ['.modify-blur-panel', '.add']
     }
 );

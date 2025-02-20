@@ -36,13 +36,13 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 
 function update() {
-    name.value = data?.name ?? '';
+    name.value = data?.name ?? '边框样式';
     desc.value = data?.description ?? '';
     border.value = data?.border;
     if (data) {
         const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = data.border.sideSetting;
         thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
-       
+
     } else {
         const sideSetting = manager.fillCtx.strokeInfo?.sideSetting;
         const position = manager.fillCtx.strokeInfo?.position;
@@ -83,7 +83,7 @@ function createStyle() {
 const setThickness = (event: Event) => {
     let arrs = thickness.value.replaceAll(/，/g, ',').replaceAll(/-/g, '').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
     const b = arrs.every(i => isNaN(Number(i)) === false);
-    if (!b||!arrs.length) return thickness.value = oldvalue.value;
+    if (!b || !arrs.length) return thickness.value = oldvalue.value;
     if (arrs.length === 1) {
         arrs = arrs.concat(...arrs, ...arrs, ...arrs);
     }
@@ -93,9 +93,10 @@ const setThickness = (event: Event) => {
     if (arrs.length === 3) {
         arrs = arrs.concat(arrs[1]);
     }
-    if(arrs.join(', ') === oldvalue.value) return;
-    oldvalue.value = arrs.join(', ');
-    const num = arrs.map(i => Number(i))
+    thickness.value = arrs.join(', ')
+    if (thickness.value === oldvalue.value) return;
+    oldvalue.value = thickness.value;
+    const num = thickness.value.split(', ').map(i => Number(i))
     if (!data) return;
     const sideType = num.every(i => i == num[0]) ? SideType.Normal : SideType.Custom;
     const side = new BorderSideSetting(sideType, num[0], num[3], num[2], num[1]);
@@ -120,20 +121,23 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="modify-stroke-style-panel" id="modify-stroke-style-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')" />
+        <PanelHeader :title="data ? t('stylelib.editor_border') : t('stylelib.create_border')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" @changeInput="changeInput" />
-        <div class="type" v-if="data">
-            <div class="title">{{ t('stylelib.position') }}</div>
-            <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
-                :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
-                @select="positionSelect" :entry="'style'"></Select>
+            @modify-desc="modifyDesc" />
+        <div v-if="data" class="data-panel">
+            <div class="type">
+                <div class="title">{{ t('stylelib.position') }}</div>
+                <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
+                    :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
+                    @select="positionSelect" :entry="'style'"></Select>
+            </div>
+            <div class="thickness">
+                <div class="title">{{ t('stylelib.thickness') }}</div>
+                <input type="text" v-focus v-model="thickness" @change="setThickness">
+            </div>
         </div>
-        <div class="thickness" v-if="data">
-            <div class="title">{{ t('stylelib.thickness') }}</div>
-            <input type="text" v-focus v-model="thickness" @change="setThickness">
-        </div>
-        <div v-if="!data" :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
+
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -149,37 +153,43 @@ onUnmounted(() => {
     padding-bottom: 8px;
     box-sizing: border-box;
 
-    .type {
+    .data-panel {
         display: flex;
+        flex-direction: column;
         gap: 8px;
-        align-items: center;
-        padding: 0 12px;
-        box-sizing: border-box;
 
-        .select {
-            flex: 1;
-        }
-    }
-
-
-    .thickness {
-
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 12px;
-        box-sizing: border-box;
-
-        input {
-            flex: 1;
-            width: 100%;
-            outline: none;
-            border: none;
-            padding: 10px 8px;
-            background-color: #F5F5F5;
-            height: 32px;
-            border-radius: 6px;
+        .type {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 0 12px;
             box-sizing: border-box;
+
+            .select {
+                flex: 1;
+            }
+        }
+
+
+        .thickness {
+
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            box-sizing: border-box;
+
+            input {
+                flex: 1;
+                width: 100%;
+                outline: none;
+                border: none;
+                padding: 10px 8px;
+                background-color: #F5F5F5;
+                height: 32px;
+                border-radius: 6px;
+                box-sizing: border-box;
+            }
         }
     }
 

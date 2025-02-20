@@ -50,12 +50,6 @@ export interface Media {
     base64: string
 }
 
-interface SystemClipboardItem {
-    type: ShapeType
-    contentType: string
-    content: Media | string
-}
-
 export type Area =
     'text-selection'
     | 'controller'
@@ -225,40 +219,6 @@ export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t
         })
     }
     workspace.creating(false);
-    tool.setAction(Action.AutoV);
-    context.cursor.reset();
-}
-
-// 图形从init到insert
-export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, t: Function, isLockRatio: boolean, land?: ShapeView, _t?: ShapeType) {
-    const tool = context.tool;
-    const action = tool.action;
-    if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'), isLockRatio);
-    const selection = context.selection;
-    const type = _t || ResultByAction(action);
-    const page = selection.selectedPage;
-    const parent = land || selection.getClosestContainer(mousedownOnPageXY);
-    let new_shape: Shape | undefined | false;
-    const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-    if (page && parent && type) {
-        const editor = context.editor4Page(page);
-        const name = getName(type, (parent).childs, t);
-        if (action === Action.AddArrow || action === Action.AddLine) {
-            const r = 0.25 * Math.PI;
-            frame.width = 100 * Math.cos(r), frame.height = 100 * Math.sin(r);
-            new_shape = editor.create2(page.data, adapt2Shape(parent) as GroupShape, type, name, frame, {
-                rotation: -45,
-                is_arrow: Boolean(action === Action.AddArrow),
-                target_xy: mousedownOnPageXY
-            });
-        }
-    }
-    if (new_shape) {
-        page && context.nextTick(page, () => {
-            const s = new_shape && page.shapes.get(new_shape.id);
-            s && selection.selectShape(s);
-        })
-    }
     tool.setAction(Action.AutoV);
     context.cursor.reset();
 }

@@ -15,6 +15,6 @@ export class Polyline extends BaseCreator {
         const path = new Path(pointsToPathD)
         path.translate(-x, -y)
         this.transform.addPreTransform(new Transform().translate(new ColVector3D([x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0])));
-        this.shape = shapeCreator.newPathShape(this.htmlElement?.tagName || "polyline", new ShapeFrame(x, y, width, height), path, this.style)
+        this.shape = shapeCreator.newPathShape(this.htmlElement?.tagName || "polyline", new ShapeFrame(x, y, width, height), path, this.context.styleMgr, this.style)
     }
 }
