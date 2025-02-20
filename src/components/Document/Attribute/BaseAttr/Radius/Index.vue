@@ -66,7 +66,7 @@ const update = debounce(_update_view, 300, { leading: true });
 const watchList: any[] = [
     watch(() => props.selectionChange, () => radiusCtxMgr.update()),
     watch(() => props.trigger, v => {
-        if (v?.includes('radius') || v?.includes('radiusMask')) {
+        if (v?.includes('radius') || v?.includes('radiusMask') || v?.includes('variables')) {
             radiusCtxMgr.update();
         } else if (v?.includes('transform')) {
             update();

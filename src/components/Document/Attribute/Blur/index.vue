@@ -61,7 +61,7 @@ const closePanel = () => {
 const watchList: any[] = [
     watch(() => props.selectionChange, () => blurCtxMgr.update()),
     watch(() => props.trigger, (v) => {
-        if (v?.includes('blur') || v?.includes('blursMask')) {
+        if (v?.includes('blur') || v?.includes('blursMask') || v?.includes('variables')) {
             blurCtxMgr.update();
         }
     })

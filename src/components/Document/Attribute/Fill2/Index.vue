@@ -64,7 +64,7 @@ function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),                  // 监听选区变化
     watch(() => props.trigger, (v) => {
-        if (v?.includes('fillsMask') || v?.includes('fills')) {
+        if (v?.includes('fillsMask') || v?.includes('fills') || v?.includes('variables')) {
             fillCtxMgr.update();
         }
     })    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态

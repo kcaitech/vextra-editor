@@ -46,12 +46,10 @@ export class FillsPicker extends ColorPickerEditor {
             if (!this.fill) return [];
             if (this.fill.parent?.parent instanceof FillMask) {
                 return [this.fill];
+            } else if (this.fill_type === 'fills') {
+                return this.flat.map(i => i.getFills()[this.index]);
             } else {
-                if (this.fill_type === 'fills') {
-                    return this.flat.map(i => i.getFills()[this.index]);
-                } else {
-                    return this.flat.map(i => i.getBorders().strokePaints[this.index]);
-                }
+                return this.flat.map(i => i.getBorders().strokePaints[this.index]);
             }
         })());
     }

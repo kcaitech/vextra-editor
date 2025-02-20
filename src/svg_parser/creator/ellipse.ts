@@ -17,6 +17,6 @@ export class EllipseCreator extends BaseCreator {
         if (this.attributes.ry) height = this.attributes.ry * 2;
         else if (this.attributes.height) height = this.attributes.height;
 
-        this.shape = shapeCreator.newOvalShape("圆形", new ShapeFrame(x, y, width, height))
+        this.shape = shapeCreator.newOvalShape("圆形", new ShapeFrame(x, y, width, height), this.context.styleMgr)
     }
 }
