@@ -171,7 +171,8 @@ function onMouseMove(e: MouseEvent) {
 </script>
 
 <template>
-    <div class="borders-container" v-if="manager.fillCtx.fills.length && manager.fillCtx.strokeInfo">
+    <div class="borders-container"
+        v-if="manager.fillCtx.strokeInfo && (manager.fillCtx.fills.length || manager.fillCtx.mixed)">
         <div class="bottom">
             <div class="test" style=" flex: calc(50% - 20px);"
                 :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(manager.selected[0].type) ? 'none' : 'auto' }">
@@ -190,6 +191,10 @@ function onMouseMove(e: MouseEvent) {
         </div>
         <BorderDetail :context="context" :manager="manager" :trigger="trigger"></BorderDetail>
     </div>
+    <teleport to="body">
+        <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
+        </div>
+    </teleport>
 </template>
 
 <style scoped lang="scss">
@@ -252,5 +257,16 @@ function onMouseMove(e: MouseEvent) {
             }
         }
     }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>

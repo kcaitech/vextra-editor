@@ -103,7 +103,6 @@ export class StrokeFillContextMgr extends StyleCtx {
         } else {
             this.fillCtx.maskInfo = undefined;
         }
-
         const origin = represent.getBorders().strokePaints;
         const replace: FillCatch[] = [];
         for (let i = origin.length - 1; i > -1; i--) replace.push({ fill: origin[i] });
@@ -181,7 +180,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             }
             this.hiddenCtrl();
         }
-        this.editor.createFill(actions);
+        this.editor.addFill(actions);
     }
 
     unify() {
