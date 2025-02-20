@@ -133,7 +133,11 @@ function selection_wather(t?: any) {
 }
 
 const watchList: any[] = [
-    watch(() => props.trigger, v => v?.includes('style') && updater())
+    watch(() => props.trigger, (v) => {
+        if (v?.includes('bordersMask') || v?.includes('borders') || v?.includes('variables')) {
+            updater();
+        }
+    })
 ];
 
 
@@ -173,8 +177,8 @@ import { StrokeFillContextMgr } from '../ctx';
                             :item-view="BorderStyleItem" :value-view="BorderStyleSelected" @select="borderStyleSelect"
                             :mixed="mixed"></Select>
                     </div>
-                    <BorderSideSelected v-if="is_border_custom && !manager.fillCtx.strokeMask" :context="context" :manager="manager"
-                        :trigger="trigger">
+                    <BorderSideSelected v-if="is_border_custom && !manager.fillCtx.strokeMask" :context="context"
+                        :manager="manager" :trigger="trigger">
                     </BorderSideSelected>
                     <div class="corner-style" v-if="!is_corner">
                         <div class="corner">{{ t('attr.corner') }}</div>

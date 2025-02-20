@@ -174,7 +174,11 @@ const dragEnd = () => {
 }
 
 const watchList: any[] = [
-  watch(() => props.trigger, v => v?.includes('style') && getSideThickness())
+  watch(() => props.trigger, (v) => {
+    if (v?.includes('bordersMask') || v?.includes('borders') || v?.includes('variables')) {
+      getSideThickness();
+    }
+  })
 ];
 
 
