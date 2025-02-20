@@ -21,7 +21,7 @@ import {
     CornerType,
     BorderSideSetting,
     SideType,
-    ResourceMgr,
+    ResourceMgr, StyleMangerMember,
 } from "@kcdesign/data"
 import {v4 as uuid} from "uuid"
 import {
@@ -45,6 +45,7 @@ import {ColVector3D} from "@kcdesign/data"
 import {makeShapeTransform2By1, updateShapeTransform1By2} from "@kcdesign/data"
 
 export type ContextType = {
+    styleMgr: ResourceMgr<StyleMangerMember>
     mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
     styleMap: { [key: string]: string }
     [key: string]: any

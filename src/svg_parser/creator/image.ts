@@ -27,6 +27,10 @@ export class ImageCreator extends BaseCreator {
         const mediaResourceMgr = this.context.mediaResourceMgr
         mediaResourceMgr.add(ref, media)
 
-        this.shape = shapeCreator.newImageShape("图片", new ShapeFrame(x, y, width, height), mediaResourceMgr, ref)
+        const frame = new ShapeFrame(x, y, width, height);
+
+        const originFrame = { width, height };
+
+        this.shape = shapeCreator.newImageFillShape("图片", frame, mediaResourceMgr, originFrame, this.context.styleMgr, ref)
     }
 }
