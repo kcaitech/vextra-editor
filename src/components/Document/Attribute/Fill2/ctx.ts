@@ -1,10 +1,8 @@
 import {
     Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
-    Style, Color, BasicArray, ArtboardView, FillModifier,
-    ShapeView
+    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, Api
 } from "@kcdesign/data";
 import { Context } from "@/context";
-import { get_actions_fill_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
@@ -92,39 +90,86 @@ export class FillsContextMgr extends StyleCtx {
     /* 创建一个填充 */
     create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
-        const editor = new FillModifier(this.repo);
+
+        const missions: Function[] = [];
 
         if (mask) {
             const color = new Color(0.2, 0, 0, 0);
             const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-            editor.createFill([{ fills: mask.fills, fill, index: mask.fills.length }])
-            // this.editor.createFill([{ fills: mask.fills, fill, index: mask.fills.length }]);
-        } else {
-            const actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[] = [];
-            const selected = this.selected;
-            for (const view of selected) {
-                let color: Color;
-                if (view instanceof ArtboardView) {
-                    color = new Color(1, 255, 255, 255);
-                } else {
-                    color = new Color(0.2, 0, 0, 0);
-                }
-                const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-                actions.push({ fills: view.style.fills, fill: fill, index: view.style.fills.length });
+            const caller = (api: Api) => {
+                api.addFillAt(mask.fills, fill, mask.fills.length);
             }
-            editor.createFill(actions);
-            // this.editor.createFill(actions);
-            this.hiddenCtrl();
+            missions.push(caller);
+            return this.editor.createFill(missions);
         }
+
+        const actions: { fills: BasicArray<Fill>, fill: Fill }[] = [];
+        const selected = this.selected;
+        const viewActions: { view: ShapeView, fill: Fill }[] = [];
+        for (const view of selected) {
+            let color: Color;
+            if (view instanceof ArtboardView) {
+                color = new Color(1, 255, 255, 255);
+            } else {
+                color = new Color(0.2, 0, 0, 0);
+            }
+
+            const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
+
+            if (view instanceof SymbolRefView || view.isVirtualShape) {
+                viewActions.push({ view, fill });
+            } else {
+                actions.push({ fills: view.style.fills, fill: fill });
+            }
+        }
+
+        const modifyLocalFills = (api: Api) => {
+            actions.forEach(action => api.addFillAt(action.fills, action.fill, action.fills.length));
+        };
+        const modifySymbolRefFills = (api: Api) => {
+            for (const action of viewActions) {
+                const variable = this.editor.getFillsVariable(api, this.page, action.view);
+                api.addFillAt(variable.value, this.editor.importFill(action.fill), variable.value.length);
+            }
+        }
+
+        missions.push(modifyLocalFills, modifySymbolRefFills);
+        this.editor.createFill(missions);
+        this.hiddenCtrl();
     }
 
     /* 统一多个图层的填充 */
     unify() {
         const fillsMaskView = this.selected.find(i => i.fillsMask);
         if (fillsMaskView) {
-            this.editor.unifyShapesFillsMask(this.document, this.selected, fillsMaskView.fillsMask!);
+            this.editor.unifyShapesFillsMask(this.selected, fillsMaskView.fillsMask!);
         } else {
-            this.editor.unifyShapesFills(this.selected.map(i => i.getFills()));
+            const containers: BasicArray<Fill>[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.selected) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else containers.push(view.getFills());
+            }
+            const editor = this.editor;
+            const master = this.selected[0].getFills().map(i => editor.importFill(i));
+
+            const modifyLocalFills = (api: Api) => {
+                if (!containers.length) return;
+                for (const fillContainer of containers) {
+                    api.deleteFills(fillContainer, 0, fillContainer.length);
+                    api.addFills(fillContainer, master.map(i => editor.importFill(i)));
+                }
+            };
+            const modifyVariableFills = (api: Api) => {
+                if (!views.length) return;
+                for (const view of views) {
+                    const fills = editor.getFillsVariable(api, this.page, view).value;
+                    api.deleteFills(fills, 0, fills.length);
+                    api.addFills(fills, master.map(i => editor.importFill(i)));
+                }
+            };
+            this.editor.unifyShapesFills([modifyLocalFills, modifyVariableFills]);
         }
         this.hiddenCtrl();
     }
@@ -133,20 +178,60 @@ export class FillsContextMgr extends StyleCtx {
     remove(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
-            this.editor.removeFill([{ fills: mask.fills, index: this.getIndexByFill(fill) }]);
+            this.editor.removeFill([(api: Api) => {
+                api.deleteFillAt(mask.fills, this.getIndexByFill(fill));
+            }]);
         } else {
             const index = this.getIndexByFill(fill);
-            this.editor.removeFill(this.selected.map(v => ({ fills: v.style.fills, index })));
+            const actions: { fills: BasicArray<Fill>, index: number }[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.selected) {
+                if (view instanceof SymbolRefView && view.isVirtualShape) {
+                    views.push(view);
+                } else actions.push({ fills: view.getFills(), index });
+            }
+            const modifyLocalFills = (api: Api) => {
+                actions.forEach(action => api.deleteFillAt(action.fills, action.index));
+            }
+            const modifyVariableFills = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getFillsVariable(api, this.page, view);
+                    api.deleteFillAt(variable.value, index);
+                }
+            }
+            this.editor.removeFill([modifyLocalFills, modifyVariableFills]);
+            this.hiddenCtrl();
         }
     }
 
     /* 隐藏或显示一条填充 */
     modifyVisible(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsEnabled([fill], !fill.isEnabled);
+            this.editor.setFillsEnabled([(api: Api) => {
+                api.setFillEnable(fill, !fill.isEnabled);
+            }]);
         } else {
+            const enable = !fill.isEnabled;
             const index = this.getIndexByFill(fill);
-            this.editor.setFillsEnabled(this.selected.map(v => v.getFills()[index]), !fill.isEnabled);
+            const fills: Fill[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.selected) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    fills.push(view.getFills()[index]);
+                }
+            }
+            const modifyLocalFills = (api: Api) => {
+                for (const fill of fills) api.setFillEnable(fill, enable);
+            }
+            const modifyVariableFills = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getFillsVariable(api, this.page, view);
+                    api.setFillEnable(variable.value[index], enable);
+                }
+            }
+            this.editor.setFillsEnabled([modifyLocalFills, modifyVariableFills]);
             this.hiddenCtrl();
         }
     }
@@ -179,10 +264,28 @@ export class FillsContextMgr extends StyleCtx {
     /* 修改一条纯色填充的颜色 */
     modifyFillColor(color: Color, fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsColor([{ fill, color }]);
+            this.editor.setFillsColor([(api: Api) => {
+                api.setFillColor(fill, color);
+            }]);
         } else {
             const index = this.getIndexByFill(fill);
-            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getFills()[index], color })));
+            const views: ShapeView[] = [];
+            const fillsPacks: { fill: Fill, color: Color }[] = [];
+            for (const view of this.selected) {
+                if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
+                else fillsPacks.push({ fill: view.getFills()[index], color });
+            }
+            const modifyLocalFills = (api: Api) => {
+                for (const pack of fillsPacks) api.setFillColor(pack.fill, pack.color);
+            }
+            const modifyVariableFills = (api: Api) => {
+                if (!views.length) return;
+                for (const view of views) {
+                    const variable = this.editor.getFillsVariable(api, this.page, view);
+                    api.setFillColor(variable.value[index], color);
+                }
+            }
+            this.editor.setFillsColor([modifyLocalFills, modifyVariableFills]);
             this.hiddenCtrl();
         }
     }
@@ -190,17 +293,50 @@ export class FillsContextMgr extends StyleCtx {
     /* 修改渐变色的透明度 */
     modifyGradientOpacity(fill: Fill, opacity: number) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setGradientOpacity([{ fill, opacity }]);
+            const mission = (api: Api) => {
+                const gradient = fill.gradient!;
+                api.setGradientOpacity(gradient, opacity);
+            }
+            this.editor.setGradientOpacity([mission]);
         } else {
             const index = this.getIndexByFill(fill);
-            this.editor.setGradientOpacity(this.selected.map(i => ({ fill: i.getFills()[index], opacity })));
+            const fills: Fill[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.selected) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
+                else fills.push(view.getFills()[index]);
+            }
+            const modifyLocalFills = (api: Api) => {
+                for (const fill of fills) {
+                    const gradient = fill.gradient!;
+                    api.setGradientOpacity(gradient, opacity);
+                }
+            }
+            const modifyVariableFills = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getFillsVariable(api, this.page, view);
+                    const fill = variable.value[index];
+                    const gradient = fill.gradient!;
+                    api.setGradientOpacity(gradient, opacity);
+                }
+            }
+
+            this.editor.setGradientOpacity([modifyLocalFills, modifyVariableFills]);
             this.hiddenCtrl();
         }
     }
 
+    /* 创建一个填充遮罩 */
+    createStyleLib(name: string, desc: string) {
+        const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
+        const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);
+        this.editor.createFillsMask(this.document, fillMask, this.page, this.selected);
+        this.kill();
+    }
+
     /* 修改图层填充遮罩的绑定值 */
     modifyFillMask(id: string) {
-        this.editor.setShapesFillMask(this.document, this.page, this.selected, id);
+        this.editor.setShapesFillMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();
     }
@@ -213,14 +349,6 @@ export class FillsContextMgr extends StyleCtx {
     /* 删除遮罩 */
     removeMask() {
         this.editor.removeShapesFillMask(this.document, this.page, this.selected);
-    }
-
-    /* 创建一个填充遮罩 */
-    createStyleLib(name: string, desc: string) {
-        const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
-        const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);
-        this.editor.createFillsMask(this.document, fillMask, this.page, this.selected);
-        this.kill();
     }
 }
 
