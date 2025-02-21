@@ -5,8 +5,8 @@
             <div class="content">
                 <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager"
                             :item="FillMaskPanelItem" :data="sheet"/>
-                <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
-                <div v-if="!sheets?.length && !keyword" class="data-null">暂无颜色样式</div>
+                <div v-if="!sheets?.length && keyword" class="search-null">{{ t('stylelib.null_search') }}</div>
+                <div v-if="!sheets?.length && !keyword" class="data-null">{{ t('stylelib.null_search') }}</div>
             </div>
         </el-scrollbar>
     </div>
@@ -20,6 +20,8 @@ import FillMaskPanelItem from './FillMaskPanelItem.vue';
 import { StyleSheet } from "@kcdesign/data"
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { StrokeFillContextMgr } from '../ctx';
+import { useI18n } from "vue-i18n";
+
 
 /**
  * 样式列表：该组件可以展示样式、筛选样式
@@ -29,6 +31,8 @@ const props = defineProps<{
     context: Context;
     manager: StrokeFillContextMgr;
 }>();
+
+const { t } = useI18n();
 const keyword = ref<string>('')
 const libs = ref<{ label: string, value: string }[]>([]);
 const currentLibs = ref<string>('all');

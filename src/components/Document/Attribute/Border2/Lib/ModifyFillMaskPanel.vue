@@ -13,7 +13,7 @@ import { StrokeFillContextMgr } from "../ctx";
 /**
  * 修改样式弹框
  */
-const {context, manager, data} = defineProps<{
+const { context, manager, data } = defineProps<{
     context: Context;
     manager: StrokeFillContextMgr;
     data?: FillMask;
@@ -22,15 +22,15 @@ const emits = defineEmits<{
     (e: 'close'): void;
 }>();
 
-const {t} = useI18n();
-const name = ref<string>(data?.name ?? '颜色样式');
+const { t } = useI18n();
+const name = ref<string>(data?.name ?? t('stylelib.colors'));
 const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>(getFills());
 
 function getFills() {
     const container: FillCatch[] = [];
     if (data) {
-        for (let i = data.fills.length - 1; i > -1; i--) container.push({fill: data.fills[i]});
+        for (let i = data.fills.length - 1; i > -1; i--) container.push({ fill: data.fills[i] });
     }
     return container;
 }
@@ -70,17 +70,19 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="modify-fill-style-panel" id="modify-fill-style-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')"/>
+        <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @changeInput="changeInput"
-                      @modify-name="modifyName" @modify-desc="modifyDesc"/>
+            @modify-name="modifyName" @modify-desc="modifyDesc" />
         <div v-if="data" class="data-panel">
-            <ListHeader title="颜色" @create="manager.create(data)"/>
+            <ListHeader :title="t('stylelib.color')" @create="manager.create(data)" />
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                          :data="(fill as FillCatch)"/>
+                    :data="(fill as FillCatch)" />
             </div>
         </div>
-        <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">创建样式</div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')
+            }}
+        </div>
     </div>
 </template>
 <style scoped lang="scss">

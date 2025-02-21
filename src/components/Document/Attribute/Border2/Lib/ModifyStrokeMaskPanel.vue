@@ -22,7 +22,7 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const name = ref<string>(data?.name ?? '边框样式');
+const name = ref<string>(data?.name ?? t('stylelib.borders'));
 const desc = ref<string>(data?.description ?? '');
 const thickness = ref<string>('');
 const oldvalue = ref<string>('');
@@ -36,7 +36,7 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 
 function update() {
-    name.value = data?.name ?? '边框样式';
+    name.value = data?.name ?? t('stylelib.borders');
     desc.value = data?.description ?? '';
     border.value = data?.border;
     if (data) {
@@ -137,7 +137,7 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{t('stylelib.add_style')}}</div>
     </div>
 </template>
 <style scoped lang="scss">

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const firstInput = ref<HTMLInputElement>();
 const { name, desc, focusAtOnce } = defineProps<{
     name: string;
@@ -39,12 +41,12 @@ onMounted(() => {
 <template>
     <div class="detail">
         <div class="name">
-            <label for="name">名称</label>
+            <label for="name">{{ t('stylelib.name') }}</label>
             <input ref="firstInput" type="text" id="name" :value="name" @change="modifyName" @input="changeInput"
                 @keydown.esc="blur">
         </div>
         <div class="des">
-            <label for="des">描述</label>
+            <label for="des">{{ t('stylelib.description') }}</label>
             <input type="text" id="des" :value="desc" @change="modifyDesc" @keydown.esc="blur">
         </div>
     </div>

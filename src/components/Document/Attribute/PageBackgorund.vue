@@ -4,13 +4,14 @@ import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Context } from "@/context";
 import { Color, Page, PageView, FillType } from "@kcdesign/data";
-import { Reg_HEX } from "@/utils/color";
+import { Reg_HEX,toHex } from "@/utils/color";
 import { message } from "@/utils/message";
 import { debounce } from "@/utils/timing_util";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
-
+import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
+import { backgorundColorPicker } from "@/components/common/ColorPicker/Editor/stylectxs/backgorundpicker";
 interface Props {
     context: Context
     page: PageView
@@ -24,6 +25,7 @@ const clr_v = ref<string>('EFEFEF');
 const alpha_v = ref<number>(100);
 const clr_ele = ref<HTMLInputElement>();
 const alpha_ele = ref<HTMLInputElement>();
+const rgba = ref<RGBACatch>({ R: 0, G: 0, B: 0, A: 0.3, position: 1 });
 
 const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
 const colorPanelStatusMgr = new ElementManager(
@@ -32,20 +34,17 @@ const colorPanelStatusMgr = new ElementManager(
     { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
 );
 
+const backgorundPicker = new backgorundColorPicker(props.context, FillType.SolidColor);
+
 function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('color-wrapper')) {
-            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -268, offsetTop: -10 } });
             break;
         }
         e = e.parentElement;
     }
-}
-
-function toHex(r: number, g: number, b: number) {
-    const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
-    return hex(r) + hex(g) + hex(b);
 }
 
 function setColor(clr: string, alpha: number) {
@@ -121,7 +120,8 @@ function change_a(e: Event) {
 
 function init_value(c: Color) {
     colors.value = [c];
-    clr_v.value = toHex(c.red, c.green, c.blue);
+    rgba.value = { R: c.red, G: c.green, B: c.blue, A: c.alpha, position: 1 };
+    clr_v.value = toHex(c).slice(1);
     alpha_v.value = c.alpha * 100;
 }
 
@@ -182,8 +182,8 @@ onUnmounted(() => {
             <input @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`" id="alpha" @blur="is_alpha_select = false"
                    @click="alpha_click" ref="alpha_ele"> -->
         </div>
-        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="FillType.SolidColor" :include="[]"
-            :color="colors" @close="() => colorPanelStatusMgr.close()" />
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="backgorundPicker" :type="FillType.SolidColor" :include="[]"
+            :color="rgba" @close="() => colorPanelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">
