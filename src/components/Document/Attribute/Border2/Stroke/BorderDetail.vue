@@ -153,8 +153,8 @@ import select_more_icon from '@/assets/icons/svg/select-more.svg';
 import corner_miter_icon from '@/assets/icons/svg/corner-miter.svg';
 import corner_bevel_icon from '@/assets/icons/svg/corner-bevel.svg';
 import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
-import { can_custom } from '../../Border';
 import { StrokeFillContextMgr } from '../ctx';
+import { can_custom } from '../index';
 
 </script>
 
