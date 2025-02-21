@@ -1,12 +1,20 @@
-import { Style, Color, BasicArray, BatchAction2, ContactLineView, Shadow, ShadowMask, ShadowPosition } from "@kcdesign/data";
+import {
+    Color,
+    BasicArray,
+    Shadow,
+    ShadowMask,
+    ShadowPosition,
+    ShadowsModifier,
+    Api,
+    ShapeView, SymbolRefView
+} from "@kcdesign/data";
 import { Context } from "@/context";
-import { get_actions_add_mask, get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_delete, get_actions_shadow_enabled, get_actions_shadow_mask, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_position, get_actions_shadow_spread, get_actions_shadow_unify } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 
-function stringifyShadows(sye: { style: Style, shadows: Shadow[] }) {
-    if (sye.style.shadowsMask) return sye.style.shadowsMask;
+function stringifyShadows(sye: { view: ShapeView, shadows: Shadow[] }) {
+    if (sye.view.shadowsMask) return sye.view.shadowsMask;
     return sye.shadows.reduce((p, c) => p + stringifyShadow(c), '')
     function stringifyShadow(shadow: Shadow) {
         let str = '';
@@ -36,20 +44,22 @@ export type ShadowsContext = {
     maskInfo?: MaskInfo;
 }
 
-/**
- * 填充模块核心状态管理器，修改填充的所有属性都由管理器完成；
- * 另外还组合了弹框管理器，可以控制相关弹窗
- */
 export class ShadowsContextMgr extends StyleCtx {
     constructor(protected context: Context, public shadowCtx: ShadowsContext) {
         super(context);
     }
 
-    private modifyMixedStatus() {
-        const selected = this.selected;
+    private m_editor: ShadowsModifier | undefined;
 
-        if (selected.length < 2) return this.shadowCtx.mixed = false;
-        const allShadows = selected.map(i => ({ shadows: i.getShadows(), style: i.style }));
+    protected get editor(): ShadowsModifier {
+        return this.m_editor ?? (this.m_editor = new ShadowsModifier(this.repo));
+    }
+
+    private modifyMixedStatus() {
+        const shapes = this.shapes;
+
+        if (shapes.length < 2) return this.shadowCtx.mixed = false;
+        const allShadows = shapes.map(i => ({ shadows: i.getShadows(), view: i }));
 
         let firstL = allShadows[0].shadows.length;
         for (const s of allShadows) if (s.shadows.length !== firstL) return this.shadowCtx.mixed = true;
@@ -65,8 +75,8 @@ export class ShadowsContextMgr extends StyleCtx {
     private updateShadows() {
         if (this.shadowCtx.mixed) return;
 
-        const represent = this.selected[0];
-        this.shadowCtx.mask = represent.style.shadowsMask;
+        const represent = this.shapes[0];
+        this.shadowCtx.mask = represent.shadowsMask;
         if (this.shadowCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.shadowCtx.mask) as ShadowMask;
             this.shadowCtx.maskInfo = {
@@ -99,139 +109,172 @@ export class ShadowsContextMgr extends StyleCtx {
 
     create(mask?: ShadowMask) {
         if (this.shadowCtx.mixed) return this.unify();
-        const actions: { shadows: Shadow[], shadow: Shadow }[] = [];
+
         if (mask) {
             const color = new Color(0.3, 0, 0, 0);
             const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
-            actions.push({ shadows: mask.shadows, shadow });
+            this.editor.createShadow([(api: Api) => {
+                api.addShadow(mask.shadows, shadow, mask.shadows.length);
+            }]);
         } else {
-            for (const view of this.selected) {
+            const actions: { shadows: BasicArray<Shadow>, shadow: Shadow }[] = [];
+            const viewActions: { view: ShapeView, shadow: Shadow }[] = [];
+            for (const view of this.shapes) {
                 const color = new Color(0.3, 0, 0, 0);
                 const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
-                const shadows = view.getShadows();
-                actions.push({ shadows, shadow });
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    viewActions.push({ view, shadow });
+                } else {
+                    actions.push({ shadows: view.getShadows(), shadow });
+                }
             }
+            const modifyLocalShadows = (api: Api) => {
+                actions.forEach(action => api.addShadow(action.shadows, action.shadow, action.shadows.length));
+            };
+            const modifySymbolRefShadows = (api: Api) => {
+                for (const action of viewActions) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, action.view);
+                    api.addShadow(variable.value, action.shadow, variable.value.length);
+                }
+            }
+            this.editor.createShadow([modifyLocalShadows, modifySymbolRefShadows]);
             this.hiddenCtrl();
         }
-        this.editor.shapesAddShadow(actions);
     }
 
     unify() {
-        const actions = get_actions_shadow_unify(this.selected);
-        this.editor.shapesShadowsUnify(actions);
+        const shadowsMaskView = this.shapes.find(i => i.shadowsMask);
+        if (shadowsMaskView) {
+            this.editor.unifyShapesShadowsMask(this.shapes, shadowsMaskView.fillsMask!);
+        } else {
+            const containers: BasicArray<Shadow>[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else containers.push(view.getShadows());
+            }
+            const editor = this.editor;
+            const master = this.shapes[0].getShadows().map(i => editor.importShadow(i));
+            const modifyLocalFills = (api: Api) => {
+                if (!containers.length) return;
+                for (const container of containers) {
+                    api.deleteShadows(container, 0, container.length);
+                    api.addShadows(container, master.map(i => editor.importShadow(i)));
+                }
+            };
+            const modifyVariableFills = (api: Api) => {
+                if (!views.length) return;
+                for (const view of views) {
+                    const fills = editor.getShadowsVariable(api, this.page, view).value;
+                    api.deleteShadows(fills, 0, fills.length);
+                    api.addShadows(fills, master.map(i => editor.importShadow(i)));
+                }
+            };
+            editor.unifyShapesShadows([modifyLocalFills, modifyVariableFills]);
+        }
+
         this.hiddenCtrl();
     }
 
     remove(shadow: Shadow) {
         const index = this.getIndexByShadow(shadow);
-        const actions: { shadows: Shadow[], index: number }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
             const mask = shadow.parent.parent as ShadowMask;
-            actions.push({ shadows: mask.shadows, index });
+            this.editor.removeShadows([(api: Api) => {
+                api.deleteShadowAt(mask.shadows, index);
+            }]);
         } else {
-            for (const view of this.selected) {
-                const shadows = view.getShadows();
-                actions.push({ shadows, index });
+            const shadowsContainer: BasicArray<Shadow>[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    shadowsContainer.push(view.getShadows());
+                }
             }
+            const modifyLocal = (api: Api) => {
+                shadowsContainer.forEach(container => api.deleteShadowAt(container, index));
+            }
+            const modifyVariable = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, view);
+                    api.deleteShadowAt(variable.value, index);
+                }
+            }
+            this.editor.removeShadows([modifyLocal, modifyVariable]);
         }
-        this.editor.shapesDeleteShadow(actions);
     }
 
     modifyVisible(shadow: Shadow) {
         const index = this.getIndexByShadow(shadow);
-        const actions: { shadow: Shadow, value: boolean }[] = [];
+        const enable = !shadow.isEnabled;
+
         if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, value: !shadow.isEnabled });
+            this.editor.setShadowEnabled([(api: Api) => {
+                api.setShadowEnable(shadow, enable);
+            }]);
         } else {
-            const selected = this.selected;
-            for (const view of selected) {
-                const shadow = view.getShadows()[index];
-                actions.push({ shadow, value: !shadow.isEnabled });
+            const shadows: Shadow[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    shadows.push(view.getShadows()[index]);
+                }
             }
+            const modifyLocal = (api: Api) => {
+                for (const shadow of shadows) api.setShadowEnable(shadow, enable);
+            }
+            const modifyVariable = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, view);
+                    api.setShadowEnable(variable.value[index], enable);
+                }
+            }
+            this.editor.setShadowEnabled([modifyLocal, modifyVariable]);
+            this.hiddenCtrl();
         }
-        this.editor.setShapesShadowEnabled(actions);
     }
 
-    modifyShadowOffsetX(offsetX: number, shadow: Shadow) {
-        if (isNaN(offsetX)) return;
-        const index = this.getIndexByShadow(shadow);
-        const actions: { shadow: Shadow, value: number }[] = [];
+    private modifyRGBA(event: Event, shadow: Shadow, color: Color) {
         if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, value: offsetX });
+            this.editor.setShadowsColor([(api: Api) => {
+                api.setShadowColor(shadow, color);
+            }]);
         } else {
-            for (const view of this.selected) {
-                const shadow = view.getShadows()[index];
-                actions.push({ shadow, value: offsetX });
+            const index = this.getIndexByShadow(shadow);
+            const views: ShapeView[] = [];
+            const shadowsPacks: { shadow: Shadow, color: Color }[] = [];
+            for (const view of this.shapes) {
+                if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
+                else shadowsPacks.push({ shadow: view.getShadows()[index], color });
             }
-        }
-        this.editor.setShapesShadowOffsetX(actions);
-    }
-
-    modifyShadowOffsetY(offsetY: number, shadow: Shadow) {
-        if (isNaN(offsetY)) return;
-        const index = this.getIndexByShadow(shadow);
-        const actions: { shadow: Shadow, value: number }[] = [];
-        if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, value: offsetY });
-        } else {
-            for (const view of this.selected) {
-                const shadow = view.getShadows()[index];
-                actions.push({ shadow, value: offsetY });
+            const modifyLocal = (api: Api) => {
+                for (const pack of shadowsPacks) api.setShadowColor(pack.shadow, pack.color);
             }
-        }
-        this.editor.setShapesShadowOffsetY(actions);
-    }
-
-    modifyShadowBlur(blur: number, shadow: Shadow) {
-        if (isNaN(blur)) return;
-        const index = this.getIndexByShadow(shadow);
-        const actions: { shadow: Shadow, value: number }[] = [];
-        if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, value: blur });
-        } else {
-            for (const view of this.selected) {
-                const shadow = view.getShadows()[index];
-                actions.push({ shadow, value: blur });
+            const modifyVariable = (api: Api) => {
+                if (!views.length) return;
+                for (const view of views) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, view);
+                    api.setShadowColor(variable.value[index], color);
+                }
             }
-        }
-        this.editor.setShapesShadowBlurRadius(actions);
-    }
-
-    modifyShadowSpread(spread: number, shadow: Shadow) {
-        if (isNaN(spread)) return;
-        const index = this.getIndexByShadow(shadow);
-        const actions: { shadow: Shadow, value: number }[] = [];
-        if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, value: spread });
-        } else {
-            for (const view of this.selected) {
-                const shadow = view.getShadows()[index];
-                actions.push({ shadow, value: spread });
-            }
-        }
-        this.editor.setShapesShadowSpread(actions);
-    }
-
-    modifyShadpwHex(event: Event, shadow: Shadow) {
-        const rgb = getRGBFromInputEvent(event);
-        if (!rgb) return;
-
-        const color = new Color(shadow.color.alpha, rgb[0], rgb[1], rgb[2]);
-        const index = this.getIndexByShadow(shadow);
-        const actions: { shadow: Shadow, color: Color }[] = [];
-        if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, color });
-        } else {
-            for (const view of this.selected) {
-                const shadow = view.getShadows()[index];
-                actions.push({ shadow, color });
-            }
+            this.editor.setShadowsColor([modifyLocal, modifyVariable])
             this.hiddenCtrl(event);
         }
-        this.editor.setShapesShadowColor(actions);
     }
 
-    modifyFillAlpha(event: Event, shadow: Shadow) {
+    modifyShadowHex(event: Event, shadow: Shadow) {
+        const rgb = getRGBFromInputEvent(event);
+        if (!rgb) return;
+        const color = new Color(shadow.color.alpha, rgb[0], rgb[1], rgb[2]);
+        this.modifyRGBA(event, shadow, color);
+    }
+
+    modifyShadowAlpha(event: Event, shadow: Shadow) {
         const alpha = getNumberFromInputEvent(event);
         if (isNaN(alpha)) return;
         const color = new Color(
@@ -240,54 +283,181 @@ export class ShadowsContextMgr extends StyleCtx {
             shadow.color.green,
             shadow.color.blue
         );
-        const index = this.getIndexByShadow(shadow);
-        const actions: { shadow: Shadow, color: Color }[] = [];
-        if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, color });
-        } else {
-            for (const view of this.selected) {
-                const shadow = view.getShadows()[index];
-                actions.push({ shadow, color });
-            }
-            this.hiddenCtrl(event);
-        }
-        this.editor.setShapesShadowColor(actions);
+        this.modifyRGBA(event, shadow, color);
     }
 
     modifyShadowPosition(shadow: Shadow, position: ShadowPosition) {
         const index = this.getIndexByShadow(shadow);
-        const actions: { shadow: Shadow, position: ShadowPosition }[] = [];
         if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, position });
+            this.editor.setShadowsPosition([(api: Api) => {
+                api.setShadowPosition(shadow, position);
+            }]);
         } else {
-            for (const view of this.selected) {
-                const shadow = view.getShadows()[index];
-                actions.push({ shadow, position });
+            const shadows: Shadow[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    shadows.push(view.getShadows()[index]);
+                }
             }
+            const modifyLocal = (api: Api) => {
+                for (const shadow of shadows) api.setShadowPosition(shadow, position);
+            }
+            const modifyVariable = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, view);
+                    api.setShadowPosition(variable.value[index], position);
+                }
+            }
+            this.editor.setShadowsPosition([modifyLocal, modifyVariable]);
             this.hiddenCtrl();
         }
-        this.editor.setShapesShadowPosition(actions);
+    }
+
+    modifyShadowOffsetX(offsetX: number, shadow: Shadow) {
+        if (isNaN(offsetX)) return;
+        const index = this.getIndexByShadow(shadow);
+        if (shadow.parent?.parent instanceof ShadowMask) {
+            this.editor.setShadowOffsetX([(api: Api) => {
+                api.setShadowOffsetX(shadow, offsetX);
+            }]);
+        } else {
+            const shadows: Shadow[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    shadows.push(view.getShadows()[index]);
+                }
+            }
+            const modifyLocal = (api: Api) => {
+                for (const shadow of shadows) api.setShadowOffsetX(shadow, offsetX);
+            }
+            const modifyVariable = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, view);
+                    api.setShadowOffsetX(variable.value[index], offsetX);
+                }
+            }
+            this.editor.setShadowOffsetX([modifyLocal, modifyVariable]);
+            this.hiddenCtrl();
+        }
+    }
+
+    modifyShadowOffsetY(offsetY: number, shadow: Shadow) {
+        if (isNaN(offsetY)) return;
+        const index = this.getIndexByShadow(shadow);
+        if (shadow.parent?.parent instanceof ShadowMask) {
+            this.editor.setShadowOffsetY([(api: Api) => {
+                api.setShadowOffsetY(shadow, offsetY);
+            }]);
+        } else {
+            const shadows: Shadow[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    shadows.push(view.getShadows()[index]);
+                }
+            }
+            const modifyLocal = (api: Api) => {
+                for (const shadow of shadows) api.setShadowOffsetY(shadow, offsetY);
+            }
+            const modifyVariable = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, view);
+                    api.setShadowOffsetY(variable.value[index], offsetY);
+                }
+            }
+            this.editor.setShadowOffsetY([modifyLocal, modifyVariable]);
+            this.hiddenCtrl();
+        }
+    }
+
+    modifyShadowBlur(blur: number, shadow: Shadow) {
+        if (isNaN(blur)) return;
+        const index = this.getIndexByShadow(shadow);
+        if (shadow.parent?.parent instanceof ShadowMask) {
+            this.editor.setShadowsBlur([(api: Api) => {
+                api.setShadowBlur(shadow, blur);
+            }]);
+        } else {
+            const shadows: Shadow[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    shadows.push(view.getShadows()[index]);
+                }
+            }
+            const modifyLocal = (api: Api) => {
+                for (const shadow of shadows) api.setShadowBlur(shadow, blur);
+            }
+            const modifyVariable = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, view);
+                    api.setShadowBlur(variable.value[index], blur);
+                }
+            }
+            this.editor.setShadowsBlur([modifyLocal, modifyVariable]);
+            this.hiddenCtrl();
+        }
+    }
+
+    modifyShadowSpread(spread: number, shadow: Shadow) {
+        if (isNaN(spread)) return;
+        const index = this.getIndexByShadow(shadow);
+        if (shadow.parent?.parent instanceof ShadowMask) {
+            this.editor.setShadowSpread([(api: Api) => {
+                api.setShadowSpread(shadow, spread);
+            }]);
+        } else {
+            const shadows: Shadow[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    shadows.push(view.getShadows()[index]);
+                }
+            }
+            const modifyLocal = (api: Api) => {
+                for (const shadow of shadows) api.setShadowSpread(shadow, spread);
+            }
+            const modifyVariable = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getShadowsVariable(api, this.page, view);
+                    api.setShadowSpread(variable.value[index], spread);
+                }
+            }
+            this.editor.setShadowSpread([modifyLocal, modifyVariable]);
+            this.hiddenCtrl();
+        }
+    }
+
+    createStyleLib(name: string, desc: string) {
+        const shadows = new BasicArray<Shadow>(...this.shadowCtx.shadows.map(i => i.shadow).reverse());
+        const shadowMask = new ShadowMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, shadows);
+        this.editor.createShadowsMask(this.document, shadowMask, this.page, this.shapes);
+        this.kill();
     }
 
     modifyShadowMask(id: string) {
-        const actions = get_actions_add_mask(this.selected, id);
-        this.editor.shapesSetShadowMask(actions);
+        this.editor.setShapesShadowsMask(this.page, this.shapes, id);
         this.kill();
         this.hiddenCtrl();
     }
 
     unbind() {
-        this.editor.shapesDelShadowMask(get_actions_shadow_mask(this.selected));
+        this.editor.unbindShapesShadowsMask(this.page, this.shapes);
     }
 
     removeMask() {
-        this.editor.shapesDelStyleShadow(get_actions_shadow_mask(this.selected));
-    }
-
-    createStyleLib(name: string, desc: string) {
-        const shadows = new BasicArray<Shadow>(...this.shadowCtx.shadows.map(i => i.shadow).reverse());
-        const shapdwMask = new ShadowMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, shadows);
-        this.editor4Doc.insertStyleLib(shapdwMask, this.page, this.selected);
-        this.kill();
+        this.editor.removeShapesShadowsMask(this.page, this.shapes);
     }
 }
