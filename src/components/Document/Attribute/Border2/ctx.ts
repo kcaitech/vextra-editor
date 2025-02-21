@@ -1,4 +1,4 @@
-import { Fill, FillMask, FillType, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType, BorderModifier, SideType } from "@kcdesign/data";
+import { Fill, FillMask, FillType, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType, BorderModifier, SideType, Api, SymbolRefView, Border } from "@kcdesign/data";
 import { Context } from "@/context";
 import { BorderData, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
@@ -172,21 +172,41 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     create(mask?: FillMask) {
         if (this.fillCtx.mixed) return this.unify();
-        const actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[] = [];
+        const missions: Function[] = [];
         if (mask) {
             const color = new Color(1, 0, 0, 0);
             const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
-            actions.push({ fills: mask.fills, fill, index: mask.fills.length });
-        } else {
-            const color = new Color(1, 0, 0, 0);
-            for (const view of this.selected) {
-                const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
-                const fills = view.getBorders().strokePaints as BasicArray<Fill>;
-                actions.push({ fills, fill, index: fills.length });
+            const caller = (api: Api) => {
+                api.addFillAt(mask.fills, fill, mask.fills.length);
             }
-            this.hiddenCtrl();
+            missions.push(caller);
+            return this.editor.createFill(missions);
         }
-        this.editor.addFill(actions);
+        const actions: { fills: BasicArray<Fill>, fill: Fill }[] = [];
+        const viewActions: { view: ShapeView, fill: Fill }[] = [];
+        for (const view of this.selected) {
+            const color = new Color(1, 0, 0, 0);
+            const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
+
+            if (view instanceof SymbolRefView || view.isVirtualShape) {
+                viewActions.push({ view, fill });
+            } else {
+                actions.push({ fills: view.style.borders.strokePaints, fill: fill });
+            }
+        }
+        const modifyLocalFills = (api: Api) => {
+            actions.forEach(action => api.addFillAt(action.fills, action.fill, action.fills.length));
+        };
+        const modifySymbolRefFills = (api: Api) => {
+            for (const action of viewActions) {
+                const variable = this.editor.getBorderVariable(api, this.page, action.view).value as Border;
+                api.addFillAt(variable.strokePaints, this.editor.importFill(action.fill), variable.strokePaints.length);
+            }
+        }
+
+        missions.push(modifyLocalFills, modifySymbolRefFills);
+        this.editor.createFill(missions);
+        this.hiddenCtrl();
     }
 
     unify() {
@@ -194,22 +214,64 @@ export class StrokeFillContextMgr extends StyleCtx {
         if (maskView) {
             this.editor.unifyShapesFillsMask(this.document, this.selected, maskView.borderFillsMask!);
         } else {
-            this.editor.unifyShapesFills(this.selected.map(i => i.getBorders().strokePaints));
+            const containers: BasicArray<Fill>[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.selected) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else containers.push(view.getFills());
+            }
+            const editor = this.editor;
+            const master = this.selected[0].getFills().map(i => editor.importFill(i));
+
+            const modifyLocalFills = (api: Api) => {
+                if (!containers.length) return;
+                for (const fillContainer of containers) {
+                    api.deleteFills(fillContainer, 0, fillContainer.length);
+                    api.addFills(fillContainer, master.map(i => editor.importFill(i)));
+                }
+            };
+            const modifyVariableFills = (api: Api) => {
+                if (!views.length) return;
+                for (const view of views) {
+                    const border = editor.getBorderVariable(api, this.page, view).value as Border;
+                    api.deleteFills(border.strokePaints, 0, border.strokePaints.length);
+                    api.addFills(border.strokePaints, master.map(i => editor.importFill(i)));
+                }
+            };
+            this.editor.unifyShapesFills([modifyLocalFills, modifyVariableFills]);
         }
         this.hiddenCtrl();
     }
 
     remove(fill: Fill) {
-        const index = this.getIndexByFill(fill);
-        const actions: { fills: BasicArray<Fill>, index: number }[] = [];
+
         if (fill.parent?.parent instanceof FillMask) {
-            actions.push({ fills: fill.parent.parent.fills, index });
+            const mask = fill.parent.parent as FillMask;
+            this.editor.removeFill([(api: Api) => {
+                api.deleteFillAt(mask.fills, this.getIndexByFill(fill));
+            }]);
         } else {
+            const index = this.getIndexByFill(fill);
+            const actions: { fills: BasicArray<Fill>, index: number }[] = [];
+            const views: ShapeView[] = [];
             for (const view of this.selected) {
-                actions.push({ fills: view.getBorders().strokePaints, index });
+                if (view instanceof SymbolRefView && view.isVirtualShape) {
+                    views.push(view);
+                } else actions.push({ fills: view.getBorders().strokePaints, index });
             }
+            const modifyLocalFills = (api: Api) => {
+                actions.forEach(action => api.deleteFillAt(action.fills, action.index));
+            }
+            const modifyVariableFills = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getBorderVariable(api, this.page, view).value as Border;
+                    api.deleteFillAt(variable.strokePaints, index);
+                }
+            }
+            this.editor.removeFill([modifyLocalFills, modifyVariableFills]);
+            this.hiddenCtrl();
         }
-        this.editor.removeFill(actions);
     }
 
     removeAll() {
@@ -218,10 +280,31 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     modifyVisible(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsEnabled([fill], !fill.isEnabled);
+            this.editor.setFillsEnabled([(api: Api) => {
+                api.setFillEnable(fill, !fill.isEnabled);
+            }]);
         } else {
+            const enable = !fill.isEnabled;
             const index = this.getIndexByFill(fill);
-            this.editor.setFillsEnabled(this.selected.map(v => v.getBorders().strokePaints[index]), !fill.isEnabled);
+            const fills: Fill[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.selected) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    fills.push(view.getBorders().strokePaints[index]);
+                }
+            }
+            const modifyLocalFills = (api: Api) => {
+                for (const fill of fills) api.setFillEnable(fill, enable);
+            }
+            const modifyVariableFills = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getBorderVariable(api, this.page, view).value as Border;
+                    api.setFillEnable(variable.strokePaints[index], enable);
+                }
+            }
+            this.editor.setFillsEnabled([modifyLocalFills, modifyVariableFills]);
             this.hiddenCtrl();
         }
     }
@@ -251,21 +334,64 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     modifyFillColor(color: Color, fill: Fill) {
-        const index = this.getIndexByFill(fill);
         if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsColor([{ fill, color }]);
+            this.editor.setFillsColor([(api: Api) => {
+                api.setFillColor(fill, color);
+            }]);
         } else {
-            this.editor.setFillsColor(this.selected.map(i => ({ fill: i.getBorders().strokePaints[index], color })));
+            const index = this.getIndexByFill(fill);
+            const views: ShapeView[] = [];
+            const fillsPacks: { fill: Fill, color: Color }[] = [];
+            for (const view of this.selected) {
+                if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
+                else fillsPacks.push({ fill: view.getBorders().strokePaints[index], color });
+            }
+            const modifyLocalFills = (api: Api) => {
+                for (const pack of fillsPacks) api.setFillColor(pack.fill, pack.color);
+            }
+            const modifyVariableFills = (api: Api) => {
+                if (!views.length) return;
+                for (const view of views) {
+                    const variable = this.editor.getBorderVariable(api, this.page, view).value as Border;
+                    api.setFillColor(variable.strokePaints[index], color);
+                }
+            }
+            this.editor.setFillsColor([modifyLocalFills, modifyVariableFills]);
             this.hiddenCtrl();
         }
     }
 
     modifyGradientOpacity(fill: Fill, opacity: number) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setGradientOpacity([{ fill, opacity }]);
+            const mission = (api: Api) => {
+                const gradient = fill.gradient!;
+                api.setGradientOpacity(gradient, opacity);
+            }
+            this.editor.setGradientOpacity([mission]);
         } else {
             const index = this.getIndexByFill(fill);
-            this.editor.setGradientOpacity(this.selected.map(i => ({ fill: i.getBorders().strokePaints[index], opacity })));
+            const fills: Fill[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.selected) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
+                else fills.push(view.getBorders().strokePaints[index]);
+            }
+            const modifyLocalFills = (api: Api) => {
+                for (const fill of fills) {
+                    const gradient = fill.gradient!;
+                    api.setGradientOpacity(gradient, opacity);
+                }
+            }
+            const modifyVariableFills = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.editor.getBorderVariable(api, this.page, view).value as Border;
+                    const fill = variable.strokePaints[index];
+                    const gradient = fill.gradient!;
+                    api.setGradientOpacity(gradient, opacity);
+                }
+            }
+
+            this.editor.setGradientOpacity([modifyLocalFills, modifyVariableFills]);
             this.hiddenCtrl();
         }
     }

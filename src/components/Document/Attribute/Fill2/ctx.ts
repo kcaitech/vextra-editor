@@ -67,7 +67,7 @@ export class FillsContextMgr extends StyleCtx {
     }
 
     private getIndexByFill(fill: Fill) {
-        return (fill.parent as unknown as Fill[])?.findIndex(i => i === fill) ?? -1;
+        return (fill.parent as unknown as Fill[])?.findIndex(i => i.id === fill.id) ?? -1;
     }
 
     private m_editor: FillModifier | undefined;
