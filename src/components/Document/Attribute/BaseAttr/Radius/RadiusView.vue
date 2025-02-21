@@ -84,7 +84,6 @@ function dragging(e: MouseEvent, which: number) {
     }
 
     let values = [-1, -1, -1, -1];
-
     values[which] = Math.max(Number(props.data[which]) + e.movementX, 0);
 
     if (!props.manager.radiusCtx.rect) {
@@ -131,7 +130,6 @@ function keydownRadius(event: KeyboardEvent, index: number) {
         event.preventDefault();
     }
 }
-
 
 </script>
 
