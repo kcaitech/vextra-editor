@@ -420,9 +420,9 @@ onUnmounted(() => {
                 <div :class="{ 'value-panel-wrapper': true }">
                     <ColorBlock :colors="(colors as Color[])" @click="showColorPanel" />
                     <input class="colorShadow" type="text" :value="colorHex" @focus="selectAllOnFocus"
-                        @change="(e) => manager.modifyShadpwHex(e, data.shadow)" />
+                        @change="(e) => manager.modifyShadowHex(e, data.shadow)" />
                     <input class="alphaShadow" type="text" :value="alpha" @focus="selectAllOnFocus"
-                        @change="(e) => manager.modifyFillAlpha(e, data.shadow)" />
+                        @change="(e) => manager.modifyShadowAlpha(e, data.shadow)" />
                 </div>
                 <ColorPicker v-if="colorPanelStatus.visible" :editor="shadowsPicker" :type="FillType.SolidColor"
                     :include="[]" :color="rgba" @close="() => colorPanelStatusMgr.close()" />

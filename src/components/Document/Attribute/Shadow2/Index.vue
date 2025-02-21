@@ -13,16 +13,10 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import ShadowStylePanel from "@/components/Document/Attribute/Shadow2/Lib/ShadowStylePanel.vue";
 import { ShadowCatch, ShadowsContext, ShadowsContextMgr } from "./ctx";
 
-/**
- * 每个模块的Index.vue应该包含
- *      Header
- *      Mask 或 自定义样式List
- *      样式库
- */
 type Props = {
     context: Context;
-    selectionChange: number;    // 选区变化
-    trigger: any[];             // 选区内图层数据修改
+    selectionChange: number;
+    trigger: any[];
 }
 const { t } = useI18n();
 

@@ -76,7 +76,6 @@ const showBorderPanel = (event: MouseEvent) => {
                     margin: 0 8px;
                     width: 16px;
                     height: 16px;
-                    background-color: #e5e5e5;
                     overflow: hidden;
                     box-sizing: border-box;
 
