@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import ColorPicker from "@/components/common/ColorPicker/index.vue";
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Context } from "@/context";
-import { Color, Page, PageView } from "@kcdesign/data";
+import { Color, Page, PageView, FillType } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
 import { debounce } from "@/utils/timing_util";
+import ColorBlock from "@/components/common/ColorBlock/Index.vue";
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
 
 interface Props {
     context: Context
@@ -16,11 +19,29 @@ interface Props {
 const props = defineProps<Props>();
 const { t } = useI18n();
 let background_color = new Color(1, 239, 239, 239);
-
+const colors = ref<Color[]>([background_color] as Color[]);
 const clr_v = ref<string>('EFEFEF');
 const alpha_v = ref<number>(100);
 const clr_ele = ref<HTMLInputElement>();
 const alpha_ele = ref<HTMLInputElement>();
+
+const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
+const colorPanelStatusMgr = new ElementManager(
+    props.context,
+    colorPanelStatus,
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
+);
+
+function showColorPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('color-wrapper')) {
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -63,6 +84,7 @@ function change_c(e: Event) {
     }
 }
 
+
 function update() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
@@ -98,7 +120,7 @@ function change_a(e: Event) {
 }
 
 function init_value(c: Color) {
-    background_color = c;
+    colors.value = [c];
     clr_v.value = toHex(c.red, c.green, c.blue);
     alpha_v.value = c.alpha * 100;
 }
@@ -146,25 +168,68 @@ onUnmounted(() => {
             style="width: 224px;height: 30px;margin-bottom: 6px;align-items: center;justify-content: flex-start;display: flex;">
             <span>{{ t('attr.background') }}</span>
         </div>
-        <div class="setting">
-            <ColorPicker class="color" :color="background_color" :context="props.context" :late="-26"
+        <div class="value-panel-wrapper">
+            <!-- <ColorPicker class="color" :color="background_color" :context="props.context" :late="-26"
                          :auto_to_right_line="true" @change="c => colorChangeFromPicker(c)">
-            </ColorPicker>
-            <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele"
+            </ColorPicker> -->
+            <ColorBlock :colors="(colors as Color[])" @click="showColorPanel" />
+            <input class="colorShadow" type="text" :value="clr_v" @focus="selectAllOnFocus" @change="(e) => change_c(e)"
+                @keyup.enter="(e) => (e.target as HTMLInputElement).blur()" />
+            <input class="alphaShadow" type="text" :value="`${alpha_v}%`" @focus="selectAllOnFocus"
+                @change="(e) => change_a(e)" @keyup.enter="(e) => (e.target as HTMLInputElement).blur()" />
+            <!-- <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele"
                    @click="clr_click" :spellcheck="false" @blur="is_color_select = false">
             <input @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`" id="alpha" @blur="is_alpha_select = false"
-                   @click="alpha_click" ref="alpha_ele">
+                   @click="alpha_click" ref="alpha_ele"> -->
         </div>
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="FillType.SolidColor" :include="[]"
+            :color="colors" @close="() => colorPanelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">
+.value-panel-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    flex: 1;
+    height: 32px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    background-color: var(--input-background);
+    border-radius: var(--default-radius);
+
+    .colorShadow {
+        flex: 1;
+        width: 46px;
+        outline: none;
+        border: none;
+        height: 14px;
+        background-color: transparent;
+        font-size: 12px;
+        box-sizing: border-box;
+    }
+
+    .alphaShadow {
+        width: 46px;
+        outline: none;
+        border: none;
+        background-color: transparent;
+        height: 14px;
+        font-size: 12px;
+        box-sizing: border-box;
+        flex: 0 0 46px;
+        text-align: right;
+    }
+}
+
 .wrap {
     padding: 12px 8px;
     box-sizing: border-box;
     height: auto;
     border-bottom: 1px solid #F0F0F0;
 
-    > span {
+    >span {
         width: 48px;
         height: 14px;
         font-weight: 700;
@@ -174,7 +239,7 @@ onUnmounted(() => {
         color: #000000;
     }
 
-    .setting {
+    .settings {
         width: 224px;
         height: 32px;
         border-radius: 4px;
