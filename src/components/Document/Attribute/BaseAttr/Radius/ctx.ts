@@ -1,9 +1,8 @@
 import { Context } from "@/context";
-import { BasicArray, RadiusMask, RadiusType, ShapeView } from "@kcdesign/data";
+import { BasicArray, RadiusMask, RadiusModifier, RadiusType, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { StyleCtx } from "../../stylectx";
 import { MaskInfo } from "../../basic";
-import { get_actions_add_mask } from "@/utils/shape_style";
 
 export type RadiusContext = {
     mixed: boolean;
@@ -54,6 +53,7 @@ export class RadiusContextMgr extends StyleCtx {
             this.radiusCtx.radius = this.calculateRadius(this.selected[0]);
         }
     }
+
     private calculateRadius(shape: ShapeView): (number | string)[] {
         const radiusFirst: (number | string)[] = [];
         const r = shape.radius;
@@ -86,7 +86,7 @@ export class RadiusContextMgr extends StyleCtx {
         }
         return radiusFirst;
     }
-    
+
     private modify_can_be_rect() {
         this.can_be_rect = false;
         const origin = this.radiusCtx.rect;
@@ -98,6 +98,12 @@ export class RadiusContextMgr extends StyleCtx {
 
         this.can_be_rect = true;
         this.radiusCtx.rect = origin;
+    }
+
+    private m_editor: RadiusModifier | undefined;
+
+    protected get radiusEditor(): RadiusModifier {
+        return this.m_editor ?? (this.m_editor = new RadiusModifier(this.repo));
     }
 
     update() {
@@ -119,16 +125,15 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     modifyRadiusMask(mask: RadiusMask, radius: number[]) {
-       this.editor4Doc.modifyRadiusMaskRadiusSetting(mask.sheet, mask.id, radius);
+        this.radiusEditor.setShapeMaskRadius(mask, radius);
     }
 
     addRadiusMask(id: string) {
-        const actions = get_actions_add_mask(this.selected, id);
-        this.editor.shapesSetRadiusMask(actions);
+        this.radiusEditor.setShapesRadiusMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();
     }
-    
+
     unbind() {
         const id = this.selected[0].radiusMask;
         const { shapes, radius } = get_actions_radius_mask(this.selected, id);
@@ -145,15 +150,19 @@ export class RadiusContextMgr extends StyleCtx {
         }
         if (this.radiusCtx.mask) radius = new BasicArray<number>(1, 1, 1, 1);
         const radiusMask = new RadiusMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, radius);
-        this.editor4Doc.insertStyleLib(radiusMask, this.page, this.selected);
+        this.radiusEditor.createRadiusMask(this.document, radiusMask, this.page, this.selected);
         this.kill();
     }
 }
 
 function get_actions_radius_mask(shapes: ShapeView[], mask_id?: string) {
     let radius: number[] = [];
-    const id = mask_id ? mask_id : shapes[0].style.fillsMask!
-    radius = (shapes[0].style.getStylesMgr()?.getSync(id) as RadiusMask).radius;
+    const id = mask_id ? mask_id : shapes[0].radiusMask!
+    let mgr = shapes[0].style.getStylesMgr();
+    if (shapes[0] instanceof SymbolRefView && !mgr) {
+        mgr = (shapes[0] as SymbolRefView).symData?.style.getStylesMgr();
+    }
+    radius = (mgr?.getSync(id) as RadiusMask).radius;
     return { shapes, radius };
 }
 
