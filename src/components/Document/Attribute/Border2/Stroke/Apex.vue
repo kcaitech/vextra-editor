@@ -2,22 +2,19 @@
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderApexStyleItem from './BorderApexStyleItem.vue';
 import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue';
-import { MarkerType, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
+import { MarkerType, PathShapeView } from '@kcdesign/data';
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { genOptions } from '@/utils/common';
 import { Context } from '@/context';
 import { hidden_selection } from '@/utils/content';
-import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border_Apex, get_actions_border_endpoint, get_actions_border_exchange } from '@/utils/shape_style';
 import { useI18n } from 'vue-i18n';
 
 import SvgIcon from '@/components/common/SvgIcon.vue';
 interface Props {
     context: Context
-    shapes: ShapeView[]
-    view: number
+    manager: StrokeFillContextMgr
     trigger: any[]
-    reflush_apex: number
 }
 const { t } = useI18n();
 const props = defineProps<Props>();
@@ -51,71 +48,36 @@ const s_mixed = ref(false);
 const e_mixed = ref(false);
 const apex_mixed = ref(false);
 function borderApexStyleSelect(selected: SelectItem) {
-    const page = props.context.selection.selectedPage;
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
     if (selected.content.startsWith('end')) {
-        borderEndStyle.value = selected;
-        if (shapes.length === 1) {
-            const e = props.context.editor4Shape(shapes[0]);
-            e.setMarkerType(selected.value as MarkerType, true);
-        } else {
-            const actions = get_actions_border_Apex(shapes, selected.value as MarkerType, true);
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesMarkerType(actions);
-            }
-        }
+        props.manager.setShapesMarkerType(selected.value as MarkerType, true);
     } else {
-        if (shapes.length === 1) {
-            const e = props.context.editor4Shape(shapes[0]);
-            e.setMarkerType(selected.value as MarkerType, false);
-        } else {
-            const actions = get_actions_border_Apex(shapes, selected.value as MarkerType, false);
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesMarkerType(actions);
-            }
-        }
-        borderFrontStyle.value = selected;
+        props.manager.setShapesMarkerType(selected.value as MarkerType, false);
     }
-    hidden_selection(props.context);
 }
 
 function apexStyleSelect(selected: SelectItem) {
-    const page = props.context.selection.selectedPage;
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
-    const actions = get_actions_border_endpoint(shapes, selected.value as MarkerType);
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesEndpoint(actions);
-    }
-    borderApexStyle.value = selected;
-    hidden_selection(props.context);
+    props.manager.setShapesEndpoint(selected.value as MarkerType);
 }
 
 const shaow_apex = ref(false);
 function init_v() {
-    const shapes = flattenShapes(props.context.selection.selectedShapes).filter(s => s.type !== ShapeType.Group);
-    const len = shapes.length;
+    const len = props.manager.selected.length;
     s_mixed.value = false;
     e_mixed.value = false;
-    shaow_apex.value = shapes.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
+    shaow_apex.value = props.manager.selected.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
     if (shaow_apex.value) {
         apexStyle();
         return;
     }
+    const shape = props.manager.selected[0];
+    const sm = shape.startMarkerType;
+    const em = shape.endMarkerType;
     if (len === 1) {
-        const s = shapes[0];
-        const sm = s.startMarkerType;
-        const em = s.endMarkerType;
         borderFrontStyle.value = { value: sm || MarkerType.Line, content: sm || MarkerType.Line };
         borderEndStyle.value = { value: em || MarkerType.Line, content: `end-${em || MarkerType.Line}` };
     } else if (len > 1) {
-        const s = shapes[0];
-        const sm = s.startMarkerType;
-        const em = s.endMarkerType;
-        s_mixed.value = !(shapes.every(v => v.startMarkerType === sm));
-        e_mixed.value = !(shapes.every(v => v.endMarkerType === em));
+        s_mixed.value = !(props.manager.selected.every(v => v.startMarkerType === sm));
+        e_mixed.value = !(props.manager.selected.every(v => v.endMarkerType === em));
         if (!s_mixed.value) {
             borderFrontStyle.value = { value: sm || MarkerType.Line, content: sm || MarkerType.Line };
         } else {
@@ -130,14 +92,13 @@ function init_v() {
 }
 
 const apexStyle = () => {
-    const shapes = flattenShapes(props.context.selection.selectedShapes).filter(s => s.type !== ShapeType.Group);
-    const len = shapes.length;
-    shaow_apex.value = shapes.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
+    const len = props.manager.selected.length;
+    shaow_apex.value = props.manager.selected.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
     apex_mixed.value = false;
+    const shape = props.manager.selected[0];
+    const sm = shape.startMarkerType;
+    const em = shape.endMarkerType;
     if (len === 1) {
-        const s = shapes[0];
-        const sm = s.startMarkerType;
-        const em = s.endMarkerType;
         const v = em !== sm ? `${t('attr.mixed')}` : (em === MarkerType.Round || em === MarkerType.Square || em === MarkerType.Line || !em) ? em : `${t('attr.mixed')}`;
         if (v === `${t('attr.mixed')}`) {
             apex_mixed.value = true;
@@ -146,11 +107,8 @@ const apexStyle = () => {
             borderApexStyle.value = { value: v || MarkerType.Line, content: `end-${v || MarkerType.Line}` };
         }
     } else if (len > 1) {
-        const s = shapes[0];
-        const sm = s.startMarkerType;
-        const em = s.endMarkerType;
-        const start = !(shapes.every(v => v.startMarkerType === sm));
-        const end = !(shapes.every(v => v.endMarkerType === em));
+        const start = !(props.manager.selected.every(v => v.startMarkerType === sm));
+        const end = !(props.manager.selected.every(v => v.endMarkerType === em));
         if (start === end && sm === em) {
             const v = em === MarkerType.Round || em === MarkerType.Square || em === MarkerType.Line || !em ? em : `${t('attr.mixed')}`
             if (v === `${t('attr.mixed')}`) {
@@ -166,39 +124,25 @@ const apexStyle = () => {
     }
 }
 function exchange() {
-    const page = props.context.selection.selectedPage;
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
-    const len = shapes.length;
-    if (len === 1) {
-        const e = props.context.editor4Shape(shapes[0]);
-        e.exchangeMarkerType();
-        init_v();
-    } else {
-        const actions = get_actions_border_exchange(shapes);
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.exchangeShapesMarkerType(actions);
-        }
-    }
+    props.manager.exchangeShapesMarkerType();
 }
-const stop = watch(() => props.shapes, init_v);
-const stop2 = watch(() => props.view, init_v);
-const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
-    if (v.length > 0 && (v.includes('style') || v.includes('variable') || v.includes('pathsegs'))) init_v();
-});
-const stop4 = watch(() => props.reflush_apex, () => {
-    apexStyle();
-})
+
+const watchList: any[] = [
+    watch(() => props.trigger, (v) => {
+        if (v?.includes('borders') || v?.includes('variables') || v?.includes('endMarkerType') || v?.includes('startMarkerType')) {
+            init_v();
+        }
+    })
+];
+
 
 onMounted(init_v);
 onUnmounted(() => {
-    stop();
-    stop2();
-    stop3();
-    stop4();
+    watchList.forEach(stop => stop());
 });
 
 import exchange_icon from '@/assets/icons/svg/exchange.svg';
+import { StrokeFillContextMgr } from '../ctx';
 </script>
 <template>
     <div class="apex-select-wrap" v-if="!shaow_apex">
