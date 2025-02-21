@@ -6,14 +6,13 @@ import {
     Blur,
     BlurMask,
     BlurType,
-    Point2D,
+    Point2D, BlurModifier,
     ShapeView,
-    SymbolRefView,
-    Variable
+    SymbolRefView
 } from "@kcdesign/data";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
-import { get_actions_add_blur, get_actions_add_mask, get_actions_blur_mask, get_actions_blur_unify } from "@/utils/shape_style";
+import { get_actions_add_mask, get_actions_blur_mask } from "@/utils/shape_style";
 import { v4 } from "uuid";
 
 export type BlurCatch = {
@@ -44,6 +43,12 @@ function stringifyBlur(sye: { view: ShapeView, blur: Blur | undefined }) {
 export class BlurContextMgr extends StyleCtx {
     constructor(protected context: Context, public blurCtx: BlurContext) {
         super(context);
+    }
+
+    private m_editor: BlurModifier | undefined;
+
+    protected get editor(): BlurModifier {
+        return this.m_editor ?? (this.m_editor = new BlurModifier(this.repo));
     }
 
     private modifyMixedStatus() {
@@ -105,16 +110,50 @@ export class BlurContextMgr extends StyleCtx {
             }
         }
         const modifyLocal = (api: Api) => {
-
+            views.forEach(view => api.addBlur(view.style, blur));
         }
-        this.editor.shapesAddBlur(get_actions_add_blur(this.shapes, blur));
+        const modifyVariable = (api: Api) => {
+            needOverride.forEach(view => {
+                const variable = this.editor.getBlurVariable(api, this.page, view);
+                api.shapeModifyVariable(this.page.data, variable, blur);
+            });
+        }
+        this.editor.createBlur([modifyLocal, modifyVariable]);
         this.hiddenCtrl();
     }
 
     unify() {
-        const actions = get_actions_blur_unify(this.shapes);
-        this.editor.shapesBlurUnify(actions);
-        this.hiddenCtrl();
+        const editor = this.editor;
+
+        const blurMaskView = this.shapes.find(i => i.blurMask);
+        if (blurMaskView) {
+            editor.unifyShapesBlurMask(this.shapes, blurMaskView.blurMask!);
+        } else {
+            const blur = editor.importBlur(this.shapes.find(i => i.blur)!.blur!);
+            const locals: ShapeView[] = [];
+            const links: ShapeView[] = [];
+            for (const view of this.shapes) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    links.push(view);
+                } else {
+                    locals.push(view);
+                }
+            }
+
+            const modifyLocal = (api: Api) => {
+                locals.forEach((view: ShapeView) => {
+                    api.addBlur(view.style, blur);
+                });
+            }
+            const modifyVariable = (api: Api) => {
+                links.forEach(view => {
+                    const variable = editor.getBlurVariable(api, this.page, view);
+                    api.shapeModifyVariable(this.page.data, variable, blur);
+                })
+            }
+            editor.unifyShapesBlur([modifyLocal, modifyVariable]);
+            this.hiddenCtrl();
+        }
     }
 
     modifyBlurType(blur: Blur, type: BlurType) {
@@ -127,7 +166,7 @@ export class BlurContextMgr extends StyleCtx {
                 if (shape.style.blur) actions.push({ blur: shape.style.blur, value: type });
             }
         }
-        this.editor.setShapeBlurType(actions);
+        // this.editor.setShapeBlurType(actions);
         this.hiddenCtrl();
     }
 
@@ -141,7 +180,7 @@ export class BlurContextMgr extends StyleCtx {
                 if (shape.style.blur) actions.push({ blur: shape.style.blur, value: !blur.isEnabled });
             }
         }
-        this.editor.setShapeBlurEnabled(actions);
+        // this.editor.setShapeBlurEnabled(actions);
         this.hiddenCtrl();
     }
 
@@ -155,7 +194,7 @@ export class BlurContextMgr extends StyleCtx {
                 if (shape.style.blur) actions.push({ blur: shape.style.blur, value });
             }
         }
-        this.editor.setShapeBlurSaturation(actions);
+        // this.editor.setShapeBlurSaturation(actions);
         this.hiddenCtrl();
     }
 
@@ -164,7 +203,7 @@ export class BlurContextMgr extends StyleCtx {
         for (let i = 0; i < this.shapes.length; i++) {
             actions.push({ style: this.shapes[i].style });
         }
-        this.editor.shapeDeleteBlur(actions);
+        // this.editor.shapeDeleteBlur(actions);
         this.hiddenCtrl();
     }
 
@@ -178,17 +217,17 @@ export class BlurContextMgr extends StyleCtx {
 
     modifyBlurMask(maskID: string) {
         const actions = get_actions_add_mask(this.shapes, maskID);
-        this.editor.shapesSetBlurMask(actions);
+        // this.editor.shapesSetBlurMask(actions);
         this.hiddenCtrl();
         this.kill();
     }
 
     unbind() {
         const actions = get_actions_blur_mask(this.shapes);
-        this.editor.shapesDelBlurMask(actions);
+        // this.editor.shapesDelBlurMask(actions);
     }
 
     removeMask() {
-        this.editor.shapesDelStyleBlur(this.shapes);
+        // this.editor.shapesDelStyleBlur(this.shapes);
     }
 }
