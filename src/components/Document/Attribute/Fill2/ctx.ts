@@ -343,12 +343,12 @@ export class FillsContextMgr extends StyleCtx {
 
     /* 解绑填充遮罩 */
     unbind() {
-        this.editor.unbindShapesFillMask(this.document, this.page, this.selected);
+        this.editor.unbindShapesFillMask(this.page, this.selected);
     }
 
     /* 删除遮罩 */
     removeMask() {
-        this.editor.removeShapesFillMask(this.document, this.page, this.selected);
+        this.editor.removeShapesFillMask(this.page, this.selected);
     }
 }
 
