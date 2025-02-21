@@ -370,7 +370,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
         <div v-if="!showpagelist" class="status-bar" @touchmove.stop="moveIcon"
             :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showEl">
-                <SvgIcon :icon="menu_black_icon"/>
+                <SvgIcon :icon="menu_black_icon" />
             </div>
         </div>
         <transition name="fade">
@@ -378,7 +378,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
                 <div class="header">
                     <div class="title">页面</div>
                     <div class="close" @click.stop="showpagelist = false">
-                        <SvgIcon :icon="close_icon"/>
+                        <SvgIcon :icon="close_icon" />
                     </div>
                 </div>
                 <div class="list">
@@ -390,7 +390,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
                                 page.data.content }}</div>
                         <div class="choose"
                             :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
-                            <SvgIcon :icon="m_select_icon"/>
+                            <SvgIcon :icon="m_select_icon" />
                         </div>
                     </div>
                 </div>
@@ -453,6 +453,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
     }
 
     .list {
+        display: flex;
         width: 24px;
         height: 24px;
 
@@ -475,6 +476,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
     background-color: #fff;
     border-radius: 16px 16px 0 0;
     padding: 4px 0 0 0;
+    box-shadow: 0 4px 6px 4px rgba(0,0,0,0.2);
     box-sizing: border-box;
     z-index: 1;
 
