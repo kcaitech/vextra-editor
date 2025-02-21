@@ -23,7 +23,7 @@ export class FillsPicker extends ColorPickerEditor {
         if (this.m_index !== undefined) return this.m_index;
         if (!this.fill) return this.m_index = 0;
         const parent = this.fill.parent as any;
-        return this.m_index = parent?.findIndex((i: any) => i === this.fill) ?? -1;
+        return this.m_index = parent?.findIndex((i: any) => i.id === this.fill?.id) ?? -1;
     }
 
     private get api(): FillsAsyncApi {

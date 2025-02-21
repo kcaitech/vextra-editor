@@ -34,6 +34,11 @@ function stringifyFills(sye: { shape: ShapeView, fills: Fill[] }) {
     }
 }
 
+function strokeMaskMixedStatus(shapes: ShapeView[]) {
+    const f_mask = shapes[0].bordersMask;
+    return shapes.every(s => s.bordersMask === f_mask);
+}
+
 function strokeMixedStatus(stroke: BorderData, shapes: ShapeView[]) {
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -135,7 +140,8 @@ export class StrokeFillContextMgr extends StyleCtx {
             sideSetting: origin.sideSetting
         }
         strokeMixedStatus(replace, this.selected);
-        if (replace.position === 'mixed' || replace.sideSetting === 'mixed') {
+        const maskMixed = strokeMaskMixedStatus(this.selected);
+        if (replace.position === 'mixed' || replace.sideSetting === 'mixed' || !maskMixed) {
             this.fillCtx.strokeMaskInfo = undefined;
             this.fillCtx.strokeMask = undefined;
         }
@@ -143,7 +149,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     private getIndexByFill(fill: Fill) {
-        return (fill.parent as unknown as Fill[])?.findIndex(i => i === fill) ?? -1;
+        return (fill.parent as unknown as Fill[])?.findIndex(i => i.id === fill.id) ?? -1;
     }
 
     private m_editor: BorderModifier | undefined;
@@ -316,7 +322,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
     createStrokeStyleLib(name: string, desc: string, mask: BorderMaskType) {
         const strokeMask = new BorderMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, mask);
-        this.editor4Doc.insertStyleLib(strokeMask, this.page, this.selected);
+        this.editor.createBorderMask(this.document, strokeMask, this.page, this.selected);
         this.kill();
     }
 }
