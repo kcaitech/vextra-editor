@@ -7,11 +7,6 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import PanelItem from "@/components/Document/Attribute/StyleLib/PanelItem.vue";
 import { ShadowsContextMgr } from "../ctx";
 
-/**
- * 用于展示样式表中单个样式的组件
- * data: 样式信息
- * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
- */
 const { data, context, manager } = defineProps<{ context: Context; manager: ShadowsContextMgr; data: ShadowMask; }>();
 
 const name = ref<string>(data.name);
@@ -31,8 +26,8 @@ function update() {
     selected.value = manager.shadowCtx.mask === data.id;
 }
 
-function showModifyPanel(event: MouseEvent) {
-    let e: Element | null = event.target as Element;
+function showModifyPanel(trigger: MouseEvent | Element) {
+    let e: Element | null = trigger instanceof Element ? trigger : trigger.target as Element;
     while (e) {
         if (e.classList.contains('modify')) {
             modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -442 } });
@@ -47,6 +42,10 @@ function modifyShadowMask() {
     manager.modifyShadowMask(data.id);
 }
 
+function disable() {
+    manager.disableMask(data);
+}
+
 onMounted(() => {
     data.watch(update);
 })
@@ -56,7 +55,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel" v-if="shadows.length">
+    <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected"
+               @modify="showModifyPanel" @disable="disable">
         <template #preview>
             <div class="content" @click="modifyShadowMask">
                 <div class="effect" :style="{
@@ -80,8 +80,7 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .content {
-    flex: 1;
-    width: 50px;
+    width: 100%;
     height: 100%;
     display: flex;
     align-items: center;

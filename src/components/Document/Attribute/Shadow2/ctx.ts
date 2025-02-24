@@ -6,7 +6,7 @@ import {
     ShadowPosition,
     ShadowsModifier,
     Api,
-    ShapeView, SymbolRefView
+    ShapeView, SymbolRefView, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
@@ -459,5 +459,9 @@ export class ShadowsContextMgr extends StyleCtx {
 
     removeMask() {
         this.editor.removeShapesShadowsMask(this.page, this.shapes);
+    }
+
+    modifyMaskStatus(mask: StyleMangerMember, value: boolean) {
+        this.editor.modifyMaskStatus(mask, value);
     }
 }

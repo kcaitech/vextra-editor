@@ -31,20 +31,23 @@ function update() {
     selected.value = manager.radiusCtx.mask === data.id;
 }
 
-function showModifyPanel(event: MouseEvent) {
-    let e: Element | null = event.target as Element;
+function showModifyPanel(trigger: MouseEvent | Element) {
+    let e: Element | null = trigger instanceof Element ? trigger : trigger.target as Element;
     while (e) {
         if (e.classList.contains('modify')) {
-            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -442 } });
+            modifyPanelStatusMgr.showBy(e, {once: {offsetLeft: -442}});
             manager.keepUniquePanel('.modify', modifyPanelStatusMgr);
             break;
         }
         e = e.parentElement;
     }
 }
-
 function addRadiusMask() {
     manager.addRadiusMask(data.id);
+}
+
+function disable() {
+    manager.disableMask(data);
 }
 
 onMounted(() => {
@@ -56,7 +59,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel">
+    <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected"
+               @modify="showModifyPanel" @disable="disable">
         <template #preview>
             <div class="content" @click="addRadiusMask">
                 <SvgIcon :icon="radius_icon" />
@@ -71,8 +75,7 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .content {
-    flex: 1;
-    width: 50px;
+    width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
