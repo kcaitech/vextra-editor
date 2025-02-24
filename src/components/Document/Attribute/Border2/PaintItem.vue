@@ -3,7 +3,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import delete_icon from "@/assets/icons/svg/delete.svg";
 import { Context } from "@/context";
 import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, reactive, ref, watchEffect, watch, nextTick } from "vue";
+import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType, GradientType } from "@kcdesign/data";

@@ -32,7 +32,6 @@ const emits = defineEmits<{
         <div v-if="props.delete" class="delete" @click="emits('delete')">
             <SvgIcon :icon="delete_icon" />
         </div>
-        <div v-if="!props.delete" class="space"></div>
     </div>
 </template>
 
@@ -44,7 +43,6 @@ const emits = defineEmits<{
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 0;
 
     .info-container {
         flex: 1;
@@ -111,12 +109,6 @@ const emits = defineEmits<{
         &:hover {
             background-color: var(--input-background);
         }
-    }
-
-    .space {
-        flex: 0 0 28px;
-        width: 28px;
-        height: 28px;
     }
 }
 </style>

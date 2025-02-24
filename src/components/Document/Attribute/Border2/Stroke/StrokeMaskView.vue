@@ -2,15 +2,16 @@
 import { Context } from '@/context';
 import { StrokeFillContextMgr } from '../ctx';
 import BorderDetail from './BorderDetail.vue';
-import unbind_icon from '@/assets/icons/svg/unbind.svg';
 import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { useI18n } from "vue-i18n";
+import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 
-const props = defineProps<{ context: Context; manager: StrokeFillContextMgr; trigger: any[] }>();
+defineProps<{ context: Context; manager: StrokeFillContextMgr; trigger: any[] }>();
 const emits = defineEmits<{
     (e: 'showBorderPanel', event: MouseEvent): void;
 }>();
-
+const t = useI18n().t;
 const showBorderPanel = (event: MouseEvent) => {
     emits('showBorderPanel', event);
 }
@@ -18,20 +19,19 @@ const showBorderPanel = (event: MouseEvent) => {
 
 <template>
     <div class="borders-container" v-if="manager.fillCtx.fills.length && manager.fillCtx.strokeMaskInfo">
-        <div class="bordermask">
-            <div class="info">
-                <div class="border-left" @click="showBorderPanel($event)">
-                    <div class="border">
-                        <SvgIcon :icon="thickness_icon" />
-                    </div>
-                    <div class="name">{{ manager.fillCtx.strokeMaskInfo.name }}</div>
+        <MaskPort :delete="false" :disabled="manager.fillCtx.strokeMaskInfo.disabled"
+                  @unbind="() => manager.unbindStroke()">
+            <div class="border-left" @click="showBorderPanel($event)">
+                <div class="border">
+                    <SvgIcon :icon="thickness_icon"/>
                 </div>
-                <div class="unbind" @click.stop="manager.unbindStroke()">
-                    <SvgIcon :icon="unbind_icon" />
+                <div class="name">{{
+                        manager.fillCtx.strokeMaskInfo.disabled ? t('stylelib.deleted_style') : manager.fillCtx.strokeMaskInfo.name
+                    }}
                 </div>
             </div>
-        </div>
-        <BorderDetail :context="context" :manager="manager" :trigger="trigger"></BorderDetail>
+        </MaskPort>
+        <BorderDetail :context="context" :manager="manager" :trigger="trigger"/>
     </div>
 </template>
 
@@ -42,65 +42,27 @@ const showBorderPanel = (event: MouseEvent) => {
     gap: 8px;
     padding: 6px 0;
 
-    .bordermask {
+    .border-left {
         flex: 1;
         display: flex;
-        height: 32px;
-        border-radius: 6px;
-        justify-content: space-between;
         align-items: center;
-        gap: 8px;
+        background-color: #F5F5F5;
+        height: 100%;
 
-        .info {
-            flex: 1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 6px;
+        &:hover {
+            background-color: #e5e5e5;
+        }
+
+        .border {
+            margin: 0 8px;
+            width: 16px;
+            height: 16px;
             overflow: hidden;
-            background-color: #f4f5f5;
-            height: 100%;
+            box-sizing: border-box;
 
-            .border-left {
-                flex: 1;
-                display: flex;
-                align-items: center;
-                background-color: #F5F5F5;
-                height: 100%;
-
-                &:hover {
-                    background-color: #e5e5e5;
-                }
-
-                .border {
-                    margin: 0 8px;
-                    width: 16px;
-                    height: 16px;
-                    overflow: hidden;
-                    box-sizing: border-box;
-
-                    >img {
-                        width: 14px;
-                        height: 16px;
-                    }
-                }
-            }
-
-            .unbind {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 28px;
-                height: 32px;
-
-                >img {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
-
-            .unbind:hover {
-                background-color: #e5e5e5;
+            > img {
+                width: 14px;
+                height: 16px;
             }
         }
     }

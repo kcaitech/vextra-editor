@@ -9,10 +9,6 @@ import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 import { StrokeFillContextMgr } from "./ctx";
 import { useI18n } from "vue-i18n";
 
-/**
- * 当图层使用样式库里的样式之后，属性面板不再展示详细的样式信息，取而代之的是该样式库里对应样式的基本信息
- * 本组件是由该基本信息为状态的组件。除了展示基本信息之外，本组件可以打开样式库面板、解绑样式、删除该样式；
- */
 const props = defineProps<{
     context: Context;
     manager: StrokeFillContextMgr;

@@ -9,13 +9,10 @@ import { StrokeFillContextMgr } from "../ctx";
 import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
-/**
- * 用于展示样式表中单个样式的组件
- * data: 样式信息
- * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
- */
 const { data, context, manager } = defineProps<{ context: Context; manager: StrokeFillContextMgr; data: BorderMask; }>();
-
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 const name = ref<string>(data.name);
 const selected = ref<boolean>(manager.fillCtx.strokeMask === data.id);
 
@@ -26,7 +23,8 @@ const modifyPanelStatusMgr = new ElementManager(
     { whiteList: ['.modify-stroke-style-panel', '.modify'] }
 );
 
-function update() {
+function update(...args: any[]) {
+    if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     selected.value = manager.fillCtx.strokeMask === data.id;
 }
@@ -84,7 +82,7 @@ onUnmounted(() => {
     padding-left: 8px;
     box-sizing: border-box;
 
-    >img {
+    > img {
         width: 14px;
         height: 16px;
     }
