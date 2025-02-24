@@ -84,5 +84,13 @@ onUnmounted(() => {
         gap: 8px;
         padding-left: 8px;
         box-sizing: border-box;
+
+        > span {
+            display: block;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 </style>
