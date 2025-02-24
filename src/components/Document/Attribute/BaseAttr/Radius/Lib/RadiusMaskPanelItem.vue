@@ -15,7 +15,9 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
  * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
  */
 const { data, context, manager } = defineProps<{ context: Context; manager: RadiusContextMgr; data: RadiusMask; }>();
-
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 const name = ref<string>(data.name);
 const selected = ref<boolean>(manager.radiusCtx.mask === data.id);
 
@@ -26,7 +28,8 @@ const modifyPanelStatusMgr = new ElementManager(
     { whiteList: ['.modify-radius-style-panel', '.modify'] }
 );
 
-function update() {
+function update(...args: any[]) {
+    if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     selected.value = manager.radiusCtx.mask === data.id;
 }

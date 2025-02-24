@@ -30,7 +30,7 @@ const emits = defineEmits<{
             </div>
         </div>
         <div v-if="props.delete" class="delete" @click="emits('delete')">
-            <SvgIcon :icon="delete_icon" />
+            <SvgIcon :icon="delete_icon"/>
         </div>
     </div>
 </template>

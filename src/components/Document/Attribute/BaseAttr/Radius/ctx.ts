@@ -1,5 +1,13 @@
 import { Context } from "@/context";
-import { BasicArray, RadiusMask, RadiusModifier, RadiusType, ShapeView, SymbolRefView } from "@kcdesign/data";
+import {
+    BasicArray,
+    RadiusMask,
+    RadiusModifier,
+    RadiusType,
+    ShapeView,
+    StyleMangerMember,
+    SymbolRefView
+} from "@kcdesign/data";
 import { v4 } from "uuid";
 import { StyleCtx } from "../../stylectx";
 import { MaskInfo } from "../../basic";
@@ -153,6 +161,9 @@ export class RadiusContextMgr extends StyleCtx {
         const radiusMask = new RadiusMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, radius);
         this.radiusEditor.createRadiusMask(this.document, radiusMask, this.page, this.selected);
         this.kill();
+    }
+    disableMask(data: StyleMangerMember) {
+        this.radiusEditor.disableMask(data);
     }
 }
 
