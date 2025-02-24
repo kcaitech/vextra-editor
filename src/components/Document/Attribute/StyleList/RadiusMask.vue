@@ -1,0 +1,82 @@
+<script setup lang="ts">
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import down_icon from "@/assets/icons/svg/down.svg";
+import { useI18n } from "vue-i18n";
+import { ref } from "vue";
+import { Context } from "@/context";
+import RadiusMaskPanelItem from '@/components/Document/Attribute/BaseAttr/Radius/Lib/RadiusMaskPanelItem.vue';
+import { RadiusContextMgr, RadiusContext } from "../BaseAttr/Radius/ctx";
+import { RadiusMask } from "@kcdesign/data";
+
+const { t } = useI18n();
+const props = defineProps<{
+    context: Context;
+    data: RadiusMask[];
+}>();
+
+const extend = ref<boolean>(props.context.attr.radiusMaskFold);
+
+const radiusCtxMgr = new RadiusContextMgr(props.context, {} as RadiusContext);
+
+const changeFold = () => {
+    extend.value = !extend.value;
+    props.context.attr.setRadiusMaskFold();
+}
+</script>
+
+<template>
+    <div class="container">
+        <div class="header" @click="changeFold">
+            <span>{{ t('stylelib.radius') }}</span>
+            <div class="down">
+                <SvgIcon :icon="down_icon" :style="{ transform: extend ? 'rotate(0deg)' : 'rotate(-90deg)' }" />
+            </div>
+        </div>
+        <template v-if="extend" v-for="c in data" :key="c.id">
+            <RadiusMaskPanelItem :context="context" :data="c" :manager="radiusCtxMgr"></RadiusMaskPanelItem>
+        </template>
+    </div>
+</template>
+
+<style scoped lang="scss">
+.container {
+    width: 100%;
+    padding: 12px 8px;
+    box-sizing: border-box;
+    height: auto;
+    border-bottom: 1px solid #F0F0F0;
+
+    .header {
+        display: flex;
+        height: 30px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+
+        span {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .down {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            border-radius: var(--default-radius);
+            transition: .2s;
+
+            >img {
+                width: 14px;
+                height: 14px;
+            }
+
+            &:hover {
+                background-color: #F5F5F5;
+            }
+        }
+    }
+}
+</style>

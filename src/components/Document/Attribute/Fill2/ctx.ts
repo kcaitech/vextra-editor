@@ -30,10 +30,9 @@ export class FillsContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        const selected = this.selected;
-
-        if (selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = selected.map(i => ({ fills: i.getFills(), shape: i }));
+        if (this.selected.length < 1) return;
+        if (this.selected.length < 2) return this.fillCtx.mixed = false;
+        const allFills = this.selected.map(i => ({ fills: i.getFills(), shape: i }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -47,7 +46,7 @@ export class FillsContextMgr extends StyleCtx {
     }
 
     private updateFills() {
-        if (this.fillCtx.mixed) return;
+        if (this.fillCtx.mixed || this.selected.length < 1) return;
 
         const represent = this.selected[0];
         this.fillCtx.mask = represent.fillsMask;
@@ -345,6 +344,7 @@ export class FillsContextMgr extends StyleCtx {
 
     /* 修改图层填充遮罩的绑定值 */
     modifyFillMask(id: string) {
+        if (!this.fillCtx.mask) return;
         this.editor.setShapesFillMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();

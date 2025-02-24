@@ -39,10 +39,10 @@ function update() {
     name.value = data?.name ?? '边框样式';
     desc.value = data?.description ?? '';
     border.value = data?.border;
+
     if (data) {
         const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = data.border.sideSetting;
-        thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
-
+        thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');        
     } else {
         const sideSetting = manager.fillCtx.strokeInfo?.sideSetting;
         const position = manager.fillCtx.strokeInfo?.position;

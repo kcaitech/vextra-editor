@@ -14,6 +14,12 @@ export class Attribute extends WatchableObject {
     static FRAME_CHANGE = 5;
     static ANCHOR_CHANGE = 6;
     static TIDY_UP_SPACE_CHANGE = 7;
+
+    private m_fillMaskFold: boolean = true;
+    private m_shadowMaskFold: boolean = true;
+    private m_blurMaskFold: boolean = true;
+    private m_borderMaskFold: boolean = true;
+    private m_radiusMaskFold: boolean = true;
     constructor() {
         super();
     }
@@ -22,5 +28,36 @@ export class Attribute extends WatchableObject {
 
     get defaultImage() {
         return DEFAULT_IMAGE;
+    }
+
+    setFillMaskFold() {
+        this.m_fillMaskFold = !this.m_fillMaskFold;
+    }
+    setShadowMaskFold() {
+        this.m_shadowMaskFold = !this.m_shadowMaskFold;
+    }
+    setBorderMaskFold() {
+        this.m_borderMaskFold = !this.m_borderMaskFold;
+    }
+    setRadiusMaskFold() {
+        this.m_radiusMaskFold = !this.m_radiusMaskFold;
+    }
+    setBlurMaskFold() {
+        this.m_blurMaskFold = !this.m_blurMaskFold;
+    }
+    get fillMaskFold() {
+        return this.m_fillMaskFold;
+    }
+    get shadowMaskFold() {
+        return this.m_shadowMaskFold;
+    }
+    get borderMaskFold() {
+        return this.m_borderMaskFold;
+    }
+    get radiusMaskFold() {
+        return this.m_radiusMaskFold;
+    }
+    get blurMaskFold() {
+        return this.m_blurMaskFold;
     }
 }
