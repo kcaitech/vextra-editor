@@ -462,7 +462,7 @@ export class ShadowsContextMgr extends StyleCtx {
         this.editor.removeShapesShadowsMask(this.page, this.shapes);
     }
 
-    modifyMaskStatus(mask: StyleMangerMember, value: boolean) {
-        this.editor.modifyMaskStatus(mask, value);
+    disableMask(mask: StyleMangerMember) {
+        this.editor.disableMask(mask);
     }
 }

@@ -9,6 +9,10 @@ import { ShadowsContextMgr } from "../ctx";
 
 const { data, context, manager } = defineProps<{ context: Context; manager: ShadowsContextMgr; data: ShadowMask; }>();
 
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
+
 const name = ref<string>(data.name);
 const shadows = ref<Shadow[]>(data.shadows.map(i => i));
 const selected = ref<boolean>(manager.shadowCtx.mask === data.id);
@@ -20,7 +24,8 @@ const modifyPanelStatusMgr = new ElementManager(
     { whiteList: ['.modify-shadow-style-panel', '.modify'] }
 );
 
-function update() {
+function update(...args: any[]) {
+    if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     shadows.value = data.shadows.map(i => i);
     selected.value = manager.shadowCtx.mask === data.id;

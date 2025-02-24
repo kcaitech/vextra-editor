@@ -12,6 +12,9 @@ const {data, context, manager} = defineProps<{
     manager: BlurContextMgr;
     data: BlurMask;
 }>();
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 
 const name = ref<string>(data.name);
 
@@ -23,7 +26,8 @@ const modifyPanelStatusMgr = new ElementManager(
 );
 const selected = ref<boolean>(manager.blurCtx.mask === data.id);
 
-function update() {
+function update(...args: any[]) {
+    if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     selected.value = manager.blurCtx.mask === data.id;
 }

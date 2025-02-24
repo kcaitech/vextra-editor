@@ -6,7 +6,7 @@
             <el-scrollbar>
                 <div class="content">
                     <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager"
-                                :item="BlurMaskPanelItem" :data="sheet"/>
+                                :item="BlurMaskPanelItem" :data="sheet" @update="update"/>
                     <div v-if="!sheets?.length && keyword" class="search-null">{{t('stylelib.null_search')}}</div>
                     <div v-if="!sheets?.length && !keyword" class="data-null">{{t('stylelib.null_data')}}</div>
                 </div>

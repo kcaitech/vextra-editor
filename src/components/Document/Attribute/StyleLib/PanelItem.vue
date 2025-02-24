@@ -13,7 +13,7 @@ const props = defineProps<{
 }>()
 const emits = defineEmits<{
     (e: 'modify', trigger: MouseEvent | Element): void;
-    (e: 'disable', event: MouseEvent): void;
+    (e: 'disable'): void;
 }>();
 const modifyMenuStatus = reactive<ElementStatus>({ id: '#remove-entrance', visible: false });
 const modifyMenuStatusMgr = new ElementManager(

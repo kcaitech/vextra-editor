@@ -16,6 +16,9 @@ defineProps<{
     item: any;
     listStatus?: boolean;
 }>();
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 const extend = ref<boolean>(true);
 </script>
 <template>
@@ -26,7 +29,7 @@ const extend = ref<boolean>(true);
         </div>
         <div v-if="extend" style="width: 100%; height: fit-content;" :class="{ grid: listStatus }">
             <component v-for="c in data.variables" :key="c.id" :is="item" :context="context" :manager="manager"
-                       :data="c"/>
+                       :data="c" @update="emits('update')"/>
         </div>
     </div>
 </template>
