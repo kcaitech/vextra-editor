@@ -6,7 +6,7 @@
                 <SheetPanel v-for="sheet in sheets" :key="sheet.id"
                             :context="context" :manager="manager" :data="sheet"
                             :list-status="manager.fillCtx.listStatus"
-                            :item="manager.fillCtx.listStatus ? FillMaskGridItem : FillMaskPanelItem" @update="update"/>
+                            :item="manager.fillCtx.listStatus ? FillMaskGridItem : FillMaskPanelItem"/>
                 <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
                 <div v-if="!sheets?.length && !keyword" class="data-null">暂无颜色样式</div>
             </div>
