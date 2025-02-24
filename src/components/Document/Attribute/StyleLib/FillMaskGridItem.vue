@@ -6,6 +6,7 @@ import ModifyFillStyle from "@/components/Document/Attribute/Fill2/Lib/ModifyFil
 import { Context } from "@/context";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
+import Tooltip from '@/components/common/Tooltip.vue';
 
 /**
  * 用于展示样式表中单个样式的组件
@@ -57,9 +58,11 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="container" :class="{ selected: selected }">
-        <div class="content" @click="modifyFillMask">
-            <ColorBlock :colors="(fills as Fill[])" :size="22" round disabled-alpha />
-        </div>
+        <Tooltip :content="name" :offset="5">
+            <div class="content" @click="modifyFillMask">
+                <ColorBlock :colors="(fills as Fill[])" :size="22" round disabled-alpha />
+            </div>
+        </Tooltip>
         <template>
             <ModifyFillStyle v-if="modifyPanelStatus.visible" :context="context" :manager="manager" :data="data"
                 @close="() => modifyPanelStatusMgr.close()" />
