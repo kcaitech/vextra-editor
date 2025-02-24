@@ -4,8 +4,8 @@ import { useI18n } from "vue-i18n";
 const t = useI18n().t;
 
 const emits = defineEmits<{
-    (e: 'modify', trigger: MouseEvent | Element): void;
-    (e: 'remove', event: MouseEvent): void;
+    (e: 'modify'): void;
+    (e: 'remove'): void;
 }>();
 </script>
 

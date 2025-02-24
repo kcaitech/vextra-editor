@@ -3,10 +3,11 @@
         <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword" />
         <el-scrollbar>
             <div class="content">
-                <SheetPanel v-if="!manager.fillCtx.listStatus" v-for="sheet in sheets" :key="sheet.id" :context="context"
-                    :list-status="manager.fillCtx.listStatus" :manager="manager" :item="FillMaskPanelItem" :data="sheet" />
                 <SheetPanel v-if="manager.fillCtx.listStatus" v-for="sheet in sheets" :key="sheet.id" :context="context"
-                    :list-status="manager.fillCtx.listStatus" :manager="manager" :item="FillMaskGridItem" :data="sheet" />
+                            list-status :manager="manager" :item="FillMaskGridItem"
+                            :data="sheet"/>
+                <SheetPanel v-else v-for="sheet in sheets" :key="sheet.id" :context="context"
+                            :manager="manager" :item="FillMaskPanelItem" :data="sheet"/>
                 <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
                 <div v-if="!sheets?.length && !keyword" class="data-null">暂无颜色样式</div>
             </div>

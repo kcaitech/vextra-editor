@@ -76,7 +76,7 @@ onUnmounted(() => {
     box-sizing: border-box;
     > span {
         display: block;
-        width: 100%;
+        width: 132px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

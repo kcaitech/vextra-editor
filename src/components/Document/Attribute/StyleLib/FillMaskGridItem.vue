@@ -7,6 +7,7 @@ import { Context } from "@/context";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import Tooltip from '@/components/common/Tooltip.vue';
+import RemoveEntrance from "@/components/Document/Attribute/StyleLib/RemoveEntrance.vue";
 
 /**
  * 用于展示样式表中单个样式的组件
@@ -18,6 +19,7 @@ const { data, context, manager } = defineProps<{ context: Context; manager: Fill
 const name = ref<string>(data.name);
 const fills = ref<Fill[]>(data.fills.map(i => i));
 const selected = ref<boolean>(manager.fillCtx.mask === data.id);
+const trigger = ref<HTMLDivElement>();
 
 const modifyPanelStatus = reactive<ElementStatus>({ id: '#modify-fill-style-panel', visible: false });
 const modifyPanelStatusMgr = new ElementManager(
@@ -26,22 +28,56 @@ const modifyPanelStatusMgr = new ElementManager(
     { whiteList: ['.modify-fill-style-panel', '.modify'] }
 );
 
+const modifyMenuStatus = reactive<ElementStatus>({ id: '#remove-entrance', visible: false });
+const modifyMenuStatusMgr = new ElementManager(
+    context,
+    modifyMenuStatus,
+    { whiteList: ['#remove-entrance'] }
+);
+
 function update() {
     name.value = data.name;
     fills.value = data.fills.map(i => i);
     selected.value = manager.fillCtx.mask === data.id;
 }
 
-function showModifyPanel(event: MouseEvent) {
+function showModifyPanel(trigger: Element) {
+    while (trigger) {
+        if (trigger.classList.contains('grid')) {
+            modifyPanelStatusMgr.showBy(trigger, { once: { offsetLeft: -270 } });
+            manager.keepUniquePanel('.grid', modifyPanelStatusMgr);
+            break;
+        }
+        trigger = trigger.parentElement;
+    }
+}
+
+function mouseup(event: MouseEvent) {
+    if (event.button !== 2) return;
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('modify')) {
-            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -442 } });
-            manager.keepUniquePanel('.modify', modifyPanelStatusMgr);
+        if (e.classList.contains('round-grid')) {
+            const box = e.getBoundingClientRect();
+
+            modifyMenuStatusMgr.showBy(e, {
+                once: {
+                    offsetLeft: event.clientX - box.x,
+                    offsetTop: event.clientY - box.y
+                }
+            });
             break;
         }
         e = e.parentElement;
     }
+}
+
+function remove() {
+    modifyMenuStatusMgr.close();
+}
+
+function modify() {
+    showModifyPanel(trigger.value);
+    modifyMenuStatusMgr.close();
 }
 
 function modifyFillMask() {
@@ -54,23 +90,23 @@ onMounted(() => {
 onUnmounted(() => {
     data.unwatch(update);
     modifyPanelStatusMgr.unmounted();
+    modifyMenuStatusMgr.unmounted();
 })
 </script>
 <template>
-    <div class="container" :class="{ selected: selected }">
+    <div ref="trigger" class="round-grid" :class="{ selected: selected }" @mouseup="mouseup">
         <Tooltip :content="name" :offset="5">
-            <div class="content" @click="modifyFillMask">
-                <ColorBlock :colors="(fills as Fill[])" :size="22" round disabled-alpha />
+            <div class="content" @click.stop="modifyFillMask">
+                <ColorBlock :colors="fills as Fill[]" :size="22" round disabled-alpha/>
             </div>
         </Tooltip>
-        <template>
-            <ModifyFillStyle v-if="modifyPanelStatus.visible" :context="context" :manager="manager" :data="data"
-                @close="() => modifyPanelStatusMgr.close()" />
-        </template>
+        <ModifyFillStyle v-if="modifyPanelStatus.visible" :context="context" :manager="manager" :data="data"
+                         @close="() => modifyPanelStatusMgr.close()"/>
+        <RemoveEntrance v-if="modifyMenuStatus.visible" @remove="remove" @modify="modify"/>
     </div>
 </template>
 <style scoped lang="scss">
-.container {
+.round-grid {
     width: 35px;
     height: 35px;
     display: flex;
