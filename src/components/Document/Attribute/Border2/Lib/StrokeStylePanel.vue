@@ -3,7 +3,7 @@ import StrokeStyle from "./StrokeStyle.vue";
 import { Context } from "@/context";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import CreateStrokeMaskPanel from "./ModifyStrokeMaskPanel.vue";
-import { computed, onMounted, onUnmounted, reactive } from "vue";
+import { computed, onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { useI18n } from "vue-i18n";
 import { StrokeFillContextMgr } from "../ctx";

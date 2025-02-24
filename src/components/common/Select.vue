@@ -190,7 +190,7 @@ function render() {
 const showOP = ref<boolean>(false)
 const arr = ref<string[]>([])
 watchEffect(() => {
-    if (props.shapes) {
+    if (props.shapes && props.shapes.length > 0) {
         showOP.value = [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) && !props.entry
     }
 })

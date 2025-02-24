@@ -79,10 +79,9 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        const selected = this.selected;
-
-        if (selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = selected.map(i => ({ fills: i.getBorders().strokePaints, shape: i }));
+        if (this.selected.length < 1) return;
+        if (this.selected.length < 2) return this.fillCtx.mixed = false;
+        const allFills = this.selected.map(i => ({ fills: i.getBorders().strokePaints, shape: i }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -96,7 +95,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     private updateFills() {
-        if (this.fillCtx.mixed) return;
+        if (this.fillCtx.mixed || this.selected.length < 1) return;
 
         const represent = this.selected[0];
         this.fillCtx.mask = represent.borderFillsMask;
@@ -116,6 +115,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     private updateStroke() {
+        if (this.selected.length < 1) return;
         const represent = this.selected[0];
         this.fillCtx.strokeMask = represent.bordersMask;
         if (this.fillCtx.strokeMask) {
@@ -427,6 +427,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     modifyStrokeMask(id: string) {
+        if (this.fillCtx.strokeMask) return;
         this.borderEditor.setShapesStrokeMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();
