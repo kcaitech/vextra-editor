@@ -63,6 +63,7 @@ function strokeMixedStatus(stroke: BorderData, shapes: ShapeView[]) {
 
 export type BorderFillsContext = {
     mixed: boolean;
+    listStatus: boolean,
     fills: FillCatch[];
 
     strokeInfo?: BorderData;
@@ -158,8 +159,14 @@ export class StrokeFillContextMgr extends StyleCtx {
         return this.m_editor ?? (this.m_editor = new BorderModifier(this.repo));
     }
 
+    toggleList() {
+        const action = !this.fillCtx.listStatus;
+        this.fillCtx.listStatus = action;
+        localStorage.setItem("styleList", JSON.stringify(action));
+    }
 
     update() {
+        this.fillCtx.listStatus = JSON.parse(localStorage.getItem("styleList") ?? JSON.stringify(false));
         this.getSelected();
         this.modifyMixedStatus();
         this.updateFills();

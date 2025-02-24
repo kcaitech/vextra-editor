@@ -14,18 +14,23 @@ defineProps<{
     manager: StyleCtx;
     data: SheetCatch;
     item: any;
+    listStatus?: boolean;
 }>();
 const extend = ref<boolean>(true);
 </script>
 <template>
     <div class="sheet-panel">
-        <div class="header" @click="extend=!extend">
-            <SvgIcon :icon="extend ? down_icon: right_icon"/>
+        <div class="header" @click="extend = !extend">
+            <SvgIcon :icon="extend ? down_icon : right_icon" />
             <span>{{ data.name }}</span>
         </div>
-        <div v-if="extend" style="width: 100%;height: fit-content;">
-            <component v-for="c in data.variables" :key="c.id" :is="item" :context="context"
-                       :manager="manager" :data="c"/>
+        <div v-if="extend && !listStatus" style="width: 100%;height: fit-content;">
+            <component v-for="c in data.variables" :key="c.id" :is="item" :context="context" :manager="manager"
+                :data="c" />
+        </div>
+        <div v-if="extend && listStatus" style="width: 100%;height: fit-content;" class="grid">
+            <component v-for="c in data.variables" :key="c.id" :is="item" :context="context" :manager="manager"
+                :data="c" />
         </div>
     </div>
 </template>
@@ -52,6 +57,11 @@ const extend = ref<boolean>(true);
             width: 14px;
             height: 14px;
         }
+    }
+
+    .grid {
+        display: flex;
+        flex-wrap: wrap;
     }
 }
 </style>

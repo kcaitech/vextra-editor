@@ -37,7 +37,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="border_fill-style-lib-panel" class="border_fill-style-lib-panel">
-        <PopoverHeader :title="title" @create="showCreatePanel" @close="emits('close')" />
+        <PopoverHeader :title="title" toggle @toggle="manager.toggleList()" @create="showCreatePanel"
+            @close="emits('close')" :grid="manager.fillCtx.listStatus" />
         <ColorStyle :context="context" :manager="manager" />
         <CreateFillMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
             @close="() => panelStatusMgr.close()" />
