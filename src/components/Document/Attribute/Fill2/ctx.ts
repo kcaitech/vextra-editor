@@ -1,6 +1,6 @@
 import {
     Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
-    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, Api
+    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, Api, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
@@ -54,7 +54,8 @@ export class FillsContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.mask) as FillMask;
             this.fillCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.fillCtx.maskInfo = undefined;
@@ -357,6 +358,11 @@ export class FillsContextMgr extends StyleCtx {
     /* 删除遮罩 */
     removeMask() {
         this.editor.removeShapesFillMask(this.page, this.selected);
+    }
+
+    // 删除填充样式(弱删除)
+    disableMask(mask: StyleMangerMember) {
+        this.editor.disableMask(mask);
     }
 }
 

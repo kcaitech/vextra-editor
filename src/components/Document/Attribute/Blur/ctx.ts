@@ -7,7 +7,7 @@ import {
     BlurType,
     Point2D, BlurModifier,
     ShapeView,
-    SymbolRefView
+    SymbolRefView, StyleMangerMember
 } from "@kcdesign/data";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
@@ -69,7 +69,8 @@ export class BlurContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.blurCtx.mask) as BlurMask;
             this.blurCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
             const b = mask.blur;
             this.blurCtx.blur = { enable: b.isEnabled, type: b.type, saturation: b.saturation, blur: b };
@@ -296,5 +297,9 @@ export class BlurContextMgr extends StyleCtx {
 
     removeMask() {
         this.editor.removeShapesBlurMask(this.page, this.shapes);
+    }
+
+    disableMask(data: StyleMangerMember) {
+        this.editor.disableMask(data);
     }
 }

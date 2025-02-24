@@ -5,6 +5,7 @@ import { onUnmounted, ref, watchEffect } from "vue";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 import { ShadowCatch, ShadowsContextMgr } from "./ctx";
+import { useI18n } from "vue-i18n";
 
 /**
  * 当图层使用样式库里的样式之后，属性面板不再展示详细的样式信息，取而代之的是该样式库里对应样式的基本信息
@@ -20,6 +21,8 @@ const emits = defineEmits<{
     (e: "show-style-lib", event: MouseEvent): void;
 }>();
 
+const t = useI18n().t;
+
 const colors = ref<Shadow[]>(props.shadows.map(i => i.shadow).reverse());
 const name = ref<string>(props.info.name);
 
@@ -29,7 +32,7 @@ onUnmounted(watchEffect(() => {
 }));
 </script>
 <template>
-    <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()">
+    <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :disabled="info.disabled">
         <div class="shadow-desc" @click="event => emits('show-style-lib', event)">
             <div class="effect" :style="{
                 boxShadow: `
@@ -41,7 +44,7 @@ onUnmounted(watchEffect(() => {
                         #0000004d
                         `}">
             </div>
-            <span>{{ name }}</span>
+            <span>{{ info.disabled ? t('stylelib.deleted_style') : name }}</span>
         </div>
     </MaskPort>
 </template>
@@ -64,10 +67,10 @@ onUnmounted(watchEffect(() => {
         overflow: hidden;
     }
 
-    .span {
+    > span {
         display: inline-block;
-        flex: 1;
-        width: 32px;
+        flex: 0 0 120px;
+        width: 120px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

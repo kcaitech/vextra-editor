@@ -3,10 +3,9 @@
         <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword" />
         <el-scrollbar>
             <div class="content">
-                <SheetPanel v-if="!manager.fillCtx.listStatus" v-for="sheet in sheets" :key="sheet.id" :context="context"
-                    :list-status="manager.fillCtx.listStatus" :manager="manager" :item="FillMaskPanelItem" :data="sheet" />
-                <SheetPanel v-if="manager.fillCtx.listStatus" v-for="sheet in sheets" :key="sheet.id" :context="context"
-                    :list-status="manager.fillCtx.listStatus" :manager="manager" :item="FillMaskGridItem" :data="sheet" />
+                <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :data="sheet"
+                            :list-status="manager.fillCtx.listStatus" :manager="manager"
+                            :item="manager.fillCtx.listStatus ? FillMaskGridItem : FillMaskPanelItem" @update="update"/>
                 <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
                 <div v-if="!sheets?.length && !keyword" class="data-null">暂无颜色样式</div>
             </div>
@@ -24,10 +23,6 @@ import { StyleSheet } from "@kcdesign/data"
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { StrokeFillContextMgr } from '../ctx';
 
-/**
- * 样式列表：该组件可以展示样式、筛选样式
- * 该组件把每个表用一个SheetPanel组件展示，遍历了所有表
- */
 const props = defineProps<{
     context: Context;
     manager: StrokeFillContextMgr;
@@ -67,7 +62,7 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = '此文件样式';
 
         for (const v of sts.variables) {
-            if (v.typeId === "fill-mask-living") cat.variables.push(v);
+            if (v.typeId === "fill-mask-living" && !v.disabled) cat.variables.push(v);
         }
         if (word) {
             const reg = new RegExp(`${word}`, 'img');

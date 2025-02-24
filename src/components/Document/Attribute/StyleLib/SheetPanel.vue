@@ -16,6 +16,9 @@ defineProps<{
     item: any;
     listStatus?: boolean;
 }>();
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 const extend = ref<boolean>(true);
 </script>
 <template>
@@ -24,13 +27,9 @@ const extend = ref<boolean>(true);
             <SvgIcon :icon="extend ? down_icon : right_icon" />
             <span>{{ data.name }}</span>
         </div>
-        <div v-if="extend && !listStatus" style="width: 100%;height: fit-content;">
+        <div v-if="extend" style="width: 100%; height: fit-content;" :class="{ grid: listStatus }">
             <component v-for="c in data.variables" :key="c.id" :is="item" :context="context" :manager="manager"
-                :data="c" />
-        </div>
-        <div v-if="extend && listStatus" style="width: 100%;height: fit-content;" class="grid">
-            <component v-for="c in data.variables" :key="c.id" :is="item" :context="context" :manager="manager"
-                :data="c" />
+                       :data="c" @update="emits('update')"/>
         </div>
     </div>
 </template>

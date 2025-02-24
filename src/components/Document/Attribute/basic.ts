@@ -3,6 +3,7 @@ import { Reg_HEX } from "@/utils/RegExp";
 export type MaskInfo = {
     name: string;
     desc: string;
+    disabled?: boolean;
 }
 export function selectAllOnFocus(event: FocusEvent) {
     event.target instanceof HTMLInputElement && event.target.value && event.target.select();

@@ -6,7 +6,7 @@ import {
     ShadowPosition,
     ShadowsModifier,
     Api,
-    ShapeView, SymbolRefView
+    ShapeView, SymbolRefView, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
@@ -80,7 +80,8 @@ export class ShadowsContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.shadowCtx.mask) as ShadowMask;
             this.shadowCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.shadowCtx.maskInfo = undefined;
@@ -459,5 +460,9 @@ export class ShadowsContextMgr extends StyleCtx {
 
     removeMask() {
         this.editor.removeShapesShadowsMask(this.page, this.shapes);
+    }
+
+    disableMask(mask: StyleMangerMember) {
+        this.editor.disableMask(mask);
     }
 }

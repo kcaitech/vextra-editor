@@ -1,4 +1,23 @@
-import { Fill, FillMask, FillType, Color, BasicArray, BorderMask, ShapeView, ShapeType, BorderSideSetting, BorderPosition, BorderMaskType, BorderModifier, SideType, Api, SymbolRefView, Border, MarkerType } from "@kcdesign/data";
+import {
+    Fill,
+    FillMask,
+    FillType,
+    Color,
+    BasicArray,
+    BorderMask,
+    ShapeView,
+    ShapeType,
+    BorderSideSetting,
+    BorderPosition,
+    BorderMaskType,
+    BorderModifier,
+    SideType,
+    Api,
+    SymbolRefView,
+    Border,
+    MarkerType,
+    StyleMangerMember
+} from "@kcdesign/data";
 import { Context } from "@/context";
 import { BorderData, get_actions_border_Apex, get_actions_border_endpoint, get_actions_border_exchange, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
@@ -103,7 +122,8 @@ export class StrokeFillContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.mask) as FillMask;
             this.fillCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.fillCtx.maskInfo = undefined;
@@ -122,7 +142,8 @@ export class StrokeFillContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.strokeMask) as BorderMask;
             this.fillCtx.strokeMaskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.fillCtx.strokeMaskInfo = undefined;
@@ -463,6 +484,10 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     removeMask() {
         this.borderEditor.removeShapesFillMask(this.document, this.page, this.selected);
+    }
+
+    disableMask(mask: StyleMangerMember) {
+        this.borderEditor.disableMask(mask);
     }
 
     createStyleLib(name: string, desc: string) {

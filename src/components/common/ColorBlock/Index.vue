@@ -42,8 +42,6 @@ function update() {
             } else if (c.fillType === FillType.Pattern) {
                 container.push({ type: "pattern", data: c.peekImage(true) || DEFAULT_IMAGE })
             }
-        } else {
-            // todo border
         }
     }
 }
