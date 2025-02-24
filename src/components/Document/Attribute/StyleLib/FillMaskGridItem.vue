@@ -15,7 +15,9 @@ import RemoveEntrance from "@/components/Document/Attribute/StyleLib/RemoveEntra
  * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
  */
 const { data, context, manager } = defineProps<{ context: Context; manager: FillsContextMgr; data: FillMask; }>();
-
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 const name = ref<string>(data.name);
 const fills = ref<Fill[]>(data.fills.map(i => i));
 const selected = ref<boolean>(manager.fillCtx.mask === data.id);
@@ -35,13 +37,14 @@ const modifyMenuStatusMgr = new ElementManager(
     { whiteList: ['#remove-entrance'] }
 );
 
-function update() {
+function update(...args: any[]) {
+    if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     fills.value = data.fills.map(i => i);
     selected.value = manager.fillCtx.mask === data.id;
 }
 
-function showModifyPanel(trigger: Element) {
+function showModifyPanel(trigger: Element | null) {
     while (trigger) {
         if (trigger.classList.contains('grid')) {
             modifyPanelStatusMgr.showBy(trigger, { once: { offsetLeft: -270 } });
@@ -72,11 +75,12 @@ function mouseup(event: MouseEvent) {
 }
 
 function remove() {
+    manager.disableMask(data);
     modifyMenuStatusMgr.close();
 }
 
 function modify() {
-    showModifyPanel(trigger.value);
+    showModifyPanel(trigger.value!);
     modifyMenuStatusMgr.close();
 }
 
