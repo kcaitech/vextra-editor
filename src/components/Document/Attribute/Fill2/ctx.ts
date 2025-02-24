@@ -13,6 +13,7 @@ export type FillCatch = {
 
 export type FillsContext = {
     mixed: boolean;
+    listStatus: boolean,
     fills: FillCatch[];
 
     mask?: string;
@@ -76,7 +77,14 @@ export class FillsContextMgr extends StyleCtx {
         return this.m_editor ?? (this.m_editor = new FillModifier(this.repo));
     }
 
+    toggleList() {
+        const action = !this.fillCtx.listStatus;
+        this.fillCtx.listStatus = action;
+        localStorage.setItem("styleList", JSON.stringify(action));
+    }
+
     update() {
+        this.fillCtx.listStatus = JSON.parse(localStorage.getItem("styleList") ?? JSON.stringify(false));
         this.getSelected();
         this.modifyMixedStatus();
         this.updateFills();
@@ -393,7 +401,7 @@ export function stringifyGradient(g: Gradient) {
     str += g.gradientType + g.from.x + g.from.y + g.to.x + g.to.y
         + (g.elipseLength ?? 'null')
         + (g.gradientOpacity ?? 'null')
-    ;
+        ;
 
     g.stops.forEach(s => str += stringifyStop(s));
 

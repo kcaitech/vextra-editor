@@ -27,6 +27,7 @@ const props = defineProps<{
 }>();
 const fillCtx = ref<BorderFillsContext>({
     mixed: false,
+    listStatus: false,
     fills: [],
     strokeInfo: undefined,
     strokeMask: undefined,

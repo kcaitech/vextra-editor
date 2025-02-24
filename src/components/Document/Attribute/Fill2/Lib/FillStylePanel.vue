@@ -11,14 +11,14 @@ import { useI18n } from "vue-i18n";
 /**
  * 填充样式库面板。用于展示样式列表、创建样式
  */
-const {context, manager} = defineProps<{ context: Context, manager: FillsContextMgr }>();
+const { context, manager } = defineProps<{ context: Context, manager: FillsContextMgr }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
-const {t} = useI18n()
-const panelStatus = reactive<ElementStatus>({id: '#modify-fill-style-panel', visible: false});
+const { t } = useI18n()
+const panelStatus = reactive<ElementStatus>({ id: '#modify-fill-style-panel', visible: false });
 const panelStatusMgr = new ElementManager(
     context,
     panelStatus,
-    {whiteList: ['.modify-fill-style-panel', '.add']}
+    { whiteList: ['.modify-fill-style-panel', '.add'] }
 );
 manager.catchPanel(panelStatusMgr);
 
@@ -26,7 +26,7 @@ function showCreatePanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('add')) {
-            e && panelStatusMgr.showBy(e, {once: {offsetLeft: -422}});
+            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -422 } });
             break;
         }
         e = e.parentElement;
@@ -39,10 +39,11 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="fill-style-lib-panel" class="fill-style-lib-panel">
-        <PopoverHeader :title="t('stylelib.colors')" @create="showCreatePanel" @close="emits('close')"/>
-        <ColorStyle :context="context" :manager="manager"/>
+        <PopoverHeader :title="t('stylelib.colors')" toggle :grid="manager.fillCtx.listStatus"
+            @toggle="manager.toggleList()" @create="showCreatePanel" @close="emits('close')" />
+        <ColorStyle :context="context" :manager="manager" />
         <CreateFillMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
-                             @close="() => panelStatusMgr.close()"/>
+            @close="() => panelStatusMgr.close()" />
     </div>
 </template>
 <style scoped lang="scss">

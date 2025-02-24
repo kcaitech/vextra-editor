@@ -29,7 +29,7 @@ const { t } = useI18n();
 const props = defineProps<Props>();
 const fillCtx = ref<FillsContext>({  // 本组件的核心状态，改状态由vue进行劫持(注：选区和图层属于非vue劫持的状态，每个模块的状态由这两类状态共同组成)
     mixed: false,                        // 选区内是否存在不一样的填充样式
-
+    listStatus: false,
     fills: [],                           // 填充样式，有可能是样式库里拿出来的，也有可能是图层自带的。注：特别注意，这个数据本身属于由vue劫持的状态，
     // 所以它并不是直接从图层上或样式库里取出来的数据，而是由该数据经过vue二次包装后数据
 
