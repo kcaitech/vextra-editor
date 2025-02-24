@@ -4,11 +4,13 @@ import { RadiusContextMgr } from './ctx';
 import unbind_icon from '@/assets/icons/svg/unbind.svg';
 import radius_icon from "@/assets/icons/svg/radius.svg";
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{ context: Context; manager: RadiusContextMgr }>();
 const emits = defineEmits<{
     (e: 'showRadiusPanel', event: MouseEvent): void;
 }>();
+const t = useI18n().t;
 
 const showRadiusPanel = (event: MouseEvent) => {
     emits('showRadiusPanel', event);
@@ -23,7 +25,7 @@ const showRadiusPanel = (event: MouseEvent) => {
                     <div class="radius">
                         <SvgIcon :icon="radius_icon" />
                     </div>
-                    <div class="name">{{ manager.radiusCtx.maskInfo.name }}</div>
+                    <div class="name">{{ manager.radiusCtx.maskInfo.disabled ?  t('stylelib.deleted_style'): manager.radiusCtx.maskInfo.name }}</div>
                 </div>
                 <div class="unbind" @click.stop="manager.unbind()">
                     <SvgIcon :icon="unbind_icon" />

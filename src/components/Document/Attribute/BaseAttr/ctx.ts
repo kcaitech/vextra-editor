@@ -199,7 +199,8 @@ export class RadiusContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.radiusCtx.mask) as RadiusMask;
             this.radiusCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.radiusCtx.maskInfo = undefined;

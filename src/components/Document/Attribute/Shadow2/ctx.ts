@@ -81,7 +81,8 @@ export class ShadowsContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.shadowCtx.mask) as ShadowMask;
             this.shadowCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.shadowCtx.maskInfo = undefined;

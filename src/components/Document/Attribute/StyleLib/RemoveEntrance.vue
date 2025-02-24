@@ -11,8 +11,8 @@ const emits = defineEmits<{
 
 <template>
     <div id="remove-entrance">
-        <div @click="emits('modify')">编辑样式</div>
-        <div @click="emits('remove')">删除样式</div>
+        <div @click="emits('modify')">{{ t('stylelib.modify') }}</div>
+        <div @click="emits('remove')">{{ t('stylelib.delete') }}</div>
     </div>
 </template>
 

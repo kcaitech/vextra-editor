@@ -17,7 +17,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ShapeView } from "@kcdesign/data";
 import { Context } from '@/context';
 import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import CreateBlurStyle from './ModifyBlurMaskPanel.vue';
@@ -93,7 +92,7 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = '此文件样式';
 
         for (const v of sts.variables) {
-            if (v.typeId === "blur-mask-living") cat.variables.push(v);
+            if (v.typeId === "blur-mask-living" && !v.disabled) cat.variables.push(v);
         }
         if (word) {
             const reg = new RegExp(`${word}`, 'img');

@@ -4,11 +4,13 @@ import unbind_icon from "@/assets/icons/svg/unbind.svg";
 import delete_icon from "@/assets/icons/svg/delete.svg";
 
 interface Props {
+    disabled?: boolean;
     delete?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    delete: true
+    delete: true,
+    disabled: false,
 })
 
 const emits = defineEmits<{
@@ -20,7 +22,7 @@ const emits = defineEmits<{
 <template>
     <div class="mask-port-wrapper">
         <div class="info-container">
-            <div class="info">
+            <div :class="{info: true, disabled}">
                 <slot />
             </div>
             <div class="unbind" @click="emits('unbind')">
@@ -62,6 +64,11 @@ const emits = defineEmits<{
             &:hover {
                 background-color: #e5e5e5;
             }
+        }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.3;
         }
 
         .unbind {

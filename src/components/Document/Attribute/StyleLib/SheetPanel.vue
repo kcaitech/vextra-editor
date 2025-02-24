@@ -24,7 +24,7 @@ const extend = ref<boolean>(true);
             <SvgIcon :icon="extend ? down_icon : right_icon" />
             <span>{{ data.name }}</span>
         </div>
-        <div v-if="extend" style="width: 100%;height: fit-content;" :class="{ grid: listStatus }">
+        <div v-if="extend" style="width: 100%; height: fit-content;" :class="{ grid: listStatus }">
             <component v-for="c in data.variables" :key="c.id" :is="item" :context="context" :manager="manager"
                        :data="c"/>
         </div>

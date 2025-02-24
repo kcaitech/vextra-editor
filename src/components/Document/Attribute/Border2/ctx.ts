@@ -104,7 +104,8 @@ export class StrokeFillContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.mask) as FillMask;
             this.fillCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.fillCtx.maskInfo = undefined;
@@ -122,7 +123,8 @@ export class StrokeFillContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.strokeMask) as BorderMask;
             this.fillCtx.strokeMaskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.fillCtx.strokeMaskInfo = undefined;
