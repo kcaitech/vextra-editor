@@ -266,30 +266,31 @@ export class Clipboard {
     write_properties() {
         try {
             const selected = this.context.selection.selectedShapes;
-            const flatten = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-            const fills = get_fills(flatten);
-            const { border, stroke_paints } = get_borders(flatten);
-            const shadows = get_shadows(selected);
-            const blur = get_blur(selected);
+            const shape = flattenShapes(selected).filter(s => s.type !== ShapeType.Group)[0];
+            const fills = shape.getFills();
+            const border = shape.getBorders();
+            const shadows = shape.getShadows();
+            const blur = shape.blur;
 
-            const radius = getRadiusForCopy(selected);
-            const contextSetting = getContextSetting(selected);
-            const mark = getMarkType(selected);
-            const text = getText(selected);
+            const radius = shape.radius;
+            const contextSetting = shape.contextSettings;
+            const mark = { start: shape.startMarkerType, end: shape.endMarkerType };
+            const text = getText([shape]);
 
             const data: any = {};
-            if (fills !== "mixed" && fills!=='mask') data['fills'] = fills.map(i => exportFill(i.fill));
-            if (typeof stroke_paints !== 'string' && !this.borderIsString(border)) {
-                const paints = new BasicArray<Fill>();
-                (stroke_paints).forEach(i => paints.push(i.fill));
-                const b = new Border(border.position as BorderPosition, border.borderStyle as BorderStyle, border.cornerType as CornerType, border.sideSetting as BorderSideSetting, paints);
-                data['borders'] = exportBorder(b);
-            }
-            if (shadows !== "mixed" && shadows!=='mask') data['shadows'] = shadows.map(i => exportShadow(i.shadow));
-            if (blur instanceof Blur) data['blur'] = exportBlur(blur);
-            if (radius) data['radius'] = radius;
+            data['fills'] = fills.map(i => exportFill(i));
+            data['fillsMask'] = shape.fillsMask;
+            data['borders'] = exportBorder(border);
+            data['bordersMask'] = shape.bordersMask;
+            data['borderFillsMask'] = shape.borderFillsMask;
+            data['shadows'] = shadows.map(i => exportShadow(i));
+            data['shadowsMask'] = shape.shadowsMask;
+            data['blurMask'] = shape.blurMask;
+            data['radius'] = radius;
+            data['radiusMask'] = shape.radiusMask;
+            data['mark'] = mark;
             if (contextSetting) data['contextSetting'] = contextSetting;
-            if (mark) data['mark'] = mark;
+            if (blur instanceof Blur) data['blur'] = exportBlur(blur);
             if (text) data['text'] = text;
 
             const code = encode_html(properties, data);
