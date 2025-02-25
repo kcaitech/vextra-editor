@@ -303,7 +303,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     removeAll() {
-        this.borderEditor.removeShapesBorder(this.document, this.page, this.selected);
+        this.borderEditor.removeShapesBorder(this.page, this.selected);
     }
 
     modifyVisible(fill: Fill) {
