@@ -25,6 +25,7 @@ export type FillsContext = {
  * 另外还组合了弹框管理器，可以控制相关弹窗
  */
 export class FillsContextMgr extends StyleCtx {
+
     constructor(protected context: Context, public fillCtx: FillsContext) {
         super(context);
     }
@@ -77,6 +78,7 @@ export class FillsContextMgr extends StyleCtx {
         return this.m_editor ?? (this.m_editor = new FillModifier(this.repo));
     }
 
+    // 切换列表风格
     toggleList() {
         const action = !this.fillCtx.listStatus;
         this.fillCtx.listStatus = action;
@@ -344,7 +346,7 @@ export class FillsContextMgr extends StyleCtx {
 
     /* 修改图层填充遮罩的绑定值 */
     modifyFillMask(id: string) {
-        if (!this.fillCtx.mask) return;
+        if (!this.fillCtx) return;
         this.editor.setShapesFillMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();
