@@ -285,7 +285,7 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     modifyBlurMask(maskID: string) {
-        if (!this.blurCtx.mask) return;
+        if (Object.keys(this.blurCtx).length === 0) return;
         this.editor.setShapesBlurMask(this.page, this.shapes, maskID);
         this.kill();
         this.hiddenCtrl();

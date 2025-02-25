@@ -139,7 +139,7 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     addRadiusMask(id: string) {
-        if (!this.radiusCtx.mask) return;
+        if (Object.keys(this.radiusCtx).length === 0) return;
         this.radiusEditor.setShapesRadiusMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();

@@ -448,7 +448,7 @@ export class ShadowsContextMgr extends StyleCtx {
     }
 
     modifyShadowMask(id: string) {
-        if (!this.shadowCtx.mask) return;
+        if (Object.keys(this.shadowCtx).length === 0) return;
         this.editor.setShapesShadowsMask(this.page, this.shapes, id);
         this.kill();
         this.hiddenCtrl();

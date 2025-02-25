@@ -33,7 +33,7 @@ const changeFold = () => {
             </div>
         </div>
         <template v-if="extend" v-for="c in data" :key="c.id">
-            <RadiusMaskPanelItem :context="context" :data="c" :manager="radiusCtxMgr"></RadiusMaskPanelItem>
+            <RadiusMaskPanelItem v-if="!c.disabled" :context="context" :data="c" :manager="radiusCtxMgr"></RadiusMaskPanelItem>
         </template>
     </div>
 </template>
@@ -55,7 +55,7 @@ const changeFold = () => {
 
         span {
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 500;
         }
 
         .down {
