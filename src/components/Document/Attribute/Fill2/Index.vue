@@ -31,7 +31,7 @@ const fillCtx = ref<FillsContext>({  // 本组件的核心状态，改状态由v
     mixed: false,                        // 选区内是否存在不一样的填充样式
     listStatus: false,
     fills: [],                           // 填充样式，有可能是样式库里拿出来的，也有可能是图层自带的。注：特别注意，这个数据本身属于由vue劫持的状态，
-    // 所以它并不是直接从图层上或样式库里取出来的数据，而是由该数据经过vue二次包装后数据
+                                         // 所以它并不是直接从图层上或样式库里取出来的数据，而是由该数据经过vue二次包装后数据
 
     mask: undefined,                     // 当选区内使用的样式库内的填充样式时，mask为该样式库的id，否则为undefined
     maskInfo: undefined                  // 当选区内使用的样式库内的填充样式时，maskInfo为改样式库的基本信息，包含名称和描述
@@ -62,12 +62,12 @@ function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
 }
 
 const watchList: any[] = [
-    watch(() => props.selectionChange, () => fillCtxMgr.update()),                  // 监听选区变化
+    watch(() => props.selectionChange, () => fillCtxMgr.update()),
     watch(() => props.trigger, (v) => {
         if (v?.includes('fillsMask') || v?.includes('fills') || v?.includes('variables')) {
             fillCtxMgr.update();
         }
-    })    // 监听选区内图层的变化，与选区一样，监听到变化都应该修改核心状态
+    })
 ];
 
 onMounted(fillCtxMgr.update.bind(fillCtxMgr));

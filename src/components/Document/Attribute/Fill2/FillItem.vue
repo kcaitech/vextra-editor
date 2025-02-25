@@ -4,7 +4,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
 import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, nextTick, onUnmounted, reactive, ref, watch, watchEffect } from "vue";
+import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType, GradientType } from "@kcdesign/data";
@@ -103,7 +103,7 @@ function update() {
     alpha.value = Math.round(color.alpha * 100) + '%';
     colors.value = [fill];
     fillsPicker.fill = fill;
-    fillsPicker.fill_type = "fills"
+    fillsPicker.fill_type = "fills";
 
     pattern.value = undefined;
     gradient.value = undefined;

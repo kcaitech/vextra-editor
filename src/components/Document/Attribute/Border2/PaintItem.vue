@@ -14,7 +14,7 @@ import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
-import { FillsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/fillspicker";
+import { PaintsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/paintspicker";
 
 const props = defineProps<{
     context: Context;
@@ -90,7 +90,7 @@ function showColorPanel(event: MouseEvent) {
     }
 }
 
-const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
+const fillsPicker = new PaintsPicker(props.context, props.data.fill.fillType);
 
 function update() {
     const fill = props.data.fill;
@@ -98,8 +98,7 @@ function update() {
     colorHex.value = color.toHex().slice(1);
     alpha.value = Math.round(color.alpha * 100) + '%';
     colors.value = [fill];
-    fillsPicker.fill = fill;
-    fillsPicker.fill_type = "borders";
+    fillsPicker.paint = fill;
 
     gradient.value = undefined;
 

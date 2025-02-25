@@ -25,6 +25,7 @@ export type FillsContext = {
  * 另外还组合了弹框管理器，可以控制相关弹窗
  */
 export class FillsContextMgr extends StyleCtx {
+
     constructor(protected context: Context, public fillCtx: FillsContext) {
         super(context);
     }
@@ -77,6 +78,7 @@ export class FillsContextMgr extends StyleCtx {
         return this.m_editor ?? (this.m_editor = new FillModifier(this.repo));
     }
 
+    // 切换列表风格
     toggleList() {
         const action = !this.fillCtx.listStatus;
         this.fillCtx.listStatus = action;
