@@ -273,13 +273,15 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     remove(fill: Fill) {
-
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
             this.borderEditor.removeFill([(api: Api) => {
                 api.deleteFillAt(mask.fills, this.getIndexByFill(fill));
             }]);
         } else {
+            if ((fill.parent as unknown as BasicArray<Fill>)?.length === 1) {
+                return this.removeAll();
+            }
             const index = this.getIndexByFill(fill);
             const actions: { fills: BasicArray<Fill>, index: number }[] = [];
             const views: ShapeView[] = [];
