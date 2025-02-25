@@ -177,8 +177,6 @@ function table_selection_change() {
 // 选区图层变化
 function update_by_shapes(...args: any[]) {
     modify_constraint_show();
-    console.log(args, 'args');
-    
     reflush_trigger.value = [...(args?.length ? args : [])];
     reflush_by_shapes.value++;
     reflush.value++;

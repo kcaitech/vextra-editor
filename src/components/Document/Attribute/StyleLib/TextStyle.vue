@@ -54,46 +54,27 @@
 
 </template>
 <script setup lang="ts">
-import add_icon from '@/assets/icons/svg/add.svg';
 import editor_icon from '@/assets/icons/svg/export-menu.svg';
 import down_icon from '@/assets/icons/svg/triangle-down.svg';
 import right_icon from '@/assets/icons/svg/triangle-right.svg';
 import search_icon from '@/assets/icons/svg/search.svg';
 import arrow_icon from '@/assets/icons/svg/arrow-right.svg';
-import close_icon from '@/assets/icons/svg/close.svg';
 import choose_icon from '@/assets/icons/svg/choose.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 
 import {
-    BasicArray,
-    Color,
-    Fill,
-    FillType,
-    GradientType,
-    ImageScaleMode,
-    ShapeType,
-    ShapeView,
-    Stop, SymbolView,
-    TableView,
-    Shadow,
-    ShadowPosition,
     TextShapeView,
     RadiusMask,
 } from "@kcdesign/data";
-import { v4 } from 'uuid';
 import { Context } from '@/context';
-import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import NewTextStyle from './NewTextStyle.vue';
 import EditorTextStyle from "./EditorTextStyle.vue";
-import { SelectItem } from "@/components/common/Select.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { FillRenderer, Mask } from "../StyleLib/fillRenderer";
 import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
-import { getShapesForStyle } from '@/utils/style';
-import { get_actions_add_mask } from '@/utils/shape_style';
-
 
 const props = defineProps<{
     context: Context;
@@ -105,7 +86,6 @@ const props = defineProps<{
 const emits = defineEmits<{
     (e: 'close'): void
 }>()
-
 
 const { t } = useI18n();
 const searchval = ref<string>('')
@@ -195,15 +175,13 @@ watchEffect(() => {
 })
 
 const createRadiusMask = (id: string) => {
-    const selected = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage!;
-    const shapes = getShapesForStyle(selected);
-    const actions = get_actions_add_mask(shapes, id);
-    const editor = props.context.editor4Page(page);
-    editor.shapesSetRadiusMask(actions);
-    emits('close')
+    // const selected = props.context.selection.selectedShapes;
+    // const shapes = getShapesForStyle(selected);
+    // const actions = get_actions_add_mask(shapes, id);
+    // const editor = new RadiusModifier(props.context.coopRepo);
+    // editor.shapesSetRadiusMask(actions);
+    // emits('close')
 }
-
 
 const filter = (v: string) => {
     filterWord.value = v;
@@ -232,7 +210,6 @@ onUnmounted(() => {
     modifyPanelStatusMgr.unmounted();
     libListStatusMgr.unmounted();
 })
-
 
 </script>
 <style lang="scss" scoped>
@@ -366,7 +343,6 @@ onUnmounted(() => {
         }
     }
 
-
     .style-item .type span {
         font-weight: var(--font-weight-medium);
     }
@@ -422,11 +398,6 @@ onUnmounted(() => {
                 }
             }
         }
-    }
-
-
-    .style-item .styles .name {
-        // color: #c8c8c8;
     }
 
     .style-item .styles .editor {
