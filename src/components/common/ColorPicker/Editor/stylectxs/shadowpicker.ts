@@ -1,5 +1,5 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { Color, Shadow, ShadowAsyncApi, ShadowMask } from "@kcdesign/data";
+import { Api, BasicArray, Color, Shadow, ShadowAsyncApi, ShadowMask, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
@@ -50,17 +50,34 @@ export class ShadowColorPicker extends ColorPickerEditor {
         this.hiddenCtrl();
     }
 
-    getApiParams(shadow: Shadow, c: RGBACatch): { shadow: Shadow, color: Color }[] {
-        const actions: { shadow: Shadow, color: Color }[] = [];
+    getApiParams(shadow: Shadow, c: RGBACatch): Function[] {
         if (shadow.parent?.parent instanceof ShadowMask) {
-            actions.push({ shadow, color: new Color(c.A, c.R, c.G, c.B) });
+            return [(api: Api) => {
+                api.setShadowColor(this.shadow!, new Color(c.A, c.R, c.G, c.B));
+            }];
         } else {
-            for (const view of this.flat) {
-                const shadow = view.getShadows()[this.index];
-                actions.push({ shadow, color: new Color(c.A, c.R, c.G, c.B) });
+            const shadows: BasicArray<Shadow>[] = [];
+            const views: ShapeView[] = [];
+            for (const view of this.selected) {
+                if (view instanceof SymbolRefView || view.isVirtualShape) {
+                    views.push(view);
+                } else {
+                    shadows.push(view.getShadows());
+                }
             }
+            const modifyVariable = (api: Api) => {
+                for (const view of views) {
+                    const variable = this.api.getShadowsVariable(api, this.page, view);
+                    api.setShadowColor(variable.value[this.index], new Color(c.A, c.R, c.G, c.B));
+                }
+            }
+            const modifyLocal = (api: Api) => {
+                for (const _shadows of shadows) {
+                    api.setShadowColor(_shadows[this.index], new Color(c.A, c.R, c.G, c.B));
+                }
+            }
+            return [modifyVariable, modifyLocal];
         }
-        return actions;
     }
 
     dragSolidEnd(): void {

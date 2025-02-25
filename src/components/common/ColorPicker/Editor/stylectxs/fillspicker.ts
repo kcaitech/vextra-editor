@@ -19,11 +19,8 @@ import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
 import { modify_imgs } from "@/utils/content";
 
-type ColorFillType = "fills" | "borders";
-
 export class FillsPicker extends ColorPickerEditor {
     fill: Fill | undefined;
-    fill_type: ColorFillType = 'fills';
 
     constructor(public context: Context, type: string) {
         super(context, type);
