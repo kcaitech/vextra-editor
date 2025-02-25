@@ -22,7 +22,9 @@ function update() {
     const borderMask: StyleManage = { typeId: 'border-mask-living', variables: [] }
     const blurMask: StyleManage = { typeId: 'blur-mask-living', variables: [] }
     const radiusMask: StyleManage = { typeId: 'radius-mask-living', variables: [] }
-    masks.variables.forEach(v => {
+    for (let i = 0; i < masks.variables.length; i++) {
+        const v = masks.variables[i];
+        if (v.disabled) continue;
         if (v.typeId === 'fill-mask-living') {
             fillMask.variables.push(v);
         } else if (v.typeId === 'shadow-mask-living') {
@@ -34,7 +36,7 @@ function update() {
         } else if (v.typeId === 'radius-mask-living') {
             radiusMask.variables.push(v);
         }
-    })
+    }
     styleMasks.value.push(fillMask, shadowMask, blurMask, radiusMask, borderMask);
     styleMasks.value = styleMasks.value.filter(m => m.variables.length !== 0);
 }

@@ -33,7 +33,7 @@ const changeFold = () => {
             </div>
         </div>
         <template v-if="extend" v-for="c in data" :key="c.id">
-            <FillMaskPanelItem :context="context" :data="c" :manager="fillCtxMgr"></FillMaskPanelItem>
+            <FillMaskPanelItem v-if="!c.disabled" :context="context" :data="c" :manager="fillCtxMgr"></FillMaskPanelItem>
         </template>
     </div>
 </template>
@@ -55,7 +55,7 @@ const changeFold = () => {
 
         span {
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 500;
         }
 
         .down {

@@ -303,7 +303,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     removeAll() {
-        this.borderEditor.removeShapesBorder(this.document, this.page, this.selected);
+        this.borderEditor.removeShapesBorder(this.page, this.selected);
     }
 
     modifyVisible(fill: Fill) {
@@ -448,7 +448,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     modifyStrokeMask(id: string) {
-        if (this.fillCtx.strokeMask) return;
+        if (Object.keys(this.fillCtx).length === 0) return;
         this.borderEditor.setShapesStrokeMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();

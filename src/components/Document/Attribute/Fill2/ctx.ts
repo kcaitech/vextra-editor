@@ -346,7 +346,7 @@ export class FillsContextMgr extends StyleCtx {
 
     /* 修改图层填充遮罩的绑定值 */
     modifyFillMask(id: string) {
-        if (!this.fillCtx) return;
+        if (Object.keys(this.fillCtx).length === 0) return;
         this.editor.setShapesFillMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();
