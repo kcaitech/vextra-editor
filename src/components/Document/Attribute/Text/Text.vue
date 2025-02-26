@@ -90,7 +90,7 @@ const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
-const fills=ref<Fill[]>([])
+const fills = ref<Fill[]>([])
 const textLibStatus = reactive<ElementStatus>({ id: '#text-lib-panel', visible: false });
 const textPanelStatusMgr = new ElementManager(
     props.context,
@@ -614,7 +614,7 @@ const _textFormat = () => {
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
 
-    fills.value=[new Fill(new BasicArray<number>,v4(),true,FillType.SolidColor,highlight.value!)]
+    fills.value = [new Fill(new BasicArray<number>, v4(), true, FillType.SolidColor, highlight.value!)]
     reflush.value++;
 }
 const textFormat = throttle(_textFormat, 0, { leading: true })
@@ -1517,7 +1517,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
                     t('attr.font_color')
-                }}
+                    }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
@@ -1541,13 +1541,13 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
                         @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false"
                         @input="sizeAlphaInput" @keydown="e => keydownAlpha(e, Number(filterAlpha()) / 100, 'color')" />
                 </div>
-                <!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
+
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
                         t('attr.font_color')
-                    }}
+                        }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
                         <SvgIcon :icon="add_icon" />
@@ -1569,25 +1569,25 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
                 </div>
                 <div>
                     <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
-                        @change="c => getColorFromPicker(c, 'highlight')">
-                    </ColorPicker>
-                     <!-- <ColorBlock :colors="(fills as Fill[])"/> -->
-                    <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
-                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
-                        @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput"
-                        @click="(e) => click(e, is_higligh_color_select)" @blur="is_higligh_color_select = false" />
-                    <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
-                        :value="(highlight!.alpha * 100).toFixed(0) + '%'"
-                        @change="(e) => onAlphaChange(e, 'highlight')" @input="higAlphaInput"
-                        @click="(e) => click(e, is_higligh_alpha_select)" @blur="is_higligh_alpha_select = false"
-                        @keydown="e => keydownAlpha(e, highlight!.alpha, 'highlight')" />
+                        <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
+                            @change="c => getColorFromPicker(c, 'highlight')">
+                        </ColorPicker>
+                        <!-- <ColorBlock :colors="(fills as Fill[])"/> -->
+                        <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
+                            :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
+                            @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput"
+                            @click="(e) => click(e, is_higligh_color_select)" @blur="is_higligh_color_select = false" />
+                        <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha"
+                            style="text-align: center;" :value="(highlight!.alpha * 100).toFixed(0) + '%'"
+                            @change="(e) => onAlphaChange(e, 'highlight')" @input="higAlphaInput"
+                            @click="(e) => click(e, is_higligh_alpha_select)" @blur="is_higligh_alpha_select = false"
+                            @keydown="e => keydownAlpha(e, highlight!.alpha, 'highlight')" />
+                    </div>
+                    <div class="perch" @click="deleteHighlight">
+                        <SvgIcon class="svg" :icon="delete_icon" />
+                    </div>
                 </div>
-                <div class="perch" @click="deleteHighlight">
-                    <SvgIcon class="svg" :icon="delete_icon" />
-                </div>
-                </div>
-           
+
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
