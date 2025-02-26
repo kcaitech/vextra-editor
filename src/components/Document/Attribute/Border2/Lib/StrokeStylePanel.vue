@@ -3,14 +3,11 @@ import StrokeStyle from "./StrokeStyle.vue";
 import { Context } from "@/context";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import CreateStrokeMaskPanel from "./ModifyStrokeMaskPanel.vue";
-import { computed, onMounted, onUnmounted, reactive } from "vue";
+import { computed, onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { useI18n } from "vue-i18n";
 import { StrokeFillContextMgr } from "../ctx";
 
-/** 
- * 填充样式库面板。用于展示样式列表、创建样式
- */
 const { context, manager, title } = defineProps<{ context: Context, manager: StrokeFillContextMgr, title: string }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
 const { t } = useI18n()

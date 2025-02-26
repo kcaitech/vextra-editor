@@ -14,7 +14,9 @@ import { StrokeFillContextMgr } from "../ctx";
  * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
  */
 const {data, context, manager} = defineProps<{ context: Context; manager: StrokeFillContextMgr; data: FillMask; }>();
-
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 const name = ref<string>(data.name);
 const fills = ref<Fill[]>(data.fills.map(i => i));
 const selected = ref<boolean>(manager.fillCtx.mask === data.id);
@@ -26,14 +28,15 @@ const modifyPanelStatusMgr = new ElementManager(
     {whiteList: ['.modify-fill-style-panel', '.modify']}
 );
 
-function update() {
+function update(...args: any[]) {
+    if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     fills.value = data.fills.map(i => i);
     selected.value = manager.fillCtx.mask === data.id;
 }
 
-function showModifyPanel(event: MouseEvent) {
-    let e: Element | null = event.target as Element;
+function showModifyPanel(trigger: MouseEvent | Element) {
+    let e: Element | null = trigger instanceof Element ? trigger : trigger.target as Element;
     while (e) {
         if (e.classList.contains('modify')) {
             modifyPanelStatusMgr.showBy(e, {once: {offsetLeft: -442}});
@@ -45,7 +48,12 @@ function showModifyPanel(event: MouseEvent) {
 }
 
 function modifyFillMask() {
+    if (selected.value) return;
     manager.modifyFillMask(data.id);
+}
+
+function disable() {
+    manager.disableMask(data);
 }
 
 onMounted(() => {
@@ -57,7 +65,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel">
+    <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected"
+               @modify="showModifyPanel" @disable="disable">
         <template #preview>
             <div class="content" @click="modifyFillMask">
                 <ColorBlock :colors="(fills as Fill[])" round disabled-alpha/>
@@ -72,13 +81,20 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
     .content {
-        flex: 1;
-        width: 50px;
+        width: 100%;
         height: 100%;
         display: flex;
         align-items: center;
         gap: 8px;
         padding-left: 8px;
         box-sizing: border-box;
+
+        > span {
+            display: block;
+            width: 132px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 </style>

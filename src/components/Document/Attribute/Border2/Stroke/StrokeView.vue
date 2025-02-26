@@ -2,16 +2,19 @@
 import { Context } from '@/context';
 import { StrokeFillContextMgr } from '../ctx';
 import BorderDetail from './BorderDetail.vue';
-import { BorderPosition, LinearApi, ShapeType } from '@kcdesign/data';
+import { BorderPosition, LinearApi, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
-import { ref } from 'vue';
 import { getSideThickness } from '../index';
 import { sortValue } from '../../BaseAttr/oval';
 import { LockMouse } from '@/transform/lockMouse';
+import Apex from './Apex.vue';
+import { onUnmounted, onMounted, ref } from 'vue';
+import { Selection } from '@/context/selection';
+import { getShapesForStyle } from '@/utils/style';
 
 const { t } = useI18n();
 
@@ -33,6 +36,7 @@ const positoSelected = () => {
 }
 
 const is_stroke_select = ref(false);
+const show_apex = ref(false);
 const strokeBlur = () => {
     isActived.value = false;
     is_stroke_select.value = false;
@@ -167,6 +171,41 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 
+const line_end_point = (shapes: ShapeView[]) => {
+    let segment = false;
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (shape instanceof PathShapeView) {
+            if (shape.segments.length === 1 && !shape.segments[0].isClosed) {
+                segment = true
+                break;
+            } else if (shape.segments.length > 1) {
+                segment = true
+                break;
+            }
+        }
+    }
+    const endpoint = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
+    return endpoint;
+}
+const updater = () => {
+    const shapes = props.context.selection.selectedShapes;
+    show_apex.value = line_end_point(getShapesForStyle(shapes));
+}
+
+function selection_wather(t?: any) {
+    if (t === Selection.CHANGE_SHAPE) {
+        updater();
+    }
+}
+
+onMounted(() => {
+    updater();
+    props.context.selection.watch(selection_wather);
+})
+onUnmounted(() => {
+    props.context.selection.unwatch(selection_wather);
+})
 
 </script>
 
@@ -191,6 +230,8 @@ function onMouseMove(e: MouseEvent) {
         </div>
         <BorderDetail :context="context" :manager="manager" :trigger="trigger"></BorderDetail>
     </div>
+    <Apex v-if="show_apex && (manager.fillCtx.fills.length || manager.fillCtx.mixed)" :context="context"
+        :manager="manager" :trigger="trigger"></Apex>
     <teleport to="body">
         <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
         </div>

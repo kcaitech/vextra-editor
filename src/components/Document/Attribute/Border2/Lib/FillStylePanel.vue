@@ -3,7 +3,7 @@ import ColorStyle from "./ColorStyle.vue";
 import { Context } from "@/context";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import CreateFillMaskPanel from "./ModifyFillMaskPanel.vue";
-import { onMounted, onUnmounted, reactive } from "vue";
+import { onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { StrokeFillContextMgr } from "../ctx";
 
@@ -37,7 +37,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="border_fill-style-lib-panel" class="border_fill-style-lib-panel">
-        <PopoverHeader :title="title" @create="showCreatePanel" @close="emits('close')" />
+        <PopoverHeader :title="title" toggle @toggle="manager.toggleList()" @create="showCreatePanel"
+            @close="emits('close')" :grid="manager.fillCtx.listStatus" />
         <ColorStyle :context="context" :manager="manager" />
         <CreateFillMaskPanel v-if="panelStatus.visible" :context="context" :manager="manager"
             @close="() => panelStatusMgr.close()" />

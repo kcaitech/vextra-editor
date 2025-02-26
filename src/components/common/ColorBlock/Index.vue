@@ -15,6 +15,7 @@ const compos = {
 
 const props = defineProps<{
     colors: (Color | Fill | Border | AttrGetter)[];
+    size?: number,
     round?: boolean,
     disabledAlpha?: boolean
 }>();
@@ -47,8 +48,6 @@ function update() {
             } else if (c.fillType === FillType.Gradient && c.gradient) {
                 container.push({ type: "gradient", data: c.gradient });
             }
-        } else {
-            // todo border
         }
     }
 }
@@ -57,7 +56,7 @@ update();
 onUnmounted(watch(() => props.colors, update));
 </script>
 <template>
-    <div :class="{ 'color-wrapper': true, round }">
+    <div :class="{ 'color-wrapper': true, round }" :style="{ width: (size || 16) + 'px', height: (size || 16) + 'px' }">
         <component v-for="(c, idx) in fillsPreview" :key="idx" :is="(compos[c.type])" :params="(c as any)" />
     </div>
 </template>

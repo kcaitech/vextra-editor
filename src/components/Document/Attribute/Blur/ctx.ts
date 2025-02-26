@@ -7,7 +7,7 @@ import {
     BlurType,
     Point2D, BlurModifier,
     ShapeView,
-    SymbolRefView
+    SymbolRefView, StyleMangerMember
 } from "@kcdesign/data";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
@@ -50,9 +50,9 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        const selected = this.selected;
-        if (selected.length < 2) return this.blurCtx.mixed = false;
-        const allBlur = selected.map(i => ({ blur: i.style.blur, view: i }));
+        if (this.selected.length < 1) return;
+        if (this.selected.length < 2) return this.blurCtx.mixed = false;
+        const allBlur = this.selected.map(i => ({ blur: i.style.blur, view: i }));
         const stringF = stringifyBlur(allBlur[0]);
         for (let i = 1; i < allBlur.length; i++) {
             const str = stringifyBlur(allBlur[i]);
@@ -62,14 +62,15 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     private updateBlur() {
-        if (this.blurCtx.mixed) return;
+        if (this.blurCtx.mixed || this.selected.length < 1) return;
         const represent = this.selected[0];
         this.blurCtx.mask = represent.blurMask;
         if (this.blurCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.blurCtx.mask) as BlurMask;
             this.blurCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
             const b = mask.blur;
             this.blurCtx.blur = { enable: b.isEnabled, type: b.type, saturation: b.saturation, blur: b };
@@ -98,7 +99,7 @@ export class BlurContextMgr extends StyleCtx {
     create() {
         if (this.blurCtx.mixed) this.unify();
         const blur = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
-        const views: ShapeView[]=[];
+        const views: ShapeView[] = [];
         const needOverride: ShapeView[] = [];
         for (const view of this.shapes) {
             if (view instanceof SymbolRefView || view.isVirtualShape) {
@@ -284,6 +285,7 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     modifyBlurMask(maskID: string) {
+        if (Object.keys(this.blurCtx).length === 0) return;
         this.editor.setShapesBlurMask(this.page, this.shapes, maskID);
         this.kill();
         this.hiddenCtrl();
@@ -295,5 +297,9 @@ export class BlurContextMgr extends StyleCtx {
 
     removeMask() {
         this.editor.removeShapesBlurMask(this.page, this.shapes);
+    }
+
+    disableMask(data: StyleMangerMember) {
+        this.editor.disableMask(data);
     }
 }

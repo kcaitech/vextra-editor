@@ -28,6 +28,7 @@ import AutoLayout from "./AutoLayout/index.vue"
 import BlurVue from "./Blur/index.vue";
 import Scale from "./Scale/index.vue";
 import Shadow2 from "./Shadow2/Index.vue";
+import StyleList from './StyleList/Index.vue';
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -333,6 +334,7 @@ onUnmounted(() => {
             <div v-if="!shapes.length && props.context.selection.selectedPage">
                 <PageBackground :context="props.context" :page="props.context.selection.selectedPage" />
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger" />
+                <StyleList :context="props.context"></StyleList>
             </div>
             <div v-if="shapes.length" class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes" :selection-change="reflush_by_selection"
@@ -368,7 +370,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </el-scrollbar>
-        <artboard-template v-if="frame" :context="context"/>
+        <artboard-template v-if="frame" :context="context" />
     </section>
 </template>
 

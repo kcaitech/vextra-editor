@@ -15,7 +15,9 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
  * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
  */
 const { data, context, manager } = defineProps<{ context: Context; manager: RadiusContextMgr; data: RadiusMask; }>();
-
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 const name = ref<string>(data.name);
 const selected = ref<boolean>(manager.radiusCtx.mask === data.id);
 
@@ -26,16 +28,17 @@ const modifyPanelStatusMgr = new ElementManager(
     { whiteList: ['.modify-radius-style-panel', '.modify'] }
 );
 
-function update() {
+function update(...args: any[]) {
+    if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     selected.value = manager.radiusCtx.mask === data.id;
 }
 
-function showModifyPanel(event: MouseEvent) {
-    let e: Element | null = event.target as Element;
+function showModifyPanel(trigger: MouseEvent | Element) {
+    let e: Element | null = trigger instanceof Element ? trigger : trigger.target as Element;
     while (e) {
         if (e.classList.contains('modify')) {
-            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -442 } });
+            modifyPanelStatusMgr.showBy(e, {once: {offsetLeft: -442}});
             manager.keepUniquePanel('.modify', modifyPanelStatusMgr);
             break;
         }
@@ -43,8 +46,13 @@ function showModifyPanel(event: MouseEvent) {
     }
 }
 
-function addRadiusMask() {
+function modify() {
+    if (selected.value) return;
     manager.addRadiusMask(data.id);
+}
+
+function disable() {
+    manager.disableMask(data);
 }
 
 onMounted(() => {
@@ -56,9 +64,10 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel">
+    <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected"
+               @modify="showModifyPanel" @disable="disable">
         <template #preview>
-            <div class="content" @click="addRadiusMask">
+            <div class="content" @click="modify">
                 <SvgIcon :icon="radius_icon" />
                 <span>{{ name }}</span>
             </div>
@@ -71,8 +80,7 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .content {
-    flex: 1;
-    width: 50px;
+    width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
@@ -83,6 +91,14 @@ onUnmounted(() => {
     >img {
         width: 14px;
         height: 16px;
+    }
+
+    > span {
+        display: block;
+        width: 132px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 </style>

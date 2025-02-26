@@ -27,6 +27,7 @@ const props = defineProps<{
 }>();
 const fillCtx = ref<BorderFillsContext>({
     mixed: false,
+    listStatus: false,
     fills: [],
     strokeInfo: undefined,
     strokeMask: undefined,
@@ -86,7 +87,7 @@ const showBorderPanel = (event: MouseEvent) => {
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),
     watch(() => props.trigger, (v) => {
-        if (v?.includes('bordersMask') || v?.includes('borders') || v?.includes('variables') || v?.includes('borderfill')) {
+        if (v?.includes('bordersMask') || v?.includes('fillsMask') || v?.includes('borderfill') || v?.includes('paints') || v?.includes('borders') || v?.includes('variables')) {
             fillCtxMgr.update();
         }
     })

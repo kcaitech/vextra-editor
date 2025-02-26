@@ -7,12 +7,11 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import PanelItem from "@/components/Document/Attribute/StyleLib/PanelItem.vue";
 import { ShadowsContextMgr } from "../ctx";
 
-/**
- * 用于展示样式表中单个样式的组件
- * data: 样式信息
- * 该组件除了展示样式基本信息之外，可以点击把该样式绑定到图层上、修改该样式
- */
 const { data, context, manager } = defineProps<{ context: Context; manager: ShadowsContextMgr; data: ShadowMask; }>();
+
+const emits = defineEmits<{
+    (e: 'update'): void;
+}>();
 
 const name = ref<string>(data.name);
 const shadows = ref<Shadow[]>(data.shadows.map(i => i));
@@ -25,14 +24,15 @@ const modifyPanelStatusMgr = new ElementManager(
     { whiteList: ['.modify-shadow-style-panel', '.modify'] }
 );
 
-function update() {
+function update(...args: any[]) {
+    if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     shadows.value = data.shadows.map(i => i);
     selected.value = manager.shadowCtx.mask === data.id;
 }
 
-function showModifyPanel(event: MouseEvent) {
-    let e: Element | null = event.target as Element;
+function showModifyPanel(trigger: MouseEvent | Element) {
+    let e: Element | null = trigger instanceof Element ? trigger : trigger.target as Element;
     while (e) {
         if (e.classList.contains('modify')) {
             modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -442 } });
@@ -44,7 +44,12 @@ function showModifyPanel(event: MouseEvent) {
 }
 
 function modifyShadowMask() {
+    if (selected.value) return;
     manager.modifyShadowMask(data.id);
+}
+
+function disable() {
+    manager.disableMask(data);
 }
 
 onMounted(() => {
@@ -56,7 +61,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <PanelItem :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel" v-if="shadows.length">
+    <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected"
+               @modify="showModifyPanel" @disable="disable">
         <template #preview>
             <div class="content" @click="modifyShadowMask">
                 <div class="effect" :style="{
@@ -80,8 +86,7 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .content {
-    flex: 1;
-    width: 50px;
+    width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
@@ -96,6 +101,14 @@ onUnmounted(() => {
         border: 1px solid #000000e5;
         border-radius: 3px;
         overflow: hidden;
+    }
+
+    > span {
+        display: block;
+        width: 132px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 </style>

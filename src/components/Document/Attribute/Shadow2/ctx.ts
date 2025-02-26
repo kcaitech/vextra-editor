@@ -6,7 +6,7 @@ import {
     ShadowPosition,
     ShadowsModifier,
     Api,
-    ShapeView, SymbolRefView
+    ShapeView, SymbolRefView, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
@@ -56,10 +56,9 @@ export class ShadowsContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        const shapes = this.shapes;
-
-        if (shapes.length < 2) return this.shadowCtx.mixed = false;
-        const allShadows = shapes.map(i => ({ shadows: i.getShadows(), view: i }));
+        if (this.selected.length < 1) return;
+        if (this.selected.length < 2) return this.shadowCtx.mixed = false;
+        const allShadows = this.selected.map(i => ({ shadows: i.getShadows(), view: i }));
 
         let firstL = allShadows[0].shadows.length;
         for (const s of allShadows) if (s.shadows.length !== firstL) return this.shadowCtx.mixed = true;
@@ -73,7 +72,7 @@ export class ShadowsContextMgr extends StyleCtx {
     }
 
     private updateShadows() {
-        if (this.shadowCtx.mixed) return;
+        if (this.shadowCtx.mixed || this.selected.length < 1) return;
 
         const represent = this.shapes[0];
         this.shadowCtx.mask = represent.shadowsMask;
@@ -81,7 +80,8 @@ export class ShadowsContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.shadowCtx.mask) as ShadowMask;
             this.shadowCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.shadowCtx.maskInfo = undefined;
@@ -449,6 +449,7 @@ export class ShadowsContextMgr extends StyleCtx {
     }
 
     modifyShadowMask(id: string) {
+        if (Object.keys(this.shadowCtx).length === 0) return;
         this.editor.setShapesShadowsMask(this.page, this.shapes, id);
         this.kill();
         this.hiddenCtrl();
@@ -460,5 +461,9 @@ export class ShadowsContextMgr extends StyleCtx {
 
     removeMask() {
         this.editor.removeShapesShadowsMask(this.page, this.shapes);
+    }
+
+    disableMask(mask: StyleMangerMember) {
+        this.editor.disableMask(mask);
     }
 }

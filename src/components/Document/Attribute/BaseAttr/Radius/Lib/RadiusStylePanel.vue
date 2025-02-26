@@ -8,9 +8,6 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import { useI18n } from "vue-i18n";
 import { RadiusContextMgr } from "../ctx";
 
-/** 
- * 填充样式库面板。用于展示样式列表、创建样式
- */
 const { context, manager, title } = defineProps<{ context: Context, manager: RadiusContextMgr, title: string }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
 const { t } = useI18n()

@@ -4,7 +4,7 @@
         <el-scrollbar>
             <div class="content">
                 <SheetPanel v-for="sheet in sheets" :key="sheet.id" :context="context" :manager="manager"
-                    :item="ShaodwMaskPanelItem" :data="sheet" />
+                            :item="ShadowMaskPanelItem" :data="sheet" @update="update"/>
                 <div v-if="!sheets.length && keyword" class="null">{{ t('stylelib.null_search') }}</div>
                 <div v-if="!sheets.length && !keyword" class="null">{{ t('stylelib.null_data') }}</div>
             </div>
@@ -16,7 +16,7 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
 import SearchInput from "@/components/common/SearchInput.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
-import ShaodwMaskPanelItem from './ShadowMaskPanelItem.vue';
+import ShadowMaskPanelItem from './ShadowMaskPanelItem.vue';
 import { StyleSheet } from "@kcdesign/data"
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { ShadowsContextMgr } from '../ctx';
@@ -66,7 +66,7 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = '此文件样式';
 
         for (const v of sts.variables) {
-            if (v.typeId === "shadow-mask-living") cat.variables.push(v);
+            if (v.typeId === "shadow-mask-living" && !v.disabled) cat.variables.push(v);
         }
         if (word) {
             const reg = new RegExp(`${word}`, 'img');

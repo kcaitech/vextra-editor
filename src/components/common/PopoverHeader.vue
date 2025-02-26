@@ -2,9 +2,13 @@
 import add_icon from "@/assets/icons/svg/add.svg";
 import close_icon from "@/assets/icons/svg/close.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import toggle_list from "@/assets/icons/svg/toggle-list.svg";
+import toggle_grid from "@/assets/icons/svg/toggle-grid.svg";
 
 withDefaults(defineProps<{
     title: string;
+    grid?: boolean;
+    toggle?: boolean;
     create?: boolean;
     close?: boolean;
 }>(), {
@@ -14,6 +18,7 @@ withDefaults(defineProps<{
 
 const emits = defineEmits<{
     (e: "create", event: MouseEvent): void;
+    (e: "toggle", event: MouseEvent): void;
     (e: "close"): void;
 }>();
 </script>
@@ -21,6 +26,9 @@ const emits = defineEmits<{
     <div class="header">
         <div class="title">{{ title }}</div>
         <div class="tool">
+            <div v-if="toggle" class="add" @click="(event) => emits('toggle', event)">
+                <SvgIcon :icon="grid ? toggle_grid : toggle_list"/>
+            </div>
             <div v-if="create" class="add" @click="(event) => emits('create', event)">
                 <SvgIcon :icon="add_icon"/>
             </div>

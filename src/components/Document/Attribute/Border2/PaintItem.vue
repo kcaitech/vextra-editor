@@ -3,7 +3,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import delete_icon from "@/assets/icons/svg/delete.svg";
 import { Context } from "@/context";
 import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, reactive, ref, watchEffect, watch, nextTick } from "vue";
+import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType, GradientType } from "@kcdesign/data";
@@ -14,7 +14,7 @@ import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
-import { FillsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/fillspicker";
+import { PaintsPicker } from "@/components/common/ColorPicker/Editor/stylectxs/paintspicker";
 
 const props = defineProps<{
     context: Context;
@@ -25,7 +25,7 @@ const { t } = useI18n();
 const fillTypes = [FillType.SolidColor, FillType.Gradient];
 const colorHex = ref<string>(props.data.fill.color.toHex().slice(1));
 const alpha = ref<string>(props.data.fill.color.alpha * 100 + '%');
-const colors = ref<(Fill)[]>([props.data.fill]);
+const colors = ref<Fill[]>([props.data.fill]);
 const innerText = ref<string>();
 const compo = ref<any>();
 const fillType = ref<string>(FillType.SolidColor);
@@ -90,7 +90,7 @@ function showColorPanel(event: MouseEvent) {
     }
 }
 
-const fillsPicker = new FillsPicker(props.context, props.data.fill.fillType);
+const fillsPicker = new PaintsPicker(props.context, props.data.fill.fillType);
 
 function update() {
     const fill = props.data.fill;
@@ -98,8 +98,7 @@ function update() {
     colorHex.value = color.toHex().slice(1);
     alpha.value = Math.round(color.alpha * 100) + '%';
     colors.value = [fill];
-    fillsPicker.fill = fill;
-    fillsPicker.fill_type = "borders";
+    fillsPicker.paint = fill;
 
     gradient.value = undefined;
 

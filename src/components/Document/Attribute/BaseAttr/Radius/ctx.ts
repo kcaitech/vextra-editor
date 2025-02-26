@@ -1,5 +1,13 @@
 import { Context } from "@/context";
-import { BasicArray, RadiusMask, RadiusModifier, RadiusType, ShapeView, SymbolRefView } from "@kcdesign/data";
+import {
+    BasicArray,
+    RadiusMask,
+    RadiusModifier,
+    RadiusType,
+    ShapeView,
+    StyleMangerMember,
+    SymbolRefView
+} from "@kcdesign/data";
 import { v4 } from "uuid";
 import { StyleCtx } from "../../stylectx";
 import { MaskInfo } from "../../basic";
@@ -26,10 +34,9 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        const selected = this.selected;
-
-        if (selected.length < 2) return this.radiusCtx.mixed = false;
-        const allRadius = selected.map(i => ({ radius: i.radius, radiusMask: i.radiusMask }));
+        if (this.selected.length < 1) return;
+        if (this.selected.length < 2) return this.radiusCtx.mixed = false;
+        const allRadius = this.selected.map(i => ({ radius: i.radius, radiusMask: i.radiusMask }));
 
         const stringMixed = radiusMaskMixed(allRadius[0].radiusMask);
         for (let i = 1; i < allRadius.length; i++) {
@@ -40,12 +47,14 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     private updateRadius() {
+        if (this.selected.length < 1) return;
         this.radiusCtx.mask = this.radiusCtx.mixed ? undefined : this.selected[0].radiusMask;
         if (this.radiusCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.radiusCtx.mask) as RadiusMask;
             this.radiusCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
             this.radiusCtx.radius = [...this.selected[0].radius];
         } else {
@@ -88,6 +97,7 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     private modify_can_be_rect() {
+        if (this.selected.length < 1) return;
         this.can_be_rect = false;
         const origin = this.radiusCtx.rect;
         this.radiusCtx.rect = false;
@@ -129,6 +139,7 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     addRadiusMask(id: string) {
+        if (Object.keys(this.radiusCtx).length === 0) return;
         this.radiusEditor.setShapesRadiusMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();
@@ -152,6 +163,9 @@ export class RadiusContextMgr extends StyleCtx {
         const radiusMask = new RadiusMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, radius);
         this.radiusEditor.createRadiusMask(this.document, radiusMask, this.page, this.selected);
         this.kill();
+    }
+    disableMask(data: StyleMangerMember) {
+        this.radiusEditor.disableMask(data);
     }
 }
 

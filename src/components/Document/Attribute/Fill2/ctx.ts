@@ -1,6 +1,6 @@
 import {
     Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
-    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, Api
+    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, Api, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
@@ -13,6 +13,7 @@ export type FillCatch = {
 
 export type FillsContext = {
     mixed: boolean;
+    listStatus: boolean,
     fills: FillCatch[];
 
     mask?: string;
@@ -24,15 +25,15 @@ export type FillsContext = {
  * 另外还组合了弹框管理器，可以控制相关弹窗
  */
 export class FillsContextMgr extends StyleCtx {
+
     constructor(protected context: Context, public fillCtx: FillsContext) {
         super(context);
     }
 
     private modifyMixedStatus() {
-        const selected = this.selected;
-
-        if (selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = selected.map(i => ({ fills: i.getFills(), shape: i }));
+        if (this.selected.length < 1) return;
+        if (this.selected.length < 2) return this.fillCtx.mixed = false;
+        const allFills = this.selected.map(i => ({ fills: i.getFills(), shape: i }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -46,7 +47,7 @@ export class FillsContextMgr extends StyleCtx {
     }
 
     private updateFills() {
-        if (this.fillCtx.mixed) return;
+        if (this.fillCtx.mixed || this.selected.length < 1) return;
 
         const represent = this.selected[0];
         this.fillCtx.mask = represent.fillsMask;
@@ -54,7 +55,8 @@ export class FillsContextMgr extends StyleCtx {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.mask) as FillMask;
             this.fillCtx.maskInfo = {
                 name: mask.name,
-                desc: mask.description
+                desc: mask.description,
+                disabled: mask.disabled
             }
         } else {
             this.fillCtx.maskInfo = undefined;
@@ -76,7 +78,15 @@ export class FillsContextMgr extends StyleCtx {
         return this.m_editor ?? (this.m_editor = new FillModifier(this.repo));
     }
 
+    // 切换列表风格
+    toggleList() {
+        const action = !this.fillCtx.listStatus;
+        this.fillCtx.listStatus = action;
+        localStorage.setItem("styleList", JSON.stringify(action));
+    }
+
     update() {
+        this.fillCtx.listStatus = JSON.parse(localStorage.getItem("styleList") ?? JSON.stringify(false));
         this.getSelected();
         this.modifyMixedStatus();
         this.updateFills();
@@ -337,6 +347,7 @@ export class FillsContextMgr extends StyleCtx {
 
     /* 修改图层填充遮罩的绑定值 */
     modifyFillMask(id: string) {
+        if (Object.keys(this.fillCtx).length === 0) return;
         this.editor.setShapesFillMask(this.page, this.selected, id);
         this.kill();
         this.hiddenCtrl();
@@ -350,6 +361,11 @@ export class FillsContextMgr extends StyleCtx {
     /* 删除遮罩 */
     removeMask() {
         this.editor.removeShapesFillMask(this.page, this.selected);
+    }
+
+    // 删除填充样式(弱删除)
+    disableMask(mask: StyleMangerMember) {
+        this.editor.disableMask(mask);
     }
 }
 

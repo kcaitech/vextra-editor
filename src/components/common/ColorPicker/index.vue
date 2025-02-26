@@ -61,7 +61,7 @@ import {
 import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
-import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
+// import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
 import { ImgFrame } from '@/context/atrribute';
 import ColorStyle from '@/components/Document/Attribute/Fill2/Lib/ColorStyle.vue';
 import { watchEffect } from 'vue';
@@ -1544,10 +1544,10 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </template>
-                <PatternFill :context="context" :entrance="props.entrance" v-else :scale="imageScale" :imageScaleMode="scaleMode"
-                    :image="image_url" :paintFilter="paintFilter" @changeMode="changeScaleMode"
-                    @setImageRef="setImageRef" @changeRotate="emit('changeRotate')"
-                    @changeScale="(s) => emit('changeScale', s)" @imagefilter="(color,type,v)=>color.execute_fillmask_ImageFilter(props.style?.sheet!,props.style?.id!,type,v,props.locat?.index!)"/>
+<!--                <PatternFill :context="context" :entrance="props.entrance" v-else :scale="imageScale" :imageScaleMode="scaleMode"-->
+<!--                    :image="image_url" :paintFilter="paintFilter" @changeMode="changeScaleMode"-->
+<!--                    @setImageRef="setImageRef" @changeRotate="emit('changeRotate')"-->
+<!--                    @changeScale="(s) => emit('changeScale', s)" @imagefilter="(color,type,v)=>color.execute_fillmask_ImageFilter(props.style?.sheet!,props.style?.id!,type,v,props.locat?.index!)"/>-->
             </div>
             <!-- <div v-if="custom === 'style' && !props.entrance" class="color-style">
                <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
