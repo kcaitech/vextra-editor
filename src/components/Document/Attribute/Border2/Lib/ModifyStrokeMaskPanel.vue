@@ -68,8 +68,12 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
-function changeInput(value: string) {
+function changeNameInput(value: string) {
     name.value = value;
+}
+
+function changeDescInput(value: string) {
+    desc.value = value;
 }
 
 function createStyle() {
@@ -110,20 +114,29 @@ function positionSelect(selected: SelectItem) {
     manager.modifyBorderPositionMask(data.border, selected.value as BorderPosition);
 }
 
+function checkEnter(e: KeyboardEvent) {
+    if (e.key === 'Enter' && name.value && !data) {
+        createStyle();
+    }
+}
+
 onMounted(() => {
     update();
     data?.watch(update);
+    document.addEventListener('keydown', checkEnter);
 });
 
 onUnmounted(() => {
     data?.unwatch(update);
+    document.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-stroke-style-panel" id="modify-stroke-style-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_border') : t('stylelib.create_border')" @close="emits('close')" />
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" />
+        <PanelHeader :title="data ? t('stylelib.editor_border') : t('stylelib.create_border')"
+            @close="emits('close')" />
+        <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
+            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
         <div v-if="data" class="data-panel">
             <div class="type">
                 <div class="title">{{ t('stylelib.position') }}</div>
@@ -133,11 +146,13 @@ onUnmounted(() => {
             </div>
             <div class="thickness">
                 <div class="title">{{ t('stylelib.thickness') }}</div>
-                <input type="text" v-focus v-model="thickness" @change="setThickness">
+                <input type="text" v-model="thickness" @change="setThickness">
             </div>
         </div>
 
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{t('stylelib.add_style')}}</div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')
+            }}
+        </div>
     </div>
 </template>
 <style scoped lang="scss">

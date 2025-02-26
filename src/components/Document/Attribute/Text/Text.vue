@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed, shallowRef, reactive } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
@@ -23,7 +23,7 @@ import {
 } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color } from "@kcdesign/data";
-import ColorPicker from '@/components/common/ColorPicker/index.vue';
+// import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -40,6 +40,10 @@ import TextStyle from '@/components/Document/Attribute/StyleLib/TextStyle.vue';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { v4 } from 'uuid';
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
+import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
+import { toHex } from "@/utils/color";
+import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
+import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 
 interface Props {
     context: Context
@@ -90,7 +94,15 @@ const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
-const fills=ref<Fill[]>([])
+const fills = ref<Fill[]>([])
+const colors = ref<AttrGetter[]>();
+const rgba = ref<RGBACatch>({ R: 153, G: 43, B: 43, A: 0.52, position: 1 });
+const highlightrgba = ref<RGBACatch>({ R: 153, G: 43, B: 43, A: 0.52, position: 1 });
+const compo = ref<any>();
+const colorHex = ref<string>('');
+const innerText = ref<string>('');
+const fillTypes = [FillType.SolidColor, FillType.Gradient];
+const gradientcatch = ref<GradientCatch | undefined>();
 const textLibStatus = reactive<ElementStatus>({ id: '#text-lib-panel', visible: false });
 const textPanelStatusMgr = new ElementManager(
     props.context,
@@ -101,12 +113,67 @@ const textPanelStatusMgr = new ElementManager(
     }
 );
 
-function toHex(r: number, g: number, b: number, prefix = true) {
-    const hex = (n: number) => n.toString(16)
-        .toUpperCase().length === 1
-        ? `0${n.toString(16).toUpperCase()}`
-        : n.toString(16).toUpperCase();
-    return (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
+const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
+const colorPanelStatusMgr = new ElementManager(
+    props.context,
+    colorPanelStatus,
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
+);
+
+const highlightPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
+const highlightPanelStatusMgr = new ElementManager(
+    props.context,
+    highlightPanelStatus,
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
+);
+
+const styleReplace = {
+    flex: 1,
+    width: '46px',
+    outline: 'none',
+    border: 'none',
+    height: '14px',
+    'background-color': 'transparent',
+    'font-size': ' 12px',
+    'box-sizing': 'border-box'
+};
+
+const HexInput = () => h('input', {
+    style: styleReplace,
+    value: colorHex.value,
+    spellcheck: false,
+    onFocus: selectAllOnFocus,
+    onChange: (e) => props.manager.modifyFillHex(e, props.data.fill)
+});
+
+const DescSpan = () => h('div', {
+    style: Object.assign({
+        display: 'flex',
+        'align-items': 'center'
+    }, styleReplace),
+    innerText: innerText.value
+});
+
+function showColorPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('color-wrapper')) {
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -304, offsetTop: -10 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
+function showHighlightPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('color-wrapper')) {
+            highlightPanelStatusMgr.showBy(e, { once: { offsetLeft: -304, offsetTop: -10 } });
+            break;
+        }
+        e = e.parentElement;
+    }
 }
 
 const onShowFont = () => {
@@ -153,6 +220,21 @@ const onShowSize = () => {
     })
 
     document.addEventListener('click', onShowSizeBlur);
+}
+
+function assemble(type: FillType) {
+    switch (type) {
+        case FillType.Gradient:
+            innerText.value = t(`color.${gradient.value!.gradientType}`);
+            compo.value = DescSpan();
+            break;
+        case FillType.Pattern:
+            innerText.value = t('pattern.image');
+            compo.value = DescSpan();
+            break;
+        default:
+            compo.value = HexInput();
+    }
 }
 
 const onShowSizeBlur = (e: Event) => {
@@ -491,8 +573,14 @@ const _textFormat = () => {
         const __text = t_shape[0].getText();
         if (textIndex === -1) {
             format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+            console.log(format, 'format1');
+
+            colors.value = [format] as AttrGetter[]
         } else {
+
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+            console.log(format, 'format2');
+            colors.value = [format] as AttrGetter[]
         }
         colorIsMulti.value = format.colorIsMulti
         isAutoLineHeight.value = format.autoLineHeight ?? true;
@@ -510,6 +598,7 @@ const _textFormat = () => {
         isBold.value = format.weight
         isTilt.value = format.italic || false
         gradient.value = format.gradient;
+        if (gradient.value) gradientcatch.value = getGradientCatch(gradient.value);
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
         if (format.minimumLineHeightIsMulti || format.autoLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
         if (format.italicIsMulti) weightMixed.value = true;
@@ -525,6 +614,10 @@ const _textFormat = () => {
         if (format.fillTypeIsMulti) mixed.value = true;
         if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
         props.context.workspace.focusText()
+        if (!textColor.value) return
+        if (!highlight.value) return
+        highlightrgba.value = { R: highlight.value.red, G: highlight.value.green, B: highlight.value.blue, A: highlight.value.alpha, position: 1 }
+        rgba.value = { R: textColor.value.red, G: textColor.value.green, B: textColor.value.blue, A: textColor.value.alpha, position: 1 }
     } else {
         let formats: any[] = [];
         let format: any = {};
@@ -614,7 +707,10 @@ const _textFormat = () => {
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
 
-    fills.value=[new Fill(new BasicArray<number>,v4(),true,FillType.SolidColor,highlight.value!)]
+    fills.value = [new Fill(new BasicArray<number>, v4(), true, FillType.SolidColor, highlight.value!)]
+    colorHex.value = toHex(textColor.value!).slice(1)
+    assemble(fillType.value);
+    if (gradient.value) gradientcatch.value = getGradientCatch(gradient.value);
     reflush.value++;
 }
 const textFormat = throttle(_textFormat, 0, { leading: true })
@@ -639,6 +735,8 @@ const highlightAlphaValue = ref('');
 function onAlphaChange(e: Event, type: string) {
     let value: any;
     value = type === 'color' ? texAlphaValue.value : highlightAlphaValue.value;
+    console.log(value, 'value', texAlphaValue.value);
+
     if (value?.slice(-1) === '%') {
         value = Number(value?.slice(0, -1))
         if (value >= 0) {
@@ -737,7 +835,7 @@ function onColorChange(e: Event, type: string) {
             setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = toHex(textColor.value!.red, textColor.value!.green, textColor.value!.blue);
+            return (e.target as HTMLInputElement).value = toHex(textColor.value!).slice(1);
         }
     } else {
         let value = getColorValue(highlightColorValue.value);
@@ -747,7 +845,7 @@ function onColorChange(e: Event, type: string) {
             setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = toHex(highlight.value!.red, highlight.value!.green, highlight.value!.blue);
+            return (e.target as HTMLInputElement).value = toHex(highlight.value!).slice(1);
         }
     }
 }
@@ -1142,9 +1240,13 @@ const selectAlphaValue = () => {
     }
 }
 const sizeAlphaInput = () => {
+    console.log(alphaFill.value, 'alphaFill.value');
+
     if (alphaFill.value) {
         const value = alphaFill.value.value;
         texAlphaValue.value = value;
+        console.log(texAlphaValue.value);
+
     }
     if (sizeColor.value) textColorValue.value = sizeColor.value.value;
 }
@@ -1370,6 +1472,7 @@ import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
 import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
 import style_icon from '@/assets/icons/svg/styles.svg';
 import delete_icon from "@/assets/icons/svg/delete.svg";
+import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
 </script>
 
 <template>
@@ -1514,12 +1617,9 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
                 <!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
-                    t('attr.font_color')
-                }}
-                </div>
-                <div class="color">
+            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor">
+                <div class="title">{{ t('attr.font_color') }}</div>
+                <!-- <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
                         :locat="{ index: 0, type: 'text' }" :fill-type="fillType" :gradient="gradient"
                         @change="c => getColorFromPicker(c, 'color')"
@@ -1540,8 +1640,14 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
                         :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
                         @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false"
                         @input="sizeAlphaInput" @keydown="e => keydownAlpha(e, Number(filterAlpha()) / 100, 'color')" />
+                </div> -->
+                <div class="value-panel-wrapper">
+                    <ColorBlock :colors="(colors as AttrGetter[])" @click="showColorPanel" />
+                    <component :is="compo" />
+                    <input ref="alphaFill" class="alphaShadow" type="text" :value="`${filterAlpha()}%`"
+                        @focus="selectAllOnFocus" @change="(e) => onAlphaChange(e, 'color')" @input="sizeAlphaInput"
+                        @keyup.enter="(e) => (e.target as HTMLInputElement).blur()" />
                 </div>
-                <!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
@@ -1564,30 +1670,37 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px"
-                    :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                <div :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
+                <div class="setting">
+                    <!-- <div class="color">
+                        <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
+                            @change="c => getColorFromPicker(c, 'highlight')">
+                        </ColorPicker>
+                        <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
+                            :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
+                            @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput"
+                            @click="(e) => click(e, is_higligh_color_select)" @blur="is_higligh_color_select = false" />
+                        <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha"
+                            style="text-align: center;" :value="(highlight!.alpha * 100).toFixed(0) + '%'"
+                            @change="(e) => onAlphaChange(e, 'highlight')" @input="higAlphaInput"
+                            @click="(e) => click(e, is_higligh_alpha_select)" @blur="is_higligh_alpha_select = false"
+                            @keydown="e => keydownAlpha(e, highlight!.alpha, 'highlight')" />
+                    </div> -->
+                    <div class="value-panel-wrapper">
+                        <ColorBlock :colors="([highlight] as Color[])" @click="showHighlightPanel" />
+                        <input ref="higlightColor" class="colorShadow" type="text" :value="toHex(highlight).slice(1)"
+                            @focus="selectAllOnFocus" @change="(e) => onColorChange(e, 'highlight')"
+                            @input="higColorInput" @keyup.enter="(e) => (e.target as HTMLInputElement).blur()" />
+                        <input ref="higlighAlpha" class="alphaShadow" type="text"
+                            :value="`${(highlight.alpha * 100).toFixed(0)}%`" @focus="selectAllOnFocus"
+                            @change="(e) => onAlphaChange(e, 'highlight')" @input="higAlphaInput"
+                            @keyup.enter="(e) => (e.target as HTMLInputElement).blur()" />
+                    </div>
+                    <div class="perch" @click="deleteHighlight">
+                        <SvgIcon class="svg" :icon="delete_icon" />
+                    </div>
                 </div>
-                <div>
-                    <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
-                        @change="c => getColorFromPicker(c, 'highlight')">
-                    </ColorPicker>
-                     <!-- <ColorBlock :colors="(fills as Fill[])"/> -->
-                    <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
-                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
-                        @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput"
-                        @click="(e) => click(e, is_higligh_color_select)" @blur="is_higligh_color_select = false" />
-                    <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
-                        :value="(highlight!.alpha * 100).toFixed(0) + '%'"
-                        @change="(e) => onAlphaChange(e, 'highlight')" @input="higAlphaInput"
-                        @click="(e) => click(e, is_higligh_alpha_select)" @blur="is_higligh_alpha_select = false"
-                        @keydown="e => keydownAlpha(e, highlight!.alpha, 'highlight')" />
-                </div>
-                <div class="perch" @click="deleteHighlight">
-                    <SvgIcon class="svg" :icon="delete_icon" />
-                </div>
-                </div>
-           
+
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
@@ -1612,6 +1725,10 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
                 </div>
             </div>
         </div>
+        <ColorPicker v-if="colorPanelStatus.visible" :editor="backgorundPicker" :type="fillType" :include="fillTypes"
+            :color="rgba" :gradient="gradientcatch" @close="() => colorPanelStatusMgr.close()" />
+        <ColorPicker v-if="highlightPanelStatus.visible" :editor="backgorundPicker" :type="FillType.SolidColor"
+            :include="[]" :color="highlightrgba" @close="() => highlightPanelStatusMgr.close()" />
         <TextStyle v-if="textLibStatus.visible" :context="props.context" :textShape="props.shape"
             :textShapes="props.textShapes" @close="closePanel"></TextStyle>
         <teleport to="body">
@@ -1622,6 +1739,41 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 </template>
 
 <style scoped lang="scss">
+.value-panel-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    flex: 1;
+    height: 32px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    background-color: var(--input-background);
+    border-radius: var(--default-radius);
+
+    .colorShadow {
+        flex: 1;
+        width: 46px;
+        outline: none;
+        border: none;
+        height: 14px;
+        background-color: transparent;
+        font-size: 12px;
+        box-sizing: border-box;
+    }
+
+    .alphaShadow {
+        width: 40px;
+        outline: none;
+        border: none;
+        background-color: transparent;
+        height: 14px;
+        font-size: 12px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+}
+
 .text-panel {
     width: 100%;
     display: flex;
@@ -1931,8 +2083,8 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
         .text-color {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            text-wrap: nowrap;
+            gap: 8px;
+            margin-bottom: 8px;
 
             .color {
                 background-color: var(--input-background);
@@ -1973,7 +2125,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
         .highlight-color {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 8px;
 
             .color {
                 background-color: var(--input-background);
@@ -2009,6 +2161,12 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
                 input+input {
                     width: 45px;
                 }
+            }
+
+            .setting {
+                display: flex;
+                align-items: center;
+                flex: 1;
             }
         }
 

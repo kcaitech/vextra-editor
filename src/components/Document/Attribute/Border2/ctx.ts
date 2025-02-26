@@ -245,7 +245,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     remove(fill: Fill) {
-
+        if (this.fillCtx.mask && this.fillCtx.fills.length === 1) return;
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
             this.editor.removeFill([(api: Api) => {

@@ -56,33 +56,47 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
-function changeInput(value: string) {
+function changeNameInput(value: string) {
     name.value = value;
+}
+
+function changeDescInput(value: string) {
+    desc.value = value;
 }
 
 function createStyle() {
     manager.createStyleLib(name.value, desc.value);
 }
 
+function checkEnter(e: KeyboardEvent) {
+    if (e.key === 'Enter' && name.value && !data) {
+        createStyle();
+    }
+}
+
 onMounted(() => {
     data?.watch(update);
-});
+    document.addEventListener('keydown', checkEnter);
+})
+
 onUnmounted(() => {
     data?.unwatch(update);
+    document.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-blur-panel" id="modify-blur-panel">
         <PanelHeader :title="data ? t('stylelib.editor_blur') : t('stylelib.create_blur')" @close="emits('close')" />
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" @changeInput="changeInput" />
+        <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
+            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
         <div v-if="data" class="data-panel">
             <ListHeader :title="t('stylelib.blur')" create />
             <div class="fills-container">
                 <BlurPanel :manager="manager" :context="context" :blur="(blur as BlurCatch)" del />
             </div>
         </div>
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')
+            }}
         </div>
     </div>
 </template>

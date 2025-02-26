@@ -89,7 +89,7 @@ onUnmounted(() => {
 
         <div v-else-if="shadowCtx.shadows.length" class="shadows-container">
             <ShadowItem v-for="(shadow, index) in shadowCtx.shadows" :key="index" :context="context"
-                :manager="shadowCtxMgr" :data="(shadow as ShadowCatch)" />
+                :manager="shadowCtxMgr" :data="(shadow as ShadowCatch)"/>
         </div>
 
         <ShadowStylePanel v-if="shadowLibStatus.visible" :context="context" :manager="shadowCtxMgr"

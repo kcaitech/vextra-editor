@@ -176,6 +176,7 @@ export class FillsContextMgr extends StyleCtx {
 
     /* 移除一条填充 */
     remove(fill: Fill) {
+        if (this.fillCtx.fills.length === 1) return;
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
             this.editor.removeFill([(api: Api) => {
@@ -393,7 +394,7 @@ export function stringifyGradient(g: Gradient) {
     str += g.gradientType + g.from.x + g.from.y + g.to.x + g.to.y
         + (g.elipseLength ?? 'null')
         + (g.gradientOpacity ?? 'null')
-    ;
+        ;
 
     g.stops.forEach(s => str += stringifyStop(s));
 

@@ -169,12 +169,12 @@ onUnmounted(() => {
     <div class="fill-item-container">
         <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)" />
         <div :class="{ 'value-panel-wrapper': true, disabled: !data.fill.isEnabled }">
-            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel" />
+            <ColorBlock :colors="(colors as Fill[])" @click="showColorPanel" />
             <component :is="compo" />
             <input class="alpha" type="text" :value="alpha" @focus="selectAllOnFocus"
                 @change="(e) => manager.modifyFillAlpha(e, data.fill)" />
         </div>
-        <div class="delete" :class="{ disabled: manager.fillCtx.mask && manager.fillCtx.fills.length === 1 }"
+        <div class="delete" :class="{ disabled: (manager.fillCtx.mask && manager.fillCtx.fills.length === 1) }"
             @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon" />
         </div>
@@ -216,11 +216,8 @@ onUnmounted(() => {
     }
 
     .disabled {
-        >* {
-            opacity: 0.3;
-            pointer-events: none;
-        }
-
+        opacity: 0.3;
+        pointer-events: none;
     }
 
     .delete {

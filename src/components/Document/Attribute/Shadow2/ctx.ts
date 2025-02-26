@@ -182,6 +182,7 @@ export class ShadowsContextMgr extends StyleCtx {
         if (shadow.parent?.parent instanceof ShadowMask) {
             const mask = shadow.parent.parent as ShadowMask;
             this.editor.removeShadows([(api: Api) => {
+                if (mask.shadows.length === 1) return;
                 api.deleteShadowAt(mask.shadows, index);
             }]);
         } else {

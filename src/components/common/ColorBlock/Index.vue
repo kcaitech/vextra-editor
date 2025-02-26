@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Border, Color, Fill, FillType, Gradient } from "@kcdesign/data";
+import { AttrGetter, Border, Color, Fill, FillType, Gradient } from "@kcdesign/data";
 import { onUnmounted, ref, watch } from "vue";
 import { DEFAULT_IMAGE } from "@/context/atrribute";
 
@@ -14,7 +14,7 @@ const compos = {
 };
 
 const props = defineProps<{
-    colors: (Color | Fill | Border)[];
+    colors: (Color | Fill | Border | AttrGetter)[];
     round?: boolean,
     disabledAlpha?: boolean
 }>();
@@ -29,17 +29,23 @@ const fillsPreview = ref<{
 function update() {
     const container = fillsPreview.value;
     container.length = 0;
-    const {colors, disabledAlpha} = props;
+    const { colors, disabledAlpha } = props;
     for (const c of colors) {
         if (c instanceof Color) {
-            container.push({type: "solid", data: c, disabledAlpha});
+            container.push({ type: "solid", data: c, disabledAlpha });
         } else if (c instanceof Fill) {
             if (c.fillType === FillType.SolidColor) {
-                container.push({type: "solid", data: c.color, disabledAlpha});
+                container.push({ type: "solid", data: c.color, disabledAlpha });
             } else if (c.fillType === FillType.Gradient) {
-                container.push({type: "gradient", data: c.gradient!});
+                container.push({ type: "gradient", data: c.gradient! });
             } else if (c.fillType === FillType.Pattern) {
-                container.push({type: "pattern", data: c.peekImage(true) || DEFAULT_IMAGE})
+                container.push({ type: "pattern", data: c.peekImage(true) || DEFAULT_IMAGE })
+            }
+        } else if (c instanceof AttrGetter) {
+            if (c.fillType === FillType.SolidColor && c.color) {
+                container.push({ type: "solid", data: c.color, disabledAlpha });
+            } else if (c.fillType === FillType.Gradient && c.gradient) {
+                container.push({ type: "gradient", data: c.gradient });
             }
         } else {
             // todo border
@@ -51,8 +57,8 @@ update();
 onUnmounted(watch(() => props.colors, update));
 </script>
 <template>
-    <div :class="{'color-wrapper': true, round}">
-        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="(compos[c.type])" :params="(c as any)"/>
+    <div :class="{ 'color-wrapper': true, round }">
+        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="(compos[c.type])" :params="(c as any)" />
     </div>
 </template>
 <style scoped lang="scss">
