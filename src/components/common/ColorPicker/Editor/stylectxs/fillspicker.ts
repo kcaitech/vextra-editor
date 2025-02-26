@@ -475,7 +475,7 @@ export class FillsPicker extends ColorPickerEditor {
                     api.setFillGradient(_fills[this.index], getCopy());
                 })
             }
-            this.editor.reverseGradientStops([modifyVariable, modifyLocal]);
+            this.editor.rotateGradientStops([modifyVariable, modifyLocal]);
             this.hiddenCtrl();
         }
         this.commit();
