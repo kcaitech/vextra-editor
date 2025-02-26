@@ -48,6 +48,7 @@ function showModifyPanel(trigger: MouseEvent | Element) {
 }
 
 function modifyFillMask() {
+    if (selected.value) return;
     manager.modifyFillMask(data.id);
 }
 

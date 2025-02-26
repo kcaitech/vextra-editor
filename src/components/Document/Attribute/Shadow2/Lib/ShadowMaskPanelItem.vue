@@ -44,6 +44,7 @@ function showModifyPanel(trigger: MouseEvent | Element) {
 }
 
 function modifyShadowMask() {
+    if (selected.value) return;
     manager.modifyShadowMask(data.id);
 }
 

@@ -451,7 +451,10 @@ export class BundleHandler {
                 const frame = new ShapeFrame(0, 0, width, height);
                 const asset: UploadAssets = { buff, ref };
                 assets.push(asset);
-                source.push(creator.newImageFillShape(name, frame, manager, { width, height }, ref));
+                source.push(creator.newImageFillShape(name, frame, manager, {
+                    width,
+                    height
+                }, this.context.data.stylesMgr, ref));
             }
             const editor = context.editor4Page(context.selection.selectedPage!);
             const result = editor.replace(context.data, source, shapes.map((s) => adapt2Shape(s)));

@@ -45,7 +45,9 @@ function showModifyPanel(trigger: MouseEvent | Element) {
         e = e.parentElement;
     }
 }
-function addRadiusMask() {
+
+function modify() {
+    if (selected.value) return;
     manager.addRadiusMask(data.id);
 }
 
@@ -65,7 +67,7 @@ onUnmounted(() => {
     <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected"
                @modify="showModifyPanel" @disable="disable">
         <template #preview>
-            <div class="content" @click="addRadiusMask">
+            <div class="content" @click="modify">
                 <SvgIcon :icon="radius_icon" />
                 <span>{{ name }}</span>
             </div>

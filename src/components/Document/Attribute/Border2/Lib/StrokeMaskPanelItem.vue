@@ -42,6 +42,7 @@ function showModifyPanel(trigger: MouseEvent | Element) {
 }
 
 function modifyStrokeMask() {
+    if (selected.value) return;
     manager.modifyStrokeMask(data.id);
 }
 

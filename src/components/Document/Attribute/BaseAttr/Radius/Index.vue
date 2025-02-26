@@ -10,7 +10,6 @@ import RadiusView from "./RadiusView.vue";
 import RadiusStylePanel from "./Lib/RadiusStylePanel.vue";
 
 import style_icon from "@/assets/icons/svg/styles.svg";
-import { debounce } from "lodash";
 const { t } = useI18n();
 
 const props = defineProps<{
@@ -57,19 +56,11 @@ const closePanel = () => {
     radiusPanelStatusMgr.close();
 }
 
-const _update_view = () => {
-    radiusCtxMgr.update();
-}
-
-const update = debounce(_update_view, 300, { leading: true });
-
 const watchList: any[] = [
     watch(() => props.selectionChange, () => radiusCtxMgr.update()),
     watch(() => props.trigger, v => {
         if (v?.includes('radius') || v?.includes('radiusMask') || v?.includes('variables')) {
             radiusCtxMgr.update();
-        } else if (v?.includes('transform')) {
-            update();
         }
     })
 ]

@@ -14,7 +14,6 @@ import {
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 
-
 export class PaintsPicker extends ColorPickerEditor {
     paint: Fill | undefined;
 
@@ -98,7 +97,7 @@ export class PaintsPicker extends ColorPickerEditor {
         if (!this.paint) return;
         this.getSelection();
         if (this.paint.parent?.parent instanceof FillMask) {
-            this.editor.modifySolidColor2([(api: Api) => {
+            this.editor.modifySolidColor([(api: Api) => {
                 api.setFillColor(this.paint!, new Color(c.A, c.R, c.G, c.B));
             }]);
             this.commit();
@@ -121,7 +120,7 @@ export class PaintsPicker extends ColorPickerEditor {
                 api.setFillColor(_fills[this.index], new Color(c.A, c.R, c.G, c.B));
             })
         }
-        this.editor.modifySolidColor2([modifyVariable, modifyLocal]);
+        this.editor.modifySolidColor([modifyVariable, modifyLocal]);
         this.hiddenCtrl();
         this.commit();
     }
@@ -141,7 +140,7 @@ export class PaintsPicker extends ColorPickerEditor {
     /* 拖拽修改纯色 */
     solidDragging(c: RGBACatch): void {
         if (this.paint!.parent?.parent instanceof FillMask) {
-            this.editor.modifySolidColor2([(api: Api) => {
+            this.editor.modifySolidColor([(api: Api) => {
                 api.setFillColor(this.paint!, new Color(c.A, c.R, c.G, c.B));
             }]);
             return;
@@ -158,7 +157,7 @@ export class PaintsPicker extends ColorPickerEditor {
                 api.setFillColor(_fills[this.index], new Color(c.A, c.R, c.G, c.B));
             })
         }
-        this.editor.modifySolidColor2([modifyVariable, modifyLocal]);
+        this.editor.modifySolidColor([modifyVariable, modifyLocal]);
         this.hiddenCtrl();
     }
 
