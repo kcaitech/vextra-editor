@@ -1,26 +1,19 @@
 import {
     adapt2Shape,
     AsyncCreator,
-    BasicArray,
     Blur,
-    Border,
-    BorderPosition,
-    BorderSideSetting,
-    BorderStyle,
     ColVector3D,
     ContactShape,
-    CornerType,
     CurvePoint,
     Document,
     export_shape,
     export_text,
-    Fill,
     GroupShape,
     GroupShapeView,
     import_shape_from_clipboard,
     import_text,
     makeShapeTransform1By2,
-    makeShapeTransform2By1, Matrix, MossError,
+    makeShapeTransform2By1, MossError,
     Page,
     PathShape,
     Shape,
@@ -32,7 +25,8 @@ import {
     TextShape,
     TextShapeEditor,
     Transform,
-    TransformRaw
+    TransformRaw,
+    exportContextSettings
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
@@ -45,10 +39,10 @@ import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
 import { WorkSpace } from "@/context/workspace";
-import { BorderData, get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
+import { BorderData } from "@/utils/shape_style";
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 import { flattenShapes } from "@/utils/cutout";
-import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
+import { getText } from "@/utils/attri_setting";
 import { UploadAssets } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { ImageLoader } from "@/imageLoader";
@@ -289,10 +283,9 @@ export class Clipboard {
             data['radius'] = radius;
             data['radiusMask'] = shape.radiusMask;
             data['mark'] = mark;
-            if (contextSetting) data['contextSetting'] = contextSetting;
+            if (contextSetting) data['contextSetting'] = exportContextSettings(contextSetting);
             if (blur instanceof Blur) data['blur'] = exportBlur(blur);
             if (text) data['text'] = text;
-
             const code = encode_html(properties, data);
 
             // @ts-ignore
@@ -302,8 +295,7 @@ export class Clipboard {
             navigator.clipboard.write(content);
             return true;
         } catch (e) {
-            console.log('write_properties error:', e);
-            return false;
+            throw e;
         }
     }
     borderIsString(border: BorderData) {
@@ -924,8 +916,6 @@ async function paster_plain_inner_shape(_d: any, context: Context, editor: TextS
  * @description 封装html数据
  */
 function encode_html(identity: string, data: any, text?: string): string {
-    // encodeURIComponent 确保转义正确
-    // btoa 作为html标签的属性，不可以有一些干扰字符，采用base64封装干扰字符
     const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
 
     return `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
