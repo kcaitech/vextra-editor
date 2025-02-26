@@ -44,6 +44,10 @@ function showModifyPanel(trigger: MouseEvent | Element) {
     }
 }
 
+function modify() {
+    if (selected.value) return;
+    manager.modifyBlurMask(data.id);
+}
 function disable() {
     manager.disableMask(data);
 }
@@ -59,7 +63,7 @@ onUnmounted(() => {
     <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected"
                @modify="showModifyPanel" @disable="disable">
         <template #preview>
-            <div class="content" @click="() => manager.modifyBlurMask(data.id)">
+            <div class="content" @click="modify">
                 <span>{{ name }}</span>
             </div>
         </template>

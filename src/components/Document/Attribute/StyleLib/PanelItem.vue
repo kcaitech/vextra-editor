@@ -23,7 +23,7 @@ const modifyMenuStatusMgr = new ElementManager(
 );
 const trigger = ref<HTMLDivElement | null>(null);
 
-function click(event: MouseEvent) {
+function mouseup(event: MouseEvent) {
     if (event.button !== 2) return;
     let e: Element | null = event.target as Element;
     while (e) {
@@ -58,7 +58,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div :class="{'fill-mask-catch-wrapper': true, extend, selected }">
-        <div class="preview-container" @mouseup="click">
+        <div class="preview-container" @mouseup="mouseup">
             <slot name="preview"/>
         </div>
         <div ref="trigger" class="modify" @click.stop="event => emits('modify', event)">
@@ -81,6 +81,7 @@ onUnmounted(() => {
     .preview-container {
         flex: 1;
         width: 50px;
+        height: 100%;
     }
 
     .modify {

@@ -85,6 +85,7 @@ function modify() {
 }
 
 function modifyFillMask() {
+    if (selected.value) return;
     manager.modifyFillMask(data.id);
 }
 
