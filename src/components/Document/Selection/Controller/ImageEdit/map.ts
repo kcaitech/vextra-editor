@@ -1,7 +1,7 @@
 import { ImageScaleMode } from "@kcdesign/data";
 import Crop from './Crop.vue';
-import Tile from './Tile.vue'
+import TileCtrl from './TileCtrl.vue'
 export const image_mode_map = new Map<ImageScaleMode, any>([
-    [ImageScaleMode.Tile, Tile],
+    [ImageScaleMode.Tile, TileCtrl],
     [ImageScaleMode.Crop, Crop],
 ])
