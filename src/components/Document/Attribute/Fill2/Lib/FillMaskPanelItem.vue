@@ -25,7 +25,7 @@ const modifyPanelStatus = reactive<ElementStatus>({id: '#modify-fill-style-panel
 const modifyPanelStatusMgr = new ElementManager(
     context,
     modifyPanelStatus,
-    {whiteList: ['.modify-fill-style-panel', '.modify']}
+    { whiteList: ['.modify-fill-style-panel', '.modify'], level: 1 }
 );
 
 function update(...args: any[]) {

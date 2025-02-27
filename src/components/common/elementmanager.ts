@@ -22,6 +22,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private m_white_list: string[];
     private m_stop: any[] = [];
     private m_on_destroy: Function | undefined = undefined;
+    private m_level: number | string | undefined = undefined;
 
     constructor(
         private context: Context,
@@ -32,7 +33,8 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             offsetTop?: number;
             offsetLeft?: number;
             whiteList?: string[];
-            destroy?: Function,
+            destroy?: Function;
+            level?: number;
         }
     ) {
         this.m_left = init?.left ?? 0;
@@ -41,6 +43,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.m_offset_t = init?.offsetTop ?? 0;
         this.m_white_list = init?.whiteList ?? [];
         this.m_on_destroy = init?.destroy;
+        this.m_level = init?.level;
 
         this.m_stop.push(watch(() => this.element.visible, (val) => !val && this.removeEvent()));
     }
@@ -82,20 +85,39 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private m_target: HTMLDivElement | undefined;
 
     private shutExist() { /* 关闭已经打开的同类型弹框 */
-        let events = this.context.eventsMap.get(this.element.id);
-        if (!events) {
-            events = [];
-            this.context.eventsMap.set(this.element.id, events);
-        } else {
-            let f = events.pop();
-            while (f) {
-                f();
-                f = events.pop();
+        {
+            let events = this.context.eventsMap.get(this.element.id);
+            if (!events) {
+                events = [];
+                this.context.eventsMap.set(this.element.id, events);
+            } else {
+                let f = events.pop();
+                while (f) {
+                    f();
+                    f = events.pop();
+                }
             }
+            events.push(() => {
+                this.element.visible = false;
+            });
         }
-        events.push(() => {
-            this.element.visible = false;
-        });
+        if (this.m_level !== undefined) {
+            const level = 'popover-index' + this.m_level;
+            let events = this.context.eventsMap.get(level);
+            if (!events) {
+                events = [];
+                this.context.eventsMap.set(level, events);
+            } else {
+                let f = events.pop();
+                while (f) {
+                    f();
+                    f = events.pop();
+                }
+            }
+            events.push(() => {
+                this.element.visible = false;
+            });
+        }
     }
 
     private get target() {

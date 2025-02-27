@@ -21,7 +21,7 @@ const modifyPanelStatus = reactive<ElementStatus>({ id: '#modify-shadow-style-pa
 const modifyPanelStatusMgr = new ElementManager(
     context,
     modifyPanelStatus,
-    { whiteList: ['.modify-shadow-style-panel', '.modify'] }
+    { whiteList: ['.modify-shadow-style-panel', '.modify'], level: 1 }
 );
 
 function update(...args: any[]) {

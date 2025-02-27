@@ -22,7 +22,7 @@ const modifyPanelStatus = reactive<ElementStatus>({id: '#modify-blur-panel', vis
 const modifyPanelStatusMgr = new ElementManager(
     context,
     modifyPanelStatus,
-    {whiteList: ['#modify-blur-panel', '.modify']}
+    { whiteList: ['#modify-blur-panel', '.modify'], level: 1 }
 );
 const selected = ref<boolean>(manager.blurCtx.mask === data.id);
 
