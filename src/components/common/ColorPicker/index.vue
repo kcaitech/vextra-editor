@@ -996,7 +996,7 @@ function update_gradient(gradient: Gradient | undefined) {
     if (!gradient || props.fillType !== FillType.Gradient) {
         return;
     }
-    gradient_channel_style.value = gradient_channel_generator(gradient);
+    // gradient_channel_style.value = gradient_channel_generator(gradient);
     const id = props.context.color.selected_stop;
     update_stops(id);
     props.context.color.notify(ColorCtx.GRADIENT_UPDATE);
@@ -1084,10 +1084,10 @@ function move_stop_position(e: MouseEvent) {
         const line_rect = gradient_line.value.getBoundingClientRect();
         const line_width = Math.min(Math.max(e.clientX - line_rect.left, 0), line_rect.width);
         const stop_p = line_width / line_rect.width;
-        gradient_channel_style.value = gradient_channel_generator(props.gradient!);
+        // gradient_channel_style.value = gradient_channel_generator(props.gradient!);
         stop_els.value[index].left = stop_p * 152 + 16;
         if (props.entrance) {
-            gradientEditor.execute_fillmask_stop_position!(props.style!.sheet, props.style!.id, props.locat.index, stop_p, stop_id.value);
+            // gradientEditor.execute_fillmask_stop_position!(props.style!.sheet, props.style!.id, props.locat.index, stop_p, stop_id.value);
         } else {
             gradientEditor.execute_stop_position(stop_p, stop_id.value);
         }
@@ -1101,7 +1101,7 @@ function move_stop_position(e: MouseEvent) {
             const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
             const locat = props.locat;
             if (locat.type !== 'text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes, page!, locat.index, locat.type);
+                // gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes, page!, locat.index, locat.type);
             } else {
                 if (!props.gradient) return;
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
@@ -1238,7 +1238,7 @@ function menu_watcher(t: any, id: string) {
 
 function color_watch(t: number) {
     if (t === ColorCtx.CHANGE_STOP && props.gradient) {
-        gradient_channel_style.value = gradient_channel_generator(props.gradient);
+        // gradient_channel_style.value = gradient_channel_generator(props.gradient);
         update_stops(props.context.color.selected_stop);
     } else if (t === ColorCtx.STOP_DELETE) {
         delete_gradient_stop();

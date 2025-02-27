@@ -1082,7 +1082,6 @@ const updateContextColor = () => {
     }
 }
 
-// const stop = watch(() => props.dataChange, textFormat);
 const stop2 = watch(() => props.textShapes, (v) => {
     shapes.value = v;
     textFormat();
@@ -1103,7 +1102,6 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.attr.unwatch(text_selection_wather);
     props.context.workspace.unwatch(workspace_wather);
-    // stop();
     stop2();
     stop3();
     stop4();
@@ -1139,9 +1137,9 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
-                <div class="text-style" @click="showTextPanel($event)">
-                    <SvgIcon :icon="style_icon" />
-                </div>
+<!--                <div class="text-style" @click="showTextPanel($event)">-->
+<!--                    <SvgIcon :icon="style_icon" />-->
+<!--                </div>-->
                 <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
             </template>
@@ -1277,9 +1275,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 6px; gap: 8px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;">{{
-                    t('attr.font_color')
-                    }}
+                <div style="font-size: 12px;">{{t('attr.font_color') }}
                 </div>
                 <div class="color">
                     <ColorBlock :colors="([textColor || new Color(1, 6, 6, 6)] as Color[])" @click="showColorPanel" />
@@ -1293,10 +1289,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
-                        t('attr.font_color')
-                        }}
-                    </div>
+                    <div style="font-size: 12px;margin-right: 10px;">{{t('attr.font_color') }}</div>
                     <div class="add" @click="setMixedTextColor">
                         <SvgIcon :icon="add_icon" />
                     </div>
@@ -1312,7 +1305,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;"
+                <div style="font-size: 12px;"
                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                 </div>
                 <div class="highlight-color-block">
@@ -1332,7 +1325,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
+                    <div style="font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                     </div>
                     <div class="add" @click="setMixedHighlight">
@@ -1343,7 +1336,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight" @click="addHighlight">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
+                    <div style="font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                     </div>
                     <div class="color_border"></div>
