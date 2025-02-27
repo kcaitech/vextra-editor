@@ -7,6 +7,7 @@ import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { drawTooltip, hexToX } from "@/components/common/ColorPicker/utils";
 import { inject } from "vue";
+import { useI18n } from "vue-i18n";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -21,6 +22,8 @@ const MAX_TOP = HEIGHT - DOT_SIZE / 2;
 const LINE_LENGTH = 196;
 const LINE_LENGTH_CSS = `${LINE_LENGTH}px`;
 const { valueS, valueH, changeValueS, changeValueH } = inject('HSB') as { valueS: Ref<number>, valueH: Ref<number>, changeValueS: (v: number) => void, changeValueH: (v: number) => void };
+
+const t = useI18n().t;
 
 const emits = defineEmits<{
     (e: "change", stop: RGBACatch): void;
@@ -155,7 +158,7 @@ function eyedropper() {
     }).catch((e: any) => {
         console.error(e);
     });
-    const tooltip = drawTooltip('按下Esc退出');
+    const tooltip = drawTooltip(t('stylelib.esc_exit'));
     document.body.appendChild(tooltip);
     setTimeout(() => tooltip.remove(), 2000);
 }

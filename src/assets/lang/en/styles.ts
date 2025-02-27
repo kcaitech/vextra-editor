@@ -39,5 +39,7 @@ export const stylelib = {
     description: 'Description',
 
     null_data: 'No styles.',
-    null_search: 'No styles match this search.'
+    null_search: 'No styles match this search.',
+
+    esc_exit: 'ESC to exit'
 }
