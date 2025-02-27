@@ -35,8 +35,7 @@ const blurTypeOptions = [
 </template>
 <style scoped lang="scss">
 .blur-container {
-    padding: 6px 0;
-    height: 30px;
+    height: 32px;
     width: 100%;
     display: flex;
     gap: 8px;

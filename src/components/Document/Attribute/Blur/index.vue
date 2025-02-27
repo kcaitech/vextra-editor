@@ -42,12 +42,12 @@ const active = computed<boolean>(() => !!(blurCtx.value.mask || blurCtx.value.bl
 const showBlurPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('mask-port-wrapper')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: -4, offsetTop: 36}});
+        if (e.classList.contains('header-container')) {
+            e && blurPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('blur-panel')) {
-            e && blurPanelStatusMgr.showBy(e, {once: {offsetLeft: 4, offsetTop: 36}});
+        if (e.classList.contains('mask-port-wrapper')) {
+            e && blurPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
         e = e.parentElement;
@@ -78,7 +78,8 @@ onUnmounted(() => {
     <div class="blur-panel" ref="blurPanelTrigger">
         <TypeHeader :title="t('blur.blur')" @click="() => blurCtxMgr.init()" :active="active">
             <template #tool>
-                <div v-if="cloverVisible" class="blur_clover" @click="showBlurPanel($event)">
+                <div v-if="cloverVisible" :class="{ 'active': blurLibStatus.visible }" class="blur_clover"
+                    @click="showBlurPanel($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!blurCtx.blur || blurCtx.mixed" class="add" @click.stop="() => blurCtxMgr.create()">
@@ -87,8 +88,9 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div v-if="blurCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <MaskPort v-else-if="blurCtx.maskInfo" :disabled="blurCtx.maskInfo.disabled" @unbind="() => blurCtxMgr.unbind()"
-                  @delete="() => blurCtxMgr.removeMask()">
+        <MaskPort v-else-if="blurCtx.maskInfo" :class="{ 'maskactive': blurLibStatus.visible }"
+            :disabled="blurCtx.maskInfo.disabled" @unbind="() => blurCtxMgr.unbind()"
+            @delete="() => blurCtxMgr.removeMask()">
             <div class="blur_desc" @click="showBlurPanel($event)">
                 <div class="effect" />
                 <div>{{ blurCtx.maskInfo.disabled ? t('stylelib.deleted_style') : blurCtx.maskInfo.name }}</div>
@@ -173,5 +175,9 @@ onUnmounted(() => {
             white-space: nowrap;
         }
     }
+}
+
+.active {
+    background-color: rgba(191, 191, 191, 0.7) !important;
 }
 </style>

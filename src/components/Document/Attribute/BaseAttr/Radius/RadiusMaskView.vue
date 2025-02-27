@@ -19,13 +19,13 @@ const showRadiusPanel = (event: MouseEvent) => {
 
 <template>
     <MaskPort @unbind="() => manager.unbind()" :disabled="manager.radiusCtx.maskInfo!.disabled" :delete="false"
-              style="width: 184px;">
+        style="width: 184px;">
         <div class="radius-left" @click="showRadiusPanel($event)">
             <div class="radius">
-                <SvgIcon :icon="radius_icon"/>
+                <SvgIcon :icon="radius_icon" />
             </div>
             <div class="name">{{
-                    manager.radiusCtx.maskInfo!.disabled ? t('stylelib.deleted_style') : manager.radiusCtx.maskInfo!.name
+                manager.radiusCtx.maskInfo!.disabled ? t('stylelib.deleted_style') : manager.radiusCtx.maskInfo!.name
                 }}
             </div>
         </div>
@@ -37,12 +37,7 @@ const showRadiusPanel = (event: MouseEvent) => {
     flex: 1;
     display: flex;
     align-items: center;
-    background-color: #F5F5F5;
     height: 100%;
-
-    &:hover {
-        background-color: #e5e5e5;
-    }
 
     .radius {
         margin: 0 8px;
@@ -51,7 +46,7 @@ const showRadiusPanel = (event: MouseEvent) => {
         overflow: hidden;
         box-sizing: border-box;
 
-        > img {
+        >img {
             width: 14px;
             height: 16px;
         }

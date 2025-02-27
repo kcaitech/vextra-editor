@@ -7,8 +7,8 @@
                             :context="context" :manager="manager" :data="sheet"
                             :list-status="manager.fillCtx.listStatus"
                             :item="manager.fillCtx.listStatus ? FillMaskGridItem : FillMaskPanelItem"/>
-                <div v-if="!sheets?.length && keyword" class="search-null">没有搜索到相关样式</div>
-                <div v-if="!sheets?.length && !keyword" class="data-null">暂无颜色样式</div>
+                <div v-if="!sheets?.length && keyword" class="search-null">{{ t('stylelib.null_search') }}</div>
+                <div v-if="!sheets?.length && !keyword" class="data-null">{{ t('stylelib.null_data') }}</div>
             </div>
         </el-scrollbar>
     </div>
@@ -23,6 +23,7 @@ import FillMaskGridItem from '@/components/Document/Attribute/StyleLib/FillMaskG
 import { StyleSheet } from "@kcdesign/data"
 import { FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
+import { useI18n } from 'vue-i18n';
 
 /**
  * 样式列表：该组件可以展示样式、筛选样式
@@ -32,6 +33,8 @@ const props = defineProps<{
     context: Context;
     manager: FillsContextMgr;
 }>();
+
+const { t } = useI18n();
 const keyword = ref<string>('')
 const libs = ref<{ label: string, value: string }[]>([]);
 const currentLibs = ref<string>('all');

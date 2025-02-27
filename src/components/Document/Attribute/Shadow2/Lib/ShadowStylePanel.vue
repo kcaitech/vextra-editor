@@ -8,9 +8,6 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import { useI18n } from "vue-i18n";
 import { ShadowsContextMgr } from "../ctx";
 
-/**
- * 填充样式库面板。用于展示样式列表、创建样式
- */
 const { context, manager } = defineProps<{ context: Context, manager: ShadowsContextMgr }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
 const { t } = useI18n()

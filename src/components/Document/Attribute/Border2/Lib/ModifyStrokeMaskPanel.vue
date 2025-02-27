@@ -22,7 +22,7 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const name = ref<string>(data?.name ?? '边框样式');
+const name = ref<string>(data?.name ?? t('stylelib.borders'));
 const desc = ref<string>(data?.description ?? '');
 const thickness = ref<string>('');
 const oldvalue = ref<string>('');
@@ -36,7 +36,7 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 
 function update() {
-    name.value = data?.name ?? '边框样式';
+    name.value = data?.name ?? t('stylelib.borders');
     desc.value = data?.description ?? '';
     border.value = data?.border;
 
@@ -68,8 +68,12 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
-function changeInput(value: string) {
+function changeNameInput(value: string) {
     name.value = value;
+}
+
+function changeDescInput(value: string) {
+    desc.value = value;
 }
 
 function createStyle() {
@@ -82,8 +86,8 @@ function createStyle() {
 
 const setThickness = (event: Event) => {
     let arrs = thickness.value.replaceAll(/，/g, ',').replaceAll(/-/g, '').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
-    const b = arrs.every(i => isNaN(Number(i)) === false);
-    if (!b || !arrs.length) return thickness.value = oldvalue.value;
+    const b = arrs.some(i => isNaN(Number(i)));
+    if (b || !arrs.length) return thickness.value = oldvalue.value;
     if (arrs.length === 1) {
         arrs = arrs.concat(...arrs, ...arrs, ...arrs);
     }
@@ -96,7 +100,8 @@ const setThickness = (event: Event) => {
     thickness.value = arrs.join(', ')
     if (thickness.value === oldvalue.value) return;
     oldvalue.value = thickness.value;
-    const num = thickness.value.split(', ').map(i => Number(i))
+    const num = thickness.value.split(', ').map(i => Number(i));
+    
     if (!data) return;
     const sideType = num.every(i => i == num[0]) ? SideType.Normal : SideType.Custom;
     const side = new BorderSideSetting(sideType, num[0], num[3], num[2], num[1]);
@@ -110,34 +115,43 @@ function positionSelect(selected: SelectItem) {
     manager.modifyBorderPositionMask(data.border, selected.value as BorderPosition);
 }
 
+function checkEnter(e: KeyboardEvent) {
+    if (e.key === 'Enter' && name.value && !data) {
+        createStyle();
+    }
+}
+
 onMounted(() => {
     update();
     data?.watch(update);
+    document.addEventListener('keydown', checkEnter);
 });
 
 onUnmounted(() => {
     data?.unwatch(update);
+    document.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-stroke-style-panel" id="modify-stroke-style-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_border') : t('stylelib.create_border')" @close="emits('close')" />
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" />
+        <PanelHeader :title="data ? t('stylelib.editor_border') : t('stylelib.create_border')"
+            @close="emits('close')" />
+        <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
+            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
         <div v-if="data" class="data-panel">
             <div class="type">
                 <div class="title">{{ t('stylelib.position') }}</div>
                 <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
                     :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
-                    @select="positionSelect" :entry="'style'"></Select>
+                    @select="positionSelect" :entry="'style'" />
             </div>
             <div class="thickness">
                 <div class="title">{{ t('stylelib.thickness') }}</div>
-                <input type="text" v-focus v-model="thickness" @change="setThickness">
+                <input type="text" v-model="thickness" @change="setThickness">
             </div>
         </div>
 
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">

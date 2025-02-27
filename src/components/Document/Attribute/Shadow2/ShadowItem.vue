@@ -9,11 +9,14 @@ import ShadowDetail from "./ShadowDetail.vue";
 import { ShadowCatch, ShadowsContextMgr } from "./ctx";
 import { ShadowPosition } from "@kcdesign/data";
 import SelectBanana from "@/components/common/Select/SelectBanana.vue";
+import { onMounted, watch } from "vue";
+import { last } from "lodash";
 
-defineProps<{
+const props = defineProps<{
     context: Context;
     manager: ShadowsContextMgr;
     data: ShadowCatch;
+    lastone?: boolean;
 }>();
 const { t } = useI18n();
 const shadowPositionOptions = [
@@ -30,8 +33,7 @@ const shadowPositionOptions = [
         <div class="detail">
             <ShadowDetail :context="context" :data="data" :manager="manager" />
         </div>
-        <div class="delete" :class="{ disabled: manager.shadowCtx.mask && manager.shadowCtx.shadows.length === 1 }"
-            @click="() => manager.remove(data.shadow)">
+        <div class="delete" :class="{ disabled: lastone }" @click="() => manager.remove(data.shadow)">
             <SvgIcon :icon="delete_icon" />
         </div>
     </div>
@@ -78,10 +80,8 @@ const shadowPositionOptions = [
     }
 
     .disabled {
-        >* {
-            opacity: 0.3;
-            pointer-events: none;
-        }
+        opacity: 0.3;
+        pointer-events: none;
     }
 
     .detail {

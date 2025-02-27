@@ -7,9 +7,6 @@ import { onUnmounted, reactive } from "vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { StrokeFillContextMgr } from "../ctx";
 
-/**
- * 填充样式库面板。用于展示样式列表、创建样式
- */
 const { context, manager, title } = defineProps<{ context: Context, manager: StrokeFillContextMgr, title: string }>();
 const emits = defineEmits<{ (e: "close"): void; }>();
 const panelStatus = reactive<ElementStatus>({ id: '#modify-fill-style-panel', visible: false });

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 
-const firstInput = ref<HTMLInputElement>();
-const { name, desc, focusAtOnce } = defineProps<{
+const { t } = useI18n();
+const { name, desc } = defineProps<{
     name: string;
     desc: string;
-    focusAtOnce?: boolean;
 }>();
-const emits = defineEmits(["modifyName", "modifyDesc", "changeInput"]);
+const emits = defineEmits(["modifyName", "modifyDesc", "changeNameInput", "changeDescInput"]);
 
 function blur(event: KeyboardEvent) {
     (event.target as HTMLInputElement).blur();
@@ -25,27 +25,25 @@ function modifyDesc(event: Event) {
     target.blur();
 }
 
-function changeInput(event: Event) {
-    emits("changeInput", (event.target as HTMLInputElement).value);
+function changeNameInput(event: Event) {
+    emits("changeNameInput", (event.target as HTMLInputElement).value);
 }
 
-onMounted(() => {
-    if (focusAtOnce) {
-        firstInput.value!.focus();
-        firstInput.value!.select();
-    }
-});
+function changeDescInput(event: Event) {
+    emits("changeDescInput", (event.target as HTMLInputElement).value);
+}
+
 </script>
 <template>
     <div class="detail">
         <div class="name">
-            <label for="name">名称</label>
-            <input ref="firstInput" type="text" id="name" :value="name" @change="modifyName" @input="changeInput"
+            <label for="name">{{ t('stylelib.name') }}</label>
+            <input v-focus type="text" id="name" :value="name" @change="modifyName" @input="changeNameInput"
                 @keydown.esc="blur">
         </div>
         <div class="des">
-            <label for="des">描述</label>
-            <input type="text" id="des" :value="desc" @change="modifyDesc" @keydown.esc="blur">
+            <label for="des">{{ t('stylelib.description') }}</label>
+            <input type="text" id="des" :value="desc" @change="modifyDesc" @input="changeDescInput" @keydown.esc="blur">
         </div>
     </div>
 </template>

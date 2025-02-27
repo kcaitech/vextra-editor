@@ -120,13 +120,13 @@ function click() {
         <span class="icon" ref="icon" v-if="!props.tootip || props.disabled" @mousedown="onMouseDown"
             :class="{ cursor: !props.disabled }">{{ ticon }}</span>
         <Tooltip v-if="props.tootip && props.disabled" :content="props.tootip" :offset="12">
-            <input ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
+            <input v-blur ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
                 :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
-        <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
+        <input v-blur v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
             :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click"
             @keydown="e => emits('keyDown', e, props.shadowV)">
-        <div class="adjust" :class="{ active: isActive }">
+        <div class="adjust">
             <SvgIcon :icon="down_icon" style="transform: rotate(180deg);"
                 :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment" />
             <SvgIcon :icon="down_icon" :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="decrease" />

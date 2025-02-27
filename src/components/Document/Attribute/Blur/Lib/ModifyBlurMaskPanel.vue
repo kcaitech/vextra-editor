@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { Blur, BlurMask } from "@kcdesign/data";
+import { BlurMask } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
@@ -23,11 +23,11 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const name = ref<string>(data?.name ?? '模糊样式');
-const desc = ref<string>(data?.description ?? '');
-const blur = ref<BlurCatch | undefined>(getBlur());
+const name = ref<string>('');
+const desc = ref<string>('');
+const blur = ref<BlurCatch | undefined>();
 
-function getBlur() {
+function getBlur(): BlurCatch | undefined {
     if (data) {
         return {
             enable: data.blur.isEnabled,
@@ -39,7 +39,7 @@ function getBlur() {
 }
 
 function update() {
-    name.value = data?.name ?? '';
+    name.value = data?.name ?? t('stylelib.blurs');
     desc.value = data?.description ?? '';
     blur.value = getBlur();
 }
@@ -56,33 +56,47 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
-function changeInput(value: string) {
+function changeNameInput(value: string) {
     name.value = value;
+}
+
+function changeDescInput(value: string) {
+    desc.value = value;
 }
 
 function createStyle() {
     manager.createStyleLib(name.value, desc.value);
 }
 
+function checkEnter(e: KeyboardEvent) {
+    if (e.key === 'Enter' && name.value && !data) {
+        createStyle();
+    }
+}
+
 onMounted(() => {
+    update();
     data?.watch(update);
-});
+    document.addEventListener('keydown', checkEnter);
+})
+
 onUnmounted(() => {
     data?.unwatch(update);
+    document.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-blur-panel" id="modify-blur-panel">
         <PanelHeader :title="data ? t('stylelib.editor_blur') : t('stylelib.create_blur')" @close="emits('close')" />
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" @changeInput="changeInput"/>
+        <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
+            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
         <div v-if="data" class="data-panel">
-            <ListHeader title="模糊" create />
+            <ListHeader :title="t('stylelib.blur')" create />
             <div class="fills-container">
-                <BlurPanel :manager="manager" :context="context" :blur="(blur as BlurCatch)" del />
+                <BlurPanel v-if="blur" :manager="manager" :context="context" :blur="(blur as BlurCatch)" del />
             </div>
         </div>
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -103,6 +117,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        margin-bottom: 8px;
 
         .fills-container {
             display: flex;
@@ -110,7 +125,7 @@ onUnmounted(() => {
             gap: 6px;
             width: 100%;
             height: fit-content;
-            padding: 6px 12px;
+            padding: 0 12px;
             box-sizing: border-box;
         }
     }

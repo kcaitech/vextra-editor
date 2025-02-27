@@ -57,11 +57,11 @@ fillCtxMgr.catchPanel(strokePanelStatusMgr);
 function showFillLib(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('border_clover')) {
-            fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
+        if (e.classList.contains('header-container')) {
+            fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('border_desc')) {
+        if (e.classList.contains('mask-port-wrapper')) {
             fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
@@ -72,11 +72,11 @@ function showFillLib(event: MouseEvent) {
 const showBorderPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('border-style')) {
-            strokePanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
+        if (e.classList.contains('header-container')) {
+            strokePanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('border-left')) {
+        if (e.classList.contains('mask-port-wrapper')) {
             strokePanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
@@ -87,15 +87,13 @@ const showBorderPanel = (event: MouseEvent) => {
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),
     watch(() => props.trigger, (v) => {
-        if (v?.includes('bordersMask') || v?.includes('fillsMask') || v?.includes('paints') || v?.includes('borders') || v?.includes('variables')) {
+        if (v?.includes('bordersMask') || v?.includes('fillsMask') || v?.includes('borderfill') || v?.includes('paints') || v?.includes('borders') || v?.includes('variables')) {
             fillCtxMgr.update();
         }
     })
 ];
 
-onMounted(() => {
-    fillCtxMgr.update();
-});
+onMounted(fillCtxMgr.update.bind(fillCtxMgr));
 onUnmounted(() => {
     watchList.forEach(stop => stop());
     fillPanelStatusMgr.unmounted();
@@ -106,7 +104,8 @@ onUnmounted(() => {
     <div class="borders-wrapper">
         <TypeHeader :title="t('attr.stroke')" @click.stop="() => fillCtxMgr.init()" :active="!!fillCtx.fills.length">
             <template #tool>
-                <div v-if="!fillCtx.strokeMask" class="border-style" @click="showBorderPanel">
+                <div v-if="!fillCtx.strokeMask" :class="{ 'active': strokeLibStatus.visible }" class="border-style"
+                    @click="showBorderPanel">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="fillCtx.fills.length || fillCtx.mixed" class="add"
@@ -119,8 +118,8 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <StrokeView v-if="!fillCtx.strokeMask" :context="context" :manager="fillCtxMgr" :trigger="trigger" />
-        <StrokeMaskView v-else :context="context" :manager="fillCtxMgr" :trigger="trigger"
-            @showBorderPanel="showBorderPanel">
+        <StrokeMaskView v-else :class="{ 'maskactive': strokeLibStatus.visible }" :context="context"
+            :manager="fillCtxMgr" :trigger="trigger" @showBorderPanel="showBorderPanel">
         </StrokeMaskView>
         <StrokeStylePanel v-if="strokeLibStatus.visible" :context="context" :manager="fillCtxMgr"
             @close="() => strokePanelStatusMgr.close()" :title="t('stylelib.borders')" />
@@ -128,7 +127,8 @@ onUnmounted(() => {
         <TypeHeader v-if="fillCtx.fills.length || fillCtx.mixed" :title="t('attr.stroke_color')"
             :active="!!fillCtx.fills.length">
             <template #tool>
-                <div v-if="cloverVisible" class="border_clover" @click="showFillLib">
+                <div v-if="cloverVisible" :class="{ 'active': fillLibStatus.visible }" class="border_clover"
+                    @click="showFillLib">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!fillCtx.mask || fillCtx.mixed" class="create" @click="() => fillCtxMgr.create()">
@@ -137,8 +137,9 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <PaintMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
-            :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!" @show-style-lib="showFillLib" />
+        <PaintMaskView v-else-if="fillCtx.mask" :class="{ 'maskactive': fillLibStatus.visible }" :context="context"
+            :manager="fillCtxMgr" :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!"
+            @show-style-lib="showFillLib" />
         <div v-else-if="fillCtx.fills.length" class="fills-container">
             <PaintItem v-for="(fill, index) in fillCtx.fills" :key="index" :context="context" :manager="fillCtxMgr"
                 :data="(fill as FillCatch)" />
@@ -229,5 +230,9 @@ onUnmounted(() => {
         height: fit-content;
         padding: 6px 0;
     }
+}
+
+.active {
+    background-color: rgba(191, 191, 191, 0.7) !important;
 }
 </style>

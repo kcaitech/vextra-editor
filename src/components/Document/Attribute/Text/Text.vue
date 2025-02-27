@@ -19,7 +19,6 @@ import {
 } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color } from "@kcdesign/data";
-import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -35,6 +34,10 @@ import { sortValue } from '../BaseAttr/oval';
 import TextStyle from '@/components/Document/Attribute/StyleLib/TextStyle.vue';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
+import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
+import { toHex } from "@/utils/color";
+import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
+import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 
 interface Props {
     context: Context
@@ -92,14 +95,6 @@ const textPanelStatusMgr = new ElementManager(
         whiteList: ['.text-lib-panel', '.text-left']
     }
 );
-
-function toHex(r: number, g: number, b: number, prefix = true) {
-    const hex = (n: number) => n.toString(16)
-        .toUpperCase().length === 1
-        ? `0${n.toString(16).toUpperCase()}`
-        : n.toString(16).toUpperCase();
-    return (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
-}
 
 const onShowFont = () => {
     props.context.workspace.focusText()
@@ -439,15 +434,15 @@ function onAlphaChange(e: Event, type: string) {
         value = Math.min(value.toFixed(2), 100) / 100;
         let color;
         if (type === 'color') {
-            const { red, green, blue } = textColor.value || new Color(1, 6, 6, 6);
-            color = toHex(red, green, blue);
+            const c = textColor.value || new Color(1, 6, 6, 6);
+            color = toHex(c);
             if (fillType.value === FillType.Gradient) {
                 set_gradient_opacity(value);
                 return;
             }
         } else {
-            const { red, green, blue } = highlight.value || new Color(1, 216, 216, 216);
-            color = toHex(red, green, blue);
+            const c = highlight.value || new Color(1, 216, 216, 216);
+            color = toHex(c);
         }
         setColor(color, value, type);
     } else {
@@ -480,7 +475,7 @@ function onColorChange(e: Event, type: string) {
             setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = toHex(textColor.value!.red, textColor.value!.green, textColor.value!.blue);
+            return (e.target as HTMLInputElement).value = toHex(textColor.value!).slice(1);
         }
     } else {
         if (Reg_HEX.test(value)) {
@@ -488,7 +483,7 @@ function onColorChange(e: Event, type: string) {
             setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = toHex(highlight.value!.red, highlight.value!.green, highlight.value!.blue);
+            return (e.target as HTMLInputElement).value = toHex(highlight.value!).slice(1);
         }
     }
 }
@@ -654,7 +649,6 @@ const selectSizeValue = () => {
         sizeValue.value = value;
     }
 }
-
 const getTextShapes = () => {
     shapes.value = props.textShapes;
 }
@@ -962,7 +956,7 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'], destroy: closeColor }
+    { whiteList: ['#color-piker-gen-2-panel', '.text-color'], destroy: closeColor }
 );
 
 const colorPicker = new TextPicker(props.context, fillType.value, 'color');
@@ -970,7 +964,7 @@ const colorPicker = new TextPicker(props.context, fillType.value, 'color');
 function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('color-wrapper')) {
+        if (e.classList.contains('text-color')) {
             const color = props.context.color;
             if (fillType.value === FillType.SolidColor) {
                 if (color.gradient_type) color.set_gradient_type(undefined);
@@ -983,7 +977,7 @@ function showColorPanel(event: MouseEvent) {
                 color.switch_editor_mode(true, gradient.value);
                 color.setImageScaleMode(undefined);
             }
-            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -327 } });
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -262 } });
             break;
         }
         e = e.parentElement;
@@ -994,7 +988,7 @@ const highlightPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-p
 const highlightPanelStatusMgr = new ElementManager(
     props.context,
     highlightPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
+    { whiteList: ['#color-piker-gen-2-panel', '.highlight-color'] }
 );
 
 const highlightPicker = new TextPicker(props.context, FillType.SolidColor, 'highlight');
@@ -1002,8 +996,8 @@ const highlightPicker = new TextPicker(props.context, FillType.SolidColor, 'high
 function showHighlightPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('color-wrapper')) {
-            highlightPanelStatusMgr.showBy(e, { once: { offsetLeft: -327 } });
+        if (e.classList.contains('highlight-color')) {
+            highlightPanelStatusMgr.showBy(e, { once: { offsetLeft: -262 } });
             break;
         }
         e = e.parentElement;
@@ -1094,7 +1088,6 @@ const updateContextColor = () => {
     }
 }
 
-// const stop = watch(() => props.dataChange, textFormat);
 const stop2 = watch(() => props.textShapes, (v) => {
     shapes.value = v;
     textFormat();
@@ -1115,7 +1108,6 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.attr.unwatch(text_selection_wather);
     props.context.workspace.unwatch(workspace_wather);
-    // stop();
     stop2();
     stop3();
     stop4();
@@ -1140,10 +1132,8 @@ import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
 import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
 import style_icon from '@/assets/icons/svg/styles.svg';
 import delete_icon from "@/assets/icons/svg/delete.svg";
-import { selectAllOnFocus } from '../basic';
-import { toHex as toHex2 } from '@/utils/color';
-import { getGradientCatch, GradientCatch } from '@/components/common/ColorPicker/Editor/gradientlineareditor';
 import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
+import { toHex as toHex2 } from '@/utils/color';
 import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/textpicker';
 </script>
 
@@ -1151,9 +1141,9 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
-                <div class="text-style" @click="showTextPanel($event)">
-                    <SvgIcon :icon="style_icon" />
-                </div>
+                <!--                <div class="text-style" @click="showTextPanel($event)">-->
+                <!--                    <SvgIcon :icon="style_icon" />-->
+                <!--                </div>-->
                 <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
             </template>
@@ -1289,14 +1279,12 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 6px; gap: 8px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;">{{
-                    t('attr.font_color')
-                }}
+                <div style="font-size: 12px;">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
                     <ColorBlock :colors="([textColor || new Color(1, 6, 6, 6)] as Color[])" @click="showColorPanel" />
-                    <component :is="compo" />
-                    <input ref="alphaFill" class="alphaFill" type="alphaFill" :value="filterAlpha() + '%'"
+                    <component v-blur :is="compo" />
+                    <input v-blur ref="alphaFill" class="alphaFill" type="alphaFill" :value="filterAlpha() + '%'"
                         @focus="selectAllOnFocus" @change="(e) => onAlphaChange(e, 'color')" />
                     <ColorPicker v-if="colorPanelStatus.visible" :editor="colorPicker" :type="colorType"
                         :include="fillTypes" :color="rgbaColor!" :gradient="color_gradient" @close="closeColor" />
@@ -1305,10 +1293,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
-                        t('attr.font_color')
-                    }}
-                    </div>
+                    <div style="font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
                     <div class="add" @click="setMixedTextColor">
                         <SvgIcon :icon="add_icon" />
                     </div>
@@ -1324,16 +1309,17 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;"
-                    :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                <div style="font-size: 12px;" :class="{ 'check': highlight, 'nocheck': !highlight }">{{
+                    t('attr.highlight_color') }}
                 </div>
                 <div class="highlight-color-block">
                     <div class="color">
                         <ColorBlock :colors="([highlight || new Color(1, 216, 216, 216)] as Color[])"
                             @click="showHighlightPanel" />
-                        <component :is="HexHighlightInput()" />
-                        <input ref="higlighAlpha" class="alphaFill" type="alphaFill" :value="filterAlpha2() + '%'"
-                            @focus="selectAllOnFocus" @change="(e) => onAlphaChange(e, 'highlight')" />
+                        <component v-blur :is="HexHighlightInput()" />
+                        <input v-blur ref="higlighAlpha" class="alphaFill" type="alphaFill"
+                            :value="filterAlpha2() + '%'" @focus="selectAllOnFocus"
+                            @change="(e) => onAlphaChange(e, 'highlight')" />
                         <ColorPicker v-if="highlightPanelStatus.visible" :editor="highlightPicker"
                             :type="FillType.SolidColor" :include="[]" :color="rgbaHighlight!" @close="closeHighlight" />
                     </div>
@@ -1344,8 +1330,9 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                    <div style="font-size: 12px;margin-right: 10px;"
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{
+                            t('attr.highlight_color') }}
                     </div>
                     <div class="add" @click="setMixedHighlight">
                         <SvgIcon :icon="add_icon" />
@@ -1355,8 +1342,9 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight" @click="addHighlight">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                    <div style="font-size: 12px;margin-right: 10px;"
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{
+                            t('attr.highlight_color') }}
                     </div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
@@ -1375,6 +1363,41 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
 </template>
 
 <style scoped lang="scss">
+.value-panel-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    flex: 1;
+    height: 32px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    background-color: var(--input-background);
+    border-radius: var(--default-radius);
+
+    .colorShadow {
+        flex: 1;
+        width: 46px;
+        outline: none;
+        border: none;
+        height: 14px;
+        background-color: transparent;
+        font-size: 12px;
+        box-sizing: border-box;
+    }
+
+    .alphaShadow {
+        width: 40px;
+        outline: none;
+        border: none;
+        background-color: transparent;
+        height: 14px;
+        font-size: 12px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+}
+
 .text-panel {
     width: 100%;
     display: flex;
@@ -1684,8 +1707,8 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
         .text-color {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            text-wrap: nowrap;
+            gap: 8px;
+            margin-bottom: 8px;
 
             .color {
                 display: flex;

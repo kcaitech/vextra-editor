@@ -31,7 +31,7 @@ const fillCtx = ref<FillsContext>({  // 本组件的核心状态，改状态由v
     mixed: false,                        // 选区内是否存在不一样的填充样式
     listStatus: false,
     fills: [],                           // 填充样式，有可能是样式库里拿出来的，也有可能是图层自带的。注：特别注意，这个数据本身属于由vue劫持的状态，
-                                         // 所以它并不是直接从图层上或样式库里取出来的数据，而是由该数据经过vue二次包装后数据
+    // 所以它并不是直接从图层上或样式库里取出来的数据，而是由该数据经过vue二次包装后数据
 
     mask: undefined,                     // 当选区内使用的样式库内的填充样式时，mask为该样式库的id，否则为undefined
     maskInfo: undefined                  // 当选区内使用的样式库内的填充样式时，maskInfo为改样式库的基本信息，包含名称和描述
@@ -49,11 +49,11 @@ fillCtxMgr.catchPanel(fillPanelStatusMgr);                                      
 function showFillLib(event: MouseEvent) { /*打开填充样式库面板*/
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('fill-clover')) {
-            fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
+        if (e.classList.contains('header-container')) {
+            fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('fill-desc')) {
+        if (e.classList.contains('mask-port-wrapper')) {
             fillPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
@@ -80,7 +80,8 @@ onUnmounted(() => {
     <div class="fills-wrapper">
         <TypeHeader :title="t('attr.fill')" :active="!!fillCtx.fills.length" @click.stop="() => fillCtxMgr.init()">
             <template #tool>
-                <div v-if="cloverVisible" class="fill-clover" @click="showFillLib">
+                <div v-if="cloverVisible" :class="{ 'active': fillLibStatus.visible }" class="fill-clover"
+                    @click="showFillLib">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!fillCtx.mask || fillCtx.mixed" class="create" @click="() => fillCtxMgr.create()">
@@ -89,8 +90,9 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <FillMaskView v-else-if="fillCtx.mask" :context="context" :manager="fillCtxMgr"
-            :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!" @show-style-lib="showFillLib" />
+        <FillMaskView v-else-if="fillCtx.mask" :class="{ 'maskactive': fillLibStatus.visible }" :context="context"
+            :manager="fillCtxMgr" :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!"
+            @show-style-lib="showFillLib" />
         <div v-else-if="fillCtx.fills.length" class="fills-container">
             <FillItem v-for="(fill, index) in fillCtx.fills" :key="index" :context="context" :manager="fillCtxMgr"
                 :data="(fill as FillCatch)" />
@@ -151,5 +153,8 @@ onUnmounted(() => {
         height: fit-content;
         padding: 6px 0;
     }
+}
+.active {
+    background-color: rgba(191, 191, 191, 0.7) !important;
 }
 </style>

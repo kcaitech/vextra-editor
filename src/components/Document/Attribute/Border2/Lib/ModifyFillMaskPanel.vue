@@ -13,7 +13,7 @@ import { StrokeFillContextMgr } from "../ctx";
 /**
  * 修改样式弹框
  */
-const {context, manager, data} = defineProps<{
+const { context, manager, data } = defineProps<{
     context: Context;
     manager: StrokeFillContextMgr;
     data?: FillMask;
@@ -23,14 +23,14 @@ const emits = defineEmits<{
 }>();
 
 const {t} = useI18n();
-const name = ref<string>(data?.name ?? '颜色样式');
+const name = ref<string>(data?.name ?? t('stylelib.colors'));
 const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>(getFills());
 
 function getFills() {
     const container: FillCatch[] = [];
     if (data) {
-        for (let i = data.fills.length - 1; i > -1; i--) container.push({fill: data.fills[i]});
+        for (let i = data.fills.length - 1; i > -1; i--) container.push({ fill: data.fills[i] });
     }
     return container;
 }
@@ -53,34 +53,47 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
-function changeInput(value: string) {
+function changeNameInput(value: string) {
     name.value = value;
+}
+
+function changeDescInput(value: string) {
+    desc.value = value;
 }
 
 function createStyle() {
     manager.createStyleLib(name.value, desc.value);
 }
 
+function checkEnter(e: KeyboardEvent) {
+    if (e.key === 'Enter' && name.value && !data) {
+        createStyle();
+    }
+}
+
 onMounted(() => {
     data?.watch(update);
+    document.addEventListener('keydown', checkEnter);
 });
+
 onUnmounted(() => {
     data?.unwatch(update);
+    document.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-fill-style-panel" id="modify-fill-style-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')"/>
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @changeInput="changeInput"
-                      @modify-name="modifyName" @modify-desc="modifyDesc"/>
+        <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')" />
+        <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
+            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
         <div v-if="data" class="data-panel">
-            <ListHeader title="颜色" @create="manager.create(data)"/>
+            <ListHeader :title="t('stylelib.color')" @create="manager.create(data)"/>
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                          :data="(fill as FillCatch)"/>
+                    :data="(fill as FillCatch)" />
             </div>
         </div>
-        <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">创建样式</div>
+        <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -101,6 +114,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        margin-bottom: 8px;
 
         .fills-container {
             display: flex;
@@ -108,7 +122,7 @@ onUnmounted(() => {
             gap: 6px;
             width: 100%;
             height: fit-content;
-            padding: 6px 12px;
+            padding: 0 12px;
             box-sizing: border-box;
         }
     }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { ShadowMask } from "@kcdesign/data";
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import ShadowItem from "@/components/Document/Attribute/Shadow2/ShadowItem.vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
@@ -22,9 +22,10 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const name = ref<string>(data?.name ?? '阴影样式');
+const name = ref<string>(data?.name ?? t('stylelib.shadows'));
 const desc = ref<string>(data?.description ?? '');
-const shadows = ref<ShadowCatch[]>(getShadows());
+const shadows = ref<ShadowCatch[]>();
+const lastone = ref<boolean>(false);
 
 function getShadows() {
     const container: ShadowCatch[] = [];
@@ -35,10 +36,10 @@ function getShadows() {
 }
 
 function update() {
-    name.value = data?.name ?? '';
+    name.value = data?.name ?? t('stylelib.shadows');
     desc.value = data?.description ?? '';
     shadows.value = getShadows();
-
+    lastone.value = shadows.value.length === 1;
 }
 
 function modifyName(value: string) {
@@ -53,35 +54,49 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
-function changeInput(value: string) {
+function changeNameInput(value: string) {
     name.value = value;
+}
+
+function changeDescInput(value: string) {
+    desc.value = value;
 }
 
 function createStyle() {
     manager.createStyleLib(name.value, desc.value);
 }
 
+function checkEnter(e: KeyboardEvent) {
+    if (e.key === 'Enter' && name.value && !data) {
+        createStyle();
+    }
+}
+
 onMounted(() => {
+    update();
     data?.watch(update);
+    document.addEventListener('keydown', checkEnter);
 });
+
 onUnmounted(() => {
     data?.unwatch(update);
+    document.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-shadow-style-panel" id="modify-shadow-style-panel">
         <PanelHeader :title="data ? t('stylelib.editor_shadow') : t('stylelib.create_shadow')"
             @close="emits('close')" />
-        <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" @changeInput="changeInput" />
+        <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
+            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
         <div v-if="data" class="data-panel">
-            <ListHeader title="阴影" @create="manager.create(data)" />
+            <ListHeader :title="t('stylelib.shadow')" @create="manager.create(data)" />
             <div class="fills-container">
                 <ShadowItem v-for="(shadow, index) in shadows" :key="index" :context="context" :manager="manager"
-                    :data="(shadow as ShadowCatch)" />
+                    :data="(shadow as ShadowCatch)" :lastone="lastone" />
             </div>
         </div>
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -102,6 +117,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        margin-bottom: 8px;
 
         .fills-container {
             display: flex;
@@ -109,7 +125,7 @@ onUnmounted(() => {
             gap: 6px;
             width: 100%;
             height: fit-content;
-            padding: 6px 12px;
+            padding: 0 12px;
             box-sizing: border-box;
         }
     }

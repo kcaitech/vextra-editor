@@ -22,7 +22,7 @@ const emits = defineEmits<{
 <template>
     <div class="mask-port-wrapper">
         <div class="info-container">
-            <div :class="{info: true, disabled}">
+            <div v-bind="$attrs" :class="{ 'info': true, 'disabled': disabled }">
                 <slot />
             </div>
             <div class="unbind" @click="emits('unbind')">
@@ -30,7 +30,7 @@ const emits = defineEmits<{
             </div>
         </div>
         <div v-if="props.delete" class="delete" @click="emits('delete')">
-            <SvgIcon :icon="delete_icon"/>
+            <SvgIcon :icon="delete_icon" />
         </div>
     </div>
 </template>
@@ -52,6 +52,10 @@ const emits = defineEmits<{
         background-color: var(--input-background);
         border-radius: var(--default-radius);
         overflow: hidden;
+
+        .maskactive {
+            background-color: #e5e5e5 !important;
+        }
 
         .info {
             flex: 1;
