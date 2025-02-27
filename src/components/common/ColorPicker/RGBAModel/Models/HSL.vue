@@ -13,7 +13,7 @@ const S = ref<number>(0);
 const L = ref<number>(0);
 
 function update() {
-    const hsl = RGB2HSL({red: props.stop.R, green: props.stop.R, blue: props.stop.R} as unknown as Color);
+    const hsl = RGB2HSL({ red: props.stop.R, green: props.stop.G, blue: props.stop.B } as Color);
     H.value = Math.round(hsl.h);
     S.value = Math.round(hsl.s * 100);
     L.value = Math.round(hsl.l * 100);
@@ -35,7 +35,7 @@ function changeH(event: Event) {
 function changeS(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = verifiedVal(parseInt(target.value), 0, 100);
-    const rgb = HSL2RGB({h: H.value, s: value, l: L.value});
+    const rgb = HSL2RGB({ h: H.value, s: value * 0.01, l: L.value * 0.01 });
     emits('change', Object.assign({...props.stop}, {R: rgb.R, G: rgb.G, B: rgb.B}));
     target.blur();
 }
@@ -43,7 +43,7 @@ function changeS(event: Event) {
 function changeL(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = verifiedVal(parseInt(target.value), 0, 100);
-    const rgb = HSL2RGB({h: H.value, s: S.value, l: value});
+    const rgb = HSL2RGB({ h: H.value, s: S.value * 0.01, l: value * 0.01 });
     emits('change', Object.assign({...props.stop}, {R: rgb.R, G: rgb.G, B: rgb.B}));
     target.blur();
 }
