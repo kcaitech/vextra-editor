@@ -8,11 +8,6 @@ export type ElementStatus = {
     visible: boolean;
 }
 
-/*以下是一段测试代码，记得删*/
-const counter = new Set<any>();
-(window as any).__event_counter = counter;
-
-/*==end==*/
 
 export class ElementManager { /* 可用于窗口状态处理，窗口应该要是一个DIV类型的元素 */
     private m_left: number;
@@ -219,7 +214,6 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private downCheck = this.__downCheck.bind(this);
 
     private removeEvent() {
-        counter.delete(this.downCheck); // todo 测试代码
         document.removeEventListener("mousedown", this.downCheck);
         this.m_stop.forEach(stop => stop());
     }
@@ -259,8 +253,6 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
                 return achieve;
             });
             document.addEventListener('mousedown', this.downCheck);
-
-            counter.add(this.downCheck); // todo 测试代码
         }
 
         nextTick(() => {
