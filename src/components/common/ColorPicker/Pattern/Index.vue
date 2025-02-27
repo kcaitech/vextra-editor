@@ -43,6 +43,7 @@ function rotate() {
 
 function scale(event: Event) {
     props.editor.modifyTileScale(event);
+    (event.target as HTMLInputElement).blur();
 }
 
 function focus(event: Event) {
@@ -95,9 +96,9 @@ function focus(event: Event) {
         }
 
         .scale {
-            flex: 0 0 60px;
+            flex: 0 0 68px;
             height: 100%;
-            width: 60px;
+            width: 68px;
             border-radius: 4px;
             background-color: #f4f5f5;
             display: flex;

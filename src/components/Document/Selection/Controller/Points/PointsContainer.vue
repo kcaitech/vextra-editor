@@ -20,7 +20,6 @@ import { startEdit } from "@/path/pathEdit";
 import { CursorType } from "@/utils/cursor2";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { Action } from "@/context/tool";
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 interface Props {
     context: Context;
@@ -325,7 +324,6 @@ function window_blur() {
 
 function workspaceWatcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.SELECTION_VIEW_UPDATE) update();
-
 }
 
 watch(() => props.shape, (value, old) => {

@@ -7,6 +7,7 @@ import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { drawTooltip, hexToX } from "@/components/common/ColorPicker/utils";
 import { inject } from "vue";
+import { useI18n } from "vue-i18n";
 
 const WIDTH = 250;
 const WIDTH_CSS = `${WIDTH}px`;
@@ -21,6 +22,8 @@ const MAX_TOP = HEIGHT - DOT_SIZE / 2;
 const LINE_LENGTH = 196;
 const LINE_LENGTH_CSS = `${LINE_LENGTH}px`;
 const { valueS, valueH, changeValueS, changeValueH } = inject('HSB') as { valueS: Ref<number>, valueH: Ref<number>, changeValueS: (v: number) => void, changeValueH: (v: number) => void };
+
+const t = useI18n().t;
 
 const emits = defineEmits<{
     (e: "change", stop: RGBACatch): void;
@@ -54,9 +57,6 @@ function modifySaturation(_s: number, _b: number) {
 
     }
 
-    // if (rgb.R === 255 && rgb.G === 0 && rgb.B === 0) {
-    //     return;
-    // }
     emits("dragging", {
         R: rgb.R,
         G: rgb.G,
@@ -149,15 +149,16 @@ function downAlphaSlider(event: MouseEvent) {
 }
 
 function eyedropper() {
-    const System_EyeDropper = (window as any).EyeDropper;
-    const s_eye_dropper = new System_EyeDropper();
+    const EyeDropper = (window as any).EyeDropper;
+    if (!EyeDropper) return;
+    const s_eye_dropper = new EyeDropper();
     s_eye_dropper.open().then((result: any) => {
         const rgb = hexToX(result.sRGBHex);
         emits('change', { R: rgb[0], G: rgb[1], B: rgb[2], A: 1, position: 1 });
     }).catch((e: any) => {
         console.error(e);
     });
-    const tooltip = drawTooltip('按下Esc退出');
+    const tooltip = drawTooltip(t('stylelib.esc_exit'));
     document.body.appendChild(tooltip);
     setTimeout(() => tooltip.remove(), 2000);
 }
@@ -172,15 +173,6 @@ function locate() {
     }
     top.value = HEIGHT * (1 - hsb.b) - DOT_SIZE / 2;
     alphaX.value = (LINE_LENGTH - DOT_SIZE) * A;
-    // if (hsb.h === 0 && lastHueDetail.x !== 0) {
-    //     console.log(lastHueDetail.x);
-
-    //     hueX.value = lastHueDetail.x;
-    //     hue.value = lastHueDetail.hue;
-    // } else {
-    //     hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
-    //     hue.value = Object.assign({ ...props.stop }, getHRGB(hsb.h * 360));
-    // }
     if ((R === 0 && G === 0 && B === 0) || hsb.s === 0) {
         hueX.value = valueH.value / 360 * (LINE_LENGTH - DOT_SIZE);
         hue.value = Object.assign({ ...props.stop }, getHRGB(valueH.value));
@@ -189,8 +181,6 @@ function locate() {
         hue.value = Object.assign({ ...props.stop }, getHRGB(hsb.h * 360));
         changeValueH(hsb.h * 360);
     }
-    // hueX.value = (LINE_LENGTH - DOT_SIZE) * hsb.h;
-    // hue.value = Object.assign({ ...props.stop }, getHRGB(hsb.h * 360));
 }
 
 watchEffect(locate);
