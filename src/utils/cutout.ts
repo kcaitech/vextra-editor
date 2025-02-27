@@ -1,12 +1,10 @@
 import { XY } from "@/context/selection";
-import { Border, BorderPosition, GroupShape, GroupShapeView, Page, PageView, ShadowPosition, Shape, ShapeType, ShapeView } from "@kcdesign/data";
-import { isTarget, isTarget2 } from '@/utils/common';
-import { Context } from '@/context';
+import { PageView, ShadowPosition, ShapeType, ShapeView } from "@kcdesign/data";
+import { isTarget2 } from '@/utils/common';
 export function getCutoutShape(shape: ShapeView, page: PageView, selectedShapes: Map<string, ShapeView>) {
     if (!shape.parent) return;
     const matrix = shape.parent.matrix2Root();
     const p = shape.boundingBox()
-    const { width, height } = shape.frame;
     const p1: XY = matrix.computeCoord2(p.x, p.y); // lt
     const p2: XY = matrix.computeCoord2(p.width + p.x, p.y); // rt
     const p3: XY = matrix.computeCoord2(p.width + p.x, p.height + p.y); // rb

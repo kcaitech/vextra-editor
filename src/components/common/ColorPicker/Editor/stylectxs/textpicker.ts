@@ -117,7 +117,7 @@ export class TextPicker extends ColorPickerEditor {
                 }
             })
         }
-        this.editor.modifySolidColor2([modifyLocal]);
+        this.editor.modifySolidColor([modifyLocal]);
         this.hiddenCtrl();
         this.commit();
     }
@@ -149,7 +149,7 @@ export class TextPicker extends ColorPickerEditor {
                 }
             })
         }
-        this.editor.modifySolidColor2([modifyLocal]);
+        this.editor.modifySolidColor([modifyLocal]);
         this.hiddenCtrl();
     }
 

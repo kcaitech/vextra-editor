@@ -392,7 +392,7 @@ const setTextSize = () => {
     if (!isNaN(Number(value)) && Number(value) > 0) {
         changeTextSize(Number(value))
     } else {
-        textFormat()
+        textFormat();
     }
 
 }
@@ -434,47 +434,22 @@ function workspace_wather(t: number) {
 
 function onAlphaChange(e: Event, type: string) {
     let value = (e.target as HTMLInputElement).value as any;
-    if (value?.slice(-1) === '%') {
-        value = Number(value?.slice(0, -1))
-        if (value >= 0) {
-            value = Math.min(value.toFixed(2), 100) / 100;
-            let color;
-            if (type === 'color') {
-                const { red, green, blue } = textColor.value || new Color(1, 6, 6, 6);
-                color = toHex(red, green, blue);
-                if (fillType.value === FillType.Gradient) {
-                    set_gradient_opacity(value);
-                    return;
-                }
-            } else {
-                const { red, green, blue } = highlight.value || new Color(1, 216, 216, 216);
-                color = toHex(red, green, blue);
+    value = value?.slice(-1) === '%' ? Number(value?.slice(0, -1)) : Number(value);
+    if (!isNaN(value) && value >= 0) {
+        value = Math.min(value.toFixed(2), 100) / 100;
+        let color;
+        if (type === 'color') {
+            const { red, green, blue } = textColor.value || new Color(1, 6, 6, 6);
+            color = toHex(red, green, blue);
+            if (fillType.value === FillType.Gradient) {
+                set_gradient_opacity(value);
+                return;
             }
-            setColor(color, value, type);
-            return;
         } else {
-            alpha_message(type);
+            const { red, green, blue } = highlight.value || new Color(1, 216, 216, 216);
+            color = toHex(red, green, blue);
         }
-    } else if (!isNaN(Number(value))) {
-        if (value >= 0) {
-            value = Number(Math.min(Number(value), 100).toFixed(2)) / 100
-            let color;
-            if (type === 'color') {
-                const { red, green, blue } = textColor.value || new Color(1, 6, 6, 6);
-                color = toHex(red, green, blue);
-                if (fillType.value === FillType.Gradient) {
-                    set_gradient_opacity(value);
-                    return;
-                }
-            } else {
-                const { red, green, blue } = highlight.value || new Color(1, 216, 216, 216);
-                color = toHex(red, green, blue);
-            }
-            setColor(color, value, type);
-            return
-        } else {
-            alpha_message(type);
-        }
+        setColor(color, value, type);
     } else {
         alpha_message(type);
     }
@@ -818,16 +793,12 @@ const _textFormat = () => {
     weightMixed.value = false;
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(t_shape[0])
+        const editor = props.context.editor4TextShape(t_shape[0]);
         let format: AttrGetter
         const __text = t_shape[0].getText();
-        if (textIndex === -1) {
-            format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-        } else {
-            format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
-        }
+        format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
         colorPicker.format = format;
-        colorIsMulti.value = format.colorIsMulti
+        colorIsMulti.value = format.colorIsMulti;
         isAutoLineHeight.value = format.autoLineHeight ?? true;
         rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0)
         wordSpace.value = format_value(format.kerning || 0)
@@ -898,11 +869,7 @@ const _textFormat = () => {
                     break;
                 }
             }
-            if (foundEqual) {
-                format[key] = referenceValue;
-            } else {
-                format[key] = `unlikeness`;
-            }
+            format[key] = foundEqual ? referenceValue : 'unlikeness';
         }
         colorPicker.format = format;
         isAutoLineHeight.value = format.autoLineHeight ?? true;
@@ -990,6 +957,7 @@ const rgbaColor = ref<RGBACatch>({ R: 6, G: 6, B: 6, A: 1, position: 1 });
 const rgbaHighlight = ref<RGBACatch>({ R: 216, G: 216, B: 216, A: 1, position: 1 });
 const colorType = ref<string>(FillType.SolidColor);
 const color_gradient = ref<GradientCatch | undefined>();
+
 const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
 const colorPanelStatusMgr = new ElementManager(
     props.context,
@@ -1003,7 +971,7 @@ function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('color-wrapper')) {
-            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -327 } });
             break;
         }
         e = e.parentElement;
@@ -1023,7 +991,7 @@ function showHighlightPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('color-wrapper')) {
-            highlightPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            highlightPanelStatusMgr.showBy(e, { once: { offsetLeft: -327 } });
             break;
         }
         e = e.parentElement;
@@ -1040,6 +1008,7 @@ const styleReplace = {
     'font-size': ' 12px',
     'box-sizing': 'border-box'
 };
+
 const HexHighlightInput = () => h('input', {
     style: styleReplace,
     value: toHex2(highlight.value || new Color(1, 216, 216, 216)).slice(1),
@@ -1047,6 +1016,7 @@ const HexHighlightInput = () => h('input', {
     onFocus: selectAllOnFocus,
     onChange: (e) => onColorChange(e, 'highlight')
 });
+
 const HexInput = () => h('input', {
     style: styleReplace,
     value: toHex2(textColor.value || new Color(1, 6, 6, 6)).slice(1),
@@ -1054,6 +1024,7 @@ const HexInput = () => h('input', {
     onFocus: selectAllOnFocus,
     onChange: (e) => onColorChange(e, 'color')
 });
+
 const DescSpan = () => h('div', {
     style: Object.assign({
         display: 'flex',
@@ -1061,6 +1032,7 @@ const DescSpan = () => h('div', {
     }, styleReplace),
     innerText: innerText.value
 });
+
 function assemble() {
     color_gradient.value = undefined;
     switch (fillType.value) {
@@ -1088,7 +1060,7 @@ const closeColor = () => {
 }
 
 const closeHighlight = () => {
-    colorPanelStatusMgr.close();
+    highlightPanelStatusMgr.close();
 }
 
 const updateContextColor = () => {
@@ -1302,13 +1274,12 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                         </i>
                     </div>
                 </div>
-                <!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
+            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 6px; gap: 8px;">
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;">{{
                     t('attr.font_color')
-                }}
+                    }}
                 </div>
                 <div class="color">
                     <ColorBlock :colors="([textColor || new Color(1, 6, 6, 6)] as Color[])" @click="showColorPanel" />
@@ -1324,7 +1295,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
                         t('attr.font_color')
-                    }}
+                        }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
                         <SvgIcon :icon="add_icon" />
@@ -1341,10 +1312,10 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px"
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;"
                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                 </div>
-                <div>
+                <div class="highlight-color-block">
                     <div class="color">
                         <ColorBlock :colors="([highlight || new Color(1, 216, 216, 216)] as Color[])"
                             @click="showHighlightPanel" />
@@ -1352,14 +1323,12 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                         <input ref="higlighAlpha" class="alphaFill" type="alphaFill" :value="filterAlpha2() + '%'"
                             @focus="selectAllOnFocus" @change="(e) => onAlphaChange(e, 'highlight')" />
                         <ColorPicker v-if="highlightPanelStatus.visible" :editor="highlightPicker"
-                            :type="FillType.SolidColor" :include="[FillType.SolidColor]" :color="rgbaHighlight!"
-                            @close="closeHighlight" />
+                            :type="FillType.SolidColor" :include="[]" :color="rgbaHighlight!" @close="closeHighlight" />
                     </div>
                     <div class="perch" @click="deleteHighlight">
                         <SvgIcon class="svg" :icon="delete_icon" />
                     </div>
                 </div>
-
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
@@ -1735,6 +1704,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 8px;
 
             .color {
                 display: flex;
@@ -1748,18 +1718,26 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                 border-radius: var(--default-radius);
 
                 .alphaFill {
-                    width: 46px;
+                    width: 35px;
                     outline: none;
                     border: none;
                     background-color: transparent;
                     height: 14px;
                     font-size: 12px;
                     box-sizing: border-box;
-                    flex: 0 0 46px;
+                    flex: 0 0 35px;
                     text-align: right;
                 }
             }
+
+            .highlight-color-block {
+                display: flex;
+                flex: 1;
+                align-items: center;
+                gap: 8px;
+            }
         }
+
 
         .text-colors {
             .color-title {
@@ -1808,7 +1786,6 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             align-items: center;
             width: 28px;
             height: 28px;
-            margin-left: 5px;
             border-radius: var(--default-radius);
 
             >img {
