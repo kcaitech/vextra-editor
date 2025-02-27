@@ -23,11 +23,11 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const name = ref<string>(data?.name ?? t('stylelib.blurs'));
-const desc = ref<string>(data?.description ?? '');
-const blur = ref<BlurCatch | undefined>(getBlur());
+const name = ref<string>('');
+const desc = ref<string>('');
+const blur = ref<BlurCatch | undefined>();
 
-function getBlur() {
+function getBlur(): BlurCatch | undefined {
     if (data) {
         return {
             enable: data.blur.isEnabled,
@@ -39,7 +39,7 @@ function getBlur() {
 }
 
 function update() {
-    name.value = data?.name ?? '';
+    name.value = data?.name ?? t('stylelib.blurs');
     desc.value = data?.description ?? '';
     blur.value = getBlur();
 }
@@ -75,6 +75,7 @@ function checkEnter(e: KeyboardEvent) {
 }
 
 onMounted(() => {
+    update();
     data?.watch(update);
     document.addEventListener('keydown', checkEnter);
 })
@@ -92,7 +93,7 @@ onUnmounted(() => {
         <div v-if="data" class="data-panel">
             <ListHeader :title="t('stylelib.blur')" create />
             <div class="fills-container">
-                <BlurPanel :manager="manager" :context="context" :blur="(blur as BlurCatch)" del />
+                <BlurPanel v-if="blur" :manager="manager" :context="context" :blur="(blur as BlurCatch)" del />
             </div>
         </div>
         <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')
@@ -118,6 +119,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        margin-bottom: 8px;
 
         .fills-container {
             display: flex;
@@ -125,7 +127,7 @@ onUnmounted(() => {
             gap: 6px;
             width: 100%;
             height: fit-content;
-            padding: 6px 12px;
+            padding: 0 12px;
             box-sizing: border-box;
         }
     }

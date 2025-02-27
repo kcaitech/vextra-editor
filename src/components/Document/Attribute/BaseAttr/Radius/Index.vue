@@ -40,8 +40,8 @@ radiusCtxMgr.catchPanel(radiusPanelStatusMgr);
 function showRadiusPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('radius_clover')) {
-            radiusPanelStatusMgr.showBy(e, { once: { offsetLeft: -164, offsetTop: 36 } });
+        if (e.classList.contains('header')) {
+            radiusPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
         if (e.classList.contains('radius-left')) {
@@ -77,14 +77,15 @@ onUnmounted(() => {
 <template>
     <div class="header">
         <div class="title">{{ t('stylelib.round') }}</div>
-        <div v-if="cloverVisible" class="radius_clover" @click="showRadiusPanel($event)">
+        <div v-if="cloverVisible" :class="{ 'active': radiusLibStatus.visible }" class="radius_clover"
+            @click="showRadiusPanel($event)">
             <SvgIcon :icon="style_icon"></SvgIcon>
         </div>
     </div>
     <RadiusView v-if="!radiusCtx.mask && radiusCtx.radius.length" :context="context" :manager="radiusCtxMgr"
         :data="radiusCtx.radius" :disabled="disabled" />
-    <RadiusMaskView v-else-if="radiusCtx.mask" :context="context" :manager="radiusCtxMgr"
-        @showRadiusPanel="showRadiusPanel" />
+    <RadiusMaskView v-else-if="radiusCtx.mask" :class="{ 'maskactive': radiusLibStatus.visible }" :context="context"
+        :manager="radiusCtxMgr" @showRadiusPanel="showRadiusPanel" />
     <RadiusStylePanel v-if="radiusLibStatus.visible" :context="context" :manager="radiusCtxMgr" @close="closePanel"
         :title="t('stylelib.radius')" />
 </template>
@@ -100,18 +101,27 @@ onUnmounted(() => {
     flex-direction: row;
     gap: 8px;
 
-    img {
+    .radius_clover {
         width: 28px;
         height: 28px;
-        padding: 8px;
-        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-radius: 6px;
+        box-sizing: border-box;
 
         &:hover {
             background-color: #F5F5F5;
         }
+
+        img {
+            width: 12px;
+            height: 12px;
+        }
     }
+}
 
-
+.active {
+    background-color: rgba(191, 191, 191, 0.7) !important;
 }
 </style>

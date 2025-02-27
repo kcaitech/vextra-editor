@@ -20,12 +20,12 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const name = ref<string>(data?.name ?? '边框样式');
+const name = ref<string>(data?.name ?? t('stylelib.radius'));
 const desc = ref<string>(data?.description ?? '');
 const radius = ref<string>('');
 
 function update() {
-    name.value = data?.name ?? '';
+    name.value = data?.name ?? t('stylelib.radius');
     desc.value = data?.description ?? '';
     if (data) {
         radius.value = [...data.radius].join(', ');
@@ -46,8 +46,12 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
-function changeInput(value: string) {
+function changeNameInput(value: string) {
     name.value = value;
+}
+
+function changeDescInput(value: string) {
+    desc.value = value;
 }
 
 function createStyle() {
@@ -78,26 +82,36 @@ const setRadius = (event: Event) => {
     manager.modifyRadiusMask(data, num);
 }
 
+function checkEnter(e: KeyboardEvent) {
+    if (e.key === 'Enter' && name.value && !data) {
+        createStyle();
+    }
+}
+
 onMounted(() => {
     update();
     data?.watch(update);
+    document.addEventListener('keydown', checkEnter);
 });
 
 onUnmounted(() => {
     data?.unwatch(update);
+    document.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-radius-style-panel" id="modify-radius-style-panel">
-        <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')" />
+        <PanelHeader :title="data ? t('stylelib.editor_radius') : t('stylelib.create_radius')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" @changeInput="changeInput"/>
+            @modify-desc="modifyDesc" @change-name-input="changeNameInput" @change-desc-input="changeDescInput"/>
 
         <div class="radius" v-if="data">
             <div class="title">{{ t('stylelib.round') }}</div>
             <input type="text" v-model="radius" @change="setRadius">
         </div>
-        <div v-if="!data" :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
+        <div v-if="!data" :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{
+            t('stylelib.add_style')
+            }}</div>
     </div>
 </template>
 <style scoped lang="scss">

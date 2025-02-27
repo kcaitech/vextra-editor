@@ -223,7 +223,7 @@ onUnmounted(() => {
                 <SvgIcon :icon="thickness_icon"
                     :class="{ cursor_pointer: typeof manager.fillCtx.strokeInfo.sideSetting === 'string' }"
                     @mousedown.stop="onMouseDown($event)" />
-                <input ref="borderThickness" type="text" :value="thickness_value()" @change="setThickness($event)"
+                <input v-blur ref="borderThickness" type="text" :value="thickness_value()" @change="setThickness($event)"
                     @blur="strokeBlur" @click="strokeClick" @focus="isActived = true;"
                     @keydown="e => keydownThickness(e, thickness_value())">
             </div>

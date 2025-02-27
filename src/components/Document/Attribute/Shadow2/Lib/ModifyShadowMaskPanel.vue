@@ -36,7 +36,7 @@ function getShadows() {
 }
 
 function update() {
-    name.value = data?.name ?? '';
+    name.value = data?.name ?? t('stylelib.shadows');
     desc.value = data?.description ?? '';
     shadows.value = getShadows();
     lastone.value = shadows.value.length === 1;

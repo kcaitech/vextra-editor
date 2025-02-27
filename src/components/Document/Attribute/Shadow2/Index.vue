@@ -40,12 +40,12 @@ shadowCtxMgr.catchPanel(shadowPanelStatusMgr);
 function showShadowLib(event: MouseEvent) { /*打开填充样式库面板*/
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('mask-port-wrapper')) {
+        if (e.classList.contains('header-container')) {
             shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
-        if (e.classList.contains('shadows-wrapper')) {
-            shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: 4, offsetTop: 36 } });
+        if (e.classList.contains('mask-port-wrapper')) {
+            shadowPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
             break;
         }
         e = e.parentElement;
@@ -73,7 +73,8 @@ onUnmounted(() => {
         <TypeHeader :title="t('attr.shadow')" :active="!!shadowCtx.shadows.length"
             @click.stop="() => shadowCtxMgr.init()">
             <template #tool>
-                <div v-if="cloverVisible" class="shadow_clover" @click="showShadowLib($event)">
+                <div v-if="cloverVisible" :class="{ 'active': shadowLibStatus.visible }" class="shadow_clover"
+                    @click="showShadowLib($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <div v-if="!shadowCtx.mask || shadowCtx.mixed" class="create" @click="() => shadowCtxMgr.create()">
@@ -83,13 +84,13 @@ onUnmounted(() => {
         </TypeHeader>
 
         <div v-if="shadowCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <ShadowMaskView v-else-if="shadowCtx.mask" :context="context" :manager="shadowCtxMgr"
-            :shadows="(shadowCtx.shadows as ShadowCatch[])" :info="shadowCtx.maskInfo!"
-            @show-style-lib="e=>showShadowLib(e)" />
+        <ShadowMaskView v-else-if="shadowCtx.mask" :class="{ 'maskactive': shadowLibStatus.visible }" :context="context"
+            :manager="shadowCtxMgr" :shadows="(shadowCtx.shadows as ShadowCatch[])" :info="shadowCtx.maskInfo!"
+            @show-style-lib="e => showShadowLib(e)" />
 
         <div v-else-if="shadowCtx.shadows.length" class="shadows-container">
             <ShadowItem v-for="(shadow, index) in shadowCtx.shadows" :key="index" :context="context"
-                :manager="shadowCtxMgr" :data="(shadow as ShadowCatch)"/>
+                :manager="shadowCtxMgr" :data="(shadow as ShadowCatch)" />
         </div>
 
         <ShadowStylePanel v-if="shadowLibStatus.visible" :context="context" :manager="shadowCtxMgr"
@@ -149,5 +150,9 @@ onUnmounted(() => {
         height: fit-content;
         padding: 6px 0;
     }
+}
+
+.active {
+    background-color: rgba(191, 191, 191, 0.7) !important;
 }
 </style>

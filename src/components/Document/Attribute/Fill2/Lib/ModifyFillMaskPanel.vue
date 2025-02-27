@@ -24,7 +24,8 @@ const emits = defineEmits<{
 const { t } = useI18n();
 const name = ref<string>(data?.name ?? t('stylelib.colors'));
 const desc = ref<string>(data?.description ?? '');
-const fills = ref<FillCatch[]>(getFills());
+const fills = ref<FillCatch[]>();
+const lastone = ref<boolean>(false);
 
 function getFills() {
     const container: FillCatch[] = [];
@@ -35,9 +36,10 @@ function getFills() {
 }
 
 function update() {
-    name.value = data?.name ?? '';
+    name.value = data?.name ?? t('stylelib.colors');
     desc.value = data?.description ?? '';
     fills.value = getFills();
+    lastone.value= fills.value.length === 1;
 }
 
 function modifyName(value: string) {
@@ -71,6 +73,7 @@ function checkEnter(e: KeyboardEvent) {
 }
 
 onMounted(() => {
+    update();
     data?.watch(update);
     document.addEventListener('keydown', checkEnter);
 });
@@ -89,7 +92,7 @@ onUnmounted(() => {
             <ListHeader :title="t('stylelib.color')" @create="manager.create(data)" />
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                    :data="(fill as FillCatch)" />
+                    :data="(fill as FillCatch)" :lastone="lastone" />
             </div>
         </div>
         <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')

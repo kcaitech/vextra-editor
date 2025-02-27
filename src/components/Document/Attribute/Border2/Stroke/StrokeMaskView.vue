@@ -19,7 +19,7 @@ const showBorderPanel = (event: MouseEvent) => {
 
 <template>
     <div class="borders-container" v-if="manager.fillCtx.fills.length && manager.fillCtx.strokeMaskInfo">
-        <MaskPort :delete="false" :disabled="manager.fillCtx.strokeMaskInfo.disabled"
+        <MaskPort v-bind="$attrs" :delete="false" :disabled="manager.fillCtx.strokeMaskInfo.disabled"
                   @unbind="() => manager.unbindStroke()">
             <div class="border-left" @click="showBorderPanel($event)">
                 <div class="border">
@@ -46,7 +46,6 @@ const showBorderPanel = (event: MouseEvent) => {
         flex: 1;
         display: flex;
         align-items: center;
-        background-color: #F5F5F5;
         height: 100%;
 
         &:hover {

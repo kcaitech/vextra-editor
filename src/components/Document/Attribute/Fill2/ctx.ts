@@ -186,10 +186,10 @@ export class FillsContextMgr extends StyleCtx {
 
     /* 移除一条填充 */
     remove(fill: Fill) {
-        if (this.fillCtx.fills.length === 1) return;
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
             this.editor.removeFill([(api: Api) => {
+                if (mask.fills.length === 1) return;
                 api.deleteFillAt(mask.fills, this.getIndexByFill(fill));
             }]);
         } else {
