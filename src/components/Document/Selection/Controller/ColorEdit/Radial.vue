@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { getTextIndexAndLen, get_add_gradient_color, get_gradient, get_temporary_stop, isSelectText, to_rgba } from './gradient_utils';
+import { getTextIndexAndLen, get_add_gradient_color, get_gradient, get_temporary_stop, to_rgba } from './gradient_utils';
 import {
     AsyncGradientEditor,
     BasicArray,
@@ -14,7 +14,6 @@ import {
     GradientType,
     Matrix,
     ShapeFrame,
-    ShapeType,
     Stop,
     TextShapeView,
     TransformRaw,
@@ -50,6 +49,7 @@ let startPosition: ClientXY = { x: 0, y: 0 };
 let dot_type: DotType = 'to';
 let isDragging = false;
 let gradientEditor: GradientEditor | undefined;
+let gradientTextEditor: AsyncGradientEditor | undefined;
 const dragActiveDis = 3;
 const active = ref();
 const rotate = ref(0);
@@ -141,7 +141,7 @@ const dot_mousemove = (e: MouseEvent) => {
     const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
-    if (isDragging && gradientEditor) {
+    if (isDragging) {
         startPosition.x = x;
         startPosition.y = y;
         const matrix = new TransformRaw();
@@ -160,24 +160,44 @@ const dot_mousemove = (e: MouseEvent) => {
             } else {
                 fill = locate.type === 'fills' ? [shape.getFills()[locate.index]] : [shape.getBorders().strokePaints[locate.index]];
             }
-        }
-        if (dot_type === 'from') {
-            gradientEditor.modifyFrom(fill, posi);
-        } else if (dot_type === 'to') {
-            gradientEditor.modifyTo(fill, posi);
-        } else if (dot_type === 'ellipse') {
-            const m_p = props.context.workspace.getContentXY(e);
-            const m = new Matrix();
-            m.trans(-dot1.value.x, -dot1.value.y);
-            m.rotate(-rotate_r.value);
-            const p = m.computeCoord3(m_p).y / line_length.value / (frame.width / frame.height);
-            update_ellipse_dot(e, Math.abs(p));
-            gradientEditor.modifyEllipseLength(fill, p);
+            if (dot_type === 'from') {
+                gradientEditor!.modifyFrom(fill, posi);
+            } else if (dot_type === 'to') {
+                gradientEditor!.modifyTo(fill, posi);
+            } else if (dot_type === 'ellipse') {
+                const m_p = props.context.workspace.getContentXY(e);
+                const m = new Matrix();
+                m.trans(-dot1.value.x, -dot1.value.y);
+                m.rotate(-rotate_r.value);
+                const p = m.computeCoord3(m_p).y / line_length.value / (frame.width / frame.height);
+                update_ellipse_dot(e, Math.abs(p));
+                gradientEditor!.modifyEllipseLength(fill, p);
+            }
+        } else {
+            if (dot_type === 'from') {
+                gradientTextEditor?.execute_from(posi);
+            } else if (dot_type === 'to') {
+                gradientTextEditor?.execute_to(posi);
+            } else if (dot_type === 'ellipse') {
+                const m_p = props.context.workspace.getContentXY(e);
+                const m = new Matrix();
+                m.trans(-dot1.value.x, -dot1.value.y);
+                m.rotate(-rotate_r.value);
+                const p = m.computeCoord3(m_p).y / line_length.value / (frame.width / frame.height);
+                update_ellipse_dot(e, Math.abs(p));
+                gradientTextEditor!.execute_elipselength(p);
+            }
         }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
-            gradientEditor = new GradientEditor(props.context.coopRepo);
+            if (locate.type !== 'text') {
+                gradientEditor = new GradientEditor(props.context.coopRepo);
+            } else {
+                const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+                const editor = props.context.editor4TextShape(shape as TextShapeView);
+                gradientTextEditor = editor.asyncSetTextGradient([shape] as TextShapeView[], gradient, textIndex, selectLength);
+            }
         }
     }
 }
@@ -188,6 +208,10 @@ const dot_mouseup = (e: MouseEvent) => {
     if (gradientEditor) {
         gradientEditor.commit();
         gradientEditor = undefined;
+    }
+    if (gradientTextEditor) {
+        gradientTextEditor.close();
+        gradientTextEditor = undefined;
     }
     down_ellipse.value = false;
     ellipse_show.value = false;
@@ -281,18 +305,8 @@ const add_stop = (e: MouseEvent) => {
                 return 0;
             }
         })
-        const shapes = getShapesForStyle(props.context.selection.selectedShapes);
-        const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
-        const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-        if (text_shapes.length === 1) {
-            if (isSelectText(props.context)) {
-                editor.setTextGradient(new_gradient, 0, Infinity);
-            } else {
-                editor.setTextGradient(new_gradient, textIndex, selectLength);
-            }
-        } else {
-            editor.setTextGradientMulti(text_shapes as TextShapeView[], new_gradient);
-        }
+        const editor = props.context.editor4TextShape(shape as TextShapeView);
+        editor.setTextGradient(new_gradient, textIndex, selectLength);
     }
     nextTick(() => {
         down_stop(e, stop.id);
@@ -338,7 +352,7 @@ const stop_mousemove = (e: MouseEvent) => {
     const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
-    if (isDragging && gradientEditor) {
+    if (isDragging) {
         startPosition.x = x;
         startPosition.y = y;
         const posi = get_stop_position(e);
@@ -353,12 +367,20 @@ const stop_mousemove = (e: MouseEvent) => {
             } else {
                 fill = locate.type === 'fills' ? [shape.getFills()[locate.index]] : [shape.getBorders().strokePaints[locate.index]];
             }
+            gradientEditor!.modifyStopPosition(fill, posi, down_stop_id.value);
+        } else {
+            gradientTextEditor!.execute_stop_position(posi, down_stop_id.value);
         }
-        gradientEditor.modifyStopPosition(fill, posi, down_stop_id.value);
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
-            gradientEditor = new GradientEditor(props.context.coopRepo);
+            if (locate.type !== 'text') {
+                gradientEditor = new GradientEditor(props.context.coopRepo);
+            } else {
+                const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+                const editor = props.context.editor4TextShape(shape as TextShapeView);
+                gradientTextEditor = editor.asyncSetTextGradient([shape] as TextShapeView[], gradient, textIndex, selectLength);
+            }
         }
     }
 }
@@ -375,6 +397,10 @@ const stop_mouseup = (e: MouseEvent) => {
     if (gradientEditor) {
         gradientEditor.commit();
         gradientEditor = undefined;
+    }
+    if (gradientTextEditor) {
+        gradientTextEditor.close();
+        gradientTextEditor = undefined;
     }
     percent_show.value = false;
     document.removeEventListener('mousemove', stop_mousemove);

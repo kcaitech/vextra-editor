@@ -56,7 +56,6 @@ import {
     GradientFrom,
     getTextIndexAndLen,
     get_add_gradient_color,
-    isSelectText
 } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
 import { watch } from 'vue';
@@ -1101,44 +1100,14 @@ function move_stop_position(e: MouseEvent) {
             const page = props.context.selection.selectedPage;
             const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
             const locat = props.locat;
-            if (locat.type !== 'table_text' && locat.type !== 'text') {
+            if (locat.type !== 'text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes, page!, locat.index, locat.type);
             } else {
                 if (!props.gradient) return;
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                if (locat.type === 'table_text') {
-                    const tableSelection = props.context.tableSelection;
-                    const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
-                    if (tableSelection.editingCell) {
-                        const table_cell = tableSelection.editingCell;
-                        const editor_text = props.context.editor4TextShape(table_cell);
-                        if (isSelectText(props.context)) {
-                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], props.gradient, 0, Infinity);
-                        } else {
-                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], props.gradient, textIndex, selectLength);
-                        }
-                    } else {
-                        const editor = props.context.editor4Table(table_shape);
-                        if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
-                            gradientEditor = editor.asyncSetTextGradient(props.gradient);
-                        } else {
-                            gradientEditor = editor.asyncSetTextGradient(props.gradient, {
-                                rowStart: tableSelection.tableRowStart,
-                                rowEnd: tableSelection.tableRowEnd,
-                                colStart: tableSelection.tableColStart,
-                                colEnd: tableSelection.tableColEnd
-                            });
-                        }
-                    }
-                } else {
-                    const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
-                    const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-                    if (isSelectText(props.context)) {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], props.gradient, 0, Infinity);
-                    } else {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], props.gradient, textIndex, selectLength);
-                    }
-                }
+                const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
+                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], props.gradient, textIndex, selectLength);
             }
 
             passive();
@@ -1284,7 +1253,7 @@ const is_gradient_selected = () => {
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     if (shapes.length === 1) {
-        if (shapes[0].type === ShapeType.Table && props.locat && props.locat.type !== 'table_text') {
+        if (shapes[0].type === ShapeType.Table && props.locat) {
             const t = props.context.tableSelection;
             if (t.editingCell || !(t.tableRowStart < 0 || t.tableColStart < 0)) {
                 return false;
@@ -1414,23 +1383,23 @@ onUnmounted(() => {
                 <div class="left">
                     <div class="color-type" :class="{ active: custom === 'custom' }" @click="custom = 'custom'">{{
                         t(`attr.fill`) }}</div>
-                    <div v-if="fillType && is_gradient_selected() && !props.entrance" class="style" :class="{ active: custom === 'style' }"
-                        @click="custom = 'style'">颜色样式</div>
+                    <div v-if="fillType && is_gradient_selected() && !props.entrance" class="style"
+                        :class="{ active: custom === 'style' }" @click="custom = 'style'">颜色样式</div>
                 </div>
                 <div class="right">
                     <div v-if="!props.entrance" class="newstyle" @click.stop="EditorStyle = !EditorStyle">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                     <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
-                        <SvgIcon :icon="close_icon"/>
+                        <SvgIcon :icon="close_icon" />
                     </div>
                 </div>
             </div>
             <div v-if="custom === 'custom'" class="custom">
                 <div class="color_type_container" v-if="fillType && is_gradient_selected()">
-<!--                    <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"-->
-<!--                        :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">-->
-<!--                    </ColorType>-->
+                    <!--                    <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"-->
+                    <!--                        :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">-->
+                    <!--                    </ColorType>-->
                 </div>
                 <!-- 渐变工具 -->
                 <div v-if="fill_type === FillType.Gradient && fillType === FillType.Gradient && is_gradient_selected()"
@@ -1445,12 +1414,12 @@ onUnmounted(() => {
                     </div>
                     <div class="reverse" @click="reverse">
                         <Tooltip :content="t('color.reverse')">
-                            <SvgIcon :icon="exchange_icon"/>
+                            <SvgIcon :icon="exchange_icon" />
                         </Tooltip>
                     </div>
                     <div class="rotate" @click="rotate">
                         <Tooltip :content="t('color.rotate')">
-                            <SvgIcon :icon="rotate90_icon"/>
+                            <SvgIcon :icon="rotate90_icon" />
                         </Tooltip>
                     </div>
                 </div>
@@ -1470,7 +1439,7 @@ onUnmounted(() => {
                     </div>
                     <div class="controller">
                         <div class="eyedropper">
-                            <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper"/>
+                            <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper" />
                         </div>
                         <div class="sliders-container" ref="sliders">
                             <!-- &lt;!&ndash; 色相 &ndash;&gt; -->
@@ -1541,10 +1510,10 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </template>
-<!--                <PatternFill :context="context" :entrance="props.entrance" v-else :scale="imageScale" :imageScaleMode="scaleMode"-->
-<!--                    :image="image_url" :paintFilter="paintFilter" @changeMode="changeScaleMode"-->
-<!--                    @setImageRef="setImageRef" @changeRotate="emit('changeRotate')"-->
-<!--                    @changeScale="(s) => emit('changeScale', s)" @imagefilter="(color,type,v)=>color.execute_fillmask_ImageFilter(props.style?.sheet!,props.style?.id!,type,v,props.locat?.index!)"/>-->
+                <!--                <PatternFill :context="context" :entrance="props.entrance" v-else :scale="imageScale" :imageScaleMode="scaleMode"-->
+                <!--                    :image="image_url" :paintFilter="paintFilter" @changeMode="changeScaleMode"-->
+                <!--                    @setImageRef="setImageRef" @changeRotate="emit('changeRotate')"-->
+                <!--                    @changeScale="(s) => emit('changeScale', s)" @imagefilter="(color,type,v)=>color.execute_fillmask_ImageFilter(props.style?.sheet!,props.style?.id!,type,v,props.locat?.index!)"/>-->
             </div>
             <!-- <div v-if="custom === 'style' && !props.entrance" class="color-style">
                <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
@@ -1579,6 +1548,7 @@ onUnmounted(() => {
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
     border: 1px solid rgb(215, 215, 215);
     box-sizing: border-box;
+
     img {
         border-radius: 3px;
         width: 16px;
@@ -2063,7 +2033,7 @@ onUnmounted(() => {
                         margin-bottom: 12px;
                     }
 
-                    > .document-color-container {
+                    >.document-color-container {
                         width: 100%;
                         max-height: 90px;
                         overflow: scroll;

@@ -1,5 +1,4 @@
 import { Context } from "@/context";
-import { flattenShapes } from "@/utils/cutout";
 import {
     Color,
     Stop,
@@ -11,7 +10,6 @@ import {
     Point2D,
     TextShapeView,
     AttrGetter,
-    TableCellView,
     Fill,
     FillMask
 } from "@kcdesign/data";
@@ -91,7 +89,7 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
         let fills: Fill[] = [];
         let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
         if (maskId) {
-            const mask =context.data.stylesMgr.getSync(maskId) as FillMask;
+            const mask = context.data.stylesMgr.getSync(maskId) as FillMask;
             fills = mask.fills;
         } else {
             fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
@@ -104,13 +102,8 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
         const editor = context.editor4TextShape(shape as TextShapeView)
         let format: AttrGetter
         const __text = (shape as TextShapeView).getText();
-        if (textIndex === -1) {
-            format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-        } else {
-            format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
-        }
+        format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
         return format.gradient;
-
     }
 }
 
@@ -182,15 +175,10 @@ export const getTextIndexAndLen = (context: Context) => {
     const selection = context.selection.textSelection;
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
-    return { textIndex, selectLength }
-}
-
-export const isSelectText = (context: Context) => {
-    const selection = context.selection.textSelection;
     if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
-        return false
+        return { textIndex, selectLength }
     } else {
-        return true
+        return { textIndex: 0, selectLength: Infinity }
     }
 }
 
