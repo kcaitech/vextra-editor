@@ -96,9 +96,7 @@ onUnmounted(() => {
                     :data="(shadow as ShadowCatch)" :lastone="lastone" />
             </div>
         </div>
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')
-            }}
-        </div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">

@@ -19,12 +19,7 @@ function changeValueH(v: number) {
 
 defineProps<{ stop: RGBACatch }>();
 
-provide('HSB', {
-    valueS,
-    valueH,
-    changeValueS,
-    changeValueH,
-});
+provide('HSB', { valueS, valueH, changeValueS, changeValueH });
 </script>
 
 <template>

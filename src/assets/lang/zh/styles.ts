@@ -41,6 +41,10 @@ export const stylelib = {
     description: '描述',
 
     null_data: '没有可用的样式',
-    null_search: '没有搜索到相关样式'
+    null_search: '没有搜索到相关样式',
 
+    esc_exit: '按下ESC退出',
+
+    all: '全部样式',
+    local_style: '此文件样式',
 }

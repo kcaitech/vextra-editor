@@ -142,7 +142,7 @@ onUnmounted(() => {
                 <div class="title">{{ t('stylelib.position') }}</div>
                 <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
                     :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
-                    @select="positionSelect" :entry="'style'"></Select>
+                    @select="positionSelect" :entry="'style'" />
             </div>
             <div class="thickness">
                 <div class="title">{{ t('stylelib.thickness') }}</div>
@@ -150,9 +150,7 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')
-            }}
-        </div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">

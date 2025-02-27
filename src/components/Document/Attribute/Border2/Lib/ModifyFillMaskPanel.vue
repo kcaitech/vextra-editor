@@ -22,7 +22,7 @@ const emits = defineEmits<{
     (e: 'close'): void;
 }>();
 
-const { t } = useI18n();
+const {t} = useI18n();
 const name = ref<string>(data?.name ?? t('stylelib.colors'));
 const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>(getFills());
@@ -87,15 +87,13 @@ onUnmounted(() => {
         <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
             @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
         <div v-if="data" class="data-panel">
-            <ListHeader :title="t('stylelib.color')" @create="manager.create(data)" />
+            <ListHeader :title="t('stylelib.color')" @create="manager.create(data)"/>
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
                     :data="(fill as FillCatch)" />
             </div>
         </div>
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')
-            }}
-        </div>
+        <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">

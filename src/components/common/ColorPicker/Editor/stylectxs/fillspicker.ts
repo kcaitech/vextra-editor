@@ -475,7 +475,7 @@ export class FillsPicker extends ColorPickerEditor {
                     api.setFillGradient(_fills[this.index], getCopy());
                 })
             }
-            this.editor.reverseGradientStops([modifyVariable, modifyLocal]);
+            this.editor.rotateGradientStops([modifyVariable, modifyLocal]);
             this.hiddenCtrl();
         }
         this.commit();
@@ -525,7 +525,7 @@ export class FillsPicker extends ColorPickerEditor {
     modifyTileScale(event: Event): void {
         if (!this.fill) return;
         this.getSelection();
-        const val = getNumberFromInputEvent(event);
+        const val = Math.max(2, getNumberFromInputEvent(event)) / 100;
         if (isNaN(val)) return;
         if (this.fill.parent?.parent instanceof FillMask) {
             this.editor.modifyTileScale([(api: Api) => {
@@ -559,11 +559,10 @@ export class FillsPicker extends ColorPickerEditor {
     /* 当一个填充以图片作为填充物并以平铺方式填充时，用于旋转图片 */
     rotateImg(): void {
         if (!this.fill) return;
+        this.getSelection();
         const rotate = ((this.fill?.rotation ?? 0) + 90) % 360;
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.rotateImg([(api: Api) => {
-                api.setFillImageRotate(this.fill!, rotate);
-            }]);
+            this.editor.rotateImg([(api: Api) => api.setFillImageRotate(this.fill!, rotate)]);
             this.commit();
             return;
         }
@@ -580,9 +579,7 @@ export class FillsPicker extends ColorPickerEditor {
             });
         }
         const modifyLocal = (api: Api) => {
-            fills.forEach((_fills) => {
-                api.setFillImageRotate(_fills[this.index], rotate);
-            })
+            fills.forEach((_fills) => api.setFillImageRotate(_fills[this.index], rotate));
         }
         this.editor.rotateImg([modifyVariable, modifyLocal]);
         this.hiddenCtrl();

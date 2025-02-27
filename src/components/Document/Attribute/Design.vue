@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
+import { onMounted, onUnmounted, onUpdated, ref, shallowRef } from 'vue';
 import { ArtboardView, ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
@@ -174,14 +174,19 @@ function table_selection_change() {
     reflush_by_table_selection.value++;
 }
 
+let __trigger: Set<any> = new Set();
 // 选区图层变化
 function update_by_shapes(...args: any[]) {
     modify_constraint_show();
-    reflush_trigger.value = [...(args?.length ? args : [])];
+    args.forEach(v => __trigger.add(v))
+    reflush_trigger.value = Array.from(__trigger);
     reflush_by_shapes.value++;
     reflush.value++;
 }
 
+function clear() {
+    __trigger.clear();
+}
 function _modify_constraint_show() {
     constraintShow.value = props.context.selection.selectedShapes.every(
         s => is_constrainted(s)
@@ -304,6 +309,8 @@ function toolWatcher(t: number) {
     }
 }
 
+onUpdated(clear);
+
 onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     props.context.selection.watch(selection_watcher);
@@ -330,6 +337,7 @@ onUnmounted(() => {
 
 <template>
     <section id="Design">
+        <div style="display: none">{{ reflush }}</div>
         <el-scrollbar height="100%">
             <div v-if="!shapes.length && props.context.selection.selectedPage">
                 <PageBackground :context="props.context" :page="props.context.selection.selectedPage" />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ImageScaleMode, Matrix, ShapeType } from '@kcdesign/data';
+import { ImageScaleMode, ShapeType } from '@kcdesign/data';
 import { onMounted, ref } from 'vue';
 import { image_mode_map } from "./map";
 import { dbl_action } from '@/utils/mouse_interactive';
@@ -9,7 +9,6 @@ import { onUnmounted } from 'vue';
 import { ColorCtx } from '@/context/color';
 interface Props {
     context: Context
-    matrix: Matrix
 }
 const props = defineProps<Props>();
 const mode = ref<ImageScaleMode>();
@@ -54,8 +53,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="image-mode" @mousedown.stop="down" @mousemove="move" v-if="mode">
-        <component :is="image_mode_map.get(mode)" :context="props.context" :matrix="matrix"/>
+    <div v-if="mode" class="image-mode" @mousedown.stop="down" @mousemove="move">
+        <component :is="image_mode_map.get(mode)" :context="props.context" />
     </div>
 </template>
 <style scoped lang="scss">

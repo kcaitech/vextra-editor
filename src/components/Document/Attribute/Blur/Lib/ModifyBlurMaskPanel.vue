@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { Blur, BlurMask } from "@kcdesign/data";
+import { BlurMask } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
@@ -96,9 +96,7 @@ onUnmounted(() => {
                 <BlurPanel v-if="blur" :manager="manager" :context="context" :blur="(blur as BlurCatch)" del />
             </div>
         </div>
-        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style')
-            }}
-        </div>
+        <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">

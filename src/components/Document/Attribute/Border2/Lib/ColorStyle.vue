@@ -7,7 +7,7 @@
                             :list-status="manager.fillCtx.listStatus" :manager="manager"
                             :item="manager.fillCtx.listStatus ? FillMaskGridItem : FillMaskPanelItem" @update="update"/>
                 <div v-if="!sheets?.length && keyword" class="search-null">{{ t('stylelib.null_search') }}</div>
-                <div v-if="!sheets?.length && !keyword" class="data-null">{{ t('stylelib.null_search') }}</div>
+                <div v-if="!sheets?.length && !keyword" class="data-null">{{ t('stylelib.null_data') }}</div>
             </div>
         </el-scrollbar>
     </div>
@@ -24,7 +24,6 @@ import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { StrokeFillContextMgr } from '../ctx';
 import { useI18n } from "vue-i18n";
 
-
 const props = defineProps<{
     context: Context;
     manager: StrokeFillContextMgr;
@@ -36,13 +35,16 @@ const libs = ref<{ label: string, value: string }[]>([]);
 const currentLibs = ref<string>('all');
 const sheets = ref<SheetCatch[]>([]);
 
+const all = t('stylelib.all');
+const local = t('stylelib.local_style');
+
 function updateLib() {
     libs.value.length = 0;
     if (!props.context.data.stylelib) return;
-    libs.value.push({ label: '全部样式', value: 'all' });
+    libs.value.push({ label: all, value: 'all' });
     props.context.data.stylelib.map(lib => {
         if (lib.id === props.context.data.id) {
-            libs.value.push({ label: '此文件样式', value: lib.id });
+            libs.value.push({ label: local, value: lib.id });
         } else {
             libs.value.push({ label: lib.name, value: lib.id });
         }
@@ -63,7 +65,7 @@ function update() {
             id: sts.id,
             variables: []
         };
-        if (cat.id === props.context.data.id) cat.name = '此文件样式';
+        if (cat.id === props.context.data.id) cat.name = local;
 
         for (const v of sts.variables) {
             if (v.typeId === "fill-mask-living" && !v.disabled) cat.variables.push(v);
