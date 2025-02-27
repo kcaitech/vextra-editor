@@ -962,7 +962,7 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'], destroy: closeColor }
 );
 
 const colorPicker = new TextPicker(props.context, fillType.value, 'color');
@@ -971,6 +971,18 @@ function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('color-wrapper')) {
+            const color = props.context.color;
+            if (fillType.value === FillType.SolidColor) {
+                if (color.gradient_type) color.set_gradient_type(undefined);
+                if (color.locate) color.gradient_locate(undefined);
+                if (color.mode) color.switch_editor_mode(false);
+                if (color.imageScaleMode) color.setImageScaleMode(undefined);
+            } else {
+                color.set_gradient_type(gradient.value?.gradientType || GradientType.Linear);
+                color.gradient_locate({ index: 0, type: "text" });
+                color.switch_editor_mode(true, gradient.value);
+                color.setImageScaleMode(undefined);
+            }
             colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -327 } });
             break;
         }
@@ -1050,7 +1062,7 @@ function assemble() {
     }
 }
 
-const closeColor = () => {
+function closeColor() {
     colorPanelStatusMgr.close();
     const color = props.context.color;
     if (color.gradient_type) color.set_gradient_type(undefined);
@@ -1279,7 +1291,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 6px; gap: 8px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;">{{
                     t('attr.font_color')
-                    }}
+                }}
                 </div>
                 <div class="color">
                     <ColorBlock :colors="([textColor || new Color(1, 6, 6, 6)] as Color[])" @click="showColorPanel" />
@@ -1295,7 +1307,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
                         t('attr.font_color')
-                        }}
+                    }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
                         <SvgIcon :icon="add_icon" />

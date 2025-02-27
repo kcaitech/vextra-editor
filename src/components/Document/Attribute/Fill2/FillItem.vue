@@ -80,7 +80,7 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'], destroy: close }
 );
 
 function showColorPanel(event: MouseEvent) {
@@ -122,7 +122,7 @@ function update() {
     assemble();
 }
 
-const close = () => {
+function close() {
     colorPanelStatusMgr.close();
     const color = props.context.color;
     if (color.gradient_type) color.set_gradient_type(undefined);

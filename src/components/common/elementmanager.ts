@@ -21,6 +21,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private m_offset_t: number;
     private m_white_list: string[];
     private m_stop: any[] = [];
+    private m_on_destroy: Function | undefined = undefined;
 
     constructor(
         private context: Context,
@@ -31,6 +32,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             offsetTop?: number;
             offsetLeft?: number;
             whiteList?: string[];
+            destroy?: Function,
         }
     ) {
         this.m_left = init?.left ?? 0;
@@ -38,6 +40,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.m_offset_l = init?.offsetLeft ?? 0;
         this.m_offset_t = init?.offsetTop ?? 0;
         this.m_white_list = init?.whiteList ?? [];
+        this.m_on_destroy = init?.destroy;
 
         this.m_stop.push(watch(() => this.element.visible, (val) => !val && this.removeEvent()));
     }
@@ -187,6 +190,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         for (const query of this.m_white_list) {
             if (event.target.closest(query)) return;
         }
+        this.m_on_destroy?.();
         this.element.visible = false;
     }
 

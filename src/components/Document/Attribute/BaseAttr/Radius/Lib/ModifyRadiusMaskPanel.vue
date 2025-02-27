@@ -74,6 +74,8 @@ const setRadius = (event: Event) => {
     }
 
     const num = arrs.map(i => Math.max(Number(i), 0));
+    const isNan = num.some(i => isNaN(Number(i)));
+    if (isNan) return update();
     if (!data) return;
     manager.modifyRadiusMask(data, num);
 }
@@ -91,7 +93,7 @@ onUnmounted(() => {
     <div class="modify-radius-style-panel" id="modify-radius-style-panel">
         <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @modify-name="modifyName"
-            @modify-desc="modifyDesc" @changeInput="changeInput"/>
+            @modify-desc="modifyDesc" @changeInput="changeInput" />
 
         <div class="radius" v-if="data">
             <div class="title">{{ t('stylelib.round') }}</div>
