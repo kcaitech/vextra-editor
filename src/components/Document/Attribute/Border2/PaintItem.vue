@@ -83,6 +83,11 @@ function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('color-wrapper')) {
+            const color = props.context.color;
+            color.set_gradient_type(fillType.value as GradientType);
+            color.gradient_locate({ index: fillsPicker.index, type: "borders" });
+            color.switch_editor_mode(true, props.data.fill.gradient);
+            color.setImageScaleMode(undefined);
             colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
             break;
         }
