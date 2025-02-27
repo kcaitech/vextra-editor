@@ -480,7 +480,7 @@ const workspace_watcher = (t: number | string) => {
 const color_watcher = (t: number) => {
     if (t === ColorCtx.CHANGE_STOP) {
         active.value = props.context.color.selected_stop;
-    } else if (t === ColorCtx.GRADIENT_UPDATE) {
+    } else if (t === ColorCtx.GRADIENT_UPDATE || t === ColorCtx.COLOR_EDITOR) {
         get_linear_points();
     }
 }
