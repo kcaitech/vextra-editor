@@ -14,6 +14,6 @@ onUnmounted(watch(() => props.params, draw));
 </script>
 <template>
     <div style="width: 100%; height: 100%; background-color: #fff; position: absolute;">
-        <img :src="src" alt="fill-image" style="width: 100%; height: 100%;object-fit: contain;">
+        <img :src="src" alt="fill-image" style="width: 100%; height: 100%;object-fit: cover;">
     </div>
 </template>
