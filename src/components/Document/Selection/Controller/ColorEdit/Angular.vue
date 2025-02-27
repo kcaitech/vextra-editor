@@ -136,7 +136,7 @@ const dot_mousemove = (e: MouseEvent) => {
     const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
-    if (isDragging && gradientEditor) {
+    if (isDragging) {
         startPosition.x = x;
         startPosition.y = y;
         const matrix = new TransformRaw();
@@ -156,9 +156,9 @@ const dot_mousemove = (e: MouseEvent) => {
                 fill = locate.type === 'fills' ? [shape.getFills()[locate.index]] : [shape.getBorders().strokePaints[locate.index]];
             }
             if (dot_type === 'from') {
-                gradientEditor.modifyFrom(fill, posi);
+                gradientEditor!.modifyFrom(fill, posi);
             } else if (dot_type === 'to') {
-                gradientEditor.modifyTo(fill, posi);
+                gradientEditor!.modifyTo(fill, posi);
             }
         } else {
             if (dot_type === 'from') {
@@ -306,7 +306,7 @@ const stop_mousemove = (e: MouseEvent) => {
     const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
-    if (isDragging && gradientEditor) {
+    if (isDragging) {
         startPosition.x = x;
         startPosition.y = y;
         get_percent_posi(e);
@@ -321,7 +321,7 @@ const stop_mousemove = (e: MouseEvent) => {
             } else {
                 fill = locate.type === 'fills' ? [shape.getFills()[locate.index]] : [shape.getBorders().strokePaints[locate.index]];
             }
-            gradientEditor.modifyStopPosition(fill, posi, down_stop_id.value);
+            gradientEditor!.modifyStopPosition(fill, posi, down_stop_id.value);
         } else {
             gradientTextEditor!.execute_stop_position(posi, down_stop_id.value);
         }
