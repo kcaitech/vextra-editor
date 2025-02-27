@@ -23,7 +23,7 @@ const emits = defineEmits<{
 }>();
 
 const {t} = useI18n();
-const name = ref<string>(data?.name ?? '颜色样式');
+const name = ref<string>(data?.name ?? t('stylelib.colors'));
 const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>(getFills());
 
@@ -74,13 +74,13 @@ onUnmounted(() => {
         <MaskBaseInfo :name="name" :desc="desc" :focus-at-once="!data" @changeInput="changeInput"
                       @modify-name="modifyName" @modify-desc="modifyDesc"/>
         <div v-if="data" class="data-panel">
-            <ListHeader title="颜色" @create="manager.create(data)"/>
+            <ListHeader :title="t('stylelib.color')" @create="manager.create(data)"/>
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
                           :data="(fill as FillCatch)"/>
             </div>
         </div>
-        <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">创建样式</div>
+        <div v-else :class="{'create-style': true, disabled: !name}" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">

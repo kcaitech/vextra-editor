@@ -97,7 +97,7 @@ onUnmounted(() => {
             <div class="title">{{ t('stylelib.round') }}</div>
             <input type="text" v-model="radius" @change="setRadius">
         </div>
-        <div v-if="!data" :class="{ 'create-style': true, disabled: !name }" @click="createStyle">创建样式</div>
+        <div v-if="!data" :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>
     </div>
 </template>
 <style scoped lang="scss">

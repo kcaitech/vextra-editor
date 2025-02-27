@@ -41,5 +41,8 @@ export const stylelib = {
     null_data: 'No styles.',
     null_search: 'No styles match this search.',
 
-    esc_exit: 'ESC to exit'
+    esc_exit: 'ESC to exit',
+
+    all: 'All styles',
+    local_style: 'Created in this file',
 }

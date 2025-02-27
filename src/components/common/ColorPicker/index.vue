@@ -59,11 +59,8 @@ import {
     isSelectText
 } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
-import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
-// import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
 import { ImgFrame } from '@/context/atrribute';
-import ColorStyle from '@/components/Document/Attribute/Fill2/Lib/ColorStyle.vue';
 import { watchEffect } from 'vue';
 
 interface FillItem {
