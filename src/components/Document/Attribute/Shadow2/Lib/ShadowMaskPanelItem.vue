@@ -34,9 +34,8 @@ function update(...args: any[]) {
 function showModifyPanel(trigger: MouseEvent | Element) {
     let e: Element | null = trigger instanceof Element ? trigger : trigger.target as Element;
     while (e) {
-        if (e.classList.contains('modify')) {
-            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -442 } });
-            manager.keepUniquePanel('.modify', modifyPanelStatusMgr);
+        if (e.classList.contains('mask-catch-wrapper')) {
+            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
             break;
         }
         e = e.parentElement;

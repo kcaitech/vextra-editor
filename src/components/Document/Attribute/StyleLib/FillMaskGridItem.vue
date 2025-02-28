@@ -47,8 +47,7 @@ function update(...args: any[]) {
 function showModifyPanel(trigger: Element | null) {
     while (trigger) {
         if (trigger.classList.contains('grid')) {
-            modifyPanelStatusMgr.showBy(trigger, { once: { offsetLeft: -270 } });
-            manager.keepUniquePanel('.grid', modifyPanelStatusMgr);
+            modifyPanelStatusMgr.showBy(trigger, { once: { offsetLeft: -256 } });
             break;
         }
         trigger = trigger.parentElement;

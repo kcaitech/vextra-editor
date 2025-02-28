@@ -57,7 +57,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div :class="{'fill-mask-catch-wrapper': true, extend, selected }">
+    <div :class="{'mask-catch-wrapper': true, extend, selected }">
         <div class="preview-container" @mouseup="mouseup">
             <slot name="preview"/>
         </div>
@@ -69,7 +69,7 @@ onUnmounted(() => {
     </div>
 </template>
 <style scoped lang="scss">
-.fill-mask-catch-wrapper {
+.mask-catch-wrapper {
     position: relative;
     width: 100%;
     height: 32px;
