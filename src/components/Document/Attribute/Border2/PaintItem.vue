@@ -76,7 +76,7 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'], destroy: close }
+    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'], onDestroy: close }
 );
 
 function showColorPanel(event: MouseEvent) {

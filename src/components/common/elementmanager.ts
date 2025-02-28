@@ -8,7 +8,6 @@ export type ElementStatus = {
     visible: boolean;
 }
 
-
 export class ElementManager { /* 可用于窗口状态处理，窗口应该要是一个DIV类型的元素 */
     private m_left: number;
     private m_top: number;
@@ -28,7 +27,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             offsetTop?: number;
             offsetLeft?: number;
             whiteList?: string[];
-            destroy?: Function;
+            onDestroy?: Function;
             level?: number;
         }
     ) {
@@ -37,7 +36,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.m_offset_l = init?.offsetLeft ?? 0;
         this.m_offset_t = init?.offsetTop ?? 0;
         this.m_white_list = init?.whiteList ?? [];
-        this.m_on_destroy = init?.destroy;
+        this.m_on_destroy = init?.onDestroy;
         this.m_level = init?.level;
 
         this.m_stop.push(watch(() => this.element.visible, (val) => !val && this.removeEvent()));
@@ -97,7 +96,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             });
         }
         if (this.m_level !== undefined) {
-            const level = 'popover-index' + this.m_level;
+            const level = 'popover-level' + this.m_level;
             let events = this.context.eventsMap.get(level);
             if (!events) {
                 events = [];

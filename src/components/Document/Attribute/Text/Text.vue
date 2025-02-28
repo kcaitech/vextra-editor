@@ -956,7 +956,7 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.text-color'], destroy: closeColor }
+    { whiteList: ['#color-piker-gen-2-panel', '.text-color'], onDestroy: closeColor }
 );
 
 const colorPicker = new TextPicker(props.context, fillType.value, 'color');
