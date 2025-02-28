@@ -44,7 +44,7 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     }
 
     setSolidColor(c: RGBACatch): void {
-        this.onUnmounted = () => updateRecently(new Color(c.A, c.R, c.G, c.B));
+        this.onUnmounted = () => updateRecently(new Color(c.A, c.R, c.G, c.B)); // 在色板关闭时更新“最近使用”
     }
 
     dragSolidBegin(): void {

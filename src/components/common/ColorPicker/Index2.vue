@@ -52,6 +52,7 @@ function update() {
     else if (props.pattern) data.value = props.pattern;
     else data.value = props.color;
 }
+
 const stopWatch = watchEffect(update);
 onUnmounted(() => {
     stopWatch();
