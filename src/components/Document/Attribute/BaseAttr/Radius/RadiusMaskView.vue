@@ -6,7 +6,11 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from "vue-i18n";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 
-defineProps<{ context: Context; manager: RadiusContextMgr }>();
+defineProps<{
+    context: Context;
+    manager: RadiusContextMgr;
+    active: boolean;
+}>();
 const emits = defineEmits<{
     (e: 'showRadiusPanel', event: MouseEvent): void;
 }>();
@@ -18,8 +22,8 @@ const showRadiusPanel = (event: MouseEvent) => {
 </script>
 
 <template>
-    <MaskPort @unbind="() => manager.unbind()" :disabled="manager.radiusCtx.maskInfo!.disabled" :delete="false"
-        style="width: 184px;">
+    <MaskPort :disabled="manager.radiusCtx.maskInfo!.disabled" :delete="false" :active="active" style="width: 184px;"
+              @unbind="() => manager.unbind()">
         <div class="radius-left" @click="showRadiusPanel($event)">
             <div class="radius">
                 <SvgIcon :icon="radius_icon" />
