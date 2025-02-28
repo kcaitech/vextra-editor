@@ -46,11 +46,19 @@ function autoLayout(): void {
     } else {
         shapes = selectShapes[0].childs;
     }
+    let newshape: Shape | undefined;
     if (props.shapes.length > 1) {
         editor.create_autolayout_artboard(shapes, name);
     } else {
         const editor = props.context.editor4Shape(selectShapes[0]);
-        editor.addAutoLayout();
+        newshape = editor.addAutoLayout();
+    }
+    if (newshape) {
+        props.context.nextTick(page, () => {
+            const group = newshape && page.getShape(newshape.id);
+            group && props.context.selection.selectShape(group);
+            group && props.context.selection.notify(Selection.EXTEND, group);
+        })
     }
 }
 
@@ -243,7 +251,7 @@ function draggingVerSpace(e: MouseEvent) {
 
     if (!autoLayoutModifyHandler.asyncApiCaller) {
         autoLayoutModifyHandler.createApiCaller();
-    }                             
+    }
     const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
@@ -303,7 +311,7 @@ const changeSizing = (value: StackSizing, dir: PaddingDir) => {
 
 const changeGapSizing = (value: StackSizing, dir: PaddingDir) => {
     const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);    
+    const editor = props.context.editor4Shape(shapes);
     editor.modifyAutoLayoutGapSizing(value, dir);
 }
 

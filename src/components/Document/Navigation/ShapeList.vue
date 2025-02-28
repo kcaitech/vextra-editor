@@ -265,9 +265,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
             if (s.autoLayout) {
                 contextMenuItems.value.add(MenuItemType.UnAutoLayout);
             } else {
-                if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(s.type)) {
-                    contextMenuItems.value.add(MenuItemType.AutoLayout);
-                }
+                contextMenuItems.value.add(MenuItemType.AutoLayout);
             }
         }
         if (selected.length > 1) {

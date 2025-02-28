@@ -230,7 +230,7 @@ onMounted(() => {
             position: absolute;
             right: 9px;
             height: 32px;
-            flex: 0 0 10px;
+            flex: 0 0 12px;
 
             img {
                 margin: auto 0;

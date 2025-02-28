@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
-import { nextTick, onMounted, onUnmounted, ref, h, watch, watchEffect } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, h, watchEffect } from 'vue';
 import Key from "@/components/common/Key.vue";
 import { MenuItemType } from "@/components/Document/Menu/index";
 import { useI18n } from "vue-i18n";
 import {
     adapt_page, flattenSelection,
     get_shape_within_document,
-    getName,
     lower_layer, outlineSelection,
     select_all,
     shape_track,
@@ -32,7 +31,6 @@ import { Navi } from "@/context/navigate";
 import Layers from './Layers.vue';
 import TableMenu from './TableMenu/TableMenu.vue';
 import { useMask } from "@/components/Document/Creator/execute";
-import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 import { autoLayoutFn, unAutoLayoutFn } from '@/utils/auto_layout';
 import { MossClipboard } from "@/clipboard";
 
