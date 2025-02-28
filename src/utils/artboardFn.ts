@@ -126,7 +126,7 @@ export function insertFrameTemplate(context: Context) {
         frame.y = y;
         const fillColor = new Color(1, 255, 255, 255);
         const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, fillColor);
-        let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill);
+        let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill, context.data.stylesMgr);
         artboard = editor.insert(parent.data, shapes.length, artboard, true);
         context.nextTick(parent, () => {
             if (artboard) {
