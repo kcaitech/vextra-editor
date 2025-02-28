@@ -50,6 +50,12 @@ const showRadiusPanel = (event: MouseEvent) => {
             width: 14px;
             height: 16px;
         }
+        .name {
+            flex: 0 0 116px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 }
 </style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Blur, ShapeView } from "@kcdesign/data";
+import { ShapeView } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import BlurStyle from '@/components/Document/Attribute/Blur/Lib/BlurStyle.vue';
@@ -88,12 +88,15 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div v-if="blurCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <MaskPort v-else-if="blurCtx.maskInfo" :class="{ 'maskactive': blurLibStatus.visible }"
+        <MaskPort v-else-if="blurCtx.maskInfo" :active="blurLibStatus.visible"
             :disabled="blurCtx.maskInfo.disabled" @unbind="() => blurCtxMgr.unbind()"
             @delete="() => blurCtxMgr.removeMask()">
             <div class="blur_desc" @click="showBlurPanel($event)">
                 <div class="effect" />
-                <div>{{ blurCtx.maskInfo.disabled ? t('stylelib.deleted_style') : blurCtx.maskInfo.name }}</div>
+                <div class="name">{{
+                        blurCtx.maskInfo.disabled ? t('stylelib.deleted_style') : blurCtx.maskInfo.name
+                    }}
+                </div>
             </div>
         </MaskPort>
         <BlurPanel v-else-if="blurCtx.blur" :manager="blurCtxMgr" :context="context"
@@ -166,10 +169,8 @@ onUnmounted(() => {
             overflow: hidden;
         }
 
-        .span {
-            display: inline-block;
-            flex: 1;
-            width: 32px;
+        .name {
+            flex: 0 0 116px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

@@ -64,6 +64,13 @@ const showBorderPanel = (event: MouseEvent) => {
                 height: 16px;
             }
         }
+
+        .name {
+            flex: 0 0 116px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 }
 </style>
