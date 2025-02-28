@@ -10,7 +10,6 @@ import {
   SideType,
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { flattenShapes } from '@/utils/cutout';
 import { get_borders_side } from '@/utils/shape_style';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';
@@ -38,8 +37,8 @@ const thickness_left = ref<number | string>(0);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
 
 const update_side = () => {
-  const selected = props.context.selection.selectedShapes;
-  const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group && can_custom.includes(s.type) && !s.data.haveEdit);
+  const flat = props.context.selection.flat;
+  const s = flat.filter(s => s.type !== ShapeType.Group && can_custom.includes(s.type) && !s.data.haveEdit);
   if (!s.length) return;
   shapes.value = s;
   const action = get_borders_side(s);
