@@ -24,7 +24,7 @@ const props = defineProps<{
     context: Context;
     manager: FillsContextMgr;
     data: FillCatch;
-    lastone?: boolean;
+    last?: boolean;
 }>();
 const { t } = useI18n();
 const colorHex = ref<string>(props.data.fill.color.toHex().slice(1));
@@ -174,12 +174,12 @@ onUnmounted(() => {
     <div class="fill-item-container">
         <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)" />
         <div :class="{ 'value-panel-wrapper': true, disabled: !data.fill.isEnabled }">
-            <ColorBlock :colors="(colors as Fill[])" @click="showColorPanel" />
+            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel" />
             <component v-blur :is="compo" />
             <input v-blur class="alpha" type="text" :value="alpha" @focus="selectAllOnFocus"
                 @change="(e) => manager.modifyFillAlpha(e, data.fill)" />
         </div>
-        <div class="delete" :class="{ disabled: lastone }" @click="() => manager.remove(data.fill)">
+        <div class="delete" :class="{ disabled: last }" @click="() => manager.remove(data.fill)">
             <SvgIcon :icon="delete_icon" />
         </div>
         <ColorPicker v-if="colorPanelStatus.visible" :editor="fillsPicker" :type="fillType" :color="rgba!"

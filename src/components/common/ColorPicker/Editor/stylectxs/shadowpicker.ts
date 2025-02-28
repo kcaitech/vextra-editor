@@ -31,6 +31,7 @@ export class ShadowColorPicker extends ColorPickerEditor {
     }
 
     setSolidColor(c: RGBACatch): void {
+        super.setSolidColor(c);
         this.updateSelection();
         if (!this.shadow) return;
         const actions = this.getApiParams(this.shadow, c);
@@ -44,6 +45,7 @@ export class ShadowColorPicker extends ColorPickerEditor {
     }
 
     solidDragging(c: RGBACatch): void {
+        super.setSolidColor(c);
         if (!this.shadow) return;
         const actions = this.getApiParams(this.shadow, c);
         this.api.modifySolidColor(actions);

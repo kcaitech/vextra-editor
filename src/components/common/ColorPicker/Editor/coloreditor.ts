@@ -2,8 +2,9 @@ import { SelectionCtx } from "@/components/common/ColorPicker/Editor/basic";
 import { Context } from "@/context";
 import { IColorPicker, IGradientModifier, IPatternModifier } from "@/components/common/ColorPicker/Editor/basic/icolorpicker";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { AsyncApiCaller, PageEditor } from "@kcdesign/data";
+import { AsyncApiCaller, Color, PageEditor } from "@kcdesign/data";
 import { hidden_selection } from "@/utils/content";
+import { updateRecently } from "@/components/common/ColorPicker/utils";
 
 export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGradientModifier, IPatternModifier {
     private m_fill_type: string;
@@ -42,13 +43,17 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
         this.m_fill_type = type;
     }
 
-    setSolidColor(c: RGBACatch): void {}
+    setSolidColor(c: RGBACatch): void {
+        this.onUnmounted = () => updateRecently(new Color(c.A, c.R, c.G, c.B));
+    }
 
     dragSolidBegin(): void {
         this.updateSelection();
     }
 
-    solidDragging(c: RGBACatch): void {}
+    solidDragging(c: RGBACatch): void {
+        this.onUnmounted = () => updateRecently(new Color(c.A, c.R, c.G, c.B));
+    }
 
     dragSolidEnd(): void {}
 
@@ -101,4 +106,7 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     modifyTileScale(event: Event): void {}
 
     rotateImg(): void {}
+
+    onUnmounted() {
+    };
 }

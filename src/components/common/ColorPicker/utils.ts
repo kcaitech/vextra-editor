@@ -1,6 +1,19 @@
 import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 
-import { Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
+import {
+    Color,
+    Fill,
+    ShapeType,
+    ShapeView,
+    TextShapeView,
+    Gradient,
+    Stop,
+    GradientType,
+    FillType,
+    GroupShapeView,
+    TableView,
+    exportGradient, importGradient
+} from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';
@@ -270,11 +283,11 @@ export const getCanvasRectColor = (ctx: any, rect: Rect, scale: number = 1) => {
 }
 
 // store
-export const key_storage = 'color_recently';
+export const color_recent_storage = 'color_recently';
 const split = ':';
 
 export function updateRecently(color: Color) {
-    const store = JSON.parse(localStorage.getItem(key_storage) || JSON.stringify([]));
+    const store = JSON.parse(localStorage.getItem(color_recent_storage) || JSON.stringify([]));
     if (store.length) {
         const item = parseColorForStorage(color);
         const e_idx = store.findIndex((i: string) => i === item);
@@ -294,21 +307,27 @@ export function updateRecently(color: Color) {
         store.unshift(c);
         setLocalStorageForColors(store);
     }
-    return localStorage.getItem(key_storage);
+    return localStorage.getItem(color_recent_storage);
 }
 
 function parseColorForStorage(color: Color): string {
+    // if (color instanceof Gradient) return "gradient/" + JSON.stringify(exportGradient(color));
+    // else return "color/" + `${color.alpha}${split}${color.red}${split}${color.green}${split}${color.blue}`;
     return `${color.alpha}${split}${color.red}${split}${color.green}${split}${color.blue}`;
 }
 
-export function parseColorFormStorage(c: string): Color {
-    let _c: any[] = c.split(split);
-    _c = _c.map(i => Number(i));
-    return new Color(_c[0], Math.round(_c[1]), Math.round(_c[2]), Math.round(_c[3]));
+export function parseColorFormStorage(c: string): Color | Gradient {
+    if (c.includes('gradient')) {
+        return importGradient(JSON.parse(c.slice('gradient/'.length)));
+    } else {
+        let _c: any[] = c.split(split);
+        _c = _c.map(i => Number(i));
+        return new Color(_c[0], Math.round(_c[1]), Math.round(_c[2]), Math.round(_c[3]));
+    }
 }
 
 function setLocalStorageForColors(si: string[]) {
-    localStorage.setItem(key_storage, JSON.stringify(si));
+    localStorage.setItem(color_recent_storage, JSON.stringify(si));
 }
 
 // RGB => H

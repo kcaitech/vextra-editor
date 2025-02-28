@@ -14,10 +14,10 @@ const compos = {
 };
 
 const props = defineProps<{
-    colors: (Color | Fill | Border | AttrGetter)[];
-    size?: number,
-    round?: boolean,
-    disabledAlpha?: boolean
+    colors: (Color | Fill | Border | AttrGetter | Gradient)[];
+    size?: number;
+    round?: boolean;
+    disabledAlpha?: boolean;
 }>();
 type BlockType = 'solid' | 'pattern' | 'gradient';
 
@@ -48,6 +48,8 @@ function update() {
             } else if (c.fillType === FillType.Gradient && c.gradient) {
                 container.push({ type: "gradient", data: c.gradient });
             }
+        } else if (c instanceof Gradient) {
+            container.push({ type: "gradient", data: c });
         }
     }
 }

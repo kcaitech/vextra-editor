@@ -94,6 +94,7 @@ export class PaintsPicker extends ColorPickerEditor {
 
     /* 修改填充纯色 */
     setSolidColor(c: RGBACatch): void {
+        super.setSolidColor(c);
         if (!this.paint) return;
         this.updateSelection();
         if (this.paint.parent?.parent instanceof FillMask) {
@@ -139,6 +140,7 @@ export class PaintsPicker extends ColorPickerEditor {
 
     /* 拖拽修改纯色 */
     solidDragging(c: RGBACatch): void {
+        super.setSolidColor(c);
         if (this.paint!.parent?.parent instanceof FillMask) {
             this.editor.modifySolidColor([(api: Api) => {
                 api.setFillColor(this.paint!, new Color(c.A, c.R, c.G, c.B));

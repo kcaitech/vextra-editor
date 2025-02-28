@@ -96,6 +96,7 @@ export class TextPicker extends ColorPickerEditor {
 
     /* 修改填充纯色 */
     setSolidColor(c: RGBACatch): void {
+        super.setSolidColor(c);
         this.updateSelection();
         const modifyLocal = (api: Api) => {
             this.textShapes.forEach((s) => {
@@ -129,6 +130,7 @@ export class TextPicker extends ColorPickerEditor {
 
     /* 拖拽修改纯色 */
     solidDragging(c: RGBACatch): void {
+        super.setSolidColor(c);
         const modifyLocal = (api: Api) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);

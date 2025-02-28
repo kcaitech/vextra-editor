@@ -3,7 +3,7 @@ import { Color, Shadow, backgorundAsyncApi, ShadowMask } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
-export class backgorundColorPicker extends ColorPickerEditor {
+export class backgroundColorPicker extends ColorPickerEditor {
 
     constructor(public context: Context, type: string) {
         super(context, type);
@@ -20,6 +20,7 @@ export class backgorundColorPicker extends ColorPickerEditor {
     }
 
     setSolidColor(c: RGBACatch): void {
+        super.setSolidColor(c);
         const actions = this.getApiParams(c);
         this.api.modifySolidColor(actions);
         this.hiddenCtrl();
@@ -31,6 +32,7 @@ export class backgorundColorPicker extends ColorPickerEditor {
     }
 
     solidDragging(c: RGBACatch): void {
+        super.setSolidColor(c);
         const actions = this.getApiParams(c);
         this.api.modifySolidColor(actions);
         this.hiddenCtrl();

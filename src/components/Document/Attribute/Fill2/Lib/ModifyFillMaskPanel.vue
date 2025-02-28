@@ -25,7 +25,7 @@ const { t } = useI18n();
 const name = ref<string>(data?.name ?? t('stylelib.colors'));
 const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>();
-const lastone = ref<boolean>(false);
+const last = ref<boolean>(false);
 
 function getFills() {
     const container: FillCatch[] = [];
@@ -39,7 +39,7 @@ function update() {
     name.value = data?.name ?? t('stylelib.colors');
     desc.value = data?.description ?? '';
     fills.value = getFills();
-    lastone.value= fills.value.length === 1;
+    last.value= fills.value.length === 1;
 }
 
 function modifyName(value: string) {
@@ -92,7 +92,7 @@ onUnmounted(() => {
             <ListHeader :title="t('stylelib.color')" @create="manager.create(data)" />
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                    :data="(fill as FillCatch)" :lastone="lastone" />
+                    :data="(fill as FillCatch)" :last="last" />
             </div>
         </div>
         <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>

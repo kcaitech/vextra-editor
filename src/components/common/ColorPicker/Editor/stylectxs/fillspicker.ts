@@ -18,6 +18,7 @@ import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
 import { modify_imgs } from "@/utils/content";
+import { updateRecently } from "@/components/common/ColorPicker/utils";
 
 export class FillsPicker extends ColorPickerEditor {
     fill: Fill | undefined;
@@ -99,6 +100,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     /* 修改填充纯色 */
     setSolidColor(c: RGBACatch): void {
+        super.setSolidColor(c);
         if (!this.fill) return;
         this.updateSelection();
         if (this.fill.parent?.parent instanceof FillMask) {
@@ -143,6 +145,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     /* 拖拽修改纯色 */
     solidDragging(c: RGBACatch): void {
+        super.setSolidColor(c);
         if (this.fill!.parent?.parent instanceof FillMask) {
             this.editor.modifySolidColor([(api: Api) => {
                 api.setFillColor(this.fill!, new Color(c.A, c.R, c.G, c.B));
