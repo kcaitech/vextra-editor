@@ -4,11 +4,13 @@ import unbind_icon from "@/assets/icons/svg/unbind.svg";
 import delete_icon from "@/assets/icons/svg/delete.svg";
 
 interface Props {
+    active?: boolean;
     disabled?: boolean;
     delete?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
+    active: false,
     delete: true,
     disabled: false,
 })
@@ -22,7 +24,7 @@ const emits = defineEmits<{
 <template>
     <div class="mask-port-wrapper">
         <div class="info-container">
-            <div v-bind="$attrs" :class="{ 'info': true, 'disabled': disabled }">
+            <div v-bind="$attrs" :class="{ 'info': true, 'disabled': disabled, active }">
                 <slot />
             </div>
             <div class="unbind" @click="emits('unbind')">
@@ -53,7 +55,7 @@ const emits = defineEmits<{
         border-radius: var(--default-radius);
         overflow: hidden;
 
-        .maskactive {
+        .active {
             background-color: #e5e5e5 !important;
         }
 

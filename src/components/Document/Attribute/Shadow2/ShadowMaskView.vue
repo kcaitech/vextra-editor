@@ -69,8 +69,7 @@ onUnmounted(watchEffect(() => {
 
     > span {
         display: inline-block;
-        flex: 0 0 120px;
-        width: 120px;
+        flex: 0 0 116px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

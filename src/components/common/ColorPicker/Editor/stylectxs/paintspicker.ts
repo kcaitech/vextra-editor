@@ -62,7 +62,7 @@ export class PaintsPicker extends ColorPickerEditor {
     modifyFillType(type: string): void {
         if (!this.paint) return;
         super.modifyFillType(type);
-        this.getSelection();
+        this.updateSelection();
         if (this.paint.parent?.parent instanceof FillMask) {
             this.editor.modifyFillType([(api: Api) => {
                 this.setType(api, this.paint!, type);
@@ -95,7 +95,7 @@ export class PaintsPicker extends ColorPickerEditor {
     /* 修改填充纯色 */
     setSolidColor(c: RGBACatch): void {
         if (!this.paint) return;
-        this.getSelection();
+        this.updateSelection();
         if (this.paint.parent?.parent instanceof FillMask) {
             this.editor.modifySolidColor([(api: Api) => {
                 api.setFillColor(this.paint!, new Color(c.A, c.R, c.G, c.B));
@@ -130,7 +130,7 @@ export class PaintsPicker extends ColorPickerEditor {
 
     /* 拖拽修改纯色前置 */
     dragSolidBegin(): void {
-        this.getSelection();
+        this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getBorders().strokePaints);
@@ -169,7 +169,7 @@ export class PaintsPicker extends ColorPickerEditor {
     }
 
     createStop(c: RGBACatch) {
-        this.getSelection();
+        this.updateSelection();
         const color = new Color(c.A, c.R, c.G, c.B);
         const stop = new Stop([0] as BasicArray<number>, v4(), c.position, color);
         const getCopy = () => {
@@ -220,7 +220,7 @@ export class PaintsPicker extends ColorPickerEditor {
     }
 
     removeStop(stopAt: number) {
-        this.getSelection();
+        this.updateSelection();
         const getCopy = () => {
             const gradient = this.paint!.gradient!;
             const gradientCopy = this.editor.importGradient(gradient);
@@ -254,7 +254,7 @@ export class PaintsPicker extends ColorPickerEditor {
     }
 
     setStopColor(c: RGBACatch, stopAt: number) {
-        this.getSelection();
+        this.updateSelection();
         if (!this.paint) return;
 
         const getCopy = () => {
@@ -290,7 +290,7 @@ export class PaintsPicker extends ColorPickerEditor {
     }
 
     dragStopBegin() {
-        this.getSelection();
+        this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getBorders().strokePaints);
@@ -333,7 +333,7 @@ export class PaintsPicker extends ColorPickerEditor {
     }
 
     dragStopPositionBegin() {
-        this.getSelection();
+        this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getBorders().strokePaints);
@@ -379,7 +379,7 @@ export class PaintsPicker extends ColorPickerEditor {
     reverseStops() {
         if (!this.paint) return;
 
-        this.getSelection();
+        this.updateSelection();
 
         const getCopy = () => {
             const gradient = this.paint!.gradient!;
@@ -425,7 +425,7 @@ export class PaintsPicker extends ColorPickerEditor {
     rotateStops() {
         if (!this.paint) return;
 
-        this.getSelection();
+        this.updateSelection();
 
         const getCopy = () => {
             const gradient = this.paint!.gradient!;

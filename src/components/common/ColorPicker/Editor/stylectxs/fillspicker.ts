@@ -67,7 +67,7 @@ export class FillsPicker extends ColorPickerEditor {
     modifyFillType(type: string): void {
         if (!this.fill) return;
         super.modifyFillType(type);
-        this.getSelection();
+        this.updateSelection();
         if (this.fill.parent?.parent instanceof FillMask) {
             this.editor.modifyFillType([(api: Api) => {
                 this.setType(api, this.fill!, type);
@@ -100,7 +100,7 @@ export class FillsPicker extends ColorPickerEditor {
     /* 修改填充纯色 */
     setSolidColor(c: RGBACatch): void {
         if (!this.fill) return;
-        this.getSelection();
+        this.updateSelection();
         if (this.fill.parent?.parent instanceof FillMask) {
             this.editor.modifySolidColor([(api: Api) => {
                 api.setFillColor(this.fill!, new Color(c.A, c.R, c.G, c.B));
@@ -134,7 +134,7 @@ export class FillsPicker extends ColorPickerEditor {
     private m_fills: BasicArray<Fill>[] = [];
     /* 拖拽修改纯色前置 */
     dragSolidBegin(): void {
-        this.getSelection();
+        this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
@@ -173,7 +173,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     createStop(c: RGBACatch) {
-        this.getSelection();
+        this.updateSelection();
         const color = new Color(c.A, c.R, c.G, c.B);
         const stop = new Stop([0] as BasicArray<number>, v4(), c.position, color);
         const getCopy = () => {
@@ -224,7 +224,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     removeStop(stopAt: number) {
-        this.getSelection();
+        this.updateSelection();
         const getCopy = () => {
             const gradient = this.fill!.gradient!;
             const gradientCopy = this.editor.importGradient(gradient);
@@ -258,7 +258,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     setStopColor(c: RGBACatch, stopAt: number) {
-        this.getSelection();
+        this.updateSelection();
         if (!this.fill) return;
 
         const getCopy = () => {
@@ -294,7 +294,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     dragStopBegin() {
-        this.getSelection();
+        this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
@@ -337,7 +337,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     dragStopPositionBegin() {
-        this.getSelection();
+        this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
@@ -383,7 +383,7 @@ export class FillsPicker extends ColorPickerEditor {
     reverseStops() {
         if (!this.fill) return;
 
-        this.getSelection();
+        this.updateSelection();
 
         const getCopy = () => {
             const gradient = this.fill!.gradient!;
@@ -429,7 +429,7 @@ export class FillsPicker extends ColorPickerEditor {
     rotateStops() {
         if (!this.fill) return;
 
-        this.getSelection();
+        this.updateSelection();
 
         const getCopy = () => {
             const gradient = this.fill!.gradient!;
@@ -483,7 +483,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     modifyObjectFit(type: ImageScaleMode): void {
         if (!this.fill) return;
-        this.getSelection();
+        this.updateSelection();
         if (this.fill.parent?.parent instanceof FillMask) {
             this.editor.modifyObjectFit([(api: Api) => {
                 api.setFillScaleMode(this.fill!, type);
@@ -524,7 +524,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     modifyTileScale(event: Event): void {
         if (!this.fill) return;
-        this.getSelection();
+        this.updateSelection();
         const val = Math.max(2, getNumberFromInputEvent(event)) / 100;
         if (isNaN(val)) return;
         if (this.fill.parent?.parent instanceof FillMask) {
@@ -559,7 +559,7 @@ export class FillsPicker extends ColorPickerEditor {
     /* 当一个填充以图片作为填充物并以平铺方式填充时，用于旋转图片 */
     rotateImg(): void {
         if (!this.fill) return;
-        this.getSelection();
+        this.updateSelection();
         const rotate = ((this.fill?.rotation ?? 0) + 90) % 360;
         if (this.fill.parent?.parent instanceof FillMask) {
             this.editor.rotateImg([(api: Api) => api.setFillImageRotate(this.fill!, rotate)]);
@@ -590,7 +590,7 @@ export class FillsPicker extends ColorPickerEditor {
         buff: Uint8Array,
         base64: string
     }, width: number, height: number): Function[] {
-        this.getSelection();
+        this.updateSelection();
         if (!this.fill) return [];
         if (this.fill.parent?.parent instanceof FillMask) {
             const mission = (api: Api) => {
@@ -655,7 +655,7 @@ export class FillsPicker extends ColorPickerEditor {
     }
 
     filterDragBegin(): void {
-        this.getSelection();
+        this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());

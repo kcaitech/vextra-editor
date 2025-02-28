@@ -61,23 +61,23 @@ function apexStyleSelect(selected: SelectItem) {
 
 const shaow_apex = ref(false);
 function init_v() {
-    const len = props.manager.selected.length;
+    const len = props.manager.flat.length;
     s_mixed.value = false;
     e_mixed.value = false;
-    shaow_apex.value = props.manager.selected.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
+    shaow_apex.value = props.manager.flat.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
     if (shaow_apex.value) {
         apexStyle();
         return;
     }
-    const shape = props.manager.selected[0];
+    const shape = props.manager.flat[0];
     const sm = shape.startMarkerType;
     const em = shape.endMarkerType;
     if (len === 1) {
         borderFrontStyle.value = { value: sm || MarkerType.Line, content: sm || MarkerType.Line };
         borderEndStyle.value = { value: em || MarkerType.Line, content: `end-${em || MarkerType.Line}` };
     } else if (len > 1) {
-        s_mixed.value = !(props.manager.selected.every(v => v.startMarkerType === sm));
-        e_mixed.value = !(props.manager.selected.every(v => v.endMarkerType === em));
+        s_mixed.value = !(props.manager.flat.every(v => v.startMarkerType === sm));
+        e_mixed.value = !(props.manager.flat.every(v => v.endMarkerType === em));
         if (!s_mixed.value) {
             borderFrontStyle.value = { value: sm || MarkerType.Line, content: sm || MarkerType.Line };
         } else {
@@ -92,10 +92,10 @@ function init_v() {
 }
 
 const apexStyle = () => {
-    const len = props.manager.selected.length;
-    shaow_apex.value = props.manager.selected.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
+    const len = props.manager.flat.length;
+    shaow_apex.value = props.manager.flat.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
     apex_mixed.value = false;
-    const shape = props.manager.selected[0];
+    const shape = props.manager.flat[0];
     const sm = shape.startMarkerType;
     const em = shape.endMarkerType;
     if (len === 1) {
@@ -107,8 +107,8 @@ const apexStyle = () => {
             borderApexStyle.value = { value: v || MarkerType.Line, content: `end-${v || MarkerType.Line}` };
         }
     } else if (len > 1) {
-        const start = !(props.manager.selected.every(v => v.startMarkerType === sm));
-        const end = !(props.manager.selected.every(v => v.endMarkerType === em));
+        const start = !(props.manager.flat.every(v => v.startMarkerType === sm));
+        const end = !(props.manager.flat.every(v => v.endMarkerType === em));
         if (start === end && sm === em) {
             const v = em === MarkerType.Round || em === MarkerType.Square || em === MarkerType.Line || !em ? em : `${t('attr.mixed')}`
             if (v === `${t('attr.mixed')}`) {

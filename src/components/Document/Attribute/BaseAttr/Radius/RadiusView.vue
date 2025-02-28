@@ -39,7 +39,7 @@ function setting_for_extend(val: number, index: number) {
     values[index] = val;
 
     if (keyupdate.value) {
-        linearApi.shapesModifyRadius(props.manager.selected, values);
+        linearApi.shapesModifyRadius(props.manager.flat, values);
     } else {
         props.manager.modifyRadius(values);
     }
@@ -70,7 +70,7 @@ async function dragstart(e: MouseEvent) {
         });
     }
 
-    lockMouseHandler = new LockMouse(props.context, e, props.manager.selected);
+    lockMouseHandler = new LockMouse(props.context, e, props.manager.flat);
     document.addEventListener('pointerlockchange', pointerLockChange, false);
 }
 
@@ -120,7 +120,7 @@ function keydownRadius(event: KeyboardEvent, index: number) {
         const target = event.target as HTMLInputElement;
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        const shapes = props.manager.selected;
+        const shapes = props.manager.flat;
         value = get_value_from_input(value);
         if (props.manager.radiusCtx.rect) {
             setting_for_extend(value, index);

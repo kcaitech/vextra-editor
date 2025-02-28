@@ -14,6 +14,7 @@ const props = defineProps<{
     manager: StrokeFillContextMgr;
     fills: FillCatch[];
     info: MaskInfo;
+    active: boolean;
 }>();
 const emits = defineEmits<{
     (e: "show-style-lib", event: MouseEvent): void;
@@ -29,9 +30,10 @@ onUnmounted(watchEffect(() => {
 }));
 </script>
 <template>
-    <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :disabled="info.disabled">
+    <MaskPort :disabled="info.disabled" :active="active" @delete="() => manager.removeMask()"
+              @unbind="() => manager.unbind()">
         <div class="border_desc" @click="event => emits('show-style-lib', event)">
-            <ColorBlock :colors="(colors as Fill[])" round disabled-alpha/>
+            <ColorBlock :colors="colors as Fill[]" round disabled-alpha/>
             <span>{{ info.disabled ? t('stylelib.deleted_style') : name }}</span>
         </div>
     </MaskPort>
@@ -46,10 +48,9 @@ onUnmounted(watchEffect(() => {
     gap: 8px;
     padding: 0 8px;
 
-    .span {
+    span {
         display: inline-block;
-        flex: 1;
-        width: 32px;
+        flex: 0 0 116px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

@@ -155,7 +155,7 @@ onUnmounted(() => {
     <div class="fill-item-container">
         <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)" />
         <div :class="{ 'value-panel-wrapper': true, disabled: !data.fill.isEnabled }">
-            <ColorBlock :colors="(colors as Fill[])" @click="showColorPanel" />
+            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel" />
             <component v-blur :is="compo" />
             <input v-blur class="alpha" type="text" :value="alpha" @focus="selectAllOnFocus"
                 @change="(e) => manager.modifyFillAlpha(e, data.fill)" />

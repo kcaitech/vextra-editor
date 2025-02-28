@@ -31,7 +31,7 @@ export class ShadowColorPicker extends ColorPickerEditor {
     }
 
     setSolidColor(c: RGBACatch): void {
-        this.getSelection();
+        this.updateSelection();
         if (!this.shadow) return;
         const actions = this.getApiParams(this.shadow, c);
         this.api.modifySolidColor(actions);
@@ -40,7 +40,7 @@ export class ShadowColorPicker extends ColorPickerEditor {
     }
 
     dragSolidBegin(): void {
-        this.getSelection();
+        this.updateSelection();
     }
 
     solidDragging(c: RGBACatch): void {

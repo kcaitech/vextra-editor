@@ -91,7 +91,7 @@ function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType
     value = value + (e.code === 'ArrowUp' ? 1 : -1)
     if (isNaN(value)) return;
     value = value <= 0 ? 0 : value <= 300 ? value : 300
-    linearApi.modifyBorderCustomThickness(props.manager.selected, value, type);
+    linearApi.modifyBorderCustomThickness(props.manager.flat, value, type);
     hidden_selection(props.context);
     e.preventDefault();
   }
@@ -159,7 +159,7 @@ const dragging = (e: MouseEvent, thickness: number | string, type: SideType) => 
   } else if (val > 300) {
     val = 300;
   }
-  lockMouse.modifyBorderCustomThickness(props.manager.selected, val, type);
+  lockMouse.modifyBorderCustomThickness(props.manager.flat, val, type);
   getSideThickness();
 }
 

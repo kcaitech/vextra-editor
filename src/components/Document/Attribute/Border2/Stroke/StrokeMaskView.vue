@@ -7,7 +7,12 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from "vue-i18n";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 
-defineProps<{ context: Context; manager: StrokeFillContextMgr; trigger: any[] }>();
+defineProps<{
+    context: Context;
+    manager: StrokeFillContextMgr;
+    trigger: any[];
+    active: boolean;
+}>();
 const emits = defineEmits<{
     (e: 'showBorderPanel', event: MouseEvent): void;
 }>();
@@ -19,7 +24,7 @@ const showBorderPanel = (event: MouseEvent) => {
 
 <template>
     <div class="borders-container" v-if="manager.fillCtx.fills.length && manager.fillCtx.strokeMaskInfo">
-        <MaskPort v-bind="$attrs" :delete="false" :disabled="manager.fillCtx.strokeMaskInfo.disabled"
+        <MaskPort v-bind="$attrs" :delete="false" :disabled="manager.fillCtx.strokeMaskInfo.disabled" :active="active"
                   @unbind="() => manager.unbindStroke()">
             <div class="border-left" @click="showBorderPanel($event)">
                 <div class="border">
@@ -63,6 +68,13 @@ const showBorderPanel = (event: MouseEvent) => {
                 width: 14px;
                 height: 16px;
             }
+        }
+
+        .name {
+            flex: 0 0 116px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
 }

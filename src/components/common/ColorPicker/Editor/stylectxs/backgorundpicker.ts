@@ -27,7 +27,7 @@ export class backgorundColorPicker extends ColorPickerEditor {
     }
 
     dragSolidBegin(): void {
-        this.getSelection();
+        this.updateSelection();
     }
 
     solidDragging(c: RGBACatch): void {

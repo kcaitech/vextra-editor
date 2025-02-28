@@ -11,7 +11,7 @@ export class SelectionCtx {
         this.flat = [];
     }
 
-    getSelection() {
+    updateSelection() {
         this.selected = this.context.selection.selectedShapes;
         this.flat = this.context.selection.flat;
     }
