@@ -39,11 +39,12 @@ function changeDescInput(event: Event) {
         <div class="name">
             <label for="name">{{ t('stylelib.name') }}</label>
             <input v-focus type="text" id="name" :value="name" @change="modifyName" @input="changeNameInput"
-                @keydown.esc="blur">
+                @keydown.esc="blur" autocomplete="off">
         </div>
         <div class="des">
             <label for="des">{{ t('stylelib.description') }}</label>
-            <input type="text" id="des" :value="desc" @change="modifyDesc" @input="changeDescInput" @keydown.esc="blur">
+            <input type="text" id="des" :value="desc" @change="modifyDesc" @input="changeDescInput" @keydown.esc="blur"
+                autocomplete="off">
         </div>
     </div>
 </template>
