@@ -50,7 +50,6 @@ export class MossWriter {
             if (!mask) return;
             masks.push(exportMask(mask) as StyleMangerMember);
         });
-        console.log('--masks--', masks);
         return masks;
     }
 
