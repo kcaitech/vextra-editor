@@ -36,7 +36,7 @@ function showModifyPanel(trigger: MouseEvent | Element) {
     let e: Element | null = trigger instanceof Element ? trigger : trigger.target as Element;
     while (e) {
         if (e.classList.contains('mask-catch-wrapper')) {
-            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
+            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -260 } });
             break;
         }
         e = e.parentElement;
