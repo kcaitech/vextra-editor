@@ -12,7 +12,7 @@ import {
     FillType,
     GroupShapeView,
     TableView,
-    exportGradient, importGradient
+    importGradient
 } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
