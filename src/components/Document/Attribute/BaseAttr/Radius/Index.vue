@@ -84,7 +84,7 @@ onUnmounted(() => {
     </div>
     <RadiusView v-if="!radiusCtx.mask && radiusCtx.radius.length" :context="context" :manager="radiusCtxMgr"
         :data="radiusCtx.radius" :disabled="disabled" />
-    <RadiusMaskView v-else-if="radiusCtx.mask" :class="{ 'maskactive': radiusLibStatus.visible }" :context="context"
+    <RadiusMaskView v-else-if="radiusCtx.mask" :active="radiusLibStatus.visible" :context="context"
         :manager="radiusCtxMgr" @showRadiusPanel="showRadiusPanel" />
     <RadiusStylePanel v-if="radiusLibStatus.visible" :context="context" :manager="radiusCtxMgr" @close="closePanel"
         :title="t('stylelib.radius')" />
