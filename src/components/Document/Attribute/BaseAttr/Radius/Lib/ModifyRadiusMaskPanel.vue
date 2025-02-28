@@ -62,6 +62,7 @@ function createStyle() {
 const setRadius = (event: Event) => {
     const target = event.target as HTMLInputElement;
     let arrs = radius.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
+    if (radius.value === '') return update();
     const b = arrs.some(i => isNaN(Number(i)));
     target.blur();
     if (b) return update();
