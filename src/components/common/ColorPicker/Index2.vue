@@ -53,7 +53,11 @@ function update() {
     else data.value = props.color;
 }
 
-onUnmounted(watchEffect(update));
+const stopWatch = watchEffect(update);
+onUnmounted(() => {
+    stopWatch();
+    editor.onUnmounted();
+});
 </script>
 
 <template>

@@ -14,19 +14,18 @@ import {
     import_text,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
-    Matrix,
     Page,
     PathShapeView,
     Shape,
     ShapeFrame,
     ShapeType,
-    ShapeView,
+    ShapeView, StyleMangerMember,
     SVGParseResult,
     SymbolView,
     TextShape,
     Transform,
     TransformRaw,
-    UploadAssets
+    UploadAssets,
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
@@ -316,7 +315,8 @@ export class BundleHandler {
     paste(bundle: Bundle) {
         let { images, SVG, HTML, plain } = bundle;
         const source = this.getSource(HTML) as SourceBundle;        // 图层
-        const paras = this.getParas(HTML);                                       // 文本段落
+        const paras = this.getParas(HTML);                          // 文本段落
+        if (source.styles.length) this.insertMasks(source.styles);  // 样式
         if (images) {                                                            // 图片资源(多个的情况下可能包含了SVG资源)
             const allMedia: (SVGBundle | ImageBundle)[] = [...images, ...(SVG ? SVG : [])];
             const context = this.context;
@@ -434,6 +434,7 @@ export class BundleHandler {
 
         const source = this.getSource(HTML);
         const paras = this.getParas(HTML);
+        if (source.styles.length) this.insertMasks(source.styles);  // 样式
 
         if (images) {
             // 用图片生成图层
@@ -523,5 +524,10 @@ export class BundleHandler {
                 if (!result) message("danger", context.workspace.t('system.uploadMediaFail'));
             });
         }
+    }
+
+    insertMasks(masks: StyleMangerMember[]) {
+        const editor = this.context.editor4Doc();
+        editor.insertStyles(masks);
     }
 }

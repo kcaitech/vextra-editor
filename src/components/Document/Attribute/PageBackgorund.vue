@@ -11,7 +11,7 @@ import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
 import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
-import { backgorundColorPicker } from "@/components/common/ColorPicker/Editor/stylectxs/backgorundpicker";
+import { backgroundColorPicker } from "@/components/common/ColorPicker/Editor/stylectxs/backgorundpicker";
 interface Props {
     context: Context
     page: PageView
@@ -35,7 +35,7 @@ const colorPanelStatusMgr = new ElementManager(
     { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'] }
 );
 
-const backgorundPicker = new backgorundColorPicker(props.context, FillType.SolidColor);
+const backgorundPicker = new backgroundColorPicker(props.context, FillType.SolidColor);
 
 function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;

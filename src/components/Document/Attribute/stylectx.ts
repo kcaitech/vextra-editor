@@ -73,7 +73,6 @@ export class StyleCtx {
     }
 
     private m_panel: Set<ElementManager> = new Set();
-    private m_panel_map: Map<string, ElementManager> = new Map();
 
     protected kill() {
         this.m_panel.forEach(i => i.close());
@@ -81,12 +80,6 @@ export class StyleCtx {
 
     catchPanel(ele: ElementManager) {
         this.m_panel.add(ele);
-    }
-
-    keepUniquePanel(type: string, ele: ElementManager) {
-        const exist = this.m_panel_map.get(type);
-        if (exist && exist !== ele) exist.close();
-        this.m_panel_map.set(type, ele);
     }
 
     modifyMaskName(sheet: string, maskID: string, name: string) {

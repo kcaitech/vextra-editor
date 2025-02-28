@@ -1,7 +1,7 @@
 <template>
     <div id="blur-lib-panel" class="blur-lib-panel">
         <PopoverHeader :title="t('stylelib.blurs')" @create="showCreatePanel" @close="emits('close')"/>
-        <div style="padding: 8px 12px; box-sizing: border-box;" @wheel.stop>
+        <div style="padding: 12px 8px; box-sizing: border-box;" @wheel.stop>
             <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword" />
             <el-scrollbar>
                 <div class="content">

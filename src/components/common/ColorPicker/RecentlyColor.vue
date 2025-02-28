@@ -1,36 +1,26 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { Color } from "@kcdesign/data";
+import { Color, Gradient } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
-import { key_storage, parseColorFormStorage } from "@/components/common/ColorPicker/utils";
+import { color_recent_storage, parseColorFormStorage } from "@/components/common/ColorPicker/utils";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue"
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
 const emits = defineEmits(["change"])
 
 const {t} = useI18n();
-const recent = ref<Color[]>([]);
+const recent = ref<(Color | Gradient)[]>([]);
 
 function init_recent() {
-    let r = localStorage.getItem(key_storage);
+    let r = localStorage.getItem(color_recent_storage);
     r = JSON.parse(r || '[]');
-    if (!r || !r.length) {
-        return;
-    }
+    if (!r?.length) return;
     recent.value = [];
-    for (let i = 0; i < r.length; i++) {
-        recent.value.push(parseColorFormStorage(r[i]));
-    }
+    for (let i = 0; i < r.length; i++) recent.value.push(parseColorFormStorage(r[i]));
 }
 
 function setColor(color: Color) {
-    const cc: RGBACatch = {
-        R: color.red,
-        G: color.green,
-        B: color.blue,
-        A: color.alpha,
-        position: 1
-    }
+    const cc: RGBACatch = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
     emits("change", cc);
 }
 

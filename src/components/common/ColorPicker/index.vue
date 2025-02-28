@@ -30,7 +30,7 @@ import {
     drawTooltip,
     updateRecently,
     parseColorFormStorage,
-    key_storage,
+    color_recent_storage,
     RGB2HSB,
     RGB2H,
     validate,
@@ -908,14 +908,14 @@ function switch_tile() {
 }
 
 function init_recent() {
-    let r = localStorage.getItem(key_storage);
+    let r = localStorage.getItem(color_recent_storage);
     r = JSON.parse(r || '[]');
     if (!r || !r.length) {
         return;
     }
     recent.value = [];
     for (let i = 0; i < r.length; i++) {
-        recent.value.push(parseColorFormStorage(r[i]));
+        // recent.value.push(parseColorFormStorage(r[i]));
     }
 }
 
@@ -954,7 +954,7 @@ function update_recent_color() {
     if (nVal.length) {
         recent.value = [];
         for (let i = 0; i < nVal.length; i++) {
-            recent.value.push(parseColorFormStorage(nVal[i]));
+            // recent.value.push(parseColorFormStorage(nVal[i]));
         }
     }
 }

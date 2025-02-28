@@ -36,6 +36,7 @@ export type SourceBundle = {
     originIds: string[];
     media: any;
     unbindRefs: RefShapeBase[];
+    styles: any[];
 }
 
 export class MossClipboard {

@@ -31,6 +31,9 @@ const transformLB = ref<string>();
 const transformL = ref<string>();
 const visible = ref<boolean>(true);
 
+const rightSidePath = ref<string>();
+const bottomSidePath = ref<string>();
+
 let transformBase: Transform = new Transform();
 
 let direction: Direction = Direction.Angle;
@@ -181,6 +184,9 @@ function update() {
     const rbDot = rb.transform(ColVector3D.FromXY(0, 0)).col0;
     const lbDot = lb.transform(ColVector3D.FromXY(0, 0)).col0;
 
+    rightSidePath.value = `M${rtDot.x} ${rtDot.y} L${rbDot.x} ${rbDot.y}`;
+    bottomSidePath.value = `M${lbDot.x} ${lbDot.y} L${rbDot.x} ${rbDot.y}`;
+
     maskPath.value = `M${ltDot.x}, ${ltDot.y} L${rtDot.x}, ${rtDot.y} L${rbDot.x}, ${rbDot.y} L${lbDot.x}, ${lbDot.y}`;
     visible.value = Math.min(Math.abs(ltDot.x - rtDot.x), Math.abs(ltDot.y - rbDot.y)) > 24;
 
@@ -219,23 +225,19 @@ onUnmounted(() => {
             <path :transform="transformLT" d="M0 0 h12 v4 h-8 v8 h-4 z"/>
             <path :transform="transformT" d="M-6 0 h12 v4 h-12 z"/>
             <path :transform="transformRT" d="M-12 0 h12 v12 h-4 v-8 h-8 z"/>
-            <path class="assist" :transform="transformR" d="M0 -12 v24 h-8 v-24 z"
-                  @mousedown="(e) => start(e, Direction.Hor)" @mouseenter="() =>enter(Direction.Hor)"
-                  @mouseleave="leave"/>
+            <path class="assist" :d="rightSidePath" @mousedown="(e) => start(e, Direction.Hor)" stroke-width="10"
+                  @mouseenter="() => enter(Direction.Hor)" @mouseleave="leave"/>
             <path :transform="transformR" d="M0 -6 v12 h-4 v-12 z"
-                  @mousedown="(e) => start(e, Direction.Hor)" @mouseenter="() =>enter(Direction.Hor)"
+                  @mousedown="(e) => start(e, Direction.Hor)" @mouseenter="() => enter(Direction.Hor)"
                   @mouseleave="leave"/>
-            <path class="assist" :transform="transformRB" d="M0 0 h-16 v-16 h16"
-                  @mousedown="(e) => start(e, Direction.Angle)" @mouseenter="() =>enter(Direction.Angle)"
-                  @mouseleave="leave"/>
-            <path :transform="transformRB" d="M0 0 h-12 v-4 h8 v-8 h4"
-                  @mousedown="(e) => start(e, Direction.Angle)" @mouseenter="() =>enter(Direction.Angle)"
-                  @mouseleave="leave"/>
-            <path class="assist" :transform="transformB" d="M12 0 h-24 v-8 h24 z"
-                  @mousedown="(e) => start(e, Direction.Ver)" @mouseenter="() =>enter(Direction.Ver)"
+            <path class="assist" :d="bottomSidePath" @mousedown="(e) => start(e, Direction.Ver)" stroke-width="10"
+                  @mouseenter="() => enter(Direction.Ver)" @mouseleave="leave"/>
+            <path :transform="transformRB" d="M0 0 h-12 v-4 h8 v-8 h4"/>
+            <path class="assist" :transform="transformRB" d="M-10 -10 h20 v20 h-20"
+                  @mousedown="(e) => start(e, Direction.Angle)" @mouseenter="() => enter(Direction.Angle)"
                   @mouseleave="leave"/>
             <path :transform="transformB" d="M6 0 h-12 v-4 h12 z"
-                  @mousedown="(e) => start(e, Direction.Ver)" @mouseenter="() =>enter(Direction.Ver)"
+                  @mousedown="(e) => start(e, Direction.Ver)" @mouseenter="() => enter(Direction.Ver)"
                   @mouseleave="leave"/>
             <path :transform="transformLB" d="M0 0 h12 v-4 h-8 v-8 h-4 z"/>
             <path :transform="transformL" d="M0 -6 h4 v12 h-4 z"/>
@@ -254,5 +256,6 @@ path {
 
 .assist {
     fill: transparent;
+    stroke: transparent;
 }
 </style>
