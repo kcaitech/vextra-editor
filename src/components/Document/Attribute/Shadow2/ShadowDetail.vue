@@ -91,7 +91,7 @@ function keydownOffsetX(e: KeyboardEvent, val: string | number) {
         if (props.data.shadow.parent?.parent instanceof ShadowMask) {
             actions.push({ shadow: props.data.shadow, value });
         } else {
-            for (const view of props.manager.selected) {
+            for (const view of props.manager.flat) {
                 const shadow = view.getShadows()[_idx];
                 actions.push({ shadow, value });
             }
@@ -118,7 +118,7 @@ function keydownOffsetY(e: KeyboardEvent, val: string | number) {
         if (props.data.shadow.parent?.parent instanceof ShadowMask) {
             actions.push({ shadow: props.data.shadow, value });
         } else {
-            for (const view of props.manager.selected) {
+            for (const view of props.manager.flat) {
                 const shadow = view.getShadows()[_idx];
                 actions.push({ shadow, value });
             }
@@ -145,7 +145,7 @@ function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
         if (props.data.shadow.parent?.parent instanceof ShadowMask) {
             actions.push({ shadow: props.data.shadow, value });
         } else {
-            for (const view of props.manager.selected) {
+            for (const view of props.manager.flat) {
                 const shadow = view.getShadows()[_idx];
                 actions.push({ shadow, value });
             }
@@ -172,7 +172,7 @@ function keydownSpread(e: KeyboardEvent, val: string | number) {
         if (props.data.shadow.parent?.parent instanceof ShadowMask) {
             actions.push({ shadow: props.data.shadow, value });
         } else {
-            for (const view of props.manager.selected) {
+            for (const view of props.manager.flat) {
                 const shadow = view.getShadows()[_idx];
                 actions.push({ shadow, value });
             }
@@ -228,7 +228,7 @@ function draggingX(e: MouseEvent) {
     if (props.data.shadow.parent?.parent instanceof ShadowMask) {
         actions.push({ shadow: props.data.shadow, value });
     } else {
-        for (const view of props.manager.selected) {
+        for (const view of props.manager.flat) {
             const shadow = view.getShadows()[_idx];
             actions.push({ shadow, value });
         }
@@ -249,7 +249,7 @@ function draggingY(e: MouseEvent) {
     if (props.data.shadow.parent?.parent instanceof ShadowMask) {
         actions.push({ shadow: props.data.shadow, value });
     } else {
-        for (const view of props.manager.selected) {
+        for (const view of props.manager.flat) {
             const shadow = view.getShadows()[_idx];
             actions.push({ shadow, value });
         }
@@ -270,7 +270,7 @@ function draggingB(e: MouseEvent) {
     if (props.data.shadow.parent?.parent instanceof ShadowMask) {
         actions.push({ shadow: props.data.shadow, value });
     } else {
-        for (const view of props.manager.selected) {
+        for (const view of props.manager.flat) {
             const shadow = view.getShadows()[_idx];
             actions.push({ shadow, value });
         }
@@ -291,7 +291,7 @@ function draggingS(e: MouseEvent) {
     if (props.data.shadow.parent?.parent instanceof ShadowMask) {
         actions.push({ shadow: props.data.shadow, value });
     } else {
-        for (const view of props.manager.selected) {
+        for (const view of props.manager.flat) {
             const shadow = view.getShadows()[_idx];
             actions.push({ shadow, value });
         }
@@ -310,7 +310,7 @@ function dragEnd() {
 const disabled = ref(false);
 const spare_tip = ref('');
 const disable = () => {
-    const shapes = props.manager.selected;
+    const shapes = props.manager.flat;
     if (shapes.length === 1) {
         const type = shapes[0].type;
         const fills = shapes[0].data.style.fills;

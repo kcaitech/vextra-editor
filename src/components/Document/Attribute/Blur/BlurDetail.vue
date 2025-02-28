@@ -162,8 +162,8 @@ const text_keyboard = (e: KeyboardEvent, val: string | number) => {
         if (props.blur.blur.parent instanceof BlurMask) {
             actions.push({ blur: props.blur.blur, value });
         } else {
-            for (let i = 0; i < props.manager.selected.length; i++) {
-                const shape = props.manager.selected[i];
+            for (let i = 0; i < props.manager.flat.length; i++) {
+                const shape = props.manager.flat[i];
                 if (shape.style.blur) actions.push({ blur: shape.style.blur, value });
             }
         }

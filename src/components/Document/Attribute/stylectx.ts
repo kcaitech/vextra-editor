@@ -1,8 +1,7 @@
-import { CoopRepository, ShapeView, Document } from "@kcdesign/data";
+import { ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { hidden_selection } from "@/utils/content";
 import { ElementManager } from "@/components/common/elementmanager";
-import { getShapesForStyle } from "@/utils/style";
 
 export type SheetCatch = {
     name: string;
@@ -11,12 +10,12 @@ export type SheetCatch = {
 }
 
 export class StyleCtx {
-    private m_shapes: ShapeView[];
     private m_selected: ShapeView[];
+    private m_flat: ShapeView[];
 
     constructor(protected context: Context) {
-        this.m_shapes = [];
         this.m_selected = [];
+        this.m_flat = [];
     }
 
     get repo() {
@@ -31,24 +30,13 @@ export class StyleCtx {
         return this.context.data;
     }
 
-    protected getSelected() {
-        this.shapes = this.context.selection.selectedShapes;
-        this.selected = this.context.selection.flat;
+    protected updateSelection() {
+        this.selected = this.context.selection.selectedShapes;
+        this.flat = this.context.selection.flat;
     }
 
     /**
      * 选区内的选中图层：相当与context.selection.selectedShapes
-     */
-    get shapes() {
-        return this.m_shapes;
-    }
-
-    set shapes(ss) {
-        this.m_shapes = ss;
-    }
-
-    /**
-     * 选区内的选中图层的基础上，把编组打平。
      */
     get selected() {
         return this.m_selected;
@@ -56,6 +44,17 @@ export class StyleCtx {
 
     set selected(ss) {
         this.m_selected = ss;
+    }
+
+    /**
+     * 选区内的选中图层的基础上，把编组打平。
+     */
+    get flat() {
+        return this.m_flat;
+    }
+
+    set flat(ss) {
+        this.m_flat = ss;
     }
 
 

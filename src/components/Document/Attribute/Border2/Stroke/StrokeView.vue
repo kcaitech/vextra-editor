@@ -93,7 +93,7 @@ function keydownThickness(event: KeyboardEvent, val: string | number) {
             value = value + (event.code === 'ArrowUp' ? 1 : -1);
             if (isNaN(value)) return;
             value = value <= 0 ? 0 : value <= 300 ? value : 300;
-            if (old !== value) linearApi.modifyShapesBorderThickness(props.manager.selected, value);
+            if (old !== value) linearApi.modifyShapesBorderThickness(props.manager.flat, value);
         }
         event.preventDefault();
     }
@@ -167,7 +167,7 @@ function onMouseMove(e: MouseEvent) {
         let thickness = (getSideThickness(strokeInfo.sideSetting) || 0) + e.movementX;
         if (thickness > 300) thickness = 300;
 
-        lockMouseHandler?.modifyBorderThickness(props.manager.selected, thickness < 0 ? 0 : thickness);
+        lockMouseHandler?.modifyBorderThickness(props.manager.flat, thickness < 0 ? 0 : thickness);
     }
 }
 
@@ -214,10 +214,10 @@ onUnmounted(() => {
         v-if="manager.fillCtx.strokeInfo && (manager.fillCtx.fills.length || manager.fillCtx.mixed)">
         <div class="bottom">
             <div class="test" style=" flex: calc(50% - 20px);"
-                :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(manager.selected[0].type) ? 'none' : 'auto' }">
-                <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
-                    :selected="positoSelected()" @select="positionSelect" :index="0"
-                    :mixed="manager.fillCtx.strokeInfo.position === 'mixed'"></Select>
+                :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(manager.flat[0].type) ? 'none' : 'auto' }">
+                <Select class="select" :context="context" :shapes="manager.flat" :source="positonOptionsSource"
+                        :selected="positoSelected()" @select="positionSelect" :index="0"
+                        :mixed="manager.fillCtx.strokeInfo.position === 'mixed'"></Select>
             </div>
             <div class="thickness-container" style=" flex: calc(50% - 20px);" :class="{ actived: isActived }">
                 <SvgIcon :icon="thickness_icon"

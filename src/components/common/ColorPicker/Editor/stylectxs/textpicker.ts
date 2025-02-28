@@ -83,7 +83,7 @@ export class TextPicker extends ColorPickerEditor {
     /* 修改填充类型 */
     modifyFillType(type: string): void {
         super.modifyFillType(type);
-        this.getSelection();
+        this.updateSelection();
         const modifyLocal = (api: Api) => {
             this.textShapes.forEach((shape) => {
                 this.setType(api, shape, type);
@@ -96,7 +96,7 @@ export class TextPicker extends ColorPickerEditor {
 
     /* 修改填充纯色 */
     setSolidColor(c: RGBACatch): void {
-        this.getSelection();
+        this.updateSelection();
         const modifyLocal = (api: Api) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
@@ -124,7 +124,7 @@ export class TextPicker extends ColorPickerEditor {
 
     /* 拖拽修改纯色前置 */
     dragSolidBegin(): void {
-        this.getSelection();
+        this.updateSelection();
     }
 
     /* 拖拽修改纯色 */
@@ -159,7 +159,7 @@ export class TextPicker extends ColorPickerEditor {
     }
 
     createStop(c: RGBACatch) {
-        this.getSelection();
+        this.updateSelection();
         const color = new Color(c.A, c.R, c.G, c.B);
         const stop = new Stop([0] as BasicArray<number>, v4(), c.position, color);
         const getCopy = () => {
@@ -205,7 +205,7 @@ export class TextPicker extends ColorPickerEditor {
     }
 
     removeStop(stopAt: number) {
-        this.getSelection();
+        this.updateSelection();
         const getCopy = () => {
             const gradient = this.format!.gradient!;
             const gradientCopy = this.editor.importGradient(gradient);
@@ -234,7 +234,7 @@ export class TextPicker extends ColorPickerEditor {
     }
 
     setStopColor(c: RGBACatch, stopAt: number) {
-        this.getSelection();
+        this.updateSelection();
         const getCopy = () => {
             const gradient = this.format!.gradient!;
             const copy = this.editor.importGradient(gradient);
@@ -263,7 +263,7 @@ export class TextPicker extends ColorPickerEditor {
     }
 
     dragStopBegin() {
-        this.getSelection();
+        this.updateSelection();
     }
 
     draggingStop(c: RGBACatch, stopAt: number): void {
@@ -298,7 +298,7 @@ export class TextPicker extends ColorPickerEditor {
     }
 
     dragStopPositionBegin() {
-        this.getSelection();
+        this.updateSelection();
     }
 
     draggingStopPosition(position: number, stopAt: number) {
@@ -334,7 +334,7 @@ export class TextPicker extends ColorPickerEditor {
     }
 
     reverseStops() {
-        this.getSelection();
+        this.updateSelection();
         const getCopy = () => {
             const gradient = this.format!.gradient!;
             const stops = gradient.stops;
@@ -370,7 +370,7 @@ export class TextPicker extends ColorPickerEditor {
     }
 
     rotateStops() {
-        this.getSelection();
+        this.updateSelection();
         const getCopy = () => {
             const gradient = this.format!.gradient!;
             const copy = this.editor.importGradient(gradient);

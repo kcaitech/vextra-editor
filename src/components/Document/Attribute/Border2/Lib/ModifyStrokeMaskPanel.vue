@@ -141,9 +141,9 @@ onUnmounted(() => {
         <div v-if="data" class="data-panel">
             <div class="type">
                 <div class="title">{{ t('stylelib.position') }}</div>
-                <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
-                    :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
-                    @select="positionSelect" :entry="'style'" />
+                <Select class="select" :context="context" :shapes="manager.flat" :source="positonOptionsSource"
+                        :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
+                        @select="positionSelect" :entry="'style'" />
             </div>
             <div class="thickness">
                 <div class="title">{{ t('stylelib.thickness') }}</div>

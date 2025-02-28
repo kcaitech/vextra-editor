@@ -45,7 +45,7 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     setSolidColor(c: RGBACatch): void {}
 
     dragSolidBegin(): void {
-        this.getSelection();
+        this.updateSelection();
     }
 
     solidDragging(c: RGBACatch): void {}
