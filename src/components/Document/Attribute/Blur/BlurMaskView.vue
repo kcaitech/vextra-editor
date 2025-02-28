@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { Shadow } from "@kcdesign/data";
+import { Blur } from "@kcdesign/data";
 import { onUnmounted, ref, watchEffect } from "vue";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
-import { ShadowCatch, ShadowsContextMgr } from "./ctx";
+import { BlurCatch, BlurContextMgr } from "./ctx";
 import { useI18n } from "vue-i18n";
 
 /**
@@ -13,8 +13,8 @@ import { useI18n } from "vue-i18n";
  */
 const props = defineProps<{
     context: Context;
-    manager: ShadowsContextMgr;
-    shadows: ShadowCatch[];
+    manager: BlurContextMgr;
+    blur: BlurCatch;
     info: MaskInfo;
     active: boolean;
 }>();
@@ -24,33 +24,26 @@ const emits = defineEmits<{
 
 const t = useI18n().t;
 
-const colors = ref<Shadow[]>(props.shadows.map(i => i.shadow).reverse());
 const name = ref<string>(props.info.name);
 
 onUnmounted(watchEffect(() => {
-    colors.value = props.shadows.map(i => i.shadow).reverse();
     name.value = props.info.name;
 }));
 </script>
 <template>
-    <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :active="active" :disabled="info.disabled">
-        <div class="shadow-desc" @click="event => emits('show-style-lib', event)">
-            <div class="effect" :style="{
-                boxShadow: `
-                        ${colors[0].position.includes('in') ? 'inset' : ''} 
-                        ${colors[0].offsetX > 0 ? '1px' : colors[0].offsetX < 0 ? '-1px' : '0'} 
-                        ${colors[0].offsetY > 0 ? '1px' : colors[0].offsetY < 0 ? '-1px' : '0'} 
-                        ${colors[0].blurRadius > 0 ? '1px' : '0'}
-                        ${colors[0].spread > 0 ? '1px' : '0'}
-                        #0000004d
-                        `}">
+    <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :active="active"
+        :disabled="info.disabled">
+        <div class="blur_desc" @click="event => emits('show-style-lib', event)">
+            <div class="effect" />
+            <div class="name">{{
+                info.disabled ? t('stylelib.deleted_style') : info.name
+                }}
             </div>
-            <span>{{ info.disabled ? t('stylelib.deleted_style') : name }}</span>
         </div>
     </MaskPort>
 </template>
 <style scoped lang="scss">
-.shadow-desc {
+.blur_desc {
     flex: 1;
     width: 100%;
     height: 100%;
@@ -60,16 +53,15 @@ onUnmounted(watchEffect(() => {
     padding: 0 8px;
 
     .effect {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         background-color: #fff;
         border: 1px solid #000000e5;
         border-radius: 3px;
         overflow: hidden;
     }
 
-    > span {
-        display: inline-block;
+    .name {
         flex: 0 0 116px;
         overflow: hidden;
         text-overflow: ellipsis;

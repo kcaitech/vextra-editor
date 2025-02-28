@@ -12,6 +12,7 @@ import { ElementManager, ElementStatus } from "@/components/common/elementmanage
 import { BlurCatch, BlurContext, BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 import BlurPanel from "@/components/Document/Attribute/Blur/BlurPanel.vue"
+import BlurMaskView from "./BlurMaskView.vue"
 
 type Props = {
     context: Context;
@@ -33,7 +34,7 @@ const blurLibStatus = reactive<ElementStatus>({ id: '#blur-lib-panel', visible: 
 const blurPanelStatusMgr = new ElementManager(
     props.context,
     blurLibStatus,
-    { whiteList: ['.blur_clover', '.blur-lib-panel', '.blur_desc'] }
+    { whiteList: ['header-container', '.blur-lib-panel', 'mask-port-wrapper'] }
 );
 blurCtxMgr.catchPanel(blurPanelStatusMgr);
 
@@ -88,17 +89,8 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div v-if="blurCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <MaskPort v-else-if="blurCtx.maskInfo" :active="blurLibStatus.visible"
-            :disabled="blurCtx.maskInfo.disabled" @unbind="() => blurCtxMgr.unbind()"
-            @delete="() => blurCtxMgr.removeMask()">
-            <div class="blur_desc" @click="showBlurPanel($event)">
-                <div class="effect" />
-                <div class="name">{{
-                        blurCtx.maskInfo.disabled ? t('stylelib.deleted_style') : blurCtx.maskInfo.name
-                    }}
-                </div>
-            </div>
-        </MaskPort>
+        <BlurMaskView v-else-if="blurCtx.mask" :active="blurLibStatus.visible" :context="context" :manager="blurCtxMgr"
+            :blur="(blurCtx.blur as BlurCatch)" :info="blurCtx.maskInfo!" @show-style-lib="e => showBlurPanel(e)" />
         <BlurPanel v-else-if="blurCtx.blur" :manager="blurCtxMgr" :context="context"
             :blur="(blurCtx.blur as BlurCatch)" />
         <BlurStyle v-if="blurLibStatus.visible" :context="props.context" :manager="blurCtxMgr" @close="closePanel" />
@@ -149,32 +141,6 @@ onUnmounted(() => {
 
     .add:hover {
         background-color: #F5F5F5;
-    }
-
-    .blur_desc {
-        flex: 1;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 8px;
-
-        .effect {
-            width: 16px;
-            height: 16px;
-            background-color: #fff;
-            border: 1px solid #000000e5;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .name {
-            flex: 0 0 116px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
     }
 }
 

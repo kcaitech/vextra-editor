@@ -84,7 +84,7 @@ onUnmounted(() => {
         </TypeHeader>
 
         <div v-if="shadowCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <ShadowMaskView v-else-if="shadowCtx.mask" :class="{ 'maskactive': shadowLibStatus.visible }" :context="context"
+        <ShadowMaskView v-else-if="shadowCtx.mask" :active="shadowLibStatus.visible" :context="context"
             :manager="shadowCtxMgr" :shadows="(shadowCtx.shadows as ShadowCatch[])" :info="shadowCtx.maskInfo!"
             @show-style-lib="e => showShadowLib(e)" />
 
