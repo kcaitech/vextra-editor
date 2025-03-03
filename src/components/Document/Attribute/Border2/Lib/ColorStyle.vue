@@ -19,7 +19,7 @@ import SearchInput from "@/components/common/SearchInput.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import FillMaskPanelItem from './FillMaskPanelItem.vue';
 import FillMaskGridItem from '@/components/Document/Attribute/StyleLib/FillMaskGridItem.vue';
-import { StyleSheet } from "@kcdesign/data"
+import { FillMask, FillType, StyleSheet } from "@kcdesign/data"
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { StrokeFillContextMgr } from '../ctx';
 import { useI18n } from "vue-i18n";
@@ -68,9 +68,11 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = local;
 
         for (const v of sts.variables) {
-            console.log(v, 'v');
-            
-            if (v.typeId === "fill-mask-living" && !v.disabled) cat.variables.push(v);
+            if (v.typeId === "fill-mask-living" && !v.disabled) {
+                const fills = (v as FillMask).fills;
+                if (fills.some(i => i.fillType === FillType.Pattern)) continue;
+                cat.variables.push(v);
+            }
         }
         if (word) {
             const reg = new RegExp(`${word}`, 'img');

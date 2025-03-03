@@ -276,6 +276,8 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     repositioning() {
         const target = this.target;
 
+        if (!target) return;
+
         const rect = target.getBoundingClientRect();
         const clientWidth = document.documentElement.clientWidth;
         const clientHeight = document.documentElement.clientHeight;

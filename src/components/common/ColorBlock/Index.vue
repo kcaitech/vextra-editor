@@ -24,6 +24,8 @@ type BlockType = 'solid' | 'pattern' | 'gradient';
 const fillsPreview = ref<{
     type: BlockType;
     data: Color | Gradient | string;
+
+    opacity?: number;
     disabledAlpha?: boolean;
 }[]>([]);
 
@@ -35,12 +37,17 @@ function update() {
         if (c instanceof Color) {
             container.push({ type: "solid", data: c, disabledAlpha });
         } else if (c instanceof Fill) {
+            if (!c.isEnabled) continue;
             if (c.fillType === FillType.SolidColor) {
                 container.push({ type: "solid", data: c.color, disabledAlpha });
             } else if (c.fillType === FillType.Gradient) {
-                container.push({ type: "gradient", data: c.gradient! });
+                container.push({ type: "gradient", data: c.gradient!, opacity: c.gradient?.gradientOpacity ?? 1 });
             } else if (c.fillType === FillType.Pattern) {
-                container.push({ type: "pattern", data: c.peekImage(true) || DEFAULT_IMAGE })
+                container.push({
+                    type: "pattern",
+                    data: c.peekImage(true) || DEFAULT_IMAGE,
+                    opacity: c.color.alpha ?? 1
+                });
             }
         } else if (c instanceof AttrGetter) {
             if (c.fillType === FillType.SolidColor && c.color) {
@@ -59,7 +66,8 @@ onUnmounted(watch(() => props.colors, update));
 </script>
 <template>
     <div :class="{ 'color-wrapper': true, round }" :style="{ width: (size || 16) + 'px', height: (size || 16) + 'px' }">
-        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="(compos[c.type])" :params="(c as any)" />
+        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="compos[c.type]" :params="c as any"
+                   :opacity="c.opacity"/>
     </div>
 </template>
 <style scoped lang="scss">
