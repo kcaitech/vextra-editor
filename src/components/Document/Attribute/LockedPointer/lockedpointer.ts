@@ -72,6 +72,11 @@ export class LockedPointer {
     private up = this.__up.bind(this);
     private blur = this.__blur.bind(this);
 
+    /**
+     * @param event
+     * @param exe 拖动过程中的callback
+     * @param after 拖动结束的callback
+     */
     start(event: MouseEvent, exe: (event: MouseEvent) => void, after: Function) {
         this.__fixed.x = event.clientX;
         this.__fixed.y = event.clientY;

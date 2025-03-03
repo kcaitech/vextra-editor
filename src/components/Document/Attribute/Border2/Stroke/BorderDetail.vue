@@ -1,31 +1,30 @@
 <script setup lang="ts">
 import Popover from '@/components/common/Popover.vue';
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { BorderStyle, CornerType, ShapeType, TableView } from "@kcdesign/data";
+import { BorderStyle, CornerType, ShapeType } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
-import {
-    get_actions_border,
-    get_actions_border_style, get_borders_corner
-} from '@/utils/shape_style';
-import { flattenShapes } from '@/utils/cutout';
-import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
+import { get_actions_border, get_actions_border_style, get_borders_corner } from '@/utils/shape_style';
+import { hidden_selection } from '@/utils/content';
 import { Menu } from "@/context/menu";
 import BorderSideSelected from './BorderSideSelected.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import select_more_icon from '@/assets/icons/svg/select-more.svg';
+import corner_miter_icon from '@/assets/icons/svg/corner-miter.svg';
+import corner_bevel_icon from '@/assets/icons/svg/corner-bevel.svg';
+import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
+import { customizable, StrokeFillContextMgr } from '../ctx';
 
-interface Props {
+const props = defineProps<{
     context: Context
     manager: StrokeFillContextMgr
     trigger: any[]
-}
-
-const props = defineProps<Props>();
+}>();
 const { t } = useI18n();
 const popover = ref();
 const borderStyle = ref<SelectItem>({ value: 'dash', content: t('attr.dash') });
@@ -45,7 +44,6 @@ function showMenu() {
 }
 
 function updater() {
-    // border style init
     const strokeInfo = props.manager.fillCtx.strokeInfo;
     if (!strokeInfo) return;
     if (typeof strokeInfo.borderStyle === 'string') {
@@ -60,75 +58,37 @@ function updater() {
 
 function borderStyleSelect(selected: SelectItem) {
     borderStyle.value = selected;
-    const selecteds = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
-    const shape = selecteds[0];
-    const table = props.context.tableSelection;
-    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-        const bs = selected.value === 'dash' ? new BorderStyle(2, 2) : new BorderStyle(0, 0);
-        const e = props.context.editor4Table(shape as TableView);
-        const range = get_table_range(table);
-        e.setBorderStyle4Cell(bs, range);
-    } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_border_style(shapes, (selected.value as 'dash' | 'solid'));
-        if (actions && actions.length) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesBorderStyle(actions);
-        }
-    }
+    const flat = props.context.selection.flat;
+    const actions = get_actions_border_style(flat, selected.value as 'dash' | 'solid');
+    if (actions && actions.length) props.manager.modifyStrokeStyle(actions);
     popover.value.focus();
     hidden_selection(props.context);
 }
 
-const setCornerType = (type: CornerType) => {
+function setCornerType(type: CornerType) {
     if (selected.value === type) return;
     selected.value = type;
-    const selecteds = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
-    const shape = selecteds[0];
-    const table = props.context.tableSelection;
-    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-        const e = props.context.editor4Table(shape as TableView);
-        const range = get_table_range(table);
-    } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_border(shapes, type);
-        if (actions && actions.length) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesBorderCornerType(actions);
-        }
-    }
+    const flat = props.context.selection.flat;
+    if (flat.length < 1) return;
+    const actions = get_actions_border(flat, type);
+    if (actions && actions.length) props.manager.modifyCornerType(actions);
     popover.value.focus();
     hidden_selection(props.context);
 }
 
-// watch(() => props.border, () => {
-//     updater();
-// }, { deep: true })
-
-const update_corner = () => {
-    const selecteds = props.context.selection.selectedShapes;
-    const s = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-    if (!s.length) return;
-    is_corner.value = s.every(s => s.type === ShapeType.Line || s.type === ShapeType.Contact);
+function update_corner() {
+    const flat = props.context.selection.selectedShapes;
+    if (!flat.length) return;
+    is_corner.value = flat.every(s => s.type === ShapeType.Line || s.type === ShapeType.Contact);
     if (is_corner.value) return;
-    is_border_custom.value = s.some(s => {
-        return can_custom.includes(s.type) && !s.data.haveEdit;
+    is_border_custom.value = flat.some(s => {
+        return customizable.includes(s.type) && !s.data.haveEdit;
     });
-    const actions = get_borders_corner(s);
+    const actions = get_borders_corner(flat);
     if (actions) {
         selected.value = actions;
     } else {
         selected.value = undefined;
-    }
-}
-
-function selection_wather(t?: any) {
-    if (t === Selection.CHANGE_SHAPE) {
-        update_corner();
     }
 }
 
@@ -137,24 +97,15 @@ const watchList: any[] = [
         if (v?.includes('bordersMask') || v?.includes('borders') || v?.includes('variables')) {
             updater();
         }
+    }),
+    props.context.selection.watch((t?: any) => {
+        if (t === Selection.CHANGE_SHAPE) {
+            update_corner();
+        }
     })
 ];
 
-onMounted(() => {
-    props.context.selection.watch(selection_wather);
-})
-onUnmounted(() => {
-    watchList.forEach(stop => stop());
-    props.context.selection.unwatch(selection_wather);
-})
-
-import select_more_icon from '@/assets/icons/svg/select-more.svg';
-import corner_miter_icon from '@/assets/icons/svg/corner-miter.svg';
-import corner_bevel_icon from '@/assets/icons/svg/corner-bevel.svg';
-import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
-import { StrokeFillContextMgr } from '../ctx';
-import { can_custom } from '../index';
-
+onUnmounted(() => watchList.forEach(stop => stop()));
 </script>
 
 <template>
@@ -163,7 +114,7 @@ import { can_custom } from '../index';
             :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">
-                    <div class="bg" :class="{ actived: props.context.menu.isPopoverExisted }" @click="showMenu">
+                    <div class="bg" :class="{ active: props.context.menu.isPopoverExisted }" @click="showMenu">
                         <SvgIcon :icon="select_more_icon" />
                     </div>
                 </div>
@@ -174,7 +125,7 @@ import { can_custom } from '../index';
                         <label>{{ t('attr.borderStyle') }}</label>
                         <Select class="select" :source="borderStyleOptionsSource" :selected="borderStyle"
                             :item-view="BorderStyleItem" :value-view="BorderStyleSelected" @select="borderStyleSelect"
-                            :mixed="mixed"></Select>
+                                :mixed="mixed"/>
                     </div>
                     <BorderSideSelected v-if="is_border_custom && !manager.fillCtx.strokeMask" :context="context"
                         :manager="manager" :trigger="trigger">
@@ -203,7 +154,7 @@ import { can_custom } from '../index';
 </template>
 
 <style scoped lang="scss">
-.actived {
+.active {
     background-color: #EBEBEB;
 }
 
@@ -261,7 +212,6 @@ import { can_custom } from '../index';
                     box-sizing: border-box;
                     width: 24px;
                     height: 14px;
-                    font-family: HarmonyOS Sans;
                     font-size: 12px;
                     color: #737373;
                     margin-right: 24px;
@@ -327,7 +277,7 @@ import { can_custom } from '../index';
                     }
                 }
 
-                .actived {
+                .active {
                     border: 1px solid #1878F5;
                 }
 
@@ -345,7 +295,6 @@ import { can_custom } from '../index';
                 flex: 0 0 24px;
                 box-sizing: border-box;
                 width: 24px;
-                font-family: HarmonyOS Sans;
                 font-size: 12px;
                 color: #737373;
                 margin-right: 24px;

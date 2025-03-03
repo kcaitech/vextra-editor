@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h, nextTick } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
@@ -1098,6 +1098,7 @@ const stop3 = watch(() => props.trigger, v => {
     }
 })
 const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
+const stop5 = watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()));
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     props.context.attr.watch(text_selection_wather);
@@ -1111,6 +1112,7 @@ onUnmounted(() => {
     stop2();
     stop3();
     stop4();
+    stop5();
 })
 const fillTypes = [FillType.SolidColor, FillType.Gradient];
 import SvgIcon from '@/components/common/SvgIcon.vue';
@@ -1130,7 +1132,6 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
 import text_autowidth_icon from '@/assets/icons/svg/text-autowidth.svg';
 import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
 import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
 import delete_icon from "@/assets/icons/svg/delete.svg";
 import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
 import { toHex as toHex2 } from '@/utils/color';

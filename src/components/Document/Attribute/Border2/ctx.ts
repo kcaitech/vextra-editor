@@ -80,6 +80,94 @@ function strokeMixedStatus(stroke: BorderData, shapes: ShapeView[]) {
     }
 }
 
+function getSideInfo(border: Border, type: SideType) {
+    const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
+    const max_thickness = Math.max(thicknessTop, thicknessLeft, thicknessBottom, thicknessRight)
+    switch (type) {
+        case SideType.Normal:
+            return new BorderSideSetting(type, max_thickness, max_thickness, max_thickness, max_thickness);
+        case SideType.Top:
+            return new BorderSideSetting(type, thicknessTop === 0 ? max_thickness : thicknessTop, 0, 0, 0);
+        case SideType.Left:
+            return new BorderSideSetting(type, 0, thicknessLeft === 0 ? max_thickness : thicknessLeft, 0, 0);
+        case SideType.Right:
+            return new BorderSideSetting(type, 0, 0, 0, thicknessRight === 0 ? max_thickness : thicknessRight);
+        case SideType.Bottom:
+            return new BorderSideSetting(type, 0, 0, thicknessBottom === 0 ? max_thickness : thicknessBottom, 0);
+        case SideType.Custom:
+            switch (sideType) {
+                case SideType.Top:
+                    return new BorderSideSetting(type, thicknessTop, 0, 0, 0);
+                case SideType.Left:
+                    return new BorderSideSetting(type, 0, thicknessLeft, 0, 0);
+                case SideType.Right:
+                    return new BorderSideSetting(type, 0, 0, 0, thicknessRight);
+                case SideType.Bottom:
+                    return new BorderSideSetting(type, 0, 0, thicknessBottom, 0);
+                case SideType.Normal:
+                    return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
+                default:
+                    return new BorderSideSetting(type, 0, 0, 0, 0);
+            }
+        default:
+            return new BorderSideSetting(SideType.Normal, 0, 0, 0, 0);
+    }
+}
+
+export function getSideSettingType(views: ShapeView[]) {
+    const represent = views[0].getBorders();
+    const side = represent.sideSetting.sideType;
+    return views.some(view => view.getBorders().sideSetting.sideType !== side) ? undefined : side;
+}
+
+export function getThickness(flat: ShapeView[]) {
+    const represent = flat[0].getBorders();
+    const b = represent.sideSetting;
+    let side: (number | false)[] = [b.thicknessTop, b.thicknessRight, b.thicknessBottom, b.thicknessLeft];
+    for (let i = 1; i < flat.length; i++) {
+        const borders = flat[i].getBorders() || [];
+        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders.sideSetting;
+        if (b.thicknessTop !== thicknessTop) side[0] = false;
+        if (b.thicknessRight !== thicknessRight) side[1] = false;
+        if (b.thicknessBottom !== thicknessBottom) side[2] = false;
+        if (b.thicknessLeft !== thicknessLeft) side[3] = false;
+    }
+    return side;
+}
+
+export function getSideThickness(side: BorderSideSetting): number | false {
+    const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = side;
+    return (() => {
+        switch (sideType) {
+            case SideType.Top:
+                return thicknessTop;
+            case SideType.Left:
+                return thicknessLeft;
+            case SideType.Right:
+                return thicknessRight;
+            case SideType.Bottom:
+                return thicknessBottom;
+            case SideType.Custom:
+                if (thicknessBottom === thicknessLeft && thicknessLeft === thicknessRight && thicknessRight === thicknessTop) {
+                    return thicknessTop;
+                } else {
+                    return false;
+                }
+            default:
+                return thicknessTop;
+        }
+    })();
+}
+
+export const customizable = [
+    ShapeType.Rectangle,
+    ShapeType.Artboard,
+    ShapeType.Image,
+    ShapeType.Symbol,
+    ShapeType.SymbolRef,
+    ShapeType.SymbolUnion
+];
+
 export type BorderFillsContext = {
     mixed: boolean;
     listStatus: boolean,
@@ -456,16 +544,52 @@ export class StrokeFillContextMgr extends StyleCtx {
         this.hiddenCtrl();
     }
 
+    modifySideType(type: SideType, views: ShapeView[]) {
+        const local: ShapeView[] = [];
+        const refs: ShapeView[] = [];
+        for (const view of views) {
+            if (view instanceof SymbolRefView || view.isVirtualShape) refs.push(view);
+            else local.push(view);
+        }
+        const editor = this.borderEditor;
+        const modifyLocal = (api: Api) => {
+            local.forEach(view => {
+                const border = view.style.borders;
+                const side = getSideInfo(border, type);
+                api.setBorderSide(view.style.borders, side);
+            });
+        }
+        const modifyVariable = (api: Api) => {
+            refs.forEach(view => {
+                const variable = editor.getBorderVariable(api, this.page, view);
+                const side = getSideInfo(variable.value, type)
+                api.setBorderSide(variable.value, side)
+            });
+        }
+        editor.modifyBorderSideSetting([modifyLocal, modifyVariable]);
+    }
+
     modifyBorderThicknessMask(border: BorderMaskType, side: BorderSideSetting) {
-        this.borderEditor.setBorderMaskSide([{ border, side }]);
+        this.borderEditor.setBorderMaskSide([{ border: border as any, side }]);
     }
 
     modifyBorderThickness(thickness: number) {
         this.borderEditor.setBorderThickness(this.page, this.flat, thickness);
     }
 
-    modifyBorderCustomThickness(thickness: number, type: SideType) {
-        this.borderEditor.setBorderCustomThickness(this.page, this.flat, thickness, type);
+    // 设置单边厚度
+    modifyBorderCustomThickness(views: ShapeView[], thickness: number, type: SideType) {
+        this.borderEditor.setBorderCustomThickness(this.page, views, thickness, type);
+    }
+
+    // 设置边框样式（虚线/实线）
+    modifyStrokeStyle(actions: { target: ShapeView, value: any }[]) {
+        this.borderEditor.modifyStrokeStyle(this.page, actions);
+    }
+
+    //修改边框拐角样式
+    modifyCornerType(actions: { target: ShapeView, value: any }[]) {
+        this.borderEditor.modifyCornerType(this.page, actions);
     }
 
     modifyBorderPositionMask(border: BorderMaskType, position: BorderPosition) {
@@ -504,3 +628,4 @@ export class StrokeFillContextMgr extends StyleCtx {
         this.kill();
     }
 }
+

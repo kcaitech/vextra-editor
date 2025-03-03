@@ -273,6 +273,26 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.element.visible = false;
     }
 
+    repositioning() {
+        const target = this.target;
+
+        const rect = target.getBoundingClientRect();
+        const clientWidth = document.documentElement.clientWidth;
+        const clientHeight = document.documentElement.clientHeight;
+
+        let { x: left, y: top } = rect;
+
+        const exceedW = clientWidth - (left + rect.width);
+        if (exceedW < 0) left = Math.max(0, left + exceedW);
+        const exceedH = clientHeight - 4 - (top + rect.height);
+        if (exceedH < 0) top = Math.max(0, top + exceedH);
+
+        this.clientX = left;
+        this.clientY = top;
+        target.style.left = `${left}px`;
+        target.style.top = `${top}px`;
+    }
+
     unmounted() {
         this.removeEvent();
         this.close();

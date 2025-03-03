@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { StrokeFillContextMgr } from '../ctx';
+import { getSideThickness, StrokeFillContextMgr } from '../ctx';
 import BorderDetail from './BorderDetail.vue';
 import { BorderPosition, LinearApi, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
@@ -8,7 +8,6 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
-import { getSideThickness } from '../index';
 import { sortValue } from '../../BaseAttr/oval';
 import { LockMouse } from '@/transform/lockMouse';
 import Apex from './Apex.vue';
@@ -185,8 +184,7 @@ const line_end_point = (shapes: ShapeView[]) => {
             }
         }
     }
-    const endpoint = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
-    return endpoint;
+    return shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
 }
 const updater = () => {
     const shapes = props.context.selection.selectedShapes;
