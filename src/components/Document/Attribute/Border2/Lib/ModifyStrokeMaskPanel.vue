@@ -171,12 +171,13 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        padding: 0 8px;
+        box-sizing: border-box;
 
         .type {
             display: flex;
             gap: 8px;
             align-items: center;
-            padding: 0 12px;
             box-sizing: border-box;
 
             .select {
@@ -186,11 +187,9 @@ onUnmounted(() => {
 
 
         .thickness {
-
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 0 12px;
             box-sizing: border-box;
 
             input {
@@ -213,8 +212,7 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto;
-        margin-top: 8px;
+        margin: 8px auto 0;
         font-size: 12px;
         color: #fff;
         border-radius: 6px;

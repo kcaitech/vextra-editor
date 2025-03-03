@@ -956,7 +956,7 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.text-color'], onDestroy: closeColor }
+    { whiteList: ['#color-piker-gen-2-panel', '.text-color'], onDestroy: clearPanelStatus }
 );
 
 const colorPicker = new TextPicker(props.context, fillType.value, 'color');
@@ -1056,13 +1056,17 @@ function assemble() {
     }
 }
 
-function closeColor() {
-    colorPanelStatusMgr.close();
+function clearPanelStatus() {
     const color = props.context.color;
     if (color.gradient_type) color.set_gradient_type(undefined);
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
     if (color.imageScaleMode) color.setImageScaleMode(undefined);
+}
+
+function closeColor() {
+    colorPanelStatusMgr.close();
+    clearPanelStatus();
 }
 
 const closeHighlight = () => {

@@ -91,9 +91,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
                     f = events.pop();
                 }
             }
-            events.push(() => {
-                this.element.visible = false;
-            });
+            events.push(() => this.close());
         }
         if (this.m_level !== undefined) {
             const level = 'popover-level' + this.m_level;
@@ -108,9 +106,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
                     f = events.pop();
                 }
             }
-            events.push(() => {
-                this.element.visible = false;
-            });
+            events.push(() => this.close());
         }
     }
 
@@ -206,8 +202,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         for (const query of this.m_white_list) {
             if (event.target.closest(query)) return;
         }
-        this.m_on_destroy?.();
-        this.element.visible = false;
+        this.close();
     }
 
     private downCheck = this.__downCheck.bind(this);
@@ -229,10 +224,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             fixed?: boolean;
         }
     ) {
-        if (this.element.visible) {
-            this.element.visible = false;
-            return;
-        }
+        if (this.element.visible) return this.close();
 
         this.shutExist();
 
@@ -248,7 +240,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             }));
             this.context.escstack.save(v4(), () => {
                 const achieve = this.element.visible;
-                this.element.visible = false;
+                this.close();
                 return achieve;
             });
             document.addEventListener('mousedown', this.downCheck);
@@ -271,6 +263,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
 
     close() {
         this.element.visible = false;
+        this.m_on_destroy?.();
     }
 
     repositioning() {

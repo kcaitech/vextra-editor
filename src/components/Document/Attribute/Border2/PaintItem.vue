@@ -76,7 +76,7 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.fill-item-container'], onDestroy: close }
+    { whiteList: ['#color-piker-gen-2-panel', '.fill-item-container'], onDestroy: clearStatus }
 );
 
 function showColorPanel(event: MouseEvent) {
@@ -120,12 +120,16 @@ function update() {
     assemble();
 }
 
-function close() {
-    colorPanelStatusMgr.close();
+function clearStatus() {
     const color = props.context.color;
     if (color.gradient_type) color.set_gradient_type(undefined);
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
+}
+
+function close() {
+    colorPanelStatusMgr.close();
+    clearStatus();
 }
 
 const watchList = [
