@@ -146,8 +146,10 @@ function getHorSpacePosition() {
         for (let j = 0; j < shape_row.length - 1; j++) {
             const shape = shape_row[j];
             const frame = getIncludedBorderFrame(shape, autoLayout.bordersTakeSpace);
-            const row_space = getIncludedBorderFrame(shape_row[j + 1], autoLayout.bordersTakeSpace).x - (frame.x + frame.width);
+            const next_frame = getIncludedBorderFrame(shape_row[j + 1], autoLayout.bordersTakeSpace);
+            const row_space = next_frame.x - (frame.x + frame.width);
             leftPadding = frame.x + frame.width;
+
             const horSpace = m.transform([
                 ColVector3D.FromXY(leftPadding, topPadding),
                 ColVector3D.FromXY(leftPadding + row_space, topPadding),
@@ -155,6 +157,7 @@ function getHorSpacePosition() {
                 ColVector3D.FromXY(leftPadding, topPadding + maxHeightInRow)
             ]);
             const hor: Box = { lt: horSpace.col0, rt: horSpace.col1, rb: horSpace.col2, lb: horSpace.col3 };
+
             horSpaceBox.value.push(hor);
             const ver_rotate = Math.atan2(horSpace.col3.y - horSpace.col0.y, horSpace.col3.x - horSpace.col0.x) * (180 / Math.PI);
             const spaceLine = m.transform([ColVector3D.FromXY(leftPadding + (row_space / 2), topPadding + (maxHeightInRow / 2))]);
@@ -171,7 +174,9 @@ function getHorSpacePosition() {
 }
 
 const getIncludedBorderFrame = (shape: ShapeView, includedBorder?: boolean) => {
-    let f = getShapeFrame(shape.data);
+    let f = getShapeFrame(shape);
+    console.log(f.x, f.y, f.width, f.height, 'row_space');
+
     if (includedBorder) {
         const border = shape.getBorders();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
