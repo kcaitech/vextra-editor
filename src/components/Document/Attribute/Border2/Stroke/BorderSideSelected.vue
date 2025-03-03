@@ -28,6 +28,9 @@ const props = defineProps<{
     manager: StrokeFillContextMgr
     trigger: any[]
 }>();
+const emits = defineEmits<{
+    (e: 'repositioning'): void;
+}>();
 const sideType = ref<SideType>();
 const topThickness = ref<number | string>(0);
 const rightThickness = ref<number | string>(0);
@@ -120,9 +123,7 @@ const watchList: any[] = [
         if (v?.includes('haveEdit')) flat = undefined;
     }),
     watch(() => sideType.value, (v, o) => {
-        if (v === SideType.Custom || o === SideType.Custom) {
-            nextTick(() => props.context.menu.notify(Menu.UPDATE_LOCATE));
-        }
+        if (v === SideType.Custom || o === SideType.Custom) emits("repositioning");
     }),
     props.context.selection.watch((t?: any) => {
         if (t === Selection.CHANGE_SHAPE) {

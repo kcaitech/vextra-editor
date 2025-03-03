@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import Popover from '@/components/common/Popover.vue';
-import { ref, watch, onUnmounted, reactive } from 'vue';
+import { ref, watch, onUnmounted, reactive, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
@@ -11,7 +10,6 @@ import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border, get_actions_border_style, get_borders_corner } from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
-import { Menu } from "@/context/menu";
 import BorderSideSelected from './BorderSideSelected.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import select_more_icon from '@/assets/icons/svg/select-more.svg';
@@ -39,31 +37,24 @@ const is_corner = ref(true);
 const is_border_custom = ref(false);
 const mixed = ref(false);
 
-const panelStatus = reactive<ElementStatus>({ id: '#border-detail-container', visible: false });
-const panelStatusMgr = new ElementManager(
+const detailsPanelStatus = reactive<ElementStatus>({ id: '#border-detail-container', visible: false });
+const detailsPanelStatusMgr = new ElementManager(
     props.context,
-    panelStatus,
-    { whiteList: ['#border-detail-container', '.borders-container'] }
+    detailsPanelStatus,
+    { whiteList: ['#border-detail-container', '.borders-container'], level: 1 }
 );
 
 function showDetailPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
         if (e.classList.contains('borders-container')) {
-            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -266, offsetTop: 6 } });
+            e && detailsPanelStatusMgr.showBy(e, { once: { offsetLeft: -266, offsetTop: 6 } });
             break;
         }
         e = e.parentElement;
     }
     updater();
     update_corner();
-}
-
-function showMenu() {
-    props.context.menu.notify(Menu.SHUTDOWN_MENU);
-    updater();
-    update_corner();
-    popover.value.show();
 }
 
 function updater() {
@@ -117,14 +108,10 @@ function update_corner() {
 
 const watchList: any[] = [
     watch(() => props.trigger, (v) => {
-        if (v?.includes('bordersMask') || v?.includes('borders') || v?.includes('variables')) {
-            updater();
-        }
+        if (v?.includes('bordersMask') || v?.includes('borders') || v?.includes('variables')) updater();
     }),
     props.context.selection.watch((t?: any) => {
-        if (t === Selection.CHANGE_SHAPE) {
-            update_corner();
-        }
+        if (t === Selection.CHANGE_SHAPE) update_corner();
     })
 ];
 
@@ -135,8 +122,8 @@ onUnmounted(() => watchList.forEach(stop => stop()));
     <div class="border-trigger" @click="showDetailPanel">
         <SvgIcon :icon="select_more_icon" />
     </div>
-    <div v-if="panelStatus.visible" class="border-detail-container" id="border-detail-container">
-        <PopoverHeader :title="t('attr.advanced_stroke')" :create="false" @close="panelStatusMgr.close()" />
+    <div v-if="detailsPanelStatus.visible" class="border-detail-container" id="border-detail-container">
+        <PopoverHeader :title="t('attr.advanced_stroke')" :create="false" @close="detailsPanelStatusMgr.close()"/>
         <div class="options-container">
             <div>
                 <label>{{ t('attr.borderStyle') }}</label>
@@ -145,7 +132,8 @@ onUnmounted(() => watchList.forEach(stop => stop()));
                     :mixed="mixed" />
             </div>
             <BorderSideSelected v-if="is_border_custom && !manager.fillCtx.strokeMask" :context="context"
-                :manager="manager" :trigger="trigger">
+                                :manager="manager" :trigger="trigger"
+                                @repositioning="() => nextTick(() => detailsPanelStatusMgr.repositioning())">
             </BorderSideSelected>
             <div class="corner-style" v-if="!is_corner">
                 <div class="corner">{{ t('attr.corner') }}</div>
@@ -165,46 +153,6 @@ onUnmounted(() => watchList.forEach(stop => stop()));
                 </div>
             </div>
         </div>
-        <!-- <Popover :context="props.context" class="popover" ref="popover" :width="244" :auto_to_right_line="true"
-            :title="t('attr.advanced_stroke')">
-            <template #trigger>
-                <div class="trigger">
-                    <div class="bg" :class="{ active: props.context.menu.isPopoverExisted }" @click="showMenu">
-                        <SvgIcon :icon="select_more_icon" />
-                    </div>
-                </div>
-            </template>
-<template #body>
-                <div class="options-container">
-                    <div>
-                        <label>{{ t('attr.borderStyle') }}</label>
-                        <Select class="select" :source="borderStyleOptionsSource" :selected="borderStyle"
-                            :item-view="BorderStyleItem" :value-view="BorderStyleSelected" @select="borderStyleSelect"
-                                :mixed="mixed"/>
-                    </div>
-                    <BorderSideSelected v-if="is_border_custom && !manager.fillCtx.strokeMask" :context="context"
-                        :manager="manager" :trigger="trigger">
-                    </BorderSideSelected>
-                    <div class="corner-style" v-if="!is_corner">
-                        <div class="corner">{{ t('attr.corner') }}</div>
-                        <div class="corner-select">
-                            <div class="miter" :class="{ selected: selected === CornerType.Miter }"
-                                @click="setCornerType(CornerType.Miter)" style="margin-right: 5px;">
-                                <SvgIcon :icon="corner_miter_icon" />
-                            </div>
-                            <div class="bevel" :class="{ selected: selected === CornerType.Bevel }"
-                                @click="setCornerType(CornerType.Bevel)">
-                                <SvgIcon :icon="corner_bevel_icon" />
-                            </div>
-                            <div class="round" :class="{ selected: selected === CornerType.Round }"
-                                @click="setCornerType(CornerType.Round)" style="margin-left: 5px;">
-                                <SvgIcon :icon="corner_round_icon" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-</Popover> -->
     </div>
 </template>
 
