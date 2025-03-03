@@ -153,10 +153,11 @@ export class RadiusContextMgr extends StyleCtx {
 
     createStyleLib(name: string, desc: string) {
         let radius = new BasicArray<number>();
-        if (this.flat[0].radius.length === 4) {
-            radius.push(...this.flat[0].radius);
+        const represent = this.flat[0];
+        if (represent.radius.length === 4) {
+            radius.push(...represent.radius);
         } else {
-            const r = this.flat[0].radius[0];
+            const r = represent.radius[0];
             radius.push(r, r, r, r);
         }
         if (this.radiusCtx.mask) radius = new BasicArray<number>(1, 1, 1, 1);
