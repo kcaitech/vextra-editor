@@ -116,7 +116,7 @@ const update_corner = () => {
     is_corner.value = s.every(s => s.type === ShapeType.Line || s.type === ShapeType.Contact);
     if (is_corner.value) return;
     is_border_custom.value = s.some(s => {
-        return can_custom.includes(s.type) && !s.data.haveEdit;
+        return customizable.includes(s.type) && !s.data.haveEdit;
     });
     const actions = get_borders_corner(s);
     if (actions) {
@@ -153,7 +153,7 @@ import corner_miter_icon from '@/assets/icons/svg/corner-miter.svg';
 import corner_bevel_icon from '@/assets/icons/svg/corner-bevel.svg';
 import corner_round_icon from '@/assets/icons/svg/corner-round.svg';
 import { StrokeFillContextMgr } from '../ctx';
-import { can_custom } from '../index';
+import { customizable } from '../index';
 
 </script>
 
