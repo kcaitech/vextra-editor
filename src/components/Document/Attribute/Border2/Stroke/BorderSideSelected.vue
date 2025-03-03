@@ -52,30 +52,23 @@ const update_side = () => {
 
 const setSideType = (type: SideType) => {
   if (select_side.value === type || !shapes.value) return;
-  select_side.value = type;
-  const page = props.context.selection.selectedPage;
-  if (!page) return;
-  const b = shapes.value[0].getBorders();
-  const data = getSideInfo(b, type);
-  if (!data) return;
+  const page = props.context.selection.selectedPage!;
 
   const actions: { border: Border, side: BorderSideSetting }[] = [];
-  for (const view of shapes.value) {
-    const border = view.getBorders();
-    actions.push({ border, side: data });
+  for (const view of props.context.selection.flat) {
+    // const border = view.getBorders();
+      const border = view.data.style.borders;
+    const side = getSideInfo(border, type);
+    actions.push({ border, side });
   }
 
-  const editor = props.context.editor4Page(page);
-  editor.setShapesBorderSide(actions);
+  props.context.editor4Page(page).setShapesBorderSide(actions);
   hidden_selection(props.context);
-  getSideThickness();
 }
 
 watch(() => select_side.value, (v, o) => {
   if (v === SideType.Custom || o === SideType.Custom) {
-    nextTick(() => {
-      props.context.menu.notify(Menu.UPDATE_LOCATE);
-    })
+    nextTick(() => props.context.menu.notify(Menu.UPDATE_LOCATE));
   }
 })
 
@@ -283,7 +276,6 @@ import { StrokeFillContextMgr } from '../ctx';
     flex: 0 0 24px;
     box-sizing: border-box;
     width: 24px;
-    font-family: HarmonyOS Sans;
     font-size: 12px;
     color: #737373;
     margin-right: 24px;
