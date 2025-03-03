@@ -170,12 +170,9 @@ export class RadiusContextMgr extends StyleCtx {
 }
 
 function get_actions_radius_mask(shapes: ShapeView[], mask_id?: string) {
-    let radius: number[] = [];
+    let radius: number[];
     const id = mask_id ? mask_id : shapes[0].radiusMask!
-    let mgr = shapes[0].style.getStylesMgr();
-    if (shapes[0] instanceof SymbolRefView && !mgr) {
-        mgr = (shapes[0] as SymbolRefView).symData?.style.getStylesMgr();
-    }
+    const mgr = shapes[0].style.getStylesMgr();
     radius = (mgr?.getSync(id) as RadiusMask).radius;
     return { shapes, radius };
 }

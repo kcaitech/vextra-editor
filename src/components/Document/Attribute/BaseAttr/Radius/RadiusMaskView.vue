@@ -22,7 +22,8 @@ const showRadiusPanel = (event: MouseEvent) => {
 </script>
 
 <template>
-    <MaskPort :disabled="manager.radiusCtx.maskInfo!.disabled" :delete="false" :active="active" style="width: 184px;"
+    <MaskPort :disabled="manager.radiusCtx.maskInfo!.disabled" :delete="false" :active="active"
+              style="width: 184px;height: 30px;"
               @unbind="() => manager.unbind()">
         <div class="radius-left" @click="showRadiusPanel($event)">
             <div class="radius">
