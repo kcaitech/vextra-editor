@@ -115,15 +115,9 @@ function getSideInfo(border: Border, type: SideType) {
 }
 
 export function getSideSettingType(views: ShapeView[]) {
-    const shape = views[0];
-    const represent = shape.getBorders();
+    const represent = views[0].getBorders();
     const side = represent.sideSetting.sideType;
-    const mixed = views.some(view => view.getBorders().sideSetting.sideType !== side);
-    if (mixed) {
-        return undefined;
-    } else {
-        return side;
-    }
+    return views.some(view => view.getBorders().sideSetting.sideType !== side) ? undefined : side;
 }
 
 export function getThickness(flat: ShapeView[]) {
@@ -550,8 +544,9 @@ export class StrokeFillContextMgr extends StyleCtx {
         this.borderEditor.setBorderThickness(this.page, this.flat, thickness);
     }
 
-    modifyBorderCustomThickness(thickness: number, type: SideType) {
-        this.borderEditor.setBorderCustomThickness(this.page, this.flat, thickness, type);
+    // 设置单边厚度
+    modifyBorderCustomThickness(views: ShapeView[], thickness: number, type: SideType) {
+        this.borderEditor.setBorderCustomThickness(this.page, views, thickness, type);
     }
 
     modifyBorderPositionMask(border: BorderMaskType, position: BorderPosition) {

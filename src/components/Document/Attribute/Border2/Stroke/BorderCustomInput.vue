@@ -3,32 +3,32 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import { ref } from 'vue';
 
 const props = defineProps<{
-    ticon: string
-    shadowV: number | string
+    icon: string
+    value: number | string
     disabled?: boolean
 }>();
 const emits = defineEmits<{
-    (e: 'onChange', value: number): void;
+    (e: 'change', value: number): void;
     (e: 'dragstart', event: MouseEvent): void;
     (e: 'dragging', event: MouseEvent): void;
     (e: 'dragend'): void;
     (e: 'keydown', event: KeyboardEvent, value: string | number): void;
 }>();
 const input = ref<HTMLInputElement>();
-const isActived = ref(false);
+const active = ref(false);
 const selectValue = () => {
-    isActived.value = true;
+    active.value = true;
 }
 
-const onChange = () => {
+const change = () => {
     if (input.value) {
         let value = input.value.value;
         if (isNaN(Number(value)) || !value.trim().length) {
-            return input.value.value = String(props.shadowV);
+            return input.value.value = String(props.value);
         }
         if (Number(value) > 300) value = '300';
         if (Number(value) < 0) value = '0';
-        emits('onChange', Number(value));
+        emits('change', Number(value));
         input.value.blur();
     }
 }
@@ -37,7 +37,7 @@ const augment = () => {
         let value = input.value.value;
         if (Number(value) === 300) return;
         const result = +value + 1;
-        emits('onChange', result);
+        emits('change', result);
     }
 }
 const decrease = () => {
@@ -45,7 +45,7 @@ const decrease = () => {
         let value = input.value.value;
         if (Number(value) === 0) return;
         const result = +value - 1;
-        emits('onChange', result);
+        emits('change', result);
     }
 }
 
@@ -87,7 +87,7 @@ const windowBlur = () => {
 }
 
 function blur2() {
-    isActived.value = false;
+    active.value = false;
     is_select.value = false;
 }
 
@@ -103,9 +103,9 @@ function click() {
     is_select.value = true;
 }
 
-const getinput_value = () => {
+const draggable = () => {
     if (input.value) {
-        return isNaN(Number(input.value.value)) ? true : false;
+        return isNaN(Number(input.value.value));
     } else {
         return true;
     }
@@ -131,13 +131,13 @@ const border_icons:{[key: string]: string} = {
 </script>
 
 <template>
-    <div class="input-container" :class="{ actived: isActived }">
-        <div class="icon" :class="{ cursor_pointer: getinput_value() }" ref="icon" @mousedown="onMouseDown">
-            <SvgIcon :icon="border_icons[ticon]"/>
+    <div class="input-container" :class="{ active }">
+        <div class="icon" :class="{ cursor_pointer: draggable() }" ref="icon" @mousedown="onMouseDown">
+            <SvgIcon :icon="border_icons[icon]"/>
         </div>
-        <input ref="input" :value="props.shadowV" @focus="selectValue" @change="onChange" @blur="blur2" @click="click"
-            @keydown="e => emits('keydown', e, props.shadowV)">
-        <div class="adjust" :class="{ active: isActived }">
+        <input ref="input" :value="props.value" @focus="selectValue" @change="change" @blur="blur2" @click="click"
+               @keydown="e => emits('keydown', e, props.value)">
+        <div class="adjust" :class="{ active }">
             <SvgIcon :icon="down_icon" style="transform: rotate(180deg);" :style="{ cursor: 'pointer' }"
                 @click="augment"/>
             <SvgIcon :icon="down_icon" :style="{ cursor: 'pointer' }" @click="decrease"/>
@@ -154,8 +154,6 @@ const border_icons:{[key: string]: string} = {
     overflow: hidden;
     padding: 3px 3px 3px 8px;
     align-items: center;
-    //padding-left: 12px;
-    //padding-right: 3px;
     border: 1px solid transparent;
     box-sizing: border-box;
     background-color: var(--input-background);
@@ -166,7 +164,6 @@ const border_icons:{[key: string]: string} = {
         flex-shrink: 0;
         width: 16px;
         height: 16px;
-        font-family: HarmonyOS Sans;
         font-size: 12px;
         color: #8C8C8C;
 
@@ -186,7 +183,6 @@ const border_icons:{[key: string]: string} = {
         align-content: center;
         margin-left: 8px;
         color: #000000;
-        font-family: HarmonyOS Sans;
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;
@@ -208,8 +204,6 @@ const border_icons:{[key: string]: string} = {
         width: 19px;
         height: 100%;
         flex: 0 0 19px;
-        //background-color: #fff;
-        //margin-left: 5px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -232,17 +226,13 @@ const border_icons:{[key: string]: string} = {
     .adjust.active {
         background-color: #EBEBEB;
     }
-
-    //.adjust.active {
-    //    background-color: #EBEBEB !important;
-    //}
 }
 
 .disabled {
     opacity: 0.4;
 }
 
-.actived {
+.active {
     border: 1px solid #1878F5;
 }
 </style>

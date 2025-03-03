@@ -1,11 +1,7 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import BorderCustomInput from './BorderCustomInput.vue';
-import {
-    LinearApi,
-    ShapeView,
-    SideType,
-} from '@kcdesign/data';
+import { LinearApi, ShapeView, SideType } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';
@@ -23,18 +19,17 @@ import border_custom_icon from '@/assets/icons/svg/border-custom.svg';
 import { sortValue } from '../../BaseAttr/oval';
 import { LockMouse } from '@/transform/lockMouse';
 import { getSideSettingType, getThickness, StrokeFillContextMgr } from '../ctx';
+import { LockedPointer } from "@/components/Document/Attribute/LockedPointer/lockedpointer";
+import { verifiedVal } from "@/components/common/ColorPicker/utils";
 
 const { t } = useI18n();
 
-interface Props {
+const props = defineProps<{
     context: Context
     manager: StrokeFillContextMgr
     trigger: any[]
-}
-
-const props = defineProps<Props>();
+}>();
 const sideType = ref<SideType>();
-const shapes = ref<ShapeView[]>();
 const topThickness = ref<number | string>(0);
 const rightThickness = ref<number | string>(0);
 const bottomThickness = ref<number | string>(0);
@@ -49,6 +44,8 @@ function getFlat() {
 
 function update() {
     const flat = getFlat();
+    if (!flat.length) return;
+
     sideType.value = getSideSettingType(flat);
 
     const thickness = getThickness(flat);
@@ -65,12 +62,12 @@ function setSideType(type: SideType) {
     hidden_selection(props.context);
 }
 
-const setSideThickness = (thickness: number, type: SideType) => {
-    props.manager.modifyBorderCustomThickness(thickness, type);
+function setSideThickness(thickness: number, type: SideType) {
+    props.manager.modifyBorderCustomThickness(getFlat(), thickness, type);
 }
 
 function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType) {
-    if (!shapes.value) return;
+    if (getFlat().length === 0) return;
     if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
         let value: any = sortValue(val.toString());
         value = value + (e.code === 'ArrowUp' ? 1 : -1)
@@ -82,69 +79,40 @@ function keydownThickness(e: KeyboardEvent, val: string | number, type: SideType
     }
 }
 
-function selection_watcher(t?: any) {
-    if (t === Selection.CHANGE_SHAPE) {
-        flat = undefined;
-        update();
-    }
-}
-
-const tel = ref<boolean>(false);
-const telX = ref<number>(0);
-const telY = ref<number>(0);
+const locker = new LockedPointer();
 let lockMouse: LockMouse | undefined = undefined;
+let draggingType: SideType = SideType.Normal;
 
-function updatePosition(movementX: number, movementY: number) {
-    const clientHeight = document.documentElement.clientHeight;
-    const clientWidth = document.documentElement.clientWidth;
-    telX.value += movementX;
-    telY.value += movementY;
-    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
-    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
-}
+function dragStart(event: MouseEvent, type: SideType) {
+    draggingType = type;
+    lockMouse = new LockMouse(props.context, event);
 
-async function dragStart(e: MouseEvent) {
-    tel.value = true;
-    telX.value = e.clientX;
-    telY.value = e.clientY;
-    const el = e.target as HTMLElement;
-    if (!document.pointerLockElement) {
-        await el.requestPointerLock({
-            unadjustedMovement: true
-        })
-    }
-    lockMouse = new LockMouse(props.context, e);
-    document.addEventListener('pointerlockchange', pointerLockChange, false);
-}
-
-const pointerLockChange = () => {
-    if (!document.pointerLockElement) dragEnd();
-}
-
-const dragging = (e: MouseEvent, thickness: number | string, type: SideType) => {
-    if (typeof thickness === 'string') return;
-    updatePosition(e.movementX, e.movementY);
-    if (!lockMouse) return;
-    if (!lockMouse.asyncApiCaller) {
-        lockMouse.createApiCaller('translating');
-    }
-    let val = thickness + e.movementX;
-    if (val < 0) {
-        val = 0;
-    } else if (val > 300) {
-        val = 300;
-    }
-    lockMouse.modifyBorderCustomThickness(props.manager.flat, val, type);
-}
-
-const dragEnd = () => {
-    tel.value = false;
-    document.exitPointerLock();
-    if (lockMouse) {
-        lockMouse.fulfil();
+    locker.start(event, (event: MouseEvent) => {
+        if (!lockMouse) return;
+        if (!lockMouse.asyncApiCaller) lockMouse.createApiCaller('translating');
+        const tNow = getThicknessByDraggingType();
+        if (typeof tNow === 'string') return;
+        const val = verifiedVal(tNow + event.movementX, 0, 300);
+        lockMouse.modifyBorderCustomThickness(getFlat(), val, type);
+    }, () => {
+        lockMouse?.fulfil();
         lockMouse = undefined;
+    })
+
+    function getThicknessByDraggingType(): string | number {
+        switch (draggingType) {
+            case SideType.Left:
+                return leftThickness.value;
+            case SideType.Right:
+                return rightThickness.value;
+            case SideType.Top:
+                return topThickness.value;
+            case SideType.Bottom:
+                return bottomThickness.value;
+            default:
+                return leftThickness.value;
+        }
     }
-    document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 const watchList: any[] = [
@@ -157,7 +125,12 @@ const watchList: any[] = [
             nextTick(() => props.context.menu.notify(Menu.UPDATE_LOCATE));
         }
     }),
-    props.context.selection.watch(selection_watcher)
+    props.context.selection.watch((t?: any) => {
+        if (t === Selection.CHANGE_SHAPE) {
+            flat = undefined;
+            update();
+        }
+    })
 ];
 
 onMounted(update);
@@ -197,41 +170,29 @@ onUnmounted(() => watchList.forEach(stop => stop()));
         <div v-if="sideType === SideType.Custom" class="border-style" style="margin-top: 6px;">
             <div class="border"></div>
             <div class="border-custom">
-                <BorderCustomInput ticon="top" :shadowV="topThickness"
-                                   @onChange="(v) => setSideThickness(v, SideType.Top)"
-                                   @dragstart="(e) => dragStart(e)"
-                                   @dragging="(e) => dragging(e, topThickness, SideType.Top)"
-                                   @dragend="dragEnd"
-                                   @keydown="(e, val) => keydownThickness(e, val, SideType.Top)"></BorderCustomInput>
-                <BorderCustomInput ticon="bottom" :shadowV="bottomThickness"
-                                   @onChange="(v) => setSideThickness(v, SideType.Bottom)"
-                                   @dragstart="(e) => dragStart(e)"
-                                   @dragging="(e) => dragging(e, bottomThickness, SideType.Bottom)" @dragend="dragEnd"
-                                   @keydown="(e, val) => keydownThickness(e, val, SideType.Bottom)">
-                </BorderCustomInput>
+                <BorderCustomInput icon="top" :value="topThickness"
+                                   @change="(v) => setSideThickness(v, SideType.Top)"
+                                   @dragstart="(e) => dragStart(e, SideType.Top)"
+                                   @keydown="(e, val) => keydownThickness(e, val, SideType.Top)"/>
+                <BorderCustomInput icon="bottom" :value="bottomThickness"
+                                   @change="(v) => setSideThickness(v, SideType.Bottom)"
+                                   @dragstart="(e) => dragStart(e, SideType.Bottom)"
+                                   @keydown="(e, val) => keydownThickness(e, val, SideType.Bottom)"/>
             </div>
         </div>
         <div v-if="sideType === SideType.Custom" class="border-style" style="margin-top: 6px;">
             <div class="border"></div>
             <div class="border-custom">
-                <BorderCustomInput ticon="left" :shadowV="leftThickness"
-                                   @onChange="(v) => setSideThickness(v, SideType.Left)"
-                                   @dragstart="(e) => dragStart(e)"
-                                   @dragging="(e) => dragging(e, leftThickness, SideType.Left)"
-                                   @dragend="dragEnd" @keydown="(e, val) => keydownThickness(e, val, SideType.Left)">
-                </BorderCustomInput>
-                <BorderCustomInput ticon="right" :shadowV="rightThickness"
-                                   @onChange="(v) => setSideThickness(v, SideType.Right)"
-                                   @dragstart="(e) => dragStart(e)"
-                                   @dragging="(e) => dragging(e, rightThickness, SideType.Right)" @dragend="dragEnd"
-                                   @keydown="(e, val) => keydownThickness(e, val, SideType.Right)">
-                </BorderCustomInput>
+                <BorderCustomInput icon="left" :value="leftThickness"
+                                   @change="(v) => setSideThickness(v, SideType.Left)"
+                                   @dragstart="(e) => dragStart(e,  SideType.Left)"
+                                   @keydown="(e, val) => keydownThickness(e, val, SideType.Left)"/>
+                <BorderCustomInput icon="right" :value="rightThickness"
+                                   @change="(v) => setSideThickness(v, SideType.Right)"
+                                   @dragstart="(e) => dragStart(e, SideType.Right)"
+                                   @keydown="(e, val) => keydownThickness(e, val, SideType.Right)"/>
             </div>
         </div>
-        <teleport to="body">
-            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
-            </div>
-        </teleport>
     </div>
 </template>
 
@@ -302,16 +263,5 @@ onUnmounted(() => watchList.forEach(stop => stop()));
 
 .selected {
     background-color: #FFFFFF;
-}
-
-.point {
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    background-image: url("@/assets/cursor/scale.png");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 32px;
-    z-index: 10000;
 }
 </style>
