@@ -6,7 +6,6 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';
 import { useI18n } from 'vue-i18n';
-import { customizable } from "../index"
 import { Menu } from '@/context/menu';
 import { format_value } from "@/utils/common";
 import SvgIcon from '@/components/common/SvgIcon.vue';
@@ -18,7 +17,7 @@ import border_right_icon from '@/assets/icons/svg/border-right.svg';
 import border_custom_icon from '@/assets/icons/svg/border-custom.svg';
 import { sortValue } from '../../BaseAttr/oval';
 import { LockMouse } from '@/transform/lockMouse';
-import { getSideSettingType, getThickness, StrokeFillContextMgr } from '../ctx';
+import { customizable, getSideSettingType, getThickness, StrokeFillContextMgr } from '../ctx';
 import { LockedPointer } from "@/components/Document/Attribute/LockedPointer/lockedpointer";
 import { verifiedVal } from "@/components/common/ColorPicker/utils";
 

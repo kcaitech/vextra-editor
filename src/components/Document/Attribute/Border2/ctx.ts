@@ -135,6 +135,39 @@ export function getThickness(flat: ShapeView[]) {
     return side;
 }
 
+export function getSideThickness(side: BorderSideSetting): number | false {
+    const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = side;
+    return (() => {
+        switch (sideType) {
+            case SideType.Top:
+                return thicknessTop;
+            case SideType.Left:
+                return thicknessLeft;
+            case SideType.Right:
+                return thicknessRight;
+            case SideType.Bottom:
+                return thicknessBottom;
+            case SideType.Custom:
+                if (thicknessBottom === thicknessLeft && thicknessLeft === thicknessRight && thicknessRight === thicknessTop) {
+                    return thicknessTop;
+                } else {
+                    return false;
+                }
+            default:
+                return thicknessTop;
+        }
+    })();
+}
+
+export const customizable = [
+    ShapeType.Rectangle,
+    ShapeType.Artboard,
+    ShapeType.Image,
+    ShapeType.Symbol,
+    ShapeType.SymbolRef,
+    ShapeType.SymbolUnion
+];
+
 export type BorderFillsContext = {
     mixed: boolean;
     listStatus: boolean,
@@ -547,6 +580,16 @@ export class StrokeFillContextMgr extends StyleCtx {
     // 设置单边厚度
     modifyBorderCustomThickness(views: ShapeView[], thickness: number, type: SideType) {
         this.borderEditor.setBorderCustomThickness(this.page, views, thickness, type);
+    }
+
+    // 设置边框样式（虚线/实线）
+    modifyStrokeStyle(actions: { target: ShapeView, value: any }[]) {
+        this.borderEditor.modifyStrokeStyle(this.page, actions);
+    }
+
+    //修改边框拐角样式
+    modifyCornerType(actions: { target: ShapeView, value: any }[]) {
+        this.borderEditor.modifyCornerType(this.page, actions);
     }
 
     modifyBorderPositionMask(border: BorderMaskType, position: BorderPosition) {
