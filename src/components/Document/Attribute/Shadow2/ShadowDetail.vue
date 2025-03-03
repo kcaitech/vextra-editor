@@ -49,7 +49,7 @@ const panelStatus = reactive<ElementStatus>({ id: '#shadow-detail-container', vi
 const panelStatusMgr = new ElementManager(
     props.context,
     panelStatus,
-    { whiteList: ['#shadow-detail-container', '.shadow-trigger'] }
+    { whiteList: ['#shadow-detail-container', '.fill-item-container'] }
 );
 
 function showColorPanel(event: MouseEvent) {
@@ -67,8 +67,8 @@ function showDetailPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     disable();
     while (e) {
-        if (e.classList.contains('shadow-trigger')) {
-            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -306 } });
+        if (e.classList.contains('fill-item-container')) {
+            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -266 } });
             break;
         }
         e = e.parentElement;

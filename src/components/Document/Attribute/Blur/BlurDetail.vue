@@ -47,14 +47,14 @@ const panelStatus = reactive<ElementStatus>({ id: '#blur-detail-container', visi
 const panelStatusMgr = new ElementManager(
     props.context,
     panelStatus,
-    { whiteList: ['#blur-detail-container', '.blur-trigger'] }
+    { whiteList: ['#blur-detail-container', '.blur-container'] }
 );
 
 function showDetailPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('blur-trigger')) {
-            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -384 } });
+        if (e.classList.contains('blur-container')) {
+            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -266 } });
             break;
         }
         e = e.parentElement;

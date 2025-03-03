@@ -68,6 +68,8 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = local;
 
         for (const v of sts.variables) {
+            console.log(v, 'v');
+            
             if (v.typeId === "fill-mask-living" && !v.disabled) cat.variables.push(v);
         }
         if (word) {

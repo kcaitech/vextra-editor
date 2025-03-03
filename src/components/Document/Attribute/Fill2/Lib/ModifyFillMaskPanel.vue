@@ -124,7 +124,7 @@ onUnmounted(() => {
             gap: 6px;
             width: 100%;
             height: fit-content;
-            padding: 0 12px;
+            padding: 0 8px;
             box-sizing: border-box;
         }
     }

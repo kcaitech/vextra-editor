@@ -76,19 +76,19 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'], onDestroy: close }
+    { whiteList: ['#color-piker-gen-2-panel', '.fill-item-container'], onDestroy: close }
 );
 
 function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('color-wrapper')) {
+        if (e.classList.contains('fill-item-container')) {
             const color = props.context.color;
             color.set_gradient_type(fillType.value as GradientType);
             color.gradient_locate({ index: fillsPicker.index, type: "borders" });
             color.switch_editor_mode(true, props.data.fill.gradient);
             color.setImageScaleMode(undefined);
-            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -262 } });
             break;
         }
         e = e.parentElement;

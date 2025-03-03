@@ -19,7 +19,7 @@ const emits = defineEmits(["create"]);
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 0 12px;
+    padding: 0 8px;
     box-sizing: border-box;
 
     .create {

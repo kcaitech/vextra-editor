@@ -147,7 +147,7 @@ onUnmounted(() => {
             </div>
             <div class="thickness">
                 <div class="title">{{ t('stylelib.thickness') }}</div>
-                <input type="text" v-model="thickness" @change="setThickness">
+                <input v-blur type="text" v-model="thickness" @change="setThickness">
             </div>
         </div>
 

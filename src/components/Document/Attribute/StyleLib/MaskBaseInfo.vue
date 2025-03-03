@@ -53,7 +53,7 @@ function changeDescInput(event: Event) {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 0 12px;
+    padding: 0 8px;
     box-sizing: border-box;
 
     .name,
