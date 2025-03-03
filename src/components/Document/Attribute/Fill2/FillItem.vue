@@ -4,7 +4,7 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 
 import { Context } from "@/context";
 import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
+import { h, nextTick, onUnmounted, reactive, ref, watch, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType, GradientType } from "@kcdesign/data";
@@ -137,36 +137,38 @@ function close() {
     if (color.imageScaleMode) color.setImageScaleMode(undefined);
 }
 
-const stop1 = watchEffect(update);
-const stop2 = watchEffect(() => {
-    const fill = props.data.fill;
-    const color = props.context.color;
-    if (!colorPanelStatus.visible) return;
-    if (fillType.value === FillType.SolidColor) {
-        if (color.gradient_type) color.set_gradient_type(undefined);
-        if (color.locate) color.gradient_locate(undefined);
-        if (color.mode) color.switch_editor_mode(false);
-        if (color.imageScaleMode) color.setImageScaleMode(undefined);
-    } else if (fillType.value === FillType.Pattern) {
-        color.gradient_locate({ index: fillsPicker.index, type: "fills" });
-        color.setImageScaleMode(fill.imageScaleMode);
-        color.setImageOriginFrame({
-            width: fill.originalImageWidth ?? 100,
-            height: fill.originalImageHeight ?? 100
-        });
-        color.setImageScale(fill.scale);
-        color.switch_editor_mode(false);
-    } else {
-        color.set_gradient_type(fillType.value as GradientType);
-        color.gradient_locate({ index: fillsPicker.index, type: "fills" });
-        color.switch_editor_mode(true, fill.gradient);
-        color.setImageScaleMode(undefined);
-    }
-});
+const watchList = [
+    watchEffect(update),
+    watchEffect(() => {
+        const fill = props.data.fill;
+        const color = props.context.color;
+        if (!colorPanelStatus.visible) return;
+        if (fillType.value === FillType.SolidColor) {
+            if (color.gradient_type) color.set_gradient_type(undefined);
+            if (color.locate) color.gradient_locate(undefined);
+            if (color.mode) color.switch_editor_mode(false);
+            if (color.imageScaleMode) color.setImageScaleMode(undefined);
+        } else if (fillType.value === FillType.Pattern) {
+            color.gradient_locate({ index: fillsPicker.index, type: "fills" });
+            color.setImageScaleMode(fill.imageScaleMode);
+            color.setImageOriginFrame({
+                width: fill.originalImageWidth ?? 100,
+                height: fill.originalImageHeight ?? 100
+            });
+            color.setImageScale(fill.scale);
+            color.switch_editor_mode(false);
+        } else {
+            color.set_gradient_type(fillType.value as GradientType);
+            color.gradient_locate({ index: fillsPicker.index, type: "fills" });
+            color.switch_editor_mode(true, fill.gradient);
+            color.setImageScaleMode(undefined);
+        }
+    }),
+    watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()))
+];
 
 onUnmounted(() => {
-    stop1();
-    stop2();
+    watchList.forEach(stop => stop());
     colorPanelStatusMgr.unmounted();
 });
 </script>
