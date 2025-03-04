@@ -59,7 +59,7 @@ const closePanel = () => {
 const watchList: any[] = [
     watch(() => props.selectionChange, () => radiusCtxMgr.update()),
     watch(() => props.trigger, v => {
-        if (v?.includes('radius') || v?.includes('radiusMask') || v?.includes('variables')) {
+        if (v?.includes('radius')|| v?.includes('radiusMask') || v?.includes('variables') || v?.includes('cornerRadius')) {
             radiusCtxMgr.update();
         }
     })

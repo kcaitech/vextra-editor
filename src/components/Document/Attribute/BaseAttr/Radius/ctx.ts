@@ -6,7 +6,6 @@ import {
     RadiusType,
     ShapeView,
     StyleMangerMember,
-    SymbolRefView
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { StyleCtx } from "../../stylectx";
