@@ -1,5 +1,5 @@
 import { LzData } from "@kcdesign/data";
-import { Zip } from "@pal/zip";
+import { Zip } from "@/basic/zip";
 
 interface IJSON {
     [key: string]: any

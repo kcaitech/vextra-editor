@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { PageView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { initpal } from '@/components/common/initpal';
+import { initDataModule } from '@/components/common/initmodule';
 import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import Loading from '@/components/common/Loading.vue';
@@ -113,7 +113,7 @@ const changeLeftWidth = (width: number) => {
 }
 
 onMounted(() => {
-    initpal().then(() => {
+    initDataModule().then(() => {
         inited.value = true;
     }).catch((e) => {
         console.log(e)

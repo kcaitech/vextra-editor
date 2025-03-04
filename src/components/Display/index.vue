@@ -2,7 +2,7 @@
 import { onBeforeMount, shallowRef } from "vue";
 import { fetchConfig, parserDocument } from "./parser";
 import { Context } from "@/context";
-import { initpal } from "@/components/common/initpal";
+import { initDataModule } from "@/components/common/initmodule";
 import { message } from "@/utils/message";
 import { PageView } from "@kcdesign/data";
 import PreviewContent from "@/components/Display/PreviewContent.vue";
@@ -11,7 +11,7 @@ const context = shallowRef<Context | undefined>(undefined);
 const pageView = shallowRef<PageView | undefined>(undefined);
 
 async function initContext() {
-    await initpal();
+    await initDataModule();
     const __context = await parserDocument();
     if (__context) {
         const config = await fetchConfig();

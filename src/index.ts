@@ -14,7 +14,7 @@ import {
     Repository,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
-import { Zip } from "@pal/zip";
+import { Zip } from "@/basic/zip";
 import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
@@ -23,6 +23,7 @@ import { importDocumentFromMDD } from "@/io";
 
 import '@/style/constant.scss'
 import '@/style/app.scss'
+import { initDataModule } from "./components/common/initmodule";
 export {i18n_messages as i18n} from '@/i18n';
 
 export * from "./openapi";
@@ -41,6 +42,7 @@ const t = (i18n as any).global.t;
 export { useComment } from '@/components/Document/Creator/execute'
 
 async function _open(props: DocumentProps) {
+    await initDataModule();
     const repo = new Repository();
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;

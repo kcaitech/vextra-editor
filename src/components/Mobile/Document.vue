@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { initpal } from '@/components/common/initpal';
+import { initDataModule } from '@/components/common/initmodule';
 import { Context } from "@/context";
 import {
     Matrix,
@@ -143,7 +143,7 @@ function updatePageList() {
 }
 
 onMounted(() => {
-    initpal().then(() => {
+    initDataModule().then(() => {
         initialized.value = true;
     }).catch((e) => {
         console.log(e)

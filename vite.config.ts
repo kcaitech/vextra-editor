@@ -3,7 +3,6 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import dts from "vite-plugin-dts";
-import arraybuffer from "vite-plugin-arraybuffer";
 
 const PRODUCTION = process.env.NODE_ENV === 'production';
 console.log('config for ' + process.env.NODE_ENV);
@@ -42,7 +41,6 @@ export default defineConfig({
         }
     },
     plugins: [
-        arraybuffer(),
         vue(),
         cssInjectedByJsPlugin(),
         dts({
@@ -55,8 +53,7 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            '@': fileURLToPath(new URL('./src', import.meta.url)),
-            '@pal': fileURLToPath(new URL('./src/PAL/browser', import.meta.url))
+            '@': fileURLToPath(new URL('./src', import.meta.url))
         }
     },
     css: {

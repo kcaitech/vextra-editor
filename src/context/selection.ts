@@ -33,7 +33,7 @@ import { v4 } from "uuid";
 import { ISelection, SelectionEvents } from "@/openapi/selection";
 import { skipUserSelectShapes } from "@/utils/content";
 import { DocSelectionData } from "./user";
-import { initpal } from "@/components/common/initpal";
+import { initDataModule } from "@/components/common/initmodule";
 import { EnvChainGenerator } from "@/mouse/envchain";
 import { IScout } from "@/openapi";
 import { getShapesForStyle } from "@/utils/style";
@@ -168,7 +168,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             if (cur_page && cur_page.id === id) return cur_page;
             const page = await pagesMgr.get(id);
             if (!page) return;
-            await initpal();
+            await initDataModule();
             p = ctx.getPageDom(page).dom;
         }
 

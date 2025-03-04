@@ -11,7 +11,7 @@ import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
-import { initpal } from '@/components/common/initpal';
+import { initDataModule } from '@/components/common/initmodule';
 import { setup as keyboardUnits } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ContextEvents, IContext } from '@/openapi';
@@ -136,7 +136,7 @@ onMounted(() => {
     init_watcher();
     init_keyboard_units();
     // sessionStorage.setItem('project_id', ''); // 不是editor要处理的
-    initpal().catch((e) => {
+    initDataModule().catch((e) => {
         console.error(e)
     });
     const ctx: Context = props.context as Context;
