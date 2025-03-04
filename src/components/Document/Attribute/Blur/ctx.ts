@@ -98,7 +98,7 @@ export class BlurContextMgr extends StyleCtx {
 
     create() {
         if (this.blurCtx.mixed) this.unify();
-        const blur = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
+        const blur = new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
         const views: ShapeView[] = [];
         const needOverride: ShapeView[] = [];
         for (const view of this.selected) {
@@ -278,7 +278,7 @@ export class BlurContextMgr extends StyleCtx {
 
     createStyleLib(name: string, desc: string) {
         const { isEnabled, saturation, type } = this.blurCtx.blur?.blur!;
-        const blur = new Blur([0] as BasicArray<number>, isEnabled, new Point2D(0, 0), saturation, type);
+        const blur = new Blur(isEnabled, new Point2D(0, 0), saturation, type);
         const blurMask = new BlurMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, blur);
         this.editor.createBlurMask(this.document, blurMask, this.page, this.flat);
         this.kill();

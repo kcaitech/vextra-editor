@@ -225,7 +225,7 @@ export function drawPipetteCanvas(colors: IColors, size: number) {
         ctx.lineTo(j * size, diameter);
         ctx.stroke();
     }
-    // 画圆形边框
+    // 画圆形描边
     ctx.beginPath();
     ctx.strokeStyle = '#ddd';
     ctx.arc(radius, radius, radius, 0, 2 * Math.PI);

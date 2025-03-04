@@ -2,7 +2,7 @@ export const lable = {
     development: '开发模式',
     selectLayer: '请选择图层',
     copyfailure: '复制失败',
-    border: '边框',
+    border: '描边',
     position: '位置',
     pure_color: '纯色',
     thickness: '粗细',

@@ -582,12 +582,12 @@ export class StrokeFillContextMgr extends StyleCtx {
         this.borderEditor.setBorderCustomThickness(this.page, views, thickness, type);
     }
 
-    // 设置边框样式（虚线/实线）
+    // 设置描边样式（虚线/实线）
     modifyStrokeStyle(actions: { target: ShapeView, value: any }[]) {
         this.borderEditor.modifyStrokeStyle(this.page, actions);
     }
 
-    //修改边框拐角样式
+    //修改描边拐角样式
     modifyCornerType(actions: { target: ShapeView, value: any }[]) {
         this.borderEditor.modifyCornerType(this.page, actions);
     }

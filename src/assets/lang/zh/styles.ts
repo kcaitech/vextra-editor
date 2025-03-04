@@ -9,9 +9,9 @@ export const stylelib = {
     editor_color: '编辑颜色样式',
     color: '颜色',
 
-    borders: '边框样式',
-    create_border: '创建边框样式',
-    editor_border: '编辑边框样式',
+    borders: '描边样式',
+    create_border: '创建描边样式',
+    editor_border: '编辑描边样式',
     position: '位置',
     thickness: '粗细',
 
