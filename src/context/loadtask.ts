@@ -1,4 +1,5 @@
-import { Document, SymbolShape, Task, TaskMgr, TaskPriority } from "@kcdesign/data";
+import { Task, TaskMgr, TaskPriority } from "@/basic/taskmgr";
+import { Document } from "@kcdesign/data";
 
 export function startLoadTask(data: Document, taskMgr: TaskMgr) {
     const pagelist = data.pagesList.slice(0);

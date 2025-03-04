@@ -1,6 +1,5 @@
 import {
     CoopRepository,
-    TaskMgr,
     WatchableObject,
     TableEditor,
     PageView,
@@ -47,6 +46,7 @@ import { scout } from "@/utils/scout";
 import { Preview } from "./preview";
 import { MossClipboard } from "@/clipboard";
 import { EditorLayout } from "@/components/Document/Layout/editorlayout";
+import { TaskMgr } from "@/basic/taskmgr";
 
 // 仅暴露必要的方法
 export class RepoWraper {
