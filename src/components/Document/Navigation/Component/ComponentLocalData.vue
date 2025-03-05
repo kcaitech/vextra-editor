@@ -61,9 +61,6 @@ function update_status_set(id: string) {
     _list_loader();
 }
 
-function document_watcher(t: string) {
-    if (t === 'update-symbol-list') list_loader(); // todo 改用symbolMgr的监听
-}
 const select_watch = (t: number) => {
     if (t === Selection.PAGE_RENAME) {
         _list_loader();
@@ -73,7 +70,6 @@ const select_watch = (t: number) => {
 onMounted(() => {
     props.context.data.pagesMgr.watch(list_loader);
     props.context.data.symbolsMgr.watch(list_loader);
-    props.context.data.__correspondent.watch(document_watcher);
     props.context.navi.watch(navi_watch);
     props.context.selection.watch(select_watch);
     _list_loader();
@@ -81,7 +77,6 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.data.pagesMgr.unwatch(list_loader);
     props.context.data.symbolsMgr.unwatch(list_loader);
-    props.context.data.__correspondent.unwatch(document_watcher);
     props.context.navi.unwatch(navi_watch);
     props.context.selection.unwatch(select_watch);
 })
