@@ -175,8 +175,6 @@ function getHorSpacePosition() {
 
 const getIncludedBorderFrame = (shape: ShapeView, includedBorder?: boolean) => {
     let f = getShapeFrame(shape);
-    console.log(f.x, f.y, f.width, f.height, 'row_space');
-
     if (includedBorder) {
         const border = shape.getBorders();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;

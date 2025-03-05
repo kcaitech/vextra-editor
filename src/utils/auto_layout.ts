@@ -41,7 +41,8 @@ export const autoLayoutFn = (context: Context, t: Function) => {
 }
 
 export const unAutoLayoutFn = (context: Context) => {
-    const selectShapes = context.selection.selectedShapes;
-    const editor = context.editor4Shape(selectShapes[0]);
-    editor.deleteAutoLayout();
+    const shapes = context.selection.selectedShapes;
+    const page = context.selection.selectedPage!;
+    const editor = context.editor4Page(page);
+    editor.deleteAutoLayout(shapes);
 }
