@@ -14,19 +14,18 @@ import {
     import_text,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
-    Matrix,
     Page,
     PathShapeView,
     Shape,
     ShapeFrame,
     ShapeType,
-    ShapeView,
+    ShapeView, StyleMangerMember,
     SVGParseResult,
     SymbolView,
     TextShape,
     Transform,
     TransformRaw,
-    UploadAssets
+    UploadAssets,
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { message } from "@/utils/message";
@@ -316,7 +315,7 @@ export class BundleHandler {
     paste(bundle: Bundle) {
         let { images, SVG, HTML, plain } = bundle;
         const source = this.getSource(HTML) as SourceBundle;        // 图层
-        const paras = this.getParas(HTML);                                       // 文本段落
+        const paras = this.getParas(HTML);                          // 文本段落
         if (images) {                                                            // 图片资源(多个的情况下可能包含了SVG资源)
             const allMedia: (SVGBundle | ImageBundle)[] = [...images, ...(SVG ? SVG : [])];
             const context = this.context;
@@ -354,6 +353,7 @@ export class BundleHandler {
         } else if (SVG) { // 一定是单个SVG资源，多个的场景当作图片资源处理
             this.insertImage(SVG);
         } else if (source) {
+            if (source.styles?.length) this.insertMasks(source.styles);  // 样式
             // 当剪切板内只有一个容器，并且该容器存在于文档，并且此时没有选区或者选区正是该容器时，粘贴在容器右边的空白区域上
             // 有可进入选区
             // 无可进入选区
@@ -451,7 +451,10 @@ export class BundleHandler {
                 const frame = new ShapeFrame(0, 0, width, height);
                 const asset: UploadAssets = { buff, ref };
                 assets.push(asset);
-                source.push(creator.newImageFillShape(name, frame, manager, { width, height }, ref));
+                source.push(creator.newImageFillShape(name, frame, manager, {
+                    width,
+                    height
+                }, this.context.data.stylesMgr, ref));
             }
             const editor = context.editor4Page(context.selection.selectedPage!);
             const result = editor.replace(context.data, source, shapes.map((s) => adapt2Shape(s)));
@@ -460,6 +463,7 @@ export class BundleHandler {
                 if (!result) message("danger", context.workspace.t('system.uploadMediaFail'));
             });
         } else if (source) {
+            if (source.styles?.length) this.insertMasks(source.styles);  // 样式
             // 检查有没有图层内容
             const context = this.context;
             const page = context.selection.selectedPage!;
@@ -520,5 +524,10 @@ export class BundleHandler {
                 if (!result) message("danger", context.workspace.t('system.uploadMediaFail'));
             });
         }
+    }
+
+    insertMasks(masks: StyleMangerMember[]) {
+        const editor = this.context.editor4Doc();
+        editor.insertStyles(masks);
     }
 }

@@ -1,21 +1,23 @@
 <script setup lang="ts">
-const props = defineProps<{
-    title: string,
+interface Props {
+    title: string
     active: boolean
-}>();
-</script>
+}
 
+const props = withDefaults(defineProps<Props>(), {
+    active: true
+})
+</script>
 <template>
     <div class="header-container">
         <div class="header">
-            <div class="title" :class="{ 'checked': active }">{{ props.title }}</div>
+            <div :class="{ title: true, active }">{{ props.title }}</div>
             <div class="tool">
-                <slot name="tool"></slot>
+                <slot name="tool" />
             </div>
         </div>
     </div>
 </template>
-
 <style scoped lang="scss">
 .header-container {
     width: 100%;
@@ -35,19 +37,21 @@ const props = defineProps<{
         >.title {
             flex: 0 0 auto;
             height: 14px;
-            font-family: HarmonyOS Sans;
             font-size: 12px;
             font-weight: normal;
             font-feature-settings: "kern" on;
             color: #737373;
         }
 
-        .checked {
+        .active {
             color: #000000;
         }
 
         .tool {
+            display: flex;
+            align-items: center;
             flex: 0 0 auto;
+            gap: 8px;
         }
     }
 

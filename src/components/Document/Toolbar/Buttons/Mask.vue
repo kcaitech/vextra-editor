@@ -2,7 +2,7 @@
 import ToolButton from './ToolButton.vue';
 import { useI18n } from 'vue-i18n'
 import { Context } from '@/context';
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { Selection } from "@/context/selection";
 import { useMask } from "@/components/Document/Creator/execute";
 import { ShapeType } from "@kcdesign/data";
@@ -77,5 +77,4 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
         height: 18px;
     }
 }
-
 </style>

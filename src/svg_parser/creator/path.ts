@@ -9,7 +9,7 @@ import {ColVector3D} from "@kcdesign/data"
 
 export class PathCreator extends BaseCreator {
     afterAllAdjust() {
-        if (this.attributes.fill || !this.attributes.stroke) return; // 本节点不是边框
+        if (this.attributes.fill || !this.attributes.stroke) return; // 本节点不是描边
 
         const svgRoot = this.root?.htmlElement?.root
         if (!svgRoot) return;
@@ -56,7 +56,7 @@ export class PathCreator extends BaseCreator {
 
         if (!fillPart) fillPart = this;
 
-        // 设置填充部分的边框
+        // 设置填充部分的描边
         let strokeWidth = this.attributes.strokeWidth
         if (strokeWidth && position !== "center") strokeWidth /= 2;
         fillPart.attributes.stroke = {
@@ -65,7 +65,7 @@ export class PathCreator extends BaseCreator {
             position: position,
         }
 
-        if (fillPart !== this) this.remove(); // 有填充的情况下移除边框部分
+        if (fillPart !== this) this.remove(); // 有填充的情况下移除描边部分
     }
 
     createShape() {
@@ -93,7 +93,7 @@ export class PathCreator extends BaseCreator {
         const x1 = diffTranslate.x + (this.attributes.x || 0)
         const y1 = diffTranslate.y + (this.attributes.y || 0)
         this.transform.translate(new ColVector3D([x1, y1, 0]))
-        this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x1, y1, width, height), path, this.style)
+        this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x1, y1, width, height), path, this.context.styleMgr, this.style)
 
         // dev code
         // if (this.localAttributes["id"] === "路径_348") {

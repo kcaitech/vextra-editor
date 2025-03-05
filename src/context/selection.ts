@@ -36,6 +36,7 @@ import { DocSelectionData } from "./user";
 import { initpal } from "@/components/common/initpal";
 import { EnvChainGenerator } from "@/mouse/envchain";
 import { IScout } from "@/openapi";
+import { getShapesForStyle } from "@/utils/style";
 
 export interface XY {
     x: number,
@@ -78,21 +79,15 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     static SELECTION_HIDDEN = 16;
     static SHOW_INTERVAL = 17;
     static PASSIVE_CONTOUR = 18;
-
     static CHANGE_USER_STATE = 19;
-
     static PREVIEW_HOVER_CHANGE = 20;
-
     static LAYOUT_DOTTED_LINE = 21;
     static LAYOUT_DOTTED_LINE_MOVE = 22;
     static UPDATE_LAYOUT_DOTTED_LINE = 23;
     static PRE_INSERT = 24;
     static NEED_TIDY_UP = 25;
     static CHANGE_TIDY_UP_SHAPE = 26;
-
     static HIDDEN_RESET = 27;
-
-    // static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: PageView;
     private m_selectShapes: ShapeView[] = [];
@@ -112,10 +107,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     private userSelectionList: DocSelectionData[] = [];
     private tidy_up: boolean = true;
     private tidy_up_dir: boolean = false; //false 水平， true垂直
-    private tidy_up_algin: TidyUpAlgin = 'center';
+    private tidy_up_align: TidyUpAlgin = 'center';
     private m_tidyup_selectShapes: ShapeView[] = [];
-
     private m_hover_stroke: number = 14;
+    private m_flat: ShapeView[] | undefined = undefined;
 
     chainGenerator: EnvChainGenerator;
 
@@ -183,6 +178,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
         this.m_selectPage = p;
         this.m_selectShapes.length = 0;
+        this.m_flat = undefined;
         this.notify(Selection.CHANGE_PAGE);
 
         return p;
@@ -283,6 +279,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             this.resetSelectShapes();
         } else {
             this.m_selectShapes.length = 0;
+            this.m_flat = undefined;
             this.m_selectShapes.push(shape);
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
@@ -301,6 +298,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     rangeSelectShape(shapes: ShapeView[]) {
         this.m_selectShapes.length = 0;
+        this.m_flat = undefined;
         this.m_selectShapes.push(...shapes);
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
@@ -316,6 +314,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
         if (this.m_selectShapes.length > 0) {
             this.m_selectShapes.length = 0;
+            this.m_flat = undefined;
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE_HOVER);
             this.notify(Selection.CHANGE_SHAPE);
@@ -354,10 +353,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     replaceSelectShape(shape: ShapeView) {
         this.m_selectShapes.length = 0;
+        this.m_flat = undefined;
         this.m_selectShapes.push(shape);
     }
 
-    // 通过id获取shape
     getShapeById(id: string): ShapeView | undefined {
         const page = this.m_selectPage;
         let shape: ShapeView | undefined;
@@ -411,7 +410,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             const colStart = this.tableSelection.tableColStart;
             const colEnd = this.tableSelection.tableColEnd;
             if (!(rowStart < 0 && rowEnd < 0 && colStart < 0 && colEnd < 0)) {
-                state.table = { isRowOrCol: false, rows: [], cols: [] }
+                state.table = {isRowOrCol: false, rows: [], cols: []}
                 const rowCount = table.rowHeights.length;
                 const colCount = table.colWidths.length;
                 if (rowStart === 0 && rowEnd === rowCount - 1) {
@@ -543,7 +542,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.m_is_new_shape_selection = v;
     }
 
-    // #region 特殊类型shape的读取
     get textshape() {
         if (this.selectedShapes.length !== 1) {
             return;
@@ -553,7 +551,8 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         if (_textshape) {
             return _textshape;
         }
-        const _tabletext = (() => {
+
+        return (() => {
             if (!(this.selectedShapes[0] instanceof TableView)) {
                 return
             }
@@ -562,8 +561,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
                 return tableSelection.editingCell;
             }
         })();
-
-        return _tabletext;
     }
 
     get pathshape() {
@@ -581,27 +578,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? (this.selectedShapes[0]) as SymbolView : undefined;
     }
 
-    get unionshape() {
-        if (this.selectedShapes.length === 1) {
-            const xs = this.selectedShapes[0];
-            if (xs.data instanceof SymbolUnionShape) {
-                return adapt2Shape(xs) as SymbolUnionShape;
-            }
-        }
-    }
-
     get symbolstate() {
-        if (this.selectedShapes.length === 1) {
-            const s = this.selectedShapes[0];
-            const p = s.parent;
-            if (!p || !(p.data instanceof SymbolUnionShape)) {
-                return;
-            }
-            return (s) as SymbolView;
-        }
-    }
-
-    get symbolstateview() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
             const p = s.parent;
@@ -639,7 +616,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
     }
 
-    // #endregion
     get is_interval() {
         return this.m_interval;
     }
@@ -691,21 +667,23 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.notify(Selection.PREVIEW_HOVER_CHANGE);
     }
 
-    whetherTidyUp(v: boolean, dir: boolean, algin: TidyUpAlgin) {
+    whetherTidyUp(v: boolean, dir: boolean, align: TidyUpAlgin) {
         this.tidy_up = v;
         this.tidy_up_dir = dir;
-        this.tidy_up_algin = algin;
+        this.tidy_up_align = align;
         this.notify(Selection.NEED_TIDY_UP);
     }
 
     get isTidyUp() {
         return this.tidy_up;
     }
+
     get isTidyUpDir() {
         return this.tidy_up_dir;
     }
-    get tidyUpAlgin() {
-        return this.tidy_up_algin;
+
+    get tidyUpAlign() {
+        return this.tidy_up_align;
     }
 
     selectTidyUpShape(shapes?: ShapeView[]) {
@@ -717,9 +695,14 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
         this.notify(Selection.CHANGE_TIDY_UP_SHAPE);
     }
+
     get selectedTidyUpShapes(): ShapeView[] {
         return this.m_tidyup_selectShapes;
     }
 
     zoomIn: boolean = false;
+
+    get flat() {
+        return this.m_flat ?? (this.m_flat = getShapesForStyle(this.m_selectShapes));
+    }
 }

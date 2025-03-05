@@ -358,8 +358,6 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     }
 
     setUserLocalFontList(list: string[]) {
-        console.log(list, 'list');
-        
         this.m_origin_fontList = list;
         this.notify(WorkSpace.LOCAL_FONT_LIST_UPDATE);
     }

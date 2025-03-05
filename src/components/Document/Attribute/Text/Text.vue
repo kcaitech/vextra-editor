@@ -2,39 +2,42 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed, shallowRef } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h, nextTick } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
     AsyncTextAttrEditor,
     AttrGetter,
-    BasicArray,
     FillType,
     Gradient,
     GradientType,
     LinearApi,
-    Matrix,
     ShapeType,
-    Stop,
     TextBehaviour,
     TextShapeView,
     cloneGradient
 } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color } from "@kcdesign/data";
-import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
 import { throttle } from 'lodash';
 import { watch } from 'vue';
-import { getGradient, gradient_equals } from '../../Selection/Controller/ColorEdit/gradient_utils';
+import { gradient_equals } from '../../Selection/Controller/ColorEdit/gradient_utils';
 import FontWeightSelected from './FontWeightSelected.vue';
 import { fontWeightConvert } from './FontNameList';
 import { Attribute } from '@/context/atrribute';
 import { format_value, is_mac } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
+import TextStyle from '@/components/Document/Attribute/StyleLib/TextStyle.vue';
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import ColorBlock from "@/components/common/ColorBlock/Index.vue";
+import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
+import { toHex } from "@/utils/color";
+import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
+import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 
 interface Props {
     context: Context
@@ -60,7 +63,6 @@ const fontName = ref(DefaultFontName)
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
-const sizeColor = ref<HTMLInputElement>()
 const mixed = ref<boolean>(false);
 const higMixed = ref<boolean>(false);
 const textColor = ref<Color>()
@@ -68,7 +70,6 @@ const highlight = ref<Color>()
 const fillType = ref<FillType>(FillType.SolidColor);
 const gradient = ref<Gradient>();
 const textSize = ref<HTMLInputElement>()
-const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
 const sizeHoverIndex = ref(-1);
 const fontWeight = ref('Regular');
@@ -85,14 +86,15 @@ const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
-
-function toHex(r: number, g: number, b: number, prefix = true) {
-    const hex = (n: number) => n.toString(16)
-        .toUpperCase().length === 1
-        ? `0${n.toString(16).toUpperCase()}`
-        : n.toString(16).toUpperCase();
-    return (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
-}
+const textLibStatus = reactive<ElementStatus>({ id: '#text-lib-panel', visible: false });
+const textPanelStatusMgr = new ElementManager(
+    props.context,
+    textLibStatus,
+    {
+        offsetLeft: -250,
+        whiteList: ['.text-lib-panel', '.text-left']
+    }
+);
 
 const onShowFont = () => {
     props.context.workspace.focusText()
@@ -158,12 +160,7 @@ const setFontWeight = (weight: number, italic: boolean) => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextWeight(weight, italic, 0, Infinity)
-        } else {
-            editor.setTextWeight(weight, italic, textIndex, selectLength)
-            textFormat()
-        }
+        editor.setTextWeight(weight, italic, textIndex, selectLength)
     } else {
         editor.setTextWeightMulti(props.textShapes, weight, italic);
     }
@@ -179,12 +176,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextHorAlign(icon, 0, Infinity)
-        } else {
-            editor.setTextHorAlign(icon, textIndex, selectLength)
-            textFormat()
-        }
+        editor.setTextHorAlign(icon, textIndex, selectLength)
     } else {
         editor.setTextHorAlignMulti(props.textShapes, icon);
     }
@@ -198,7 +190,6 @@ const onSelectVertical = (icon: TextVerAlign) => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         editor.setTextVerAlign(icon)
-        textFormat()
     } else {
         editor.setTextVerAlignMulti(props.textShapes, icon);
     }
@@ -212,24 +203,14 @@ const changeTextSize = (size: number) => {
     showSize.value = false;
     const shape = props.textShapes[0] as TextShapeView
     const editor = props.context.editor4TextShape(shape)
-    
+
     if (shapes.value.length === 1) {
         const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            keydownval.value
-                ?
-                linearApi.modifyTextFontSize(0, Infinity, size, shape)
-                :
-                editor.setTextFontSize(0, Infinity, size)
-
-        } else {
-            keydownval.value
-                ?
-                linearApi.modifyTextFontSize(textIndex, selectLength, size, shape)
-                :
-                editor.setTextFontSize(textIndex, selectLength, size)
-
-        }
+        keydownval.value
+            ?
+            linearApi.modifyTextFontSize(textIndex, selectLength, size, shape)
+            :
+            editor.setTextFontSize(textIndex, selectLength, size)
     } else {
         keydownval.value
             ?
@@ -249,18 +230,13 @@ const setFont = (font: string) => {
     const editor = props.context.editor4TextShape(props.shape);
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextFontName(0, Infinity, font)
-        } else {
-            editor.setTextFontName(textIndex, selectLength, font)
-        }
+        editor.setTextFontName(textIndex, selectLength, font)
     } else {
         editor.setTextFontNameMulti(props.textShapes, font);
     }
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.fontName = font;
     props.context.textSelection.setTextAttr(textAttr);
-    textFormat()
 }
 
 const setWordSpace = (val?: number) => {
@@ -274,19 +250,11 @@ const setWordSpace = (val?: number) => {
         //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
         // }
         if (!isNaN(Number(wordSpace.value))) {
-            if (isSelectText()) {
-                keydownval.value
-                    ?
-                    linearApi.modifyTextCharSpacing(val!, 0, Infinity, props.shape)
-                    :
-                    editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
-            } else {
-                keydownval.value
-                    ?
-                    linearApi.modifyTextCharSpacing(val!, textIndex, selectLength, props.shape)
-                    :
-                    editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
-            }
+            keydownval.value
+                ?
+                linearApi.modifyTextCharSpacing(val!, textIndex, selectLength, props.shape)
+                :
+                editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
         } else {
             textFormat()
         }
@@ -347,19 +315,11 @@ const setRowHeight = (val?: number) => {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         if (!isNaN(Number(value))) {
-            if (isSelectText()) {
-                keydownval.value
-                    ?
-                    linearApi.modifyTextLineHeight(val!, isAuto, 0, Infinity, props.shape)
-                    :
-                    editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, 0, Infinity)
-            } else {
-                keydownval.value
-                    ?
-                    linearApi.modifyTextLineHeight(val!, isAuto, textIndex, selectLength, props.shape)
-                    :
-                    editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, textIndex, selectLength)
-            }
+            keydownval.value
+                ?
+                linearApi.modifyTextLineHeight(val!, isAuto, textIndex, selectLength, props.shape)
+                :
+                editor.setLineHeight(value.length === 0 ? undefined : Number(value), isAuto, textIndex, selectLength)
         } else {
             textFormat();
             return;
@@ -401,26 +361,18 @@ function keydownHeight(event: KeyboardEvent) {
     }
 }
 
-function getTextSelection() {
-    return props.context.selection.textSelection;
-}
-
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
-    const selection = getTextSelection();
+    const selection = props.context.selection.textSelection;
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
-    return { textIndex, selectLength }
-}
-//判断是否选择文本框还是光标聚焦了
-const isSelectText = () => {
-    const selection = getTextSelection();
     if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
-        return false
+        return { textIndex, selectLength }
     } else {
-        return true
+        return { textIndex: 0, selectLength: Infinity }
     }
 }
+
 const sizeValue = ref('');
 const executed = ref(true);
 //输入框设置字体大小
@@ -435,7 +387,7 @@ const setTextSize = () => {
     if (!isNaN(Number(value)) && Number(value) > 0) {
         changeTextSize(Number(value))
     } else {
-        textFormat()
+        textFormat();
     }
 
 }
@@ -462,145 +414,6 @@ const handleSize = () => {
 }
 const reflush = ref(0);
 // 获取当前文字格式
-const _textFormat = () => {
-    const shapes = props.context.selection.selectedShapes;
-    const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShapeView[];
-    if (t_shape.length === 0 || !t_shape[0].text) return
-    mixed.value = false;
-    disableWeight.value = false;
-    weightMixed.value = false;
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(t_shape[0])
-        let format: AttrGetter
-        const __text = t_shape[0].getText();
-        if (textIndex === -1) {
-            format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-        } else {
-            format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
-        }
-        colorIsMulti.value = format.colorIsMulti
-        isAutoLineHeight.value = format.autoLineHeight ?? true;
-        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0)
-        wordSpace.value = format_value(format.kerning || 0)
-        highlightIsMulti.value = format.highlightIsMulti
-        selectLevel.value = format.alignment || 'left'
-        selectVertical.value = format.verAlign || 'top'
-        selectText.value = format.textBehaviour || 'flexible'
-        fontName.value = format.fontName || DefaultFontName
-        fonstSize.value = format_value(format.fontSize || 14) as number
-        textColor.value = format.color
-        highlight.value = format.highlight
-        fillType.value = format.fillType || FillType.SolidColor
-        isBold.value = format.weight
-        isTilt.value = format.italic || false
-        gradient.value = format.gradient;
-        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
-        if (format.minimumLineHeightIsMulti || format.autoLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
-        if (format.italicIsMulti) weightMixed.value = true;
-        if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
-        if (format.weightIsMulti) weightMixed.value = true;
-        if (colorIsMulti.value) mixed.value = true;
-        if (highlightIsMulti.value) higMixed.value = true;
-        if (format.fontNameIsMulti) {
-            disableWeight.value = true;
-            fontName.value = `${t('attr.more_value')}`
-        }
-        if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
-        if (format.fillTypeIsMulti) mixed.value = true;
-        if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
-        props.context.workspace.focusText()
-    } else {
-        let formats: any[] = [];
-        let format: any = {};
-        for (let i = 0; i < t_shape.length; i++) {
-            const text = t_shape[i];
-            const editor = props.context.editor4TextShape(text);
-            const __text = text.getText();
-            const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-            formats.push(format)
-        }
-
-        const referenceKeys = Object.keys(formats[0]);
-        for (const key of referenceKeys) {
-            const referenceValue = formats[0][key];
-            let foundEqual = true;
-            for (let i = 1; i < formats.length; i++) {
-                if ((key === 'color' || key === 'highlight') && formats[i][key] && referenceValue) {
-                    if (!(formats[i][key] as Color).equals(referenceValue as Color)) {
-                        foundEqual = false;
-                        break;
-                    }
-                } else if (key === 'gradient') {
-                    if (formats[i][key]) {
-                        if (!referenceValue) {
-                            foundEqual = false;
-                            break;
-                        }
-                        if (!(gradient_equals(formats[i][key], referenceValue))) {
-                            foundEqual = false;
-                            break;
-                        }
-                    } else if (referenceValue) {
-                        foundEqual = false;
-                        break;
-                    }
-                } else if (formats[i][key] !== referenceValue) {
-                    foundEqual = false;
-                    break;
-                }
-            }
-            if (foundEqual) {
-                format[key] = referenceValue;
-            } else {
-                format[key] = `unlikeness`;
-            }
-        }
-        isAutoLineHeight.value = format.autoLineHeight ?? true;
-        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0) as number;
-        colorIsMulti.value = format.colorIsMulti;
-        highlightIsMulti.value = format.highlightIsMulti;
-        selectLevel.value = format.alignment || 'left';
-        wordSpace.value = format_value(format.kerning || 0);
-        selectVertical.value = format.verAlign || 'top';
-        selectText.value = format.textBehaviour;
-        fontName.value = format.fontName || DefaultFontName;
-        fonstSize.value = format_value(format.fontSize || 14) as number
-        highlight.value = format.highlight;
-        textColor.value = format.color;
-        isBold.value = format.weight;
-        isTilt.value = format.italic || false;
-        fillType.value = format.fillType || FillType.SolidColor
-        textColor.value = format.color;
-        gradient.value = format.gradient;
-        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
-        if (format.fontName === 'unlikeness') {
-            disableWeight.value = true;
-            fontName.value = `${t('attr.more_value')}`;
-        }
-        if (format.minimumLineHeight === 'unlikeness' || format.autoLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-        if (format.minimumLineHeightIsMulti === 'unlikeness' || format.autoLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-        if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
-        if (format.alignment === 'unlikeness') selectLevel.value = '';
-        if (format.verAlign === 'unlikeness') selectVertical.value = '';
-        if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
-        if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if (format.textBehaviour === 'unlikeness') selectText.value = '';
-        if (format.weight === 'unlikeness') weightMixed.value = true;
-        if (format.italic === 'unlikeness') weightMixed.value = true;
-        if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
-        if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
-        if (format.fillType === 'unlikeness') mixed.value = true;
-        if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
-        if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
-        if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
-        if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
-        if (format.gradient === 'unlikeness') gradient.value = undefined;
-        if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
-    }
-    reflush.value++;
-}
-const textFormat = throttle(_textFormat, 0, { leading: true })
 
 function selection_wather(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
@@ -614,84 +427,26 @@ function workspace_wather(t: number) {
     }
 }
 
-const textColorValue = ref('');
-const texAlphaValue = ref('');
-const highlightColorValue = ref('');
-const highlightAlphaValue = ref('');
-
 function onAlphaChange(e: Event, type: string) {
-    let value: any;
-    value = type === 'color' ? texAlphaValue.value : highlightAlphaValue.value;
-    if (value?.slice(-1) === '%') {
-        value = Number(value?.slice(0, -1))
-        if (value >= 0) {
-            if (value > 100) {
-                value = 100
-            }
-            value = value.toFixed(2) / 100
-            let color;
-            if (type === 'color') {
-                color = textColorValue.value;
-                if (fillType.value === FillType.Gradient) {
-                    set_gradient_opacity(value);
-                    return;
-                }
-            } else {
-                color = highlightColorValue.value
-            }
-            setColor(color, value, type);
-            return
-        } else {
-            alpha_message(type);
-        }
-    } else if (!isNaN(Number(value))) {
-        if (value >= 0) {
-            if (value > 100) {
-                value = 100
-            }
-            value = Number((Number(value)).toFixed(2)) / 100
-            let color;
-            if (type === 'color') {
-                color = textColorValue.value;
-                if (fillType.value === FillType.Gradient) {
-                    set_gradient_opacity(value);
-                    return;
-                }
-            } else {
-                color = highlightColorValue.value
-            }
-            setColor(color, value, type);
-            return
-        } else {
-            alpha_message(type);
-        }
-    } else {
-        alpha_message(type);
-    }
-}
-
-function keydownAlpha(event: KeyboardEvent, val: string | number, type: string) {
-
-    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
-        event.preventDefault();
-        keydownval.value = true;
-        let value: any = sortValue(val.toString());
-        let old = value
-        value = Number(value.toFixed(2))
-        value = value + (event.code === 'ArrowUp' ? 0.01 : -0.01)
-        value = value <= 0 ? 0 : value <= 1 ? value : 1
-        if (isNaN(value) || old === value) return;
+    let value = (e.target as HTMLInputElement).value as any;
+    value = value?.slice(-1) === '%' ? Number(value?.slice(0, -1)) : Number(value);
+    if (!isNaN(value) && value >= 0) {
+        value = Math.min(value.toFixed(2), 100) / 100;
         let color;
         if (type === 'color') {
-            color = sizeColor.value?.value;
+            const c = textColor.value || new Color(1, 6, 6, 6);
+            color = toHex(c);
             if (fillType.value === FillType.Gradient) {
                 set_gradient_opacity(value);
                 return;
             }
         } else {
-            color = higlightColor.value?.value
+            const c = highlight.value || new Color(1, 216, 216, 216);
+            color = toHex(c);
         }
-        setColor(color!, value, type);
+        setColor(color, value, type);
+    } else {
+        alpha_message(type);
     }
 }
 
@@ -712,25 +467,23 @@ const alpha_message = (type: string) => {
 }
 
 function onColorChange(e: Event, type: string) {
+    const v = (e.target as HTMLInputElement).value;
+    let value = getColorValue(v);
     if (type === 'color') {
-        let value = getColorValue(textColorValue.value);
         if (Reg_HEX.test(value)) {
-            let alpha = Number(texAlphaValue.value.slice(0, -1));
-            alpha = Number(alpha.toFixed(2)) / 100
+            const alpha = textColor.value?.alpha || 1;
             setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = toHex(textColor.value!.red, textColor.value!.green, textColor.value!.blue);
+            return (e.target as HTMLInputElement).value = toHex(textColor.value!).slice(1);
         }
     } else {
-        let value = getColorValue(highlightColorValue.value);
         if (Reg_HEX.test(value)) {
-            let alpha = Number(highlightAlphaValue.value.slice(0, -1));
-            alpha = Number(alpha.toFixed(2)) / 100
+            const alpha = highlight.value?.alpha || 1;
             setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = toHex(highlight.value!.red, highlight.value!.green, highlight.value!.blue);
+            return (e.target as HTMLInputElement).value = toHex(highlight.value!).slice(1);
         }
     }
 }
@@ -752,33 +505,6 @@ const getColorValue = (v: string) => {
     return value;
 }
 
-function getColorFromPicker(color: Color, type: string) {
-    const editor = props.context.editor4TextShape(props.shape)
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen();
-        if (isSelectText()) {
-            if (type === 'color') {
-                editor.setTextColor(0, Infinity, color)
-            } else {
-                editor.setTextHighlightColor(0, Infinity, color)
-            }
-        } else {
-            if (type === 'color') {
-                editor.setTextColor(textIndex, selectLength, color)
-            } else {
-                editor.setTextHighlightColor(textIndex, selectLength, color)
-            }
-        }
-        textFormat()
-    } else {
-        if (type === 'color') {
-            editor.setTextColorMulti(props.textShapes, color)
-        } else {
-            editor.setTextHighlightColorMulti(props.textShapes, color)
-        }
-    }
-}
-
 function setColor(clr: string, alpha: number, type: string) {
     if (clr.slice(0, 1) !== '#') clr = '#' + clr;
     const res = clr.match(Reg_HEX);
@@ -793,36 +519,19 @@ function setColor(clr: string, alpha: number, type: string) {
     const editor = props.context.editor4TextShape(shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        if (isSelectText()) {
-            if (type === 'color') {
-                keydownval.value
-                    ?
-                    linearApi.modifyTextColor(0, Infinity, new Color(alpha, r, g, b), shape)
-                    :
-                    editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
-            } else {
-                keydownval.value
-                    ?
-                    linearApi.modifyTextHighlightColor(0, Infinity, new Color(alpha, r, g, b), shape)
-                    :
-                    editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b))
-            }
+        if (type === 'color') {
+            keydownval.value
+                ?
+                linearApi.modifyTextColor(textIndex, selectLength, new Color(alpha, r, g, b), shape)
+                :
+                editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
         } else {
-            if (type === 'color') {
-                keydownval.value
-                    ?
-                    linearApi.modifyTextColor(textIndex, selectLength, new Color(alpha, r, g, b), shape)
-                    :
-                    editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
-            } else {
-                keydownval.value
-                    ?
-                    linearApi.modifyTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b), shape)
-                    :
-                    editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
-            }
+            keydownval.value
+                ?
+                linearApi.modifyTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b), shape)
+                :
+                editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
         }
-        textFormat()
     } else {
         if (type === 'color') {
             keydownval.value
@@ -845,12 +554,7 @@ const deleteHighlight = () => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        if (isSelectText()) {
-            editor.setTextHighlightColor(0, Infinity, undefined)
-        } else {
-            editor.setTextHighlightColor(textIndex, selectLength, undefined)
-        }
-        textFormat()
+        editor.setTextHighlightColor(textIndex, selectLength, undefined)
     } else {
         editor.setTextHighlightColorMulti(props.textShapes, undefined);
     }
@@ -861,12 +565,7 @@ const addHighlight = () => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        if (isSelectText()) {
-            editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216))
-        } else {
-            editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216))
-        }
-        textFormat()
+        editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216))
     } else {
         editor.setTextHighlightColorMulti(props.textShapes, new Color(1, 216, 216, 216))
     }
@@ -878,48 +577,21 @@ const setMixedHighlight = () => {
     let format: AttrGetter
     const __text = props.shape.getText();
     if (length.value) {
-        if (isSelectText()) {
-            format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr())
-            const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
-            editor.setTextHighlightColor(0, Infinity, new Color(alpha, red, green, blue));
-        } else {
-            format = __text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr())
-            const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
-            editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, red, green, blue));
-        }
+        format = __text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr())
+        const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
+        editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, red, green, blue));
     } else {
         format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
         const { alpha, red, green, blue } = format.highlight || new Color(1, 216, 216, 216);
-        console.log(format.highlight, 'format.highlight');
-        
         editor.setTextHighlightColorMulti(props.textShapes, new Color(alpha, red, green, blue));
     }
 }
 
-const higAlphaInput = () => {
-    if (higlighAlpha.value && higlightColor.value) {
-        const value = higlighAlpha.value.value;
-        highlightColorValue.value = higlightColor.value.value;
-        highlightAlphaValue.value = value;
-    }
-}
-const higColorInput = () => {
-    if (higlightColor.value && higlighAlpha.value) {
-        const value = higlightColor.value.value;
-        highlightAlphaValue.value = higlighAlpha.value.value;
-        highlightColorValue.value = value;
-    }
-}
 const addTextColor = () => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        if (isSelectText()) {
-            editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6))
-        } else {
-            editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6))
-        }
-        textFormat()
+        editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6))
     } else {
         editor.setTextColorMulti(props.textShapes, new Color(1, 6, 6, 6))
     }
@@ -931,22 +603,12 @@ const setMixedTextColor = () => {
     let format: AttrGetter
     const __text = props.shape.getText();
     if (length.value) {
-        if (isSelectText()) {
-            format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr())
-            const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
-            editor.setTextColor(0, Infinity, new Color(alpha, red, green, blue));
-            editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
-            if (format.gradient) {
-                editor.setTextGradient(format.gradient, 0, Infinity);
-            }
-        } else {
-            format = __text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr())
-            const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
-            editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
-            editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
-            if (format.gradient) {
-                editor.setTextGradient(format.gradient, textIndex, selectLength);
-            }
+        format = __text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr())
+        const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
+        editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
+        editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
+        if (format.gradient) {
+            editor.setTextGradient(format.gradient, textIndex, selectLength);
         }
     } else {
         format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
@@ -959,131 +621,11 @@ const setMixedTextColor = () => {
     }
 }
 
-const togger_gradient_type = (type: GradientType, fillType: FillType) => {
-    const editor = props.context.editor4TextShape(props.shape);
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextFillType(fillType, 0, Infinity)
-            if (fillType === FillType.Gradient) {
-                const g = getGradient(gradient.value, type, textColor.value!);
-                editor.setTextGradient(g, 0, Infinity);
-            }
-        } else {
-            editor.setTextFillType(fillType, textIndex, selectLength)
-            if (fillType === FillType.Gradient) {
-                const g = getGradient(gradient.value, type, textColor.value!);
-                editor.setTextGradient(g, textIndex, selectLength);
-            }
-            textFormat()
-        }
-    } else {
-        editor.setTextFillTypeMulti(props.textShapes, fillType);
-        if (fillType === FillType.Gradient) {
-            const g = getGradient(gradient.value, type, textColor.value!);
-            editor.setTextGradientMulti(props.textShapes, g);
-        }
-    }
-}
-
-function gradient_stop_color_change(color: Color, index: number) {
-    if (!gradient.value) return;
-    const editor = props.context.editor4TextShape(props.shape);
-    let g: Gradient;
-    g = cloneGradient(gradient.value);
-    if (g) {
-        g.stops[index].color = color;
-    }
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            if (index === 0) editor.setTextColor(0, Infinity, color);
-            editor.setTextGradient(g, 0, Infinity);
-        } else {
-            if (index === 0) editor.setTextColor(textIndex, selectLength, color);
-            editor.setTextGradient(g, textIndex, selectLength);
-        }
-    } else {
-        if (index === 0) editor.setTextColorMulti((shapes.value as TextShapeView[]), color);
-        editor.setTextGradientMulti(props.textShapes, g);
-    }
-}
-
-function gradient_add_stop(position: number, color: Color, id: string) {
-    if (!gradient.value) return;
-    const stop = new Stop(new BasicArray(), id, position, color);
-    const g = cloneGradient(gradient.value);
-    g.stops.push(stop);
-    const s = g.stops as BasicArray<Stop>;
-    s.forEach((v, i) => {
-        const idx = new BasicArray<number>();
-        idx.push(i);
-        v.crdtidx = idx;
-    })
-    s.sort((a, b) => {
-        if (a.position > b.position) {
-            return 1;
-        } else if (a.position < b.position) {
-            return -1;
-        } else {
-            return 0;
-        }
-    })
-    editor_gradient(g);
-}
-
-function gradient_stop_delete(index: number) {
-    if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
-    g.stops.splice(index, 1);
-    editor_gradient(g);
-}
-
-function gradient_reverse() {
-    if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
-    const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
-    for (let _i = 0, _l = g.stops.length; _i < _l; _i++) {
-        const _stop = g.stops[_i];
-        const inver_index = g.stops.length - 1 - _i;
-        new_stops.push(new Stop(_stop.crdtidx, _stop.id, _stop.position, g.stops[inver_index].color));
-    }
-    g.stops = new_stops;
-    editor_gradient(g);
-}
-
-function gradient_rotate() {
-    if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
-    const { from, to } = g;
-    const gradientType = g.gradientType;
-    if (gradientType === GradientType.Linear) {
-        const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
-        const m = new Matrix();
-        m.trans(-midpoint.x, -midpoint.y);
-        m.rotate(Math.PI / 2);
-        m.trans(midpoint.x, midpoint.y);
-        g.to = m.computeCoord3(to) as any;
-        g.from = m.computeCoord3(from) as any;
-    } else if (gradientType === GradientType.Radial || gradientType === GradientType.Angular) {
-        const m = new Matrix();
-        m.trans(-from.x, -from.y);
-        m.rotate(Math.PI / 2);
-        m.trans(from.x, from.y);
-        g.to = m.computeCoord3(to) as any;
-    }
-    editor_gradient(g);
-}
-
 const editor_gradient = (g: Gradient) => {
     const editor = props.context.editor4TextShape(props.shape);
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextGradient(g, 0, Infinity);
-        } else {
-            editor.setTextGradient(g, textIndex, selectLength);
-        }
+        editor.setTextGradient(g, textIndex, selectLength);
     } else {
         editor.setTextGradientMulti(props.textShapes, g);
     }
@@ -1099,50 +641,12 @@ const onSelectText = (icon: TextBehaviour) => {
     }
 }
 
-const sizeColorInput = () => {
-    if (sizeColor.value && alphaFill.value) {
-        const value = sizeColor.value.value;
-        textColorValue.value = value;
-        texAlphaValue.value = alphaFill.value.value;
-    }
-}
 const selectSizeValue = () => {
     if (textSize.value) {
         executed.value = true;
         getTextShapes();
         const value = textSize.value.value;
         sizeValue.value = value;
-    }
-}
-const selectColorValue = () => {
-    if (sizeColor.value) {
-        executed.value = true;
-        getTextShapes();
-    }
-}
-const selectAlphaValue = () => {
-    if (alphaFill.value) {
-        executed.value = true;
-        getTextShapes();
-    }
-}
-const sizeAlphaInput = () => {
-    if (alphaFill.value) {
-        const value = alphaFill.value.value;
-        texAlphaValue.value = value;
-    }
-    if (sizeColor.value) textColorValue.value = sizeColor.value.value;
-}
-const selectHiglightColor = () => {
-    if (higlightColor.value) {
-        executed.value = true;
-        getTextShapes();
-    }
-}
-const selectHiglighAlpha = () => {
-    if (higlighAlpha.value) {
-        executed.value = true;
-        getTextShapes();
     }
 }
 const getTextShapes = () => {
@@ -1157,6 +661,18 @@ const filterAlpha = () => {
         const opacity = gradient.value.gradientOpacity;
         a = (opacity === undefined ? 1 : opacity) * 100;
     }
+    let alpha = Math.round(a * 100) / 100;
+    if (Number.isInteger(alpha)) {
+        return alpha.toFixed(0); // 返回整数形式
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+        return alpha.toFixed(1); // 保留一位小数
+    } else {
+        return alpha.toFixed(2); // 保留两位小数
+    }
+}
+const filterAlpha2 = () => {
+    let a: number = 100;
+    if (highlight.value) a = highlight.value.alpha * 100;
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
         return alpha.toFixed(0); // 返回整数形式
@@ -1183,16 +699,7 @@ const onMouseDown = async (e: MouseEvent, t: string) => {
         });
     }
     const { textIndex, selectLength } = getTextIndexAndLen();
-    let index = textIndex;
-    let length = selectLength;
-    if (isSelectText()) {
-        index = 0;
-        length = Number.MAX_VALUE;
-    } else {
-        index = textIndex;
-        length = selectLength;
-    }
-    textAttrEditor = props.context.editor4TextShape(props.shape).asyncSetTextAttr(props.textShapes, index, length);
+    textAttrEditor = props.context.editor4TextShape(props.shape).asyncSetTextAttr(props.textShapes, textIndex, selectLength);
     e.stopPropagation()
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove);
@@ -1271,11 +778,141 @@ const text_selection_wather = (t: number) => {
         textFormat();
     }
 }
+const _textFormat = () => {
+    const shapes = props.context.selection.selectedShapes;
+    const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShapeView[];
+    if (t_shape.length === 0 || !t_shape[0].text) return
+    mixed.value = false;
+    disableWeight.value = false;
+    weightMixed.value = false;
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        const editor = props.context.editor4TextShape(t_shape[0]);
+        let format: AttrGetter
+        const __text = t_shape[0].getText();
+        format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
+        colorPicker.format = format;
+        colorIsMulti.value = format.colorIsMulti;
+        isAutoLineHeight.value = format.autoLineHeight ?? true;
+        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0)
+        wordSpace.value = format_value(format.kerning || 0)
+        highlightIsMulti.value = format.highlightIsMulti
+        selectLevel.value = format.alignment || 'left'
+        selectVertical.value = format.verAlign || 'top'
+        selectText.value = format.textBehaviour || 'flexible'
+        fontName.value = format.fontName || DefaultFontName
+        fonstSize.value = format_value(format.fontSize || 14) as number
+        textColor.value = format.color
+        highlight.value = format.highlight
+        fillType.value = format.fillType || FillType.SolidColor
+        isBold.value = format.weight
+        isTilt.value = format.italic || false
+        gradient.value = format.gradient;
+        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
+        if (format.minimumLineHeightIsMulti || format.autoLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
+        if (format.italicIsMulti) weightMixed.value = true;
+        if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
+        if (format.weightIsMulti) weightMixed.value = true;
+        if (colorIsMulti.value) mixed.value = true;
+        if (highlightIsMulti.value) higMixed.value = true;
+        if (format.fontNameIsMulti) {
+            disableWeight.value = true;
+            fontName.value = `${t('attr.more_value')}`
+        }
+        if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
+        if (format.fillTypeIsMulti) mixed.value = true;
+        if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
+        props.context.workspace.focusText()
+    } else {
+        let formats: any[] = [];
+        let format: any = {};
+        for (let i = 0; i < t_shape.length; i++) {
+            const text = t_shape[i];
+            const editor = props.context.editor4TextShape(text);
+            const __text = text.getText();
+            const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+            formats.push(format)
+        }
 
-const is_higligh_alpha_select = ref(false);
-const is_higligh_color_select = ref(false);
-const is_font_alpha_select = ref(false);
-const is_font_color_select = ref(false);
+        const referenceKeys = Object.keys(formats[0]);
+        for (const key of referenceKeys) {
+            const referenceValue = formats[0][key];
+            let foundEqual = true;
+            for (let i = 1; i < formats.length; i++) {
+                if ((key === 'color' || key === 'highlight') && formats[i][key] && referenceValue) {
+                    if (!(formats[i][key] as Color).equals(referenceValue as Color)) {
+                        foundEqual = false;
+                        break;
+                    }
+                } else if (key === 'gradient') {
+                    if (formats[i][key]) {
+                        if (!referenceValue) {
+                            foundEqual = false;
+                            break;
+                        }
+                        if (!(gradient_equals(formats[i][key], referenceValue))) {
+                            foundEqual = false;
+                            break;
+                        }
+                    } else if (referenceValue) {
+                        foundEqual = false;
+                        break;
+                    }
+                } else if (formats[i][key] !== referenceValue) {
+                    foundEqual = false;
+                    break;
+                }
+            }
+            format[key] = foundEqual ? referenceValue : 'unlikeness';
+        }
+        colorPicker.format = format;
+        isAutoLineHeight.value = format.autoLineHeight ?? true;
+        rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0) as number;
+        colorIsMulti.value = format.colorIsMulti;
+        highlightIsMulti.value = format.highlightIsMulti;
+        selectLevel.value = format.alignment || 'left';
+        wordSpace.value = format_value(format.kerning || 0);
+        selectVertical.value = format.verAlign || 'top';
+        selectText.value = format.textBehaviour;
+        fontName.value = format.fontName || DefaultFontName;
+        fonstSize.value = format_value(format.fontSize || 14) as number
+        highlight.value = format.highlight;
+        textColor.value = format.color;
+        isBold.value = format.weight;
+        isTilt.value = format.italic || false;
+        fillType.value = format.fillType || FillType.SolidColor
+        textColor.value = format.color;
+        gradient.value = format.gradient;
+        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
+        if (format.fontName === 'unlikeness') {
+            disableWeight.value = true;
+            fontName.value = `${t('attr.more_value')}`;
+        }
+        if (format.minimumLineHeight === 'unlikeness' || format.autoLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeightIsMulti === 'unlikeness' || format.autoLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
+        if (format.alignment === 'unlikeness') selectLevel.value = '';
+        if (format.verAlign === 'unlikeness') selectVertical.value = '';
+        if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
+        if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
+        if (format.textBehaviour === 'unlikeness') selectText.value = '';
+        if (format.weight === 'unlikeness') weightMixed.value = true;
+        if (format.italic === 'unlikeness') weightMixed.value = true;
+        if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
+        if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
+        if (format.fillType === 'unlikeness') mixed.value = true;
+        if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
+        if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+        if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+        if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
+        if (format.gradient === 'unlikeness') gradient.value = undefined;
+        if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
+    }
+    updateContextColor();
+    reflush.value++;
+}
+const textFormat = throttle(_textFormat, 0, { leading: true })
+
 const is_char_space_select = ref(false);
 const is_row_height_select = ref(false);
 const is_size_select = ref(false);
@@ -1290,7 +927,171 @@ function click(e: Event, variate: boolean) {
     variate = true;
 }
 
-// const stop = watch(() => props.dataChange, textFormat);
+const showTextPanel = (event: MouseEvent) => {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('text-panel')) {
+            e && textPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
+            break;
+        }
+        if (e.classList.contains('text-left')) {
+            e && textPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
+const closePanel = () => {
+    textPanelStatusMgr.close();
+}
+const compo = ref<any>();
+const innerText = ref<string>('');
+const rgbaColor = ref<RGBACatch>({ R: 6, G: 6, B: 6, A: 1, position: 1 });
+const rgbaHighlight = ref<RGBACatch>({ R: 216, G: 216, B: 216, A: 1, position: 1 });
+const colorType = ref<string>(FillType.SolidColor);
+const color_gradient = ref<GradientCatch | undefined>();
+
+const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
+const colorPanelStatusMgr = new ElementManager(
+    props.context,
+    colorPanelStatus,
+    { whiteList: ['#color-piker-gen-2-panel', '.text-color'], onDestroy: clearPanelStatus }
+);
+
+const colorPicker = new TextPicker(props.context, fillType.value, 'color');
+
+function showColorPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('text-color')) {
+            const color = props.context.color;
+            if (fillType.value === FillType.SolidColor) {
+                if (color.gradient_type) color.set_gradient_type(undefined);
+                if (color.locate) color.gradient_locate(undefined);
+                if (color.mode) color.switch_editor_mode(false);
+                if (color.imageScaleMode) color.setImageScaleMode(undefined);
+            } else {
+                color.set_gradient_type(gradient.value?.gradientType || GradientType.Linear);
+                color.gradient_locate({ index: 0, type: "text" });
+                color.switch_editor_mode(true, gradient.value);
+                color.setImageScaleMode(undefined);
+            }
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -262 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
+const highlightPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
+const highlightPanelStatusMgr = new ElementManager(
+    props.context,
+    highlightPanelStatus,
+    { whiteList: ['#color-piker-gen-2-panel', '.highlight-color'] }
+);
+
+const highlightPicker = new TextPicker(props.context, FillType.SolidColor, 'highlight');
+
+function showHighlightPanel(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('highlight-color')) {
+            highlightPanelStatusMgr.showBy(e, { once: { offsetLeft: -262 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
+
+const styleReplace = {
+    flex: 1,
+    width: '48px',
+    outline: 'none',
+    border: 'none',
+    height: '14px',
+    'background-color': 'transparent',
+    'font-size': ' 12px',
+    'box-sizing': 'border-box'
+};
+
+const HexHighlightInput = () => h('input', {
+    style: styleReplace,
+    value: toHex2(highlight.value || new Color(1, 216, 216, 216)).slice(1),
+    spellcheck: false,
+    onFocus: selectAllOnFocus,
+    onChange: (e) => onColorChange(e, 'highlight')
+});
+
+const HexInput = () => h('input', {
+    style: styleReplace,
+    value: toHex2(textColor.value || new Color(1, 6, 6, 6)).slice(1),
+    spellcheck: false,
+    onFocus: selectAllOnFocus,
+    onChange: (e) => onColorChange(e, 'color')
+});
+
+const DescSpan = () => h('div', {
+    style: Object.assign({
+        display: 'flex',
+        'align-items': 'center'
+    }, styleReplace),
+    innerText: innerText.value
+});
+
+function assemble() {
+    color_gradient.value = undefined;
+    switch (fillType.value) {
+        case FillType.Gradient:
+            colorType.value = gradient.value?.gradientType || GradientType.Linear;
+            color_gradient.value = getGradientCatch(gradient.value!);
+            innerText.value = t(`color.${gradient.value?.gradientType || GradientType.Linear}`);
+            compo.value = DescSpan();
+            break;
+        default:
+            colorType.value = fillType.value;
+            const color = textColor.value || new Color(1, 6, 6, 6);
+            rgbaColor.value = { R: color.red, G: color.green, B: color.blue, A: color.alpha, position: 1 };
+            compo.value = HexInput();
+    }
+}
+
+function clearPanelStatus() {
+    const color = props.context.color;
+    if (color.gradient_type) color.set_gradient_type(undefined);
+    if (color.locate) color.gradient_locate(undefined);
+    if (color.mode) color.switch_editor_mode(false);
+    if (color.imageScaleMode) color.setImageScaleMode(undefined);
+}
+
+function closeColor() {
+    colorPanelStatusMgr.close();
+    clearPanelStatus();
+}
+
+const closeHighlight = () => {
+    highlightPanelStatusMgr.close();
+}
+
+const updateContextColor = () => {
+    assemble();
+    const c = highlight.value || new Color(1, 216, 216, 216);
+    rgbaHighlight.value = { R: c.red, G: c.green, B: c.blue, A: c.alpha, position: 1 };
+    const color = props.context.color;
+    if (!colorPanelStatus.visible) return;
+    if (fillType.value === FillType.SolidColor) {
+        if (color.gradient_type) color.set_gradient_type(undefined);
+        if (color.locate) color.gradient_locate(undefined);
+        if (color.mode) color.switch_editor_mode(false);
+        if (color.imageScaleMode) color.setImageScaleMode(undefined);
+    } else {
+        color.set_gradient_type(gradient.value?.gradientType || GradientType.Linear);
+        color.gradient_locate({ index: 0, type: "text" });
+        color.switch_editor_mode(true, gradient.value);
+        color.setImageScaleMode(undefined);
+    }
+}
+
 const stop2 = watch(() => props.textShapes, (v) => {
     shapes.value = v;
     textFormat();
@@ -1301,6 +1102,7 @@ const stop3 = watch(() => props.trigger, v => {
     }
 })
 const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
+const stop5 = watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()));
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     props.context.attr.watch(text_selection_wather);
@@ -1311,12 +1113,12 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.attr.unwatch(text_selection_wather);
     props.context.workspace.unwatch(workspace_wather);
-    // stop();
     stop2();
     stop3();
     stop4();
+    stop5();
 })
-
+const fillTypes = [FillType.SolidColor, FillType.Gradient];
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import down_icon from '@/assets/icons/svg/down.svg';
 import white_select_icon from '@/assets/icons/svg/white-select.svg';
@@ -1334,13 +1136,19 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
 import text_autowidth_icon from '@/assets/icons/svg/text-autowidth.svg';
 import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
 import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
-
+import delete_icon from "@/assets/icons/svg/delete.svg";
+import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
+import { toHex as toHex2 } from '@/utils/color';
+import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/textpicker';
 </script>
 
 <template>
-    <div class="text-panel" @mousedown.stop>
+    <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
+                <!--                <div class="text-style" @click="showTextPanel($event)">-->
+                <!--                    <SvgIcon :icon="style_icon" />-->
+                <!--                </div>-->
                 <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
             </template>
@@ -1350,7 +1158,7 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
                 <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ fontName }}</span>
                     <div class="down">
-                        <SvgIcon :icon="down_icon" style="width: 12px;height: 12px"/>
+                        <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
                 </div>
                 <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
@@ -1368,7 +1176,7 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
                             @focus="selectSizeValue" @input="handleSize" @click="(e) => click(e, is_size_select)"
                             @keydown="e => keydownSize(e)">
                         <div class="down" @click="onShowSize">
-                            <SvgIcon :icon="down_icon" style=""/>
+                            <SvgIcon :icon="down_icon" style="" />
                         </div>
                     </div>
                     <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
@@ -1377,7 +1185,7 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
                             @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
                             <div class="icon">
                                 <SvgIcon v-if="sizeSelectIndex === i"
-                                    :icon="sizeHoverIndex === i ? white_select_icon : page_select_icon"/>
+                                    :icon="sizeHoverIndex === i ? white_select_icon : page_select_icon" />
                             </div>
                         </div>
                     </div>
@@ -1386,7 +1194,7 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
             <div class="text-middle">
                 <div class="interval jointly-text" style="margin-right: 8px;">
                     <div @mousedown="(e) => onMouseDown(e, 'row-height')">
-                        <SvgIcon :icon="word_space_icon"/>
+                        <SvgIcon :icon="word_space_icon" />
                     </div>
                     <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="() => setRowHeight()"
                         :placeholder="row_height" @input="handleSize" @click="(e) => click(e, is_row_height_select)"
@@ -1394,7 +1202,7 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
                 </div>
                 <div class="interval jointly-text" style="padding-right: 0;">
                     <div @mousedown="(e) => onMouseDown(e, 'char-space')">
-                        <SvgIcon :icon="row_height_icon"/>
+                        <SvgIcon :icon="row_height_icon" />
                     </div>
                     <input type="text" v-model="wordSpace" ref="charSpacing" class="input"
                         @change="() => setWordSpace()" @input="handleSize"
@@ -1407,25 +1215,25 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'left' }"
                         @click="onSelectLevel(TextHorAlign.Left)">
                         <Tooltip :content="t('attr.align_left')" :offset="15">
-                            <SvgIcon :icon="text_left_icon"/>
+                            <SvgIcon :icon="text_left_icon" />
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'centered' }"
                         @click="onSelectLevel(TextHorAlign.Centered)">
                         <Tooltip :content="t('attr.align_center')" :offset="15">
-                            <SvgIcon :icon="text_center_icon"/>
+                            <SvgIcon :icon="text_center_icon" />
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'right' }"
                         @click="onSelectLevel(TextHorAlign.Right)">
                         <Tooltip :content="t('attr.align_right')" :offset="15">
-                            <SvgIcon :icon="text_right_icon"/>
+                            <SvgIcon :icon="text_right_icon" />
                         </Tooltip>
                     </i>
                     <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'natural' }"
                         @click="onSelectLevel(TextHorAlign.Natural)">
                         <Tooltip :content="t('attr.align_the_sides')" :offset="15">
-                            <SvgIcon :icon="text_justify_icon"/>
+                            <SvgIcon :icon="text_justify_icon" />
                         </Tooltip>
                     </i>
                 </div>
@@ -1436,19 +1244,19 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'top' }"
                             @click="onSelectVertical(TextVerAlign.Top)">
                             <Tooltip :content="t('attr.align_top')" :offset="15">
-                                <SvgIcon :icon="align_top_icon"/>
+                                <SvgIcon :icon="align_top_icon" />
                             </Tooltip>
                         </i>
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'middle' }"
                             @click="onSelectVertical(TextVerAlign.Middle)">
                             <Tooltip :content="t('attr.align_middle')" :offset="15">
-                                <SvgIcon :icon="align_middle_icon"/>
+                                <SvgIcon :icon="align_middle_icon" />
                             </Tooltip>
                         </i>
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'bottom' }"
                             @click="onSelectVertical(TextVerAlign.Bottom)">
                             <Tooltip :content="t('attr.align_bottom')" :offset="15">
-                                <SvgIcon :icon="align_bottom_icon"/>
+                                <SvgIcon :icon="align_bottom_icon" />
                             </Tooltip>
                         </i>
                     </div>
@@ -1456,63 +1264,43 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'flexible' }"
                             @click="onSelectText(TextBehaviour.Flexible)">
                             <Tooltip :content="t('attr.autowidth')" :offset="15">
-                                <SvgIcon :icon="text_autowidth_icon"/>
+                                <SvgIcon :icon="text_autowidth_icon" />
                             </Tooltip>
                         </i>
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixed' }"
                             @click="onSelectText(TextBehaviour.Fixed)">
                             <Tooltip :content="t('attr.autoheight')" :offset="15">
-                                <SvgIcon :icon="text_autoheight_icon"/>
+                                <SvgIcon :icon="text_autoheight_icon" />
                             </Tooltip>
                         </i>
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
                             @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
                             <Tooltip :content="t('attr.fixedsize')" :offset="15">
-                                <SvgIcon :icon="text_fixedsize_icon"/>
+                                <SvgIcon :icon="text_fixedsize_icon" />
                             </Tooltip>
                         </i>
                     </div>
                 </div>
-                <!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
-            t('attr.font_color')
-        }}
+            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 6px; gap: 8px;">
+                <div style="font-size: 12px;">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
-                        :locat="{ index: 0, type: 'text' }" :fill-type="fillType" :gradient="gradient"
-                        @change="c => getColorFromPicker(c, 'color')"
-                        @gradient-type="(type, fillType) => togger_gradient_type(type, fillType)"
-                        @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
-                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)"
-                        @gradient-reverse="gradient_reverse" @gradient-rotate="gradient_rotate"
-                        @gradient-stop-delete="(index) => gradient_stop_delete(index)">
-                    </ColorPicker>
-                    <input ref="sizeColor" v-if="fillType !== FillType.Gradient" class="sizeColor"
-                        @focus="selectColorValue" :spellcheck="false"
-                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue, false)"
-                        @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput"
-                        @click="(e) => click(e, is_font_color_select)" @blur="is_font_color_select = false" />
-                    <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
-                    <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
-                        :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
-                        @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false"
-                        @input="sizeAlphaInput" @keydown="e => keydownAlpha(e, Number(filterAlpha()) / 100, 'color')" />
+                    <ColorBlock :colors="([textColor || new Color(1, 6, 6, 6)] as Color[])" @click="showColorPanel" />
+                    <component v-blur :is="compo" />
+                    <input v-blur ref="alphaFill" class="alphaFill" type="alphaFill" :value="filterAlpha() + '%'"
+                        @focus="selectAllOnFocus" @change="(e) => onAlphaChange(e, 'color')" />
+                    <ColorPicker v-if="colorPanelStatus.visible" :editor="colorPicker" :type="colorType"
+                        :include="fillTypes" :color="rgbaColor!" :gradient="color_gradient" @close="closeColor" />
                 </div>
-                <!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
+
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
-            t('attr.font_color')
-        }}
-                    </div>
+                    <div style="font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
                     <div class="add" @click="setMixedTextColor">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
@@ -1520,56 +1308,58 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
             <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div class="add" @click="addTextColor">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                 </div>
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px"
-                    :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                <div style="font-size: 12px;" :class="{ 'check': highlight, 'nocheck': !highlight }">{{
+                    t('attr.highlight_color') }}
                 </div>
-                <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
-                        @change="c => getColorFromPicker(c, 'highlight')">
-                    </ColorPicker>
-                    <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
-                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
-                        @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput"
-                        @click="(e) => click(e, is_higligh_color_select)" @blur="is_higligh_color_select = false" />
-                    <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
-                        :value="(highlight!.alpha * 100).toFixed(0) + '%'"
-                        @change="(e) => onAlphaChange(e, 'highlight')" @input="higAlphaInput"
-                        @click="(e) => click(e, is_higligh_alpha_select)" @blur="is_higligh_alpha_select = false"
-                        @keydown="e => keydownAlpha(e, highlight!.alpha, 'highlight')" />
-                </div>
-                <div class="perch" @click="deleteHighlight">
-                    <SvgIcon class="svg" :icon="delete"/>
+                <div class="highlight-color-block">
+                    <div class="color">
+                        <ColorBlock :colors="([highlight || new Color(1, 216, 216, 216)] as Color[])"
+                            @click="showHighlightPanel" />
+                        <component v-blur :is="HexHighlightInput()" />
+                        <input v-blur ref="higlighAlpha" class="alphaFill" type="alphaFill"
+                            :value="filterAlpha2() + '%'" @focus="selectAllOnFocus"
+                            @change="(e) => onAlphaChange(e, 'highlight')" />
+                        <ColorPicker v-if="highlightPanelStatus.visible" :editor="highlightPicker"
+                            :type="FillType.SolidColor" :include="[]" :color="rgbaHighlight!" @close="closeHighlight" />
+                    </div>
+                    <div class="perch" @click="deleteHighlight">
+                        <SvgIcon class="svg" :icon="delete_icon" />
+                    </div>
                 </div>
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                    <div style="font-size: 12px;margin-right: 10px;"
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{
+                            t('attr.highlight_color') }}
                     </div>
                     <div class="add" @click="setMixedHighlight">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight" @click="addHighlight">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                    <div style="font-size: 12px;margin-right: 10px;"
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{
+                            t('attr.highlight_color') }}
                     </div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
-                        <SvgIcon :icon="add_icon"/>
+                        <SvgIcon :icon="add_icon" />
                     </div>
                 </div>
             </div>
         </div>
+        <TextStyle v-if="textLibStatus.visible" :context="props.context" :textShape="props.shape"
+            :textShapes="props.textShapes" @close="closePanel"></TextStyle>
         <teleport to="body">
             <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
             </div>
@@ -1578,6 +1368,41 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
 </template>
 
 <style scoped lang="scss">
+.value-panel-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    flex: 1;
+    height: 32px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    background-color: var(--input-background);
+    border-radius: var(--default-radius);
+
+    .colorShadow {
+        flex: 1;
+        width: 46px;
+        outline: none;
+        border: none;
+        height: 14px;
+        background-color: transparent;
+        font-size: 12px;
+        box-sizing: border-box;
+    }
+
+    .alphaShadow {
+        width: 40px;
+        outline: none;
+        border: none;
+        background-color: transparent;
+        height: 14px;
+        font-size: 12px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+}
+
 .text-panel {
     width: 100%;
     display: flex;
@@ -1604,6 +1429,31 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
         }
     }
 
+    .text-style {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        border-radius: var(--default-radius);
+        transition: .2s;
+
+        >img {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .text-style img {
+        padding: 2px;
+        box-sizing: border-box;
+    }
+
+    .text-style:hover {
+        background-color: #F5F5F5;
+    }
+
     .text-container {
         font-size: var(--font-default-fontsize);
 
@@ -1616,6 +1466,7 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
             align-items: center;
 
             >img {
+                // outline: none;
                 width: 16px;
                 height: 16px;
                 overflow: visible !important;
@@ -1731,7 +1582,7 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
                         align-items: center;
                         justify-content: center;
 
-                        >svg {
+                        >img {
                             width: 12px;
                             height: 12px;
                         }
@@ -1861,41 +1712,30 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
         .text-color {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            text-wrap: nowrap;
+            gap: 8px;
+            margin-bottom: 8px;
 
             .color {
-                background-color: var(--input-background);
-                flex: 1;
-                height: 32px;
-                padding: 8px;
-                padding-right: 4px;
-                border-radius: var(--default-radius);
-                box-sizing: border-box;
                 display: flex;
                 align-items: center;
-
-                .sizeColor {
-                    outline: none;
-                    border: none;
-                    width: 60px;
-                    background-color: transparent;
-                    margin-left: 8px;
-                    font-size: 12px;
-                    flex: auto;
-                }
+                gap: 8px;
+                flex: 1;
+                height: 32px;
+                padding: 0 8px;
+                box-sizing: border-box;
+                background-color: var(--input-background);
+                border-radius: var(--default-radius);
 
                 .alphaFill {
+                    width: 46px;
                     outline: none;
                     border: none;
-                    width: 35px;
                     background-color: transparent;
+                    height: 14px;
                     font-size: 12px;
-                    flex: auto;
-                }
-
-                input+input {
-                    width: 45px;
+                    box-sizing: border-box;
+                    flex: 0 0 46px;
+                    text-align: right;
                 }
             }
         }
@@ -1904,43 +1744,40 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 8px;
 
             .color {
-                background-color: var(--input-background);
-                flex: 1;
-                height: 32px;
-                padding: 8px;
-                padding-right: 4px;
-                border-radius: var(--default-radius);
-                box-sizing: border-box;
                 display: flex;
                 align-items: center;
-
-                .colorFill {
-                    outline: none;
-                    border: none;
-                    background-color: transparent;
-                    width: 60px;
-                    height: 14px;
-                    margin-left: 8px;
-                    font-size: 12px;
-                }
+                gap: 8px;
+                flex: 1;
+                height: 32px;
+                padding: 0 8px;
+                box-sizing: border-box;
+                background-color: var(--input-background);
+                border-radius: var(--default-radius);
 
                 .alphaFill {
+                    width: 35px;
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 35px;
-                    text-align: center;
+                    height: 14px;
                     font-size: 12px;
-                    flex: auto;
-                }
-
-                input+input {
-                    width: 45px;
+                    box-sizing: border-box;
+                    flex: 0 0 35px;
+                    text-align: right;
                 }
             }
+
+            .highlight-color-block {
+                display: flex;
+                flex: 1;
+                align-items: center;
+                gap: 8px;
+            }
         }
+
 
         .text-colors {
             .color-title {
@@ -1989,7 +1826,6 @@ import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
             align-items: center;
             width: 28px;
             height: 28px;
-            margin-left: 5px;
             border-radius: var(--default-radius);
 
             >img {

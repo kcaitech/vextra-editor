@@ -21,10 +21,9 @@ import {
     CornerType,
     BorderSideSetting,
     SideType,
-    ResourceMgr,
-    StrokePaint,
+    ResourceMgr, StyleMangerMember,
 } from "@kcdesign/data"
-import {v4 as uuid} from "uuid"
+import { v4 as uuid } from "uuid"
 import {
     Attributes,
     FillColor,
@@ -40,12 +39,13 @@ import {
     parseTransform,
     RadialGradient
 } from "../utils"
-import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
-import {Transform} from "@kcdesign/data"
-import {ColVector3D} from "@kcdesign/data"
-import {makeShapeTransform2By1, updateShapeTransform1By2} from "@kcdesign/data"
+import { BaseTreeNode, TreeNodeTraverseHandler } from "../tree"
+import { Transform } from "@kcdesign/data"
+import { ColVector3D } from "@kcdesign/data"
+import { makeShapeTransform2By1, updateShapeTransform1By2 } from "@kcdesign/data"
 
 export type ContextType = {
+    styleMgr: ResourceMgr<StyleMangerMember>
     mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
     styleMap: { [key: string]: string }
     [key: string]: any
@@ -226,7 +226,7 @@ export class BaseCreator extends BaseTreeNode {
         const isPath = this.htmlElement.tagName === "path"
         if (d) {
             this.attributes.d = d
-            const {x, y, width, height} = getPathBoxFromD(d)
+            const { x, y, width, height } = getPathBoxFromD(d)
             this.attributes.pathX = x
             this.attributes.pathY = y
             if (isPath) {
@@ -241,7 +241,7 @@ export class BaseCreator extends BaseTreeNode {
         const pointsToPathD = shapeCreator.polylinePointsToPathD(points, this.htmlElement.tagName === "polyline")
         if (pointsToPathD) {
             this.attributes.pointsToPathD = pointsToPathD
-            const {x, y, width, height} = getPathBoxFromD(pointsToPathD)
+            const { x, y, width, height } = getPathBoxFromD(pointsToPathD)
             this.attributes.polylineX = x
             this.attributes.polylineY = y
             if (isPolyline) {
@@ -257,7 +257,7 @@ export class BaseCreator extends BaseTreeNode {
             this.attributes.transform = this.localAttributes["transform"] ?? undefined
             transform = this.attributes.transform
         }
-        if (transform) this.transform.addTransform(parseTransform(transform, {width: this.attributes.width ?? 0, height: this.attributes.height ?? 0}));
+        if (transform) this.transform.addTransform(parseTransform(transform, { width: this.attributes.width ?? 0, height: this.attributes.height ?? 0 }));
 
         // opacity
         const opacity = this.localAttributes["opacity"]
@@ -560,7 +560,7 @@ export class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        let {translate, rotate, skew, scale} = this.transform.decompose()
+        let { translate, rotate, skew, scale } = this.transform.decompose()
         // 最终的宽高
         const size = shape.size;
         const w1 = size.width * scale.x
@@ -628,7 +628,7 @@ export class BaseCreator extends BaseTreeNode {
         const transform2 = makeShapeTransform2By1(shape.transform)
         transform2.setTranslate(new ColVector3D([translate.x, translate.y, 0]))
         transform2.setRotateZ(rotate.z)
-        transform2.setSkew({skew: skew})
+        transform2.setSkew({ skew: skew })
         transform2.setScale(new ColVector3D([scale.x, scale.y, scale.z]))
         updateShapeTransform1By2(shape.transform, transform2)
     }
@@ -664,9 +664,9 @@ export class BaseCreator extends BaseTreeNode {
             }
 
             const stops = gradient.stops.map((item, i) => {
-                    item.color.a *= item.opacity
-                    return new Stop([i] as BasicArray<number>, uuid(), item.offset, myColorToColor(item.color))
-                }
+                item.color.a *= item.opacity
+                return new Stop([i] as BasicArray<number>, uuid(), item.offset, myColorToColor(item.color))
+            }
             ) as BasicArray<Stop>
 
             return new Gradient(from, to, colorType, stops as BasicArray<Stop>, elipseLength, opacity)
@@ -687,7 +687,7 @@ export class BaseCreator extends BaseTreeNode {
             else fill.fillRule = FillRule.Nonzero;
         }
 
-        const strokePaints = new BasicArray<StrokePaint>()
+        const strokePaints = new BasicArray<Fill>()
         const stroke = this.attributes.stroke
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
         const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
@@ -709,7 +709,7 @@ export class BaseCreator extends BaseTreeNode {
             }
             const borderStyle = new BorderStyle(stroke.dashArray[0], stroke.dashArray[1])
             const side = new BorderSideSetting(SideType.Normal, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
-            const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color))
+            const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color))
             border.position = position;
             border.borderStyle = borderStyle;
             border.cornerType = cornerType;
@@ -761,7 +761,7 @@ export class SvgCreator extends BaseCreator {
     viewBox: [number, number, number, number] | undefined
 
     createShape() {
-        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, this.attributes.width || 0, this.attributes.height || 0))
+        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, this.attributes.width || 0, this.attributes.height || 0), this.style?.getStylesMgr()!)
     }
 
     afterChildrenCreateShape(): void {

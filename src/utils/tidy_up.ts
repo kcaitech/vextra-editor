@@ -473,7 +473,7 @@ export function getVerShapeOutlineFrame(context: Context, shape_rows: ShapeView[
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
-    const algin = context.selection.tidyUpAlgin;
+    const algin = context.selection.tidyUpAlign;
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         const maxWidth = Math.max(...shape_row.map(s => s._p_frame.width));
@@ -514,7 +514,7 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
-    const algin = context.selection.tidyUpAlgin;
+    const algin = context.selection.tidyUpAlign;
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         const maxHeight = Math.max(...shape_row.map(s => s._p_frame.height));

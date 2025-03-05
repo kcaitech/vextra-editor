@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import SvgIcon from "./SvgIcon.vue";
 
 type Props = {
     icon: string;
     value: string | number;
-
+    show?: boolean;
+    position?: boolean;
     disabled?: boolean;
     draggable?: boolean;
 }
@@ -26,9 +27,9 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
-
 const inputEl = ref<HTMLInputElement>();
 const active = ref<boolean>();
+const RadiusActive = ref<boolean>(false)
 let isDown = false;
 
 function down(e: MouseEvent) {
@@ -81,6 +82,11 @@ function keydown(event: KeyboardEvent) {
     if (event.key === "Escape") return inputEl.value?.blur();
     emits("keydown", event);
 }
+
+watch(() => props.position, (v) => {
+    RadiusActive.value = v
+})
+
 </script>
 
 <template>
@@ -112,6 +118,31 @@ function keydown(event: KeyboardEvent) {
         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
     }
 
+    .radius-style {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        border-radius: 4px;
+        visibility: hidden;
+
+        >svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+    .radius-style svg {
+        padding: 1px;
+        box-sizing: border-box;
+    }
+
+    .radius-style:hover {
+        background-color: #e5e5e5;
+    }
+
     .un-draggable {
         pointer-events: none;
         cursor: auto;
@@ -138,6 +169,10 @@ function keydown(event: KeyboardEvent) {
         color: #FFFFFF;
         background: #1878F5;
     }
+
+    &:hover .radius-style {
+        visibility: visible;
+    }
 }
 
 .disabled {
@@ -148,5 +183,10 @@ function keydown(event: KeyboardEvent) {
 .active {
     background-color: transparent !important;
     border: 1px solid #1878F5;
+}
+
+.active-radius {
+    visibility: visible !important;
+    background-color: #e5e5e5;
 }
 </style>

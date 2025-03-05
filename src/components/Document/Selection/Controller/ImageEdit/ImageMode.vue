@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { GradientType, ImageScaleMode, Matrix, ShapeType } from '@kcdesign/data';
+import { ImageScaleMode, ShapeType } from '@kcdesign/data';
 import { onMounted, ref } from 'vue';
 import { image_mode_map } from "./map";
 import { dbl_action } from '@/utils/mouse_interactive';
@@ -9,7 +9,6 @@ import { onUnmounted } from 'vue';
 import { ColorCtx } from '@/context/color';
 interface Props {
     context: Context
-    matrix: Matrix
 }
 const props = defineProps<Props>();
 const mode = ref<ImageScaleMode>();
@@ -38,14 +37,10 @@ function move(e: MouseEvent) {
     }
 }
 const selected_watcher = (t: number | string) => {
-    if (t === Selection.CHANGE_SHAPE) {
-        init();
-    }
+    if (t === Selection.CHANGE_SHAPE) init();
 }
 const color_watcher = (t: number) => {
-    if (t === ColorCtx.CHANGE_IMAGE_MODE) {
-        init();
-    }
+    if (t === ColorCtx.CHANGE_IMAGE_MODE) init();
 }
 onMounted(() => {
     init();
@@ -58,12 +53,12 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="imagemode" @mousedown.stop="down" @mousemove="move" v-if="mode">
-        <component :is="image_mode_map.get(mode)" :context="props.context" :matrix="matrix"></component>
+    <div v-if="mode" class="image-mode" @mousedown.stop="down" @mousemove="move">
+        <component :is="image_mode_map.get(mode)" :context="props.context" />
     </div>
 </template>
 <style scoped lang="scss">
-.imagemode {
+.image-mode {
     width: 100%;
     height: 100%;
     position: absolute;

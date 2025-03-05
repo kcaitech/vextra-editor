@@ -25,6 +25,7 @@ export function toHex(options: {
     alpha: number
 }): string {
     const toHex = (n: number) => {
+        n = Math.round(n);
         return n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     }
     return "#" + toHex(options.red) + toHex(options.green) + toHex(options.blue);

@@ -750,7 +750,7 @@ onUnmounted(() => {
          @mousemove="move" @mouseleave="props.context.selection.unHoverShape"
          @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
-        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="(matrix as Matrix)" />
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix as Matrix" />
         <Rule :context="props.context" :page="(props.page as PageView)"/>
         <ImagePicker :context="props.context"/>
         <!-- 页面调整控件，确保在ContentView顶层 -->

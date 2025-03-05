@@ -1,9 +1,8 @@
 import { BoundHandler } from "@/transform/handler";
 import {
-    ArtboardView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, Shape, ShapeFrame,
+    ArtboardView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, ShapeFrame,
     ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
-    makeShapeTransform1By2, PathShapeView, makeShapeTransform2By1, layoutShapesOrder2, GroupShapeView,
-    getShapeFrame
+    makeShapeTransform1By2, PathShapeView, makeShapeTransform2By1, layoutShapesOrder2, getShapeFrame
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";

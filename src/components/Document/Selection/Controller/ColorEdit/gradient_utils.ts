@@ -1,5 +1,4 @@
 import { Context } from "@/context";
-import { flattenShapes } from "@/utils/cutout";
 import {
     Color,
     Stop,
@@ -11,12 +10,14 @@ import {
     Point2D,
     TextShapeView,
     AttrGetter,
-    TableCellView
+    Fill,
+    FillMask
 } from "@kcdesign/data";
 import { importGradient } from "@kcdesign/data";
 import { v4 } from "uuid";
+import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
-export type GradientFrom = 'fills' | 'borders' | 'text' | 'table_text';
+export type GradientFrom = 'fills' | 'borders' | 'text';
 
 export function to_rgba(options: {
     red: number,
@@ -55,68 +56,54 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
         }
     }
 }
-
+export const get_add_gradient_color2 = (stops: RGBACatch[], position: number) => {
+    for (let i = 0; i < stops.length; i++) {
+        const stop = stops[i];
+        if (position < stop.position) {
+            let n_alpha;
+            const c = i === 0 ? stop : stops[i - 1];
+            const { R: red, G: green, B: blue, A: alpha } = c;
+            if (i > 0) {
+                const after_position = stops[i - 1].position;
+                const a_len = alpha - stop.A;
+                const proportion = ((position - after_position) * a_len) / (stop.position - after_position);
+                if (a_len === 0) {
+                    n_alpha = alpha;
+                } else {
+                    n_alpha = a_len > 0 ? alpha - proportion : alpha + proportion;
+                }
+            } else {
+                n_alpha = alpha;
+            }
+            return { R: red, G: green, B: blue, A: n_alpha, position } as RGBACatch;
+        } else if (position > stops[i].position && i === stops.length - 1) {
+            const { R: red, G: green, B: blue, A: alpha } = stop;
+            return { R: red, G: green, B: blue, A: alpha, position } as RGBACatch;;
+        }
+    }
+}
 export const get_gradient = (context: Context, shape: ShapeView) => {
-    const locat = context.color.locat;
-    if (!locat || !shape || !shape.style) return;
-    if (locat.type !== 'text' && locat.type !== 'table_text') {
-        let gradient_type = locat.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
-        if (shape.type === ShapeType.Group) {
-            const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group);
-            gradient_type = locat.type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders().strokePaints;
-        }
-        if (!gradient_type[locat.index]) return;
-        const gradient = gradient_type[locat.index].gradient;
-        return gradient;
-    } else {
-        if (locat.type === 'text') {
-            if (shape.type !== ShapeType.Text) return;
-            const { textIndex, selectLength } = getTextIndexAndLen(context);
-            const editor = context.editor4TextShape(shape as TextShapeView)
-            let format: AttrGetter
-            const __text = (shape as TextShapeView).getText();
-            if (textIndex === -1) {
-                format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-            } else {
-                format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
-            }
-            return format.gradient;
+    const locate = context.color.locate;
+    if (!locate || !shape || !shape.style) return;
+    if (locate.type !== 'text') {
+        let fills: Fill[] = [];
+        let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
+        if (maskId) {
+            const mask = context.data.stylesMgr.getSync(maskId) as FillMask;
+            fills = mask.fills;
         } else {
-            if (shape.type !== ShapeType.Table) return;
-            const table_s = context.tableSelection;
-            if (table_s.editingCell) {
-                const cell = table_s.editingCell;
-                const { textIndex, selectLength } = getTextIndexAndLen(context);
-                const editor = context.editor4TextShape(cell);
-                let format: AttrGetter;
-                if (textIndex === -1) {
-                    format = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-                } else {
-                    format = cell.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
-                }
-                return format.gradient;
-            } else {
-                let cells: (TableCellView)[];
-                if (table_s.tableRowStart < 0 || table_s.tableColStart < 0) {
-                    cells = shape.childs as (TableCellView)[];
-                } else {
-                    cells = table_s.getSelectedCells(true).reduce((cells, item) => {
-                        if (item.cell) cells.push(item.cell);
-                        return cells;
-                    }, [] as (TableCellView[]));
-                }
-                const formats: any[] = [];
-                for (let i = 0; i < cells.length; i++) {
-                    const cell = cells[i];
-                    if (cell && cell.text) {
-                        const editor = context.editor4TextShape(cell as any);
-                        const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-                        formats.push(forma);
-                    }
-                }
-                return formats[0].gradient;
-            }
+            fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
         }
+        if (!fills[locate.index]) return;
+        return fills[locate.index].gradient;
+    } else {
+        if (shape.type !== ShapeType.Text) return;
+        const { textIndex, selectLength } = getTextIndexAndLen(context);
+        const editor = context.editor4TextShape(shape as TextShapeView)
+        let format: AttrGetter
+        const __text = (shape as TextShapeView).getText();
+        format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+        return format.gradient;
     }
 }
 
@@ -175,11 +162,11 @@ export function getGradient(gradient: Gradient | undefined, grad_type: GradientT
         stops.push(new Stop(new BasicArray(0), v4(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(1), v4(), 1, new Color(0, red, green, blue)))
         const from = grad_type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
         const to = { x: 0.5, y: 1 };
-        let elipseLength = undefined;
+        let ellipseLength = undefined;
         if (grad_type === GradientType.Radial) {
-            elipseLength = 1;
+            ellipseLength = 1;
         }
-        new_gradient = new Gradient(from as Point2D, to as Point2D, grad_type, stops, elipseLength);
+        new_gradient = new Gradient(from as Point2D, to as Point2D, grad_type, stops, ellipseLength);
     }
     return new_gradient;
 }
@@ -188,15 +175,10 @@ export const getTextIndexAndLen = (context: Context) => {
     const selection = context.selection.textSelection;
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
-    return { textIndex, selectLength }
-}
-
-export const isSelectText = (context: Context) => {
-    const selection = context.selection.textSelection;
     if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
-        return false
+        return { textIndex, selectLength }
     } else {
-        return true
+        return { textIndex: 0, selectLength: Infinity }
     }
 }
 

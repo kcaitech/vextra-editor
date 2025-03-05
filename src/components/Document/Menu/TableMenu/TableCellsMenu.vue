@@ -72,7 +72,7 @@ const showAlginMenu = (meun: string) => {
 }
 
 const hiddenAlginMenu = () => {
-        isAlignMenu.value = ''
+    isAlignMenu.value = ''
 }
 const textAlginHor = (svg: string) => {
     horIcon.value = svg;
@@ -221,6 +221,8 @@ const getCellsFormat = () => {
         const _fs = get_fills(cells);
         if (_fs === 'mixed' || !_fs.length) {
             color.value = new Color(1, 255, 255, 255);
+        } else if (_fs === 'mask') {
+            return;
         } else {
             color.value = _fs[0].fill.color;
         }

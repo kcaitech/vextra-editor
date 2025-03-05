@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import close_icon from "@/assets/icons/svg/close.svg";
+import exchange_icon from "@/assets/icons/svg/exchange.svg";
+import rotate90_icon from "@/assets/icons/svg/rotate90.svg";
+import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg";
+import add_icon from "@/assets/icons/svg/add.svg";
+
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
 import {
     AsyncGradientEditor,
@@ -10,7 +17,9 @@ import {
     PaintFilter,
     ShapeType,
     TableView,
+    Fill,
     TextShapeView,
+    FillMask,
 } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -21,7 +30,7 @@ import {
     drawTooltip,
     updateRecently,
     parseColorFormStorage,
-    key_storage,
+    color_recent_storage,
     RGB2HSB,
     RGB2H,
     validate,
@@ -36,7 +45,7 @@ import {
     stops_generator,
     hexToX, RGB2SB,
 } from './utils';
-import { typical, model2label } from './typical';
+import { typical, model2label } from './Preset/typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 import { Menu } from "@/context/menu";
@@ -47,18 +56,26 @@ import {
     GradientFrom,
     getTextIndexAndLen,
     get_add_gradient_color,
-    isSelectText
 } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
-import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
-import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
 import { ImgFrame } from '@/context/atrribute';
+import { watchEffect } from 'vue';
+
+interface FillItem {
+    id: number,
+    fill: Fill
+}
 
 interface Props {
+    styletop?: number
+    styleleft?: number
+    open?: boolean
+    entrance?: string
+    style?: FillMask
     context: Context
     color: Color
-
+    fillslist?: FillItem[]
     locat?: { index: number, type: GradientFrom }
     fillType?: FillType
     gradient?: Gradient
@@ -103,6 +120,8 @@ interface Emits {
     (e: 'changeRotate'): void;
     (e: 'changeScale', scale: number): void;
     (e: 'closeMode'): void;
+    (e: 'close'): void;
+    (e: "addfill"): void
 }
 
 export interface HRGB { // 色相
@@ -180,12 +199,13 @@ const fill_type = ref<FillType>(FillType.SolidColor);
 const stop_els = ref<StopEl[]>([]);
 const imageScale = ref<number>();
 const scaleMode = ref<ImageScaleMode>();
-
+const EditorStyle = ref<boolean>(false)
 const LINE_LENGTH = 196;
 const DOT_SIZE = 12;
 const HALF_DOT_SIZE = DOT_SIZE / 2;
 const HUE_WIDTH = 250;
 const HUE_HEIGHT = 200;
+const custom = ref<string>('custom')
 
 const DOT_SIZE_CSS = `${DOT_SIZE}px`;
 const HUE_WIDTH_CSS = `${HUE_WIDTH}px`;
@@ -200,17 +220,14 @@ const data = reactive<Data>({
 })
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
 
-// 色相
 const hue = computed<number>(() => {
     return Math.floor((hueIndicatorAttr.x / (LINE_LENGTH - DOT_SIZE)) * 360);
 })
 
-// 饱和度
 const saturation = computed<number>(() => {
     return (dotPosition.left + HALF_DOT_SIZE) / HUE_WIDTH;
 })
 
-// 亮度
 const brightness = computed<number>(() => {
     return (1 - (dotPosition.top + HALF_DOT_SIZE) / HUE_HEIGHT);
 })
@@ -268,9 +285,6 @@ function passive() {
     sleep = true;
 }
 
-/**
- * @description 调色板定位
- */
 function locate() {
     if (!(popoverEl.value && block.value)) {
         return;
@@ -316,9 +330,6 @@ function locate() {
     }
 }
 
-/**
- * @description 退出调色板
- */
 function quit(e: MouseEvent) {
     const need_quit = props.fillType === FillType.Gradient && props.gradient
         ? e.target instanceof Element && !e.target.closest('.color-block') && !e.target.closest('#content')
@@ -411,7 +422,6 @@ function wheel(e: WheelEvent) {
     }
 }
 
-// 设置透明度
 function setAlphaIndicatorPosition(e: MouseEvent) {
     if (sliders.value) {
         setMousedownPosition(e);
@@ -513,7 +523,6 @@ function mousemove4Dot(e: MouseEvent) {
     }
 }
 
-// set color
 function setRGB(indicator: number) {
     const h = (indicator / (LINE_LENGTH - DOT_SIZE)) * 360;
     const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
@@ -561,7 +570,6 @@ const changeColor = (color: Color) => {
     }
 }
 
-// 鼠标抬起
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove4Dot);
     document.removeEventListener('mousemove', mousemove4Alpha)
@@ -581,7 +589,6 @@ function eyedropper() {
     }
 }
 
-// 系统自带的取色器
 function systemEyeDropper() {
     const System_EyeDropper = (window as any).EyeDropper;
     const s_eye_dropper = new System_EyeDropper();
@@ -602,7 +609,6 @@ function systemEyeDropper() {
     setTimeout(() => tooltip?.parentNode?.removeChild(tooltip), 2000);
 }
 
-// 自制取色器
 function eyeDropperInit(): Eyedropper {
     const root = props.context.workspace.root.element;
     return new Eyedropper({
@@ -727,7 +733,6 @@ function keyboardWatcher(e: KeyboardEvent) {
     }
 }
 
-// 输入框输入
 function enter() {
     let v: string | number = inputTarget.value;
     if (model.value.value === 'Hex') {
@@ -823,17 +828,20 @@ function enter() {
     inputTarget.blur();
 }
 
-function triggle() {
-    const menu = props.context.menu;
-    const exist = menu.isColorPickerMount;
-    if (exist) {
-        menu.removeColorPicker();
-        if (exist !== blockId) {
-            colorPickerMount();
-        }
-    } else {
-        colorPickerMount();
-    }
+function showPanel() {
+    picker_visible.value = true;
+    // const menu = props.context.menu;
+    // const exist = menu.isColorPickerMount;
+    // // custom.value = 'custom'
+    // // colorPickerMount();
+    // if (exist) {
+    //     menu.removeColorPicker();
+    //     if (exist !== blockId) {
+    //         colorPickerMount();
+    //     }
+    // } else {
+    //     colorPickerMount();
+    // }
 }
 
 /**
@@ -844,7 +852,7 @@ function colorPickerMount() {
     props.context.menu.setupColorPicker(blockId);
 
     if (props.locat) {
-        props.context.color.gradinet_locat(props.locat);
+        props.context.color.gradient_locate(props.locat);
     }
 
     init();
@@ -866,22 +874,20 @@ function blockUnmount() {
     const menu = props.context.menu;
     const e = menu.isColorPickerMount;
     if (e === blockId) menu.clearColorPickerId();
-    props.context.color.clear_locat();
+    props.context.color.clear_locate();
     props.context.color.switch_editor_mode(false);
 }
 
-/**
- * @description 移除调色板
- */
 function removeCurColorPicker() {
     if (need_update_recent.value) {
         update_recent_color();
         need_update_recent.value = false;
     }
     props.context.menu.clearColorPickerId();
-    props.context.color.clear_locat();
+    props.context.color.clear_locate();
     props.context.color.switch_editor_mode(false);
     picker_visible.value = false;
+    emit('close')
     props.context.color.select_stop(undefined);
     props.context.color.setImageScale(undefined);
     props.context.color.setImageScaleMode(undefined);
@@ -901,16 +907,15 @@ function switch_tile() {
     }
 }
 
-// init
 function init_recent() {
-    let r = localStorage.getItem(key_storage);
+    let r = localStorage.getItem(color_recent_storage);
     r = JSON.parse(r || '[]');
     if (!r || !r.length) {
         return;
     }
     recent.value = [];
     for (let i = 0; i < r.length; i++) {
-        recent.value.push(parseColorFormStorage(r[i]));
+        // recent.value.push(parseColorFormStorage(r[i]));
     }
 }
 
@@ -918,7 +923,6 @@ function init_document_colors() {
     document_colors.value = getColorsFromDoc(props.context);
 }
 
-// init
 function init(color = props.color) {
     init_recent();
     const { red, green, blue, alpha } = color;
@@ -950,7 +954,7 @@ function update_recent_color() {
     if (nVal.length) {
         recent.value = [];
         for (let i = 0; i < nVal.length; i++) {
-            recent.value.push(parseColorFormStorage(nVal[i]));
+            // recent.value.push(parseColorFormStorage(nVal[i]));
         }
     }
 }
@@ -992,7 +996,7 @@ function update_gradient(gradient: Gradient | undefined) {
     if (!gradient || props.fillType !== FillType.Gradient) {
         return;
     }
-    gradient_channel_style.value = gradient_channel_generator(gradient);
+    // gradient_channel_style.value = gradient_channel_generator(gradient);
     const id = props.context.color.selected_stop;
     update_stops(id);
     props.context.color.notify(ColorCtx.GRADIENT_UPDATE);
@@ -1080,9 +1084,14 @@ function move_stop_position(e: MouseEvent) {
         const line_rect = gradient_line.value.getBoundingClientRect();
         const line_width = Math.min(Math.max(e.clientX - line_rect.left, 0), line_rect.width);
         const stop_p = line_width / line_rect.width;
-        gradient_channel_style.value = gradient_channel_generator(props.gradient!);
+        // gradient_channel_style.value = gradient_channel_generator(props.gradient!);
         stop_els.value[index].left = stop_p * 152 + 16;
-        gradientEditor.execute_stop_position(stop_p, stop_id.value);
+        if (props.entrance) {
+            // gradientEditor.execute_fillmask_stop_position!(props.style!.sheet, props.style!.id, props.locat.index, stop_p, stop_id.value);
+        } else {
+            gradientEditor.execute_stop_position(stop_p, stop_id.value);
+        }
+
         passive();
     } else {
         if (Math.hypot(dx, dy) > 3) {
@@ -1091,44 +1100,14 @@ function move_stop_position(e: MouseEvent) {
             const page = props.context.selection.selectedPage;
             const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
             const locat = props.locat;
-            if (locat.type !== 'table_text' && locat.type !== 'text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes, page!, locat.index, locat.type);
+            if (locat.type !== 'text') {
+                // gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes, page!, locat.index, locat.type);
             } else {
                 if (!props.gradient) return;
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                if (locat.type === 'table_text') {
-                    const tableSelection = props.context.tableSelection;
-                    const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
-                    if (tableSelection.editingCell) {
-                        const table_cell = tableSelection.editingCell;
-                        const editor_text = props.context.editor4TextShape(table_cell);
-                        if (isSelectText(props.context)) {
-                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], props.gradient, 0, Infinity);
-                        } else {
-                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], props.gradient, textIndex, selectLength);
-                        }
-                    } else {
-                        const editor = props.context.editor4Table(table_shape);
-                        if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
-                            gradientEditor = editor.asyncSetTextGradient(props.gradient);
-                        } else {
-                            gradientEditor = editor.asyncSetTextGradient(props.gradient, {
-                                rowStart: tableSelection.tableRowStart,
-                                rowEnd: tableSelection.tableRowEnd,
-                                colStart: tableSelection.tableColStart,
-                                colEnd: tableSelection.tableColEnd
-                            });
-                        }
-                    }
-                } else {
-                    const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
-                    const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-                    if (isSelectText(props.context)) {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], props.gradient, 0, Infinity);
-                    } else {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], props.gradient, textIndex, selectLength);
-                    }
-                }
+                const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
+                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], props.gradient, textIndex, selectLength);
             }
 
             passive();
@@ -1155,7 +1134,7 @@ function color_type_change(val: GradientType, type: FillType) {
     update_gradient_type(val, type);
     nextTick(() => {
         set_gradient(val, type);
-        if (props.locat) props.context.color.gradinet_locat(props.locat);
+        if (props.locat) props.context.color.gradient_locate(props.locat);
         init();
         locate();
         if (type === FillType.Pattern) {
@@ -1167,7 +1146,7 @@ function color_type_change(val: GradientType, type: FillType) {
 const set_gradient = (val: GradientType, fillType: FillType) => {
     if (fillType !== FillType.Gradient) {
         props.context.color.set_gradient_type(undefined);
-        props.context.color.clear_locat();
+        props.context.color.clear_locate();
         props.context.color.switch_editor_mode(false);
         props.context.color.setImageScale(undefined);
         props.context.color.setImageScaleMode(undefined);
@@ -1181,7 +1160,7 @@ const set_gradient = (val: GradientType, fillType: FillType) => {
             if (props.locat) props.context.color.switch_editor_mode(true, props.gradient);
         }, 100)
     }
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
+    if (props.locat) props.context.color.gradient_locate(props.locat);
 }
 
 // 切换渐变类型
@@ -1216,7 +1195,7 @@ const get_gradient_type = () => {
         props.context.color.switch_editor_mode(false);
         if (props.fillType === FillType.SolidColor) {
             fill_type.value = FillType.SolidColor;
-            props.context.color.clear_locat();
+            props.context.color.clear_locate();
             props.context.color.setImageScale(undefined);
             props.context.color.setImageScaleMode(undefined);
         } else if (props.fillType === FillType.Pattern) {
@@ -1229,7 +1208,7 @@ const get_gradient_type = () => {
     }
 
     if (props.locat) {
-        props.context.color.gradinet_locat(props.locat);
+        props.context.color.gradient_locate(props.locat);
     }
 }
 
@@ -1259,7 +1238,7 @@ function menu_watcher(t: any, id: string) {
 
 function color_watch(t: number) {
     if (t === ColorCtx.CHANGE_STOP && props.gradient) {
-        gradient_channel_style.value = gradient_channel_generator(props.gradient);
+        // gradient_channel_style.value = gradient_channel_generator(props.gradient);
         update_stops(props.context.color.selected_stop);
     } else if (t === ColorCtx.STOP_DELETE) {
         delete_gradient_stop();
@@ -1274,7 +1253,7 @@ const is_gradient_selected = () => {
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     if (shapes.length === 1) {
-        if (shapes[0].type === ShapeType.Table && props.locat && props.locat.type !== 'table_text') {
+        if (shapes[0].type === ShapeType.Table && props.locat) {
             const t = props.context.tableSelection;
             if (t.editingCell || !(t.tableRowStart < 0 || t.tableColStart < 0)) {
                 return false;
@@ -1305,6 +1284,16 @@ const watch_picker = () => {
 watch(() => picker_visible.value, (v) => {
     if (!v) {
         emit('closeMode');
+    }
+})
+
+watchEffect(() => {
+    if (props.open) {
+        custom.value = 'style'
+    }
+    picker_visible.value = props.open
+    if (picker_visible.value) {
+        props.context.menu.setupColorPicker(blockId)
     }
 })
 
@@ -1380,163 +1369,185 @@ onUnmounted(() => {
     document.removeEventListener('mousedown', quit);
     blockUnmount();
     props.context.color.select_stop(undefined);
-    props.context.color.clear_locat();
+    props.context.color.clear_locate();
     props.context.color.switch_editor_mode(false);
 })
-
-import SvgIcon from "@/components/common/SvgIcon.vue"
-import close_icon from "@/assets/icons/svg/close.svg"
-import exchange_icon from "@/assets/icons/svg/exchange.svg"
-import rotate90_icon from "@/assets/icons/svg/rotate90.svg"
-import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg"
-
 </script>
-
 <template>
-    <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
-        <img v-if="fillType === FillType.Pattern" :src="image_url" alt="">
-        <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
-            <!-- 头部 -->
+    <div ref="block" class="color-block" :style="block_style_generator(color, gradient, fillType)" @click="showPanel">
+        <img v-if="fillType === FillType.Pattern" :src="image_url" alt="pattern">
+        <div v-if="picker_visible" class="popover" ref="popoverEl"
+            :style="{ top: props.styletop + 'px', left: props.styleleft + 'px' }" @click.stop @wheel="wheel"
+            @mousedown.stop>
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
-                <div class="color-type-desc">
-                    <div class="color-type">{{ t(`attr.fill`) }}</div>
+                <div class="left">
+                    <div class="color-type" :class="{ active: custom === 'custom' }" @click="custom = 'custom'">{{
+                        t(`attr.fill`) }}</div>
+                    <div v-if="fillType && is_gradient_selected() && !props.entrance" class="style"
+                        :class="{ active: custom === 'style' }" @click="custom = 'style'">颜色样式</div>
                 </div>
-                <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
-                    <SvgIcon :icon="close_icon"/>
+                <div class="right">
+                    <div v-if="!props.entrance" class="newstyle" @click.stop="EditorStyle = !EditorStyle">
+                        <SvgIcon :icon="add_icon" />
+                    </div>
+                    <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
+                        <SvgIcon :icon="close_icon" />
+                    </div>
                 </div>
             </div>
-            <div class="color_type_container" v-if="fillType && is_gradient_selected()">
-                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"
-                    :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">
-                </ColorType>
+            <div v-if="custom === 'custom'" class="custom">
+                <div class="color_type_container" v-if="fillType && is_gradient_selected()">
+                    <!--                    <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"-->
+                    <!--                        :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">-->
+                    <!--                    </ColorType>-->
+                </div>
+                <!-- 渐变工具 -->
+                <div v-if="fill_type === FillType.Gradient && fillType === FillType.Gradient && is_gradient_selected()"
+                    class="gradient-container">
+                    <div class="line-container">
+                        <div class="line" ref="gradient_line" :style="gradient_channel_style"
+                            @mouseup.stop="_gradient_channel_down"></div>
+                        <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
+                            @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
+                            <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
+                        </div>
+                    </div>
+                    <div class="reverse" @click="reverse">
+                        <Tooltip :content="t('color.reverse')">
+                            <SvgIcon :icon="exchange_icon" />
+                        </Tooltip>
+                    </div>
+                    <div class="rotate" @click="rotate">
+                        <Tooltip :content="t('color.rotate')">
+                            <SvgIcon :icon="rotate90_icon" />
+                        </Tooltip>
+                    </div>
+                </div>
+                <!-- 饱和度 -->
+                <template v-if="fillType !== FillType.Pattern">
+                    <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
+                        :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                        <div class="white"></div>
+                        <div class="black"></div>
+                        <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
+                    </div>
+                    <!-- &lt;!&ndash; 常用色 &ndash;&gt; -->
+                    <div class="typical-container">
+                        <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
+                            :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                        </div>
+                    </div>
+                    <div class="controller">
+                        <div class="eyedropper">
+                            <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper" />
+                        </div>
+                        <div class="sliders-container" ref="sliders">
+                            <!-- &lt;!&ndash; 色相 &ndash;&gt; -->
+                            <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
+                                <div class="hueIndicator" ref="hueIndicator"
+                                    :style="{ left: hueIndicatorAttr.x + 'px' }">
+                                </div>
+                            </div>
+                            <!-- &lt;!&ndash; 透明度 &ndash;&gt; -->
+                            <div class="alpha-bacground">
+                                <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
+                                    :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                                    <div class="alphaIndicator" ref="alphaIndicator"
+                                        :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- &lt;!&ndash; model & values &ndash;&gt; -->
+                    <div class="input-container">
+                        <Select class="model" :source="modelOptions" :selected="model" @select="switchModel" />
+                        <div class="values">
+                            <div class="wrap">
+                                <div v-if="values.length === 4" class="value">
+                                    <div v-for="(i, idx) in values" :key="idx" class="item">
+                                        <input :value="i" @click="(e) => inputClick(e, idx)" />
+                                    </div>
+                                </div>
+                                <div v-else class="value">
+                                    <div class="item" style="height: 100%;width: 112.5px;">
+                                        <input spellcheck="false" :value="values[0]" @click="(e) => inputClick(e, 0)"
+                                            style="text-align: left;padding-left: 8px;" />
+                                    </div>
+                                    <div class="item">
+                                        <input :value="values[1]" @click="(e) => inputClick(e, 1)" />
+                                    </div>
+                                </div>
+                                <div class="label">
+                                    <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- &lt;!&ndash; 最近使用 &ndash;&gt; -->
+                    <div class="recently-container" v-if="recent.length">
+                        <div class="inner">
+                            <div class="header">{{ t('color.recently') }}</div>
+                            <div class="typical-container">
+                                <div class="block" v-for="(c, idx) in recent" :key="idx"
+                                    @click="() => setColor(c as any)"
+                                    :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- &lt;!&ndash; 文档使用 &ndash;&gt; -->
+                    <div class="dc-container" v-if="document_colors.length">
+                        <div class="inner">
+                            <div class="header">{{ t('color.documentc') }}</div>
+                            <div class="document-color-container" @wheel.stop>
+                                <div class="block" v-for="(c, idx) in document_colors" :key="idx"
+                                    @click="() => setColor(c.color as any)"
+                                    :title="t('color.times').replace('xx', c.times.toString())"
+                                    :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <!--                <PatternFill :context="context" :entrance="props.entrance" v-else :scale="imageScale" :imageScaleMode="scaleMode"-->
+                <!--                    :image="image_url" :paintFilter="paintFilter" @changeMode="changeScaleMode"-->
+                <!--                    @setImageRef="setImageRef" @changeRotate="emit('changeRotate')"-->
+                <!--                    @changeScale="(s) => emit('changeScale', s)" @imagefilter="(color,type,v)=>color.execute_fillmask_ImageFilter(props.style?.sheet!,props.style?.id!,type,v,props.locat?.index!)"/>-->
             </div>
-            <!-- 渐变工具 -->
-            <div v-if="fill_type === FillType.Gradient && fillType === FillType.Gradient && is_gradient_selected()"
-                class="gradient-container">
-                <div class="line-container">
-                    <div class="line" ref="gradient_line" :style="gradient_channel_style"
-                        @mouseup.stop="_gradient_channel_down"></div>
-                    <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
-                        @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
-                        <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
-                    </div>
-                </div>
-                <div class="reverse" @click="reverse">
-                    <Tooltip :content="t('color.reverse')">
-                        <SvgIcon :icon="exchange_icon"/>
-                    </Tooltip>
-                </div>
-                <div class="rotate" @click="rotate">
-                    <Tooltip :content="t('color.rotate')">
-                        <SvgIcon :icon="rotate90_icon"/>
-                    </Tooltip>
-                </div>
-            </div>
-            <!-- 饱和度 -->
-            <template v-if="fillType !== FillType.Pattern">
-                <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-                    :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
-                    <div class="white"></div>
-                    <div class="black"></div>
-                    <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
-                </div>
-                <!-- &lt;!&ndash; 常用色 &ndash;&gt; -->
-                <div class="typical-container">
-                    <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-                        :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
-                    </div>
-                </div>
-                <div class="controller">
-                    <div class="eyedropper">
-                        <SvgIcon :icon="eyedropper_icon" @click.stop="eyedropper"/>
-                    </div>
-                    <div class="sliders-container" ref="sliders">
-                        <!-- &lt;!&ndash; 色相 &ndash;&gt; -->
-                        <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
-                            <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }">
-                            </div>
-                        </div>
-                        <!-- &lt;!&ndash; 透明度 &ndash;&gt; -->
-                        <div class="alpha-bacground">
-                            <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-                                :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
-                                <div class="alphaIndicator" ref="alphaIndicator"
-                                    :style="{ left: alphaIndicatorAttr.x + 'px' }">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- &lt;!&ndash; model & values &ndash;&gt; -->
-                <div class="input-container">
-                    <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"/>
-                    <div class="values">
-                        <div class="wrap">
-                            <div v-if="values.length === 4" class="value">
-                                <div v-for="(i, idx) in values" :key="idx" class="item">
-                                    <input :value="i" @click="(e) => inputClick(e, idx)"/>
-                                </div>
-                            </div>
-                            <div v-else class="value">
-                                <div class="item" style="height: 100%;width: 112.5px;">
-                                    <input spellcheck="false" :value="values[0]" @click="(e) => inputClick(e, 0)"
-                                           style="text-align: left;padding-left: 8px;"/>
-                                </div>
-                                <div class="item">
-                                    <input :value="values[1]" @click="(e) => inputClick(e, 1)"/>
-                                </div>
-                            </div>
-                            <div class="label">
-                                <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- &lt;!&ndash; 最近使用 &ndash;&gt; -->
-                <div class="recently-container" v-if="recent.length">
-                    <div class="inner">
-                        <div class="header">{{ t('color.recently') }}</div>
-                        <div class="typical-container">
-                            <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-                                :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- &lt;!&ndash; 文档使用 &ndash;&gt; -->
-                <div class="dc-container" v-if="document_colors.length">
-                    <div class="inner">
-                        <div class="header">{{ t('color.documentc') }}</div>
-                        <div class="documentc-container" @wheel.stop>
-                            <div class="block" v-for="(c, idx) in document_colors" :key="idx"
-                                @click="() => setColor(c.color as any)"
-                                :title="t('color.times').replace('xx', c.times.toString())"
-                                :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-            <PatternFill :context="context" v-else :scale="imageScale" :imageScaleMode="scaleMode" :image="image_url"
-                :paintFilter="paintFilter" @changeMode="changeScaleMode" @setImageRef="setImageRef"
-                @changeRotate="emit('changeRotate')" @changeScale="(s) => emit('changeScale', s)" />
+            <!-- <div v-if="custom === 'style' && !props.entrance" class="color-style">
+               <ColorStyle :shapes="props.context.selection.selectedShapes" :context="props.context"
+                   :fill="props.fillslist" @close="EditorStyle = false" :locat="props.locat">
+               </ColorStyle>
+            </div> -->
         </div>
     </div>
 </template>
-
 <style lang="scss" scoped>
+.active {
+    border-bottom: 2px solid #1878f5 !important;
+}
+
+.color-style {
+    box-sizing: border-box
+}
+
+.editor-style {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: -252px;
+}
+
 .color-block {
     position: relative;
+    flex: 0 0 16px;
     width: 16px;
     height: 16px;
     border-radius: 3px;
-    font-weight: 500;
-    font-size: var(--font-default-fontsize);
-    opacity: 1;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
     border: 1px solid rgb(215, 215, 215);
     box-sizing: border-box;
-    flex: 0 0 16px;
-    background-color: var(--theme-color-anti);
 
     img {
         border-radius: 3px;
@@ -1551,7 +1562,6 @@ import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg"
         box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
         border-radius: 8px;
         border: 1px solid #F0F0F0;
-        overflow: hidden;
         z-index: 99;
 
         width: v-bind('HUE_WIDTH_CSS');
@@ -1566,247 +1576,253 @@ import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg"
             align-items: center;
             justify-content: space-between;
             box-sizing: border-box;
-            border-width: 0 0 1px 0;
-            border-style: solid;
-            border-color: #F5F5F5;
             padding: 14px 12px;
 
-            >.color-type-desc {
+            >.left {
                 display: flex;
                 align-items: center;
-                cursor: pointer;
+                height: 40px;
+                gap: 8px;
 
-                .color-type {
+                >.color-type {
+                    display: flex;
+                    align-items: center;
+                    height: 100%;
+                    border-bottom: 2px solid transparent;
                     user-select: none;
+                    box-sizing: border-box;
                 }
 
-                >svg {
-                    transition: 0.3s;
-                    width: 10px;
-                    height: 10px;
-                    margin-left: 4px;
-                }
-
-                >svg:hover {
-                    transform: translateY(2px);
+                >.style {
+                    display: flex;
+                    align-items: center;
+                    height: 100%;
+                    border-bottom: 2px solid transparent;
+                    box-sizing: border-box;
                 }
             }
 
-            >.close {
-                flex: 0 0 16px;
-                height: 16px;
-                text-align: center;
-                line-height: 16px;
-                border-radius: 4px;
-                user-select: none;
+            >.right {
                 display: flex;
                 align-items: center;
+                gap: 4px;
 
-                >svg {
-                    width: 85%;
-                    height: 85%;
-                }
-            }
-        }
-
-        .color_type_container {
-            width: 100%;
-            height: 32px;
-            display: flex;
-            margin: 10px 0;
-            padding: 0 12px;
-            box-sizing: border-box;
-        }
-
-        >.gradient-container {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            height: 28px;
-            text-align: center;
-            padding-right: 12px;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-
-            .line-container {
-                flex: 1;
-                position: relative;
-                margin-left: 2px;
-                padding-left: 12px;
-                margin-right: 8px;
-                box-sizing: border-box;
-
-                .line {
-                    width: 100%;
-                    height: 8px;
-                    border-radius: 4px;
-                    box-shadow: 0 0 1px 1px #efefef;
-                }
-
-                .stops {
-                    position: absolute;
-                    width: 20px;
-                    height: 20px;
+                >.newstyle {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    top: 4px;
-                    transform: translate(-50%, -50%);
-                }
-
-                .stop {
-                    width: 12px;
-                    height: 12px;
-                    border: 1px solid rgba(0, 0, 0, .2);
-                    border-radius: 50%;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 4px;
                     box-sizing: border-box;
-                    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(0, 0, 0, 0.2);
-                }
 
-                .stop-active {
-                    width: 14px;
-                    height: 14px;
-                    box-sizing: border-box;
-                    border: 2px solid var(--active-color);
-                    border-radius: 50%;
-                    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(0, 0, 0, 0.2);
-                }
-            }
+                    &:hover {
+                        background-color: #f5f5f5;
+                    }
 
-            .reverse {
-                flex: 0 0 28px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-
-                svg {
-                    width: 14px;
-                    height: 14px;
-                    outline: none;
-                }
-            }
-
-            .rotate {
-                flex: 0 0 28px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-
-                svg {
-                    width: 14px;
-                    height: 14px;
-                    outline: none;
-                }
-            }
-        }
-
-        >.saturation {
-            width: 100%;
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-
-            height: v-bind('HUE_HEIGHT_CSS');
-
-            >.white {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
-            }
-
-            >.black {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
-            }
-
-            >.dot {
-                width: v-bind('DOT_SIZE_CSS');
-                height: v-bind('DOT_SIZE_CSS');
-                border-radius: 50%;
-                border: 2px solid #fff;
-                position: absolute;
-                box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
-                box-sizing: border-box;
-            }
-        }
-
-        >.typical-container {
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 6px;
-            box-sizing: border-box;
-
-            >.block {
-                margin: 0 3px 6px 3px;
-                width: 16px;
-                height: 16px;
-                border-radius: 3px;
-                border: 1px solid rgba(0, 0, 0, 0.1);
-                cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
-                box-sizing: border-box;
-            }
-        }
-
-        >.controller {
-            width: 100%;
-            height: 46px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            padding: 8px 12px;
-            box-sizing: border-box;
-            justify-content: space-around;
-
-            >.sliders-container {
-                width: v-bind('LINE_LENGTH_CSS');
-                height: 32px;
-
-                >.hue {
-                    position: relative;
-                    width: 100%;
-                    height: 8px;
-                    background: linear-gradient(90deg, #f00 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00);
-                    border-radius: 5px 5px 5px 5px;
-                    cursor: pointer;
-
-                    >.hueIndicator {
-                        top: -2px;
-                        width: v-bind('DOT_SIZE_CSS');
-                        height: v-bind('DOT_SIZE_CSS');
-                        border-radius: 50%;
-                        border: 2px solid #fff;
-                        position: absolute;
-                        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
-                        box-sizing: border-box;
+                    >img {
+                        outline: none;
+                        width: 16px;
+                        height: 16px;
                     }
                 }
 
-                >.alpha-bacground {
-                    margin-top: 8px;
-                    width: 100%;
-                    height: 8px;
-                    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
-                    background-size: auto 75%;
-                    border-radius: 5px 5px 5px 5px;
-                    cursor: pointer;
+                >.close {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 4px;
                     box-sizing: border-box;
 
-                    >.alpha {
+                    &:hover {
+                        background-color: #f5f5f5;
+                    }
+
+                    >img {
+                        outline: none;
+                        width: 16px;
+                        height: 16px;
+                        padding: 2px;
+                        margin-top: 1px;
+                        box-sizing: border-box;
+                    }
+                }
+            }
+        }
+
+        .custom {
+            .color_type_container {
+                width: 100%;
+                height: 32px;
+                display: flex;
+                margin: 10px 0;
+                padding: 0 12px;
+                box-sizing: border-box;
+            }
+
+            >.gradient-container {
+                display: flex;
+                align-items: center;
+                width: 100%;
+                height: 28px;
+                text-align: center;
+                padding-right: 12px;
+                margin-bottom: 10px;
+                box-sizing: border-box;
+
+                .line-container {
+                    flex: 1;
+                    position: relative;
+                    margin-left: 2px;
+                    padding-left: 12px;
+                    margin-right: 8px;
+                    box-sizing: border-box;
+
+                    .line {
+                        width: 100%;
+                        height: 8px;
+                        border-radius: 4px;
+                        box-shadow: 0 0 1px 1px #efefef;
+                    }
+
+                    .stops {
+                        position: absolute;
+                        width: 20px;
+                        height: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        top: 4px;
+                        transform: translate(-50%, -50%);
+                    }
+
+                    .stop {
+                        width: 12px;
+                        height: 12px;
+                        border: 1px solid rgba(0, 0, 0, .2);
+                        border-radius: 50%;
+                        box-sizing: border-box;
+                        box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(0, 0, 0, 0.2);
+                    }
+
+                    .stop-active {
+                        width: 14px;
+                        height: 14px;
+                        box-sizing: border-box;
+                        border: 2px solid var(--active-color);
+                        border-radius: 50%;
+                        box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(0, 0, 0, 0.2);
+                    }
+                }
+
+                .reverse {
+                    flex: 0 0 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+
+                    svg {
+                        width: 14px;
+                        height: 14px;
+                        outline: none;
+                    }
+                }
+
+                .rotate {
+                    flex: 0 0 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+
+                    svg {
+                        width: 14px;
+                        height: 14px;
+                        outline: none;
+                    }
+                }
+            }
+
+            >.saturation {
+                width: 100%;
+                position: relative;
+                cursor: pointer;
+                overflow: hidden;
+
+                height: v-bind('HUE_HEIGHT_CSS');
+
+                >.white {
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
+                }
+
+                >.black {
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
+                }
+
+                >.dot {
+                    width: v-bind('DOT_SIZE_CSS');
+                    height: v-bind('DOT_SIZE_CSS');
+                    border-radius: 50%;
+                    border: 2px solid #fff;
+                    position: absolute;
+                    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                    box-sizing: border-box;
+                }
+            }
+
+            >.typical-container {
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 6px;
+                box-sizing: border-box;
+
+                >.block {
+                    margin: 0 3px 6px 3px;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 3px;
+                    border: 1px solid rgba(0, 0, 0, 0.1);
+                    cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
+                    box-sizing: border-box;
+                }
+            }
+
+            >.controller {
+                width: 100%;
+                height: 46px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 8px 12px;
+                box-sizing: border-box;
+                justify-content: space-around;
+
+                >.sliders-container {
+                    width: v-bind('LINE_LENGTH_CSS');
+                    height: 32px;
+
+                    >.hue {
                         position: relative;
                         width: 100%;
-                        height: 100%;
+                        height: 8px;
+                        background: linear-gradient(90deg, #f00 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00);
                         border-radius: 5px 5px 5px 5px;
+                        cursor: pointer;
 
-                        >.alphaIndicator {
+                        >.hueIndicator {
                             top: -2px;
                             width: v-bind('DOT_SIZE_CSS');
                             height: v-bind('DOT_SIZE_CSS');
@@ -1818,217 +1834,244 @@ import eyedropper_icon from "@/assets/icons/svg/eyedropper.svg"
                         }
                     }
 
-                }
-            }
-
-            >.eyedropper {
-                width: 30px;
-                height: 30px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                border-radius: 2px;
-                transition: 0.1s;
-                padding: 6px;
-                box-sizing: border-box;
-
-                >svg {
-                    width: 18px;
-                    height: 18px;
-                    cursor: pointer;
-                }
-            }
-        }
-
-        .input-container {
-            width: 100%;
-            height: fit-content;
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            padding: 12px;
-            box-sizing: border-box;
-            justify-content: space-between;
-
-            .model {
-                flex: 0 0 62px;
-                height: 32px;
-            }
-
-            .values {
-                width: 160px;
-
-                .wrap {
-                    width: 160px;
-                    height: 100%;
-                    box-sizing: border-box;
-
-                    .value {
-                        width: 160px;
-                        height: 32px;
-                        display: flex;
-                        align-items: center;
-                        background-color: #F5F5F5;
-                        border-radius: 6px;
-                        padding: 9px 5px;
+                    >.alpha-bacground {
+                        margin-top: 8px;
+                        width: 100%;
+                        height: 8px;
+                        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
+                        background-size: auto 75%;
+                        border-radius: 5px 5px 5px 5px;
+                        cursor: pointer;
                         box-sizing: border-box;
 
-                        .item {
+                        >.alpha {
+                            position: relative;
+                            width: 100%;
                             height: 100%;
-                            width: 25%;
-                            text-align: center;
+                            border-radius: 5px 5px 5px 5px;
 
-                            >input {
-                                width: 100%;
+                            >.alphaIndicator {
+                                top: -2px;
+                                width: v-bind('DOT_SIZE_CSS');
+                                height: v-bind('DOT_SIZE_CSS');
+                                border-radius: 50%;
+                                border: 2px solid #fff;
+                                position: absolute;
+                                box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                                box-sizing: border-box;
+                            }
+                        }
+
+                    }
+                }
+
+                >.eyedropper {
+                    width: 30px;
+                    height: 30px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-radius: 2px;
+                    transition: 0.1s;
+                    padding: 6px;
+                    box-sizing: border-box;
+
+                    >svg {
+                        width: 18px;
+                        height: 18px;
+                        cursor: pointer;
+                    }
+                }
+            }
+
+
+            .input-container {
+                width: 100%;
+                height: fit-content;
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                padding: 12px;
+                box-sizing: border-box;
+                justify-content: space-between;
+
+                .model {
+                    flex: 0 0 62px;
+                    height: 32px;
+                }
+
+                .values {
+                    width: 160px;
+
+                    .wrap {
+                        width: 160px;
+                        height: 100%;
+                        box-sizing: border-box;
+
+                        .value {
+                            width: 160px;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            background-color: #F5F5F5;
+                            border-radius: 6px;
+                            padding: 9px 5px;
+                            box-sizing: border-box;
+
+                            .item {
                                 height: 100%;
-                                border: none;
-                                outline: none;
+                                width: 25%;
                                 text-align: center;
-                                padding: 0;
-                                background-color: transparent;
-                                font-size: 13px;
+
+                                >input {
+                                    width: 100%;
+                                    height: 100%;
+                                    border: none;
+                                    outline: none;
+                                    text-align: center;
+                                    padding: 0;
+                                    background-color: transparent;
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                    line-height: 14px;
+                                    color: #000000;
+                                }
+                            }
+                        }
+
+                        .label {
+                            width: 160px;
+                            height: 24px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            padding: 5px;
+                            box-sizing: border-box;
+
+                            .item {
+                                height: 100%;
+                                width: 25%;
+                                font-size: 12px;
                                 font-weight: 500;
-                                line-height: 14px;
-                                color: #000000;
+                                color: #8C8C8C;
+                                align-items: center;
+                                display: flex;
+                                justify-content: center;
                             }
                         }
                     }
+                }
+            }
 
-                    .label {
-                        width: 160px;
-                        height: 24px;
+            >.recently-container {
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px;
+                box-sizing: border-box;
+                border-top: 1px solid #EBEBEB;
+                border-bottom: 1px solid #EBEBEB;
+
+                .inner {
+                    width: 100%;
+
+                    .header {
+                        width: 48px;
+                        height: 14px;
+                        font-family: HarmonyOS Sans, serif;
+                        font-size: 12px;
+                        font-weight: 500;
+                        line-height: 14px;
+                        color: #000000;
+                        margin-bottom: 12px;
+                    }
+
+                    >.typical-container {
+                        width: 100%;
                         display: flex;
+                        flex-direction: row;
                         align-items: center;
-                        justify-content: space-between;
-                        padding: 5px;
                         box-sizing: border-box;
 
-                        .item {
-                            height: 100%;
-                            width: 25%;
-                            font-size: 12px;
-                            font-weight: 500;
-                            color: #8C8C8C;
-                            align-items: center;
-                            display: flex;
-                            justify-content: center;
+                        >.block {
+                            width: 16px;
+                            height: 16px;
+                            border-radius: 3px;
+                            border: 1px solid rgba(0, 0, 0, 0.1);
+                            cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
+                            box-sizing: border-box;
+                        }
+
+                        >.block:not(:first-child) {
+                            margin-left: 6.2px;
                         }
                     }
                 }
             }
-        }
 
-        >.recently-container {
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            box-sizing: border-box;
-            border-top: 1px solid #EBEBEB;
-            border-bottom: 1px solid #EBEBEB;
-
-            .inner {
-                //border-top: 1px solid #cecece;
+            >.dc-container {
                 width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 2px 2px 12px;
+                box-sizing: border-box;
 
-                .header {
-                    width: 48px;
-                    height: 14px;
-                    font-family: HarmonyOS Sans;
-                    font-size: 12px;
-                    font-weight: 500;
-                    line-height: 14px;
-                    color: #000000;
-                    margin-bottom: 12px;
-                }
-
-                >.typical-container {
+                .inner {
                     width: 100%;
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    box-sizing: border-box;
 
-                    >.block {
-                        width: 16px;
-                        height: 16px;
-                        border-radius: 3px;
-                        border: 1px solid rgba(0, 0, 0, 0.1);
-                        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
-                        box-sizing: border-box;
+                    .header {
+                        height: 14px;
+                        font-family: HarmonyOS Sans, serif;
+                        font-size: 12px;
+                        font-weight: 500;
+                        line-height: 14px;
+                        color: #000000;
+                        margin-bottom: 12px;
                     }
 
-                    >.block:not(:first-child) {
-                        margin-left: 6.2px;
-                    }
-                }
-            }
-        }
+                    >.document-color-container {
+                        width: 100%;
+                        max-height: 90px;
+                        overflow: scroll;
+                        display: grid;
+                        grid-row-gap: 7px;
+                        grid-column-gap: 7px;
+                        grid-template-columns: repeat(auto-fill, 16px);
 
-        >.dc-container {
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 2px 2px 12px;
-            box-sizing: border-box;
+                        &::-webkit-scrollbar {
+                            width: 5px;
+                        }
 
-            .inner {
-                //border-top: 1px solid #cecece;
-                width: 100%;
+                        &::-webkit-scrollbar-track {
+                            background-color: transparent;
+                        }
 
-                .header {
-                    // width: 48px;
-                    height: 14px;
-                    font-family: HarmonyOS Sans;
-                    font-size: 12px;
-                    font-weight: 500;
-                    line-height: 14px;
-                    color: #000000;
-                    margin-bottom: 12px;
-                }
+                        &::-webkit-scrollbar-thumb {
+                            background-color: #EBEBEB;
+                            border-radius: 150px;
+                        }
 
-                >.documentc-container {
-                    width: 100%;
-                    max-height: 90px;
-                    overflow: scroll;
-                    display: grid;
-                    grid-row-gap: 7px;
-                    grid-column-gap: 7px;
-                    grid-template-columns: repeat(auto-fill, 16px);
+                        &::-webkit-scrollbar-thumb:hover {
+                            background-color: transparent;
+                        }
 
-                    &::-webkit-scrollbar {
-                        width: 5px;
-                    }
+                        &::-webkit-scrollbar-thumb:active {
+                            background-color: transparent;
+                        }
 
-                    &::-webkit-scrollbar-track {
-                        background-color: transparent;
-                    }
-
-                    &::-webkit-scrollbar-thumb {
-                        background-color: #EBEBEB;
-                        border-radius: 150px;
-                    }
-
-                    &::-webkit-scrollbar-thumb:hover {
-                        background-color: transparent;
-                    }
-
-                    &::-webkit-scrollbar-thumb:active {
-                        background-color: transparent;
-                    }
-
-                    >.block {
-                        display: inline-block;
-                        width: 16px;
-                        height: 16px;
-                        border-radius: 3px;
-                        border: 1px solid rgba(0, 0, 0, 0.1);
-                        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
-                        box-sizing: border-box;
+                        >.block {
+                            display: inline-block;
+                            width: 16px;
+                            height: 16px;
+                            border-radius: 3px;
+                            border: 1px solid rgba(0, 0, 0, 0.1);
+                            cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
+                            box-sizing: border-box;
+                        }
                     }
                 }
             }

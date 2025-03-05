@@ -115,7 +115,7 @@ onUnmounted(stop);
     display: flex;
     align-items: center;
 
-    > svg {
+    > img {
         width: 13px;
         height: 13px;
     }

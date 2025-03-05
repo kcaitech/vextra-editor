@@ -501,7 +501,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
             padding: 2px;
             box-sizing: border-box;
 
-            svg {
+            img {
                 width: 100%;
                 height: 100%;
                 color: #595959;
@@ -529,7 +529,7 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
                 width: 20px;
                 height: 20px;
 
-                svg {
+                img {
                     margin: auto;
                     width: 100%;
                     height: 100%;

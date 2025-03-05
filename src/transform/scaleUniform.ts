@@ -21,7 +21,7 @@ type BaseFrames = Map<string, Box>;
  * size
  * 圆角
  * 文字：字号、行高、字间距、段落间距
- * 边框粗细
+ * 描边粗细
  * 阴影offsetX、offsetY、blur、spread
  * 高斯模糊半径
  * 背景模糊半径

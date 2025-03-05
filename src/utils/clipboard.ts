@@ -1,15 +1,9 @@
 import {
     adapt2Shape,
     AsyncCreator,
-    BasicArray,
     Blur,
-    Border,
-    BorderPosition,
-    BorderSideSetting,
-    BorderStyle,
     ColVector3D,
     ContactShape,
-    CornerType,
     CurvePoint,
     Document,
     export_shape,
@@ -19,20 +13,20 @@ import {
     import_shape_from_clipboard,
     import_text,
     makeShapeTransform1By2,
-    makeShapeTransform2By1, Matrix, MossError,
+    makeShapeTransform2By1, MossError,
     Page,
     PathShape,
     Shape,
     ShapeFrame,
     ShapeType,
     ShapeView,
-    StrokePaint,
     TableCellType,
     Text,
     TextShape,
     TextShapeEditor,
     Transform,
-    TransformRaw
+    TransformRaw,
+    exportContextSettings
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
@@ -45,10 +39,10 @@ import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
 import { WorkSpace } from "@/context/workspace";
-import { BorderData, get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
+import { BorderData } from "@/utils/shape_style";
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 import { flattenShapes } from "@/utils/cutout";
-import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
+import { getText } from "@/utils/attri_setting";
 import { UploadAssets } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { ImageLoader } from "@/imageLoader";
@@ -266,32 +260,32 @@ export class Clipboard {
     write_properties() {
         try {
             const selected = this.context.selection.selectedShapes;
-            const flatten = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-            const fills = get_fills(flatten);
-            const { border, stroke_paints } = get_borders(flatten);
-            const shadows = get_shadows(selected);
-            const blur = get_blur(selected);
+            const shape = flattenShapes(selected).filter(s => s.type !== ShapeType.Group)[0];
+            const fills = shape.getFills();
+            const border = shape.getBorders();
+            const shadows = shape.getShadows();
+            const blur = shape.blur;
 
-            const radius = getRadiusForCopy(selected);
-            const contextSetting = getContextSetting(selected);
-            const mark = getMarkType(selected);
-            const text = getText(selected);
+            const radius = shape.radius;
+            const contextSetting = shape.contextSettings;
+            const mark = { start: shape.startMarkerType, end: shape.endMarkerType };
+            const text = getText([shape]);
 
             const data: any = {};
-            if (fills !== "mixed") data['fills'] = fills.map(i => exportFill(i.fill));
-            if (typeof stroke_paints !== 'string' && !this.borderIsString(border)) {
-                const paints = new BasicArray<StrokePaint>();
-                (stroke_paints).forEach(i => paints.push(i.strokePaint));
-                const b = new Border(border.position as BorderPosition, border.borderStyle as BorderStyle, border.cornerType as CornerType, border.sideSetting as BorderSideSetting, paints);
-                data['borders'] = exportBorder(b);
-            }
-            if (shadows !== "mixed") data['shadows'] = shadows.map(i => exportShadow(i.shadow));
+            data['fills'] = fills.map(i => exportFill(i));
+            data['fillsMask'] = shape.fillsMask;
+            data['borders'] = exportBorder(border);
+            data['bordersMask'] = shape.bordersMask;
+            data['borderFillsMask'] = shape.borderFillsMask;
+            data['shadows'] = shadows.map(i => exportShadow(i));
+            data['shadowsMask'] = shape.shadowsMask;
+            data['blurMask'] = shape.blurMask;
+            data['radius'] = radius;
+            data['radiusMask'] = shape.radiusMask;
+            data['mark'] = mark;
+            if (contextSetting) data['contextSetting'] = exportContextSettings(contextSetting);
             if (blur instanceof Blur) data['blur'] = exportBlur(blur);
-            if (radius) data['radius'] = radius;
-            if (contextSetting) data['contextSetting'] = contextSetting;
-            if (mark) data['mark'] = mark;
             if (text) data['text'] = text;
-
             const code = encode_html(properties, data);
 
             // @ts-ignore
@@ -301,8 +295,7 @@ export class Clipboard {
             navigator.clipboard.write(content);
             return true;
         } catch (e) {
-            console.log('write_properties error:', e);
-            return false;
+            throw e;
         }
     }
     borderIsString(border: BorderData) {
@@ -923,8 +916,6 @@ async function paster_plain_inner_shape(_d: any, context: Context, editor: TextS
  * @description 封装html数据
  */
 function encode_html(identity: string, data: any, text?: string): string {
-    // encodeURIComponent 确保转义正确
-    // btoa 作为html标签的属性，不可以有一些干扰字符，采用base64封装干扰字符
     const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
 
     return `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
@@ -1345,7 +1336,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
         page && context.nextTick(page, () => {
             new_shape && selection.selectShape(page.shapes.get(new_shape.id));
         })
-        const fills = new_shape.style.getFills();
+        const fills = new_shape.style.fills;
         context.net?.upload(fills[0].imageRef || '', media.buff.buffer.slice(0));
     }
     context.tool.setAction(Action.AutoV);

@@ -10,6 +10,7 @@ import { WorkSpace } from '@/context/workspace';
 import { format_value } from "@/utils/common";
 const { t } = useI18n();
 interface Props {
+  event?:string,
   context: Context,
   textShape: TextShapeView,
   textShapes: TextShapeView[]
@@ -288,7 +289,7 @@ import text_titlecase_icon from '@/assets/icons/svg/text-titlecase.svg';
 
 <template>
   <div class="text-detail-container">
-    <Popover :context="props.context" class="popover" ref="popover" :width="232" :auto_to_right_line="true"
+    <Popover :context="props.context" :event="props.event" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
         <div class="trigger" @click="showMenu">
@@ -299,7 +300,7 @@ import text_titlecase_icon from '@/assets/icons/svg/text-titlecase.svg';
       </template>
       <template #body>
         <div class="options-container">
-          <div>
+          <div v-if="!props.event?.includes('text')">
             <span>{{ t('attr.paragraph_space') }}</span>
             <div :class="{ actived: isActived3 }"
               style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
@@ -307,7 +308,7 @@ import text_titlecase_icon from '@/assets/icons/svg/text-titlecase.svg';
                 class="input" @change="setParagraphSpace" style="width: 100%;height: 100%" @click="click">
             </div>
           </div>
-          <div>
+          <div v-if="!props.event?.includes('text')">
             <span>{{ t('attr.id_style') }}</span>
             <div class="vertical-aligning jointly-text">
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'none' }"
@@ -399,8 +400,7 @@ import text_titlecase_icon from '@/assets/icons/svg/text-titlecase.svg';
 .text-detail-container {
 
   >.popover {
-    width: 16px;
-    height: 16px;
+
 
     .trigger {
       width: 28px;
@@ -408,8 +408,7 @@ import text_titlecase_icon from '@/assets/icons/svg/text-titlecase.svg';
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-top: -11px;
-      margin-left: -12px;
+   
       border-radius: var(--default-radius);
 
       >svg {

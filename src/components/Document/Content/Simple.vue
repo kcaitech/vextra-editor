@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix, Shape, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, ref } from 'vue';
 interface Props {
     shape: ShapeView
@@ -10,10 +10,7 @@ let background_color = 'rgba(128, 128,128, 0.8)';
 const x = ref<number>(0), y = ref<number>(0), width = ref<number>(0), height = ref<number>(0);
 function init() {
     const s = props.shape, p = s.parent;
-    if (!p) {
-        console.log('abort');
-        return;
-    }
+    if (!p) return;
     const box = s.boundingBox();
     const p2r = p.matrix2Root();
     p2r.multiAtLeft(props.matrix);

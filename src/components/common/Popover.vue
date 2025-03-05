@@ -7,7 +7,7 @@ interface Props {
     context: Context;
 
     auto_to_right_line?: boolean
-
+    event?: string;
     title?: string;
     top?: number;
     left?: number;
@@ -37,7 +37,7 @@ function show() {
     popoverVisible.value = true;
     props.context.menu.isPopoverExisted = true;
     container.value.focus();
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
     props.context.escstack.save(v4(), popoverClose);
 
     nextTick(locate);
@@ -50,7 +50,7 @@ function locate() {
 
     const { height, width } = popover.value.getBoundingClientRect();
 
-    const { y, x, } = container.value.getBoundingClientRect();
+    const { y, x, left } = container.value.getBoundingClientRect();
 
     // y
     let _top = y
@@ -71,7 +71,11 @@ function locate() {
 
     if (props.auto_to_right_line) {
         const r = props.context.workspace.root.right;
-        _left = r - width - 4;
+        if (left > r) {
+            _left = left - (left - r) - width
+        } else {
+            _left = left - (props.event?.includes('text') ? 208 : 172) - width
+        }
     }
 
     popover.value.style.left = _left + 'px';
@@ -94,7 +98,7 @@ function popoverClose() {
 function menu_watcher(t: number) {
     if (t === Menu.SHUTDOWN_POPOVER) {
         popoverClose();
-    } else if(t === Menu.UPDATE_LOCATE) {
+    } else if (t === Menu.UPDATE_LOCATE) {
         locate();
     }
 }
@@ -113,7 +117,7 @@ import SvgIcon from './SvgIcon.vue';
 
 <template>
     <div class="__popover-container" ref="container" tabindex="-1">
-        <slot name="trigger"/>
+        <slot name="trigger" />
         <div ref="popover" v-if="popoverVisible" class="popover" :style="{
             width: props.width ? props.width + 'px' : 'auto',
             height: props.height ? props.height + 'px' : 'auto',
@@ -175,6 +179,7 @@ import SvgIcon from './SvgIcon.vue';
                     width: 12px;
                     height: 12px;
                 }
+
                 &:hover {
                     background-color: #F5F5F5;
                 }

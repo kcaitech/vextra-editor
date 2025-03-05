@@ -282,13 +282,13 @@ const changePerfix = (index: number, idx: number) => {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setShapesExportFormatPerfix(actions);
+            editor.setShapesExportFormatPrefix(actions);
         }
     } else {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setPageExportFormatPerfix(_idx, perfixItems[index]);
+            editor.setPageExportFormatPrefix(_idx, perfixItems[index]);
         }
     }
 }
@@ -609,6 +609,7 @@ import add_icon from "@/assets/icons/svg/add.svg"
             display: flex;
             align-items: center;
             position: relative;
+            gap: 8px;
 
             .cutout-icon {
                 width: 28px;

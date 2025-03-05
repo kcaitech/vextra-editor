@@ -8,43 +8,31 @@ export function deleteUnits(context: Context, shift = false) {
     // 删除参考线
     if (context.user.isRuleVisible && context.tool.referSelection?.selected?.valid) {
         const { env, index, axis } = context.tool.referSelection.selected;
-        new ReferLineHandler(context, axis, env, index).delete(env, index);
-        return;
+        return new ReferLineHandler(context, axis, env, index).delete(env, index);
     }
-    // 删除颜色控点
-    if (context.color.selected_stop !== undefined) {
-        context.color.notify(ColorCtx.STOP_DELETE);
-        return
-    }
-    // 删除路径节点
+
+    // 删除渐变色控点
+    if (context.color.selected_stop !== undefined) return context.color.notify(ColorCtx.STOP_DELETE);
+
+    // 删除路径片段
     const path_edit_mode = context.workspace.is_path_edit_mode;
-    if (path_edit_mode) {
-        delete_for_path_edit(context, shift);
-        return;
-    }
+    if (path_edit_mode) return delete_for_path_edit(context, shift);
 
     const selected = context.selection.selectedShapes;
-    if (selected.length === 0) {
-        return;
-    }
+    if (selected.length === 0) return;
 
     // 批量删除图层
-    if (selected.length > 1) {
-        delete_shapes(context, selected);
-        return;
-    }
+    if (selected.length > 1) return delete_shapes(context, selected);
 
     // 删除单元格
     const table = context.selection.tableshape;
-    if (table) {
-        delete_for_table(context, table);
-        return;
-    }
+    if (table) return delete_for_table(context, table);
 
     // 删除单个图层
     delete_shapes(context, selected);
 }
 
+/* 删除路径片段 */
 function delete_for_path_edit(context: Context, keepClosed = false) {
     const path_shape = context.selection.pathshape;
     if (!path_shape) return;
@@ -59,6 +47,7 @@ function delete_for_path_edit(context: Context, keepClosed = false) {
     }
 }
 
+/* 删除图层 */
 function delete_shapes(context: Context, shapes: ShapeView[]) {
     const page = context.selection.selectedPage;
     if (page) {
@@ -68,6 +57,7 @@ function delete_shapes(context: Context, shapes: ShapeView[]) {
     context.selection.resetSelectShapes();
 }
 
+/* 删除单元格 */
 function delete_for_table(context: Context, table: TableView) {
     const ts = context.tableSelection;
     const editor = context.editor4Table(table);

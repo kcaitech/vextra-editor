@@ -22,7 +22,7 @@ function init() {
 function down(e: MouseEvent) {
     e.stopPropagation();
     if (dbl_action()) {
-        props.context.color.clear_locat();
+        props.context.color.clear_locate();
         props.context.color.switch_editor_mode(false);
     }
 }

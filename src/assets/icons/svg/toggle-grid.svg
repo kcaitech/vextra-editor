@@ -1,0 +1,12 @@
+<svg data-v-f3b91450="" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em"
+    viewBox="0 0 16 16" class="" style="font-size: 16px; transform: rotate(0deg);">
+    <defs>
+        <clipPath id="mg-icon437a">
+            <rect width="16" height="16" rx="0"></rect>
+        </clipPath>
+    </defs>
+    <g clip-path="url(#mg-icon437a)">
+        <path fill="currentcolor" fill-opacity=".85" fill-rule="evenodd"
+            d="M7 2H2v5h5zM3 6V3h3v3zm4 3H2v5h5zm-4 4v-3h3v3zM14 2H9v5h5zm-4 4V3h3v3zm4 3H9v5h5zm-4 4v-3h3v3z"></path>
+    </g>
+</svg>
