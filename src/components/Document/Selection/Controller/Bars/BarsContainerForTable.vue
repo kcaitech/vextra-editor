@@ -3,9 +3,7 @@ import { Context } from '@/context';
 import {
     ColVector3D,
     CtrlElementType,
-    makeShapeTransform2By1,
     ShapeView,
-    Transform,
     TransformRaw
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
@@ -48,10 +46,10 @@ function update_dot_path() {
     paths.length = 0;
     const shape = props.shape;
     const { x, y, width, height } = shape.frame;
-    const m = makeShapeTransform2By1(shape.matrix2Root());
-    m.addTransform(makeShapeTransform2By1(props.context.workspace.matrix));
+    const m = (shape.matrix2Root());
+    m.addTransform((props.context.workspace.matrix));
 
-    const { col0: rt, col1: rb, col2: lb } = m.transform([
+    const { [0]: rt, [1]: rb, [2]: lb } = m.transform([
         ColVector3D.FromXY(x + width, y),
         ColVector3D.FromXY(x + width, y + height),
         ColVector3D.FromXY(x, y + height)
@@ -108,44 +106,45 @@ function bar_mouseup(event: MouseEvent) {
 
 function setCursor(t: CtrlElementType) {
     const shape = props.shape;
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix as unknown as TransformRaw);
-    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
+    const clientMatrix = (props.context.workspace.matrix as unknown as TransformRaw);
+    const fromRoot = (shape.matrix2Root());
 
     const fromClient = fromRoot.addTransform(clientMatrix);
     const { x, y, width, height } = shape.frame;
 
-    const { col0: vecR, col1: vecB } = fromClient.clone()
-        .clearTranslate()
-        .clearScaleSize()
-        .transform([
+    const _from = fromClient.clone()
+    _from.clearTranslate()
+    _from.clearScaleSize()
+
+    const { [0]: vecR, [1]: vecB } = _from.transform([
             ColVector3D.FromXY(1, 0),
             ColVector3D.FromXY(0, 1),
         ]);
 
     const xVector = ColVector3D.FromXY(1, 0);
 
-    const thetaR = cursorAngle(xVector, vecR);
-    const thetaB = cursorAngle(xVector, vecB);
+    const thetaR = cursorAngle(xVector, ColVector3D.FromXY(vecR));
+    const thetaB = cursorAngle(xVector, ColVector3D.FromXY(vecB));
 
     const cols = fromClient.transform([
         ColVector3D.FromXY(x + width, y),
         ColVector3D.FromXY(x, y + height)
     ]);
 
-    const { col0, col1 } = cols;
+    const { [0]:col0, [1]:col1 } = cols;
     const action = props.context.tool.action;
     const type = action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
     if (t === CtrlElementType.RectRight) {
-        const assistR = new Transform()
+        const assistR = new TransformRaw()
             .setRotateZ(thetaR)
             .setTranslate(col0);
 
-        props.context.cursor.setType(type, assistR.decomposeEuler().z * 180 / Math.PI);
+        props.context.cursor.setType(type, assistR.decomposeRotate() * 180 / Math.PI);
     } else {
-        const assistB = new Transform()
+        const assistB = new TransformRaw()
             .setRotateZ(thetaB)
             .setTranslate(col1);
-        props.context.cursor.setType(type, assistB.decomposeEuler().z * 180 / Math.PI);
+        props.context.cursor.setType(type, assistB.decomposeRotate() * 180 / Math.PI);
     }
 }
 

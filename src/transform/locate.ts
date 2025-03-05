@@ -1,7 +1,6 @@
 import { Context } from "@/context";
 import {
     ColVector3D,
-    makeShapeTransform2By1,
     Matrix,
     ShapeView
 } from "@kcdesign/data";

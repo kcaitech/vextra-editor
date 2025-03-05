@@ -3,10 +3,8 @@ import { Context } from '@/context';
 import {
     ColVector3D,
     CtrlElementType,
-    makeMatrixByTransform2,
-    makeShapeTransform2By1,
     ShapeView,
-    Transform, XYsBounding
+    TransformRaw, XYsBounding
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
@@ -81,15 +79,15 @@ function updateByShape(...args: any[]) {
 }
 
 const rotateCtx: {
-    mlt: Transform;
-    mrt: Transform;
-    mrb: Transform;
-    mlb: Transform;
+    mlt: TransformRaw;
+    mrt: TransformRaw;
+    mrb: TransformRaw;
+    mlb: TransformRaw;
 } = {
-    mlt: new Transform(),
-    mrt: new Transform(),
-    mrb: new Transform(),
-    mlb: new Transform()
+    mlt: new TransformRaw(),
+    mrt: new TransformRaw(),
+    mrb: new TransformRaw(),
+    mlb: new TransformRaw()
 }
 
 function updateDotLayout() {
@@ -97,58 +95,62 @@ function updateDotLayout() {
     const shape = props.shape;
     const { x, y, width, height } = shape.frame;
 
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
-    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
+    const clientMatrix = (props.context.workspace.matrix);
+    const fromRoot = (shape.matrix2Root());
 
     const fromClient = fromRoot.addTransform(clientMatrix);
 
-    const ltTransform = new Transform()
-        .rotateZ({ angle: Math.PI })
+    const ltTransform = new TransformRaw()
+        .rotate(Math.PI)
         .setTranslate(ColVector3D.FromXY(x, y))
         .addTransform(fromClient)
-        .clearScaleSize();
+        ltTransform.clearScaleSize();
 
-    const rtTransform = new Transform()
-        .rotateZ({ angle: -0.5 * Math.PI })
+    const rtTransform = new TransformRaw()
+        .rotate(-0.5 * Math.PI)
         .setTranslate(ColVector3D.FromXY(x + width, y))
         .addTransform(fromClient)
-        .clearScaleSize();
+        rtTransform.clearScaleSize();
 
-    const rbTransform = new Transform()
+    const rbTransform = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(x + width, y + height))
         .addTransform(fromClient)
-        .clearScaleSize();
+        rbTransform.clearScaleSize();
 
-    const lbTransform = new Transform()
-        .rotateZ({ angle: 0.5 * Math.PI })
+    const lbTransform = new TransformRaw()
+        .rotate(0.5 * Math.PI)
         .setTranslate(ColVector3D.FromXY(x, y + height))
         .addTransform(fromClient)
-        .clearScaleSize();
+        lbTransform.clearScaleSize();
 
+        ltTransform.clearSkew()
+        rtTransform.clearSkew()
+        rbTransform.clearSkew()
+        lbTransform.clearSkew()
     dots.push(
         {
             type: CtrlElementType.RectLT,
-            transform: makeMatrixByTransform2(ltTransform.clearSkew()).toString(), // 随时准备换回去
+            transform: (ltTransform).toString(), // 随时准备换回去
         },
         {
             type: CtrlElementType.RectRT,
-            transform: makeMatrixByTransform2(rtTransform.clearSkew()).toString(),
+            transform: (rtTransform).toString(),
         },
         {
             type: CtrlElementType.RectRB,
-            transform: makeMatrixByTransform2(rbTransform.clearSkew()).toString(),
+            transform: (rbTransform).toString(),
         },
         {
             type: CtrlElementType.RectLB,
-            transform: makeMatrixByTransform2(lbTransform.clearSkew()).toString(),
+            transform: (lbTransform).toString(),
         }
     )
 
     subDots.length = 0;
-    const { col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB } = fromClient.clone()
-        .clearTranslate()
-        .clearScaleSize()
-        .transform([
+    const _from = fromClient.clone()
+    _from.clearTranslate()
+    _from.clearScaleSize()
+    const { [0]: vecLT, [1]: vecRT, [2]: vecRB, [3]: vecLB } = _from.transform([
             ColVector3D.FromXY(-1, -1),
             ColVector3D.FromXY(1, -1),
             ColVector3D.FromXY(1, 1),
@@ -157,10 +159,10 @@ function updateDotLayout() {
 
     const xVector = ColVector3D.FromXY(1, 0);
 
-    const theta1 = cursorAngle(xVector, vecLT);
-    const theta2 = cursorAngle(xVector, vecRT);
-    const theta3 = cursorAngle(xVector, vecRB);
-    const theta4 = cursorAngle(xVector, vecLB);
+    const theta1 = cursorAngle(xVector, ColVector3D.FromXY(vecLT));
+    const theta2 = cursorAngle(xVector, ColVector3D.FromXY(vecRT));
+    const theta3 = cursorAngle(xVector, ColVector3D.FromXY(vecRB));
+    const theta4 = cursorAngle(xVector, ColVector3D.FromXY(vecLB));
 
     const cols = fromClient.transform([
         ColVector3D.FromXY(x, y),
@@ -170,7 +172,7 @@ function updateDotLayout() {
         ColVector3D.FromXY(x + width / 2, y + height / 2),
     ]);
 
-    const { col0, col1, col2, col3 } = cols;
+    const { [0]:col0, [1]:col1, [2]:col2, [3]:col3 } = cols;
 
 
     const box = XYsBounding([{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, {
@@ -179,22 +181,22 @@ function updateDotLayout() {
     }]);
     assist.value = !((box.right - box.left < 24) || (box.bottom - box.top < 24));
 
-    const assistLT = new Transform()
+    const assistLT = new TransformRaw()
         .setRotateZ(theta1)
         .setTranslate(col0);
     rotateCtx.mlt = assistLT;
 
-    const assistRT = new Transform()
+    const assistRT = new TransformRaw()
         .setRotateZ(theta2)
         .setTranslate(col1);
     rotateCtx.mrt = assistRT;
 
-    const assistRB = new Transform()
+    const assistRB = new TransformRaw()
         .setRotateZ(theta3)
         .setTranslate(col2);
     rotateCtx.mrb = assistRB;
 
-    const assistLB = new Transform()
+    const assistLB = new TransformRaw()
         .setRotateZ(theta4)
         .setTranslate(col3);
     rotateCtx.mlb = assistLB;
@@ -203,22 +205,22 @@ function updateDotLayout() {
         {
             type: CtrlElementType.RectLT,
             type2: CtrlElementType.RectLTR,
-            transform: makeMatrixByTransform2(assistLT).toString()
+            transform: (assistLT).toString()
         },
         {
             type: CtrlElementType.RectRT,
             type2: CtrlElementType.RectRTR,
-            transform: makeMatrixByTransform2(assistRT).toString()
+            transform: (assistRT).toString()
         },
         {
             type: CtrlElementType.RectRB,
             type2: CtrlElementType.RectRBR,
-            transform: makeMatrixByTransform2(assistRB).toString()
+            transform: (assistRB).toString()
         },
         {
             type: CtrlElementType.RectLB,
             type2: CtrlElementType.RectLBR,
-            transform: makeMatrixByTransform2(assistLB).toString()
+            transform: (assistLB).toString()
         }
     )
 }
@@ -279,13 +281,13 @@ function setCursor(t: CtrlElementType, active = false) {
     // rotate
     let deg = 0;
     if (t === CtrlElementType.RectLT || t === CtrlElementType.RectLTR) {
-        deg = rotateCtx.mlt.decomposeEuler().z * 180 / Math.PI;
+        deg = rotateCtx.mlt.decomposeRotate() * 180 / Math.PI;
     } else if (t === CtrlElementType.RectRT || t === CtrlElementType.RectRTR) {
-        deg = rotateCtx.mrt.decomposeEuler().z * 180 / Math.PI;
+        deg = rotateCtx.mrt.decomposeRotate() * 180 / Math.PI;
     } else if (t === CtrlElementType.RectRB || t === CtrlElementType.RectRBR) {
-        deg = rotateCtx.mrb.decomposeEuler().z * 180 / Math.PI;
+        deg = rotateCtx.mrb.decomposeRotate() * 180 / Math.PI;
     } else if (t === CtrlElementType.RectLB || t === CtrlElementType.RectLBR) {
-        deg = rotateCtx.mlb.decomposeEuler().z * 180 / Math.PI;
+        deg = rotateCtx.mlb.decomposeRotate() * 180 / Math.PI;
     }
 
     active

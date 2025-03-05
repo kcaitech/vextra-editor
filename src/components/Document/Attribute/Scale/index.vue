@@ -13,7 +13,7 @@ import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
-import { ColVector3D, makeShapeTransform2By1, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
+import { ColVector3D, ShapeSize, ShapeView, TransformRaw, XYsBounding } from "@kcdesign/data";
 import { ScaleUniformer } from "@/transform/scaleUniform";
 
 const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();
@@ -57,7 +57,7 @@ function getSize() {
     h.value = box.bottom - box.top;
 }
 
-function modifyFixed(transform: Transform, ratio: number, __box?: {
+function modifyFixed(transform: TransformRaw, ratio: number, __box?: {
     left: number,
     top: number,
     right: number,
@@ -99,21 +99,21 @@ function modifyFixed(transform: Transform, ratio: number, __box?: {
 
 function __change_size(ratio: number) {
     const box = __get_box();
-    const units: { shape: ShapeView, transform: Transform }[] = [];
+    const units: { shape: ShapeView, transform: TransformRaw }[] = [];
     const selected = props.context.selection.selectedShapes;
 
-    const cache = new Map<ShapeView, Transform>();
+    const cache = new Map<ShapeView, TransformRaw>();
     for (const shape of selected) {
         const parent = shape.parent!;
         if (cache.has(parent)) continue;
-        cache.set(parent, makeShapeTransform2By1(parent.matrix2Root()));
+        cache.set(parent, (parent.matrix2Root()));
     }
 
-    const selectionTransform = new Transform().setTranslate(ColVector3D.FromXY(box.left, box.top));
+    const selectionTransform = new TransformRaw().setTranslate(ColVector3D.FromXY(box.left, box.top));
     const inverse = selectionTransform.getInverse();
 
     for (const shape of selected) {
-        const transform = makeShapeTransform2By1(shape.transform).addTransform(cache.get(shape.parent!)!);
+        const transform = (shape.transform.clone()).addTransform(cache.get(shape.parent!)!);
         transform.addTransform(inverse);
         units.push({ shape, transform });
     }
@@ -122,17 +122,17 @@ function __change_size(ratio: number) {
 
     modifyFixed(selectionTransform, ratio, box);
 
-    const parentsTransform = new Map<ShapeView, Transform>();
+    const parentsTransform = new Map<ShapeView, TransformRaw>();
     for (const shape of selected) {
         const parent = shape.parent!;
         if (parentsTransform.has(parent)) continue;
-        const t = makeShapeTransform2By1(parent.matrix2Root());
+        const t = (parent.matrix2Root());
         parentsTransform.set(parent, t.getInverse());
     }
 
     const params: {
         shape: ShapeView,
-        transform: Transform,
+        transform: TransformRaw,
         size: { width: number, height: number },
         decomposeScale: { x: number, y: number }
     }[] = [];

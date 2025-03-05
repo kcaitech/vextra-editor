@@ -1,12 +1,8 @@
 import { Context } from "@/context";
 import {
     ColVector3D,
-    makeMatrixByTransform2,
-    makeShapeTransform2By1,
-    Matrix2,
-    NumberArray2D,
     ShapeView, SymbolView,
-    Transform
+    TransformRaw
 } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
 import { cursorAngle } from "@/components/Document/Selection/common";
@@ -77,8 +73,8 @@ export class TitleRenderer {
 
         const { x, y, width, height } = shape.frame;
 
-        const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
-        const clientMatrix = makeShapeTransform2By1(this.m_context.workspace.matrix);
+        const fromRoot = (shape.matrix2Root());
+        const clientMatrix = (this.m_context.workspace.matrix);
 
         const fromClient = fromRoot.clone()
             .addTransform(clientMatrix);
@@ -90,12 +86,16 @@ export class TitleRenderer {
             ColVector3D.FromXY(x, y + height)
         ]);
 
-        const {
-            col0: lt,
-            col1: rt,
-            col2: rb,
-            col3: lb
-        } = points;
+        const lt = ColVector3D.FromXY(points[0])
+        const rt = ColVector3D.FromXY(points[1])
+        const rb = ColVector3D.FromXY(points[2])
+        const lb = ColVector3D.FromXY(points[3])
+        // const {
+        //     [0]: lt,
+        //     [1]: rt,
+        //     [2]: rb,
+        //     [3]: lb
+        // } = points;
 
         const s1 = [lt, rt];
         const s2 = [rt, rb];
@@ -198,16 +198,21 @@ export class TitleRenderer {
         const X = xAxis[1].clone().subtract(xAxis[0]);
         const Y = yAxis[1].clone().subtract(yAxis[0]);
 
-        const tDirection = new Transform({
-            matrix: new Matrix2(new NumberArray2D([4, 4], [
-                X.x, Y.x, 0, 0,
-                X.y, Y.y, 0, 0,
-                X.z, Y.z, 1, 0,
-                0, 0, 0, 1,
-            ]))
-        }).clearSkew().transform(ColVector3D.FromXY(0, -1)).col0;
+        const t = new TransformRaw(X.x, Y.x, 0, 
+                X.y, Y.y, 0
+        )
+        // ({
+        //     matrix: new Matrix2(new NumberArray2D([4, 4], [
+        //         X.x, Y.x, 0, 0,
+        //         X.y, Y.y, 0, 0,
+        //         X.z, Y.z, 1, 0,
+        //         0, 0, 0, 1,
+        //     ]))
+        // })
+        t.clearSkew()
+        const tDirection = t.transform(ColVector3D.FromXY(0, -1));
 
-        const OT = new Transform()
+        const OT = new TransformRaw()
             .setRotateZ(cursorAngle(ColVector3D.FromXY(1, 0), X))
             .setTranslate(O)
             .translateAt({
@@ -224,7 +229,7 @@ export class TitleRenderer {
             titleCtx.name = '...';
         }
 
-        titleCtx.transform = makeMatrixByTransform2(OT).toString();
+        titleCtx.transform = (OT).toString();
     }
 
     private updateContainerTitle(id: string, args: any[]) {

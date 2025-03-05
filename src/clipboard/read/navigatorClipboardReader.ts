@@ -1,5 +1,5 @@
 import { Bundle } from "@/clipboard";
-import { parse as SVGParse } from "@/svg_parser";
+import { svgParser as SVGParse } from "@kcdesign/data";
 import { Reader } from "@/clipboard/read/reader";
 import { Context } from "@/context";
 
@@ -18,7 +18,7 @@ export class NavigatorClipboardReader extends Reader {
                 const blob = await item.getType("text/plain");
                 const text = await blob.text();
                 if (this.maySvgText(text)) {
-                    const svg = SVGParse(text);
+                    const svg = SVGParse.parse(text);
                     const svgs = bundle["SVG"];
                     svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
                 } else bundle["plain"] = text;

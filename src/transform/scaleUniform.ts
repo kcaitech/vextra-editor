@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import { ColVector3D, makeShapeTransform2By1, Matrix, Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit } from "@kcdesign/data";
+import { ColVector3D, Matrix, Scaler, ShapeSize, ShapeView, TransformRaw, UniformScaleUnit } from "@kcdesign/data";
 import { AnchorType } from "@/components/Document/Attribute/Scale/index";
 
 type Box = {
@@ -33,14 +33,14 @@ export class ScaleUniformer extends TransformHandler {
     private baseFrames: BaseFrames = new Map();
 
 
-    selectionTransform: Transform = new Transform();
-    selectionTransformInverse: Transform = new Transform();
+    selectionTransform: TransformRaw = new TransformRaw();
+    selectionTransformInverse: TransformRaw = new TransformRaw();
     selectionSize = { width: 0, height: 0 };
 
-    transformCache: Map<ShapeView, Transform> = new Map();
-    transformInverseCache: Map<ShapeView, Transform> = new Map();
+    transformCache: Map<ShapeView, TransformRaw> = new Map();
+    transformInverseCache: Map<ShapeView, TransformRaw> = new Map();
 
-    shapeTransformListInSelection: Transform[] = [];
+    shapeTransformListInSelection: TransformRaw[] = [];
 
     shapeSizeList: {
         width: number,
@@ -124,7 +124,7 @@ export class ScaleUniformer extends TransformHandler {
         const transformForSelection = this.selectionTransform.clone();
         const __scale = transformForSelection.decomposeScale();
 
-        transformForSelection.setTranslate(transformForSelection.transform(ltPointForSelection).col0);
+        transformForSelection.setTranslate(transformForSelection.transform(ltPointForSelection));
         transformForSelection.setScale(new ColVector3D([
             sizeForSelection.width / this.selectionSize.width * (__scale.x > 0 ? 1 : -1),
             sizeForSelection.height / this.selectionSize.height * (__scale.y > 0 ? 1 : -1),
@@ -258,8 +258,8 @@ export class ScaleUniformer extends TransformHandler {
 
             if (!cache.has(shape.parent!)) {
                 const transform = shape.parent!.matrix2Root();
-                cache.set(shape.parent!, makeShapeTransform2By1(transform));
-                inverseCache.set(shape.parent!, makeShapeTransform2By1(transform.getInverse()));
+                cache.set(shape.parent!, (transform));
+                inverseCache.set(shape.parent!, (transform.getInverse()));
             }
         }
 
@@ -279,13 +279,13 @@ export class ScaleUniformer extends TransformHandler {
         const multi = shapes.length > 1;
 
         this.selectionTransform = multi
-            ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(makeShapeTransform2By1(alpha.matrix2Root()));
+            ? new TransformRaw().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
+            : new TransformRaw().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root()));
 
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;
 
-        this.shapeTransformListInSelection = shapes.map((shape, i) => makeShapeTransform2By1(shape.transform)
+        this.shapeTransformListInSelection = shapes.map((shape, i) => (shape.transform.clone())
             .addTransform(cache.get(shape.parent!)!)
             .addTransform(selectionInverse))
 

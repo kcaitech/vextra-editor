@@ -1,8 +1,8 @@
 import { BoundHandler } from "@/transform/handler";
 import {
     ArtboardView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, ShapeFrame,
-    ShapeType, ShapeView, StackMode, SymbolView, Transform, TransformRaw, TranslateUnit, Transporter,
-    makeShapeTransform1By2, PathShapeView, makeShapeTransform2By1, layoutShapesOrder2, getShapeFrame
+    ShapeType, ShapeView, StackMode, SymbolView, TransformRaw, TranslateUnit, Transporter,
+    PathShapeView, layoutShapesOrder2, getShapeFrame
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
@@ -23,7 +23,7 @@ enum TranslateMode {
 }
 interface TranslateBaseItem {
     transformRaw: TransformRaw,
-    transform: Transform;
+    transform: TransformRaw;
     view: ShapeView;
 }
 interface EnvLeaf {
@@ -327,7 +327,7 @@ class SelModel {
     }
 
     private __box(shapes: ShapeView[]) {
-        const cache = new Map<ShapeView, Transform>();
+        const cache = new Map<ShapeView, TransformRaw>();
         let left = Infinity;
         let right = -Infinity;
         let top = Infinity;
@@ -340,11 +340,11 @@ class SelModel {
 
             let p2r = cache.get(parent)!;
             if (!p2r) {
-                p2r = makeShapeTransform2By1(parent.matrix2Root());
+                p2r = (parent.matrix2Root());
                 cache.set(parent, p2r);
             }
 
-            const transform = makeShapeTransform2By1(shape.transform);
+            const transform = (shape.transform.clone());
             transform.addTransform(p2r);
 
             original.set(shape.id, {
@@ -357,22 +357,22 @@ class SelModel {
 
             let points: XY[];
             if (is_straight(shape)) {
-                const unitTransform = new Transform().setScale(ColVector3D.FromXYZ(width, height, 1)).addTransform(transform);
+                const unitTransform = new TransformRaw().scale(width, height).addTransform(transform);
                 const lt = (shape as PathShapeView).segments[0].points[0];
                 const rb = (shape as PathShapeView).segments[0].points[1];
-                const { col0, col1 } = unitTransform.transform([
+                points = unitTransform.transform([
                     ColVector3D.FromXY(lt.x, lt.y),
                     ColVector3D.FromXY(rb.x, rb.y)
                 ])
-                points = [col0, col1];
+                // points = [col0, col1];
             } else {
-                const { col0, col1, col2, col3 } = transform.transform([
+                points = transform.transform([
                     ColVector3D.FromXY(x, y),
                     ColVector3D.FromXY(x + width, y),
                     ColVector3D.FromXY(x + width, y + height),
                     ColVector3D.FromXY(x, y + height),
                 ])
-                points = [col0, col1, col2, col3];
+                // points = [col0, col1, col2, col3];
             }
 
             for (const point of points) {
@@ -1060,7 +1060,7 @@ export class Translate2 extends BoundHandler {
         const deltaY = ty - y;
 
         const transformUnits: TranslateUnit[] = [];
-        const cache = new Map<ShapeView, Transform>();
+        const cache = new Map<ShapeView, TransformRaw>();
         const shapes = manager.shapes;
         const __is_locked = this.isLocked.bind(this);
         for (const shape of shapes) {
@@ -1069,12 +1069,12 @@ export class Translate2 extends BoundHandler {
             const parent = shape.parent!;
             let PI = cache.get(parent)!;
             if (!PI) {
-                PI = makeShapeTransform2By1(parent.matrix2Root().getInverse());
+                PI = (parent.matrix2Root().getInverse());
                 cache.set(parent, PI);
             }
             const __t = model.getBaseTransform(shape)
                 .clone()
-                .translate(ColVector3D.FromXY(deltaX, deltaY));
+                .translate(deltaX, deltaY);
 
             if (model.alignPixel && align) {
                 const decompose = __t.clone().decomposeTranslate();
@@ -1082,11 +1082,11 @@ export class Translate2 extends BoundHandler {
                 const intY = Math.round(decompose.y);
                 const offsetX = intX - decompose.x;
                 const offsetY = intY - decompose.y;
-                if (offsetX || offsetY) __t.translate(ColVector3D.FromXY(offsetX, offsetY));
+                if (offsetX || offsetY) __t.translate(offsetX, offsetY);
             }
 
             __t.addTransform(PI);
-            const transform = makeShapeTransform1By2(__t) as TransformRaw;
+            const transform = (__t);
             transformUnits.push({ shape, transform });
         }
 

@@ -4,10 +4,8 @@ import { onMounted, onUnmounted, ref } from "vue";
 import {
     FillsAsyncApi,
     ColVector3D,
-    makeMatrixByTransform2,
-    makeShapeTransform2By1,
-    Transform,
-    ShapeView, Fill, SymbolRefView, Api
+    ShapeView, Fill, SymbolRefView, Api,
+    TransformRaw
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { DragKit } from "@/components/common/draggable";
@@ -34,7 +32,7 @@ const visible = ref<boolean>(true);
 const rightSidePath = ref<string>();
 const bottomSidePath = ref<string>();
 
-let transformBase: Transform = new Transform();
+let transformBase: TransformRaw = new TransformRaw();
 
 let direction: Direction = Direction.Angle;
 let editor: FillsAsyncApi | undefined = undefined;
@@ -103,7 +101,7 @@ function start(event: MouseEvent, d: Direction) {
 let need_reset_cursor_after_transform = true;
 
 function setCursor(type: Direction, active = false) {
-    let deg = transformBase.decomposeEuler().z * 180 / Math.PI;
+    let deg = transformBase.decomposeRotate() * 180 / Math.PI;
     if (type === Direction.Ver) {
         deg += 90;
     } else if (type === Direction.Angle) {
@@ -142,47 +140,47 @@ function update() {
         width = width ^ height;
     }
 
-    const transform = new Transform()
-        .addTransform(makeShapeTransform2By1(shape.matrix2Root()))
-        .addTransform(makeShapeTransform2By1(props.context.workspace.matrix));
+    const transform = new TransformRaw()
+        .addTransform((shape.matrix2Root()))
+        .addTransform((props.context.workspace.matrix));
 
-    const lt = new Transform()
+    const lt = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(0, 0))
         .addTransform(transform)
-        .clearScaleSize();
-    const top = new Transform()
+        lt.clearScaleSize();
+    const top = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(width / 2, 0))
         .addTransform(transform)
-        .clearScaleSize();
-    const rt = new Transform()
+        top.clearScaleSize();
+    const rt = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(width, 0))
         .addTransform(transform)
-        .clearScaleSize();
-    const right = new Transform()
+        rt.clearScaleSize();
+    const right = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(width, height / 2))
         .addTransform(transform)
-        .clearScaleSize();
-    const rb = new Transform()
+        right.clearScaleSize();
+    const rb = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(width, height))
         .addTransform(transform)
-        .clearScaleSize();
-    const bottom = new Transform()
+        rb.clearScaleSize();
+    const bottom = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(width / 2, height))
         .addTransform(transform)
-        .clearScaleSize();
-    const lb = new Transform()
+        bottom.clearScaleSize();
+    const lb = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(0, height))
         .addTransform(transform)
-        .clearScaleSize();
-    const left = new Transform()
+        lb.clearScaleSize();
+    const left = new TransformRaw()
         .setTranslate(ColVector3D.FromXY(0, height / 2))
         .addTransform(transform)
-        .clearScaleSize();
+        left.clearScaleSize();
 
-    const ltDot = lt.transform(ColVector3D.FromXY(0, 0)).col0;
-    const rtDot = rt.transform(ColVector3D.FromXY(0, 0)).col0;
-    const rbDot = rb.transform(ColVector3D.FromXY(0, 0)).col0;
-    const lbDot = lb.transform(ColVector3D.FromXY(0, 0)).col0;
+    const ltDot = lt.transform(ColVector3D.FromXY(0, 0));
+    const rtDot = rt.transform(ColVector3D.FromXY(0, 0));
+    const rbDot = rb.transform(ColVector3D.FromXY(0, 0));
+    const lbDot = lb.transform(ColVector3D.FromXY(0, 0));
 
     rightSidePath.value = `M${rtDot.x} ${rtDot.y} L${rbDot.x} ${rbDot.y}`;
     bottomSidePath.value = `M${lbDot.x} ${lbDot.y} L${rbDot.x} ${rbDot.y}`;
@@ -191,14 +189,14 @@ function update() {
     visible.value = Math.min(Math.abs(ltDot.x - rtDot.x), Math.abs(ltDot.y - rbDot.y)) > 24;
 
     transformBase = lt;
-    transformLT.value = makeMatrixByTransform2(lt).toString();
-    transformT.value = makeMatrixByTransform2(top).toString();
-    transformRT.value = makeMatrixByTransform2(rt).toString();
-    transformR.value = makeMatrixByTransform2(right).toString();
-    transformRB.value = makeMatrixByTransform2(rb).toString();
-    transformB.value = makeMatrixByTransform2(bottom).toString();
-    transformLB.value = makeMatrixByTransform2(lb).toString();
-    transformL.value = makeMatrixByTransform2(left).toString();
+    transformLT.value = (lt).toString();
+    transformT.value = (top).toString();
+    transformRT.value = (rt).toString();
+    transformR.value = (right).toString();
+    transformRB.value = (rb).toString();
+    transformB.value = (bottom).toString();
+    transformLB.value = (lb).toString();
+    transformL.value = (left).toString();
 }
 
 function workspaceWatcher(t: any) {

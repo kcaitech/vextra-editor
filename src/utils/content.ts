@@ -10,7 +10,6 @@ import {
     getFormatFromBase64,
     GroupShape,
     GroupShapeView,
-    makeShapeTransform2By1,
     Matrix,
     PathShapeView,
     PathType,
@@ -35,7 +34,7 @@ import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shape
 import { is_circular_ref2, is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
-import * as parse_svg from "@/svg_parser";
+import { svgParser as parse_svg } from "@kcdesign/data";
 import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
@@ -1238,7 +1237,7 @@ export function redo(context: Context) {
     modify_selection(context);
 }
 
-export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
+export async function upload_image(context: Context, ref: string, buff: Uint8Array) {
     if (!context.net) return false;
     try {
         const __buff = new Uint8Array(buff);
@@ -1346,10 +1345,10 @@ export const lessen = (context: Context) => {
 export const getTransformCol = (context: Context, shape: ShapeView, x: number, y: number) => {
     const matrix = new Matrix(context.workspace.matrix);
     const shape_root_m = shape.matrix2Root();
-    let m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix);
+    let m = (shape_root_m).clone();
+    const clientTransform = (matrix);
     m.addTransform(clientTransform); //root到视图
-    const { col0 } = m.transform([ColVector3D.FromXY(x, y)]);
+    const { [0]: col0 } = m.transform([ColVector3D.FromXY(x, y)]);
     return { x: col0.x, y: col0.y };
 }
 

@@ -12,12 +12,11 @@ import {
     FillType,
     GeneratorParams,
     GroupShapeView,
-    makeShapeTransform2By1,
     Matrix,
     ShapeFrame,
     ShapeType,
     ShapeView,
-    Transform
+    TransformRaw
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { v4 } from "uuid";
@@ -777,9 +776,9 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private getTargetTransform(env: ShapeView, frame: ShapeFrame) {
-        const envFromRoot = makeShapeTransform2By1(env.matrix2Root());
+        const envFromRoot = (env.matrix2Root());
 
-        const selectionTransform = new Transform()
+        const selectionTransform = new TransformRaw()
             .setTranslate(ColVector3D.FromXY(frame.x, frame.y));
 
         const targetTransform = selectionTransform
@@ -790,7 +789,8 @@ export class CreatorExecute extends TransformHandler {
         frame.width = frame.width * Math.abs(scale.x);
         frame.height = frame.height * Math.abs(scale.y);
 
-        return targetTransform.clearScaleSize();
+        targetTransform.clearScaleSize();
+        return targetTransform
     }
 
     private fixedByUserConfig() {

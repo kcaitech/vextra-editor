@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { ResourceMgr, Shape, } from "@kcdesign/data";
+import { ResourceMgr, Shape, TransformRaw, } from "@kcdesign/data";
 import { ClipboardEventReader } from "@/clipboard/read/clipboardEventReader";
 import { NavigatorClipboardReader } from "@/clipboard/read/navigatorClipboardReader";
 import { BundleHandler } from "@/clipboard/bundleHandler";
@@ -24,7 +24,7 @@ export type Bundle = {
     SVG?: SVGBundle[];              // 矢量图层
 }
 
-export type RefShapeBase ={
+export type RefShapeBase = {
     symbol: string;
     base: Shape;
     shapeId: string;
@@ -32,7 +32,7 @@ export type RefShapeBase ={
 
 export type SourceBundle = {
     shapes: Shape[];
-    originTransform: any;
+    originTransform: { [key: string]: TransformRaw };
     originIds: string[];
     media: any;
     unbindRefs: RefShapeBase[];
@@ -67,7 +67,7 @@ export class MossClipboard {
         } else return false;
     }
 
-    writeProperties() {}
+    writeProperties() { }
     async read(event?: ClipboardEvent): Promise<Bundle | undefined> {
         const bundle: Bundle = {};
         try {

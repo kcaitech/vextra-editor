@@ -2,11 +2,11 @@
 import { Context } from '@/context';
 import { find_space_for_state, make_default_state, make_state, SymbolType } from '@/utils/symbol';
 import {
-    ColVector3D, makeMatrixByTransform2,
-    makeShapeTransform2By1,
+    ColVector3D, 
     Shape,
     ShapeView,
-    SymbolView, Transform
+    SymbolView, 
+    TransformRaw
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -32,19 +32,19 @@ function gen_add_button_transform() {
     const shape = props.shape;
     const { x, y, width, height } = shape.frame;
 
-    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
+    const fromRoot = (shape.matrix2Root());
+    const clientMatrix = (props.context.workspace.matrix);
 
-    const transform = new Transform()
+    const transform = new TransformRaw()
         .setTranslate(props.symbolType === SymbolType.Union
             ? ColVector3D.FromXY(x + width / 2, y + height)
             : ColVector3D.FromXY(x + width, y + height / 2))
         .addTransform(fromRoot)
         .addTransform(clientMatrix)
-        .clearSkew()
-        .clearScaleSize();
+        transform.clearSkew()
+        transform.clearScaleSize();
     const translateVector = props.symbolType === SymbolType.Union ? ColVector3D.FromXY(-8, 8) : ColVector3D.FromXY(8, -8);
-    return makeMatrixByTransform2(transform.translateInLocal(translateVector)).toString();
+    return (transform.translateInLocal(translateVector)).toString();
 }
 
 function down(e: MouseEvent) {

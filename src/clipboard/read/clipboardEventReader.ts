@@ -1,5 +1,5 @@
 import { Bundle } from "@/clipboard";
-import { parse as SVGParse } from "@/svg_parser";
+import { svgParser as SVGParse } from "@kcdesign/data";
 import { Reader } from "@/clipboard/read/reader";
 import { Context } from "@/context";
 
@@ -67,7 +67,7 @@ export class ClipboardEventReader extends Reader {
             } else if (item.type === "text/plain") {
                 const result = item.result;
                 if (this.maySvgText(result)) {
-                    const svg = SVGParse(result);
+                    const svg = SVGParse.parse(result);
                     const svgs = bundle["SVG"];
                     svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
                 } else bundle["plain"] = result;

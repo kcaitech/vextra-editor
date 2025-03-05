@@ -7,17 +7,15 @@ import {
     PrototypeNavigationType,
     PrototypeTransitionType,
     ShapeView,
-    makeShapeTransform2By1,
     ArtboardView
 } from '@kcdesign/data';
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
-import { debounce, throttle } from "lodash";
+import { throttle } from "lodash";
 import { is_mac, XYsBounding } from "@/utils/common";
 import { Preview } from "@/context/preview";
 import { getFrameList, getPreviewMatrix, scrollAtrboard, viewBox } from "@/utils/preview";
 import { toStyle } from "@/utils/message";
-import { nextTick } from 'vue';
 
 type PCard = InstanceType<typeof PageCard>;
 
@@ -52,6 +50,10 @@ export class ViewUpdater {
 
     get pageCard() {
         return this.m_page_card;
+    }
+
+    set pageCard(card: PCard | undefined) {
+        this.m_page_card = card;
     }
 
     setPageCard(card: PCard | undefined) {
@@ -129,19 +131,19 @@ export class ViewUpdater {
         const transformMatrix = new Matrix();
         const shape_root_m = shape.matrix2Root();
         shape_root_m.trans(-page.transform.translateX, -page.transform.translateY);
-        const m = makeShapeTransform2By1(shape_root_m).clone(); // 图层到root
-        const clientTransform = makeShapeTransform2By1(transformMatrix);
+        const m = (shape_root_m).clone(); // 图层到root
+        // const clientTransform = (transformMatrix);
 
-        m.addTransform(clientTransform); //root到视图
+        m.addTransform(transformMatrix); //root到视图
 
         const { x, y, width, height } = shape.frame;
-        const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+        const box = XYsBounding(m.transform([
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY(x + width, y),
             ColVector3D.FromXY(x + width, y + height),
             ColVector3D.FromXY(x, y + height)
-        ]);
-        const box = XYsBounding([lt, rt, rb, lb]);
+        ]));
+        // const box = XYsBounding([lt, rt, rb, lb]);
 
         const root = container.getBoundingClientRect();
 
@@ -548,19 +550,19 @@ export class ViewUpdater {
         }
         const shape_root_m = shape.matrix2Root();
         shape_root_m.trans(-page.transform.translateX, -page.transform.translateY);
-        const m = makeShapeTransform2By1(shape_root_m).clone(); // 图层到root
-        const clientTransform = makeShapeTransform2By1(this.matrix);
+        const m = (shape_root_m).clone(); // 图层到root
+        // const clientTransform = (this.matrix);
 
-        m.addTransform(clientTransform); //root到视图
+        m.addTransform(this.matrix); //root到视图
 
         const { x, y, width, height } = shape.frame;
-        const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+        const box = XYsBounding(m.transform([
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY(x + width, y),
             ColVector3D.FromXY(x + width, y + height),
             ColVector3D.FromXY(x, y + height)
-        ]);
-        const box = XYsBounding([lt, rt, rb, lb]);
+        ]));
+        // const box = XYsBounding([lt, rt, rb, lb]);
 
         return box;
     }

@@ -1,5 +1,5 @@
 import { Shape, ResourceMgr } from "@kcdesign/data";
-import * as parse_svg from "@/svg_parser";
+import { svgParser as parse_svg} from "@kcdesign/data";
 import { Context } from "@/context";
 
 export class Reader {

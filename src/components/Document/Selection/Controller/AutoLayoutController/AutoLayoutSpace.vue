@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection, XY } from '@/context/selection';
-import { ArtboardView, BorderPosition, ColVector3D, Matrix, PaddingDir, Shape, ShapeView, StackMode, StackSizing, adapt2Shape, layoutShapesOrder2, makeShapeTransform2By1 } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { ArtboardView, BorderPosition, ColVector3D, Matrix, PaddingDir, ShapeView, StackMode, StackSizing, layoutShapesOrder2 } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
 import { fixedZero } from '@/utils/common';
@@ -74,8 +74,8 @@ function getVerSpacePosition() {
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = shape.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     let verSpacing = autoLayout.stackCounterSpacing; //垂直间距
     let topPadding = autoLayout.stackVerticalPadding; //上边距
@@ -102,17 +102,17 @@ function getVerSpacePosition() {
             ColVector3D.FromXY(x + width - autoLayout.stackPaddingRight, topPadding + verSpacing),
             ColVector3D.FromXY(leftPadding, topPadding + verSpacing)
         ]);
-        const hor_rotate = Math.atan2(verSpace.col1.y - verSpace.col0.y, verSpace.col1.x - verSpace.col0.x) * (180 / Math.PI);
-        const ver: Box = { lt: verSpace.col0, rt: verSpace.col1, rb: verSpace.col2, lb: verSpace.col3 };
+        const hor_rotate = Math.atan2(verSpace[1].y - verSpace[0].y, verSpace[1].x - verSpace[0].x) * (180 / Math.PI);
+        const ver: Box = { lt: verSpace[0], rt: verSpace[1], rb: verSpace[2], lb: verSpace[3] };
         verSpaceBox.value.push(ver);
         const verWidth = width - autoLayout.stackPaddingRight - autoLayout.stackHorizontalPadding;
         const topLine = m.transform([ColVector3D.FromXY(leftPadding + (verWidth / 2), topPadding + (verSpacing / 2))]);
         const ling: ControlsLine = {
-            lt: { x: topLine.col0.x - 7, y: topLine.col0.y - 1.5 },
-            rt: { x: topLine.col0.x + 7, y: topLine.col0.y - 1.5 },
-            rb: { x: topLine.col0.x + 7, y: topLine.col0.y + 1.5 },
-            lb: { x: topLine.col0.x - 7, y: topLine.col0.y + 1.5 },
-            offset: topLine.col0, rotate: hor_rotate, index: i
+            lt: { x: topLine[0].x - 7, y: topLine[0].y - 1.5 },
+            rt: { x: topLine[0].x + 7, y: topLine[0].y - 1.5 },
+            rb: { x: topLine[0].x + 7, y: topLine[0].y + 1.5 },
+            lb: { x: topLine[0].x - 7, y: topLine[0].y + 1.5 },
+            offset: topLine[0], rotate: hor_rotate, index: i
         }
         verSpaceLine.value.push(ling);
     }
@@ -129,8 +129,8 @@ function getHorSpacePosition() {
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = shape.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     let topPadding = autoLayout.stackVerticalPadding; //上边距
     const shape_rows = layoutShapesOrder2(shape.childs, !!autoLayout.bordersTakeSpace);
@@ -154,16 +154,16 @@ function getHorSpacePosition() {
                 ColVector3D.FromXY(leftPadding + row_space, topPadding + maxHeightInRow),
                 ColVector3D.FromXY(leftPadding, topPadding + maxHeightInRow)
             ]);
-            const hor: Box = { lt: horSpace.col0, rt: horSpace.col1, rb: horSpace.col2, lb: horSpace.col3 };
+            const hor: Box = { lt: horSpace[0], rt: horSpace[1], rb: horSpace[2], lb: horSpace[3] };
             horSpaceBox.value.push(hor);
-            const ver_rotate = Math.atan2(horSpace.col3.y - horSpace.col0.y, horSpace.col3.x - horSpace.col0.x) * (180 / Math.PI);
+            const ver_rotate = Math.atan2(horSpace[3].y - horSpace[0].y, horSpace[3].x - horSpace[0].x) * (180 / Math.PI);
             const spaceLine = m.transform([ColVector3D.FromXY(leftPadding + (row_space / 2), topPadding + (maxHeightInRow / 2))]);
             const ling: ControlsLine = {
-                lt: { x: spaceLine.col0.x - 7, y: spaceLine.col0.y - 1.5 },
-                rt: { x: spaceLine.col0.x + 7, y: spaceLine.col0.y - 1.5 },
-                rb: { x: spaceLine.col0.x + 7, y: spaceLine.col0.y + 1.5 },
-                lb: { x: spaceLine.col0.x - 7, y: spaceLine.col0.y + 1.5 },
-                offset: spaceLine.col0, rotate: ver_rotate, index: j
+                lt: { x: spaceLine[0].x - 7, y: spaceLine[0].y - 1.5 },
+                rt: { x: spaceLine[0].x + 7, y: spaceLine[0].y - 1.5 },
+                rb: { x: spaceLine[0].x + 7, y: spaceLine[0].y + 1.5 },
+                lb: { x: spaceLine[0].x - 7, y: spaceLine[0].y + 1.5 },
+                offset: spaceLine[0], rotate: ver_rotate, index: j
             }
             horSpaceLine.value.push(ling);
         }

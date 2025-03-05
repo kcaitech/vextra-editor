@@ -146,7 +146,7 @@ export class MossWriter {
         } else {
             let shapes = compare_layer_3(this.context.selection.selectedShapes, -1);
             if (!shapes.length) return;
-            const origin_transform_map: any = {};
+            const origin_transform_map: {[key:string]:TransformRaw} = {};
             const position_map: Map<string, TransformRaw> = new Map();
             const points_map: Map<string, CurvePoint[]> = new Map();
             for (let i = 0, len = shapes.length; i < len; i++) {

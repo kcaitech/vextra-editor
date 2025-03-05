@@ -12,8 +12,6 @@ import {
     ImagePack,
     import_shape_from_clipboard,
     import_text,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1,
     Page,
     PathShapeView,
     Shape,
@@ -23,7 +21,6 @@ import {
     SVGParseResult,
     SymbolView,
     TextShape,
-    Transform,
     TransformRaw,
     UploadAssets,
 } from "@kcdesign/data";
@@ -143,17 +140,17 @@ export class BundleHandler {
         const start = context.workspace.matrix.inverseCoord(root.center.x, root.center.y);
         start.x -= area.width / 2;
         start.y -= area.height / 2;
-        const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
+        const offset = new TransformRaw().setTranslate(ColVector3D.FromXY(start.x, start.y));
         const SH = new SpaceHandler(context);
         const env = SH.getEnvByArea(area);
         const matrix = env.matrix2Root();
-        const inverse = makeShapeTransform2By1((matrix.inverse));
+        const inverse = ((matrix.inverse));
 
         for (let i = 0; i < transforms.length; i++) {
-            const t = makeShapeTransform2By1(transforms[i]);
+            const t = (transforms[i].clone());
             t.addTransform(offset);
             t.addTransform(inverse);
-            transforms[i] = makeShapeTransform1By2(t);
+            transforms[i] = (t);
         }
         const packs: {
             pack: ImagePack | SVGParseResult,
@@ -235,11 +232,11 @@ export class BundleHandler {
 
             const env = envs[i];
             const start = { x: (env.frame.width - area.width) / 2, y: (env.frame.height - area.height) / 2 };
-            const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
+            const offset = new TransformRaw().setTranslate(ColVector3D.FromXY(start.x, start.y));
             for (let i = 0; i < transforms.length; i++) {
-                const t = makeShapeTransform2By1(transforms[i]);
+                const t = (transforms[i].clone());
                 t.addTransform(offset);
-                transforms[i] = makeShapeTransform1By2(t);
+                transforms[i] = (t);
             }
             for (let i = 0; i < medias.length; i++) {
                 const media = medias[i];
@@ -286,10 +283,10 @@ export class BundleHandler {
                 const env = container[i];
                 const __shape = import_shape_from_clipboard(context.data, page, [shape]).pop()!;
                 const start = { x: (env.frame.width - area.width) / 2, y: (env.frame.height - area.height) / 2 };
-                const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
-                const t = makeShapeTransform2By1(__shape.transform);
+                const offset = new TransformRaw().setTranslate(ColVector3D.FromXY(start.x, start.y));
+                const t = (__shape.transform.clone());
                 t.addTransform(offset);
-                __shape.transform = makeShapeTransform1By2(t);
+                __shape.transform = (t);
                 actions.push({ parent: adapt2Shape(env) as GroupShape, shape: __shape });
             }
         } else {
@@ -298,15 +295,15 @@ export class BundleHandler {
             const start = context.workspace.matrix.inverseCoord(root.center.x, root.center.y);
             start.x -= area.width / 2;
             start.y -= area.height / 2;
-            const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
+            const offset = new TransformRaw().setTranslate(ColVector3D.FromXY(start.x, start.y));
             const SH = new SpaceHandler(context);
             const env = SH.getEnvByArea(area);
             const matrix = env.matrix2Root();
-            const inverse = makeShapeTransform2By1((matrix.inverse));
-            const t = makeShapeTransform2By1(__shape.transform);
+            const inverse = ((matrix.inverse));
+            const t = (__shape.transform.clone());
             t.addTransform(offset);
             t.addTransform(inverse);
-            __shape.transform = makeShapeTransform1By2(t);
+            __shape.transform = (t);
             actions.push({ parent: adapt2Shape(env) as GroupShape, shape: __shape })
         }
         return actions.length && context.editor4Page(context.selection.selectedPage!).insertShapes(actions);

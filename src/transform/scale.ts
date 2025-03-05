@@ -1,9 +1,8 @@
 import { Context } from "@/context";
 import { BoundHandler, FrameLike } from "./handler";
 import {
-    ColVector3D, CtrlElementType, Matrix, Scaler, ShapeSize, ShapeView, SymbolView, Transform, UniformScaleUnit,
+    ColVector3D, CtrlElementType, Scaler, ShapeSize, ShapeView, SymbolView, UniformScaleUnit,
     ArtboardView, GroupShapeView, SymbolRefView,
-    makeShapeTransform2By1,
     TransformRaw
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
@@ -41,14 +40,14 @@ export class ScaleHandler extends BoundHandler {
 
     private readonly uniformScaleMode: boolean;
 
-    selectionTransform: Transform = new Transform();  // 选区的Transform
-    selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
+    selectionTransform: TransformRaw = new TransformRaw();  // 选区的Transform
+    selectionTransformInverse: TransformRaw = new TransformRaw();  // 选区Transform的逆
     selectionSize = { width: 0, height: 0 }; // 选区的size
 
-    transformCache: Map<ShapeView, Transform> = new Map(); // transform缓存
-    transformInverseCache: Map<ShapeView, Transform> = new Map();
+    transformCache: Map<ShapeView, TransformRaw> = new Map(); // transform缓存
+    transformInverseCache: Map<ShapeView, TransformRaw> = new Map();
 
-    shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
+    shapeTransformListInSelection: TransformRaw[] = []; // shape在选区坐标系下的Transform
 
     shapeSizeList: {
         width: number,
@@ -223,7 +222,7 @@ export class ScaleHandler extends BoundHandler {
             bases.set(shape.id, f);
 
             if (!cache.has(shape.parent!)) {
-                const transform = makeShapeTransform2By1(shape.parent!.matrix2Root());
+                const transform = (shape.parent!.matrix2Root());
                 cache.set(shape.parent!, transform);
                 inverseCache.set(shape.parent!, transform.getInverse());
             }
@@ -246,13 +245,13 @@ export class ScaleHandler extends BoundHandler {
 
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
-            ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(makeShapeTransform2By1(alpha.matrix2Root()));
+            ? new TransformRaw().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
+            : new TransformRaw().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root()));
 
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;
 
-        this.shapeTransformListInSelection = shapes.map((shape) => makeShapeTransform2By1(shape.transform)  // 在Parent坐标系下
+        this.shapeTransformListInSelection = shapes.map((shape) => (shape.transform.clone())  // 在Parent坐标系下
             .addTransform(cache.get(shape.parent!)!)  // 在Root坐标系下
             .addTransform(selectionInverse))  // 在选区坐标系下
 
@@ -422,7 +421,7 @@ export class ScaleHandler extends BoundHandler {
 
         // 光标在选区坐标系下的坐标
         const cursorPointFromRoot = ColVector3D.FromXY(this.livingPoint.x, this.livingPoint.y);
-        const cursorPointFromSelection = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot));
+        const cursorPointFromSelection = ColVector3D.FromXY(this.selectionTransformInverse.transform(cursorPointFromRoot));
 
         const { width: selectionWidth, height: selectionHeight } = this.selectionSize;
 
@@ -597,11 +596,11 @@ export class ScaleHandler extends BoundHandler {
             height: rbPointForSelection.y - ltPointForSelection.y
         }
         if (this.alignPixel) {
-            let rootXY = ColVector3D.FromMatrix(this.selectionTransform.transform(ltPointForSelection));
+            let rootXY = ColVector3D.FromXY(this.selectionTransform.transform(ltPointForSelection));
             rootXY.x = Math.round(rootXY.x);
             rootXY.y = Math.round(rootXY.y);
 
-            rootXY = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(rootXY));
+            rootXY = ColVector3D.FromXY(this.selectionTransformInverse.transform(rootXY));
             ltPointForSelection.x = rootXY.x;
             ltPointForSelection.y = rootXY.y;
 
@@ -625,7 +624,7 @@ export class ScaleHandler extends BoundHandler {
         const transformForSelection = this.selectionTransform.clone();
         const __scale = transformForSelection.decomposeScale();
 
-        transformForSelection.setTranslate(transformForSelection.transform(ltPointForSelection).col0);
+        transformForSelection.setTranslate(transformForSelection.transform(ltPointForSelection));
         transformForSelection.setScale(new ColVector3D([
             sizeForSelection.width / this.selectionSize.width * (__scale.x > 0 ? 1 : -1),
             sizeForSelection.height / this.selectionSize.height * (__scale.y > 0 ? 1 : -1),
@@ -636,7 +635,7 @@ export class ScaleHandler extends BoundHandler {
         const units: {
             shape: ShapeView,
             size: ShapeSize,
-            transform2: Transform,
+            transform2: TransformRaw,
             scale: { x: number, y: number },
             w_change: boolean,
             h_change: boolean
@@ -721,7 +720,7 @@ export class ScaleHandler extends BoundHandler {
         }
 
         const cursorPointFromRoot = ColVector3D.FromXY(living.x, living.y);
-        const cursorPointFromSelection = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot));
+        const cursorPointFromSelection = ColVector3D.FromXY(this.selectionTransformInverse.transform(cursorPointFromRoot));
 
         const { width: selectionWidth, height: selectionHeight } = this.selectionSize;
 
@@ -842,7 +841,7 @@ export class ScaleHandler extends BoundHandler {
 
         if (__scale.x < 0.02 || __scale.y < 0.02) return;
 
-        transformForSelection.setTranslate(transformForSelection.transform(ltPointForSelection).col0);
+        transformForSelection.setTranslate(transformForSelection.transform(ltPointForSelection));
         transformForSelection.setScale(new ColVector3D([
             sizeForSelection.width / this.selectionSize.width * (__scale.x > 0 ? 1 : -1),
             sizeForSelection.height / this.selectionSize.height * (__scale.y > 0 ? 1 : -1),

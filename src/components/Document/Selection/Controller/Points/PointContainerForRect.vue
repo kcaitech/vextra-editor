@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
-import { ColVector3D, CurvePoint, Matrix, PolygonShapeView, ShapeFrame, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ColVector3D, CurvePoint, Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint, getRadiusValue } from './common';
 import { fixedZero } from '@/utils/common';
@@ -79,10 +79,10 @@ function getRadiusPosition() {
     }
     const matrix = new Matrix(props.context.workspace.matrix);
     const shape_root_m = shape.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix);
     m.addTransform(clientTransform); //root到视图
-    const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform(result);
+    const { [0]: lt, [1]: rt, [2]: rb, [3]: lb } = m.transform(result);
     return [{ x: lt.x, y: lt.y }, { x: rt.x, y: rt.y }, { x: rb.x, y: rb.y }, { x: lb.x, y: lb.y }];
 }
 
@@ -134,11 +134,11 @@ const getMovePoint = (e: MouseEvent) => {
     const clientXY = props.context.workspace.getContentXY(e);
     const matrix = new Matrix(props.context.workspace.matrix);
     const shape_root_m = shape.matrix2Root();
-    let m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix);
+    let m = (shape_root_m).clone();
+    const clientTransform = (matrix);
     m.addTransform(clientTransform); //root到视图
     const _m = m.getInverse(); // 视图转图形
-    const { col0: xy } = _m.transform([ColVector3D.FromXY(clientXY.x, clientXY.y)]);
+    const { [0]: xy } = _m.transform([ColVector3D.FromXY(clientXY.x, clientXY.y)]);
     xy.x /= frame.width;
     xy.y /= frame.height;
     const d0 = Math.hypot(xy.x, xy.y);

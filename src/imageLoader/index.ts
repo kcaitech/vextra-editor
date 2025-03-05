@@ -2,12 +2,11 @@ import { Context } from "@/context";
 import {
     ColVector3D, GroupShapeView, ImagePack,
     Shape, ShapeView, SVGParseResult,
-    Transform, TransformRaw, UploadAssets,
-    makeShapeTransform1By2, makeShapeTransform2By1,
+    TransformRaw, UploadAssets,
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
-import * as parse_svg from "@/svg_parser";
+import { svgParser as parse_svg } from "@kcdesign/data";
 import { upload_image } from "@/utils/content";
 import { XY } from "@/context/selection";
 
@@ -118,8 +117,8 @@ export class ImageLoader {
             }
         } else {
             const { width, height } = context.workspace.root;
-            let clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
-            const { col0, col1 } = clientMatrix.clone().getInverse().transform([
+            let clientMatrix = (context.workspace.matrix);
+            const { [0]:col0, [1]:col1 } = clientMatrix.clone().getInverse().transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height)
             ]);
@@ -133,26 +132,26 @@ export class ImageLoader {
                 matrix.scale(1 / Math.max(ratioW, ratioH));
                 matrix.trans(width / 2, height / 2);
 
-                clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
+                clientMatrix = (context.workspace.matrix);
                 context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
             }
 
             const centerAfterScale = clientMatrix.clone()
                 .getInverse()
-                .transform(ColVector3D.FromXY(width / 2, height / 2)).col0;
+                .transform(ColVector3D.FromXY(width / 2, height / 2));
 
             const dx = centerAfterScale.x - area.width / 2;
             const dy = centerAfterScale.y - area.height / 2;
 
-            const selectionTransform = new Transform()
+            const selectionTransform = new TransformRaw()
                 .setTranslate(ColVector3D.FromXY(dx, dy));
 
             for (let i = 0; i < transforms.length; i++) {
                 const transform = transforms[i];
-                const t = makeShapeTransform2By1(transform)
+                const t = (transform.clone())
                     .clone()
                     .addTransform(selectionTransform)
-                transforms[i] = makeShapeTransform1By2(t) as TransformRaw;
+                transforms[i] = (t);
             }
         }
         return env;

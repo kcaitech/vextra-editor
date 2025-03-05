@@ -1,4 +1,4 @@
-import { Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D, GroupShapeView, makeShapeTransform1By2, TransformRaw, Transform, ArtboardView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape } from "@kcdesign/data";
+import { Shape, ShapeType, GroupShape, ColVector3D, GroupShapeView, ArtboardView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape, TransformRaw } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
@@ -6,7 +6,7 @@ import { InsertAction, EnvLike } from "@/clipboard/bundleHandler/index";
 import { BoundingLike } from "@/space";
 
 export class ClipboardTransformHandler {
-    private __source_origin_transform_bounding(source: Shape[], originTransform: any) {
+    private __source_origin_transform_bounding(source: Shape[], originTransform: { [key: string]: TransformRaw }) {
         let left = Infinity;
         let top = Infinity;
         let right = -Infinity;
@@ -16,7 +16,7 @@ export class ClipboardTransformHandler {
             const shape = source[i];
             const _t = originTransform[`${shape.id}`];
             if (!_t) continue;
-            const __transform = makeShapeTransform2By1(_t);
+            const __transform = TransformRaw.from(_t);
             let width, height;
             if (shape.size) {
                 width = shape.size.width;
@@ -27,13 +27,13 @@ export class ClipboardTransformHandler {
                 width = __box.right - __box.left;
                 height = __box.bottom - __box.top;
             }
-            const { col0, col1, col2, col3 } = __transform.transform([
+            const box = XYsBounding(__transform.transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height),
                 ColVector3D.FromXY(width, 0),
                 ColVector3D.FromXY(0, height),
-            ]);
-            const box = XYsBounding([col0, col1, col2, col3]);
+            ]));
+            // const box = XYsBounding([col0, col1, col2, col3]);
 
             if (box.top < top) top = box.top;
             if (box.left < left) left = box.left;
@@ -44,7 +44,7 @@ export class ClipboardTransformHandler {
         return { left, top, right, bottom };
     }
 
-    private __fit_to_env(source: Shape[], env: GroupShapeView, originTransform: any) {
+    private __fit_to_env(source: Shape[], env: GroupShapeView, originTransform: { [key: string]: TransformRaw }) {
         const { x: envX, y: envY, width: envWidth, height: envHeight } = env.frame;
 
         const env2root = env.matrix2Root();
@@ -60,7 +60,7 @@ export class ClipboardTransformHandler {
 
         const sourceOriginBound = this.__source_origin_transform_bounding(source, originTransform);
 
-        const targetSelectionTransform = new Transform();
+        const targetSelectionTransform = new TransformRaw();
 
         if (sourceOriginBound.left > envBoundWidth || sourceOriginBound.right < 0) {
             const shapeCX = (sourceOriginBound.left + sourceOriginBound.right) / 2;
@@ -75,10 +75,10 @@ export class ClipboardTransformHandler {
             const _t = originTransform[`${shape.id}`];
             if (!_t) continue;
 
-            const __transform = makeShapeTransform2By1(_t)
+            const __transform = (_t.clone())
                 .addTransform(targetSelectionTransform);
 
-            shape.transform = makeShapeTransform1By2(__transform) as TransformRaw;
+            shape.transform = (__transform);
         }
     }
 
@@ -99,7 +99,7 @@ export class ClipboardTransformHandler {
 
         for (let i = 0; i < source.length; i++) {
             const shape = source[i];
-            const __transform = makeShapeTransform2By1(shape.transform);
+            // const __transform = (shape.transform.clone());
             let width, height;
             if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
                 const children = (shape as GroupShape).childs;
@@ -110,13 +110,13 @@ export class ClipboardTransformHandler {
                 width = shape.size.width;
                 height = shape.size.height;
             }
-            const { col0, col1, col2, col3 } = __transform.transform([
+            const box = XYsBounding(TransformRaw.from(shape.transform).transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height),
                 ColVector3D.FromXY(width, 0),
                 ColVector3D.FromXY(0, height),
-            ]);
-            const box = XYsBounding([col0, col1, col2, col3]);
+            ]));
+            // const box = XYsBounding([col0, col1, col2, col3]);
 
             if (box.top < top) top = box.top;
             if (box.left < left) left = box.left;

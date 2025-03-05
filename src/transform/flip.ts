@@ -1,9 +1,8 @@
 import { Context } from "@/context";
 import {
     ColVector3D,
-    makeShapeTransform2By1,
     ShapeView,
-    Transform,
+    TransformRaw,
 } from "@kcdesign/data"
 import { XYsBounding } from "@/utils/common";
 
@@ -15,7 +14,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
     if (!__shapes.length) return;
 
-    const TC = new Map<string, Transform>(); // transformCache for parent reflect to root
+    const TC = new Map<string, TransformRaw>(); // transformCache for parent reflect to root
 
     let left = Infinity;
     let top = Infinity;
@@ -31,11 +30,11 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
         shapes.push(shape);
 
-        const t = makeShapeTransform2By1(shape.transform);
+        const t = (shape.transform.clone());
 
         let parent2root = TC.get(parent.id);
         if (!parent2root) {
-            parent2root = makeShapeTransform2By1(parent.matrix2Root());
+            parent2root = (parent.matrix2Root());
             TC.set(parent.id, parent2root);
         }
 
@@ -44,14 +43,12 @@ export function flip(context: Context, axis: 'X' | 'Y') {
         const r = x + width;
         const b = y + height;
 
-        const { col0, col1, col2, col3 } = t.transform([
+        const box = XYsBounding(t.transform([
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY(r, y),
             ColVector3D.FromXY(r, b),
             ColVector3D.FromXY(x, b),
-        ]);
-
-        const box = XYsBounding([col0, col1, col2, col3]);
+        ]));
 
         if (box.left < left) left = box.left;
         if (box.top < top) top = box.top;
@@ -63,17 +60,17 @@ export function flip(context: Context, axis: 'X' | 'Y') {
     const multi = shapes.length > 1;
 
     const selectionTransform = multi
-        ? new Transform().setTranslate(ColVector3D.FromXY(left, top))
-        : makeShapeTransform2By1(shape1th.matrix2Root());
+        ? new TransformRaw().setTranslate(ColVector3D.FromXY(left, top))
+        : (shape1th.matrix2Root());
 
     const selectionTransformInverse = selectionTransform.getInverse();
 
-    const STLIS: { shape: ShapeView, transform: Transform }[] = []; // shapeTransformListInSelection 图层相对选区坐标系的transform集合
+    const STLIS: { shape: ShapeView, transform: TransformRaw }[] = []; // shapeTransformListInSelection 图层相对选区坐标系的transform集合
     if (multi) {
         for (const shape of shapes) {
             STLIS.push({
                 shape,
-                transform: makeShapeTransform2By1(shape.transform)
+                transform: (shape.transform.clone())
                     .addTransform(TC.get(shape.parent!.id)!)
                     .addTransform(selectionTransformInverse)
             });
@@ -81,7 +78,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
     } else {
         STLIS.push({
             shape: shape1th,
-            transform: new Transform()
+            transform: new TransformRaw()
         });
     }
 
@@ -89,12 +86,12 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
     let flipedSelectionTransform;
     if (axis === "Y") {
-        flipedSelectionTransform = selectionTransform.clone().flipH(left + size.width / 2);
+        flipedSelectionTransform = selectionTransform.clone().flipHoriz(left + size.width / 2);
     } else {
-        flipedSelectionTransform = selectionTransform.clone().flipV(top + size.height / 2);
+        flipedSelectionTransform = selectionTransform.clone().flipVert(top + size.height / 2);
     }
 
-    const params: { shape: ShapeView, transform2: Transform }[] = [];
+    const params: { shape: ShapeView, transform2: TransformRaw }[] = [];
 
     for (const { shape, transform } of STLIS) {
         params.push({
