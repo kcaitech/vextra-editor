@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import { ColVector3D, Matrix, Scaler, ShapeSize, ShapeView, TransformRaw, UniformScaleUnit } from "@kcdesign/data";
+import { ColVector3D, Matrix, Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit } from "@kcdesign/data";
 import { AnchorType } from "@/components/Document/Attribute/Scale/index";
 
 type Box = {
@@ -33,14 +33,14 @@ export class ScaleUniformer extends TransformHandler {
     private baseFrames: BaseFrames = new Map();
 
 
-    selectionTransform: TransformRaw = new TransformRaw();
-    selectionTransformInverse: TransformRaw = new TransformRaw();
+    selectionTransform: Transform = new Transform();
+    selectionTransformInverse: Transform = new Transform();
     selectionSize = { width: 0, height: 0 };
 
-    transformCache: Map<ShapeView, TransformRaw> = new Map();
-    transformInverseCache: Map<ShapeView, TransformRaw> = new Map();
+    transformCache: Map<ShapeView, Transform> = new Map();
+    transformInverseCache: Map<ShapeView, Transform> = new Map();
 
-    shapeTransformListInSelection: TransformRaw[] = [];
+    shapeTransformListInSelection: Transform[] = [];
 
     shapeSizeList: {
         width: number,
@@ -279,8 +279,8 @@ export class ScaleUniformer extends TransformHandler {
         const multi = shapes.length > 1;
 
         this.selectionTransform = multi
-            ? new TransformRaw().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new TransformRaw().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root()));
+            ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root()));
 
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
     adapt2Shape, BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Fill, Page, Shadow, Shape, ShapeType,
-    ShapeView, SideType, Style, TransformRaw
+    ShapeView, SideType, Style, Transform
 } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
@@ -51,7 +51,7 @@ function assemble() {
         'assemble-page',
         'assemble-page',
         ShapeType.Page,
-        new TransformRaw(),
+        new Transform(),
         style,
         new BasicArray<Shape>(...shapes)
     );

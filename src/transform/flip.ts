@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import {
     ColVector3D,
     ShapeView,
-    TransformRaw,
+    Transform,
 } from "@kcdesign/data"
 import { XYsBounding } from "@/utils/common";
 
@@ -14,7 +14,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
     if (!__shapes.length) return;
 
-    const TC = new Map<string, TransformRaw>(); // transformCache for parent reflect to root
+    const TC = new Map<string, Transform>(); // transformCache for parent reflect to root
 
     let left = Infinity;
     let top = Infinity;
@@ -60,12 +60,12 @@ export function flip(context: Context, axis: 'X' | 'Y') {
     const multi = shapes.length > 1;
 
     const selectionTransform = multi
-        ? new TransformRaw().setTranslate(ColVector3D.FromXY(left, top))
+        ? new Transform().setTranslate(ColVector3D.FromXY(left, top))
         : (shape1th.matrix2Root());
 
     const selectionTransformInverse = selectionTransform.getInverse();
 
-    const STLIS: { shape: ShapeView, transform: TransformRaw }[] = []; // shapeTransformListInSelection 图层相对选区坐标系的transform集合
+    const STLIS: { shape: ShapeView, transform: Transform }[] = []; // shapeTransformListInSelection 图层相对选区坐标系的transform集合
     if (multi) {
         for (const shape of shapes) {
             STLIS.push({
@@ -78,7 +78,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
     } else {
         STLIS.push({
             shape: shape1th,
-            transform: new TransformRaw()
+            transform: new Transform()
         });
     }
 
@@ -91,7 +91,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
         flipedSelectionTransform = selectionTransform.clone().flipVert(top + size.height / 2);
     }
 
-    const params: { shape: ShapeView, transform2: TransformRaw }[] = [];
+    const params: { shape: ShapeView, transform2: Transform }[] = [];
 
     for (const { shape, transform } of STLIS) {
         params.push({

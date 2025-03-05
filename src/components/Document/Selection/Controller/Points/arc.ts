@@ -1,4 +1,4 @@
-import { AsyncApiCaller, PathShapeView, OvalModifier, Matrix, TransformRaw } from "@kcdesign/data";
+import { AsyncApiCaller, PathShapeView, OvalModifier, Matrix, Transform } from "@kcdesign/data";
 import { Context } from '@/context';
 
 export interface Dot {
@@ -56,7 +56,7 @@ export class ArcFreeModifier {
         const oval = this.m_oval;
 
         let xy = this.context.workspace.getContentXY(event);
-        let matrix = new TransformRaw();
+        let matrix = new Transform();
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
         matrix.multiAtLeft(this.context.workspace.matrix);
@@ -146,7 +146,7 @@ export class ArcFreeModifier {
         const start = oval.startingAngle ?? 0;
         let xy = this.context.workspace.getContentXY(event);
 
-        let matrix = new TransformRaw();
+        let matrix = new Transform();
         start && matrix.rotate(start, 0.5, 0.5);
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
@@ -177,7 +177,7 @@ export class ArcFreeModifier {
         const start = oval.startingAngle ?? 0;
         let xy = this.context.workspace.getContentXY(event);
 
-        let matrix = new TransformRaw();
+        let matrix = new Transform();
         start && matrix.rotate(start, 0.5, 0.5);
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());

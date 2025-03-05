@@ -8,7 +8,7 @@ import {
     ShapeType,
     ShapeView,
     StackPositioning,
-    TransformRaw,
+    Transform,
     TranslateUnit,
     Transporter, AutoLayout,
     BorderPosition, ShapeFrame,
@@ -25,7 +25,7 @@ import { checkTidyUpShapesOrder, getHorShapeOutlineFrame, getShapesColsMapPositi
 import { sort_by_layer } from "@/utils/group_ungroup";
 
 type BaseFrame4Trans = {
-    originTransform: TransformRaw
+    originTransform: Transform
 };
 
 type TranslateMode = 'normal' | 'layout' | 'absolute' | 'insert' | 'tidyUp';
@@ -274,7 +274,7 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private getFrames() {
-        const matrixParent2rootCache = new Map<string, TransformRaw>();
+        const matrixParent2rootCache = new Map<string, Transform>();
         let left = Infinity;
         let right = -Infinity;
         let top = Infinity;
@@ -576,7 +576,7 @@ export class TranslateHandler extends TransformHandler {
         const deltaY = livingY - originY;
 
         const transformUnits: TranslateUnit[] = [];
-        const PIC = new Map<string, TransformRaw>();
+        const PIC = new Map<string, Transform>();
         for (let i = 0; i < this.shapes2.length; i++) {
             const shape = this.shapes2[i];
 

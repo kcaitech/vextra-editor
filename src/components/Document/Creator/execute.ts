@@ -16,7 +16,7 @@ import {
     ShapeFrame,
     ShapeType,
     ShapeView,
-    TransformRaw
+    Transform
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { v4 } from "uuid";
@@ -778,7 +778,7 @@ export class CreatorExecute extends TransformHandler {
     private getTargetTransform(env: ShapeView, frame: ShapeFrame) {
         const envFromRoot = (env.matrix2Root());
 
-        const selectionTransform = new TransformRaw()
+        const selectionTransform = new Transform()
             .setTranslate(ColVector3D.FromXY(frame.x, frame.y));
 
         const targetTransform = selectionTransform

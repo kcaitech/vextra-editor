@@ -23,7 +23,7 @@ import {
     Text,
     TextShape,
     TextShapeEditor,
-    TransformRaw,
+    Transform,
     exportContextSettings
 } from '@kcdesign/data';
 import { Context } from '@/context';
@@ -187,8 +187,8 @@ export class Clipboard {
             return false;
         }
 
-        const origin_transform_map: { [key: string]: TransformRaw } = {};
-        const position_map: Map<string, TransformRaw> = new Map();
+        const origin_transform_map: { [key: string]: Transform } = {};
+        const position_map: Map<string, Transform> = new Map();
         const points_map: Map<string, CurvePoint[]> = new Map();
         this.m_envs.clear();
 
@@ -976,7 +976,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         shape.size.height = layout.contentHeight;
         const _f = shape.size;
         const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
-        const transform = new TransformRaw();
+        const transform = new Transform();
         transform.translateX = xy?.x || _xy.x;
         transform.translateY = xy?.y || _xy.y
         shape.transform = transform;
@@ -993,7 +993,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         const source = data.shapes;
         if (!source) throw new Error('invalid source');
 
-        const originTransform: { [key: string]: TransformRaw } = data.originTransform; // 原环境下transform信息
+        const originTransform: { [key: string]: Transform } = data.originTransform; // 原环境下transform信息
 
         const page = context.selection.selectedPage!;
 
@@ -1534,7 +1534,7 @@ function sourceBounding(source: Shape[]) {
     return { left, top, right, bottom };
 }
 
-function sourceOriginTransformBounding(source: Shape[], originTransform: { [key: string]: TransformRaw }) {
+function sourceOriginTransformBounding(source: Shape[], originTransform: { [key: string]: Transform }) {
     let left = Infinity;
     let top = Infinity;
     let right = -Infinity;
@@ -1544,7 +1544,7 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: { [key:
         const shape = source[i];
         const _t = originTransform[`${shape.id}`];
         if (!_t) continue;
-        const __transform = TransformRaw.from(_t);
+        const __transform = Transform.from(_t);
         let width, height;
         if (shape.type === ShapeType.Group) {
             const children = (shape as GroupShape).childs;
@@ -1572,7 +1572,7 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: { [key:
     return { left, top, right, bottom };
 }
 
-function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, originTransform: { [key: string]: TransformRaw }) {
+function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, originTransform: { [key: string]: Transform }) {
     const { left, top, right, bottom } = sourceBounding(source); // 目标选区在Root坐标系上的Bounding
 
     let clientMatrix = (context.workspace.matrix); // Root到屏幕的转换矩阵
@@ -1635,7 +1635,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             const dx = centerAfterScale.x - (right + left) / 2;
             const dy = centerAfterScale.y - (bottom + top) / 2;
 
-            const selectionTransform = new TransformRaw().trans(dx, dy);
+            const selectionTransform = new Transform().trans(dx, dy);
 
             // at last 调整选区内每个图层的位置
             for (const shape of source) {
@@ -1664,7 +1664,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
 
         const sourceOriginBound = sourceOriginTransformBounding(source, originTransform);
 
-        const targetSelectionTransform = new TransformRaw();
+        const targetSelectionTransform = new Transform();
 
         if (sourceOriginBound.left > envBoundWidth || sourceOriginBound.right < 0) {
             const shapeCX = (sourceOriginBound.left + sourceOriginBound.right) / 2;
@@ -1695,10 +1695,10 @@ function fixToXY(context: Context, source: Shape[], xy: XY) {
     const bounding = sourceBounding(source);
     const dx = xy.x - bounding.left;
     const dy = xy.y - bounding.top;
-    const selectionTransform = new TransformRaw().trans(dx, dy);
+    const selectionTransform = new Transform().trans(dx, dy);
 
     for (const shape of source) {
-        shape.transform = TransformRaw.from(shape.transform)
+        shape.transform = Transform.from(shape.transform)
             .multi(selectionTransform)
             .multi(env.matrix2Root().getInverse());
     }

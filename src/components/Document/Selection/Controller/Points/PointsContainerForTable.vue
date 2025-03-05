@@ -4,7 +4,7 @@ import {
     ColVector3D,
     CtrlElementType,
     ShapeView,
-    TransformRaw
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
@@ -48,7 +48,7 @@ function update() {
 function update_transform() {
     const shape = props.shape;
     const m = (shape.matrix2Root());
-    const mClient = (props.context.workspace.matrix as unknown as TransformRaw);
+    const mClient = (props.context.workspace.matrix as unknown as Transform);
     m.addTransform(mClient);
 
     const transform = m.clone()
@@ -249,7 +249,7 @@ function setCursor() {
 
     const {[0]:col0} = cols;
 
-    const assistRB = new TransformRaw()
+    const assistRB = new Transform()
         .setRotateZ(theta3)
         .setTranslate(col0);
     const action = props.context.tool.action;

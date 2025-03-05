@@ -4,7 +4,7 @@ import {
     ColVector3D,
     CtrlElementType,
     ShapeView,
-    TransformRaw, XYsBounding
+    Transform, XYsBounding
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
@@ -79,15 +79,15 @@ function updateByShape(...args: any[]) {
 }
 
 const rotateCtx: {
-    mlt: TransformRaw;
-    mrt: TransformRaw;
-    mrb: TransformRaw;
-    mlb: TransformRaw;
+    mlt: Transform;
+    mrt: Transform;
+    mrb: Transform;
+    mlb: Transform;
 } = {
-    mlt: new TransformRaw(),
-    mrt: new TransformRaw(),
-    mrb: new TransformRaw(),
-    mlb: new TransformRaw()
+    mlt: new Transform(),
+    mrt: new Transform(),
+    mrb: new Transform(),
+    mlb: new Transform()
 }
 
 function updateDotLayout() {
@@ -100,24 +100,24 @@ function updateDotLayout() {
 
     const fromClient = fromRoot.addTransform(clientMatrix);
 
-    const ltTransform = new TransformRaw()
+    const ltTransform = new Transform()
         .rotate(Math.PI)
         .setTranslate(ColVector3D.FromXY(x, y))
         .addTransform(fromClient)
         ltTransform.clearScaleSize();
 
-    const rtTransform = new TransformRaw()
+    const rtTransform = new Transform()
         .rotate(-0.5 * Math.PI)
         .setTranslate(ColVector3D.FromXY(x + width, y))
         .addTransform(fromClient)
         rtTransform.clearScaleSize();
 
-    const rbTransform = new TransformRaw()
+    const rbTransform = new Transform()
         .setTranslate(ColVector3D.FromXY(x + width, y + height))
         .addTransform(fromClient)
         rbTransform.clearScaleSize();
 
-    const lbTransform = new TransformRaw()
+    const lbTransform = new Transform()
         .rotate(0.5 * Math.PI)
         .setTranslate(ColVector3D.FromXY(x, y + height))
         .addTransform(fromClient)
@@ -181,22 +181,22 @@ function updateDotLayout() {
     }]);
     assist.value = !((box.right - box.left < 24) || (box.bottom - box.top < 24));
 
-    const assistLT = new TransformRaw()
+    const assistLT = new Transform()
         .setRotateZ(theta1)
         .setTranslate(col0);
     rotateCtx.mlt = assistLT;
 
-    const assistRT = new TransformRaw()
+    const assistRT = new Transform()
         .setRotateZ(theta2)
         .setTranslate(col1);
     rotateCtx.mrt = assistRT;
 
-    const assistRB = new TransformRaw()
+    const assistRB = new Transform()
         .setRotateZ(theta3)
         .setTranslate(col2);
     rotateCtx.mrb = assistRB;
 
-    const assistLB = new TransformRaw()
+    const assistLB = new Transform()
         .setRotateZ(theta4)
         .setTranslate(col3);
     rotateCtx.mlb = assistLB;

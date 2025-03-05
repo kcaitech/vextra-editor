@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { ResourceMgr, Shape, TransformRaw, } from "@kcdesign/data";
+import { ResourceMgr, Shape, Transform, } from "@kcdesign/data";
 import { ClipboardEventReader } from "@/clipboard/read/clipboardEventReader";
 import { NavigatorClipboardReader } from "@/clipboard/read/navigatorClipboardReader";
 import { BundleHandler } from "@/clipboard/bundleHandler";
@@ -32,7 +32,7 @@ export type RefShapeBase = {
 
 export type SourceBundle = {
     shapes: Shape[];
-    originTransform: { [key: string]: TransformRaw };
+    originTransform: { [key: string]: Transform };
     originIds: string[];
     media: any;
     unbindRefs: RefShapeBase[];

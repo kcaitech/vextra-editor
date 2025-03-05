@@ -5,7 +5,7 @@ import {
     TableCellType,
     import_text,
     export_text,
-    TransformRaw,
+    Transform,
     CurvePoint,
     ContactLineView,
     export_shape,
@@ -146,8 +146,8 @@ export class MossWriter {
         } else {
             let shapes = compare_layer_3(this.context.selection.selectedShapes, -1);
             if (!shapes.length) return;
-            const origin_transform_map: {[key:string]:TransformRaw} = {};
-            const position_map: Map<string, TransformRaw> = new Map();
+            const origin_transform_map: {[key:string]:Transform} = {};
+            const position_map: Map<string, Transform> = new Map();
             const points_map: Map<string, CurvePoint[]> = new Map();
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];

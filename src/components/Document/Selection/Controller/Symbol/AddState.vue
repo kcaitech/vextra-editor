@@ -6,7 +6,7 @@ import {
     Shape,
     ShapeView,
     SymbolView, 
-    TransformRaw
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -35,7 +35,7 @@ function gen_add_button_transform() {
     const fromRoot = (shape.matrix2Root());
     const clientMatrix = (props.context.workspace.matrix);
 
-    const transform = new TransformRaw()
+    const transform = new Transform()
         .setTranslate(props.symbolType === SymbolType.Union
             ? ColVector3D.FromXY(x + width / 2, y + height)
             : ColVector3D.FromXY(x + width, y + height / 2))

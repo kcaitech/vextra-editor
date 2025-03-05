@@ -5,7 +5,7 @@ import {
     FillsAsyncApi,
     ColVector3D,
     ShapeView, Fill, SymbolRefView, Api,
-    TransformRaw
+    Transform
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { DragKit } from "@/components/common/draggable";
@@ -32,7 +32,7 @@ const visible = ref<boolean>(true);
 const rightSidePath = ref<string>();
 const bottomSidePath = ref<string>();
 
-let transformBase: TransformRaw = new TransformRaw();
+let transformBase: Transform = new Transform();
 
 let direction: Direction = Direction.Angle;
 let editor: FillsAsyncApi | undefined = undefined;
@@ -140,39 +140,39 @@ function update() {
         width = width ^ height;
     }
 
-    const transform = new TransformRaw()
+    const transform = new Transform()
         .addTransform((shape.matrix2Root()))
         .addTransform((props.context.workspace.matrix));
 
-    const lt = new TransformRaw()
+    const lt = new Transform()
         .setTranslate(ColVector3D.FromXY(0, 0))
         .addTransform(transform)
         lt.clearScaleSize();
-    const top = new TransformRaw()
+    const top = new Transform()
         .setTranslate(ColVector3D.FromXY(width / 2, 0))
         .addTransform(transform)
         top.clearScaleSize();
-    const rt = new TransformRaw()
+    const rt = new Transform()
         .setTranslate(ColVector3D.FromXY(width, 0))
         .addTransform(transform)
         rt.clearScaleSize();
-    const right = new TransformRaw()
+    const right = new Transform()
         .setTranslate(ColVector3D.FromXY(width, height / 2))
         .addTransform(transform)
         right.clearScaleSize();
-    const rb = new TransformRaw()
+    const rb = new Transform()
         .setTranslate(ColVector3D.FromXY(width, height))
         .addTransform(transform)
         rb.clearScaleSize();
-    const bottom = new TransformRaw()
+    const bottom = new Transform()
         .setTranslate(ColVector3D.FromXY(width / 2, height))
         .addTransform(transform)
         bottom.clearScaleSize();
-    const lb = new TransformRaw()
+    const lb = new Transform()
         .setTranslate(ColVector3D.FromXY(0, height))
         .addTransform(transform)
         lb.clearScaleSize();
-    const left = new TransformRaw()
+    const left = new Transform()
         .setTranslate(ColVector3D.FromXY(0, height / 2))
         .addTransform(transform)
         left.clearScaleSize();

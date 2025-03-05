@@ -1,4 +1,4 @@
-import { ArtboardView, PageView, Shape, ShapeType, ShapeView, adapt2Shape, PathShapeView, Matrix, TransformRaw } from "@kcdesign/data";
+import { ArtboardView, PageView, Shape, ShapeType, ShapeView, adapt2Shape, PathShapeView, Matrix, Transform } from "@kcdesign/data";
 import { PositionAdjust } from "@kcdesign/data";
 import { is_straight } from "@/utils/attri_setting";
 
@@ -8,7 +8,7 @@ function getFrameAnchor(view: ShapeView) {
     if (is_straight(view)) {
         const width = frame.width;
         const height = frame.height;
-        const __m = new TransformRaw();
+        const __m = new Transform();
         __m.preScale(width, height);
         __m.multiAtLeft(m);
         const lt = __m.computeCoord((view as PathShapeView).segments[0].points[0]);

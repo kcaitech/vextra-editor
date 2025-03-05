@@ -3,7 +3,7 @@ import { BoundHandler, FrameLike } from "./handler";
 import {
     ColVector3D, CtrlElementType, Scaler, ShapeSize, ShapeView, SymbolView, UniformScaleUnit,
     ArtboardView, GroupShapeView, SymbolRefView,
-    TransformRaw
+    Transform
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
@@ -40,14 +40,14 @@ export class ScaleHandler extends BoundHandler {
 
     private readonly uniformScaleMode: boolean;
 
-    selectionTransform: TransformRaw = new TransformRaw();  // 选区的Transform
-    selectionTransformInverse: TransformRaw = new TransformRaw();  // 选区Transform的逆
+    selectionTransform: Transform = new Transform();  // 选区的Transform
+    selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
     selectionSize = { width: 0, height: 0 }; // 选区的size
 
-    transformCache: Map<ShapeView, TransformRaw> = new Map(); // transform缓存
-    transformInverseCache: Map<ShapeView, TransformRaw> = new Map();
+    transformCache: Map<ShapeView, Transform> = new Map(); // transform缓存
+    transformInverseCache: Map<ShapeView, Transform> = new Map();
 
-    shapeTransformListInSelection: TransformRaw[] = []; // shape在选区坐标系下的Transform
+    shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
 
     shapeSizeList: {
         width: number,
@@ -129,7 +129,7 @@ export class ScaleHandler extends BoundHandler {
         }
     }
 
-    private box2root(shape: ShapeView, parent2rootMatrixCache: Map<string, TransformRaw>) {
+    private box2root(shape: ShapeView, parent2rootMatrixCache: Map<string, Transform>) {
         const parent = shape.parent!;
 
         const frame = shape.frame;
@@ -245,8 +245,8 @@ export class ScaleHandler extends BoundHandler {
 
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
-            ? new TransformRaw().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new TransformRaw().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root()));
+            ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root()));
 
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;
@@ -635,7 +635,7 @@ export class ScaleHandler extends BoundHandler {
         const units: {
             shape: ShapeView,
             size: ShapeSize,
-            transform2: TransformRaw,
+            transform2: Transform,
             scale: { x: number, y: number },
             w_change: boolean,
             h_change: boolean

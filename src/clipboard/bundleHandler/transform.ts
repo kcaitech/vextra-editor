@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, ColVector3D, GroupShapeView, ArtboardView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape, TransformRaw } from "@kcdesign/data";
+import { Shape, ShapeType, GroupShape, ColVector3D, GroupShapeView, ArtboardView, SymbolView, adapt2Shape, Page, import_shape_from_clipboard, ShapeView, SymbolRefShape, SymbolShape, Transform } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";
@@ -6,7 +6,7 @@ import { InsertAction, EnvLike } from "@/clipboard/bundleHandler/index";
 import { BoundingLike } from "@/space";
 
 export class ClipboardTransformHandler {
-    private __source_origin_transform_bounding(source: Shape[], originTransform: { [key: string]: TransformRaw }) {
+    private __source_origin_transform_bounding(source: Shape[], originTransform: { [key: string]: Transform }) {
         let left = Infinity;
         let top = Infinity;
         let right = -Infinity;
@@ -16,7 +16,7 @@ export class ClipboardTransformHandler {
             const shape = source[i];
             const _t = originTransform[`${shape.id}`];
             if (!_t) continue;
-            const __transform = TransformRaw.from(_t);
+            const __transform = Transform.from(_t);
             let width, height;
             if (shape.size) {
                 width = shape.size.width;
@@ -44,7 +44,7 @@ export class ClipboardTransformHandler {
         return { left, top, right, bottom };
     }
 
-    private __fit_to_env(source: Shape[], env: GroupShapeView, originTransform: { [key: string]: TransformRaw }) {
+    private __fit_to_env(source: Shape[], env: GroupShapeView, originTransform: { [key: string]: Transform }) {
         const { x: envX, y: envY, width: envWidth, height: envHeight } = env.frame;
 
         const env2root = env.matrix2Root();
@@ -60,7 +60,7 @@ export class ClipboardTransformHandler {
 
         const sourceOriginBound = this.__source_origin_transform_bounding(source, originTransform);
 
-        const targetSelectionTransform = new TransformRaw();
+        const targetSelectionTransform = new Transform();
 
         if (sourceOriginBound.left > envBoundWidth || sourceOriginBound.right < 0) {
             const shapeCX = (sourceOriginBound.left + sourceOriginBound.right) / 2;
@@ -110,7 +110,7 @@ export class ClipboardTransformHandler {
                 width = shape.size.width;
                 height = shape.size.height;
             }
-            const box = XYsBounding(TransformRaw.from(shape.transform).transform([
+            const box = XYsBounding(Transform.from(shape.transform).transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height),
                 ColVector3D.FromXY(width, 0),

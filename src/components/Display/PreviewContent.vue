@@ -13,7 +13,7 @@ import {
     sessionRefIdKey,
     ShapeType,
     ShapeView,
-    TransformRaw,
+    Transform,
     XYsBounding
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
@@ -693,7 +693,7 @@ const setFixedTransform = () => {
     const select_box = viewBox(viewUpdater.v_matrix, selectShape);
     const t1 = select_box.top / scale;
     const l1 = select_box.left / scale;
-    const transform1 = new TransformRaw();
+    const transform1 = new Transform();
     transform1.trans(l1, t1);
     props.context.preview.setFixedTransform(selectShape.id, transform1);
     selectShape.setFixedTransform(transform1);
@@ -702,7 +702,7 @@ const setFixedTransform = () => {
             const select_box = viewBox(end_matrix.value as Matrix, s);
             const t2 = Math.max(select_box.top / scale, t1);
             const l2 = Math.max(select_box.left / scale, l1);
-            const transform2 = new TransformRaw();
+            const transform2 = new Transform();
             transform2.trans(l2, t2);
             props.context.preview.setFixedTransform(s.id, transform2);
             (s as ArtboardView).setFixedTransform(transform2);

@@ -15,7 +15,7 @@ import {
     Matrix,
     Stop,
     TextShapeView,
-    TransformRaw,
+    Transform,
     cloneGradient
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
@@ -139,7 +139,7 @@ const dot_mousemove = (e: MouseEvent) => {
     if (isDragging) {
         startPosition.x = x;
         startPosition.y = y;
-        const matrix = new TransformRaw();
+        const matrix = new Transform();
         let frame = shape.frame;
         matrix.preScale(frame.width, frame.height);
         matrix.multiAtLeft(shape.matrix2Root());

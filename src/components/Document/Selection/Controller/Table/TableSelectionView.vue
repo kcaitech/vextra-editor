@@ -6,7 +6,7 @@ import {
     ShapeType,
     TableCellView,
     TableView,
-    TransformRaw
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../../common';
@@ -89,7 +89,7 @@ function update_triangle() {
         const trans = (shape.matrix2Root());
         const mClient = (props.context.workspace.matrix);
 
-        const __t = new TransformRaw()
+        const __t = new Transform()
             .translate(ColVector3D.FromXY(f.x + f.width - 22, f.y + f.height - 22))
             .addTransform(trans)
             .addTransform(mClient);

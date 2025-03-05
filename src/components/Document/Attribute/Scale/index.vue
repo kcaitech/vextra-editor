@@ -13,7 +13,7 @@ import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
-import { ColVector3D, ShapeSize, ShapeView, TransformRaw, XYsBounding } from "@kcdesign/data";
+import { ColVector3D, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
 import { ScaleUniformer } from "@/transform/scaleUniform";
 
 const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();
@@ -57,7 +57,7 @@ function getSize() {
     h.value = box.bottom - box.top;
 }
 
-function modifyFixed(transform: TransformRaw, ratio: number, __box?: {
+function modifyFixed(transform: Transform, ratio: number, __box?: {
     left: number,
     top: number,
     right: number,
@@ -99,17 +99,17 @@ function modifyFixed(transform: TransformRaw, ratio: number, __box?: {
 
 function __change_size(ratio: number) {
     const box = __get_box();
-    const units: { shape: ShapeView, transform: TransformRaw }[] = [];
+    const units: { shape: ShapeView, transform: Transform }[] = [];
     const selected = props.context.selection.selectedShapes;
 
-    const cache = new Map<ShapeView, TransformRaw>();
+    const cache = new Map<ShapeView, Transform>();
     for (const shape of selected) {
         const parent = shape.parent!;
         if (cache.has(parent)) continue;
         cache.set(parent, (parent.matrix2Root()));
     }
 
-    const selectionTransform = new TransformRaw().setTranslate(ColVector3D.FromXY(box.left, box.top));
+    const selectionTransform = new Transform().setTranslate(ColVector3D.FromXY(box.left, box.top));
     const inverse = selectionTransform.getInverse();
 
     for (const shape of selected) {
@@ -122,7 +122,7 @@ function __change_size(ratio: number) {
 
     modifyFixed(selectionTransform, ratio, box);
 
-    const parentsTransform = new Map<ShapeView, TransformRaw>();
+    const parentsTransform = new Map<ShapeView, Transform>();
     for (const shape of selected) {
         const parent = shape.parent!;
         if (parentsTransform.has(parent)) continue;
@@ -132,7 +132,7 @@ function __change_size(ratio: number) {
 
     const params: {
         shape: ShapeView,
-        transform: TransformRaw,
+        transform: Transform,
         size: { width: number, height: number },
         decomposeScale: { x: number, y: number }
     }[] = [];

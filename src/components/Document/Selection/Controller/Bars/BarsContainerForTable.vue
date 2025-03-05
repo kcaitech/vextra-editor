@@ -4,7 +4,7 @@ import {
     ColVector3D,
     CtrlElementType,
     ShapeView,
-    TransformRaw
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { XY } from '@/context/selection';
@@ -106,7 +106,7 @@ function bar_mouseup(event: MouseEvent) {
 
 function setCursor(t: CtrlElementType) {
     const shape = props.shape;
-    const clientMatrix = (props.context.workspace.matrix as unknown as TransformRaw);
+    const clientMatrix = (props.context.workspace.matrix);
     const fromRoot = (shape.matrix2Root());
 
     const fromClient = fromRoot.addTransform(clientMatrix);
@@ -135,13 +135,13 @@ function setCursor(t: CtrlElementType) {
     const action = props.context.tool.action;
     const type = action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
     if (t === CtrlElementType.RectRight) {
-        const assistR = new TransformRaw()
+        const assistR = new Transform()
             .setRotateZ(thetaR)
             .setTranslate(col0);
 
         props.context.cursor.setType(type, assistR.decomposeRotate() * 180 / Math.PI);
     } else {
-        const assistB = new TransformRaw()
+        const assistB = new Transform()
             .setRotateZ(thetaB)
             .setTranslate(col1);
         props.context.cursor.setType(type, assistB.decomposeRotate() * 180 / Math.PI);

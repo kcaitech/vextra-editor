@@ -3,7 +3,7 @@ import {
     Matrix, PathShapeView,
     Rotator,
     ShapeView,
-    TransformRaw,
+    Transform,
 } from "@kcdesign/data";
 import { BoundHandler, FrameLike } from "./handler";
 import { XY } from "@/context/selection";
@@ -28,7 +28,7 @@ type Base4Rotation = {
 type BaseData4Rotate = Map<string, Base4Rotation>;
 
 export function rotate(shapes: ShapeView[], deg: number) {
-    const transformList: { shape: ShapeView, transform: TransformRaw }[] = [];
+    const transformList: { shape: ShapeView, transform: Transform }[] = [];
 
     for (const shape of shapes) {
         const t = (shape.transform.clone());
@@ -71,12 +71,12 @@ export class RotateHandler extends BoundHandler {
     originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
     baseData: BaseData4Rotate = new Map();
 
-    selectionTransform: TransformRaw = new TransformRaw();  // 选区的Transform
-    selectionTransformInverse: TransformRaw = new TransformRaw();  // 选区Transform的逆
+    selectionTransform: Transform = new Transform();  // 选区的Transform
+    selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
     selectionSize = { width: 0, height: 0 }; // 选区的size
     selectionCenter: ColVector3D = ColVector3D.FromXY(0, 0); // 选区的中点
-    transformCache: Map<ShapeView, TransformRaw> = new Map(); // transform缓存
-    shapeTransformListInSelection: TransformRaw[] = []; // shape在选区坐标系下的Transform
+    transformCache: Map<ShapeView, Transform> = new Map(); // transform缓存
+    shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
     cursorBeginAngle: number = 0; // 光标向量的初始角度（从选区的中点指向光标的向量，其与X轴的夹角）
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[]) {
@@ -250,8 +250,8 @@ export class RotateHandler extends BoundHandler {
 
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
-            ? new TransformRaw().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new TransformRaw().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root())); // todo 考虑让 transform2FromRoot 为问题因素
+            ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root())); // todo 考虑让 transform2FromRoot 为问题因素
 
         this.selectionTransformInverse = this.selectionTransform.getInverse();
         this.selectionSize = multi ? {
@@ -315,7 +315,7 @@ export class RotateHandler extends BoundHandler {
         // });
         const transformForSelection = this.selectionTransform.clone().rotateInLocal(deltaAngle, this.selectionSize.width / 2, this.selectionSize.height / 2);
 
-        const units: { shape: ShapeView, transform2: TransformRaw }[] = [];
+        const units: { shape: ShapeView, transform2: Transform }[] = [];
         const __is_locked = this.isLocked.bind(this);
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];

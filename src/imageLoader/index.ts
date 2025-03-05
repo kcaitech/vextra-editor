@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import {
     ColVector3D, GroupShapeView, ImagePack,
     Shape, ShapeView, SVGParseResult,
-    TransformRaw, UploadAssets,
+    Transform, UploadAssets,
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
@@ -97,13 +97,13 @@ export class ImageLoader {
         return Promise.all(task);
     }
 
-    private __fixTransform(transforms: TransformRaw[], area: { width: number, height: number }, targetXY?: XY) {
+    private __fixTransform(transforms: Transform[], area: { width: number, height: number }, targetXY?: XY) {
         const context = this.context;
         let env: GroupShapeView = context.selection.selectedPage!;
         if (targetXY) {
             const dx = targetXY.x;
             const dy = targetXY.y;
-            const selectionTransform = new TransformRaw().trans(dx, dy);
+            const selectionTransform = new Transform().trans(dx, dy);
 
             env = context.selection.getClosestContainer(targetXY) as GroupShapeView;
 
@@ -143,7 +143,7 @@ export class ImageLoader {
             const dx = centerAfterScale.x - area.width / 2;
             const dy = centerAfterScale.y - area.height / 2;
 
-            const selectionTransform = new TransformRaw()
+            const selectionTransform = new Transform()
                 .setTranslate(ColVector3D.FromXY(dx, dy));
 
             for (let i = 0; i < transforms.length; i++) {
@@ -165,7 +165,7 @@ export class ImageLoader {
             .filter(i => i);
         if (!packages?.length) return false;
         const transforms = (() => {
-            const transforms: TransformRaw[] = [];
+            const transforms: Transform[] = [];
             let offset = 0;
             for (let i = 0; i < packages.length; i++) {
                 if (i > 0) {
@@ -174,7 +174,7 @@ export class ImageLoader {
                     offset += 20;
                     offset += size.width;
                 }
-                const __trans = new TransformRaw();
+                const __trans = new Transform();
                 __trans.translateX = offset;
                 transforms.push(__trans)
             }

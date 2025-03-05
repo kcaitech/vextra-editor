@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import {
     ColVector3D,
     ShapeView, SymbolView,
-    TransformRaw
+    Transform
 } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
 import { cursorAngle } from "@/components/Document/Selection/common";
@@ -198,7 +198,7 @@ export class TitleRenderer {
         const X = xAxis[1].clone().subtract(xAxis[0]);
         const Y = yAxis[1].clone().subtract(yAxis[0]);
 
-        const t = new TransformRaw(X.x, Y.x, 0, 
+        const t = new Transform(X.x, Y.x, 0, 
                 X.y, Y.y, 0
         )
         // ({
@@ -212,7 +212,7 @@ export class TitleRenderer {
         t.clearSkew()
         const tDirection = t.transform(ColVector3D.FromXY(0, -1));
 
-        const OT = new TransformRaw()
+        const OT = new Transform()
             .setRotateZ(cursorAngle(ColVector3D.FromXY(1, 0), X))
             .setTranslate(O)
             .translateAt({

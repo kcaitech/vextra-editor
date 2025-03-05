@@ -1,7 +1,7 @@
 import { BoundHandler } from "@/transform/handler";
 import {
     ArtboardView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, ShapeFrame,
-    ShapeType, ShapeView, StackMode, SymbolView, TransformRaw, TranslateUnit, Transporter,
+    ShapeType, ShapeView, StackMode, SymbolView, Transform, TranslateUnit, Transporter,
     PathShapeView, layoutShapesOrder2, getShapeFrame
 } from "@kcdesign/data";
 import { Context } from "@/context";
@@ -22,8 +22,8 @@ enum TranslateMode {
     Flex = 'flex'
 }
 interface TranslateBaseItem {
-    transformRaw: TransformRaw,
-    transform: TransformRaw;
+    transformRaw: Transform,
+    transform: Transform;
     view: ShapeView;
 }
 interface EnvLeaf {
@@ -327,7 +327,7 @@ class SelModel {
     }
 
     private __box(shapes: ShapeView[]) {
-        const cache = new Map<ShapeView, TransformRaw>();
+        const cache = new Map<ShapeView, Transform>();
         let left = Infinity;
         let right = -Infinity;
         let top = Infinity;
@@ -357,7 +357,7 @@ class SelModel {
 
             let points: XY[];
             if (is_straight(shape)) {
-                const unitTransform = new TransformRaw().scale(width, height).addTransform(transform);
+                const unitTransform = new Transform().scale(width, height).addTransform(transform);
                 const lt = (shape as PathShapeView).segments[0].points[0];
                 const rb = (shape as PathShapeView).segments[0].points[1];
                 points = unitTransform.transform([
@@ -1060,7 +1060,7 @@ export class Translate2 extends BoundHandler {
         const deltaY = ty - y;
 
         const transformUnits: TranslateUnit[] = [];
-        const cache = new Map<ShapeView, TransformRaw>();
+        const cache = new Map<ShapeView, Transform>();
         const shapes = manager.shapes;
         const __is_locked = this.isLocked.bind(this);
         for (const shape of shapes) {

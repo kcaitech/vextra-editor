@@ -6,7 +6,7 @@ import {
     Matrix2, NumberArray2D,
     TableLayout,
     TableView,
-    TransformRaw
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
@@ -88,7 +88,7 @@ function update_position() {
         const X = ColVector3D.FromXY(rt).subtract(ColVector3D.FromXY(lt));
         const Y = ColVector3D.FromXY(lb).subtract(ColVector3D.FromXY(lt));
 
-        const yt = new TransformRaw(X.x, Y.x, 0,
+        const yt = new Transform(X.x, Y.x, 0,
         X.y, Y.y, 0
         )
 
@@ -102,7 +102,7 @@ function update_position() {
         // }).transform(ColVector3D.FromXY(0, -1)).col0;
         const deYDirection = yt.transform(ColVector3D.FromXY(0, -1))
 
-        const xt = new TransformRaw(X.x, Y.x, 0,
+        const xt = new Transform(X.x, Y.x, 0,
         X.y, Y.y, 0
         )
         // const deXDirection = new Transform({
@@ -192,7 +192,7 @@ function x_dot_mouseenter(index: number) {
     const m = (props.shape.matrix2Root());
     m.addTransform((props.context.workspace.matrix));
 
-    const t = new TransformRaw().setTranslate(ColVector3D.FromXY(width, 0))
+    const t = new Transform().setTranslate(ColVector3D.FromXY(width, 0))
     .addTransform(m)
     t.clearSkew()
     t.clearScaleSize()
@@ -226,7 +226,7 @@ function y_dot_mouseenter(index: number) {
 
     const m = (props.shape.matrix2Root().clone());
     m.addTransform((props.context.workspace.matrix));
-    const t = new TransformRaw().setTranslate(ColVector3D.FromXY(0, height))
+    const t = new Transform().setTranslate(ColVector3D.FromXY(0, height))
     .addTransform(m)
     t.clearSkew()
     t.clearScaleSize()

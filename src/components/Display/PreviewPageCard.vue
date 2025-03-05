@@ -2,7 +2,7 @@
 import {
     adapt2Shape, ArtboardView, BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Fill, Page, sessionRefIdKey, Shadow, Shape, ShapeType,
     ShapeView, SideType, Style,
-    TransformRaw
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
@@ -44,7 +44,7 @@ function assemble() {
     const strokePaints = new BasicArray<Fill>();
     const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
-    const trans = new TransformRaw();
+    const trans = new Transform();
     const page = new Page(
         new BasicArray<number>(),
         'assemble-page',
@@ -89,8 +89,8 @@ const setInnerTransform = (shapes: ShapeView[]) => {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shape instanceof ArtboardView) {
-            const transform = innerTrans.get(shape.id) || new TransformRaw();
-            const fixed_transform = fixedTrans.get(shape.id) || new TransformRaw();
+            const transform = innerTrans.get(shape.id) || new Transform();
+            const fixed_transform = fixedTrans.get(shape.id) || new Transform();
             shape.initInnerTransform(transform);
             shape.setFixedTransform(fixed_transform);
         }

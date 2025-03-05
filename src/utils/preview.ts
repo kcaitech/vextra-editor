@@ -11,7 +11,7 @@ import {
     Shape,
     ShapeType,
     ShapeView,
-    TransformRaw
+    Transform
 } from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
@@ -429,7 +429,7 @@ export const getAtrboardInnerOffset = (atrboard: ArtboardView) => {
 
 export const scrollAtrboard = (context: Context, atrboard: ArtboardView, trans: { x: number, y: number }) => {
     const offset = getAtrboardInnerOffset(atrboard);
-    const transform = atrboard.innerTransform || new TransformRaw();
+    const transform = atrboard.innerTransform || new Transform();
     const tx = transform.translateX;
     const ty = transform.translateY;
     let is_scrollx = false;

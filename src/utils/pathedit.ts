@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView, TransformRaw } from "@kcdesign/data";
+import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView, Transform } from "@kcdesign/data";
 import { Action } from "@/context/tool";
 
 export type Segment = {
@@ -22,7 +22,7 @@ export function get_parent_points(context: Context, range?: Map<number, number[]
 
     const parent = path_shape.parent!;
 
-    let m: TransformRaw;
+    let m: Transform;
 
     if (parent.type === ShapeType.Page) {
         m = path_shape.matrix2Root();

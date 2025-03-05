@@ -9,7 +9,7 @@ import {
     Border,
     Fill,
     Style,
-    Shadow, Page, ShapeType, TransformRaw, XYsBounding,
+    Shadow, Page, ShapeType, Transform, XYsBounding,
     BorderSideSetting,
     BorderPosition,
     BorderStyle,
@@ -82,7 +82,7 @@ function mount() {
         'assemble-page',
         'assemble-page',
         ShapeType.Page,
-        new TransformRaw(),
+        new Transform(),
         style,
         new BasicArray<Shape>(data)
     );
