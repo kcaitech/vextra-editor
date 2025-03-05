@@ -3,7 +3,6 @@ import { Context } from '@/context';
 import {
     ColVector3D, 
     Matrix,
-    Matrix2, NumberArray2D,
     TableLayout,
     TableView,
     Transform
