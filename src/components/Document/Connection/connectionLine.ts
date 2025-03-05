@@ -14,7 +14,7 @@ import {
 } from "@kcdesign/data"
 import { v4 } from "uuid";
 
-export class Connection extends WatchableObject {
+export class ConnectionLine extends WatchableObject {
     private fromparents: ShapeView[] = [];
     private toparents: ShapeView[] = [];
     private m_path: Path | undefined = undefined;
@@ -312,7 +312,7 @@ export class Connection extends WatchableObject {
 }
 
 /* 获取连接线的端点图层以及端点位置 */
-function getContactForm(page: PageView, view: Connection, contactForm: ContactForm | undefined) {
+function getContactForm(page: PageView, view: ConnectionLine, contactForm: ContactForm | undefined) {
     if (!contactForm) return;
     const apex = page.getShape(contactForm.shapeId);
     if (!apex) return;
