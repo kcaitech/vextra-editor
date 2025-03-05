@@ -187,7 +187,7 @@ watchEffect(() => {
 </script>
 
 <template>
-    <div class="blur-trigger" @click="showDetailPanel">
+    <div class="blur-trigger" :class="{ 'active': panelStatus.visible }" @click="showDetailPanel">
         <SvgIcon :icon="gear_icon" />
     </div>
     <div v-if="panelStatus.visible" id="blur-detail-container">
@@ -209,6 +209,10 @@ watchEffect(() => {
 </template>
 
 <style scoped lang="scss">
+.active {
+    background-color: #ebebeb !important;
+}
+
 .blur-trigger {
     flex: 0 0 28px;
     display: flex;

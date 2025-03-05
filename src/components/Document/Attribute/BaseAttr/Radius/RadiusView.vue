@@ -162,7 +162,7 @@ function keydownRadius(event: KeyboardEvent, index: number) {
             :disabled="disabled" @change="value => change(value, 2)" @dragstart="dragstart"
             @dragging="(e) => dragging(e, 2)" @dragend="dragend" @keydown="keydownRadius($event, 2)"
             @keyup="checkKeyup"></MossInput2>
-        <div style="width: 32px;height: 32px;"></div>
+        <div style="width: 28px;height: 28px;"></div>
     </div>
     <teleport to="body">
         <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
@@ -203,8 +203,8 @@ function keydownRadius(event: KeyboardEvent, index: number) {
     }
 
     .more-for-radius {
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
         display: flex;
         justify-content: center;
         align-items: center;

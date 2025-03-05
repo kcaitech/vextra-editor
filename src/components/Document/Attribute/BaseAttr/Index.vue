@@ -959,7 +959,7 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
                     <SvgIcon :icon="adapt_icon" style="outline: none;" />
                 </Tooltip>
             </div>
-            <div v-else style="width: 32px;height: 32px;" />
+            <div v-else style="width: 28px;height: 28px;" />
         </div>
         <div class="tr">
             <MossInput :icon="w_icon" draggable :value="format(w)" @change="changeW"
@@ -996,7 +996,7 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
                     </div>
                 </Tooltip>
             </div>
-            <div style="width: 32px;height: 32px;margin-left: 7px" />
+            <div style="width: 28px;height: 28px;" />
         </div>
         <div class="tr" v-if="s_counts">
             <MossInput :icon="angle_count_icon" draggable :value="format(counts)" @change="changeCounts"
@@ -1006,7 +1006,7 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
                 :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
                 :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
                 @dragend="dragend"></MossInput>
-            <div style="width: 32px;height: 32px;" />
+            <div style="width:28px;height: 28px;" />
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"
             :selectionChange="selectionChange" :trigger="trigger" />
@@ -1072,8 +1072,8 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
         }
 
         .lock {
-            height: 32px;
-            width: 32px;
+            height: 28px;
+            width: 28px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1104,8 +1104,8 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
         }
 
         .adapt {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1192,8 +1192,8 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
         }
 
         .more-for-radius {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             display: flex;
             justify-content: center;
             align-items: center;

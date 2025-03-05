@@ -404,6 +404,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
     width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 8px;
     padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
@@ -413,7 +414,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
     }
 
     .icon {
-        height: 26px;
+        height: 28px;
         display: flex;
         padding: 0 5px;
         justify-content: space-between;
@@ -500,11 +501,10 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
         width: 54px;
         height: 32px;
         text-align: center;
-        margin-left: 4px;
-        margin-top: 10px;
         border: none;
         background-color: #F4F5F5;
         border-radius: var(--default-radius);
+        box-sizing: border-box;
     }
 
     .input-text {
@@ -564,8 +564,6 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 }
 
 .slider {
-    margin-top: 10px;
-    margin-left: 5px;
     height: 32px;
     display: flex;
     align-items: center;
