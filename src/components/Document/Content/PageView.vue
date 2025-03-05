@@ -8,8 +8,9 @@ import ShapeTitles from './ShapeTitles.vue';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
 import { PageDom } from './vdom/page';
+import ConnectionStation from "@/components/Document/Connection/ConnectionStation.vue";
 
-interface Props {
+type Props = {
     context: Context
     params: {
         data: PageView
@@ -81,7 +82,12 @@ function updateVisibleRect() {
     const rb = matrixWithFrame_inverse.computeCoord(rect.x + rect.width, rect.y + rect.height); // root坐标系
     const page = props.params.data as PageDom;
     const innerFrame = page.frame;
-    page.updateVisibleRect({ x: lt.x + innerFrame.x, y: lt.y + innerFrame.y, width: rb.x - lt.x, height: rb.y - lt.y }, matrixWithFrame)
+    page.updateVisibleRect({
+        x: lt.x + innerFrame.x,
+        y: lt.y + innerFrame.y,
+        width: rb.x - lt.x,
+        height: rb.y - lt.y
+    }, matrixWithFrame)
 }
 
 const stopWatchPage = watch(() => props.params.data, (value, old) => {
@@ -89,8 +95,6 @@ const stopWatchPage = watch(() => props.params.data, (value, old) => {
     value.watch(page_watcher);
     pageViewRegister(true);
     page_watcher();
-
-    // if (!loaded) return;
 
     if (removeRenderIdle) {
         removeRenderIdle.remove();
@@ -128,10 +132,7 @@ function selection_watcher(...args: any[]) {
 let removeRenderIdle: {
     remove: () => void;
 } | undefined;
-// let loaded: boolean = false; // 文档数据未加载完成前不进行页面的绘制
 const prepareDom = (page: Page | PageView) => {
-    // if (!loaded) return;
-
     pageReady.value = false;
 
     const dom = props.context.getPageDom(page);
@@ -161,10 +162,7 @@ onMounted(() => {
     pageViewRegister(true);
     props.context.selection.watch(selection_watcher);
     page_watcher();
-    // props.context.setOnLoaded(() => {
-    //     loaded = true;
-        prepareDom(props.params.data);
-    // })
+    prepareDom(props.params.data);
 })
 onUnmounted(() => {
     props.params.data.unwatch(page_watcher);
@@ -187,11 +185,12 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<svg ref="pagesvg" :style="{ transform }" :data-area="rootId"
-     :width="width" :height="height" :viewBox="viewbox"/>
-<ShapeCutout v-if="show_c && pageReady" :context="props.context" :data="params.data" :matrix="props.params.matrix"
-             :transform="transformArr"/>
-<ShapeTitles v-if="show_t && pageReady" :context="props.context" :data="params.data"/>
+    <svg ref="pagesvg" :style="{ transform }" :data-area="rootId"
+         :width="width" :height="height" :viewBox="viewbox"/>
+    <ShapeCutout v-if="show_c && pageReady" :context="props.context" :data="params.data" :matrix="props.params.matrix"
+                 :transform="transformArr"/>
+    <ShapeTitles v-if="show_t && pageReady" :context="props.context" :data="params.data"/>
+    <ConnectionStation :context="context"/>
 </template>
 <style scoped>
 svg {
