@@ -1,6 +1,11 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncContactEditor, ContactLineView, ContactShape, CurvePoint, Matrix, adapt2Shape } from '@kcdesign/data';
+import {
+    ContactLineView,
+    CurvePoint,
+    Matrix,
+    ContactLineModifier
+} from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -28,7 +33,7 @@ const contact = ref<boolean>(false);
 const slices: { ver: Slice[], hor: Slice[] } = reactive({ ver: [], hor: [] });
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
-let contactEditor: AsyncContactEditor | undefined;
+let modifier: ContactLineModifier | undefined;
 let move: any;
 let search: boolean = false;
 let drag_type: 'ver' | 'hor' = 'ver';
@@ -41,20 +46,15 @@ function update() {
 }
 
 function update_slice_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
 
     show.value = false;
 
     const s = props.shape;
-    if (!(s instanceof ContactLineView)) return;
 
     const points: CurvePoint[] = s.getPoints();
 
     const m = new Matrix(matrix);
-    const f = s.frame;
-    m.preScale(f.width, f.height);
 
     const view_points: ClientXY[] = [];
 
@@ -70,25 +70,16 @@ function update_slice_path() {
         const pre = view_points[i - 1];
         const cur = view_points[i];
 
-        if (!pre || !cur) {
-            continue;
-        }
+        if (!pre || !cur) continue;
 
-        if (get_length(pre, cur) <= 30) {
-            continue;
-        }
-
+        if (get_length(pre, cur) <= 30) continue;
         const r_p1 = points[i - 1];
         const r_p2 = points[i];
 
-        if (!r_p1 || !r_p2) {
-            continue;
-        }
+        if (!r_p1 || !r_p2) continue;
 
         const d = dir(r_p1, r_p2);
-        if (!d) {
-            continue;
-        }
+        if (!d) continue;
 
         const bar_settle = get_locate(pre, cur);
 
@@ -99,13 +90,9 @@ function update_slice_path() {
 }
 
 function point_mousedown(event: MouseEvent, slice: Slice) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
 
-    if (props.shape.isLocked) {
-        return;
-    }
+    if (props.shape.isLocked) return;
 
     event.stopPropagation();
     props.context.menu.menuMount();
@@ -134,7 +121,7 @@ function point_mousemove(event: MouseEvent) {
 
     const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
 
-    if (isDragging && contactEditor) {
+    if (isDragging && modifier) {
         const p1 = submatrix.computeCoord3(startPosition);
         const p2 = submatrix.computeCoord3(mouseOnClient);
 
@@ -143,10 +130,10 @@ function point_mousemove(event: MouseEvent) {
 
         if (drag_type === 'hor') {
             delta = p2.y - p1.y;
-            contactEditor.modify_sides(_idx, 0, delta);
+            modifier.modifySide(_idx, 0, delta);
         } else if (drag_type === 'ver') {
             delta = p2.x - p1.x;
-            contactEditor.modify_sides(_idx, delta, 0);
+            modifier.modifySide(_idx, delta, 0);
         }
 
         startPosition.x = mouseOnClient.x;
@@ -156,48 +143,36 @@ function point_mousemove(event: MouseEvent) {
         const { x: mx, y: my } = mouseOnClient;
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             submatrix.reset(workspace.matrix.inverse);
-
-            contactEditor = props.context.editor
-                .controller()
-                .asyncContactEditor(adapt2Shape(props.shape) as ContactShape, props.context.selection.selectedPage!);
-
-            contactEditor.before(drag_index);
-
+            const page = props.context.selection.selectedPage!;
+            modifier = new ContactLineModifier(props.context.coopRepo, page, props.shape);
+            modifier.solidify(drag_index);
             isDragging = true;
         }
     }
 }
 
 function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
     reset_status();
 }
 
 // 重置路径
 function reset_path() {
     const editor = props.context.editor4Shape(props.shape);
-    editor.reset_contact_path();
+    editor.reset_contact_path(props.shape.getPoints());
 }
 
 function reset_status() {
-    if (isDragging) {
-        isDragging = false;
+    if (isDragging) isDragging = false;
+
+    if (search) search = false;
+
+    if (modifier) {
+        modifier.commit();
+        modifier = undefined;
     }
 
-    if (search) {
-        search = false;
-    }
-
-    if (contactEditor) {
-        contactEditor.close();
-        contactEditor = undefined;
-    }
-
-    if (contact.value) {
-        contact.value = false;
-    }
+    if (contact.value) contact.value = false;
 
     const workspace = props.context.workspace;
     workspace.scaling(false);
@@ -223,7 +198,6 @@ watch(() => props.shape, (value, old) => {
 onMounted(() => {
     props.shape.watch(update);
     update();
-
     window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {
