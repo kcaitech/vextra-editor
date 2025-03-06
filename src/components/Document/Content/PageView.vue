@@ -190,7 +190,7 @@ onUnmounted(() => {
     <ShapeCutout v-if="show_c && pageReady" :context="props.context" :data="params.data" :matrix="props.params.matrix"
                  :transform="transformArr"/>
     <ShapeTitles v-if="show_t && pageReady" :context="props.context" :data="params.data"/>
-    <ConnectionStation :context="context"/>
+<!--    <ConnectionStation :context="context"/>-->
 </template>
 <style scoped>
 svg {

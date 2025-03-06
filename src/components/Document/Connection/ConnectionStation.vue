@@ -1,13 +1,10 @@
 <script setup lang="ts">
-
-import ConnectionView from "@/components/Document/Connection/ConnectionView.vue";
 import { Context } from "@/context";
-import { ContactShape } from "@kcdesign/data";
 import { ref } from "vue";
 import { v4 } from "uuid";
 
 const props = defineProps<{ context: Context }>();
-const lines = props.context.selection.selectedPage!.connections as unknown as ContactShape[];
+const lines = props.context.selection.selectedPage!.connections;
 
 const mocks = ref<{ data: string, id: string, color: string }[]>([]);
 
@@ -28,6 +25,9 @@ function change() {
     const v = Math.round(Math.random() * 100);
     mocks.value[2].data = 'M0 50 h ' + v;
 }
+
+function updateConnections() {}
+function updateConnection() {}
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
     if (event.altKey) change();
