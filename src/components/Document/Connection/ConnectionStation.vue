@@ -1,4 +1,6 @@
 <script setup lang="ts">
+
+import ConnectionView from "@/components/Document/Connection/ConnectionView.vue";
 import { Context } from "@/context";
 import { ContactShape } from "@kcdesign/data";
 import { ref } from "vue";

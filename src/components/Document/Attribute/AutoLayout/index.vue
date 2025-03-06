@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -243,7 +243,7 @@ function draggingVerSpace(e: MouseEvent) {
 
     if (!autoLayoutModifyHandler.asyncApiCaller) {
         autoLayoutModifyHandler.createApiCaller();
-    }                             
+    }
     const shape = props.context.selection.selectedShapes[0] as ArtboardView;
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
@@ -303,7 +303,7 @@ const changeSizing = (value: StackSizing, dir: PaddingDir) => {
 
 const changeGapSizing = (value: StackSizing, dir: PaddingDir) => {
     const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);    
+    const editor = props.context.editor4Shape(shapes);
     editor.modifyAutoLayoutGapSizing(value, dir);
 }
 
@@ -471,12 +471,8 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
                 </div>
             </div>
             <div class="container-right">
-                <Tooltip :content="t(`autolayout.settings`)">
-                    <div>
-                        <AutoLayoutSetting :reflush="reflush" :autoLayoutDate="autoLayoutDate" :context="context">
-                        </AutoLayoutSetting>
-                    </div>
-                </Tooltip>
+                <AutoLayoutSetting :reflush="reflush" :autoLayoutDate="autoLayoutDate" :context="context">
+                </AutoLayoutSetting>
             </div>
         </div>
         <div class="layout-padding" v-if="!isActive && autoLayoutDate">
@@ -543,6 +539,7 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
     width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 8px;
     padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
@@ -569,7 +566,6 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
 
     .container-top {
         width: 224px;
-        padding-top: 8px;
         display: flex;
         gap: 8px;
         justify-content: space-between;
@@ -613,36 +609,10 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
             flex: 1;
         }
 
-        .container-right {
-            width: 32px;
-            display: flex;
-            justify-content: flex-end;
-
-            div {
-                width: 28px;
-                height: 28px;
-                border-radius: 6px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                >svg {
-                    width: 14px;
-                    height: 14px;
-                }
-
-                &:hover {
-                    background-color: #F5F5F5;
-                }
-            }
-
-        }
-
     }
 
     .layout-padding {
         width: 224px;
-        padding: 8px 0;
         display: flex;
         gap: 8px;
         justify-content: space-between;
@@ -660,14 +630,15 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
             justify-content: flex-end;
 
             >div {
-                width: 32px;
-                height: 32px;
+                width: 28px;
+                height: 28px;
                 box-sizing: border-box;
                 border-radius: 6px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 border: 1px solid #EBEBEB;
+                margin-top: 2px;
 
                 >svg {
                     width: 14px;
@@ -686,6 +657,7 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
         width: 224px;
 
         .title {
+            line-height: 24px;
             font-size: 12px;
             color: #BFBFBF;
         }
@@ -694,7 +666,6 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
             display: flex;
             gap: 8px;
             width: 88px;
-            padding: 8px 0;
         }
     }
 }

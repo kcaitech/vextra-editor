@@ -174,8 +174,6 @@ import { StrokeFillContextMgr } from '../ctx';
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding-top: 2px;
-    padding-bottom: 6px;
     justify-content: space-between;
     gap: 8px;
 

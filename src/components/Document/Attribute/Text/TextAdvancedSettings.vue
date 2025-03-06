@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Popover from '@/components/common/Popover.vue';
-import { ref, onMounted, onUnmounted, watch, watchEffect, computed } from 'vue';
+import { ref, onMounted, onUnmounted, watch, watchEffect, computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -8,9 +8,10 @@ import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletN
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { format_value } from "@/utils/common";
+import PopoverHeader from "@/components/common/PopoverHeader.vue";
 const { t } = useI18n();
 interface Props {
-  event?:string,
+  event?: string,
   context: Context,
   textShape: TextShapeView,
   textShapes: TextShapeView[]
@@ -29,6 +30,24 @@ const isActived2 = ref(false)
 const isActived3 = ref(false)
 const isUnderline = ref(false)
 const isDeleteline = ref(false)
+
+const panelStatus = reactive<ElementStatus>({ id: '#text-detail-container', visible: false });
+const panelStatusMgr = new ElementManager(
+  props.context,
+  panelStatus,
+  { whiteList: ['#text-detail-container', '.header-container'] }
+);
+
+function showDetailPanel(event: MouseEvent) {
+  let e: Element | null = event.target as Element;
+  while (e) {
+    if (e.classList.contains('header-container')) {
+      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -266 } });
+      break;
+    }
+    e = e.parentElement;
+  }
+}
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -154,13 +173,13 @@ const selectParaSpacing = () => {
 
 const is_select = ref(false);
 function click(e: Event) {
-    const el = e.target as HTMLInputElement;
-    if (el.selectionStart !== el.selectionEnd) {
-        return;
-    }
-    if (is_select.value) return;
-    el.select();
-    is_select.value = true;
+  const el = e.target as HTMLInputElement;
+  if (el.selectionStart !== el.selectionEnd) {
+    return;
+  }
+  if (is_select.value) return;
+  el.select();
+  is_select.value = true;
 }
 
 const shapeWatch = watch(() => props.textShape, (value, old) => {
@@ -284,262 +303,266 @@ import text_deleteline_icon from '@/assets/icons/svg/text-deleteline.svg';
 import text_uppercase_icon from '@/assets/icons/svg/text-uppercase.svg';
 import text_lowercase_icon from '@/assets/icons/svg/text-lowercase.svg';
 import text_titlecase_icon from '@/assets/icons/svg/text-titlecase.svg';
+import { ElementManager, ElementStatus } from '@/components/common/elementmanager';
 
 </script>
 
 <template>
-  <div class="text-detail-container">
-    <Popover :context="props.context" :event="props.event" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
-      :title="t('attr.text_advanced_settings')">
-      <template #trigger>
-        <div class="trigger" @click="showMenu">
-          <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
-            <SvgIcon :icon="gear_icon"/>
-          </Tooltip>
+  <div class="text-trigger" :class="{ 'active': panelStatus.visible }" @click="showDetailPanel">
+    <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
+      <SvgIcon :icon="gear_icon" />
+    </Tooltip>
+  </div>
+  <div v-if="panelStatus.visible" id="text-detail-container">
+    <PopoverHeader :title="t('attr.text_advanced_settings')" :create="false" @close="panelStatusMgr.close()" />
+    <div class="options-container">
+      <div v-if="!props.event?.includes('text')">
+        <span>{{ t('attr.paragraph_space') }}</span>
+        <div :class="{ actived: isActived3 }"
+          style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
+          <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
+            class="input" @change="setParagraphSpace" style="width: 100%;height: 100%" @click="click">
         </div>
-      </template>
-      <template #body>
-        <div class="options-container">
-          <div v-if="!props.event?.includes('text')">
-            <span>{{ t('attr.paragraph_space') }}</span>
-            <div :class="{ actived: isActived3 }"
-              style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
-                class="input" @change="setParagraphSpace" style="width: 100%;height: 100%" @click="click">
-            </div>
-          </div>
-          <div v-if="!props.event?.includes('text')">
-            <span>{{ t('attr.id_style') }}</span>
-            <div class="vertical-aligning jointly-text">
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'none' }"
-                @click="onSelectId(BulletNumbersType.None)">
-                <Tooltip :content="t('attr.none_list')" :offset="15">
-                  <SvgIcon :icon="text_no_list_icon"/>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'disorded' }"
-                @click="onSelectId(BulletNumbersType.Disorded)">
-                <Tooltip :content="t('attr.unordered_list')" :offset="15">
-                  <SvgIcon :icon="text_bulleted_list_icon"/>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'ordered-1ai' }"
-                @click="onSelectId(BulletNumbersType.Ordered1Ai)">
-                <Tooltip :content="t('attr.ordered_list')" :offset="15">
-                  <SvgIcon :icon="text_number_list_icon"/>
-                </Tooltip>
-              </i>
-            </div>
-          </div>
-          <div>
-            <span>{{ t('attr.underline') }}</span>
-            <div class="underline jointly-text">
-              <i :class="{ 'jointly-text': true, selected_bg: !isUnderline }" @click="onUnderlint">
-                <Tooltip :content="t('attr.none_list')" :offset="15">
-                  <SvgIcon :icon="text_no_list_icon"/>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, selected_bg: isUnderline }" @click="onUnderlint">
-                <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
-                  <SvgIcon :icon="text_underline_icon"/>
-                </Tooltip>
-              </i>
-            </div>
-          </div>
-          <div>
-            <span>{{ t('attr.deleteline') }}</span>
-            <div class="underline jointly-text">
-              <i :class="{ 'jointly-text': true, selected_bg: !isDeleteline }" @click="onDeleteline">
-                <Tooltip :content="t('attr.none_list')" :offset="15">
-                  <SvgIcon :icon="text_no_list_icon"/>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, selected_bg: isDeleteline }" @click="onDeleteline">
-                <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                  <SvgIcon :icon="text_deleteline_icon"/>
-                </Tooltip>
-              </i>
-            </div>
-          </div>
-          <div>
-            <span>{{ t('attr.letter_case') }}</span>
-            <div class="level-aligning jointly-text">
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'none' }"
-                @click="onSelectCase(TextTransformType.None)">
-                <Tooltip :content="t('attr.as_typed')" :offset="15">
-                  <SvgIcon :icon="text_no_list_icon"/>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase' }"
-                @click="onSelectCase(TextTransformType.Uppercase)">
-                <Tooltip :content="t('attr.uppercase')" :offset="15">
-                  <SvgIcon :icon="text_uppercase_icon" style="width: 17px;height: 14px"/>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'lowercase' }"
-                @click="onSelectCase(TextTransformType.Lowercase)">
-                <Tooltip :content="t('attr.lowercase')" :offset="15">
-                  <SvgIcon :icon="text_lowercase_icon" style="width: 14px;height: 14px"/>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase-first' }"
-                @click="onSelectCase(TextTransformType.UppercaseFirst)">
-                <Tooltip :content="t('attr.titlecase')" :offset="15">
-                  <SvgIcon :icon="text_titlecase_icon" style="width: 15px;height: 14px"/>
-                </Tooltip>
-              </i>
-            </div>
-          </div>
+      </div>
+      <div v-if="!props.event?.includes('text')">
+        <span>{{ t('attr.id_style') }}</span>
+        <div class="vertical-aligning jointly-text">
+          <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'none' }"
+            @click="onSelectId(BulletNumbersType.None)">
+            <Tooltip :content="t('attr.none_list')" :offset="15">
+              <SvgIcon :icon="text_no_list_icon" />
+            </Tooltip>
+          </i>
+          <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'disorded' }"
+            @click="onSelectId(BulletNumbersType.Disorded)">
+            <Tooltip :content="t('attr.unordered_list')" :offset="15">
+              <SvgIcon :icon="text_bulleted_list_icon" />
+            </Tooltip>
+          </i>
+          <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'ordered-1ai' }"
+            @click="onSelectId(BulletNumbersType.Ordered1Ai)">
+            <Tooltip :content="t('attr.ordered_list')" :offset="15">
+              <SvgIcon :icon="text_number_list_icon" />
+            </Tooltip>
+          </i>
         </div>
-      </template>
-    </Popover>
+      </div>
+      <div>
+        <span>{{ t('attr.underline') }}</span>
+        <div class="underline jointly-text">
+          <i :class="{ 'jointly-text': true, selected_bg: !isUnderline }" @click="onUnderlint">
+            <Tooltip :content="t('attr.none_list')" :offset="15">
+              <SvgIcon :icon="text_no_list_icon" />
+            </Tooltip>
+          </i>
+          <i :class="{ 'jointly-text': true, selected_bg: isUnderline }" @click="onUnderlint">
+            <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
+              <SvgIcon :icon="text_underline_icon" />
+            </Tooltip>
+          </i>
+        </div>
+      </div>
+      <div>
+        <span>{{ t('attr.deleteline') }}</span>
+        <div class="underline jointly-text">
+          <i :class="{ 'jointly-text': true, selected_bg: !isDeleteline }" @click="onDeleteline">
+            <Tooltip :content="t('attr.none_list')" :offset="15">
+              <SvgIcon :icon="text_no_list_icon" />
+            </Tooltip>
+          </i>
+          <i :class="{ 'jointly-text': true, selected_bg: isDeleteline }" @click="onDeleteline">
+            <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
+              <SvgIcon :icon="text_deleteline_icon" />
+            </Tooltip>
+          </i>
+        </div>
+      </div>
+      <div>
+        <span>{{ t('attr.letter_case') }}</span>
+        <div class="level-aligning jointly-text">
+          <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'none' }"
+            @click="onSelectCase(TextTransformType.None)">
+            <Tooltip :content="t('attr.as_typed')" :offset="15">
+              <SvgIcon :icon="text_no_list_icon" />
+            </Tooltip>
+          </i>
+          <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase' }"
+            @click="onSelectCase(TextTransformType.Uppercase)">
+            <Tooltip :content="t('attr.uppercase')" :offset="15">
+              <SvgIcon :icon="text_uppercase_icon" style="width: 17px;height: 14px" />
+            </Tooltip>
+          </i>
+          <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'lowercase' }"
+            @click="onSelectCase(TextTransformType.Lowercase)">
+            <Tooltip :content="t('attr.lowercase')" :offset="15">
+              <SvgIcon :icon="text_lowercase_icon" style="width: 14px;height: 14px" />
+            </Tooltip>
+          </i>
+          <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase-first' }"
+            @click="onSelectCase(TextTransformType.UppercaseFirst)">
+            <Tooltip :content="t('attr.titlecase')" :offset="15">
+              <SvgIcon :icon="text_titlecase_icon" style="width: 15px;height: 14px" />
+            </Tooltip>
+          </i>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-.text-detail-container {
+.active {
+  background-color: #ebebeb !important;
+}
 
-  >.popover {
+.text-trigger {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: var(--default-radius);
+
+  img {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background-color: #F5F5F5;
+  }
+}
 
 
-    .trigger {
-      width: 28px;
-      height: 28px;
+#text-detail-container {
+  width: 254px;
+  height: fit-content;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  box-sizing: border-box;
+  z-index: 99;
+
+  .options-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px 12px 0 12px;
+    box-sizing: border-box;
+    height: 100%;
+
+    >div {
       display: flex;
-      justify-content: center;
       align-items: center;
-   
-      border-radius: var(--default-radius);
-
-      >svg {
-        width: 16px;
-        height: 16px;
-      }
-    }
-
-    .trigger:hover {
-      background-color: #F5F5F5;
-    }
-
-    .options-container {
-      display: flex;
-      flex-direction: column;
       justify-content: space-between;
-      padding: 12px 12px 0 12px;
-      box-sizing: border-box;
-      height: 100%;
+      width: 100%;
+      margin-bottom: 12px;
 
-      >div {
+      .jointly-text {
+        height: 32px;
+        border-radius: var(--default-radius);
+        background-color: var(--input-background);
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        width: 100%;
-        margin-bottom: 12px;
+        align-items: center;
 
-        .jointly-text {
-          height: 32px;
-          border-radius: var(--default-radius);
-          background-color: var(--input-background);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-
-          >svg {
-            width: 16px;
-            height: 16px;
-          }
+        >svg {
+          width: 16px;
+          height: 16px;
         }
+      }
 
-        >span {
-          width: 60px;
-          height: 14px;
-          font-size: var(--font-default-fontsize);
-          color: #737373;
-        }
+      >span {
+        width: 60px;
+        height: 14px;
+        font-size: var(--font-default-fontsize);
+        color: #737373;
+      }
 
-        .vertical-aligning {
-          padding: 2px;
-          box-sizing: border-box;
-        }
+      .vertical-aligning {
+        padding: 2px;
+        box-sizing: border-box;
+      }
 
-        .underline {
-          display: flex;
-          width: 98px;
-          padding: 2px;
-          box-sizing: border-box;
+      .underline {
+        display: flex;
+        width: 98px;
+        padding: 2px;
+        box-sizing: border-box;
 
-          >i {
-            flex: 1;
-            height: 28px;
-            display: flex;
-            justify-content: center;
-            border-radius: 4px;
-            border: 1px solid #F4F5F5;
-          }
-        }
-
-        .level-aligning {
-          padding: 2px;
-          box-sizing: border-box;
-        }
-
-        .font-posi {
-          width: 30px;
+        >i {
+          flex: 1;
           height: 28px;
           display: flex;
           justify-content: center;
           border-radius: 4px;
           border: 1px solid #F4F5F5;
         }
+      }
 
-        .selected_bg {
-          background-color: #FFFFFF !important;
-          color: #000000;
-          border: 1px solid #F0F0F0;
-        }
+      .level-aligning {
+        padding: 2px;
+        box-sizing: border-box;
+      }
 
-        input[type="text"]::-webkit-inner-spin-button,
-        input[type="text"]::-webkit-outer-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
+      .font-posi {
+        width: 30px;
+        height: 28px;
+        display: flex;
+        justify-content: center;
+        border-radius: 4px;
+        border: 1px solid #F4F5F5;
+      }
 
-        input[type="text"] {
-          -moz-appearance: textfield;
-          appearance: textfield;
-          font-size: 13px;
-          width: 98px;
-          border: none;
-          background-color: var(--input-background);
-          height: 32px;
-          border-radius: var(--default-radius);
-          padding: 9px 0 9px 12px;
-          box-sizing: border-box;
-          font-weight: 500;
-          line-height: 14px;
-          color: #000000;
-        }
+      .selected_bg {
+        background-color: #FFFFFF !important;
+        color: #000000;
+        border: 1px solid #F0F0F0;
+      }
 
-        input:focus {
-          outline: none;
-        }
+      input[type="text"]::-webkit-inner-spin-button,
+      input[type="text"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
 
-        input::selection {
-          color: #FFFFFF;
-          background: #1878F5;
-        }
+      input[type="text"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+        font-size: 13px;
+        width: 98px;
+        border: none;
+        background-color: var(--input-background);
+        height: 32px;
+        border-radius: var(--default-radius);
+        padding: 9px 0 9px 12px;
+        box-sizing: border-box;
+        font-weight: 500;
+        line-height: 14px;
+        color: #000000;
+      }
 
-        input::-moz-selection {
-          color: #FFFFFF;
-          background: #1878F5;
-        }
+      input:focus {
+        outline: none;
+      }
 
-        .actived {
-          border: 1px solid #1878F5;
-        }
+      input::selection {
+        color: #FFFFFF;
+        background: #1878F5;
+      }
+
+      input::-moz-selection {
+        color: #FFFFFF;
+        background: #1878F5;
+      }
+
+      .actived {
+        border: 1px solid #1878F5;
       }
     }
   }
+
 
   .selected_bgc {
     background-color: #FFFFFF !important;

@@ -33,13 +33,13 @@ onUnmounted(() => {
 import select_icon from "@/assets/icons/svg/select.svg";
 </script>
 <template>
-    <div style="display: flex; align-items: center; gap: 6px;" @click="modify">
+    <div style="height: 28px;display: flex; align-items: center; gap: 6px;" @click="modify">
         <div class="check" :style="{
             'background-color': status ? 'var(--active-color)' : 'transparent',
             'border': status ? 'none' : '1px solid #EBEBEB'
         }">
-            <SvgIcon v-if="status=== 1" :icon="select_icon"/>
-            <div v-else-if="status=== 2"/>
+            <SvgIcon v-if="status === 1" :icon="select_icon" />
+            <div v-else-if="status === 2" />
         </div>
         <span>{{ t('attr.clip') }}</span>
     </div>
@@ -61,7 +61,7 @@ import select_icon from "@/assets/icons/svg/select.svg";
         height: 60%;
     }
 
-    > div {
+    >div {
         width: 60%;
         height: 1px;
         background-color: #fff;
