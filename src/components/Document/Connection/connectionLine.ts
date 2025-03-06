@@ -133,10 +133,6 @@ export class ConnectionLine extends WatchableObject {
     }
 
     createBorderPath() {
-        const borders = this.getBorders();
-        if (borders && borders.strokePaints.some(p => p.isEnabled)) {
-
-        }
     }
 
     /* 获取与端点的连接位置 */
