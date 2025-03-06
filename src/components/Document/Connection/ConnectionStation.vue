@@ -25,7 +25,6 @@ getMocks();
 function change() {
     const v = Math.round(Math.random() * 100);
     mocks.value[2].data = 'M0 50 h ' + v;
-    console.log('--change--', mocks.value[2].data);
 }
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
