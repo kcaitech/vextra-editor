@@ -349,11 +349,7 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        // context.workspace.clipboard.replace() // 替换图形 // 替换图形
-        {
-            const clip = new MossClipboard(context);
-            clip.replace();
-        }
+        new MossClipboard(context).replace(); // 替换图形
         return;
     }
     if (is_ctrl) {

@@ -72,7 +72,7 @@ export class MossClipboard {
         const bundle: Bundle = {};
         try {
             // 剪切板执行两种方案：ClipboardEventReader方案兼容性好、NavigatorClipboardReader方案实用性强，将两种方案融合，各取所长应对不同场景
-            if (navigator.userAgent.includes('Safari')) { // 对于Safari这种非常有个性的浏览器，只能忍气吞声
+            if (!navigator.userAgent.includes('Windows') && navigator.userAgent.includes('Safari')) { // 对于Safari这种非常有个性的浏览器，只能忍气吞声
                 await new ClipboardEventReader(this.context).read(bundle, event);
             } else {
                 await new ClipboardEventReader(this.context).read(bundle, event);
@@ -86,7 +86,7 @@ export class MossClipboard {
             return bundle;
         } catch (e) {
             // 在用户没有给予剪切板权限、safari浏览器下常常会抛出异常
-            console.warn(e);
+            console.error(e);
             return bundle;
         }
     }
