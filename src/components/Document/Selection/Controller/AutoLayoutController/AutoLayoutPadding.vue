@@ -1,8 +1,18 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { ArtboardView, ColVector3D, Matrix, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboardView, ColVector3D, Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 type Box = {
@@ -46,8 +56,8 @@ function getPaddingPosition() {
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = shape.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     // 上边距
     const topPadding = m.transform([
@@ -56,7 +66,7 @@ function getPaddingPosition() {
         ColVector3D.FromXY(x + width, y + autoLayout.stackVerticalPadding),
         ColVector3D.FromXY(x, y + autoLayout.stackVerticalPadding)
     ]);
-    const top: Box = { lt: topPadding.col0, rt: topPadding.col1, rb: topPadding.col2, lb: topPadding.col3 };
+    const top: Box = { lt: topPadding[0], rt: topPadding[1], rb: topPadding[2], lb: topPadding[3] };
     // 右边距
     const rightPadding = m.transform([
         ColVector3D.FromXY(x + width - autoLayout.stackPaddingRight, y),
@@ -64,7 +74,7 @@ function getPaddingPosition() {
         ColVector3D.FromXY(x + width, y + height),
         ColVector3D.FromXY(x + width - autoLayout.stackPaddingRight, y + height)
     ]);
-    const right: Box = { lt: rightPadding.col0, rt: rightPadding.col1, rb: rightPadding.col2, lb: rightPadding.col3 };
+    const right: Box = { lt: rightPadding[0], rt: rightPadding[1], rb: rightPadding[2], lb: rightPadding[3] };
     // 下边距
     const bottomPadding = m.transform([
         ColVector3D.FromXY(x, y + height - autoLayout.stackPaddingBottom),
@@ -72,7 +82,7 @@ function getPaddingPosition() {
         ColVector3D.FromXY(x + width, y + height),
         ColVector3D.FromXY(x, y + height)
     ]);
-    const bottom: Box = { lt: bottomPadding.col0, rt: bottomPadding.col1, rb: bottomPadding.col2, lb: bottomPadding.col3 };
+    const bottom: Box = { lt: bottomPadding[0], rt: bottomPadding[1], rb: bottomPadding[2], lb: bottomPadding[3] };
     // 左边距
     const leftPadding = m.transform([
         ColVector3D.FromXY(x, y),
@@ -80,7 +90,7 @@ function getPaddingPosition() {
         ColVector3D.FromXY(x + autoLayout.stackHorizontalPadding, y + height),
         ColVector3D.FromXY(x, y + height)
     ]);
-    const left: Box = { lt: leftPadding.col0, rt: leftPadding.col1, rb: leftPadding.col2, lb: leftPadding.col3 };
+    const left: Box = { lt: leftPadding[0], rt: leftPadding[1], rb: leftPadding[2], lb: leftPadding[3] };
     paddingBox.value.push(top, right, bottom, left);
 }
 

@@ -1,4 +1,14 @@
-import { Matrix, PageView, PrototypeActions, Shape, ShapeType, ShapeView, TransformRaw, WatchableObject } from "@kcdesign/data";
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+import { Matrix, PageView, PrototypeActions, Shape, ShapeType, ShapeView, Transform, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 // import { router } from "@/router";
 import { getFrameList } from "@/utils/preview";
@@ -44,8 +54,8 @@ export class Preview extends WatchableObject {
     private m_navi_shape_list: ShapeView[] = [];
     private m_setTimeouts: Set<any> = new Set();
     private m_delaySetTimeouts: Map<string, any> = new Map();
-    private m_arboard_inner_transform: Map<string, TransformRaw | undefined> = new Map();
-    private m_arboard_fixed_transform: Map<string, TransformRaw | undefined> = new Map();
+    private m_arboard_inner_transform: Map<string, Transform | undefined> = new Map();
+    private m_arboard_fixed_transform: Map<string, Transform | undefined> = new Map();
     private m_inner_scroll: ShapeView | undefined;
     private m_save_last_shape: ShapeView | undefined;
     private m_supernatant_shapes: ShapeView[] = [];
@@ -258,7 +268,7 @@ export class Preview extends WatchableObject {
         this.m_delaySetTimeouts.clear();
     }
 
-    setInnerTransform(key: string, value: TransformRaw | undefined) {
+    setInnerTransform(key: string, value: Transform | undefined) {
         this.m_arboard_inner_transform.set(key, value);
     }
 
@@ -266,7 +276,7 @@ export class Preview extends WatchableObject {
         return this.m_arboard_inner_transform;
     }
 
-    setFixedTransform(key: string, value: TransformRaw | undefined) {
+    setFixedTransform(key: string, value: Transform | undefined) {
         this.m_arboard_fixed_transform.set(key, value);
     }
 

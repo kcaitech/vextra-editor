@@ -1,13 +1,22 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import {
     ColVector3D, GroupShapeView, ImagePack,
     Shape, ShapeView, SVGParseResult,
-    Transform, TransformRaw, UploadAssets,
-    makeShapeTransform1By2, makeShapeTransform2By1,
+    Transform, UploadAssets,
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
-import * as parse_svg from "@/svg_parser";
+import { svgParser as parse_svg } from "@kcdesign/data";
 import { upload_image } from "@/utils/content";
 import { XY } from "@/context/selection";
 
@@ -98,13 +107,13 @@ export class ImageLoader {
         return Promise.all(task);
     }
 
-    private __fixTransform(transforms: TransformRaw[], area: { width: number, height: number }, targetXY?: XY) {
+    private __fixTransform(transforms: Transform[], area: { width: number, height: number }, targetXY?: XY) {
         const context = this.context;
         let env: GroupShapeView = context.selection.selectedPage!;
         if (targetXY) {
             const dx = targetXY.x;
             const dy = targetXY.y;
-            const selectionTransform = new TransformRaw().trans(dx, dy);
+            const selectionTransform = new Transform().trans(dx, dy);
 
             env = context.selection.getClosestContainer(targetXY) as GroupShapeView;
 
@@ -118,8 +127,8 @@ export class ImageLoader {
             }
         } else {
             const { width, height } = context.workspace.root;
-            let clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
-            const { col0, col1 } = clientMatrix.clone().getInverse().transform([
+            let clientMatrix = (context.workspace.matrix);
+            const { [0]:col0, [1]:col1 } = clientMatrix.clone().getInverse().transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height)
             ]);
@@ -133,13 +142,13 @@ export class ImageLoader {
                 matrix.scale(1 / Math.max(ratioW, ratioH));
                 matrix.trans(width / 2, height / 2);
 
-                clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
+                clientMatrix = (context.workspace.matrix);
                 context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
             }
 
             const centerAfterScale = clientMatrix.clone()
                 .getInverse()
-                .transform(ColVector3D.FromXY(width / 2, height / 2)).col0;
+                .transform(ColVector3D.FromXY(width / 2, height / 2));
 
             const dx = centerAfterScale.x - area.width / 2;
             const dy = centerAfterScale.y - area.height / 2;
@@ -149,10 +158,10 @@ export class ImageLoader {
 
             for (let i = 0; i < transforms.length; i++) {
                 const transform = transforms[i];
-                const t = makeShapeTransform2By1(transform)
+                const t = (transform.clone())
                     .clone()
                     .addTransform(selectionTransform)
-                transforms[i] = makeShapeTransform1By2(t) as TransformRaw;
+                transforms[i] = (t);
             }
         }
         return env;
@@ -166,7 +175,7 @@ export class ImageLoader {
             .filter(i => i);
         if (!packages?.length) return false;
         const transforms = (() => {
-            const transforms: TransformRaw[] = [];
+            const transforms: Transform[] = [];
             let offset = 0;
             for (let i = 0; i < packages.length; i++) {
                 if (i > 0) {
@@ -175,7 +184,7 @@ export class ImageLoader {
                     offset += 20;
                     offset += size.width;
                 }
-                const __trans = new TransformRaw();
+                const __trans = new Transform();
                 __trans.translateX = offset;
                 transforms.push(__trans)
             }

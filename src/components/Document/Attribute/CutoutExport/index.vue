@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import {
     BasicArray,
@@ -25,7 +35,7 @@ import {
     get_actions_export_format_unify,
     get_export_formats
 } from '@/utils/shape_style';
-import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getSvgImageData } from '@/utils/image';
+import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getPosition, getSvgImageData } from '@/utils/image';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
@@ -65,9 +75,10 @@ const exportOption = ref<ExportOptions>();
 const trim_bg = ref(false);
 const canvas_bg = ref(false);
 const previewUnfold = ref(false);
-const preview = ref();
+type Preview = InstanceType<typeof Preview>;
+const preview = ref<Preview>();
 
-let renderSvgs: SvgFormat[] = reactive([]);
+const renderSvgs = ref<SvgFormat[]>([]);
 
 function update(args: any[]) {
     if (args.includes('exportOptions') || args.includes('variables')) {
@@ -75,11 +86,8 @@ function update(args: any[]) {
     }
     if (args.includes('layout')) {
         nextTick(() => {
-            if (preview.value) {
-                const selected = props.context.selection.selectedShapes;
-                preview.value.getShapesSvg(selected);
-                renderSvgs = toRaw(preview.value.renderSvgs);
-            }
+            const selected = props.context.selection.selectedShapes;
+            getShapesSvg(selected);
         })
         reflush.value++;
     }
@@ -91,7 +99,7 @@ function updateData() {
     exportOption.value = undefined;
     const selected = props.context.selection.selectedShapes;
     const len = selected.length;
-    renderSvgs = [];
+    renderSvgs.value = [];
     if (len === 1) {
         const shape = selected[0];
         const options = shape.exportOptions;
@@ -378,11 +386,8 @@ const pngImageUrls: Map<string, string> = new Map();
 const exportFill = () => {
     pngImageUrls.clear();
     const selected = props.context.selection.selectedShapes;
-    if (preview.value) {
-        preview.value.getShapesSvg(selected);
-        renderSvgs = toRaw(preview.value.renderSvgs);
-        reflush.value++;
-    }
+    getShapesSvg(selected);
+    reflush.value++;
     nextTick(async () => {
         if (selected.length === 0) {
             await Promise.resolve(exportPageImage());
@@ -471,6 +476,67 @@ function update_by_shapes() {
     updateData();
     showCheckbox();
 }
+const DEFAULT_COLOR = () => {
+    const backgroundColor = props.context.selection.selectedPage?.backgroundColor;
+    if (backgroundColor) {
+        return color2string(backgroundColor);
+    } else {
+        return 'rgba(239,239,239,1)';
+    }
+}
+function getShapesSvg(shapes: ShapeView[]) {
+    if (shapes.length > 0) {
+        let r_Items: SvgFormat[] = [];
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            let shapeItem: ShapeView[] = [];
+            let bgc = 'transparent';
+            if (shape.type === ShapeType.Cutout) {
+                const item = parentIsArtboard(shape);
+                if (shape.isVisible && item) {
+                    shapeItem = Array(item).filter(s => s.type !== ShapeType.Cutout);
+                } else {
+                    const selectedShapes: Map<string, ShapeView> = new Map();
+                    getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
+                    shapeItem = Array.from(selectedShapes.values()).filter(s => s.type !== ShapeType.Cutout);
+                }
+                shape.exportOptions?.canvasBackground ? bgc = DEFAULT_COLOR() : bgc = 'transparent';
+            } else {
+                shapeItem = [shape];
+            }
+            const { x, y, width, height } = getPosition(shape);
+            r_Items.push(
+                {
+                    id: shape.id + i,
+                    width,
+                    height,
+                    x,
+                    y,
+                    background: bgc,
+                    shapes: shapeItem
+                }
+            )
+        }
+        renderSvgs.value = toRaw(r_Items);
+    } else if (shapes.length === 0) {
+        let r_Items: SvgFormat[] = [];
+        const page = props.context.selection.selectedPage;
+        if (!page) return;
+        const { x, y, width: _w, height: _h } = getPageBounds(page);
+        r_Items.push(
+            {
+                id: page.id + 0,
+                width: _w,
+                height: _h,
+                x: x,
+                y: y,
+                background: 'transparent',
+                shapes: page.childs.filter(s => s.type !== ShapeType.Cutout)
+            }
+        )
+        renderSvgs.value = toRaw(r_Items);
+    }
+}
 
 let page = props.context.selection.selectedPage!;
 page.watch(updateData);
@@ -505,6 +571,8 @@ onUnmounted(() => {
 import export_menu_icon from "@/assets/icons/svg/export-menu.svg"
 import add_icon from "@/assets/icons/svg/add.svg"
 import { ShapeDom } from '../../Content/vdom/shape';
+import { getCutoutShape, getPageBounds, parentIsArtboard } from '@/utils/cutout';
+import { color2string } from '@/utils/content';
 
 </script>
 
@@ -546,7 +614,7 @@ import { ShapeDom } from '../../Content/vdom/shape';
             <div class="export-box" v-if="preinstallArgus.length > 0">
                 <div @click="exportFill"><span>{{ t('cutoutExport.export') }}</span></div>
             </div>
-            <Preview ref="preview" v-if="exportOption && exportOption.exportFormats.length" :context="context"
+            <Preview ref="preview" v-if="exportOption && exportOption.exportFormats.length" :context="context" :trigger="trigger"
                 :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
                 :trim_bg="trim_bg">
             </Preview>

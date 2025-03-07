@@ -1,5 +1,15 @@
-import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D } from '@kcdesign/data';
-import { getShadowMax } from '@/utils/cutout';
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D, ArtboardView } from '@kcdesign/data';
+import { getGroupChildBounds, getShadowMax, parentIsArtboard } from '@/utils/cutout';
 import JSZip from 'jszip';
 import { XYsBounding } from './common';
 
@@ -269,7 +279,7 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                 cloneSvg.setAttribute("width", `${w}`);
                 cloneSvg.setAttribute("height", `${h}`);
                 cloneSvg.setAttribute("viewBox", `0 0 ${w / format.scale} ${h / format.scale}`);
-                
+
                 // 获取所有子元素
                 const children: HTMLElement[] = cloneSvg.children as any;
                 Array.from(children).forEach((child) => {
@@ -292,4 +302,30 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
             resolve();
         }
     })
+}
+
+export const getPosition = (shape: ShapeView) => {
+    const p_artboard = parentIsArtboard(shape);
+    if (shape.type === ShapeType.Cutout) {
+        if (p_artboard) {
+            const __frame = shape._p_frame;
+            const _f = shape.parent!.transform.transform(ColVector3D.FromXY(__frame.x, __frame.y));
+            return { x: _f.x, y: _f.y, width: shape.frame.width, height: shape.frame.height }
+        } else {
+            const p = shape.boundingBox()
+            return { ...p }
+        }
+    } else if (shape.type === ShapeType.Group) {
+        return getGroupChildBounds(shape);
+    } else {
+        const { left, top, right, bottom } = getShadowMax(shape);
+        let { x, y, width: _w, height: _h } = shape._p_outerFrame;
+        if ((shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef)) {
+            const f = shape._p_visibleFrame;
+            if (!(shape as ArtboardView).frameMaskDisabled) {
+                x = f.x; y = f.y; _w = f.width; _h = f.height;
+            }
+        }
+        return { x: x - left, y: y - top, width: _w + left + right, height: _h + top + bottom }
+    }
 }

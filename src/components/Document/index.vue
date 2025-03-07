@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { onMounted, onUnmounted, shallowRef, ref, watch } from 'vue';
 import ContentView from "./ContentView.vue";
@@ -11,7 +21,7 @@ import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
-import { initpal } from '@/components/common/initpal';
+import { initDataModule } from '@/components/common/initmodule';
 import { setup as keyboardUnits } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ContextEvents, IContext } from '@/openapi';
@@ -136,7 +146,7 @@ onMounted(() => {
     init_watcher();
     init_keyboard_units();
     // sessionStorage.setItem('project_id', ''); // 不是editor要处理的
-    initpal().catch((e) => {
+    initDataModule().catch((e) => {
         console.error(e)
     });
     const ctx: Context = props.context as Context;

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { ColorCtx } from '@/context/color';
@@ -16,7 +26,7 @@ import {
     ShapeFrame,
     Stop,
     TextShapeView,
-    TransformRaw,
+    Transform,
     cloneGradient
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
@@ -144,7 +154,7 @@ const dot_mousemove = (e: MouseEvent) => {
     if (isDragging) {
         startPosition.x = x;
         startPosition.y = y;
-        const matrix = new TransformRaw();
+        const matrix = new Transform();
         let frame = shape.frame;
         matrix.preScale(frame.width, frame.height);
         matrix.multiAtLeft(shape.matrix2Root());

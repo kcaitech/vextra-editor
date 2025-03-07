@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import { Bundle, MossClipboard, RefShapeBase, SourceBundle } from "@/clipboard";
 import {
@@ -5,7 +15,7 @@ import {
     TableCellType,
     import_text,
     export_text,
-    TransformRaw,
+    Transform,
     CurvePoint,
     ContactLineView,
     export_shape,
@@ -146,8 +156,8 @@ export class MossWriter {
         } else {
             let shapes = compare_layer_3(this.context.selection.selectedShapes, -1);
             if (!shapes.length) return;
-            const origin_transform_map: any = {};
-            const position_map: Map<string, TransformRaw> = new Map();
+            const origin_transform_map: {[key:string]:Transform} = {};
+            const position_map: Map<string, Transform> = new Map();
             const points_map: Map<string, CurvePoint[]> = new Map();
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];

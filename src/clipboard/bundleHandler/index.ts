@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import { Bundle, ImageBundle, MossClipboard, SourceBundle, SVGBundle } from "@/clipboard";
 import { ImageLoader } from "@/imageLoader";
@@ -12,8 +22,6 @@ import {
     ImagePack,
     import_shape_from_clipboard,
     import_text,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1,
     Page,
     PathShapeView,
     Shape,
@@ -24,7 +32,6 @@ import {
     SymbolView,
     TextShape,
     Transform,
-    TransformRaw,
     UploadAssets,
 } from "@kcdesign/data";
 import { v4 } from "uuid";
@@ -108,7 +115,7 @@ export class BundleHandler {
             }
         }
         const transforms = (() => {
-            const transforms: TransformRaw[] = [];
+            const transforms: Transform[] = [];
             let offset = 0;
             for (let i = 0; i < medias.length; i++) {
                 if (i > 0) {
@@ -117,7 +124,7 @@ export class BundleHandler {
                     offset += 20;
                     offset += size.width;
                 }
-                const __trans = new TransformRaw();
+                const __trans = new Transform();
                 __trans.translateX = offset;
                 transforms.push(__trans);
             }
@@ -147,17 +154,17 @@ export class BundleHandler {
         const SH = new SpaceHandler(context);
         const env = SH.getEnvByArea(area);
         const matrix = env.matrix2Root();
-        const inverse = makeShapeTransform2By1((matrix.inverse));
+        const inverse = ((matrix.inverse));
 
         for (let i = 0; i < transforms.length; i++) {
-            const t = makeShapeTransform2By1(transforms[i]);
+            const t = (transforms[i].clone());
             t.addTransform(offset);
             t.addTransform(inverse);
-            transforms[i] = makeShapeTransform1By2(t);
+            transforms[i] = (t);
         }
         const packs: {
             pack: ImagePack | SVGParseResult,
-            transform: TransformRaw,
+            transform: Transform,
             targetEnv: GroupShapeView
         }[] = [];
         for (let i = 0; i < medias.length; i++) {
@@ -211,13 +218,13 @@ export class BundleHandler {
 
         const packs: {
             pack: ImagePack | SVGParseResult,
-            transform: TransformRaw,
+            transform: Transform,
             targetEnv: GroupShapeView
         }[] = [];
 
         for (let i = 0; i < envs.length; i++) {
             const transforms = (() => {
-                const transforms: TransformRaw[] = [];
+                const transforms: Transform[] = [];
                 let offset = 0;
                 for (let i = 0; i < medias.length; i++) {
                     if (i > 0) {
@@ -226,7 +233,7 @@ export class BundleHandler {
                         offset += 20;
                         offset += size.width;
                     }
-                    const __trans = new TransformRaw();
+                    const __trans = new Transform();
                     __trans.translateX = offset;
                     transforms.push(__trans);
                 }
@@ -237,9 +244,9 @@ export class BundleHandler {
             const start = { x: (env.frame.width - area.width) / 2, y: (env.frame.height - area.height) / 2 };
             const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
             for (let i = 0; i < transforms.length; i++) {
-                const t = makeShapeTransform2By1(transforms[i]);
+                const t = (transforms[i].clone());
                 t.addTransform(offset);
-                transforms[i] = makeShapeTransform1By2(t);
+                transforms[i] = (t);
             }
             for (let i = 0; i < medias.length; i++) {
                 const media = medias[i];
@@ -287,9 +294,9 @@ export class BundleHandler {
                 const __shape = import_shape_from_clipboard(context.data, page, [shape]).pop()!;
                 const start = { x: (env.frame.width - area.width) / 2, y: (env.frame.height - area.height) / 2 };
                 const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
-                const t = makeShapeTransform2By1(__shape.transform);
+                const t = (__shape.transform.clone());
                 t.addTransform(offset);
-                __shape.transform = makeShapeTransform1By2(t);
+                __shape.transform = (t);
                 actions.push({ parent: adapt2Shape(env) as GroupShape, shape: __shape });
             }
         } else {
@@ -302,11 +309,11 @@ export class BundleHandler {
             const SH = new SpaceHandler(context);
             const env = SH.getEnvByArea(area);
             const matrix = env.matrix2Root();
-            const inverse = makeShapeTransform2By1((matrix.inverse));
-            const t = makeShapeTransform2By1(__shape.transform);
+            const inverse = ((matrix.inverse));
+            const t = (__shape.transform.clone());
             t.addTransform(offset);
             t.addTransform(inverse);
-            __shape.transform = makeShapeTransform1By2(t);
+            __shape.transform = (t);
             actions.push({ parent: adapt2Shape(env) as GroupShape, shape: __shape })
         }
         return actions.length && context.editor4Page(context.selection.selectedPage!).insertShapes(actions);

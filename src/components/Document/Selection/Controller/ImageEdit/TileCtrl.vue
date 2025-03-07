@@ -1,13 +1,21 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import {
     FillsAsyncApi,
     ColVector3D,
-    makeMatrixByTransform2,
-    makeShapeTransform2By1,
-    Transform,
-    ShapeView, Fill, SymbolRefView, Api
+    ShapeView, Fill, SymbolRefView, Api,
+    Transform
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { DragKit } from "@/components/common/draggable";
@@ -103,7 +111,7 @@ function start(event: MouseEvent, d: Direction) {
 let need_reset_cursor_after_transform = true;
 
 function setCursor(type: Direction, active = false) {
-    let deg = transformBase.decomposeEuler().z * 180 / Math.PI;
+    let deg = transformBase.decomposeRotate() * 180 / Math.PI;
     if (type === Direction.Ver) {
         deg += 90;
     } else if (type === Direction.Angle) {
@@ -143,46 +151,46 @@ function update() {
     }
 
     const transform = new Transform()
-        .addTransform(makeShapeTransform2By1(shape.matrix2Root()))
-        .addTransform(makeShapeTransform2By1(props.context.workspace.matrix));
+        .addTransform((shape.matrix2Root()))
+        .addTransform((props.context.workspace.matrix));
 
     const lt = new Transform()
         .setTranslate(ColVector3D.FromXY(0, 0))
         .addTransform(transform)
-        .clearScaleSize();
+        lt.clearScaleSize();
     const top = new Transform()
         .setTranslate(ColVector3D.FromXY(width / 2, 0))
         .addTransform(transform)
-        .clearScaleSize();
+        top.clearScaleSize();
     const rt = new Transform()
         .setTranslate(ColVector3D.FromXY(width, 0))
         .addTransform(transform)
-        .clearScaleSize();
+        rt.clearScaleSize();
     const right = new Transform()
         .setTranslate(ColVector3D.FromXY(width, height / 2))
         .addTransform(transform)
-        .clearScaleSize();
+        right.clearScaleSize();
     const rb = new Transform()
         .setTranslate(ColVector3D.FromXY(width, height))
         .addTransform(transform)
-        .clearScaleSize();
+        rb.clearScaleSize();
     const bottom = new Transform()
         .setTranslate(ColVector3D.FromXY(width / 2, height))
         .addTransform(transform)
-        .clearScaleSize();
+        bottom.clearScaleSize();
     const lb = new Transform()
         .setTranslate(ColVector3D.FromXY(0, height))
         .addTransform(transform)
-        .clearScaleSize();
+        lb.clearScaleSize();
     const left = new Transform()
         .setTranslate(ColVector3D.FromXY(0, height / 2))
         .addTransform(transform)
-        .clearScaleSize();
+        left.clearScaleSize();
 
-    const ltDot = lt.transform(ColVector3D.FromXY(0, 0)).col0;
-    const rtDot = rt.transform(ColVector3D.FromXY(0, 0)).col0;
-    const rbDot = rb.transform(ColVector3D.FromXY(0, 0)).col0;
-    const lbDot = lb.transform(ColVector3D.FromXY(0, 0)).col0;
+    const ltDot = lt.transform(ColVector3D.FromXY(0, 0));
+    const rtDot = rt.transform(ColVector3D.FromXY(0, 0));
+    const rbDot = rb.transform(ColVector3D.FromXY(0, 0));
+    const lbDot = lb.transform(ColVector3D.FromXY(0, 0));
 
     rightSidePath.value = `M${rtDot.x} ${rtDot.y} L${rbDot.x} ${rbDot.y}`;
     bottomSidePath.value = `M${lbDot.x} ${lbDot.y} L${rbDot.x} ${rbDot.y}`;
@@ -191,14 +199,14 @@ function update() {
     visible.value = Math.min(Math.abs(ltDot.x - rtDot.x), Math.abs(ltDot.y - rbDot.y)) > 24;
 
     transformBase = lt;
-    transformLT.value = makeMatrixByTransform2(lt).toString();
-    transformT.value = makeMatrixByTransform2(top).toString();
-    transformRT.value = makeMatrixByTransform2(rt).toString();
-    transformR.value = makeMatrixByTransform2(right).toString();
-    transformRB.value = makeMatrixByTransform2(rb).toString();
-    transformB.value = makeMatrixByTransform2(bottom).toString();
-    transformLB.value = makeMatrixByTransform2(lb).toString();
-    transformL.value = makeMatrixByTransform2(left).toString();
+    transformLT.value = (lt).toString();
+    transformT.value = (top).toString();
+    transformRT.value = (rt).toString();
+    transformR.value = (right).toString();
+    transformRB.value = (rb).toString();
+    transformB.value = (bottom).toString();
+    transformLB.value = (lb).toString();
+    transformL.value = (left).toString();
 }
 
 function workspaceWatcher(t: any) {

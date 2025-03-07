@@ -1,5 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
-import { Matrix, ShapeView, ArtboardView, SymbolView, GroupShapeView, XYsBounding, Shape, makeShapeTransform2By1, ShapeType, GroupShape, ColVector3D } from "@kcdesign/data";
+import { Matrix, ShapeView, ArtboardView, SymbolView, GroupShapeView, XYsBounding, Shape, ShapeType, GroupShape, ColVector3D } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 
@@ -35,7 +45,6 @@ export class SpaceHandler {
 
         for (let i = 0; i < source.length; i++) {
             const shape = source[i];
-            const __transform = makeShapeTransform2By1(shape.transform);
             let width, height;
             if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
                 const children = (shape as GroupShape).childs;
@@ -46,13 +55,14 @@ export class SpaceHandler {
                 width = shape.size.width;
                 height = shape.size.height;
             }
-            const { col0, col1, col2, col3 } = __transform.transform([
+            const __transform = (shape.transform);
+            const box = XYsBounding(__transform.transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height),
                 ColVector3D.FromXY(width, 0),
                 ColVector3D.FromXY(0, height),
-            ]);
-            const box = XYsBounding([col0, col1, col2, col3]);
+            ]));
+            // const box = XYsBounding([col0, col1, col2, col3]);
 
             if (box.top < top) top = box.top;
             if (box.left < left) left = box.left;

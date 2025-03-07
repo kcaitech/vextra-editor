@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import delete_icon from "@/assets/icons/svg/delete.svg";
@@ -134,6 +144,7 @@ function clearColorPanelStatus() {
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
     if (color.imageScaleMode) color.setImageScaleMode(undefined);
+    props.context.color.select_stop(undefined);
 }
 
 function close() {
@@ -152,6 +163,7 @@ const watchList = [
             if (color.locate) color.gradient_locate(undefined);
             if (color.mode) color.switch_editor_mode(false);
             if (color.imageScaleMode) color.setImageScaleMode(undefined);
+            props.context.color.select_stop(undefined);
         } else if (fillType.value === FillType.Pattern) {
             color.gradient_locate({ index: fillsPicker.index, type: "fills" });
             color.setImageScaleMode(fill.imageScaleMode);
@@ -161,6 +173,7 @@ const watchList = [
             });
             color.setImageScale(fill.scale);
             color.switch_editor_mode(false);
+            props.context.color.select_stop(undefined);
         } else {
             color.set_gradient_type(fillType.value as GradientType);
             color.gradient_locate({ index: fillsPicker.index, type: "fills" });

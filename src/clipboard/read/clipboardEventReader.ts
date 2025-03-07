@@ -1,5 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Bundle } from "@/clipboard";
-import { parse as SVGParse } from "@/svg_parser";
+import { svgParser as SVGParse } from "@kcdesign/data";
 import { Reader } from "@/clipboard/read/reader";
 import { Context } from "@/context";
 
@@ -67,7 +77,7 @@ export class ClipboardEventReader extends Reader {
             } else if (item.type === "text/plain") {
                 const result = item.result;
                 if (this.maySvgText(result)) {
-                    const svg = SVGParse(result);
+                    const svg = SVGParse.parse(result);
                     const svgs = bundle["SVG"];
                     svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
                 } else bundle["plain"] = result;

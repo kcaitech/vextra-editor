@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -1062,6 +1072,7 @@ function clearPanelStatus() {
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
     if (color.imageScaleMode) color.setImageScaleMode(undefined);
+    props.context.color.select_stop(undefined);
 }
 
 function closeColor() {
@@ -1084,6 +1095,7 @@ const updateContextColor = () => {
         if (color.locate) color.gradient_locate(undefined);
         if (color.mode) color.switch_editor_mode(false);
         if (color.imageScaleMode) color.setImageScaleMode(undefined);
+        props.context.color.select_stop(undefined);
     } else {
         color.set_gradient_type(gradient.value?.gradientType || GradientType.Linear);
         color.gradient_locate({ index: 0, type: "text" });

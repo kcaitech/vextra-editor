@@ -1,5 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
-import { ResourceMgr, Shape, } from "@kcdesign/data";
+import { ResourceMgr, Shape, Transform, } from "@kcdesign/data";
 import { ClipboardEventReader } from "@/clipboard/read/clipboardEventReader";
 import { NavigatorClipboardReader } from "@/clipboard/read/navigatorClipboardReader";
 import { BundleHandler } from "@/clipboard/bundleHandler";
@@ -24,7 +34,7 @@ export type Bundle = {
     SVG?: SVGBundle[];              // 矢量图层
 }
 
-export type RefShapeBase ={
+export type RefShapeBase = {
     symbol: string;
     base: Shape;
     shapeId: string;
@@ -32,7 +42,7 @@ export type RefShapeBase ={
 
 export type SourceBundle = {
     shapes: Shape[];
-    originTransform: any;
+    originTransform: { [key: string]: Transform };
     originIds: string[];
     media: any;
     unbindRefs: RefShapeBase[];
@@ -67,7 +77,7 @@ export class MossClipboard {
         } else return false;
     }
 
-    writeProperties() {}
+    writeProperties() { }
     async read(event?: ClipboardEvent): Promise<Bundle | undefined> {
         const bundle: Bundle = {};
         try {

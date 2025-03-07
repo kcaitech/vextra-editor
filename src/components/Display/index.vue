@@ -1,8 +1,18 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { onBeforeMount, shallowRef } from "vue";
 import { fetchConfig, parserDocument } from "./parser";
 import { Context } from "@/context";
-import { initpal } from "@/components/common/initpal";
+import { initDataModule } from "@/components/common/initmodule";
 import { message } from "@/utils/message";
 import { PageView } from "@kcdesign/data";
 import PreviewContent from "@/components/Display/PreviewContent.vue";
@@ -11,7 +21,7 @@ const context = shallowRef<Context | undefined>(undefined);
 const pageView = shallowRef<PageView | undefined>(undefined);
 
 async function initContext() {
-    await initpal();
+    await initDataModule();
     const __context = await parserDocument();
     if (__context) {
         const config = await fetchConfig();

@@ -22,9 +22,6 @@
     "paths": {
       "@/*": [
         "src/*"
-      ],
-      "@pal/*": [
-        "src/PAL/browser/*"
       ]
     },
     "lib": [
