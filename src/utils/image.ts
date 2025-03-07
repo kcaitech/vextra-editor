@@ -132,8 +132,7 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         let imageUrl;
         img.onload = () => {
             context && context.drawImage(img, 0, 0);
-            const dataURL = canvas.toDataURL(`image/${format.fileFormat}`);
-            imageUrl = dataURL;
+            imageUrl = canvas.toDataURL(`image/${format.fileFormat}`);
             if (context && trim) {
                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
@@ -158,8 +157,7 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                 newCanvas.height = height;
                 // 在新Canvas上绘制裁剪后的图像
                 outputCtx && outputCtx.drawImage(img, left, top, width, height, 0, 0, width, height);
-                const newDataURL = newCanvas.toDataURL(`image/${format.fileFormat}`);
-                imageUrl = newDataURL;
+                imageUrl = newCanvas.toDataURL(`image/${format.fileFormat}`);
             }
             pngImageUrls.set(id, imageUrl);
             document.body.removeChild(pcloneSvg);
@@ -236,14 +234,12 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                     const matrixValues = styleTransform.replace('matrix(', '').replace(')', '').split(',').map(parseFloat);
                     matrixValues[4] -= x;
                     matrixValues[5] -= y;
-                    const newMatrix = `matrix(${matrixValues.join(',')})`;
-                    child.style.transform = newMatrix;
+                    child.style.transform = `matrix(${matrixValues.join(',')})`;
                 }
             });
         }
         let imageUrl = '';
         const img = new Image();
-        console.log(cloneSvg);
 
         const svgString = new XMLSerializer().serializeToString(cloneSvg);
         const imgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
