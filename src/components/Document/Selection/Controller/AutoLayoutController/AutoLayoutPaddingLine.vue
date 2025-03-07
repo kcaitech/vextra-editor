@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Selection, SelectionTheme, XY } from '@/context/selection';
-import { PointHandler } from '@/transform/point';
-import { ArtboardView, ColVector3D, CurvePoint, Matrix, Matrix2, PaddingDir, PolygonShapeView, ShapeFrame, StackSize, StackSizing, makeShapeTransform2By1 } from '@kcdesign/data';
+import { Selection, XY } from '@/context/selection';
+import { ArtboardView, ColVector3D, Matrix, Matrix2, PaddingDir, StackSizing, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { fixedZero, XYsBounding } from '@/utils/common';
-import { getTransformCol } from '@/utils/content';
+import { fixedZero } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
-import { getRadiusValue } from '../Points/common';
 import { CursorType } from '@/utils/cursor2';
-import { throttle } from 'lodash';
-import { he } from 'element-plus/es/locale';
 
 type Box = {
     lt: Point,

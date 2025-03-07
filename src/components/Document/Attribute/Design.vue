@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, onUpdated, ref, shallowRef } from 'vue';
-import { ArtboardView, ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
+import { ArtboardView, GroupShapeView, ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill2/Index.vue'
@@ -125,7 +125,7 @@ function _selection_change() {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
         shapeType.value = shape.type;
-        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(shape.type)) {
+        if (shape instanceof GroupShapeView) {
             autoLayout.value = true;
         }
         if (shape instanceof SymbolRefView && (!shape.autoLayout || !shape.symData?.autoLayout)) {
@@ -338,7 +338,7 @@ onUnmounted(() => {
 <template>
     <section id="Design">
         <div style="display: none">{{ reflush }}</div>
-        <el-scrollbar height="100%">
+        <el-scrollbar height="100%" tabindex="-1" style="outline: none;">
             <div v-if="!shapes.length && props.context.selection.selectedPage">
                 <PageBackground :context="props.context" :page="props.context.selection.selectedPage" />
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger" />

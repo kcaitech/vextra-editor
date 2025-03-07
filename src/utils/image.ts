@@ -180,8 +180,8 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
             const el = cloneSvg.children[0] as SVGSVGElement;
             let rotate = shape.rotation || 0;
+            const { width, height } = cloneSvg.viewBox.baseVal
             if (el) {
-                const { width, height } = cloneSvg.viewBox.baseVal
                 const { left, top, right, bottom } = getShadowMax(shape);
                 if (isNoTransform(shape)) {
                     cloneSvg.setAttribute("width", `${width * format.scale}`);
@@ -214,7 +214,6 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                     el.style.transform = newMatrix;
                 }
             }
-            const { width, height } = cloneSvg.getBoundingClientRect();
             canvas.width = width;
             canvas.height = height;
             if (ctx) {
@@ -244,6 +243,8 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         }
         let imageUrl = '';
         const img = new Image();
+        console.log(cloneSvg);
+
         const svgString = new XMLSerializer().serializeToString(cloneSvg);
         const imgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
         imageUrl = imgUrl;
@@ -268,9 +269,11 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                 const { x, y } = cloneSvg.viewBox.baseVal
                 const w = (right - left);
                 const h = (bottom - top);
+
                 cloneSvg.setAttribute("width", `${w}`);
                 cloneSvg.setAttribute("height", `${h}`);
                 cloneSvg.setAttribute("viewBox", `0 0 ${w / format.scale} ${h / format.scale}`);
+                
                 // 获取所有子元素
                 const children: HTMLElement[] = cloneSvg.children as any;
                 Array.from(children).forEach((child) => {

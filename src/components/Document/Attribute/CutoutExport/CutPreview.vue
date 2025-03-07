@@ -7,6 +7,8 @@ import {
     ShapeView,
     adapt2Shape, ColVector3D,
     PathShapeView,
+    GroupShapeView,
+    ArtboardView,
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import {
@@ -23,8 +25,7 @@ import { getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
 import PageCard from "@/components/common/PageCard.vue";
 import { nextTick } from 'vue';
-
-type PCard = InstanceType<typeof PageCard>
+import { ShapeDom } from '../../Content/vdom/shape';
 
 const { t } = useI18n();
 
@@ -43,7 +44,7 @@ interface SvgFormat {
     x: number
     y: number
     background: string
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 
 const emits = defineEmits<{
@@ -64,13 +65,12 @@ const width = ref<number>(0);
 const height = ref<number>(0);
 const xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const background_color = ref<string>(DEFAULT_COLOR());
-let renderItems: Shape[] = reactive([]);
+let renderItems: ShapeView[] = reactive([]);
 const selectedShapes: Map<string, ShapeView> = new Map();
 const pngImage = ref();
 const renderSvgs = ref<SvgFormat[]>([]);
 const svgImageUrls: Map<string, string> = new Map();
-const shapeTrim = ref(false);
-const pageCard = ref<PCard>();
+const pageSvg = ref<SVGSVGElement>();
 
 const toggleExpand = () => {
     isTriangle.value = !isTriangle.value;
@@ -89,15 +89,15 @@ const _getCanvasShape = () => {
         const item = parentIsArtboard(shape);
         getPosition(shape);
         if (shape.isVisible && item) {
-            renderItems = toRaw(Array(adapt2Shape(item)).filter(s => s.type !== ShapeType.Cutout));
+            renderItems = toRaw(Array(item).filter(s => s.type !== ShapeType.Cutout));
         } else {
             selectedShapes.clear();
             getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
-            if (shape.isVisible) renderItems = toRaw(Array.from(selectedShapes.values()).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
+            if (shape.isVisible) renderItems = toRaw(Array.from(selectedShapes.values()).filter(s => s.type !== ShapeType.Cutout));
         }
     } else if (shapes.length === 1) {
         getPosition(shape);
-        renderItems = toRaw([shape].map(s => adapt2Shape(s)));
+        renderItems = toRaw([shape]);
     } else if (shapes.length === 0) {
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -106,7 +106,7 @@ const _getCanvasShape = () => {
             height.value = _h;
             xy.value.x = x;
             xy.value.y = y;
-            renderItems = toRaw(page.childs.map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
+            renderItems = toRaw(page.childs.filter(s => s.type !== ShapeType.Cutout));
         }
     }
     nextTick(() => {
@@ -117,7 +117,7 @@ const _getCanvasShape = () => {
 const getSvgUrl = async () => {
     const shapes = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
-    if (pageCard.value?.pageSvg) {
+    if (pageSvg.value) {
         let format: ExportFormat;
         let id = '';
         let shape: ShapeView;
@@ -132,10 +132,10 @@ const getSvgUrl = async () => {
             format = page && page.exportOptions!.exportFormats[0];
             id = page.id + format.id;
         }
-        const { width, height } = pageCard.value.pageSvg.viewBox.baseVal
-        pageCard.value.pageSvg.setAttribute("width", `${width * format.scale}`);
-        pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
-        await getSvgImageData(pageCard.value.pageSvg, props.trim_bg || shapeTrim.value, id, format, svgImageUrls, shape);
+        const { width, height } = pageSvg.value.viewBox.baseVal
+        pageSvg.value.setAttribute("width", `${width * format.scale}`);
+        pageSvg.value.setAttribute("height", `${height * format.scale}`);
+        await getSvgImageData(pageSvg.value, props.trim_bg, id, format, svgImageUrls, shape);
         pngImage.value = svgImageUrls.get(id);
         reflush.value++;
     }
@@ -144,7 +144,6 @@ const getSvgUrl = async () => {
 const getCanvasShape = debounce(_getCanvasShape, 250);
 
 const getPosition = (shape: ShapeView) => {
-    shapeTrim.value = false;
     const p_artboard = parentIsArtboard(shape);
     if (shape.type === ShapeType.Cutout) {
         if (p_artboard) {
@@ -170,16 +169,13 @@ const getPosition = (shape: ShapeView) => {
     } else {
         const { left, top, right, bottom } = getShadowMax(shape);
         let { x, y, width: _w, height: _h } = shape._p_outerFrame;
-        const maxB = Math.abs(shape.outerFrame.x)
-        if (shape instanceof PathShapeView || shape.type === ShapeType.Star || shape.type === ShapeType.Polygon) {
-            x -= (maxB * 5);
-            y -= (maxB * 5);
-            _w += (maxB * 10);
-            _h += (maxB * 10);
-            if (shape.type === ShapeType.Star || shape.type === ShapeType.Polygon) {
-                shapeTrim.value = true;
+        if ((shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef)) {
+            const f = shape._p_visibleFrame;
+            if (!(shape as ArtboardView).frameMaskDisabled) {
+                x = f.x; y = f.y; _w = f.width; _h = f.height;
             }
         }
+
         xy.value.x = x - left;
         xy.value.y = y - top;
         width.value = _w + left + right;
@@ -243,21 +239,20 @@ const getShapesSvg = (shapes: ShapeView[]) => {
         let r_Items: SvgFormat[] = [];
         for (let i = 0; i < shapes.length; i++) {
             const shape = shapes[i];
-            let shapeItem: Shape[] = [];
+            let shapeItem: ShapeView[] = [];
             let bgc = 'transparent';
             if (shape.type === ShapeType.Cutout) {
                 const item = parentIsArtboard(shape);
                 if (shape.isVisible && item) {
-                    shapeItem = Array(item).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout);
+                    shapeItem = Array(item).filter(s => s.type !== ShapeType.Cutout);
                 } else {
                     selectedShapes.clear();
                     getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
-                    shapeItem = Array.from(selectedShapes.values()).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout);
+                    shapeItem = Array.from(selectedShapes.values()).filter(s => s.type !== ShapeType.Cutout);
                 }
                 shape.exportOptions?.canvasBackground ? bgc = DEFAULT_COLOR() : bgc = 'transparent';
             } else {
-                const s = adapt2Shape(shape);
-                shapeItem = [s];
+                shapeItem = [shape];
             }
             getPosition(shape);
             r_Items.push(
@@ -286,7 +281,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                 x: x,
                 y: y,
                 background: 'transparent',
-                shapes: page.childs.map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout)
+                shapes: page.childs.filter(s => s.type !== ShapeType.Cutout)
             }
         )
         renderSvgs.value = toRaw(r_Items);
@@ -332,8 +327,9 @@ onUnmounted(() => {
             </div>
             <span>{{ t('cutoutExport.preview') }}</span>
         </div>
-        <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
-            :shapes="renderItems" :width="width" :height="height" />
+        <svg class="preview_svg" v-if="renderItems.length" ref="pageSvg" :width="width" :height="height" overflow="visible"
+            :viewBox="`${xy.x} ${xy.y} ${width} ${height}`" v-html="(renderItems[0] as ShapeDom).el?.outerHTML || ''"
+            :style="{ 'background-color': background_color }"></svg>
         <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush">
             <div class="preview-image" v-if="pngImage">
                 <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
@@ -416,7 +412,8 @@ onUnmounted(() => {
             justify-content: center;
 
             >img {
-                max-width: 100%;
+                object-fit: contain;
+                width: 100%;
                 max-height: 100%;
                 margin: auto;
                 display: block;
@@ -434,7 +431,7 @@ onUnmounted(() => {
         background-size: 16px 16px;
 
         >img {
-            max-width: 100%;
+            width: 100%;
             max-height: 240px;
             margin: auto;
             display: block;
@@ -442,7 +439,11 @@ onUnmounted(() => {
         }
     }
 }
-
+.preview_svg {
+    position: absolute;
+    top: 1000000px;
+    left: 1000000px;
+}
 .exportsvg {
     position: absolute;
     opacity: 0;

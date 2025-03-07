@@ -19,10 +19,10 @@ import layer_symbol_union_icon from '@/assets/icons/svg/layer-symbol-union.svg';
 import layer_symbol_icon from '@/assets/icons/svg/layer-symbol.svg';
 import layer_table_icon from '@/assets/icons/svg/layer-table.svg';
 import layer_text_icon from '@/assets/icons/svg/layer-text.svg';
-import SvgIcon from './SvgIcon.vue';
+import SvgIcon2 from '@/components/Document/Navigation/svg_icon.vue';
 
 
-const icons: {[key: string]: string} = {}
+const icons: { [key: string]: string } = {}
 icons[ShapeType.Text] = layer_text_icon;
 icons[ShapeType.Rectangle] = layer_rectangle_icon;
 icons[ShapeType.Oval] = layer_oval_icon;
@@ -40,6 +40,12 @@ icons[ShapeType.Contact] = layer_contact_icon;
 icons[ShapeType.Cutout] = layer_cutout_icon;
 icons[ShapeType.Image] = layer_image_icon;
 
+const icons_name: { [key: string]: string } = {}
+icons_name[ShapeType.Text] = 'layer_text_icon';
+icons_name[ShapeType.Group] = 'layer_group_icon';
+icons_name[ShapeType.Artboard] = 'layer_artboard_icon';
+icons_name[ShapeType.Contact] = 'layer_contact_icon';
+icons_name[ShapeType.Cutout] = 'layer_cutout_icon';
 interface Props {
     view: number;
     shape: ShapeView;
@@ -51,21 +57,34 @@ const path = ref<string>('');
 const is_image = ref(false);
 const flex_abbr = ref<boolean>(true);
 const icon_class = ref<string>('');
+const icon_name = ref<string>('');
 
 function updateIconClass() {
     const s = props.shape;
-    if (s.data.mask) return icon_class.value = layer_mask_icon;
-    if (s.isImageFill) return icon_class.value = layer_image_icon;
+    if (s.data.mask) {
+        icon_name.value = 'layer_mask_icon';
+        return icon_class.value = layer_mask_icon;
+    }
+    if (s.isImageFill) {
+        icon_name.value = 'layer_image_icon';
+        return icon_class.value = layer_image_icon;
+    }
     const auto_layout = s.type === ShapeType.Artboard && !!(s as ArtboardView).autoLayout;
-    if(auto_layout) return icon_class.value = layer_auto_box_icon;
-    else return icon_class.value = icons[s.type]
+    if (auto_layout) {
+        icon_name.value = 'layer_auto_box_icon';
+        return icon_class.value = layer_auto_box_icon;
+    }
+    else {
+        icon_name.value = icons_name[s.type] || '';
+        return icon_class.value = icons[s.type]
+    }
 }
 
 function getPath() {
     const shape = props.shape;
     is_image.value = shape.isImageFill && !shape.mask;
     flex_abbr.value = shape.isPathIcon && !is_image.value && !shape.mask;
-    if (!flex_abbr.value ) return updateIconClass();
+    if (!flex_abbr.value) return updateIconClass();
     const f = shape.frame;
     const m = new Matrix();
     m.trans(-(f.x + f.width / 2), -(f.y + f.height / 2));
@@ -73,10 +92,10 @@ function getPath() {
         if (shape.rotation) m.rotate(shape.rotation / 180 * Math.PI);
     }
     const box = XYsBounding([
-        {x: f.x, y: f.y},
-        {x: f.x + f.width, y: f.y},
-        {x: f.x + f.width, y: f.y + f.height},
-        {x: f.x, y: f.y + f.height}
+        { x: f.x, y: f.y },
+        { x: f.x + f.width, y: f.y },
+        { x: f.x + f.width, y: f.y + f.height },
+        { x: f.x, y: f.y + f.height }
     ].map(p => m.computeCoord3(p)));
 
     const new_w = box.right - box.left;
@@ -100,13 +119,13 @@ onMounted(getPath);
 onUnmounted(stop);
 </script>
 <template>
-<div class="abbr-container">
-    <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
-        <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"/>
-    </svg>
-    <SvgIcon v-else-if="is_image" :icon="layer_image_icon" :fill="theme" :stroke="theme"/>
-    <SvgIcon v-else :icon="icon_class" :fill="theme"/>
-</div>
+    <div class="abbr-container">
+        <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
+            <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round" />
+        </svg>
+        <SvgIcon2 v-else-if="is_image" icon="layer_image_icon" :icon-content="layer_image_icon" :theme="theme" />
+        <SvgIcon2 v-else :icon="icon_name" :icon-content="icon_class" :theme="theme" />
+    </div>
 </template>
 <style scoped lang="scss">
 .abbr-container {
@@ -115,9 +134,14 @@ onUnmounted(stop);
     display: flex;
     align-items: center;
 
-    > img {
+    >img {
         width: 13px;
         height: 13px;
+    }
+
+    >svg {
+        width: 14px;
+        height: 14px;
     }
 }
 </style>

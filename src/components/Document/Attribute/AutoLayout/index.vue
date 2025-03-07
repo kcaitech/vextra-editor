@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
-import { adapt2Shape, ArtboardView, AutoLayout, PaddingDir, Shape, ShapeType, ShapeView, StackMode, StackSizing, StackWrap, SymbolRefView, SymbolView } from '@kcdesign/data';
+import { ArtboardView, PaddingDir, Shape, ShapeType, ShapeView, StackMode, StackSizing, StackWrap, SymbolRefView } from '@kcdesign/data';
 import { computeString, getName } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import AutoLayoutInput from "./AutoLayoutInput.vue"
@@ -23,7 +23,7 @@ interface Props {
 const props = defineProps<Props>();
 const { t } = useI18n();
 const isActive = ref(false);
-const autoLayoutDate = ref<AutoLayout>();
+const autoLayoutDate = ref<AutolayoutCtx>();
 const horSpaceMenu = ref(false);
 const verSpaceMenu = ref(false);
 const horSizingMenu = ref(false);
@@ -46,18 +46,27 @@ function autoLayout(): void {
     } else {
         shapes = selectShapes[0].childs;
     }
+    let newshape: Shape | undefined;
     if (props.shapes.length > 1) {
         editor.create_autolayout_artboard(shapes, name);
     } else {
         const editor = props.context.editor4Shape(selectShapes[0]);
-        editor.addAutoLayout();
+        newshape = editor.addAutoLayout();
+    }
+    if (newshape) {
+        props.context.nextTick(page, () => {
+            const group = newshape && page.getShape(newshape.id);
+            group && props.context.selection.selectShape(group);
+            group && props.context.selection.notify(Selection.EXTEND, group);
+        })
     }
 }
 
 const deleteAutoLayout = () => {
-    const selectShapes = props.context.selection.selectedShapes;
-    const editor = props.context.editor4Shape(selectShapes[0]);
-    editor.deleteAutoLayout();
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.deleteAutoLayout(shapes);
 }
 
 const update = () => {
@@ -66,11 +75,8 @@ const update = () => {
 
 const updateData = () => {
     const selection = props.context.selection.selectedShapes;
-    if (selection.length !== 1) return;
-    const shape = selection[0] as ArtboardView;
-    if (!shape.autoLayout) return;
-    autoLayoutDate.value = shape.autoLayout;
-    isDisable.value = shape instanceof SymbolRefView;
+    autoLayoutDate.value = getAutoLayout(selection, t);
+    isDisable.value = selection.some(shape => shape instanceof SymbolRefView);
     reflush.value++;
 }
 
@@ -95,9 +101,10 @@ function watchShapes() { // 监听相关shape的变化
 }
 
 const changeLayoutMode = (wrap: StackWrap, mode: StackMode) => {
-    const selection = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(selection);
-    editor.modifyAutoLayoutDispersed(wrap, mode);
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyAutoLayoutDispersed(shapes, wrap, mode);
 }
 
 const changeHorSpace = (value: string) => {
@@ -108,9 +115,10 @@ const changeHorSpace = (value: string) => {
     const space: number = Number.parseFloat(value);
     if (isNaN(space)) return;
 
-    const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);
-    editor.modifyAutoLayoutSpace(space, 'hor');
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyAutoLayoutSpace(shapes, space, 'hor');
 }
 
 const changeVorSpace = (value: string) => {
@@ -121,31 +129,31 @@ const changeVorSpace = (value: string) => {
     let space: number = Number.parseFloat(value);
     if (isNaN(space)) return;
 
-    const shape = props.context.selection.selectedShapes[0] as ArtboardView;
-    const editor = props.context.editor4Shape(shape);
-    const autoLayout = shape.autoLayout;
-    if (!autoLayout) return;
-    if (autoLayout.stackMode !== StackMode.Vertical && space < 0) {
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    if (autoLayoutDate.value!.stackMode !== StackMode.Vertical && space < 0) {
         space = 0;
     }
-    editor.modifyAutoLayoutSpace(space, 'ver');
+    editor.modifyAutoLayoutSpace(shapes, space, 'ver');
 }
 
 const changePadding = (value: string, dir: PaddingDir) => {
-    const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
     if (dir === 'hor') {
         if (value.includes(',')) {
             const vulerArray = value.split(',');
             const hor = Number(parseFloat(vulerArray[0].trim()).toFixed(2));
             const right = Number(parseFloat(vulerArray[1].trim()).toFixed(2));
             if (isNaN(hor) || isNaN(right)) return;
-            editor.modifyAutoLayoutHorPadding(hor, right);
+            editor.modifyAutoLayoutHorPadding(shapes, hor, right);
         } else {
             value = Number.parseFloat(computeString(value)).toFixed(2);
             const padding: number = Number.parseFloat(value);
             if (isNaN(padding)) return;
-            editor.modifyAutoLayoutHorPadding(padding, padding);
+            editor.modifyAutoLayoutHorPadding(shapes, padding, padding);
         }
     } else if (dir === 'ver') {
         if (value.includes(',')) {
@@ -153,18 +161,18 @@ const changePadding = (value: string, dir: PaddingDir) => {
             const ver = Number(parseFloat(vulerArray[0].trim()).toFixed(2));
             const bottom = Number(parseFloat(vulerArray[1].trim()).toFixed(2));
             if (isNaN(ver) || isNaN(bottom)) return;
-            editor.modifyAutoLayoutVerPadding(ver, bottom);
+            editor.modifyAutoLayoutVerPadding(shapes, ver, bottom);
         } else {
             value = Number.parseFloat(computeString(value)).toFixed(2);
             const padding: number = Number.parseFloat(value);
             if (isNaN(padding)) return;
-            editor.modifyAutoLayoutVerPadding(padding, padding);
+            editor.modifyAutoLayoutVerPadding(shapes, padding, padding);
         }
     } else {
         value = Number.parseFloat(computeString(value)).toFixed(2);
         const padding: number = Number.parseFloat(value);
         if (isNaN(padding)) return;
-        editor.modifyAutoLayoutPadding(padding, dir);
+        editor.modifyAutoLayoutPadding(shapes, padding, dir);
     }
 }
 
@@ -210,7 +218,6 @@ const pointerLockChange = () => {
         modifyTelUp();
     }
 }
-
 
 function dragstart(e: MouseEvent) {
     modifyTelDown(e);
@@ -296,20 +303,24 @@ function dragend() {
 }
 
 const changeSizing = (value: StackSizing, dir: PaddingDir) => {
-    const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);
-    editor.modifyAutoLayoutSizing(value, dir);
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyAutoLayoutSizing(shapes, value, dir);
 }
 
 const changeGapSizing = (value: StackSizing, dir: PaddingDir) => {
-    const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);
-    editor.modifyAutoLayoutGapSizing(value, dir);
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyAutoLayoutGapSizing(shapes, value, dir);
 }
 
-function paddingValue(v1: number, v2: number) {
+function paddingValue(v1: number | string, v2: number | string) {
     if (v1 === v2) {
         return v1;
+    } else if (typeof v1 === 'string' || typeof v2 === 'string') {
+        return t('attr.mixed');
     } else {
         return `${v1}, ${v2}`
     }
@@ -349,6 +360,26 @@ const selectionWatcher = (t: number | string) => {
     }
 }
 
+const verSizingValue = (v?: string) => {
+    if (v === StackSizing.Fixed) {
+        return t(`autolayout.${StackSizing.Fixed}`);
+    } else if (v === t('attr.mixed')) {
+        return t('attr.mixed');
+    } else {
+        return t(`autolayout.adapt`);
+    }
+}
+
+const horSizingValue = (v?: string) => {
+    if (v === StackSizing.Auto) {
+        return t(`autolayout.adapt`);
+    } else if (v === t('attr.mixed')) {
+        return t('attr.mixed');
+    } else {
+        return t(`autolayout.${StackSizing.Fixed}`);
+    }
+}
+
 const isLayout = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length > 1) {
@@ -360,8 +391,10 @@ const isLayout = () => {
         } else {
             isActive.value = false;
         }
-    } 0
+    }
 }
+
+
 watch(() => isActive.value, () => {
     updateData();
 });
@@ -407,6 +440,7 @@ import layout_auto_icon from '@/assets/icons/svg/layout-auto.svg';
 import layout_fixed_icon from '@/assets/icons/svg/layout-fixed.svg';
 import layout_ver_fixed_icon from '@/assets/icons/svg/layout-ver-fixed.svg';
 import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
+import { AutolayoutCtx, getAutoLayout } from './ctx';
 
 </script>
 
@@ -422,9 +456,9 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
                 </div>
             </template>
         </TypeHeader>
-        <div class="container-top" v-if="!isActive && autoLayoutDate">
+        <div class="container-top" v-if="autoLayoutDate">
             <div class="container-left">
-                <div class="layout-wrap" :class="{ disabled: isDisable }" :reflush="reflush">
+                <div class="layout-wrap direction" :class="{ disabled: isDisable }" :reflush="reflush">
                     <div :class="{ active: autoLayoutDate.stackMode === StackMode.Vertical }"
                         @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Vertical)">
                         <Tooltip :content="t(`autolayout.ver`)">
@@ -471,11 +505,13 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
                 </div>
             </div>
             <div class="container-right">
-                <AutoLayoutSetting :reflush="reflush" :autoLayoutDate="autoLayoutDate" :context="context">
-                </AutoLayoutSetting>
+                <div>
+                    <AutoLayoutSetting :reflush="reflush" :autoLayoutDate="autoLayoutDate" :context="context">
+                    </AutoLayoutSetting>
+                </div>
             </div>
         </div>
-        <div class="layout-padding" v-if="!isActive && autoLayoutDate">
+        <div class="layout-padding" v-if="autoLayoutDate">
             <div class="container-input">
                 <AutoLayoutInput :icon="unfold ? left_padding_icon : hor_padding_icon"
                     :name="unfold ? 'left_padding' : 'hor_padding'"
@@ -508,21 +544,23 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
                 </Tooltip>
             </div>
         </div>
-        <div class="layout-area-size" v-if="!isActive && autoLayoutDate">
+        <div class="layout-area-size" v-if="autoLayoutDate">
             <div class="title">{{ t('autolayout.layout_area_size') }}</div>
             <div class="area-options">
                 <AutoLayoutInput
                     :icon="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? layout_auto_icon : layout_fixed_icon"
                     :name="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? 'hor_resizing' : 'hor_fixed'"
                     :isMenu="true" :show="horSizingMenu" :disabled="true" :item="t(`autolayout.${StackSizing.Fixed}`)"
-                    :value="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? t(`autolayout.adapt`) : t(`autolayout.${StackSizing.Fixed}`)"
+                    :mixed="autoLayoutDate.stackPrimarySizing === t('attr.mixed')"
+                    :value="horSizingValue(autoLayoutDate.stackPrimarySizing)"
                     @changeItem="(v) => changeSizing(v, 'hor')" @shwoMenu="shwoHorSizingMenu">
                 </AutoLayoutInput>
                 <AutoLayoutInput
                     :icon="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? layout_ver_fixed_icon : layout_ver_auto_icon"
                     :name="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? 'ver_fixed' : 'ver_resizing'"
                     :isMenu="true" :show="verSizingMenu" :disabled="true" :item="t(`autolayout.${StackSizing.Fixed}`)"
-                    :value="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? t(`autolayout.${StackSizing.Fixed}`) : t(`autolayout.adapt`)"
+                    :mixed="autoLayoutDate.stackCounterSizing === t('attr.mixed')"
+                    :value="verSizingValue(autoLayoutDate.stackCounterSizing)"
                     @changeItem="(v) => changeSizing(v, 'ver')" @shwoMenu="shwoVerSizingMenu">
                 </AutoLayoutInput>
             </div>
@@ -680,6 +718,10 @@ import layout_ver_auto_icon from '@/assets/icons/svg/layout-ver-auto.svg';
     background-position: center;
     background-size: 32px;
     z-index: 10000;
+}
+
+.direction {
+    cursor: pointer;
 }
 
 .active {

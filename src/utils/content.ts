@@ -1401,9 +1401,12 @@ export function flattenSelection(context: Context) {
     }
 }
 
-export const getShapeFrame = (shape: Shape) => {
-    if (shape.type !== ShapeType.Group) return shape.frame;
-    const childframes = (shape as GroupShape).childs.map((c) => c.boundingBox());
+export const getShapeFrame = (shape: ShapeView) => {
+    if (shape.type !== ShapeType.Group) {
+        const { x, y, height, width } = shape.frame;
+        return new ShapeFrame(x, y, width, height);
+    }
+    const childframes = (shape as GroupShapeView).childs.map((c) => c.boundingBox());
     const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
         if (i === 0) {
             p.minx = c.x;

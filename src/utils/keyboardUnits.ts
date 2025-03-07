@@ -865,10 +865,10 @@ keydownHandler['Quote'] = function (event: KeyboardEvent, context: Context) {
 
 function modifyLivingGroupForLabel(context: Context) {
     if (!context.selection.selectedShapes.length) return;
+    context.selection.setShowInterval(true);
 
     if (context.selection.hoveredShape) {
         context.selection.setLabelLivingGroup([]);
-        context.selection.setShowInterval(true);
     } else {
         const parents: Set<ShapeView> = new Set();
         for (const view of context.selection.selectedShapes) {
@@ -879,7 +879,6 @@ function modifyLivingGroupForLabel(context: Context) {
         }
         if (parents.size === 1) parents.forEach(v => {
             context.selection.setLabelLivingGroup([v]);
-            context.selection.setShowInterval(true);
         });
     }
 
@@ -891,7 +890,8 @@ keydownHandler['AltLeft'] = function (event: KeyboardEvent, context: Context) {
 }
 keydownHandler['AltRight'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
-    context.selection.setShowInterval(true);
+    if (event.repeat) return;
+    modifyLivingGroupForLabel(context);
 }
 keydownHandler['Comma'] = function (event: KeyboardEvent, context: Context) {
     const { ctrlKey, metaKey, shiftKey } = event;

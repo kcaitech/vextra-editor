@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { Context } from "@/context";
-import { AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name } from "@/utils/symbol";
-import { nextTick, ref } from "vue";
-import { SymbolShape, SymbolView, Variable, VariableType } from "@kcdesign/data";
+import { AttriListItem, delete_variable, is_status_allow_to_delete } from "@/utils/symbol";
+import { reactive, ref } from "vue";
+import { Variable } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
+import StatusAttrPanel from "./StatusAttrPanel.vue";
 
 interface Props {
     context: Context
@@ -12,76 +13,26 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const showRename = ref(false);
-const attrInput = ref('');
-const input_s = ref<HTMLInputElement>();
 const isWarnRepeat = ref(false);
 const isWarnNull = ref(false);
-const edit_symbol = ref<SymbolView>();
 const { t } = useI18n();
 
-function selectAllText(event: FocusEvent) {
-    (event.target as HTMLInputElement).select(); // 选择输入框内的文本
-    edit_symbol.value = props.context.selection.symbolshape;
-}
+const compLibStatus = reactive<ElementStatus>({ id: '#symbol-state-attr-panel', visible: false });
+const compPanelStatusMgr = new ElementManager(
+    props.context,
+    compLibStatus,
+    { whiteList: ['.symbol-state-attr-panel', '.module_item_left'] }
+);
 
-function closeInput() {
-    showRename.value = false;
-}
-
-function keyboard_watcher(e: KeyboardEvent) {
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        if (!validate()) return;
-        const _v = (e.target as HTMLInputElement).value;
-        if (_v && _v !== props.variable.name) save_name(_v);
-        closeInput()
-    }
-}
-
-const blur = () => {
-    if (!validate()) return;
-    if (attrInput.value !== props.variable.name) {
-        save_name(attrInput.value);
-        closeInput()
-    }
-}
-
-const validate = () => {
-    const len = attrInput.value.trim().length > 0;
-    const shape = edit_symbol.value || props.context.selection.symbolshape;
-    if (!shape) return false;
-    if (attrInput.value === props.variable.name) return closeInput();
-    const repeat = is_valid_name(shape, attrInput.value, VariableType.Status);
-
-    if (!len || !repeat) {
-        if (!len) isWarnNull.value = true;
-        else isWarnRepeat.value = true;
-        if (input_s.value) input_s.value.focus();
-        return false;
-    } else {
-        isWarnRepeat.value = false;
-        isWarnNull.value = false;
-        return true;
-    }
-}
-
-function rename() {
-    showRename.value = true;
-    attrInput.value = props.variable.name;
-    nextTick(() => {
-        const el = input_s.value;
-        if (el) {
-            (el as HTMLInputElement).focus();
-            el.select();
+function showCompLib(event: MouseEvent) {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('module_item_left')) {
+            compPanelStatusMgr.showBy(e, { once: { offsetLeft: -240, offsetTop: 0 } });
+            break;
         }
-    })
-}
-
-function save_name(v: string) {
-    const shape = edit_symbol.value || props.context.selection.symbolshape;
-    if (!shape) return;
-    const editor = props.context.editor4Shape(shape);
-    editor.modifyVariableName(props.variable, v);
+        e = e.parentElement;
+    }
 }
 
 function _delete() {
@@ -94,19 +45,19 @@ function _delete() {
 import delete_icon from '@/assets/icons/svg/delete.svg';
 import comp_state_icon from '@/assets/icons/svg/comp-state.svg';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import { onUnmounted } from "vue";
 
-
+onUnmounted(() => {
+    compPanelStatusMgr.unmounted();
+});
 </script>
 <template>
     <div class="module_attr_item">
         <div class="attr_con">
-            <div class="module_input" v-if="showRename">
-                <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="blur"
-                    @keydown="keyboard_watcher" />
-            </div>
-            <div class="module_item_left" @dblclick="rename" v-else>
+            <div class="module_item_left" @click="showCompLib">
                 <div class="module_name">
-                    <SvgIcon :icon="comp_state_icon"/>
+                    <SvgIcon :icon="comp_state_icon" />
                 </div>
                 <div class="name_i" :title="props.item.values.toString()">
                     <span style="width:35%;">{{ props.variable.name }}</span>
@@ -114,11 +65,14 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
                 </div>
             </div>
             <div class="delete" @click="_delete">
-                <SvgIcon :icon="delete_icon"/>
+                <SvgIcon :icon="delete_icon" />
             </div>
         </div>
         <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
         <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2') }}</p>
+        <StatusAttrPanel v-if="compLibStatus.visible" :context="context" :variable="variable" :item="item"
+            @close="() => compPanelStatusMgr.close()">
+        </StatusAttrPanel>
     </div>
 </template>
 <style scoped lang="scss">
@@ -209,23 +163,6 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 
     .module_item_left:hover {
         background-color: #EBEBEB;
-    }
-
-    .module_input {
-        display: flex;
-        align-items: center;
-        width: 192px;
-        height: 32px;
-
-        .el-input {
-            font-size: 12px;
-            height: 32px;
-
-            :deep(.el-input__wrapper) {
-                background-color: #F5F5F5;
-                border-radius: 6px;
-            }
-        }
     }
 
     .warn {

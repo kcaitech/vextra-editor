@@ -47,5 +47,7 @@ export const compos = {
     confirm: 'Confirm',
     circle_warning: 'Wrong reference',
     invalid_compos: 'Invalid Symbol',
-    toggle_list_style: 'list style'
+    toggle_list_style: 'list style',
+    comp_state_attr: 'Component state attribute',
+    state_value: 'State value',
 }

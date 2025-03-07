@@ -113,9 +113,11 @@ import down_icon from '@/assets/icons/svg/down.svg';
             <div :class="{ input_lay: true, disabled, }" @click="showSelectLayer">
                 <span v-if="selectLayerName" class="value" style="color: black;">{{ selectLayerName }}</span>
                 <span v-else style="color: #BFBFBF">{{ placeholder }}</span>
-                <SvgIcon :icon="down_icon" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">
-                    <ArrowDown />
-                </SvgIcon>
+                <div class="down">
+                    <SvgIcon :icon="down_icon" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">
+                        <ArrowDown />
+                    </SvgIcon>
+                </div>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
                 :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
@@ -225,13 +227,19 @@ import down_icon from '@/assets/icons/svg/down.svg';
         //    justify-content: center;
         //    transition: all 0.3s ease;
         //}
+        .down {
+            width: 32px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-        >svg {
-            width: 12px;
-            height: 12px;
-            color: #666666;
-            transition: all 0.3s ease;
-            margin-right: 7px;
+            img {
+                width: 12px;
+                height: 12px;
+                color: #666666;
+                transition: all 0.3s ease;
+            }
         }
     }
 

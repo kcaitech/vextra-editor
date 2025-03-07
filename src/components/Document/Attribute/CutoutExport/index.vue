@@ -6,7 +6,6 @@ import {
     ExportFormatNameingScheme,
     ExportOptions,
     ExportVisibleScaleType,
-    Shape,
     ShapeType,
     ShapeView
 } from '@kcdesign/data';
@@ -27,7 +26,6 @@ import {
     get_export_formats
 } from '@/utils/shape_style';
 import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getSvgImageData } from '@/utils/image';
-import PageCard from "@/components/common/PageCard.vue";
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const { t } = useI18n();
@@ -45,10 +43,8 @@ interface SvgFormat {
     x: number
     y: number
     background: string
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
-
-type PCard = InstanceType<typeof PageCard>
 
 export interface FormatItems {
     id: number,
@@ -70,8 +66,6 @@ const trim_bg = ref(false);
 const canvas_bg = ref(false);
 const previewUnfold = ref(false);
 const preview = ref();
-
-const pageCard = ref<PCard[]>();
 
 let renderSvgs: SvgFormat[] = reactive([]);
 
@@ -379,7 +373,7 @@ const showCheckbox = () => {
     isShowCheckbox.value = props.context.selection.selectedShapes.length === 1 && props.context.selection.selectedShapes[0].type === ShapeType.Cutout;
 }
 
-const previewSvgs = ref<SVGSVGElement[]>();
+const pageSvg = ref<SVGSVGElement[]>();
 const pngImageUrls: Map<string, string> = new Map();
 const exportFill = () => {
     pngImageUrls.clear();
@@ -427,8 +421,8 @@ const getExportUrl = async () => {
     for (let i = 0; i < selected.length; i++) {
         if (selected.length === 0) break;
         const shape = selected[i];
-        if (pageCard.value) {
-            const svg = pageCard.value[i].pageSvg!;
+        if (pageSvg.value) {
+            const svg = pageSvg.value[i]!;
             (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
                 const id = shape.id + format.id;
                 const { width, height } = svg.viewBox.baseVal
@@ -453,8 +447,8 @@ const exportPageImage = async () => {
     if (!page || !page.exportOptions) return;
     const options = page.exportOptions as ExportOptions;
     const promises: Array<Promise<void>> = [];
-    if (pageCard.value) {
-        const svg = pageCard.value[0].pageSvg!;
+    if (pageSvg.value) {
+        const svg = pageSvg.value[0]!;
         options.exportFormats.forEach((format, idx) => {
             const id = page.id + format.id;
             const { width, height } = svg.viewBox.baseVal
@@ -510,6 +504,7 @@ onUnmounted(() => {
 
 import export_menu_icon from "@/assets/icons/svg/export-menu.svg"
 import add_icon from "@/assets/icons/svg/add.svg"
+import { ShapeDom } from '../../Content/vdom/shape';
 
 </script>
 
@@ -520,10 +515,10 @@ import add_icon from "@/assets/icons/svg/add.svg"
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall" :style="{ backgroundColor: isPreinstall ? '#EBEBEB' : '' }"
                     @click.stop="showPreinstall">
-                    <SvgIcon :icon="export_menu_icon"/>
+                    <SvgIcon :icon="export_menu_icon" />
                 </div>
                 <div class="cutout-icon" @click.stop="preinstall('default')">
-                    <SvgIcon :icon="add_icon"/>
+                    <SvgIcon :icon="add_icon" />
                 </div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
                 </PreinstallSelect>
@@ -558,17 +553,10 @@ import add_icon from "@/assets/icons/svg/add.svg"
         </div>
         <div class="exportsvg" :reflush="reflush">
             <template v-for="(svg) in renderSvgs" :key="svg.id">
-                <!--                <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"-->
-                <!--                     xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"-->
-                <!--                     preserveAspectRatio="xMinYMin meet" :width="svg.width" :height="svg.height"-->
-                <!--                     :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"-->
-                <!--                     :style="{ 'background-color': svg.background }">-->
-                <!--                    <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  svg.shapes "-->
-                <!--                               :key="c.id" :data="c"/>-->
-                <!--                </svg>-->
-                <PageCard ref="pageCard" :background-color="svg.background"
-                    :view-box="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`" :shapes="svg.shapes" :width="svg.width"
-                    :height="svg.height"></PageCard>
+                <svg ref="pageSvg" :width="svg.width" :height="svg.height" overflow="visible"
+                    :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"
+                    v-html="(svg.shapes[0] as ShapeDom).el?.outerHTML || ''"
+                    :style="{ 'background-color': svg.background }"></svg>
             </template>
         </div>
     </div>
