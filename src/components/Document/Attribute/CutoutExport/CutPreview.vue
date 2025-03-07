@@ -24,7 +24,7 @@ import {
 import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
-import { getSvgImageData } from '@/utils/image';
+import { getPosition, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
 import { ShapeDom } from '../../Content/vdom/shape';
 
