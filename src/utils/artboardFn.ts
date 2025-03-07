@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { XY, PageXY } from '@/context/selection';
 import {
     Matrix,
@@ -126,7 +136,7 @@ export function insertFrameTemplate(context: Context) {
         frame.y = y;
         const fillColor = new Color(1, 255, 255, 255);
         const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, fillColor);
-        let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill);
+        let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill, context.data.stylesMgr);
         artboard = editor.insert(parent.data, shapes.length, artboard, true);
         context.nextTick(parent, () => {
             if (artboard) {

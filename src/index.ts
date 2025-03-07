@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import _DocumentVue from "./components/Document/index.vue"
 import _MobileDocumentVue from "./components/Mobile/Document.vue"
 import _PreviewVue from "./components/Preview/index.vue"
@@ -14,7 +24,7 @@ import {
     Repository,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
-import { Zip } from "@pal/zip";
+import { Zip } from "@/basic/zip";
 import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
@@ -23,6 +33,7 @@ import { importDocumentFromMDD } from "@/io";
 
 import '@/style/constant.scss'
 import '@/style/app.scss'
+import { initDataModule } from "./components/common/initmodule";
 export {i18n_messages as i18n} from '@/i18n';
 
 export * from "./openapi";
@@ -41,6 +52,7 @@ const t = (i18n as any).global.t;
 export { useComment } from '@/components/Document/Creator/execute'
 
 async function _open(props: DocumentProps) {
+    await initDataModule();
     const repo = new Repository();
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;

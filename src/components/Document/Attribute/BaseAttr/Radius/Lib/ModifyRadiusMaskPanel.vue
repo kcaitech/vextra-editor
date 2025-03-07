@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from "@/context";
 import { RadiusMask } from "@kcdesign/data";
@@ -62,6 +72,7 @@ function createStyle() {
 const setRadius = (event: Event) => {
     const target = event.target as HTMLInputElement;
     let arrs = radius.value.replaceAll(/，/g, ',').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
+    if (radius.value === '') return update();
     const b = arrs.some(i => isNaN(Number(i)));
     target.blur();
     if (b) return update();
@@ -145,7 +156,7 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 0 12px;
+        padding: 0 8px;
         box-sizing: border-box;
 
         input {

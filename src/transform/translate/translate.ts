@@ -1,9 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "../handler";
 import {
-    adapt2Shape,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1,
     Shape,
     ArtboardView,
     ColVector3D,
@@ -12,11 +19,9 @@ import {
     ShapeView,
     StackPositioning,
     Transform,
-    TransformRaw,
     TranslateUnit,
     Transporter, AutoLayout,
     BorderPosition, ShapeFrame,
-    Matrix,
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
@@ -232,13 +237,13 @@ export class TranslateHandler extends TransformHandler {
         if (!shapes.length) return;
         for (let i = 0; i < shapes.length; i++) {
             const shape = shapes[i];
-            const matrix = new Matrix();
-            const matrix2 = new Matrix(this.context.workspace.matrix);
-            matrix.reset(matrix2);
-            const shape_root_m = shape.matrix2Root();
-            const m = makeShapeTransform2By1(shape_root_m).clone();
-            const clientTransform = makeShapeTransform2By1(matrix2);
-            m.addTransform(clientTransform); //root到视图
+            // const matrix = new Matrix();
+            // const matrix2 = new Matrix(this.context.workspace.matrix);
+            // matrix.reset(matrix2);
+            // const shape_root_m = shape.matrix2Root();
+            // const m = (shape_root_m).clone();
+            // const clientTransform = (matrix2);
+            // m.addTransform(clientTransform); //root到视图
             this.outline_frame = { ...shape._p_frame };
             this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, shape._p_frame);
         }
@@ -263,13 +268,14 @@ export class TranslateHandler extends TransformHandler {
             if (!parent) continue;
             const { x, y, width, height } = shape.frame;
             if (!matrixParent2rootCache.has(parent.id)) {
-                matrixParent2rootCache.set(parent.id, makeShapeTransform2By1(parent.matrix2Root()))
+                matrixParent2rootCache.set(parent.id, (parent.matrix2Root()))
             }
 
-            const m = makeShapeTransform2By1(shape.transform).clone();
+            const m = (shape.transform).clone();
             m.addTransform(matrixParent2rootCache.get(parent.id)!);
 
-            const { col0: LT, col1: RT, col2: RB, col3: LB } = m.transform([
+            // const { col0: LT, col1: RT, col2: RB, col3: LB }
+            const points = m.transform([
                 ColVector3D.FromXY(x, y),
                 ColVector3D.FromXY(x + width, y),
                 ColVector3D.FromXY(x + width, y + height),
@@ -277,13 +283,17 @@ export class TranslateHandler extends TransformHandler {
             ])
 
             bases.set(shape.id, { originTransform: m });
+            const LT = points[0]
+            const RT = points[1]
+            const RB = points[2]
+            const LB = points[3]
 
             if (LT.x < left) left = LT.x;
             if (LT.x > right) right = LT.x;
             if (LT.y < top) top = LT.y;
             if (LT.y > bottom) bottom = LT.y;
 
-            const points = [RT, RB, LB];
+            // const points = [RT, RB, LB];
 
             for (let i = 0; i < 3; i++) {
                 const p = points[i];
@@ -554,7 +564,7 @@ export class TranslateHandler extends TransformHandler {
 
             let PI = PIC.get(parent.id);
             if (!PI) {
-                const __p = makeShapeTransform2By1(parent.matrix2Root().getInverse());
+                const __p = (parent.matrix2Root().getInverse());
 
                 PIC.set(parent.id, __p);
                 PI = __p;
@@ -574,7 +584,7 @@ export class TranslateHandler extends TransformHandler {
 
             __t.addTransform(PI);
 
-            const transform = makeShapeTransform1By2(__t) as TransformRaw;
+            const transform = (__t);
 
             transformUnits.push({ shape, transform });
         }

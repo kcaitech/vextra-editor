@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from "@/context";
 import { BorderMask, BorderMaskType, BorderPosition, BorderSideSetting, SideType } from "@kcdesign/data";
@@ -141,13 +151,13 @@ onUnmounted(() => {
         <div v-if="data" class="data-panel">
             <div class="type">
                 <div class="title">{{ t('stylelib.position') }}</div>
-                <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
-                    :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
-                    @select="positionSelect" :entry="'style'" />
+                <Select class="select" :context="context" :shapes="manager.flat" :source="positonOptionsSource"
+                        :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
+                        @select="positionSelect" :entry="'style'" />
             </div>
             <div class="thickness">
                 <div class="title">{{ t('stylelib.thickness') }}</div>
-                <input type="text" v-model="thickness" @change="setThickness">
+                <input v-blur type="text" v-model="thickness" @change="setThickness">
             </div>
         </div>
 
@@ -171,12 +181,13 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        padding: 0 8px;
+        box-sizing: border-box;
 
         .type {
             display: flex;
             gap: 8px;
             align-items: center;
-            padding: 0 12px;
             box-sizing: border-box;
 
             .select {
@@ -186,11 +197,9 @@ onUnmounted(() => {
 
 
         .thickness {
-
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 0 12px;
             box-sizing: border-box;
 
             input {
@@ -213,8 +222,7 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto;
-        margin-top: 8px;
+        margin: 8px auto 0;
         font-size: 12px;
         color: #fff;
         border-radius: 6px;

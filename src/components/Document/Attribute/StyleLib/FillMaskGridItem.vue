@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import { Fill, FillMask } from "@kcdesign/data";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
@@ -47,8 +57,7 @@ function update(...args: any[]) {
 function showModifyPanel(trigger: Element | null) {
     while (trigger) {
         if (trigger.classList.contains('grid')) {
-            modifyPanelStatusMgr.showBy(trigger, { once: { offsetLeft: -270 } });
-            manager.keepUniquePanel('.grid', modifyPanelStatusMgr);
+            modifyPanelStatusMgr.showBy(trigger, { once: { offsetLeft: -256 } });
             break;
         }
         trigger = trigger.parentElement;

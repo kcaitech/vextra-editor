@@ -1,5 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <template>
-    <div style="padding: 8px 12px; box-sizing: border-box;" @wheel.stop>
+    <div style="padding: 12px 8px; box-sizing: border-box;" @wheel.stop>
         <SearchInput :list="libs" v-model:type="currentLibs" v-model:value="keyword" />
         <el-scrollbar>
             <div class="content">
@@ -19,7 +29,7 @@ import SearchInput from "@/components/common/SearchInput.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import FillMaskPanelItem from './FillMaskPanelItem.vue';
 import FillMaskGridItem from '@/components/Document/Attribute/StyleLib/FillMaskGridItem.vue';
-import { StyleSheet } from "@kcdesign/data"
+import { FillMask, FillType, StyleSheet } from "@kcdesign/data"
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { StrokeFillContextMgr } from '../ctx';
 import { useI18n } from "vue-i18n";
@@ -68,7 +78,11 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = local;
 
         for (const v of sts.variables) {
-            if (v.typeId === "fill-mask-living" && !v.disabled) cat.variables.push(v);
+            if (v.typeId === "fill-mask-living" && !v.disabled) {
+                const fills = (v as FillMask).fills;
+                if (fills.some(i => i.fillType === FillType.Pattern)) continue;
+                cat.variables.push(v);
+            }
         }
         if (word) {
             const reg = new RegExp(`${word}`, 'img');

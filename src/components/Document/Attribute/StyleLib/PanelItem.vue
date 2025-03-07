@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import editor_icon from "@/assets/icons/svg/export-menu.svg";
@@ -57,7 +67,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div :class="{'fill-mask-catch-wrapper': true, extend, selected }">
+    <div :class="{'mask-catch-wrapper': true, extend, selected }">
         <div class="preview-container" @mouseup="mouseup">
             <slot name="preview"/>
         </div>
@@ -69,7 +79,7 @@ onUnmounted(() => {
     </div>
 </template>
 <style scoped lang="scss">
-.fill-mask-catch-wrapper {
+.mask-catch-wrapper {
     position: relative;
     width: 100%;
     height: 32px;

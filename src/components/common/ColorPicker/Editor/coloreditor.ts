@@ -1,9 +1,20 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { SelectionCtx } from "@/components/common/ColorPicker/Editor/basic";
 import { Context } from "@/context";
 import { IColorPicker, IGradientModifier, IPatternModifier } from "@/components/common/ColorPicker/Editor/basic/icolorpicker";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { AsyncApiCaller, PageEditor } from "@kcdesign/data";
+import { AsyncApiCaller, Color, PageEditor } from "@kcdesign/data";
 import { hidden_selection } from "@/utils/content";
+import { updateRecently } from "@/components/common/ColorPicker/utils";
 
 export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGradientModifier, IPatternModifier {
     private m_fill_type: string;
@@ -42,13 +53,17 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
         this.m_fill_type = type;
     }
 
-    setSolidColor(c: RGBACatch): void {}
-
-    dragSolidBegin(): void {
-        this.getSelection();
+    setSolidColor(c: RGBACatch): void {
+        this.onUnmounted = () => updateRecently(new Color(c.A, c.R, c.G, c.B)); // 在色板关闭时更新“最近使用”
     }
 
-    solidDragging(c: RGBACatch): void {}
+    dragSolidBegin(): void {
+        this.updateSelection();
+    }
+
+    solidDragging(c: RGBACatch): void {
+        this.onUnmounted = () => updateRecently(new Color(c.A, c.R, c.G, c.B));
+    }
 
     dragSolidEnd(): void {}
 
@@ -101,4 +116,7 @@ export class ColorPickerEditor extends SelectionCtx implements IColorPicker, IGr
     modifyTileScale(event: Event): void {}
 
     rotateImg(): void {}
+
+    onUnmounted() {
+    };
 }

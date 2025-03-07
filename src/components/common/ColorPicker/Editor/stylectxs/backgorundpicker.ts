@@ -1,9 +1,19 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import { Color, Shadow, backgorundAsyncApi, ShadowMask } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
-export class backgorundColorPicker extends ColorPickerEditor {
+export class backgroundColorPicker extends ColorPickerEditor {
 
     constructor(public context: Context, type: string) {
         super(context, type);
@@ -20,6 +30,7 @@ export class backgorundColorPicker extends ColorPickerEditor {
     }
 
     setSolidColor(c: RGBACatch): void {
+        super.setSolidColor(c);
         const actions = this.getApiParams(c);
         this.api.modifySolidColor(actions);
         this.hiddenCtrl();
@@ -27,10 +38,11 @@ export class backgorundColorPicker extends ColorPickerEditor {
     }
 
     dragSolidBegin(): void {
-        this.getSelection();
+        this.updateSelection();
     }
 
     solidDragging(c: RGBACatch): void {
+        super.setSolidColor(c);
         const actions = this.getApiParams(c);
         this.api.modifySolidColor(actions);
         this.hiddenCtrl();

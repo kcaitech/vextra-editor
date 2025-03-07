@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { AttrGetter, Border, Color, Fill, FillType, Gradient } from "@kcdesign/data";
 import { onUnmounted, ref, watch } from "vue";
@@ -14,16 +24,18 @@ const compos = {
 };
 
 const props = defineProps<{
-    colors: (Color | Fill | Border | AttrGetter)[];
-    size?: number,
-    round?: boolean,
-    disabledAlpha?: boolean
+    colors: (Color | Fill | Border | AttrGetter | Gradient)[];
+    size?: number;
+    round?: boolean;
+    disabledAlpha?: boolean;
 }>();
 type BlockType = 'solid' | 'pattern' | 'gradient';
 
 const fillsPreview = ref<{
     type: BlockType;
     data: Color | Gradient | string;
+
+    opacity?: number;
     disabledAlpha?: boolean;
 }[]>([]);
 
@@ -35,12 +47,17 @@ function update() {
         if (c instanceof Color) {
             container.push({ type: "solid", data: c, disabledAlpha });
         } else if (c instanceof Fill) {
+            if (!c.isEnabled) continue;
             if (c.fillType === FillType.SolidColor) {
                 container.push({ type: "solid", data: c.color, disabledAlpha });
             } else if (c.fillType === FillType.Gradient) {
-                container.push({ type: "gradient", data: c.gradient! });
+                container.push({ type: "gradient", data: c.gradient!, opacity: c.gradient?.gradientOpacity ?? 1 });
             } else if (c.fillType === FillType.Pattern) {
-                container.push({ type: "pattern", data: c.peekImage(true) || DEFAULT_IMAGE })
+                container.push({
+                    type: "pattern",
+                    data: c.peekImage(true) || DEFAULT_IMAGE,
+                    opacity: c.color.alpha ?? 1
+                });
             }
         } else if (c instanceof AttrGetter) {
             if (c.fillType === FillType.SolidColor && c.color) {
@@ -48,6 +65,8 @@ function update() {
             } else if (c.fillType === FillType.Gradient && c.gradient) {
                 container.push({ type: "gradient", data: c.gradient });
             }
+        } else if (c instanceof Gradient) {
+            container.push({ type: "gradient", data: c });
         }
     }
 }
@@ -57,7 +76,8 @@ onUnmounted(watch(() => props.colors, update));
 </script>
 <template>
     <div :class="{ 'color-wrapper': true, round }" :style="{ width: (size || 16) + 'px', height: (size || 16) + 'px' }">
-        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="(compos[c.type])" :params="(c as any)" />
+        <component v-for="(c, idx) in fillsPreview" :key="idx" :is="compos[c.type]" :params="c as any"
+                   :opacity="c.opacity"/>
     </div>
 </template>
 <style scoped lang="scss">

@@ -1,5 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from "vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Context } from "@/context";
 import { OvalData, OvalOptions, sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { hidden_selection } from "@/utils/content";
@@ -9,6 +19,7 @@ import { LockedPointer } from "@/components/Document/Attribute/LockedPointer/loc
 import { LockMouse } from "@/transform/lockMouse";
 import { useI18n } from "vue-i18n";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import oval_start_icon from "@/assets/icons/svg/oval-start.svg"
 
 const t = useI18n().t;
 
@@ -189,6 +200,14 @@ function __leave_sweep() {
     t2 = null;
 }
 
+const watchList = [
+    watch(() => props.selectionChange, (val) => {
+        ovalData.stashSelection();
+        ovalData.update(val);
+    }),
+    watch(() => props.trigger, ovalData.update.bind(ovalData))
+];
+
 watch(() => props.selectionChange, (val) => {
     ovalData.stashSelection();
     ovalData.update(val);
@@ -213,7 +232,9 @@ onMounted(() => {
     }, true);
     ovalData.__update();
 });
-import oval_start_icon from "@/assets/icons/svg/oval-start.svg"
+onUnmounted(() => {
+    watchList.forEach(stop => stop());
+})
 </script>
 <template>
     <form ref="form" :class="{'oval-arc-options-wrapper': true, disabled: options.disabled}">

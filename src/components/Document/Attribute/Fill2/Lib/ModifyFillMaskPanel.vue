@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from "@/context";
 import { FillMask } from "@kcdesign/data";
@@ -25,7 +35,7 @@ const { t } = useI18n();
 const name = ref<string>(data?.name ?? t('stylelib.colors'));
 const desc = ref<string>(data?.description ?? '');
 const fills = ref<FillCatch[]>();
-const lastone = ref<boolean>(false);
+const last = ref<boolean>(false);
 
 function getFills() {
     const container: FillCatch[] = [];
@@ -39,7 +49,7 @@ function update() {
     name.value = data?.name ?? t('stylelib.colors');
     desc.value = data?.description ?? '';
     fills.value = getFills();
-    lastone.value= fills.value.length === 1;
+    last.value= fills.value.length === 1;
 }
 
 function modifyName(value: string) {
@@ -92,7 +102,7 @@ onUnmounted(() => {
             <ListHeader :title="t('stylelib.color')" @create="manager.create(data)" />
             <div class="fills-container">
                 <FillItem v-for="(fill, index) in fills" :key="index" :context="context" :manager="manager"
-                    :data="(fill as FillCatch)" :lastone="lastone" />
+                    :data="(fill as FillCatch)" :last="last" />
             </div>
         </div>
         <div v-else :class="{ 'create-style': true, disabled: !name }" @click="createStyle">{{ t('stylelib.add_style') }}</div>
@@ -124,7 +134,7 @@ onUnmounted(() => {
             gap: 6px;
             width: 100%;
             height: fit-content;
-            padding: 0 12px;
+            padding: 0 8px;
             box-sizing: border-box;
         }
     }

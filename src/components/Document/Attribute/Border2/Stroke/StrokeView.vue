@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
-import { StrokeFillContextMgr } from '../ctx';
+import { getSideThickness, StrokeFillContextMgr } from '../ctx';
 import BorderDetail from './BorderDetail.vue';
 import { BorderPosition, LinearApi, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
@@ -8,7 +18,6 @@ import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
-import { getSideThickness } from '../index';
 import { sortValue } from '../../BaseAttr/oval';
 import { LockMouse } from '@/transform/lockMouse';
 import Apex from './Apex.vue';
@@ -93,7 +102,7 @@ function keydownThickness(event: KeyboardEvent, val: string | number) {
             value = value + (event.code === 'ArrowUp' ? 1 : -1);
             if (isNaN(value)) return;
             value = value <= 0 ? 0 : value <= 300 ? value : 300;
-            if (old !== value) linearApi.modifyShapesBorderThickness(props.manager.selected, value);
+            if (old !== value) linearApi.modifyShapesBorderThickness(props.manager.flat, value);
         }
         event.preventDefault();
     }
@@ -167,7 +176,7 @@ function onMouseMove(e: MouseEvent) {
         let thickness = (getSideThickness(strokeInfo.sideSetting) || 0) + e.movementX;
         if (thickness > 300) thickness = 300;
 
-        lockMouseHandler?.modifyBorderThickness(props.manager.selected, thickness < 0 ? 0 : thickness);
+        lockMouseHandler?.modifyBorderThickness(props.manager.flat, thickness < 0 ? 0 : thickness);
     }
 }
 
@@ -185,8 +194,7 @@ const line_end_point = (shapes: ShapeView[]) => {
             }
         }
     }
-    const endpoint = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
-    return endpoint;
+    return shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
 }
 const updater = () => {
     const shapes = props.context.selection.selectedShapes;
@@ -214,10 +222,10 @@ onUnmounted(() => {
         v-if="manager.fillCtx.strokeInfo && (manager.fillCtx.fills.length || manager.fillCtx.mixed)">
         <div class="bottom">
             <div class="test" style=" flex: calc(50% - 20px);"
-                :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(manager.selected[0].type) ? 'none' : 'auto' }">
-                <Select class="select" :context="context" :shapes="manager.selected" :source="positonOptionsSource"
-                    :selected="positoSelected()" @select="positionSelect" :index="0"
-                    :mixed="manager.fillCtx.strokeInfo.position === 'mixed'"></Select>
+                :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(manager.flat[0].type) ? 'none' : 'auto' }">
+                <Select class="select" :context="context" :shapes="manager.flat" :source="positonOptionsSource"
+                        :selected="positoSelected()" @select="positionSelect" :index="0"
+                        :mixed="manager.fillCtx.strokeInfo.position === 'mixed'"></Select>
             </div>
             <div class="thickness-container" style=" flex: calc(50% - 20px);" :class="{ actived: isActived }">
                 <SvgIcon :icon="thickness_icon"
@@ -246,7 +254,7 @@ onUnmounted(() => {
     padding: 6px 0;
 
     .bottom {
-        width: calc(100% - 19px);
+        width: calc(100% - 36px);
         display: flex;
         align-items: center;
         height: 32px;

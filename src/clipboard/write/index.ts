@@ -1,13 +1,39 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import { Bundle, MossClipboard, RefShapeBase, SourceBundle } from "@/clipboard";
 import {
-    Text, TableCellType, import_text, export_text, TransformRaw, CurvePoint, makeShapeTransform1By2, ContactLineView, export_shape, adapt2Shape, PathShape, Document, ShapeView, SymbolRefView, RefUnbind
+    Text,
+    TableCellType,
+    import_text,
+    export_text,
+    Transform,
+    CurvePoint,
+    ContactLineView,
+    export_shape,
+    adapt2Shape,
+    PathShape,
+    Document,
+    ShapeView,
+    SymbolRefView,
+    RefUnbind,
+    StyleMangerMember,
+    exportMask
 } from "@kcdesign/data";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
 
 class ExfContext {
     medias = new Set<string>();
+    styles = new Set<string>();
 }
 
 export class MossWriter {
@@ -25,6 +51,16 @@ export class MossWriter {
             media[v] = res;
         });
         return media;
+    }
+
+    private __sort_styles(document: Document, exportCtx: ExfContext) {
+        const masks: StyleMangerMember[] = [];
+        exportCtx.styles.forEach(v => {
+            const mask = document.stylesMgr.getSync(v);
+            if (!mask) return;
+            masks.push(exportMask(mask) as StyleMangerMember);
+        });
+        return masks;
     }
 
     private __sort_symbolref(views: ShapeView[]) {
@@ -120,8 +156,8 @@ export class MossWriter {
         } else {
             let shapes = compare_layer_3(this.context.selection.selectedShapes, -1);
             if (!shapes.length) return;
-            const origin_transform_map: any = {};
-            const position_map: Map<string, TransformRaw> = new Map();
+            const origin_transform_map: {[key:string]:Transform} = {};
+            const position_map: Map<string, Transform> = new Map();
             const points_map: Map<string, CurvePoint[]> = new Map();
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
@@ -140,12 +176,14 @@ export class MossWriter {
                 }
             }
             const media = this.__sort_media(this.context.data, ctx);
+            const styles = this.__sort_styles(this.context.data, ctx);
             const data: SourceBundle = {
                 originIds: _shapes.map(i => i.id),
                 originTransform: origin_transform_map,
                 shapes: _shapes,
                 media,
-                unbindRefs: this.__sort_symbolref(shapes)
+                unbindRefs: this.__sort_symbolref(shapes),
+                styles: styles,
             }
             const html = this.encode(MossClipboard.source, data);
             const blob = new Blob([html || ''], { type: 'text/html' });

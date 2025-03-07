@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -39,11 +49,12 @@ function changeDescInput(event: Event) {
         <div class="name">
             <label for="name">{{ t('stylelib.name') }}</label>
             <input v-focus type="text" id="name" :value="name" @change="modifyName" @input="changeNameInput"
-                @keydown.esc="blur">
+                @keydown.esc="blur" autocomplete="off">
         </div>
         <div class="des">
             <label for="des">{{ t('stylelib.description') }}</label>
-            <input type="text" id="des" :value="desc" @change="modifyDesc" @input="changeDescInput" @keydown.esc="blur">
+            <input type="text" id="des" :value="desc" @change="modifyDesc" @input="changeDescInput" @keydown.esc="blur"
+                autocomplete="off">
         </div>
     </div>
 </template>
@@ -52,7 +63,7 @@ function changeDescInput(event: Event) {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 0 12px;
+    padding: 0 8px;
     box-sizing: border-box;
 
     .name,

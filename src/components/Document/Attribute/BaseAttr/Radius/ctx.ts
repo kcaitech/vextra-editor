@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import {
     BasicArray,
@@ -6,7 +16,6 @@ import {
     RadiusType,
     ShapeView,
     StyleMangerMember,
-    SymbolRefView
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { StyleCtx } from "../../stylectx";
@@ -34,9 +43,9 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        if (this.selected.length < 1) return;
-        if (this.selected.length < 2) return this.radiusCtx.mixed = false;
-        const allRadius = this.selected.map(i => ({ radius: i.radius, radiusMask: i.radiusMask }));
+        if (this.flat.length < 1) return;
+        if (this.flat.length < 2) return this.radiusCtx.mixed = false;
+        const allRadius = this.flat.map(i => ({ radius: i.radius, radiusMask: i.radiusMask }));
 
         const stringMixed = radiusMaskMixed(allRadius[0].radiusMask);
         for (let i = 1; i < allRadius.length; i++) {
@@ -47,8 +56,8 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     private updateRadius() {
-        if (this.selected.length < 1) return;
-        this.radiusCtx.mask = this.radiusCtx.mixed ? undefined : this.selected[0].radiusMask;
+        if (this.flat.length < 1) return;
+        this.radiusCtx.mask = this.radiusCtx.mixed ? undefined : this.flat[0].radiusMask;
         if (this.radiusCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.radiusCtx.mask) as RadiusMask;
             this.radiusCtx.maskInfo = {
@@ -56,10 +65,10 @@ export class RadiusContextMgr extends StyleCtx {
                 desc: mask.description,
                 disabled: mask.disabled
             }
-            this.radiusCtx.radius = [...this.selected[0].radius];
+            this.radiusCtx.radius = [...this.flat[0].radius];
         } else {
             this.radiusCtx.maskInfo = undefined;
-            this.radiusCtx.radius = this.calculateRadius(this.selected[0]);
+            this.radiusCtx.radius = this.calculateRadius(this.flat[0]);
         }
     }
 
@@ -74,9 +83,9 @@ export class RadiusContextMgr extends StyleCtx {
             radiusFirst.push(...r);
         }
 
-        for (let i = 1, l = this.selected.length; i < l; i++) {
-            const currentRadius = this.selected[i].radius;
-            if (this.selected[i].radiusType !== RadiusType.Rect) {
+        for (let i = 1, l = this.flat.length; i < l; i++) {
+            const currentRadius = this.flat[i].radius;
+            if (this.flat[i].radiusType !== RadiusType.Rect) {
                 const same = currentRadius.every(i => i === currentRadius[0]);
                 if (same) {
                     if (radiusFirst[0] !== currentRadius[0]) radiusFirst[0] = mixed;
@@ -97,13 +106,13 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     private modify_can_be_rect() {
-        if (this.selected.length < 1) return;
+        if (this.flat.length < 1) return;
         this.can_be_rect = false;
         const origin = this.radiusCtx.rect;
         this.radiusCtx.rect = false;
 
-        for (let i = 0, l = this.selected.length; i < l; i++) {
-            if (this.selected[i].radiusType !== RadiusType.Rect) return;
+        for (let i = 0, l = this.flat.length; i < l; i++) {
+            if (this.flat[i].radiusType !== RadiusType.Rect) return;
         }
 
         this.can_be_rect = true;
@@ -117,7 +126,7 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     update() {
-        this.getSelected();
+        this.updateSelection();
         this.modify_can_be_rect();
         this.modifyMixedStatus();
         this.updateRadius();
@@ -126,11 +135,11 @@ export class RadiusContextMgr extends StyleCtx {
     rectToggle() {
         this.radiusCtx.rect = !this.radiusCtx.rect;
         localStorage.setItem('radius-corner-display', this.radiusCtx.rect ? 'all' : 'corner');
-        this.radiusCtx.radius = this.calculateRadius(this.selected[0]);
+        this.radiusCtx.radius = this.calculateRadius(this.flat[0]);
     }
 
     modifyRadius(value: number[]) {
-        this.editor.shapesModifyRadius(this.selected, value);
+        this.editor.shapesModifyRadius(this.flat, value);
         this.hiddenCtrl();
     }
 
@@ -140,28 +149,29 @@ export class RadiusContextMgr extends StyleCtx {
 
     addRadiusMask(id: string) {
         if (Object.keys(this.radiusCtx).length === 0) return;
-        this.radiusEditor.setShapesRadiusMask(this.page, this.selected, id);
+        this.radiusEditor.setShapesRadiusMask(this.page, this.flat, id);
         this.kill();
         this.hiddenCtrl();
     }
 
     unbind() {
-        const id = this.selected[0].radiusMask;
-        const { shapes, radius } = get_actions_radius_mask(this.selected, id);
+        const id = this.flat[0].radiusMask;
+        const { shapes, radius } = get_actions_radius_mask(this.flat, id);
         this.editor.shapesModifyRadius(shapes, radius);
     }
 
     createStyleLib(name: string, desc: string) {
         let radius = new BasicArray<number>();
-        if (this.selected[0].radius.length === 4) {
-            radius.push(...this.selected[0].radius);
+        const represent = this.flat[0];
+        if (represent.radius.length === 4) {
+            radius.push(...represent.radius);
         } else {
-            const r = this.selected[0].radius[0];
+            const r = represent.radius[0];
             radius.push(r, r, r, r);
         }
         if (this.radiusCtx.mask) radius = new BasicArray<number>(1, 1, 1, 1);
         const radiusMask = new RadiusMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, radius);
-        this.radiusEditor.createRadiusMask(this.document, radiusMask, this.page, this.selected);
+        this.radiusEditor.createRadiusMask(this.document, radiusMask, this.page, this.flat);
         this.kill();
     }
     disableMask(data: StyleMangerMember) {
@@ -170,12 +180,9 @@ export class RadiusContextMgr extends StyleCtx {
 }
 
 function get_actions_radius_mask(shapes: ShapeView[], mask_id?: string) {
-    let radius: number[] = [];
+    let radius: number[];
     const id = mask_id ? mask_id : shapes[0].radiusMask!
-    let mgr = shapes[0].style.getStylesMgr();
-    if (shapes[0] instanceof SymbolRefView && !mgr) {
-        mgr = (shapes[0] as SymbolRefView).symData?.style.getStylesMgr();
-    }
+    const mgr = shapes[0].style.getStylesMgr();
     radius = (mgr?.getSync(id) as RadiusMask).radius;
     return { shapes, radius };
 }

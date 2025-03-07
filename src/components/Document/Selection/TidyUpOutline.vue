@@ -1,8 +1,18 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 import { onMounted, onUnmounted, ref, } from "vue";
 import { Context } from "@/context";
 import { Point } from "./SelectionView.vue";
-import { ColVector3D, makeShapeTransform2By1, Matrix } from "@kcdesign/data";
+import { ColVector3D, Matrix } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 
@@ -27,10 +37,10 @@ const getOutlines = (f?: { x: number, y: number, height: number, width: number }
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
-    const { col0, col1, col2, col3 } = m.transform([
+    const { [0]:col0, [1]:col1, [2]:col2, [3]:col3 } = m.transform([
         ColVector3D.FromXY(frame.x, frame.y),
         ColVector3D.FromXY(frame.x + frame.width, frame.y),
         ColVector3D.FromXY(frame.x + frame.width, frame.y + frame.height),

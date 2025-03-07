@@ -1,12 +1,20 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 import { Context } from '@/context';
 import {
     ColVector3D,
     CtrlElementType,
-    makeMatrixByTransform2,
-    makeShapeTransform2By1,
     ShapeView,
-    Transform, TransformRaw
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
@@ -49,19 +57,19 @@ function update() {
 
 function update_transform() {
     const shape = props.shape;
-    const m = makeShapeTransform2By1(shape.matrix2Root());
-    const mClient = makeShapeTransform2By1(props.context.workspace.matrix as unknown as TransformRaw);
+    const m = (shape.matrix2Root());
+    const mClient = (props.context.workspace.matrix as unknown as Transform);
     m.addTransform(mClient);
 
     const transform = m.clone()
-        .clearSkew()
-        .clearScaleSize();
+    transform.clearSkew()
+    transform.clearScaleSize();
 
-    ltTransform.value = makeMatrixByTransform2(transform.translateInLocal(ColVector3D.FromXY(-20, -20))).toString();
+    ltTransform.value = (transform.translateInLocal(ColVector3D.FromXY(-20, -20))).toString();
 
     const {x, y, width, height} = shape.frame;
 
-    const {col0: lt, col1: rt, col2: rb, col3: lb} = m.transform([
+    const {[0]: lt, [1]: rt, [2]: rb, [3]: lb} = m.transform([
         ColVector3D.FromXY(x, y),
         ColVector3D.FromXY(x + width, y),
         ColVector3D.FromXY(x + width, y + height),
@@ -228,28 +236,28 @@ function point_mouseleave() {
 
 function setCursor() {
     const shape = props.shape;
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix as unknown as TransformRaw);
-    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
+    const clientMatrix = (props.context.workspace.matrix);
+    const fromRoot = (shape.matrix2Root());
 
     const fromClient = fromRoot.addTransform(clientMatrix);
     const {x, y, width, height} = shape.frame;
 
-    const {col0: vecRB} = fromClient.clone()
-        .clearTranslate()
-        .clearScaleSize()
-        .transform([
+    const _from = fromClient.clone()
+    _from.clearTranslate()
+    _from.clearScaleSize()
+    const {[0]: vecRB} = _from.transform([
             ColVector3D.FromXY(1, 1),
         ]);
 
     const xVector = ColVector3D.FromXY(1, 0);
 
-    const theta3 = cursorAngle(xVector, vecRB);
+    const theta3 = cursorAngle(xVector, ColVector3D.FromXY(vecRB));
 
     const cols = fromClient.transform([
         ColVector3D.FromXY(x + width, y + height)
     ]);
 
-    const {col0} = cols;
+    const {[0]:col0} = cols;
 
     const assistRB = new Transform()
         .setRotateZ(theta3)
@@ -257,7 +265,7 @@ function setCursor() {
     const action = props.context.tool.action;
     const type = action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
 
-    props.context.cursor.setType(type, assistRB.decomposeEuler().z * 180 / Math.PI);
+    props.context.cursor.setType(type, assistRB.decomposeRotate() * 180 / Math.PI);
 }
 
 watch(() => props.shape, (value, old) => {

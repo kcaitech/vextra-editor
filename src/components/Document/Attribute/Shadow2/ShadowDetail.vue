@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { ShadowCatch, ShadowsContextMgr } from './ctx';
@@ -49,7 +59,7 @@ const panelStatus = reactive<ElementStatus>({ id: '#shadow-detail-container', vi
 const panelStatusMgr = new ElementManager(
     props.context,
     panelStatus,
-    { whiteList: ['#shadow-detail-container', '.shadow-trigger'] }
+    { whiteList: ['#shadow-detail-container', '.fill-item-container'] }
 );
 
 function showColorPanel(event: MouseEvent) {
@@ -67,8 +77,8 @@ function showDetailPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     disable();
     while (e) {
-        if (e.classList.contains('shadow-trigger')) {
-            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -306 } });
+        if (e.classList.contains('fill-item-container')) {
+            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -266 } });
             break;
         }
         e = e.parentElement;
@@ -91,7 +101,7 @@ function keydownOffsetX(e: KeyboardEvent, val: string | number) {
         if (props.data.shadow.parent?.parent instanceof ShadowMask) {
             actions.push({ shadow: props.data.shadow, value });
         } else {
-            for (const view of props.manager.selected) {
+            for (const view of props.manager.flat) {
                 const shadow = view.getShadows()[_idx];
                 actions.push({ shadow, value });
             }
@@ -118,7 +128,7 @@ function keydownOffsetY(e: KeyboardEvent, val: string | number) {
         if (props.data.shadow.parent?.parent instanceof ShadowMask) {
             actions.push({ shadow: props.data.shadow, value });
         } else {
-            for (const view of props.manager.selected) {
+            for (const view of props.manager.flat) {
                 const shadow = view.getShadows()[_idx];
                 actions.push({ shadow, value });
             }
@@ -145,7 +155,7 @@ function keydownBlurRadius(e: KeyboardEvent, val: string | number) {
         if (props.data.shadow.parent?.parent instanceof ShadowMask) {
             actions.push({ shadow: props.data.shadow, value });
         } else {
-            for (const view of props.manager.selected) {
+            for (const view of props.manager.flat) {
                 const shadow = view.getShadows()[_idx];
                 actions.push({ shadow, value });
             }
@@ -172,7 +182,7 @@ function keydownSpread(e: KeyboardEvent, val: string | number) {
         if (props.data.shadow.parent?.parent instanceof ShadowMask) {
             actions.push({ shadow: props.data.shadow, value });
         } else {
-            for (const view of props.manager.selected) {
+            for (const view of props.manager.flat) {
                 const shadow = view.getShadows()[_idx];
                 actions.push({ shadow, value });
             }
@@ -228,7 +238,7 @@ function draggingX(e: MouseEvent) {
     if (props.data.shadow.parent?.parent instanceof ShadowMask) {
         actions.push({ shadow: props.data.shadow, value });
     } else {
-        for (const view of props.manager.selected) {
+        for (const view of props.manager.flat) {
             const shadow = view.getShadows()[_idx];
             actions.push({ shadow, value });
         }
@@ -249,7 +259,7 @@ function draggingY(e: MouseEvent) {
     if (props.data.shadow.parent?.parent instanceof ShadowMask) {
         actions.push({ shadow: props.data.shadow, value });
     } else {
-        for (const view of props.manager.selected) {
+        for (const view of props.manager.flat) {
             const shadow = view.getShadows()[_idx];
             actions.push({ shadow, value });
         }
@@ -270,7 +280,7 @@ function draggingB(e: MouseEvent) {
     if (props.data.shadow.parent?.parent instanceof ShadowMask) {
         actions.push({ shadow: props.data.shadow, value });
     } else {
-        for (const view of props.manager.selected) {
+        for (const view of props.manager.flat) {
             const shadow = view.getShadows()[_idx];
             actions.push({ shadow, value });
         }
@@ -291,7 +301,7 @@ function draggingS(e: MouseEvent) {
     if (props.data.shadow.parent?.parent instanceof ShadowMask) {
         actions.push({ shadow: props.data.shadow, value });
     } else {
-        for (const view of props.manager.selected) {
+        for (const view of props.manager.flat) {
             const shadow = view.getShadows()[_idx];
             actions.push({ shadow, value });
         }
@@ -310,7 +320,7 @@ function dragEnd() {
 const disabled = ref(false);
 const spare_tip = ref('');
 const disable = () => {
-    const shapes = props.manager.selected;
+    const shapes = props.manager.flat;
     if (shapes.length === 1) {
         const type = shapes[0].type;
         const fills = shapes[0].data.style.fills;

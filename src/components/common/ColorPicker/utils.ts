@@ -1,6 +1,29 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 
-import { Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
+import {
+    Color,
+    Fill,
+    ShapeType,
+    ShapeView,
+    TextShapeView,
+    Gradient,
+    Stop,
+    GradientType,
+    FillType,
+    GroupShapeView,
+    TableView,
+    importGradient
+} from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';
@@ -212,7 +235,7 @@ export function drawPipetteCanvas(colors: IColors, size: number) {
         ctx.lineTo(j * size, diameter);
         ctx.stroke();
     }
-    // 画圆形边框
+    // 画圆形描边
     ctx.beginPath();
     ctx.strokeStyle = '#ddd';
     ctx.arc(radius, radius, radius, 0, 2 * Math.PI);
@@ -270,11 +293,11 @@ export const getCanvasRectColor = (ctx: any, rect: Rect, scale: number = 1) => {
 }
 
 // store
-export const key_storage = 'color_recently';
+export const color_recent_storage = 'color_recently';
 const split = ':';
 
 export function updateRecently(color: Color) {
-    const store = JSON.parse(localStorage.getItem(key_storage) || JSON.stringify([]));
+    const store = JSON.parse(localStorage.getItem(color_recent_storage) || JSON.stringify([]));
     if (store.length) {
         const item = parseColorForStorage(color);
         const e_idx = store.findIndex((i: string) => i === item);
@@ -294,21 +317,27 @@ export function updateRecently(color: Color) {
         store.unshift(c);
         setLocalStorageForColors(store);
     }
-    return localStorage.getItem(key_storage);
+    return localStorage.getItem(color_recent_storage);
 }
 
 function parseColorForStorage(color: Color): string {
+    // if (color instanceof Gradient) return "gradient/" + JSON.stringify(exportGradient(color));
+    // else return "color/" + `${color.alpha}${split}${color.red}${split}${color.green}${split}${color.blue}`;
     return `${color.alpha}${split}${color.red}${split}${color.green}${split}${color.blue}`;
 }
 
-export function parseColorFormStorage(c: string): Color {
-    let _c: any[] = c.split(split);
-    _c = _c.map(i => Number(i));
-    return new Color(_c[0], Math.round(_c[1]), Math.round(_c[2]), Math.round(_c[3]));
+export function parseColorFormStorage(c: string): Color | Gradient {
+    if (c.includes('gradient')) {
+        return importGradient(JSON.parse(c.slice('gradient/'.length)));
+    } else {
+        let _c: any[] = c.split(split);
+        _c = _c.map(i => Number(i));
+        return new Color(_c[0], Math.round(_c[1]), Math.round(_c[2]), Math.round(_c[3]));
+    }
 }
 
 function setLocalStorageForColors(si: string[]) {
-    localStorage.setItem(key_storage, JSON.stringify(si));
+    localStorage.setItem(color_recent_storage, JSON.stringify(si));
 }
 
 // RGB => H

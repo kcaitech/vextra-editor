@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { StrokeFillContextMgr } from '../ctx';
@@ -7,7 +17,12 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from "vue-i18n";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 
-defineProps<{ context: Context; manager: StrokeFillContextMgr; trigger: any[] }>();
+defineProps<{
+    context: Context;
+    manager: StrokeFillContextMgr;
+    trigger: any[];
+    active: boolean;
+}>();
 const emits = defineEmits<{
     (e: 'showBorderPanel', event: MouseEvent): void;
 }>();
@@ -19,7 +34,7 @@ const showBorderPanel = (event: MouseEvent) => {
 
 <template>
     <div class="borders-container" v-if="manager.fillCtx.fills.length && manager.fillCtx.strokeMaskInfo">
-        <MaskPort v-bind="$attrs" :delete="false" :disabled="manager.fillCtx.strokeMaskInfo.disabled"
+        <MaskPort v-bind="$attrs" :delete="false" :disabled="manager.fillCtx.strokeMaskInfo.disabled" :active="active"
                   @unbind="() => manager.unbindStroke()">
             <div class="border-left" @click="showBorderPanel($event)">
                 <div class="border">
@@ -63,6 +78,13 @@ const showBorderPanel = (event: MouseEvent) => {
                 width: 14px;
                 height: 16px;
             }
+        }
+
+        .name {
+            flex: 0 0 116px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
 }

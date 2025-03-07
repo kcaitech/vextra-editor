@@ -1,8 +1,18 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h, nextTick } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
@@ -956,7 +966,7 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.text-color'], destroy: closeColor }
+    { whiteList: ['#color-piker-gen-2-panel', '.text-color'], onDestroy: clearPanelStatus }
 );
 
 const colorPicker = new TextPicker(props.context, fillType.value, 'color');
@@ -1056,13 +1066,17 @@ function assemble() {
     }
 }
 
-function closeColor() {
-    colorPanelStatusMgr.close();
+function clearPanelStatus() {
     const color = props.context.color;
     if (color.gradient_type) color.set_gradient_type(undefined);
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
     if (color.imageScaleMode) color.setImageScaleMode(undefined);
+}
+
+function closeColor() {
+    colorPanelStatusMgr.close();
+    clearPanelStatus();
 }
 
 const closeHighlight = () => {
@@ -1098,6 +1112,7 @@ const stop3 = watch(() => props.trigger, v => {
     }
 })
 const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
+const stop5 = watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()));
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     props.context.attr.watch(text_selection_wather);
@@ -1111,6 +1126,7 @@ onUnmounted(() => {
     stop2();
     stop3();
     stop4();
+    stop5();
 })
 const fillTypes = [FillType.SolidColor, FillType.Gradient];
 import SvgIcon from '@/components/common/SvgIcon.vue';
@@ -1130,7 +1146,6 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
 import text_autowidth_icon from '@/assets/icons/svg/text-autowidth.svg';
 import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
 import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
 import delete_icon from "@/assets/icons/svg/delete.svg";
 import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
 import { toHex as toHex2 } from '@/utils/color';

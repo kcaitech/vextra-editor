@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from "@/context";
 import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
@@ -17,6 +27,7 @@ const props = defineProps<{
     manager: FillsContextMgr;
     fills: FillCatch[];
     info: MaskInfo;
+    active: boolean;
 }>();
 const emits = defineEmits<{
     (e: "show-style-lib", event: MouseEvent): void;
@@ -32,9 +43,10 @@ onUnmounted(watchEffect(() => {
 }));
 </script>
 <template>
-    <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :disabled="info.disabled">
+    <MaskPort :active="active" :disabled="info.disabled"
+              @delete="() => manager.removeMask()" @unbind="() => manager.unbind()">
         <div class="fill-desc" @click="event => emits('show-style-lib', event)">
-            <ColorBlock :colors="(colors as Fill[])" round disabled-alpha/>
+            <ColorBlock :colors="colors as Fill[]" round disabled-alpha/>
             <span>{{ info.disabled ? t('stylelib.deleted_style') : name }}</span>
         </div>
     </MaskPort>
@@ -49,10 +61,9 @@ onUnmounted(watchEffect(() => {
     gap: 8px;
     padding: 0 8px;
 
-    .span {
+    span {
         display: inline-block;
-        flex: 1;
-        width: 32px;
+        flex: 0 0 116px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

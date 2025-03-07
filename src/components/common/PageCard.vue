@@ -1,7 +1,17 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import {
     adapt2Shape, BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Fill, Page, Shadow, Shape, ShapeType,
-    ShapeView, SideType, Style, TransformRaw
+    ShapeView, SideType, Style, Transform
 } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
@@ -51,7 +61,7 @@ function assemble() {
         'assemble-page',
         'assemble-page',
         ShapeType.Page,
-        new TransformRaw(),
+        new Transform(),
         style,
         new BasicArray<Shape>(...shapes)
     );

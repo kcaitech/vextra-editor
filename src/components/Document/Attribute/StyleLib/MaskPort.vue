@@ -1,14 +1,26 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import unbind_icon from "@/assets/icons/svg/unbind.svg";
 import delete_icon from "@/assets/icons/svg/delete.svg";
 
 interface Props {
+    active?: boolean;
     disabled?: boolean;
     delete?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
+    active: false,
     delete: true,
     disabled: false,
 })
@@ -22,7 +34,7 @@ const emits = defineEmits<{
 <template>
     <div class="mask-port-wrapper">
         <div class="info-container">
-            <div v-bind="$attrs" :class="{ 'info': true, 'disabled': disabled }">
+            <div v-bind="$attrs" :class="{ 'info': true, 'disabled': disabled, active }">
                 <slot />
             </div>
             <div class="unbind" @click="emits('unbind')">
@@ -53,7 +65,7 @@ const emits = defineEmits<{
         border-radius: var(--default-radius);
         overflow: hidden;
 
-        .maskactive {
+        .active {
             background-color: #e5e5e5 !important;
         }
 

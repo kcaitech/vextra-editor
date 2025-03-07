@@ -1,9 +1,19 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import delete_icon from "@/assets/icons/svg/delete.svg";
 import { Context } from "@/context";
 import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
-import { h, onUnmounted, reactive, ref, watchEffect } from "vue";
+import { h, nextTick, onUnmounted, reactive, ref, watch, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import { Fill, FillType, GradientType } from "@kcdesign/data";
@@ -76,19 +86,19 @@ const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel
 const colorPanelStatusMgr = new ElementManager(
     props.context,
     colorPanelStatus,
-    { whiteList: ['#color-piker-gen-2-panel', '.color-wrapper'], destroy: close }
+    { whiteList: ['#color-piker-gen-2-panel', '.fill-item-container'], onDestroy: clearStatus }
 );
 
 function showColorPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('color-wrapper')) {
+        if (e.classList.contains('fill-item-container')) {
             const color = props.context.color;
             color.set_gradient_type(fillType.value as GradientType);
             color.gradient_locate({ index: fillsPicker.index, type: "borders" });
             color.switch_editor_mode(true, props.data.fill.gradient);
             color.setImageScaleMode(undefined);
-            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -290 } });
+            colorPanelStatusMgr.showBy(e, { once: { offsetLeft: -262 } });
             break;
         }
         e = e.parentElement;
@@ -120,34 +130,40 @@ function update() {
     assemble();
 }
 
-function close() {
-    colorPanelStatusMgr.close();
+function clearStatus() {
     const color = props.context.color;
     if (color.gradient_type) color.set_gradient_type(undefined);
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
 }
 
-const stop1 = watchEffect(update);
-const stop2 = watchEffect(() => {
-    const fill = props.data.fill;
-    const color = props.context.color;
-    if (!colorPanelStatus.visible) return;
-    if (fillType.value === FillType.SolidColor) {
-        if (color.gradient_type) color.set_gradient_type(undefined);
-        if (color.locate) color.gradient_locate(undefined);
-        if (color.mode) color.switch_editor_mode(false);
-    } else {
-        color.set_gradient_type(fillType.value as GradientType);
-        color.gradient_locate({ index: fillsPicker.index, type: "borders" });
-        color.switch_editor_mode(true, fill.gradient);
-        color.setImageScaleMode(undefined);
-    }
-})
+function close() {
+    colorPanelStatusMgr.close();
+    clearStatus();
+}
+
+const watchList = [
+    watchEffect(update),
+    watchEffect(() => {
+        const fill = props.data.fill;
+        const color = props.context.color;
+        if (!colorPanelStatus.visible) return;
+        if (fillType.value === FillType.SolidColor) {
+            if (color.gradient_type) color.set_gradient_type(undefined);
+            if (color.locate) color.gradient_locate(undefined);
+            if (color.mode) color.switch_editor_mode(false);
+        } else {
+            color.set_gradient_type(fillType.value as GradientType);
+            color.gradient_locate({ index: fillsPicker.index, type: "borders" });
+            color.switch_editor_mode(true, fill.gradient);
+            color.setImageScaleMode(undefined);
+        }
+    }),
+    watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()))
+];
 
 onUnmounted(() => {
-    stop1();
-    stop2();
+    watchList.forEach(stop => stop());
     colorPanelStatusMgr.unmounted();
 });
 </script>
@@ -155,7 +171,7 @@ onUnmounted(() => {
     <div class="fill-item-container">
         <CheckBox :check="data.fill.isEnabled" @change="() => manager.modifyVisible(data.fill)" />
         <div :class="{ 'value-panel-wrapper': true, disabled: !data.fill.isEnabled }">
-            <ColorBlock :colors="(colors as Fill[])" @click="showColorPanel" />
+            <ColorBlock :colors="colors as Fill[]" @click="showColorPanel" />
             <component v-blur :is="compo" />
             <input v-blur class="alpha" type="text" :value="alpha" @focus="selectAllOnFocus"
                 @change="(e) => manager.modifyFillAlpha(e, data.fill)" />

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import style_icon from "@/assets/icons/svg/styles.svg";
@@ -87,7 +97,7 @@ const showBorderPanel = (event: MouseEvent) => {
 const watchList: any[] = [
     watch(() => props.selectionChange, () => fillCtxMgr.update()),
     watch(() => props.trigger, (v) => {
-        if (v?.includes('bordersMask') || v?.includes('fillsMask') || v?.includes('borderfill') || v?.includes('paints') || v?.includes('borders') || v?.includes('variables')) {
+        if (v?.includes('bordersMask') || v?.includes('fillsMask') || v?.includes('paints') || v?.includes('borders') || v?.includes('variables')) {
             fillCtxMgr.update();
         }
     })
@@ -118,7 +128,7 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <StrokeView v-if="!fillCtx.strokeMask" :context="context" :manager="fillCtxMgr" :trigger="trigger" />
-        <StrokeMaskView v-else :class="{ 'maskactive': strokeLibStatus.visible }" :context="context"
+        <StrokeMaskView v-else :active="strokeLibStatus.visible" :context="context"
             :manager="fillCtxMgr" :trigger="trigger" @showBorderPanel="showBorderPanel">
         </StrokeMaskView>
         <StrokeStylePanel v-if="strokeLibStatus.visible" :context="context" :manager="fillCtxMgr"
@@ -137,12 +147,12 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div v-if="fillCtx.mixed" class="tips-wrapper">{{ t('attr.mixed_lang') }}</div>
-        <PaintMaskView v-else-if="fillCtx.mask" :class="{ 'maskactive': fillLibStatus.visible }" :context="context"
-            :manager="fillCtxMgr" :fills="(fillCtx.fills as FillCatch[])" :info="fillCtx.maskInfo!"
+        <PaintMaskView v-else-if="fillCtx.mask" :context="context" :active="fillLibStatus.visible"
+                       :manager="fillCtxMgr" :fills="fillCtx.fills as FillCatch[]" :info="fillCtx.maskInfo!"
             @show-style-lib="showFillLib" />
         <div v-else-if="fillCtx.fills.length" class="fills-container">
             <PaintItem v-for="(fill, index) in fillCtx.fills" :key="index" :context="context" :manager="fillCtxMgr"
-                :data="(fill as FillCatch)" />
+                       :data="fill as FillCatch"/>
         </div>
         <FillStylePanel v-if="fillLibStatus.visible" :context="context" :manager="fillCtxMgr"
             :title="t('stylelib.colors')" @close="() => fillPanelStatusMgr.close()" />

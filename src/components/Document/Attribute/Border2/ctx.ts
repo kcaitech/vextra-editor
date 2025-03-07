@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     Fill,
     FillMask,
@@ -80,6 +90,94 @@ function strokeMixedStatus(stroke: BorderData, shapes: ShapeView[]) {
     }
 }
 
+function getSideInfo(border: Border, type: SideType) {
+    const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
+    const max_thickness = Math.max(thicknessTop, thicknessLeft, thicknessBottom, thicknessRight)
+    switch (type) {
+        case SideType.Normal:
+            return new BorderSideSetting(type, max_thickness, max_thickness, max_thickness, max_thickness);
+        case SideType.Top:
+            return new BorderSideSetting(type, thicknessTop === 0 ? max_thickness : thicknessTop, 0, 0, 0);
+        case SideType.Left:
+            return new BorderSideSetting(type, 0, thicknessLeft === 0 ? max_thickness : thicknessLeft, 0, 0);
+        case SideType.Right:
+            return new BorderSideSetting(type, 0, 0, 0, thicknessRight === 0 ? max_thickness : thicknessRight);
+        case SideType.Bottom:
+            return new BorderSideSetting(type, 0, 0, thicknessBottom === 0 ? max_thickness : thicknessBottom, 0);
+        case SideType.Custom:
+            switch (sideType) {
+                case SideType.Top:
+                    return new BorderSideSetting(type, thicknessTop, 0, 0, 0);
+                case SideType.Left:
+                    return new BorderSideSetting(type, 0, thicknessLeft, 0, 0);
+                case SideType.Right:
+                    return new BorderSideSetting(type, 0, 0, 0, thicknessRight);
+                case SideType.Bottom:
+                    return new BorderSideSetting(type, 0, 0, thicknessBottom, 0);
+                case SideType.Normal:
+                    return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
+                default:
+                    return new BorderSideSetting(type, 0, 0, 0, 0);
+            }
+        default:
+            return new BorderSideSetting(SideType.Normal, 0, 0, 0, 0);
+    }
+}
+
+export function getSideSettingType(views: ShapeView[]) {
+    const represent = views[0].getBorders();
+    const side = represent.sideSetting.sideType;
+    return views.some(view => view.getBorders().sideSetting.sideType !== side) ? undefined : side;
+}
+
+export function getThickness(flat: ShapeView[]) {
+    const represent = flat[0].getBorders();
+    const b = represent.sideSetting;
+    let side: (number | false)[] = [b.thicknessTop, b.thicknessRight, b.thicknessBottom, b.thicknessLeft];
+    for (let i = 1; i < flat.length; i++) {
+        const borders = flat[i].getBorders() || [];
+        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders.sideSetting;
+        if (b.thicknessTop !== thicknessTop) side[0] = false;
+        if (b.thicknessRight !== thicknessRight) side[1] = false;
+        if (b.thicknessBottom !== thicknessBottom) side[2] = false;
+        if (b.thicknessLeft !== thicknessLeft) side[3] = false;
+    }
+    return side;
+}
+
+export function getSideThickness(side: BorderSideSetting): number | false {
+    const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = side;
+    return (() => {
+        switch (sideType) {
+            case SideType.Top:
+                return thicknessTop;
+            case SideType.Left:
+                return thicknessLeft;
+            case SideType.Right:
+                return thicknessRight;
+            case SideType.Bottom:
+                return thicknessBottom;
+            case SideType.Custom:
+                if (thicknessBottom === thicknessLeft && thicknessLeft === thicknessRight && thicknessRight === thicknessTop) {
+                    return thicknessTop;
+                } else {
+                    return false;
+                }
+            default:
+                return thicknessTop;
+        }
+    })();
+}
+
+export const customizable = [
+    ShapeType.Rectangle,
+    ShapeType.Artboard,
+    ShapeType.Image,
+    ShapeType.Symbol,
+    ShapeType.SymbolRef,
+    ShapeType.SymbolUnion
+];
+
 export type BorderFillsContext = {
     mixed: boolean;
     listStatus: boolean,
@@ -98,9 +196,9 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        if (this.selected.length < 1) return;
-        if (this.selected.length < 2) return this.fillCtx.mixed = false;
-        const allFills = this.selected.map(i => ({ fills: i.getBorders().strokePaints, shape: i }));
+        if (this.flat.length < 1) return;
+        if (this.flat.length < 2) return this.fillCtx.mixed = false;
+        const allFills = this.flat.map(i => ({ fills: i.getBorders().strokePaints, shape: i }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -114,9 +212,9 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     private updateFills() {
-        if (this.fillCtx.mixed || this.selected.length < 1) return;
+        if (this.fillCtx.mixed || this.flat.length < 1) return;
 
-        const represent = this.selected[0];
+        const represent = this.flat[0];
         this.fillCtx.mask = represent.borderFillsMask;
         if (this.fillCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.mask) as FillMask;
@@ -135,8 +233,8 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     private updateStroke() {
-        if (this.selected.length < 1) return;
-        const represent = this.selected[0];
+        if (this.flat.length < 1) return;
+        const represent = this.flat[0];
         this.fillCtx.strokeMask = represent.bordersMask;
         if (this.fillCtx.strokeMask) {
             const mask = this.context.data.stylesMgr.getSync(this.fillCtx.strokeMask) as BorderMask;
@@ -150,8 +248,8 @@ export class StrokeFillContextMgr extends StyleCtx {
         }
         let origin = represent.getBorders();
         let index = 0;
-        while (!origin.strokePaints && index < this.selected.length) {
-            origin = this.selected[index].getBorders();
+        while (!origin.strokePaints && index < this.flat.length) {
+            origin = this.flat[index].getBorders();
             index++;
         }
 
@@ -161,8 +259,8 @@ export class StrokeFillContextMgr extends StyleCtx {
             borderStyle: origin.borderStyle,
             sideSetting: origin.sideSetting
         }
-        strokeMixedStatus(replace, this.selected);
-        const maskMixed = strokeMaskMixedStatus(this.selected);
+        strokeMixedStatus(replace, this.flat);
+        const maskMixed = strokeMaskMixedStatus(this.flat);
         if (replace.position === 'mixed' || replace.sideSetting === 'mixed' || !maskMixed) {
             this.fillCtx.strokeMaskInfo = undefined;
             this.fillCtx.strokeMask = undefined;
@@ -188,7 +286,7 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     update() {
         this.fillCtx.listStatus = JSON.parse(localStorage.getItem("styleList") ?? JSON.stringify(false));
-        this.getSelected();
+        this.updateSelection();
         this.modifyMixedStatus();
         this.updateFills();
         this.updateStroke();
@@ -212,7 +310,7 @@ export class StrokeFillContextMgr extends StyleCtx {
         }
         const actions: { fills: BasicArray<Fill>, fill: Fill }[] = [];
         const viewActions: { view: ShapeView, fill: Fill }[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             const color = new Color(1, 0, 0, 0);
             const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
 
@@ -238,19 +336,19 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     unify() {
-        const maskView = this.selected.find(i => i.borderFillsMask);
+        const maskView = this.flat.find(i => i.borderFillsMask);
         if (maskView) {
-            this.borderEditor.unifyShapesFillsMask(this.document, this.selected, maskView.borderFillsMask!);
+            this.borderEditor.unifyShapesFillsMask(this.document, this.flat, maskView.borderFillsMask!);
         } else {
             const containers: BasicArray<Fill>[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else containers.push(view.getFills());
             }
             const borderEditor = this.borderEditor;
-            const master = this.selected[0].getFills().map(i => borderEditor.importFill(i));
+            const master = this.flat[0].getFills().map(i => borderEditor.importFill(i));
 
             const modifyLocalFills = (api: Api) => {
                 if (!containers.length) return;
@@ -285,7 +383,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             const index = this.getIndexByFill(fill);
             const actions: { fills: BasicArray<Fill>, index: number }[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView && view.isVirtualShape) {
                     views.push(view);
                 } else actions.push({ fills: view.getBorders().strokePaints, index });
@@ -305,7 +403,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     removeAll() {
-        this.borderEditor.removeShapesBorder(this.page, this.selected);
+        this.borderEditor.removeShapesBorder(this.page, this.flat);
     }
 
     modifyVisible(fill: Fill) {
@@ -318,7 +416,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             const index = this.getIndexByFill(fill);
             const fills: Fill[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
@@ -372,7 +470,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             const index = this.getIndexByFill(fill);
             const views: ShapeView[] = [];
             const fillsPacks: { fill: Fill, color: Color }[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
                 else fillsPacks.push({ fill: view.getBorders().strokePaints[index], color });
             }
@@ -402,7 +500,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             const index = this.getIndexByFill(fill);
             const fills: Fill[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getBorders().strokePaints[index]);
             }
@@ -427,45 +525,81 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     setShapesMarkerType(type: MarkerType, isEnd: boolean) {
-        const actions = get_actions_border_Apex(this.selected, type, isEnd);
+        const actions = get_actions_border_Apex(this.flat, type, isEnd);
         this.editor.setShapesMarkerType(actions);
         this.hiddenCtrl();
     }
 
     exchangeShapesMarkerType() {
-        const actions = get_actions_border_exchange(this.selected);
+        const actions = get_actions_border_exchange(this.flat);
         this.editor.exchangeShapesMarkerType(actions);
         this.hiddenCtrl();
     }
     setShapesEndpoint(type: MarkerType) {
-        const actions = get_actions_border_endpoint(this.selected, type);
+        const actions = get_actions_border_endpoint(this.flat, type);
         this.editor.setShapesEndpoint(actions);
         this.hiddenCtrl();
     }
 
     modifyFillMask(id: string) {
-        this.borderEditor.setShapesFillMask(this.document, this.page, this.selected, id);
+        this.borderEditor.setShapesFillMask(this.document, this.page, this.flat, id);
         this.kill();
         this.hiddenCtrl();
     }
 
     modifyStrokeMask(id: string) {
         if (Object.keys(this.fillCtx).length === 0) return;
-        this.borderEditor.setShapesStrokeMask(this.page, this.selected, id);
+        this.borderEditor.setShapesStrokeMask(this.page, this.flat, id);
         this.kill();
         this.hiddenCtrl();
     }
 
+    modifySideType(type: SideType, views: ShapeView[]) {
+        const local: ShapeView[] = [];
+        const refs: ShapeView[] = [];
+        for (const view of views) {
+            if (view instanceof SymbolRefView || view.isVirtualShape) refs.push(view);
+            else local.push(view);
+        }
+        const editor = this.borderEditor;
+        const modifyLocal = (api: Api) => {
+            local.forEach(view => {
+                const border = view.style.borders;
+                const side = getSideInfo(border, type);
+                api.setBorderSide(view.style.borders, side);
+            });
+        }
+        const modifyVariable = (api: Api) => {
+            refs.forEach(view => {
+                const variable = editor.getBorderVariable(api, this.page, view);
+                const side = getSideInfo(variable.value, type)
+                api.setBorderSide(variable.value, side)
+            });
+        }
+        editor.modifyBorderSideSetting([modifyLocal, modifyVariable]);
+    }
+
     modifyBorderThicknessMask(border: BorderMaskType, side: BorderSideSetting) {
-        this.borderEditor.setBorderMaskSide([{ border, side }]);
+        this.borderEditor.setBorderMaskSide([{ border: border as any, side }]);
     }
 
     modifyBorderThickness(thickness: number) {
-        this.borderEditor.setBorderThickness(this.page, this.selected, thickness);
+        this.borderEditor.setBorderThickness(this.page, this.flat, thickness);
     }
 
-    modifyBorderCustomThickness(thickness: number, type: SideType) {
-        this.borderEditor.setBorderCustomThickness(this.page, this.selected, thickness, type);
+    // 设置单边厚度
+    modifyBorderCustomThickness(views: ShapeView[], thickness: number, type: SideType) {
+        this.borderEditor.setBorderCustomThickness(this.page, views, thickness, type);
+    }
+
+    // 设置描边样式（虚线/实线）
+    modifyStrokeStyle(actions: { target: ShapeView, value: any }[]) {
+        this.borderEditor.modifyStrokeStyle(this.page, actions);
+    }
+
+    //修改描边拐角样式
+    modifyCornerType(actions: { target: ShapeView, value: any }[]) {
+        this.borderEditor.modifyCornerType(this.page, actions);
     }
 
     modifyBorderPositionMask(border: BorderMaskType, position: BorderPosition) {
@@ -473,19 +607,19 @@ export class StrokeFillContextMgr extends StyleCtx {
     }
 
     modifyBorderPosition(position: BorderPosition) {
-        this.borderEditor.setBorderPosition(this.page, this.selected, position);
+        this.borderEditor.setBorderPosition(this.page, this.flat, position);
     }
 
     unbind() {
-        this.borderEditor.unbindShapesFillMask(this.document, this.page, this.selected);
+        this.borderEditor.unbindShapesFillMask(this.document, this.page, this.flat);
     }
 
     unbindStroke() {
-        this.borderEditor.unbindShapesBorderMask(this.page, this.selected);
+        this.borderEditor.unbindShapesBorderMask(this.page, this.flat);
     }
 
     removeMask() {
-        this.borderEditor.removeShapesFillMask(this.document, this.page, this.selected);
+        this.borderEditor.removeShapesFillMask(this.document, this.page, this.flat);
     }
 
     disableMask(mask: StyleMangerMember) {
@@ -495,12 +629,13 @@ export class StrokeFillContextMgr extends StyleCtx {
     createStyleLib(name: string, desc: string) {
         const fills = new BasicArray<Fill>(...this.fillCtx.fills.map(i => i.fill).reverse());
         const fillMask = new FillMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, fills);
-        this.borderEditor.createFillsMask(this.document, fillMask, this.page, this.selected);
+        this.borderEditor.createFillsMask(this.document, fillMask, this.page, this.flat);
         this.kill();
     }
     createStrokeStyleLib(name: string, desc: string, mask: BorderMaskType) {
         const strokeMask = new BorderMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, mask);
-        this.borderEditor.createBorderMask(this.document, strokeMask, this.page, this.selected);
+        this.borderEditor.createBorderMask(this.document, strokeMask, this.page, this.flat);
         this.kill();
     }
 }
+

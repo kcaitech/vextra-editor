@@ -1,8 +1,17 @@
-import { CoopRepository, ShapeView, Document } from "@kcdesign/data";
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+import { ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { hidden_selection } from "@/utils/content";
 import { ElementManager } from "@/components/common/elementmanager";
-import { getShapesForStyle } from "@/utils/style";
 
 export type SheetCatch = {
     name: string;
@@ -11,12 +20,12 @@ export type SheetCatch = {
 }
 
 export class StyleCtx {
-    private m_shapes: ShapeView[];
     private m_selected: ShapeView[];
+    private m_flat: ShapeView[];
 
     constructor(protected context: Context) {
-        this.m_shapes = [];
         this.m_selected = [];
+        this.m_flat = [];
     }
 
     get repo() {
@@ -31,24 +40,13 @@ export class StyleCtx {
         return this.context.data;
     }
 
-    protected getSelected() {
-        this.shapes = this.context.selection.selectedShapes;
-        this.selected = this.context.selection.flat;
+    protected updateSelection() {
+        this.selected = this.context.selection.selectedShapes;
+        this.flat = this.context.selection.flat;
     }
 
     /**
      * 选区内的选中图层：相当与context.selection.selectedShapes
-     */
-    get shapes() {
-        return this.m_shapes;
-    }
-
-    set shapes(ss) {
-        this.m_shapes = ss;
-    }
-
-    /**
-     * 选区内的选中图层的基础上，把编组打平。
      */
     get selected() {
         return this.m_selected;
@@ -56,6 +54,17 @@ export class StyleCtx {
 
     set selected(ss) {
         this.m_selected = ss;
+    }
+
+    /**
+     * 选区内的选中图层的基础上，把编组打平。
+     */
+    get flat() {
+        return this.m_flat;
+    }
+
+    set flat(ss) {
+        this.m_flat = ss;
     }
 
 
@@ -74,7 +83,6 @@ export class StyleCtx {
     }
 
     private m_panel: Set<ElementManager> = new Set();
-    private m_panel_map: Map<string, ElementManager> = new Map();
 
     protected kill() {
         this.m_panel.forEach(i => i.close());
@@ -82,12 +90,6 @@ export class StyleCtx {
 
     catchPanel(ele: ElementManager) {
         this.m_panel.add(ele);
-    }
-
-    keepUniquePanel(type: string, ele: ElementManager) {
-        const exist = this.m_panel_map.get(type);
-        if (exist && exist !== ele) exist.close();
-        this.m_panel_map.set(type, ele);
     }
 
     modifyMaskName(sheet: string, maskID: string, name: string) {

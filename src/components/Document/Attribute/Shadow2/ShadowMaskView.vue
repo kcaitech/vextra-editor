@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from "@/context";
 import { Shadow } from "@kcdesign/data";
@@ -16,6 +26,7 @@ const props = defineProps<{
     manager: ShadowsContextMgr;
     shadows: ShadowCatch[];
     info: MaskInfo;
+    active: boolean;
 }>();
 const emits = defineEmits<{
     (e: "show-style-lib", event: MouseEvent): void;
@@ -32,7 +43,7 @@ onUnmounted(watchEffect(() => {
 }));
 </script>
 <template>
-    <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :disabled="info.disabled">
+    <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :active="active" :disabled="info.disabled">
         <div class="shadow-desc" @click="event => emits('show-style-lib', event)">
             <div class="effect" :style="{
                 boxShadow: `
@@ -69,8 +80,7 @@ onUnmounted(watchEffect(() => {
 
     > span {
         display: inline-block;
-        flex: 0 0 120px;
-        width: 120px;
+        flex: 0 0 116px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

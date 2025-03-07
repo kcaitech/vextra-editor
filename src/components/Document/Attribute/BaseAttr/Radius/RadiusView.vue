@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import MossInput2 from '@/components/common/MossInput2.vue';
 
@@ -39,7 +49,7 @@ function setting_for_extend(val: number, index: number) {
     values[index] = val;
 
     if (keyupdate.value) {
-        linearApi.shapesModifyRadius(props.manager.selected, values);
+        linearApi.shapesModifyRadius(props.manager.flat, values);
     } else {
         props.manager.modifyRadius(values);
     }
@@ -70,7 +80,7 @@ async function dragstart(e: MouseEvent) {
         });
     }
 
-    lockMouseHandler = new LockMouse(props.context, e, props.manager.selected);
+    lockMouseHandler = new LockMouse(props.context, e, props.manager.flat);
     document.addEventListener('pointerlockchange', pointerLockChange, false);
 }
 
@@ -120,7 +130,7 @@ function keydownRadius(event: KeyboardEvent, index: number) {
         const target = event.target as HTMLInputElement;
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        const shapes = props.manager.selected;
+        const shapes = props.manager.flat;
         value = get_value_from_input(value);
         if (props.manager.radiusCtx.rect) {
             setting_for_extend(value, index);

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import { BorderMask } from "@kcdesign/data";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
@@ -32,9 +42,8 @@ function update(...args: any[]) {
 function showModifyPanel(trigger: MouseEvent | Element) {
     let e: Element | null = trigger instanceof Element ? trigger : trigger.target as Element;
     while (e) {
-        if (e.classList.contains('modify')) {
-            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -442 } });
-            manager.keepUniquePanel('.modify', modifyPanelStatusMgr);
+        if (e.classList.contains('mask-catch-wrapper')) {
+            modifyPanelStatusMgr.showBy(e, { once: { offsetLeft: -262 } });
             break;
         }
         e = e.parentElement;

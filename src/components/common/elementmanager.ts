@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { nextTick, watch } from "vue";
 import { Context } from "@/context";
 import { Selection } from "@/context/selection";
@@ -7,7 +17,6 @@ export type ElementStatus = {
     id: string;
     visible: boolean;
 }
-
 
 export class ElementManager { /* 可用于窗口状态处理，窗口应该要是一个DIV类型的元素 */
     private m_left: number;
@@ -28,7 +37,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             offsetTop?: number;
             offsetLeft?: number;
             whiteList?: string[];
-            destroy?: Function;
+            onDestroy?: Function;
             level?: number;
         }
     ) {
@@ -37,7 +46,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         this.m_offset_l = init?.offsetLeft ?? 0;
         this.m_offset_t = init?.offsetTop ?? 0;
         this.m_white_list = init?.whiteList ?? [];
-        this.m_on_destroy = init?.destroy;
+        this.m_on_destroy = init?.onDestroy;
         this.m_level = init?.level;
 
         this.m_stop.push(watch(() => this.element.visible, (val) => !val && this.removeEvent()));
@@ -92,12 +101,10 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
                     f = events.pop();
                 }
             }
-            events.push(() => {
-                this.element.visible = false;
-            });
+            events.push(() => this.close());
         }
         if (this.m_level !== undefined) {
-            const level = 'popover-index' + this.m_level;
+            const level = 'popover-level' + this.m_level;
             let events = this.context.eventsMap.get(level);
             if (!events) {
                 events = [];
@@ -109,9 +116,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
                     f = events.pop();
                 }
             }
-            events.push(() => {
-                this.element.visible = false;
-            });
+            events.push(() => this.close());
         }
     }
 
@@ -207,8 +212,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         for (const query of this.m_white_list) {
             if (event.target.closest(query)) return;
         }
-        this.m_on_destroy?.();
-        this.element.visible = false;
+        this.close();
     }
 
     private downCheck = this.__downCheck.bind(this);
@@ -230,10 +234,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             fixed?: boolean;
         }
     ) {
-        if (this.element.visible) {
-            this.element.visible = false;
-            return;
-        }
+        if (this.element.visible) return this.close();
 
         this.shutExist();
 
@@ -249,7 +250,7 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
             }));
             this.context.escstack.save(v4(), () => {
                 const achieve = this.element.visible;
-                this.element.visible = false;
+                this.close();
                 return achieve;
             });
             document.addEventListener('mousedown', this.downCheck);
@@ -272,6 +273,29 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
 
     close() {
         this.element.visible = false;
+        this.m_on_destroy?.();
+    }
+
+    repositioning() {
+        const target = this.target;
+
+        if (!target) return;
+
+        const rect = target.getBoundingClientRect();
+        const clientWidth = document.documentElement.clientWidth;
+        const clientHeight = document.documentElement.clientHeight;
+
+        let { x: left, y: top } = rect;
+
+        const exceedW = clientWidth - (left + rect.width);
+        if (exceedW < 0) left = Math.max(0, left + exceedW);
+        const exceedH = clientHeight - 4 - (top + rect.height);
+        if (exceedH < 0) top = Math.max(0, top + exceedH);
+
+        this.clientX = left;
+        this.clientY = top;
+        target.style.left = `${left}px`;
+        target.style.top = `${top}px`;
     }
 
     unmounted() {

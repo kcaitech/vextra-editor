@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
@@ -59,7 +69,7 @@ const closePanel = () => {
 const watchList: any[] = [
     watch(() => props.selectionChange, () => radiusCtxMgr.update()),
     watch(() => props.trigger, v => {
-        if (v?.includes('radius') || v?.includes('radiusMask') || v?.includes('variables')) {
+        if (v?.includes('radius')|| v?.includes('radiusMask') || v?.includes('variables') || v?.includes('cornerRadius')) {
             radiusCtxMgr.update();
         }
     })
@@ -84,7 +94,7 @@ onUnmounted(() => {
     </div>
     <RadiusView v-if="!radiusCtx.mask && radiusCtx.radius.length" :context="context" :manager="radiusCtxMgr"
         :data="radiusCtx.radius" :disabled="disabled" />
-    <RadiusMaskView v-else-if="radiusCtx.mask" :class="{ 'maskactive': radiusLibStatus.visible }" :context="context"
+    <RadiusMaskView v-else-if="radiusCtx.mask" :active="radiusLibStatus.visible" :context="context"
         :manager="radiusCtxMgr" @showRadiusPanel="showRadiusPanel" />
     <RadiusStylePanel v-if="radiusLibStatus.visible" :context="context" :manager="radiusCtxMgr" @close="closePanel"
         :title="t('stylelib.radius')" />

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import close_icon from "@/assets/icons/svg/close.svg";
@@ -30,7 +40,7 @@ import {
     drawTooltip,
     updateRecently,
     parseColorFormStorage,
-    key_storage,
+    color_recent_storage,
     RGB2HSB,
     RGB2H,
     validate,
@@ -908,14 +918,14 @@ function switch_tile() {
 }
 
 function init_recent() {
-    let r = localStorage.getItem(key_storage);
+    let r = localStorage.getItem(color_recent_storage);
     r = JSON.parse(r || '[]');
     if (!r || !r.length) {
         return;
     }
     recent.value = [];
     for (let i = 0; i < r.length; i++) {
-        recent.value.push(parseColorFormStorage(r[i]));
+        // recent.value.push(parseColorFormStorage(r[i]));
     }
 }
 
@@ -954,7 +964,7 @@ function update_recent_color() {
     if (nVal.length) {
         recent.value = [];
         for (let i = 0; i < nVal.length; i++) {
-            recent.value.push(parseColorFormStorage(nVal[i]));
+            // recent.value.push(parseColorFormStorage(nVal[i]));
         }
     }
 }

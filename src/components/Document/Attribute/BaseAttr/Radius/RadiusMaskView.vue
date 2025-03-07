@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { RadiusContextMgr } from './ctx';
@@ -6,7 +16,11 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import { useI18n } from "vue-i18n";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 
-defineProps<{ context: Context; manager: RadiusContextMgr }>();
+defineProps<{
+    context: Context;
+    manager: RadiusContextMgr;
+    active: boolean;
+}>();
 const emits = defineEmits<{
     (e: 'showRadiusPanel', event: MouseEvent): void;
 }>();
@@ -18,8 +32,9 @@ const showRadiusPanel = (event: MouseEvent) => {
 </script>
 
 <template>
-    <MaskPort @unbind="() => manager.unbind()" :disabled="manager.radiusCtx.maskInfo!.disabled" :delete="false"
-        style="width: 184px;">
+    <MaskPort :disabled="manager.radiusCtx.maskInfo!.disabled" :delete="false" :active="active"
+              style="width: 184px;height: 30px;"
+              @unbind="() => manager.unbind()">
         <div class="radius-left" @click="showRadiusPanel($event)">
             <div class="radius">
                 <SvgIcon :icon="radius_icon" />
@@ -49,6 +64,12 @@ const showRadiusPanel = (event: MouseEvent) => {
         >img {
             width: 14px;
             height: 16px;
+        }
+        .name {
+            flex: 0 0 116px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
 }

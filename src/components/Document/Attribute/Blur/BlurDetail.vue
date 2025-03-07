@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { nextTick, reactive, ref } from 'vue';
@@ -47,14 +57,14 @@ const panelStatus = reactive<ElementStatus>({ id: '#blur-detail-container', visi
 const panelStatusMgr = new ElementManager(
     props.context,
     panelStatus,
-    { whiteList: ['#blur-detail-container', '.blur-trigger'] }
+    { whiteList: ['#blur-detail-container', '.blur-container'] }
 );
 
 function showDetailPanel(event: MouseEvent) {
     let e: Element | null = event.target as Element;
     while (e) {
-        if (e.classList.contains('blur-trigger')) {
-            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -384 } });
+        if (e.classList.contains('blur-container')) {
+            e && panelStatusMgr.showBy(e, { once: { offsetLeft: -266 } });
             break;
         }
         e = e.parentElement;
@@ -162,8 +172,8 @@ const text_keyboard = (e: KeyboardEvent, val: string | number) => {
         if (props.blur.blur.parent instanceof BlurMask) {
             actions.push({ blur: props.blur.blur, value });
         } else {
-            for (let i = 0; i < props.manager.selected.length; i++) {
-                const shape = props.manager.selected[i];
+            for (let i = 0; i < props.manager.flat.length; i++) {
+                const shape = props.manager.flat[i];
                 if (shape.style.blur) actions.push({ blur: shape.style.blur, value });
             }
         }
