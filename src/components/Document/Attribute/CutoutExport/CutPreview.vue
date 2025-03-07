@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch, toRaw } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, watch, toRaw, nextTick } from 'vue';
 import {
     ExportFormat,
-    Shape,
     ShapeType,
     ShapeView,
-    adapt2Shape, ColVector3D,
-    PathShapeView,
-    GroupShapeView,
+    ColVector3D,
     ArtboardView,
 } from '@kcdesign/data';
 import { Context } from '@/context';
@@ -23,8 +20,6 @@ import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
-import PageCard from "@/components/common/PageCard.vue";
-import { nextTick } from 'vue';
 import { ShapeDom } from '../../Content/vdom/shape';
 
 const { t } = useI18n();
@@ -298,9 +293,7 @@ const drag = (e: DragEvent) => {
     e.dataTransfer!.setDragImage(img.value, img.value.clientWidth / 2, img.value.clientHeight / 2);
 }
 
-watch(() => props.canvas_bg, (v) => {
-    page_color();
-})
+watch(() => props.canvas_bg, page_color);
 
 watch(() => shape.value, (v, o) => {
     o && o.unwatch(getCanvasShape);

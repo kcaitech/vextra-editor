@@ -47,7 +47,8 @@ export default defineConfig({
         cssInjectedByJsPlugin(),
         dts({
             outDir: "dist/types",
-            rollupTypes: PRODUCTION
+            rollupTypes: PRODUCTION,
+            exclude: ['client']
         }),
     ],
     server: {
