@@ -41,10 +41,10 @@ function update_contact_apex() {
 
     const f = contact_apex.frame;
     const points: { type: ContactType, point: ClientXY }[] = [
-        { type: ContactType.Top, point: { x: f.width / 2, y: 0 } },
-        { type: ContactType.Right, point: { x: f.width, y: f.height / 2 } },
-        { type: ContactType.Bottom, point: { x: f.width / 2, y: f.height } },
-        { type: ContactType.Left, point: { x: 0, y: f.height / 2 } },
+        {type: ContactType.Top, point: {x: f.x + f.width / 2, y: f.y}},
+        {type: ContactType.Right, point: {x: f.x + f.width, y: f.y + f.height / 2}},
+        {type: ContactType.Bottom, point: {x: f.x + f.width / 2, y: f.y + f.height}},
+        {type: ContactType.Left, point: {x: f.x, y: f.y + f.height / 2}},
     ]
 
     for (let i = 0; i < 4; i++) {
@@ -75,13 +75,13 @@ function get_p(type: 'top' | 'right' | 'bottom' | 'left') {
     const m2r = contactApex.matrix2Root(), f = contactApex.frame;
     switch (type) {
         case 'top':
-            return m2r.computeCoord2(f.width / 2, 0);
+            return m2r.computeCoord2(f.x + f.width / 2, f.y);
         case 'right':
-            return m2r.computeCoord2(f.width, f.height / 2);
+            return m2r.computeCoord2(f.x + f.width, f.y + f.height / 2);
         case 'bottom':
-            return m2r.computeCoord2(f.width / 2, f.height);
+            return m2r.computeCoord2(f.x + f.width / 2, f.y + f.height);
         case 'left':
-            return m2r.computeCoord2(0, f.height / 2);
+            return m2r.computeCoord2(f.x, f.y + f.height / 2);
         default: return false;
     }
 }

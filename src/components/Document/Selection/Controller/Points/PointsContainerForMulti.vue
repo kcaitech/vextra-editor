@@ -14,7 +14,7 @@ import { CtrlElementType } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
-import { update_dot2 } from './common';
+import { update_dots } from './common';
 import { getHorizontalAngle } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { ScaleHandler } from '@/transform/scale';
@@ -55,7 +55,7 @@ function update() {
 
 function render() {
     dots.length = 0;
-    dots.push(...update_dot2(props.frame));
+    dots.push(...update_dots(props.frame));
 
     const [v1, v2, v3] = props.frame;
     const width = Math.hypot(v2.x - v1.x, v2.y - v1.y);

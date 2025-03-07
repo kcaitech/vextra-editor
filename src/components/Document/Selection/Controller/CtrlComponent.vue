@@ -212,7 +212,7 @@ onUnmounted(() => {
     <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboardView).autoLayout && !(shape instanceof SymbolRefView)" :context="props.context"
                      :controllerFrame="controllerFrame"/>
     <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboardView).autoLayout && !(shape instanceof SymbolRefView)" :context="props.context"
-                           @hoverPaddint="hoverPaddingIndex"/>
+                           @hoverPadding="hoverPaddingIndex"/>
     <AddState v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union" :context="props.context"
               :shape="props.shape" :c-frame="props.controllerFrame" :symbol-type="symbol_type"/>
 </svg>

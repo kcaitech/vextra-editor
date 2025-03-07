@@ -40,7 +40,7 @@ interface Props {
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
 
-const boundrectPath = ref("");
+const boundRectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 
 const selection_hidden = ref<boolean>(false);
@@ -75,8 +75,8 @@ const partVisible = computed(() => {
 
 function updateControllerView() {
     const framePoint = props.controllerFrame;
-    boundrectPath.value = genRectPath(framePoint);
-    props.context.workspace.setCtrlPath(boundrectPath.value);
+    boundRectPath.value = genRectPath(framePoint);
+    props.context.workspace.setCtrlPath(boundRectPath.value);
 
     bounds.left = Infinity;
     bounds.top = Infinity;
@@ -201,7 +201,7 @@ onUnmounted(() => {
     <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboardView).autoLayout && !(shape instanceof SymbolRefView)" :context="props.context"
                      :controllerFrame="controllerFrame"/>
     <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboardView).autoLayout && !(shape instanceof SymbolRefView)" :context="props.context"
-                           @hoverPaddint="hoverPaddingIndex"/>
+                           @hover-padding="hoverPaddingIndex"/>
     <component v-if="pointVisible" :is="point_map.get(shape.type)" :context="props.context"
                :shape="props.shape as PolygonShapeView"/>
 </svg>

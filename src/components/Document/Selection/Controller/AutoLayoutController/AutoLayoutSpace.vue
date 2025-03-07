@@ -45,7 +45,7 @@ interface Point {
 }
 
 const emits = defineEmits<{
-    (e: 'hoverPaddint', index: number): void;
+    (e: 'hoverPadding', index: number): void;
 }>();
 
 
@@ -323,7 +323,7 @@ function setCursor(dir: 'ver' | 'hor') {
 }
 
 const verMouseenter = (e: MouseEvent) => {
-    emits('hoverPaddint', -1);
+    emits('hoverPadding', -1);
     if (props.context.workspace.transforming) {
         return;
     }
@@ -340,7 +340,7 @@ const verMousemove = (e: MouseEvent) => {
 }
 
 const horMouseenter = (e: MouseEvent) => {
-    emits('hoverPaddint', -1);
+    emits('hoverPadding', -1);
     if (props.context.workspace.transforming) {
         return;
     }
