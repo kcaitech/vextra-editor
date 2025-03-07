@@ -81,9 +81,7 @@ export class MossClipboard {
             // 两种方案都没有获取到有效内容，使用缓存
             if (!Object.keys(bundle).length) return this.cache;
 
-            this.cache = bundle;
-
-            return bundle;
+            return this.cache = bundle;
         } catch (e) {
             // 在用户没有给予剪切板权限、safari浏览器下常常会抛出异常
             console.error(e);

@@ -53,11 +53,11 @@ export class ClipboardEventReader extends Reader {
                 images ? images.push(Object.assign(size, base64)) : bundle["images"] = [Object.assign(size, base64)];
             }
         }
-
         // 同样的经过一个await之后，类型为string的DataTransferItem里面的内容会被清空，所以需要把所有DataTransferItem的读取进程收集起来放到一个await后面
         const all: Promise<{ type: string, result: string }>[] = [];
         for (const item of stringList) {
             const type = item.type; // type不能放到getAsString的callback里面读取，执行callback的时候已经清空了
+            if (!type) continue;
             all.push(new Promise<{ type: string, result: string }>(resolve => item.getAsString((result) => resolve({ type, result }))));
         }
         const allResult = await Promise.all(all);
