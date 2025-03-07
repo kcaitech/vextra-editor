@@ -4,16 +4,14 @@ import {
     ShapeFrame,
     Shape,
     ShapeType,
-    GroupShape,
-    Artboard,
     ShapeView,
-    GroupShapeView,
     Color,
     Fill,
     BasicArray,
-    FillType
+    FillType,
+    creator
 } from '@kcdesign/data';
-import { isTarget, isTarget2 } from './common';
+import { isTarget2 } from './common';
 import { Context } from '@/context';
 import { Action, Tool } from '@/context/tool';
 import { compare_layer_3 } from './group_ungroup';
@@ -112,7 +110,6 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
 
 export function insertFrameTemplate(context: Context) {
     const selection = context.selection;
-    const workspace = context.workspace;
     const tool = context.tool;
 
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];
@@ -126,7 +123,7 @@ export function insertFrameTemplate(context: Context) {
         frame.y = y;
         const fillColor = new Color(1, 255, 255, 255);
         const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, fillColor);
-        let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill, context.data.stylesMgr);
+        let artboard: Shape | false = creator.newArtboard(tf.name, frame, context.data.stylesMgr, fill);
         artboard = editor.insert(parent.data, shapes.length, artboard, true);
         context.nextTick(parent, () => {
             if (artboard) {

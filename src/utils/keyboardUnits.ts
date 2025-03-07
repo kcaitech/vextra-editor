@@ -46,6 +46,7 @@ import {
 } from "@/components/Document/Creator/execute";
 import { unAutoLayoutFn } from "./auto_layout";
 import { MossClipboard } from "@/clipboard";
+import { group, ungroup } from "@/utils/group_ungroup";
 
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
@@ -206,12 +207,14 @@ keydownHandler['KeyG'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = ctrlKey || metaKey;
 
     if (is_ctrl && !shiftKey) {
-        context.tool.notify(Tool.GROUP, altKey); // 创建编组或容器
+        const t = context.workspace.t.bind(context.workspace);
+        const name = altKey ? t('shape.artboard') : t('shape.group')
+        group(context, context.selection.selectedShapes, name, altKey);
         return;
     }
 
     if (is_ctrl && shiftKey) {
-        context.tool.notify(Tool.UNGROUP); // 解除编组或容器
+        ungroup(context);
     }
 }
 

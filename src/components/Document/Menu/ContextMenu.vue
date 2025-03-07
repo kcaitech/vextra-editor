@@ -291,12 +291,16 @@ function bottom() {
 }
 
 function groups() {
-    props.context.tool.notify(Tool.GROUP);
+    const name = props.context.workspace.t('shape.group');
+    const views = props.context.selection.selectedShapes;
+    group(props.context, views, name);
     emits('close');
 }
 
 function container() {
-    props.context.tool.notify(Tool.GROUP, true);
+    const name = props.context.workspace.t('shape.artboard');
+    const views = props.context.selection.selectedShapes;
+    group(props.context, views, name, true);
     emits('close');
 }
 
@@ -327,7 +331,7 @@ function dissolution_container() {
 }
 
 function unGroup() {
-    props.context.tool.notify(Tool.UNGROUP);
+    ungroup(props.context);
     emits('close');
 }
 
@@ -483,6 +487,7 @@ onUnmounted(() => {
 
 import down_icon from '@/assets/icons/svg/down.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { group, ungroup } from "@/utils/group_ungroup";
 </script>
 <template>
     <div ref="menu" class="__context-menu" :style="{ width: `${width || 196}px` }" @mousedown.stop @mousemove.stop
