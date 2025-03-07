@@ -15,7 +15,7 @@ export function sort_by_layer(context: Context, selectedShapes: ShapeView[], rev
 
 /**
  * @description: 输入z轴层级无序的图形列表，输出有序的图形列表, 每个对象计算出它的路径序列如[0,1,1,3] 表示它在对象树上的根节点的第0个子节点...第1个子节点...最后排序
- * @param {Shape[]} shapes z轴层级无序的图形列表
+ * @param {ShapeView[]} selectedShapes z轴层级无序的图形列表
  * @param {1 | -1} reverse 1 为正序，-1为逆序
  * @return {Shape[]} z轴层级有序的图形列表
  */
@@ -29,7 +29,7 @@ export function compare_layer_3(selectedShapes: ShapeView[], reverse = 1): Shape
         if (compare_layer_a_b_2(a, b, path_map)) {
             return reverse * -1;
         } else {
-            return reverse * 1;
+            return reverse;
         }
     });
 }

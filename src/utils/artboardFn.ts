@@ -13,7 +13,7 @@ import {
 } from '@kcdesign/data';
 import { isTarget2 } from './common';
 import { Context } from '@/context';
-import { Action, Tool } from '@/context/tool';
+import { Action } from '@/context/tool';
 import { compare_layer_3 } from './group_ungroup';
 import { WorkSpace } from '@/context/workspace';
 import { v4 } from 'uuid';
