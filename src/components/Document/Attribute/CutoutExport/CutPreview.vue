@@ -132,7 +132,7 @@ const getSvgUrl = async () => {
             format = page && page.exportOptions!.exportFormats[0];
             id = page.id + format.id;
         }
-        const { width, height } = pageSvg.value.viewBox.baseVal
+        const { width, height } = pageSvg.value.viewBox.baseVal;
         pageSvg.value.setAttribute("width", `${width * format.scale}`);
         pageSvg.value.setAttribute("height", `${height * format.scale}`);
         await getSvgImageData(pageSvg.value, props.trim_bg, id, format, svgImageUrls, shape);
@@ -233,7 +233,7 @@ onUnmounted(() => {
             <span>{{ t('cutoutExport.preview') }}</span>
         </div>
         <svg class="preview_svg" v-if="renderItems.length" ref="pageSvg" :width="svg_width" :height="svg_height"
-            overflow="visible" :viewBox="`${xy.x} ${xy.y} ${svg_width} ${svg_width}`"
+            overflow="visible" :viewBox="`${xy.x} ${xy.y} ${svg_width} ${svg_height}`"
             v-html="(renderItems[0] as ShapeDom).el?.outerHTML || ''"
             :style="{ 'background-color': background_color }"></svg>
         <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush">

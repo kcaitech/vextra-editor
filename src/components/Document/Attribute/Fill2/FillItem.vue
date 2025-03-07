@@ -144,6 +144,7 @@ function clearColorPanelStatus() {
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
     if (color.imageScaleMode) color.setImageScaleMode(undefined);
+    props.context.color.select_stop(undefined);
 }
 
 function close() {
@@ -162,6 +163,7 @@ const watchList = [
             if (color.locate) color.gradient_locate(undefined);
             if (color.mode) color.switch_editor_mode(false);
             if (color.imageScaleMode) color.setImageScaleMode(undefined);
+            props.context.color.select_stop(undefined);
         } else if (fillType.value === FillType.Pattern) {
             color.gradient_locate({ index: fillsPicker.index, type: "fills" });
             color.setImageScaleMode(fill.imageScaleMode);
@@ -171,6 +173,7 @@ const watchList = [
             });
             color.setImageScale(fill.scale);
             color.switch_editor_mode(false);
+            props.context.color.select_stop(undefined);
         } else {
             color.set_gradient_type(fillType.value as GradientType);
             color.gradient_locate({ index: fillsPicker.index, type: "fills" });

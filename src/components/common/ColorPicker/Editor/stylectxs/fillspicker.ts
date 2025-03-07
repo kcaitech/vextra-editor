@@ -88,7 +88,7 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -122,7 +122,8 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -147,7 +148,7 @@ export class FillsPicker extends ColorPickerEditor {
     /* 拖拽修改纯色前置 */
     dragSolidBegin(): void {
         this.updateSelection();
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
         }
@@ -216,7 +217,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: Fill[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
@@ -251,7 +252,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: Fill[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
@@ -287,7 +288,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: Fill[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
@@ -308,7 +309,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     dragStopBegin() {
         this.updateSelection();
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
         }
@@ -351,7 +352,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     dragStopPositionBegin() {
         this.updateSelection();
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
         }
@@ -418,7 +419,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: BasicArray<Fill>[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
@@ -473,7 +474,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: BasicArray<Fill>[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
@@ -509,7 +510,7 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -549,7 +550,7 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -581,7 +582,7 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -615,7 +616,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: BasicArray<Fill>[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
@@ -669,7 +670,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     filterDragBegin(): void {
         this.updateSelection();
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
         }

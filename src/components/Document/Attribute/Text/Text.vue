@@ -1072,6 +1072,7 @@ function clearPanelStatus() {
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
     if (color.imageScaleMode) color.setImageScaleMode(undefined);
+    props.context.color.select_stop(undefined);
 }
 
 function closeColor() {
@@ -1094,6 +1095,7 @@ const updateContextColor = () => {
         if (color.locate) color.gradient_locate(undefined);
         if (color.mode) color.switch_editor_mode(false);
         if (color.imageScaleMode) color.setImageScaleMode(undefined);
+        props.context.color.select_stop(undefined);
     } else {
         color.set_gradient_type(gradient.value?.gradientType || GradientType.Linear);
         color.gradient_locate({ index: 0, type: "text" });
