@@ -360,7 +360,9 @@ export class BundleHandler {
         } else if (SVG) { // 一定是单个SVG资源，多个的场景当作图片资源处理
             this.insertImage(SVG);
         } else if (source) {
-            if (source.styles?.length) this.insertMasks(source.styles);  // 样式
+            if (source.styles?.length) {
+                this.insertMasks(source.styles);  // 样式
+            }
             // 当剪切板内只有一个容器，并且该容器存在于文档，并且此时没有选区或者选区正是该容器时，粘贴在容器右边的空白区域上
             // 有可进入选区
             // 无可进入选区
