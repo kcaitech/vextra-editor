@@ -215,7 +215,11 @@ class EnvRadar {
                 migrateItems.push({ view, toParent: env.parent, index: env.index });
             }
         } else {
-            for (const view of sortedViews) migrateItems.push({ view, toParent: target });
+            const __is_locked = translate.isLocked.bind(translate);
+            for (const view of sortedViews) {
+                if (__is_locked(view)) continue;
+                migrateItems.push({ view, toParent: target });
+            }
         }
 
         const context = this.context;
