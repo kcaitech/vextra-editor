@@ -10,10 +10,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive } from 'vue';
-import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
+import PopoverHeader from "@/components/common/PopoverHeader.vue";
+import Tooltip from "@/components/common/Tooltip.vue";
 
 
 interface Props {
