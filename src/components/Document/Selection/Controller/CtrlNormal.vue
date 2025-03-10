@@ -193,7 +193,7 @@ onUnmounted(() => {
 <svg xmlns="http://www.w3.org/2000/svg" data-area="controller" preserveAspectRatio="xMinYMin meet"
      viewBox="0 0 100 100" width="100" height="100" overflow="visible" :class="{ hidden: selection_hidden }"
      @mousedown="mousedown" @mouseenter="mouseenter" @mouseleave="mouseleave" @mousemove="move">
-<!--    <path :d="testPath" fill="rgba(255, 255, 0, 0.5)" fill-rule="evenodd"/>-->
+    <path :d="testPath" fill="rgba(255, 255, 0, 0.5)" fill-rule="evenodd"/>
     <path
         :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
         fill="transparent"/>
