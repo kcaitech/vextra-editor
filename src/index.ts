@@ -21,7 +21,7 @@ import {
     importRemote,
     importSketch,
     RadixConvert,
-    Repository,
+    TransactDataGuard,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
 import { Zip } from "@/basic/zip";
@@ -53,7 +53,7 @@ export { useComment } from '@/components/Document/Creator/execute'
 
 async function _open(props: DocumentProps) {
     await initDataModule();
-    const repo = new Repository();
+    const repo = new TransactDataGuard();
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;
     // let loader_: DataLoader | undefined
