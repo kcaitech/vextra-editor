@@ -199,7 +199,7 @@ function search(e: MouseEvent) { // 常规图形检索
         }
     }
 
-    const shapes = ctx.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
+    const shapes = ctx.selection.getShapesByXY(xy, metaKey || ctrlKey);
     selectShapes(ctx, shapes);
 }
 

@@ -92,6 +92,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 }
 
 function point_mousemove(event: MouseEvent) {
+    event.stopPropagation();
     if (isDragging) {
         lineHandle?.execute(event);
         if (cur_ctrl_type.endsWith('rotate')) {
@@ -105,6 +106,7 @@ function point_mousemove(event: MouseEvent) {
 }
 
 function point_mouseup(event: MouseEvent) {
+    event.stopPropagation();
     if (event.button !== 0) return;
     clear_status();
 }

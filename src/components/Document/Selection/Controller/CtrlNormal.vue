@@ -78,11 +78,6 @@ function updateControllerView() {
     boundRectPath.value = genRectPath(framePoint);
     props.context.workspace.setCtrlPath(boundRectPath.value);
 
-    // const path: Path = (props.context.selection.selectedShapes[0].borderPath ?? new Path()).clone();
-    // const transform = props.context.selection.selectedShapes[0].matrix2Root().multiAtLeft(props.context.workspace.matrix);
-    // path.transform(transform);
-    // testPath.value = path.toString();
-
     bounds.left = Infinity;
     bounds.top = Infinity;
     bounds.right = -Infinity;
