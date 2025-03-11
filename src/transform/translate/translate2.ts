@@ -1277,7 +1277,7 @@ export class Translate2 extends BoundHandler {
         const selection = this.context.selection;
         selection.setLabelLivingGroup([]);
         selection.setLabelFixedGroup([]);
-        selection.setShowInterval(false);
+        if (!this.altStatus) selection.setShowInterval(false);
 
         if (this.altStatus) this.context.nextTick(this.page, () => {
             this.context.navi.notify(Navi.SHAPELIST_UPDATE);
