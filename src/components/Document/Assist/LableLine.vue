@@ -48,8 +48,6 @@ const contour = () => {
     const selection = props.context.selection;
     const living = (selection.hoveredShape ? [selection.hoveredShape] : selection.labelLivingGroup || []);
     const fixed = selection.labelFixedGroup || selection.selectedShapes;
-    console.log('living', living);
-    console.log('fixed', fixed);
     if (!living.length || !fixed.length || (fixed.length === 1 && living.length === 1 && fixed[0].id === living[0].id)) return;
 
     matrix.reset(props.matrix);
@@ -166,7 +164,6 @@ const workspaceUpdate = (t: number | string) => {
 }
 
 const selectionWatcher = (t: string | number) => {
-    console.log('--t--', t);
   if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_SHAPE_HOVER || t === Selection.PASSIVE_CONTOUR) contour();
 }
 
@@ -187,14 +184,12 @@ onMounted(() => {
     contour();
     props.context.workspace.watch(workspaceUpdate);
     props.context.selection.watch(selectionWatcher);
-    console.log('--mounted--');
 })
 onUnmounted(() => {
     clearPoint();
     props.context.workspace.unwatch(workspaceUpdate);
     props.context.selection.unwatch(selectionWatcher);
     stop();
-    console.log('--un-mounted--');
 })
 </script>
 
