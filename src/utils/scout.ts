@@ -10,14 +10,12 @@
 
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShapeView, Matrix, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
+import { GroupShapeView, Matrix, PathShapeView, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { IScout as Scout } from "@/openapi";
 import { getVisibleBoundingByMatrix } from "@/space";
 import { EnvChain } from "@/mouse/envchain";
-
-// export { IScout as Scout } from "@/openapi";
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -49,7 +47,7 @@ export function scout(context: Context): Scout {
         const scale = context.workspace.curScale;
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
-        if (shape.borderPath) {
+        if (shape.isBorderShape && shape.borderPath) {
             if (path.isPointInFill(SVGPoint)) return true;
         }
         let onlyStroke = shape instanceof PathShapeView && !shape.getFills().length;

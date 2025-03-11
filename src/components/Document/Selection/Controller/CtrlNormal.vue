@@ -78,10 +78,10 @@ function updateControllerView() {
     boundRectPath.value = genRectPath(framePoint);
     props.context.workspace.setCtrlPath(boundRectPath.value);
 
-    const path: Path = (props.context.selection.selectedShapes[0].borderPath ?? new Path()).clone();
-    const transform = props.context.selection.selectedShapes[0].matrix2Root().multiAtLeft(props.context.workspace.matrix);
-    path.transform(transform);
-    testPath.value = path.toString();
+    // const path: Path = (props.context.selection.selectedShapes[0].borderPath ?? new Path()).clone();
+    // const transform = props.context.selection.selectedShapes[0].matrix2Root().multiAtLeft(props.context.workspace.matrix);
+    // path.transform(transform);
+    // testPath.value = path.toString();
 
     bounds.left = Infinity;
     bounds.top = Infinity;
@@ -168,7 +168,14 @@ function workspace_watcher(t: number) {
         if (needActivateAfterEditorDestroy) pointActivated.value = true;
     }
 }
-
+document.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.altKey) {
+        const path: Path = (props.context.selection.selectedShapes[0].borderPath ?? new Path()).clone();
+        const transform = props.context.selection.selectedShapes[0].matrix2Root().multiAtLeft(props.context.workspace.matrix);
+        path.transform(transform);
+        testPath.value = path.toString();
+    }
+});
 const stop = watchEffect(updateControllerView);
 onMounted(() => {
     props.context.selection.watch(selection_watcher);

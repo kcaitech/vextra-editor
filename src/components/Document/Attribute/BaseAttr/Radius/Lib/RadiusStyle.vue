@@ -77,7 +77,7 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = '此文件样式';
 
         for (const v of sts.variables) {
-            if (v.typeId === "radius-mask-living" && !v.disabled) cat.variables.push(v);
+            if (v.typeId === "radius-mask" && !v.disabled) cat.variables.push(v);
         }
         if (word) {
             const reg = new RegExp(`${word}`, 'img');
