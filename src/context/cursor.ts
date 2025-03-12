@@ -9,7 +9,7 @@
  */
 
 import { WatchableObject } from "@kcdesign/data";
-import { CursorPicker, CursorType } from "@/utils/cursor2";
+import { CursorPicker, CursorType } from "@/utils/cursor";
 
 export class Cursor extends WatchableObject {
     static CHANGE_CURSOR = 1;

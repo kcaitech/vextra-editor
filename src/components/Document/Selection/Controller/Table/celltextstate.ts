@@ -12,7 +12,7 @@ import { Matrix, TableCellView } from "@kcdesign/data";
 import { Context } from '@/context';
 import { ref } from "vue";
 import { useControllerCustom } from "../controller";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 
 export function textState(props: {
     shape: TableCellView,

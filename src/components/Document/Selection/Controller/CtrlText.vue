@@ -22,7 +22,7 @@ import { WorkSpace } from '@/context/workspace';
 import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from '@/utils/common';
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 
 interface Props {
     context: Context

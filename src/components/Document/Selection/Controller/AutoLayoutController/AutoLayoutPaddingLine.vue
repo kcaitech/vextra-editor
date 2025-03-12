@@ -16,7 +16,7 @@ import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { fixedZero } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
-import { CursorType } from '@/utils/cursor2';
+import { CursorType } from '@/utils/cursor';
 
 type Box = {
     lt: Point,

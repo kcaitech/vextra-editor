@@ -24,7 +24,7 @@ import { WorkSpace } from '@/context/workspace';
 import { permIsEdit } from '@/utils/content';
 import { forbidden_to_modify_frame } from '@/utils/common';
 // import { TranslateHandler } from '@/transform/translate';
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { ScaleHandler } from "@/transform/scale";
 import { Translate2 } from "@/transform/translate/translate2";

@@ -20,7 +20,7 @@ import { useController } from '../Controller/controller';
 import { Point } from "../SelectionView.vue";
 import { WorkSpace } from '@/context/workspace';
 import ShapesStrokeContainer from "@/components/Document/Selection/Controller/ShapeStroke/ShapesStrokeContainer.vue";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 
 interface Props {
     context: Context

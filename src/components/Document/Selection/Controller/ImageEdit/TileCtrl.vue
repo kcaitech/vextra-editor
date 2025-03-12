@@ -19,7 +19,7 @@ import {
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { DragKit } from "@/components/common/draggable";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 
 interface Props {
     context: Context;

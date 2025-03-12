@@ -20,7 +20,7 @@ import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/path/pathEdit";
 import { LineHandler } from "@/transform/line";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 
 interface Props {
     matrix: number[]

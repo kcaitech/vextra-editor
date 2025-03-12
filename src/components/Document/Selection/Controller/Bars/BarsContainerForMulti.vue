@@ -15,7 +15,7 @@ import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { ScaleHandler } from '@/transform/scale';
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { Action } from "@/context/tool";
 
 interface Props {

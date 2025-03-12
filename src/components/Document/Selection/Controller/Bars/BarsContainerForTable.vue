@@ -22,7 +22,7 @@ import { Point } from '../../SelectionView.vue';
 import { WorkSpace } from "@/context/workspace";
 import { ScaleHandler } from "@/transform/scale";
 import { cursorAngle } from "@/components/Document/Selection/common";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { Action } from "@/context/tool";
 
 interface Props {

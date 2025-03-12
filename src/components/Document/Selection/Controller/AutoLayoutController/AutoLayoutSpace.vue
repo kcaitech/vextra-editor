@@ -16,7 +16,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
 import { fixedZero } from '@/utils/common';
-import { CursorType } from '@/utils/cursor2';
+import { CursorType } from '@/utils/cursor';
 import { useI18n } from "vue-i18n";
 import { getShapeFrame } from '@/utils/content';
 const { t } = useI18n();

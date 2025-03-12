@@ -10,9 +10,9 @@
 
 
 // 吸管🍉，专吸颜色
-import { pipette } from '@/utils/cursor';
 import domtoimage from './dom-to-image.js';
 import { drawTooltip, getCanvas, getCanvasRectColor, loadImage, rbgaObjToHex, renderColorInfo } from './utils';
+import { CursorPicker } from "@/utils/cursor";
 export interface Point {
   x: number;
   y: number;
@@ -83,7 +83,7 @@ export class Eyedropper {
            left: ${x}px;
            top: ${y}px;
            z-index: 10000;
-           cursor: -webkit-image-set(url(${pipette}) 1.5x) ${4} ${28}, auto;
+           cursor: -webkit-image-set(url(${CursorPicker.PIPETTE}) 1.5x) ${4} ${28}, auto;
            width: ${width}px;
            height: ${height}px;
          `,

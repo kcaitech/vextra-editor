@@ -19,7 +19,7 @@ import { getHorizontalAngle } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { ScaleHandler } from '@/transform/scale';
 import { RotateHandler } from '@/transform/rotate';
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { Action } from "@/context/tool";
 
 interface Props {
