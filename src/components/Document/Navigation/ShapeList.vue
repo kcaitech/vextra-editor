@@ -481,7 +481,6 @@ const stopWatch = watch(() => props.page, () => {
     shapeDirList.watch(notifySourceChange)
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }, { immediate: true });
-
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
     props.context.menu.watch(menu_watcher);
