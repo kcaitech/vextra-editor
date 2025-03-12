@@ -24,10 +24,6 @@ import { getHorizontalAngle } from "@/utils/common";
 import { roundBy } from "@/path/common";
 import { PathHitChecker } from "@/path/hit";
 
-type Props = {
-    context: Context
-}
-
 type Dot = {
     point: {
         x: number,
@@ -38,7 +34,7 @@ type Dot = {
     selected: boolean
 }
 
-const props = defineProps<Props>();
+const props = defineProps<{context: Context}>();
 const data: {
     dots: Dot[],
     segments: Segment[][]

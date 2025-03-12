@@ -20,6 +20,7 @@ import { Context } from ".";
 import { Segment } from "@/utils/pathedit";
 import { Action } from "./tool";
 import { PathEditor } from "@/path/pathEdit";
+import { ActionDirection } from "@/utils/controllerFn";
 
 export type PointEditType = CurveMode | 'INVALID'
 
@@ -53,6 +54,8 @@ export class Path extends WatchableObject {
         index: number;
         e: MouseEvent;
     } | undefined = undefined;
+
+    fixedAction: string | undefined;
 
     constructor(context: Context) {
         super();

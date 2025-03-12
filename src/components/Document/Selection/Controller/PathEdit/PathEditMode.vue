@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from "@/context";
-import { onUnmounted, ref, watch } from "vue";
+import { nextTick, onUnmounted, ref, watch } from "vue";
 import { Selection, XY } from "@/context/selection";
 import { dbl_action } from "@/utils/mouse_interactive";
 import Selector4PEM, { SelectorFrame } from "@/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue";
@@ -22,6 +22,7 @@ import ClipMode from "../../Controller/ClipMode.vue";
 import PenMode from "@/components/Document/Selection/Controller/PathEdit/PenMode.vue";
 import { scout_once } from "@/utils/common";
 import { PathEditor } from "@/path/pathEdit";
+import { usePen } from "@/components/Document/Creator/execute";
 
 interface Props {
     context: Context;
@@ -147,7 +148,7 @@ function window_blur() {
 }
 
 function selection_watcher(type: number | string) {
-    if (type === Selection.CHANGE_SHAPE || type === Selection.CHANGE_PAGE) props.context.workspace.setPathEditMode(false);
+    if (type === Selection.CHANGE_SHAPE) exit();
 }
 
 function tool_watcher(type: number) {
@@ -162,38 +163,36 @@ const stopWatchVisible = watch(() => props.params.visible, (v) => {
     if (v) {
         props.context.selection.watch(selection_watcher);
         props.context.tool.watch(tool_watcher);
-        window.addEventListener('blur', window_blur);
         props.context.tool.notify(Tool.RULE_CLEAR);
+        window.addEventListener('blur', window_blur);
     } else {
         props.context.selection.unwatch(selection_watcher);
         props.context.tool.unwatch(tool_watcher);
         props.context.tool.setAction(Action.AutoV);
         props.context.cursor.reset();
-        const path = props.context.path;
-        path.reset();
-        window.removeEventListener('blur', window_blur);
-
-        new PathEditor(props.context).sortSegment();
-        path.setContactStatus(false);
-        path.saveEvent(undefined);
+        props.context.path.reset();
+        props.context.path.setContactStatus(false);
+        props.context.path.saveEvent(undefined);
         props.context.tool.notify(Tool.RULE_RENDER);
+        window.removeEventListener('blur', window_blur);
+        new PathEditor(props.context).sortSegment();
         clip_mode.value = false;
         penMode.value = false;
+        if (!props.context.selection.selectedShapes.length
+            && props.context.path.fixedAction === Action.Pen) nextTick(() => usePen(props.context));
+        props.context.path.fixedAction = undefined;
     }
 }, { immediate: true });
-
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tool.unwatch(tool_watcher);
     props.context.tool.setAction(Action.AutoV);
-    const path = props.context.path;
-    path.reset();
-    window.removeEventListener('blur', window_blur);
-
-    new PathEditor(props.context).sortSegment();
-    path.setContactStatus(false);
-    path.saveEvent(undefined);
     props.context.tool.notify(Tool.RULE_RENDER);
+    props.context.path.reset();
+    props.context.path.setContactStatus(false);
+    props.context.path.saveEvent(undefined);
+    window.removeEventListener('blur', window_blur);
+    new PathEditor(props.context).sortSegment();
     stopWatchVisible();
 })
 </script>

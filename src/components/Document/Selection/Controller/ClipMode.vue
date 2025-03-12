@@ -14,6 +14,7 @@ import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Matrix } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import ClipSlice from "./Bars/ClipSlice.vue";
+import { Action } from "@/context/tool";
 interface Props {
     context: Context
 }
@@ -69,18 +70,13 @@ function matrix_watcher(t: number | string) {
 
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
-    const shape = props.context.selection.selectedShapes[0];
-    if (shape) {
-        shape.watch(update);
-    }
+    props.context.selection.pathshape?.watch(update);
+    props.context.path.fixedAction = Action.PathClip;
     update();
 });
 onUnmounted(() => {
     props.context.workspace.unwatch(matrix_watcher);
-    const shape = props.context.selection.selectedShapes[0];
-    if (shape) {
-        shape.unwatch(update);
-    }
+    props.context.selection.pathshape?.unwatch(update);
 })
 </script>
 <template>

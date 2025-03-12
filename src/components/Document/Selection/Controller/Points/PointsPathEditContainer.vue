@@ -323,7 +323,6 @@ function resetContactStatus() {
 
 onMounted(() => {
     shape = props.context.selection.pathshape!;
-    if (!shape) return console.error('wrong shape');
     shape.watch(update);
     update();
     window.addEventListener('blur', window_blur);
@@ -334,9 +333,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     props.context.path.unwatch(path_watcher);
-
     shape?.unwatch(update);
-
     window.removeEventListener('blur', window_blur);
     props.context.workspace.unwatch(workspaceWatcher);
 })
@@ -358,8 +355,7 @@ onUnmounted(() => {
             </rect>
         </g>
     </g>
-
-    <Handle :context="props.context"></Handle>
+    <Handle :context="props.context"/>
 <!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
 <!--    <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">-->
 <!--        {{ i }}-->
@@ -367,8 +363,7 @@ onUnmounted(() => {
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
-          :class="{ point: true, selected: p.selected }">
-    </rect>
+          :class="{ point: true, selected: p.selected }"/>
 </template>
 <style lang='scss' scoped>
 .point {

@@ -476,13 +476,11 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
         }
         if (is_ctrl) { // 撤销
             event.preventDefault();
-            const keep = context.tool.action === Action.Curve ? Action.Pen : undefined;
             undo(context);
-            if (keep) nextTick(() => usePen(context));
             return;
         }
     } catch (error) {
-        console.log('wrong timing:', error);
+        console.error('wrong timing:', error);
     }
     if (event.altKey) {
         event.preventDefault();
