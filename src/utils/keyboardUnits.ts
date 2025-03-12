@@ -57,6 +57,7 @@ import {
 import { unAutoLayoutFn } from "./auto_layout";
 import { MossClipboard } from "@/clipboard";
 import { group, ungroup } from "@/utils/group_ungroup";
+import { nextTick } from "vue";
 
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
@@ -475,7 +476,9 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
         }
         if (is_ctrl) { // 撤销
             event.preventDefault();
+            const keep = context.tool.action === Action.Curve ? Action.Pen : undefined;
             undo(context);
+            if (keep) nextTick(() => usePen(context));
             return;
         }
     } catch (error) {
