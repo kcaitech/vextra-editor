@@ -8,13 +8,13 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository, importLocal, Repository } from "@kcdesign/data";
+import { CoopRepository, importLocal, TransactDataGuard } from "@kcdesign/data";
 import LCStorage from "./local";
 import { Context } from "@/context";
 
 export async function parserDocument() {
     const storage = new LCStorage();
-    const repo = new Repository();
+    const repo = new TransactDataGuard();
     const { document, loader } = await importLocal(storage, '', '', '', repo);
     const cooprepo = new CoopRepository(document, repo)
     const context = new Context(document, cooprepo, { source: 'storage', storage } as any);

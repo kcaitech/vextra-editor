@@ -8,8 +8,22 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+/**
+ * 文档编辑器组件
+ * @description 用于渲染和编辑设计文档的主要组件
+ */
 import _DocumentVue from "./components/Document/index.vue"
+
+/**
+ * 移动端文档编辑器组件
+ * @description 针对移动端优化的文档编辑器组件
+ */
 import _MobileDocumentVue from "./components/Mobile/Document.vue"
+
+/**
+ * 预览组件
+ * @description 用于预览设计文档的组件
+ */
 import _PreviewVue from "./components/Preview/index.vue"
 import _StaticShape from "./components/Document/Content/StaticShape.vue"
 import {
@@ -21,7 +35,7 @@ import {
     importRemote,
     importSketch,
     RadixConvert,
-    Repository,
+    TransactDataGuard,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
 import { Zip } from "@/basic/zip";
@@ -39,7 +53,17 @@ export {i18n_messages as i18n} from '@/i18n';
 export * from "./openapi";
 
 export const DocumentVue = _DocumentVue
+
+/**
+ * 移动端文档编辑器组件
+ * @component
+ */
 export const MobileDocumentVue = _MobileDocumentVue
+
+/**
+ * 预览组件
+ * @component
+ */
 export const PreviewVue = _PreviewVue
 
 export const StaticShape = _StaticShape
@@ -53,7 +77,7 @@ export { useComment } from '@/components/Document/Creator/execute'
 
 async function _open(props: DocumentProps) {
     await initDataModule();
-    const repo = new Repository();
+    const repo = new TransactDataGuard();
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;
     // let loader_: DataLoader | undefined
@@ -92,6 +116,11 @@ async function _open(props: DocumentProps) {
     }
 }
 
+/**
+ * 打开文档
+ * @param props @see DocumentProps
+ * @returns 
+ */
 export async function openDocument(props: DocumentProps) {
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;

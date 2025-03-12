@@ -9,12 +9,12 @@
  */
 
 <script setup lang="ts">
-import { Repository } from "@kcdesign/data";
+import { TransactDataGuard } from "@kcdesign/data";
 import { ref } from "@vue/reactivity";
 import { onBeforeUpdate, onMounted, onUnmounted } from "vue"
 // import Icon from "@/components/common/Icon.vue";
 import ToolButton from "./Buttons/ToolButton.vue"
-const props = defineProps<{ repo?: Repository }>();
+const props = defineProps<{ repo?: TransactDataGuard }>();
 let watcher: ((...args: any[]) => void) | undefined;
 // function watcher() {
 //     // repo.value = props.context.repo;

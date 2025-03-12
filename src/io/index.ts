@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { exportExForm, Repository, importMoss } from "@kcdesign/data";
+import { exportExForm, TransactDataGuard, importMoss } from "@kcdesign/data";
 import JSZip from "jszip";
 import { MossError } from "@/basic/error";
 
@@ -60,7 +60,7 @@ export function downloadByLink(content: Blob, name: string) {
     URL.revokeObjectURL(link.href);
 }
 
-export async function importDocumentFromMDD(filePack: File, repo: Repository) {
+export async function importDocumentFromMDD(filePack: File, repo: TransactDataGuard) {
     const __files = await getFiles() as {
         [p: string]: JSZip.JSZipObject
     };
