@@ -158,16 +158,16 @@ onUnmounted(() => {
     reset_hidden();
 })
 watchEffect(updateControllerView)
-const testPath = ref<string>('');
-
-document.addEventListener('keydown', (event: KeyboardEvent) => {
-    if (event.altKey) {
-        const path: Path = (props.context.selection.selectedShapes[0].borderPath ?? new Path()).clone();
-        const transform = props.context.selection.selectedShapes[0].matrix2Root().multiAtLeft(props.context.workspace.matrix);
-        path.transform(transform);
-        testPath.value = path.toString();
-    }
-});
+// const testPath = ref<string>('');
+//
+// document.addEventListener('keydown', (event: KeyboardEvent) => {
+//     if (event.altKey) {
+//         const path: Path = (props.context.selection.selectedShapes[0].borderPath ?? new Path()).clone();
+//         const transform = props.context.selection.selectedShapes[0].matrix2Root().multiAtLeft(props.context.workspace.matrix);
+//         path.transform(transform);
+//         testPath.value = path.toString();
+//     }
+// });
 </script>
 <template>
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -180,7 +180,7 @@ document.addEventListener('keydown', (event: KeyboardEvent) => {
          @mousedown="mousedown"
     >
         <path :d="line_path" class="main-path" :stroke="theme"></path>
-        <path :d="testPath" fill="rgba(0, 255, 0, 0.8)" fill-rule="evenodd"/>
+<!--        <path :d="testPath" fill="rgba(0, 255, 0, 0.8)" fill-rule="evenodd"/>-->
         <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
                                        :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame"
                                        :theme="theme">
