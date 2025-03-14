@@ -153,7 +153,7 @@ export class CurveModifier {
         const mt = 1 - t;
         const mt2 = mt * mt;
         const t2 = t * t;
-        const maxIterations = 20;
+        const maxIterations = 100;
         const tolerance = 0.01;
 
         const { p0, p1, p2, p3 } = this.bezier;
