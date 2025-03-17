@@ -117,7 +117,8 @@ export function scout(context: Context): Scout {
     }
 
     function isPointInStrokeByWidth(d: string, point: XY, width: number): boolean {
-        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         path.setAttributeNS(null, 'stroke-width', `${width}`);
         return (path as SVGGeometryElement).isPointInStroke(SVGPoint);

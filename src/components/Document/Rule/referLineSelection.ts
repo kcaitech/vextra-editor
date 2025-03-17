@@ -84,7 +84,7 @@ export class ReferLineSelection {
 
         const __xy = ctx.workspace.matrix.computeCoord3(xy);
         const ctrlPath = ctx.workspace.ctrlPath;
-        if (this.m_scout.isPointInStrokeByWidth(ctrlPath, __xy, 14 / ctx.workspace.matrix.m00)) {
+        if (this.m_scout.isPointInStrokeByWidth(ctrlPath, __xy, 14)) {
             return false;
         }
 
