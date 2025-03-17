@@ -13,34 +13,19 @@ import { exportExForm, TransactDataGuard, importMoss } from "@kcdesign/data";
 import JSZip from "jszip";
 import { MossError } from "@/basic/error";
 
-export async function exportDocument(context: Context) {
+export async function _exportDocument(context: Context) {
     const __data = context.data;
     const data = await exportExForm(__data)
         .catch((error) => {
             throw error
         });
     if (!data) throw new Error('invalid data');
-
-    const MDD = new JSZip();
-    const documentBlob = new Blob([JSON.stringify(data.document_meta)]);
-    MDD.file('document-meta.json', documentBlob);
-    const PAGES = MDD.folder('pages')!;
-    packPages(PAGES);
-    const IMAGES = MDD.folder('images')!;
-    await packImages(IMAGES);
-
-    const content = await MDD.generateAsync({ type: 'blob' });
-    const name = context.documentInfo.name || data.document_meta.name;
-    const reg = new RegExp('(.sketch|.fig|.moss)$', 'img');
-    downloadByLink(content, name.replace(reg, '') + '.moss');
-
     function packPages(folder: JSZip) {
         for (const page of data.pages) {
             const blob = new Blob([JSON.stringify(page)]);
             folder.file(page.id + '.json', blob);
         }
     }
-
     async function packImages(folder: JSZip) {
         if (!data.media_names.length) return;
         const manager = context.data.mediasMgr;
@@ -50,6 +35,23 @@ export async function exportDocument(context: Context) {
             folder.file(ref, media.buff);
         }
     }
+    const zip = new JSZip();
+    const documentBlob = new Blob([JSON.stringify(data.document_meta)]);
+    zip.file('document-meta.json', documentBlob);
+    const pages = zip.folder('pages')!;
+    packPages(pages);
+    const imgs = zip.folder('images')!;
+    await packImages(imgs);
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    return content
+}
+
+export async function exportDocument(context: Context) {
+    const content = await _exportDocument(context);
+    const name = context.documentInfo.name;
+    const reg = new RegExp('(.sketch|.fig|.moss)$', 'img');
+    downloadByLink(content, name.replace(reg, '') + '.moss');
 }
 
 export function downloadByLink(content: Blob, name: string) {

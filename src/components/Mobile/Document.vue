@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { initDataModule } from '@/components/common/initmodule';
+import { initDataModule } from '@/basic/initmodule';
 import { Context } from "@/context";
 import {
     Matrix,
@@ -575,3 +575,4 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
     margin: 0 auto;
 }
 </style>
+@/basic/initmodule

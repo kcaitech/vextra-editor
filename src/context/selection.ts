@@ -43,7 +43,7 @@ import { v4 } from "uuid";
 import { ISelection, SelectionEvents } from "@/openapi/selection";
 import { skipUserSelectShapes } from "@/utils/content";
 import { DocSelectionData } from "./user";
-import { initDataModule } from "@/components/common/initmodule";
+import { initDataModule } from "@/basic/initmodule";
 import { EnvChainGenerator } from "@/mouse/envchain";
 import { IScout } from "@/openapi";
 import { getShapesForStyle } from "@/utils/style";

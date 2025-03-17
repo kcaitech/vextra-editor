@@ -13,7 +13,7 @@ import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { PageView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { initDataModule } from '@/components/common/initmodule';
+import { initDataModule } from '@/basic/initmodule';
 import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import Loading from '@/components/common/Loading.vue';
@@ -227,4 +227,4 @@ onUnmounted(() => {
         }
     }
 }
-</style>
+</style>@/basic/initmodule
