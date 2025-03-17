@@ -96,7 +96,6 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     update() {
-        this.updateSelection();
         this.modifyMixedStatus();
         this.updateBlur();
     }

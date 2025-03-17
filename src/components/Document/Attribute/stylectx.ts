@@ -20,12 +20,8 @@ export type SheetCatch = {
 }
 
 export class StyleCtx {
-    private m_selected: ShapeView[];
-    private m_flat: ShapeView[];
 
     constructor(protected context: Context) {
-        this.m_selected = [];
-        this.m_flat = [];
     }
 
     get repo() {
@@ -40,33 +36,19 @@ export class StyleCtx {
         return this.context.data;
     }
 
-    protected updateSelection() {
-        this.selected = this.context.selection.selectedShapes;
-        this.flat = this.context.selection.flat;
-    }
-
     /**
      * 选区内的选中图层：相当与context.selection.selectedShapes
      */
     get selected() {
-        return this.m_selected;
-    }
-
-    set selected(ss) {
-        this.m_selected = ss;
+        return this.context.selection.selectedShapes;
     }
 
     /**
      * 选区内的选中图层的基础上，把编组打平。
      */
     get flat() {
-        return this.m_flat;
+        return this.context.selection.flat;
     }
-
-    set flat(ss) {
-        this.m_flat = ss;
-    }
-
 
     protected get editor(): any { /* any要趋近与Modifier */
         return this.context.editor4Page(this.context.selection.selectedPage!);

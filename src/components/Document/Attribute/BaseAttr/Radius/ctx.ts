@@ -126,7 +126,6 @@ export class RadiusContextMgr extends StyleCtx {
     }
 
     update() {
-        this.updateSelection();
         this.modify_can_be_rect();
         this.modifyMixedStatus();
         this.updateRadius();
