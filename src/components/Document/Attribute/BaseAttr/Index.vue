@@ -72,14 +72,14 @@ import fliph_icon from "@/assets/icons/svg/fliph.svg";
 import flipv_icon from "@/assets/icons/svg/flipv.svg";
 import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
 
-interface Props {
-    context: Context
-    selectionChange: number
-    trigger: any[]
-    shapes: ShapeView[]
+type Props = {
+    context: Context;
+    selectionChange: number;
+    trigger: any[];
+    shapes: ShapeView[];
 }
 
-interface ModelState {
+type ModelState = {
     x: boolean
     y: boolean
     width: boolean
@@ -138,7 +138,7 @@ const model_disable_state: ModelState = reactive({
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function _calc_attri() {
-    const selected = props.context.selection.selectedShapes;
+    const selected = props.shapes;
     if (!selected.length) return;
     const xy = get_xy(selected, mixed);
     x.value = xy.x;
@@ -154,10 +154,10 @@ function _calc_attri() {
 const calc_attri = throttle(_calc_attri, 60, { trailing: true });
 
 const parentSymbolRef = () => {
-    const len = props.context.selection.selectedShapes.length;
+    const len = props.shapes.length;
     let is_dis = false;
     if (len === 1) {
-        const shape = props.context.selection.selectedShapes[0];
+        const shape = props.shapes[0];
         let p = shape.parent;
         while (p && p.type !== ShapeType.Page) {
             if (p.type === ShapeType.SymbolRef) {
@@ -166,7 +166,7 @@ const parentSymbolRef = () => {
             p = p.parent;
         }
     } else if (len > 1) {
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = props.shapes;
         for (let i = 0; i < shapes.length; i++) {
             const shape = shapes[i];
             let p = shape.parent;
@@ -183,7 +183,7 @@ const parentSymbolRef = () => {
 }
 
 function _update_view() {
-    if (props.context.selection.selectedShapes.length) {
+    if (props.shapes.length) {
         layout();
         check_model_state();
     }
@@ -206,7 +206,7 @@ function changeX(value: string) {
     const _x: number = Number.parseFloat(value);
     if (isNaN(_x)) return;
 
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
 
 
     const actions = get_actions_frame_x(shapes, _x);
@@ -226,7 +226,7 @@ function keydownX(event: KeyboardEvent) {
         const target = event.target as HTMLInputElement;
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = props.shapes;
         const actions = get_actions_frame_x(shapes, value);
         linearApi.modifyShapesX(actions)
         event.preventDefault();
@@ -241,7 +241,7 @@ function changeY(value: string) {
     const _y: number = Number.parseFloat(value);
     if (isNaN(_y)) return;
 
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
 
     const actions = get_actions_frame_y(shapes, _y);
     const page = props.context.selection.selectedPage!;
@@ -259,7 +259,7 @@ function keydownY(event: KeyboardEvent) {
         const target = event.target as HTMLInputElement;
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = props.shapes;
         const actions = get_actions_frame_y(shapes, value);
         linearApi.modifyShapesY(actions)
         event.preventDefault();
@@ -274,7 +274,7 @@ function changeW(value: string) {
     const _w: number = Number.parseFloat(value);
     if (isNaN(_w)) return;
 
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
 
     const page = props.context.selection.selectedPage!;
 
@@ -293,7 +293,7 @@ function keydownW(event: KeyboardEvent) {
         const target = event.target as HTMLInputElement;
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = props.shapes;
         linearApi.modifyShapesWidth(shapes, value)
         event.preventDefault();
     }
@@ -309,7 +309,7 @@ function changeH(value: string) {
         return;
     }
 
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
 
     const page = props.context.selection.selectedPage!;
 
@@ -328,7 +328,7 @@ function keydownH(event: KeyboardEvent) {
         const target = event.target as HTMLInputElement;
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = props.shapes;
         linearApi.modifyShapesHeight(shapes, value)
         event.preventDefault();
     }
@@ -340,7 +340,7 @@ function lockToggle() {
     }
 
     const val = !isLock.value;
-    const actions = get_actions_constrainer_proportions(props.context.selection.selectedShapes, val);
+    const actions = get_actions_constrainer_proportions(props.shapes, val);
     const page = props.context.selection.selectedPage;
     if (!page) {
         return;
@@ -375,7 +375,7 @@ function changeR(value: string) {
 
     if (isNaN(newRotate)) return;
 
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
     const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
@@ -394,7 +394,7 @@ function keydownR(event: KeyboardEvent) {
         const target = event.target as HTMLInputElement;
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = props.shapes;
         const transforms = __rotate(shapes, value)
         linearApi.setShapesRotate(transforms)
         event.preventDefault();
@@ -412,7 +412,7 @@ function changeCounts(value: string) {
     }
     if (count < 3) count = 3;
     if (count > 60) count = 60;
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
 
     const page = props.context.selection.selectedPage!;
 
@@ -434,7 +434,7 @@ function changeInnerAngle(value: string) {
     if (offset < 0.1) offset = 0.1;
     if (offset > 100) offset = 100;
 
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
 
     const page = props.context.selection.selectedPage!;
 
@@ -446,13 +446,13 @@ function changeInnerAngle(value: string) {
 
 function adapt() {
     props.context
-        .editor4Shape((props.context.selection.selectedShapes[0]))
+        .editor4Shape((props.shapes[0]))
         .adapt();
 }
 
 function layout() {
     reset_layout();
-    const selected = props.context.selection.selectedShapes;
+    const selected = props.shapes;
     if (selected.length === 1) {
         const shape = selected[0];
         s_radius = !!shape.radiusType;
@@ -481,7 +481,7 @@ function reset_layout() {
 
 function check_model_state() {
     reset_model_state();
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
     if (shapes.length !== 1) return;
     const shape = shapes[0];
 
@@ -532,7 +532,7 @@ function all_disable() {
 }
 
 const autoLayoutDisable = () => {
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
     const every = shapes.every(item => item.parent && (item.parent as ArtboardView).autoLayout);
     if (every) {
         model_disable_state.x = true, model_disable_state.y = true;
@@ -566,7 +566,7 @@ async function modifyTelDown(e: MouseEvent) {
             unadjustedMovement: true,
         });
     }
-    const selected = props.context.selection.selectedShapes;
+    const selected = props.shapes;
     const d = props.context.selection.isTidyUpDir;
     orderShapes = checkTidyUpShapesOrder(selected, d);
     minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
@@ -735,7 +735,7 @@ function formatRotate(rotate: number | string) {
 
 const tidyUp = () => {
     if (!props.context.selection.isTidyUp) return;
-    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    const selected = getVisibleShapes(props.shapes);
     const { width, height } = getSelectedWidthHeight(props.context, selected);
 
     const shapes = tidyUpShapesOrder(selected, height > width);
@@ -754,7 +754,7 @@ const changeHorTidyUp = (value: string) => {
 
     const hor: number = Number.parseFloat(value);
     if (isNaN(hor)) return;
-    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    const selected = getVisibleShapes(props.shapes);
     const dir = props.context.selection.isTidyUpDir;
     const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
@@ -771,7 +771,7 @@ function keydownHorTidyUp(e: KeyboardEvent) {
     if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
         hor = hor + (e.code === 'ArrowUp' ? 1 : -1)
         if (isNaN(hor)) return;
-        const selected = props.context.selection.selectedShapes;
+        const selected = props.shapes;
         const dir = props.context.selection.isTidyUpDir;
         const shapes = checkTidyUpShapesOrder(selected, dir);
         const ver = typeof verSpace.value === 'number' ? verSpace.value : 0
@@ -792,7 +792,7 @@ const changeVerTidyUp = (value: string) => {
 
     const ver: number = Number.parseFloat(value);
     if (isNaN(ver)) return;
-    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    const selected = getVisibleShapes(props.shapes);
     const dir = props.context.selection.isTidyUpDir;
     const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
@@ -809,7 +809,7 @@ function keydownVerTidyUp(e: KeyboardEvent) {
     if (e.code === 'ArrowUp' || e.code === "ArrowDown") {
         ver = ver + (e.code === 'ArrowUp' ? 1 : -1)
         if (isNaN(ver)) return;
-        const selected = props.context.selection.selectedShapes;
+        const selected = props.shapes;
         const dir = props.context.selection.isTidyUpDir;
         const shapes = checkTidyUpShapesOrder(selected, dir);
         const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
@@ -826,7 +826,7 @@ function selection_change() {
     update_view();
     calc_attri();
     textBehaviour();
-    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    const selected = getVisibleShapes(props.shapes);
     if (selected.length > 1 && !hiddenTidyUp(selected)) {
         s_tidy_up.value = true;
         whetherTidyUp();
@@ -838,7 +838,7 @@ function selection_change() {
 
 const _whetherTidyUp = () => {
     if (props.context.workspace.tidyUpIsTrans) return;
-    const selected = getVisibleShapes(props.context.selection.selectedShapes);
+    const selected = getVisibleShapes(props.shapes);
     s_tidy_up.value = false;
     const length = selected.filter(shape => shape.isVisible).length;
     if (length <= 1 || length > 100) return;
@@ -907,7 +907,7 @@ const attr_watcher = (t: number, params: any) => {
 }
 
 const textBehaviour = () => {
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = props.shapes;
     const all_text = shapes.every(item => item instanceof TextShapeView);
     if (all_text) {
         model_disable_state.width = false;

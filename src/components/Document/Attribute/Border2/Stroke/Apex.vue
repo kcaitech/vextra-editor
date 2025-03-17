@@ -226,7 +226,6 @@ onUnmounted(() => {
         align-items: center;
         flex: 1;
         height: 100%;
-        margin-left: 19px;
         box-sizing: border-box;
 
         .select {

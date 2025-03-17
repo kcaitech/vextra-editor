@@ -62,7 +62,9 @@ export function is_ctrl_element(e: MouseEvent, context: Context) {
         } else if ((type === ShapeType.Contact || is_straight(shape))) {
             return selection.scout.isPointInShape(shape, workspace.getRootXY(e));
         } else {
-            return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
+            const borderPath = shape.borderPath.clone();
+            borderPath.transform(shape.matrix2Root());
+            return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e)) || selection.scout.isPointInPath(borderPath.toString(), workspace.getRootXY(e));
         }
     } else {
         return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
