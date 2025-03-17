@@ -20,7 +20,6 @@ import add_icon from '@/assets/icons/svg/add.svg';
 import style_icon from '@/assets/icons/svg/styles.svg';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import { BlurCatch, BlurContext, BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
-import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
 import BlurPanel from "@/components/Document/Attribute/Blur/BlurPanel.vue"
 import BlurMaskView from "./BlurMaskView.vue"
 
