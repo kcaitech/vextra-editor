@@ -24,18 +24,14 @@ import { Action } from '@/context/tool';
 import { PathEditor } from "@/path/pathEdit";
 import { CurveModifier } from "@/components/Document/Selection/Controller/Points/curvemodifier";
 
-interface Props {
-    context: Context
+type Dot = {
+    point: { x: number, y: number };
+    segment: number;
+    index: number;
+    selected: boolean;
 }
 
-interface Dot {
-    point: { x: number, y: number }
-    segment: number
-    index: number
-    selected: boolean
-}
-
-const props = defineProps<Props>();
+const props = defineProps<{ context: Context; }>();
 const matrix = new Matrix();
 const data: { dots: Dot[], segments: Segment[][] } = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
@@ -124,6 +120,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 function down_background_path(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) return;
     if (event.ctrlKey) {
+        add_rect.value = '';
         const next = (index === (shape as PathShapeView).segments[segment].points.length - 1) ? 0 : index + 1
         new CurveModifier(props.context, shape as PathShapeView, segment, index, next).start(event);
         return;
