@@ -42,7 +42,7 @@ export class StyleCtx {
      */
     get selected() {
         const __selected = this.context.selection.selectedShapes;
-        if (__selected) this.m_last_selected = __selected.slice(0);
+        if (__selected.length) this.m_last_selected = __selected.slice(0);
         return __selected.length ? __selected : this.m_last_selected;
     }
 
