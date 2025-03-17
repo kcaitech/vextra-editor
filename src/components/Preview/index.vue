@@ -227,4 +227,4 @@ onUnmounted(() => {
         }
     }
 }
-</style>@/basic/initmodule
+</style>

@@ -105,4 +105,3 @@ body {
     }
 }
 </style>
-@/basic/initmodule

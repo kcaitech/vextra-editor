@@ -197,4 +197,4 @@ onUnmounted(() => {
 </EditorLayout>
 <Bridge v-if="bridge" :context="(context as Context)"/>
 <Loading v-if="loading || customLoading" :size="20"/>
-</template>@/basic/initmodule
+</template>

@@ -575,4 +575,3 @@ import m_select_icon from '@/assets/icons/svg/m-select.svg';
     margin: 0 auto;
 }
 </style>
-@/basic/initmodule
