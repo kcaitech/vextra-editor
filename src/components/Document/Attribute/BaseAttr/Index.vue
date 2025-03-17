@@ -55,6 +55,22 @@ import { WorkSpace } from '@/context/workspace';
 import { LinearApi } from "@kcdesign/data"
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import ContentClip from "@/components/Document/Attribute/BaseAttr/ContentClip.vue";
+import x_icon from "@/assets/icons/svg/X.svg";
+import y_icon from "@/assets/icons/svg/Y.svg";
+import w_icon from "@/assets/icons/svg/W.svg";
+import h_icon from "@/assets/icons/svg/H.svg";
+import angle_icon from "@/assets/icons/svg/angle.svg";
+import angle_count_icon from "@/assets/icons/svg/angle-count.svg";
+import inner_angle_icon from "@/assets/icons/svg/inner-angle.svg";
+import hor_space2_icon from "@/assets/icons/svg/hor-space2.svg";
+import ver_space2_icon from "@/assets/icons/svg/ver-space2.svg";
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import adapt_icon from "@/assets/icons/svg/adapt.svg";
+import lock_icon from "@/assets/icons/svg/lock.svg";
+import lock_open_icon from "@/assets/icons/svg/lock-open.svg";
+import fliph_icon from "@/assets/icons/svg/fliph.svg";
+import flipv_icon from "@/assets/icons/svg/flipv.svg";
+import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
 
 interface Props {
     context: Context
@@ -574,7 +590,6 @@ const pointerLockChange = () => {
     }
 }
 
-
 function dragstart(e: MouseEvent) {
     modifyTelDown(e);
 }
@@ -678,7 +693,7 @@ function draggingInnerAngle(e: MouseEvent) {
     lockMouseHandler.executeInnerAngle(e.movementX / 1000);
 }
 
-function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
+function draggingTidyUp(e: MouseEvent, dir: 'hor' | 'ver') {
     updatePosition(e.movementX, e.movementY);
 
     if (!lockMouseHandler) return;
@@ -700,9 +715,9 @@ function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
         verSpace.value = Math.max(ver, -minVer);
     }
 
-    disalbeTidyup(orderShapes, d);
-    const algin = props.context.selection.tidyUpAlign;
-    lockMouseHandler.executeTidyup(orderShapes, Math.max(hor, -minHor), Math.max(ver, -minVer), d, algin);
+    disableTidyUp(orderShapes, d);
+    const align = props.context.selection.tidyUpAlign;
+    lockMouseHandler.executeTidyup(orderShapes, Math.max(hor, -minHor), Math.max(ver, -minVer), d, align);
 }
 
 function dragend() {
@@ -744,11 +759,11 @@ const changeHorTidyUp = (value: string) => {
     const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    disalbeTidyup(shapes, dir);
+    disableTidyUp(shapes, dir);
     const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
     horSpace.value = Math.max(hor, -minHor);
-    const algin = props.context.selection.tidyUpAlign;
-    editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir, algin);
+    const align = props.context.selection.tidyUpAlign;
+    editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir, align);
 }
 
 function keydownHorTidyUp(e: KeyboardEvent) {
@@ -760,11 +775,11 @@ function keydownHorTidyUp(e: KeyboardEvent) {
         const dir = props.context.selection.isTidyUpDir;
         const shapes = checkTidyUpShapesOrder(selected, dir);
         const ver = typeof verSpace.value === 'number' ? verSpace.value : 0
-        disalbeTidyup(shapes, dir);
+        disableTidyUp(shapes, dir);
         const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
         horSpace.value = Math.max(hor, -minHor);
-        const algin = props.context.selection.tidyUpAlign;
-        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir, algin)
+        const align = props.context.selection.tidyUpAlign;
+        linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir, align)
         e.preventDefault();
     }
 
@@ -783,7 +798,7 @@ const changeVerTidyUp = (value: string) => {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
-    disalbeTidyup(shapes, dir);
+    disableTidyUp(shapes, dir);
     const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
     verSpace.value = Math.max(ver, -minVer);
     editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir, props.context.selection.tidyUpAlign);
@@ -798,7 +813,7 @@ function keydownVerTidyUp(e: KeyboardEvent) {
         const dir = props.context.selection.isTidyUpDir;
         const shapes = checkTidyUpShapesOrder(selected, dir);
         const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
-        disalbeTidyup(shapes, dir);
+        disableTidyUp(shapes, dir);
         const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
         verSpace.value = Math.max(ver, -minVer);
         linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, props.context.selection.tidyUpAlign);
@@ -844,11 +859,11 @@ const _whetherTidyUp = () => {
     }
     verTidyUp.value = tidyup;
     horTidyUp.value = tidyup;
-    disalbeTidyup(shapes, dir);
-    props.context.selection.whetherTidyUp(tidyup, dir, Info.algin as TidyUpAlgin);
+    disableTidyUp(shapes, dir);
+    props.context.selection.whetherTidyUp(tidyup, dir, Info.align as TidyUpAlgin);
 }
 
-const disalbeTidyup = (shapes: ShapeView[][], d: boolean) => {
+const disableTidyUp = (shapes: ShapeView[][], d: boolean) => {
     if (d) {
         if (shapes.length === 1) {
             horTidyUp.value = true;
@@ -937,24 +952,6 @@ onUnmounted(() => {
     stop1();
     stop3();
 })
-
-import x_icon from "@/assets/icons/svg/X.svg";
-import y_icon from "@/assets/icons/svg/Y.svg";
-import w_icon from "@/assets/icons/svg/W.svg";
-import h_icon from "@/assets/icons/svg/H.svg";
-import angle_icon from "@/assets/icons/svg/angle.svg";
-import angle_count_icon from "@/assets/icons/svg/angle-count.svg";
-import inner_angle_icon from "@/assets/icons/svg/inner-angle.svg";
-import hor_space2_icon from "@/assets/icons/svg/hor-space2.svg";
-import ver_space2_icon from "@/assets/icons/svg/ver-space2.svg";
-import SvgIcon from '@/components/common/SvgIcon.vue';
-import adapt_icon from "@/assets/icons/svg/adapt.svg";
-import lock_icon from "@/assets/icons/svg/lock.svg";
-import lock_open_icon from "@/assets/icons/svg/lock-open.svg";
-import fliph_icon from "@/assets/icons/svg/fliph.svg";
-import flipv_icon from "@/assets/icons/svg/flipv.svg";
-import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
-
 </script>
 <template>
     <div class="table">
@@ -1024,12 +1021,12 @@ import tidy_up_icon from "@/assets/icons/svg/tidy-up.svg";
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up">
             <MossInput :icon="hor_space2_icon" :value="format(horSpace)" :draggable="!horTidyUp"
-                @change="changeHorTidyUp" :disabled="horTidyUp" @dragstart="dragstart"
-                @dragging="(e) => draggingTidyup(e, 'hor')" @dragend="dragend" @keydown="keydownHorTidyUp">
+                       @change="changeHorTidyUp" :disabled="horTidyUp" @dragstart="dragstart"
+                       @dragging="(e) => draggingTidyUp(e, 'hor')" @dragend="dragend" @keydown="keydownHorTidyUp">
             </MossInput>
             <MossInput :icon="ver_space2_icon" :value="format(verSpace)" :draggable="!verTidyUp"
-                @change="changeVerTidyUp" :disabled="verTidyUp" @dragstart="dragstart"
-                @dragging="(e) => draggingTidyup(e, 'ver')" @dragend="dragend" @keydown="keydownVerTidyUp">
+                       @change="changeVerTidyUp" :disabled="verTidyUp" @dragstart="dragstart"
+                       @dragging="(e) => draggingTidyUp(e, 'ver')" @dragend="dragend" @keydown="keydownVerTidyUp">
             </MossInput>
             <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
