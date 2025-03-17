@@ -110,16 +110,10 @@ function unHoverShape(e: MouseEvent) {
 }
 
 const setLock = (e: MouseEvent) => {
-    // if (lock_status.value === 2) {
-    //     return; // 继承锁
-    // }
     e.stopPropagation();
     emits('set-lock', props.data.shapeview())
 }
 const setVisible = (e: MouseEvent) => {
-    // if (visible_status.value === 2) {
-    //     return; // 继承隐藏
-    // }
     e.stopPropagation();
     emits('set-visible', props.data.shapeview());
 }
