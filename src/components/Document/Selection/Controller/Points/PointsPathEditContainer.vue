@@ -119,7 +119,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
  */
 function down_background_path(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) return;
-    if (event.ctrlKey) {
+    if (is_curve_tool()) {
         add_rect.value = '';
         const next = (index === (shape as PathShapeView).segments[segment].points.length - 1) ? 0 : index + 1
         new CurveModifier(props.context, shape as PathShapeView, segment, index, next).start(event);
