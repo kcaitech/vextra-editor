@@ -19,7 +19,7 @@ import { get_value_from_input, RadiusContextMgr } from './ctx';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { LockMouse } from '@/transform/lockMouse';
-import { ref } from 'vue';
+import { onUnmounted, ref } from 'vue';
 import { LinearApi } from '@kcdesign/data';
 import { sortValue } from '../oval';
 import { useI18n } from "vue-i18n";

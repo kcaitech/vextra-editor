@@ -36,18 +36,24 @@ export class StyleCtx {
         return this.context.data;
     }
 
+    private m_last_selected: ShapeView[] = [];
     /**
      * 选区内的选中图层：相当与context.selection.selectedShapes
      */
     get selected() {
-        return this.context.selection.selectedShapes;
+        const __selected = this.context.selection.selectedShapes;
+        if (__selected) this.m_last_selected = __selected.slice(0);
+        return __selected.length ? __selected : this.m_last_selected;
     }
 
+    private m_last_flat: ShapeView[] = [];
     /**
      * 选区内的选中图层的基础上，把编组打平。
      */
     get flat() {
-        return this.context.selection.flat;
+        const __flat = this.context.selection.flat;
+        if (__flat.length) this.m_last_flat = __flat.slice(0);
+        return __flat.length ? __flat : this.m_last_flat;
     }
 
     protected get editor(): any { /* any要趋近与Modifier */
