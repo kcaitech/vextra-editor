@@ -14,16 +14,16 @@ import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType
 import { Action } from "@/context/tool";
 
 export type Segment = {
-    mode: CurveMode
-    start: XY
-    from: XY
-    to: XY
-    end: XY
-    add: XY
-    segment: number
-    index: number
-    is_selected: boolean
-    path: string
+    type: 'straight' | 'curve';
+    start: XY;
+    from: XY;
+    to: XY;
+    end: XY;
+    add: XY;
+    segment: number;
+    index: number;
+    is_selected: boolean;
+    path: string;
 }
 
 export function get_parent_points(context: Context, range?: Map<number, number[]>) {
@@ -274,7 +274,7 @@ function s_s(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, in
     const _next = m.computeCoord2(next.x, next.y);
     const add = straightPoint(0.5, _p, _next);
     return {
-        mode: point.mode,
+        type: 'straight',
         start: _p,
         from: _p,
         to: _p,
@@ -295,7 +295,7 @@ function s_c(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, in
     const [start, from, to, end] = qua2cube(_p, _next_to, _next);
     const add = bezierCurvePoint(0.5, start, from, to, end);
     return {
-        mode: point.mode,
+        type: 'curve',
         start,
         from,
         to,
@@ -315,7 +315,7 @@ function c_s(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, in
     const [start, from, to, end] = qua2cube(_p, _point_from, _next);
     const add = bezierCurvePoint(0.5, start, from, to, end);
     return {
-        mode: point.mode,
+        type: 'curve',
         start,
         from,
         to,
@@ -335,7 +335,7 @@ function c_c(m: Matrix, point: CurvePoint, next: CurvePoint, segment: number, in
     const _next = m.computeCoord2(next.x, next.y);
     const add = bezierCurvePoint(0.5, _p, _point_from, _next_to, _next);
     return {
-        mode: point.mode,
+        type: 'curve',
         start: _p,
         from: _point_from,
         to: _next_to,

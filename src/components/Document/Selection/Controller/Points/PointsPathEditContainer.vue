@@ -23,6 +23,7 @@ import Handle from "../PathEdit/Handle.vue"
 import { Action } from '@/context/tool';
 import { PathEditor } from "@/path/pathEdit";
 import { CurveModifier } from "@/components/Document/Selection/Controller/Points/curvemodifier";
+import { AdsorbAssist } from "@/components/Document/Selection/Controller/PathEdit/adsorbassist";
 
 type Dot = {
     point: { x: number, y: number };
@@ -49,6 +50,7 @@ let downXY: XY = { x: 0, y: 0 };
 let current_segment: number = -1;
 let current_curve_point_index: number = -1;
 let current_side: number = -1;
+const rects = ref<{ x: number, y: number; width: number; height: number }[]>([]);
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
@@ -62,7 +64,10 @@ function update() {
     segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
 
     props.context.path.set_segments(segments);
+
+    rects.value = new AdsorbAssist().getSegmentBoxes(segments);
 }
+
 
 function updatePassive() {
     dots.length = 0;
@@ -362,6 +367,8 @@ onUnmounted(() => {
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
           :class="{ point: true, selected: p.selected }"/>
+    <rect v-for="(rect, i) in rects" :key="i" :x="rect.x" :y="rect.y" :width="rect.width + 'px'"
+          :height="rect.height + 'px'" fill="none" stroke="rgba(255, 0, 0, 0.5)" stroke-dasharray="4 2"/>
 </template>
 <style lang='scss' scoped>
 .point {
