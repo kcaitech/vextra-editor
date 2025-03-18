@@ -1,5 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Bundle } from "@/clipboard";
-import { parse as SVGParse } from "@/svg_parser";
+import { svgParser as SVGParse } from "@kcdesign/data";
 import { Reader } from "@/clipboard/read/reader";
 import { Context } from "@/context";
 
@@ -53,11 +63,11 @@ export class ClipboardEventReader extends Reader {
                 images ? images.push(Object.assign(size, base64)) : bundle["images"] = [Object.assign(size, base64)];
             }
         }
-
         // 同样的经过一个await之后，类型为string的DataTransferItem里面的内容会被清空，所以需要把所有DataTransferItem的读取进程收集起来放到一个await后面
         const all: Promise<{ type: string, result: string }>[] = [];
         for (const item of stringList) {
             const type = item.type; // type不能放到getAsString的callback里面读取，执行callback的时候已经清空了
+            if (!type) continue;
             all.push(new Promise<{ type: string, result: string }>(resolve => item.getAsString((result) => resolve({ type, result }))));
         }
         const allResult = await Promise.all(all);
@@ -67,7 +77,7 @@ export class ClipboardEventReader extends Reader {
             } else if (item.type === "text/plain") {
                 const result = item.result;
                 if (this.maySvgText(result)) {
-                    const svg = SVGParse(result);
+                    const svg = SVGParse.parse(result);
                     const svgs = bundle["SVG"];
                     svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
                 } else bundle["plain"] = result;

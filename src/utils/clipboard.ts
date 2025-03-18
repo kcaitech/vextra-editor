@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     adapt2Shape,
     Blur,
@@ -10,8 +20,7 @@ import {
     GroupShapeView,
     import_shape_from_clipboard,
     import_text,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1, MossError,
+    MossError,
     Page,
     PathShape,
     Shape,
@@ -22,7 +31,6 @@ import {
     TextShape,
     TextShapeEditor,
     Transform,
-    TransformRaw,
     exportContextSettings
 } from '@kcdesign/data';
 import { Context } from '@/context';
@@ -33,7 +41,7 @@ import { XYsBounding } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
-import { parse as SVGParse } from "@/svg_parser";
+import { svgParser as SVGParse } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { BorderData } from "@/utils/shape_style";
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
@@ -185,8 +193,8 @@ export class Clipboard {
             return false;
         }
 
-        const origin_transform_map: any = {};
-        const position_map: Map<string, TransformRaw> = new Map();
+        const origin_transform_map: { [key: string]: Transform } = {};
+        const position_map: Map<string, Transform> = new Map();
         const points_map: Map<string, CurvePoint[]> = new Map();
         this.m_envs.clear();
 
@@ -974,7 +982,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         shape.size.height = layout.contentHeight;
         const _f = shape.size;
         const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
-        const transform = new TransformRaw();
+        const transform = new Transform();
         transform.translateX = xy?.x || _xy.x;
         transform.translateY = xy?.y || _xy.y
         shape.transform = transform;
@@ -991,7 +999,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         const source = data.shapes;
         if (!source) throw new Error('invalid source');
 
-        const originTransform: any = data.originTransform; // 原环境下transform信息
+        const originTransform: { [key: string]: Transform } = data.originTransform; // 原环境下transform信息
 
         const page = context.selection.selectedPage!;
 
@@ -1252,7 +1260,7 @@ function clipboard_text_plain2(context: Context, data: string, _xy?: PageXY) {
 }
 
 export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
-    const parseResult = SVGParse(text);
+    const parseResult = SVGParse.parse(text);
 
     if (parseResult.shape) {
         const xy = _xy || adjust_content_xy(context, parseResult.shape.frame, false);
@@ -1505,7 +1513,6 @@ function sourceBounding(source: Shape[]) {
 
     for (let i = 0; i < source.length; i++) {
         const shape = source[i];
-        const __transform = makeShapeTransform2By1(shape.transform);
         let width, height;
         if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
             const children = (shape as GroupShape).childs;
@@ -1516,13 +1523,13 @@ function sourceBounding(source: Shape[]) {
             width = shape.size.width;
             height = shape.size.height;
         }
-        const { col0, col1, col2, col3 } = __transform.transform([
+        const box = XYsBounding(shape.transform.transform([
             ColVector3D.FromXY(0, 0),
             ColVector3D.FromXY(width, height),
             ColVector3D.FromXY(width, 0),
             ColVector3D.FromXY(0, height),
-        ]);
-        const box = XYsBounding([col0, col1, col2, col3]);
+        ]));
+        // const box = XYsBounding([col0, col1, col2, col3]);
 
         if (box.top < top) top = box.top;
         if (box.left < left) left = box.left;
@@ -1533,7 +1540,7 @@ function sourceBounding(source: Shape[]) {
     return { left, top, right, bottom };
 }
 
-function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
+function sourceOriginTransformBounding(source: Shape[], originTransform: { [key: string]: Transform }) {
     let left = Infinity;
     let top = Infinity;
     let right = -Infinity;
@@ -1543,7 +1550,7 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
         const shape = source[i];
         const _t = originTransform[`${shape.id}`];
         if (!_t) continue;
-        const __transform = makeShapeTransform2By1(_t);
+        const __transform = Transform.from(_t);
         let width, height;
         if (shape.type === ShapeType.Group) {
             const children = (shape as GroupShape).childs;
@@ -1554,13 +1561,13 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
             width = shape.size.width;
             height = shape.size.height;
         }
-        const { col0, col1, col2, col3 } = __transform.transform([
+        const box = XYsBounding(__transform.transform([
             ColVector3D.FromXY(0, 0),
             ColVector3D.FromXY(width, height),
             ColVector3D.FromXY(width, 0),
             ColVector3D.FromXY(0, height),
-        ]);
-        const box = XYsBounding([col0, col1, col2, col3]);
+        ]));
+        // const box = XYsBounding([col0, col1, col2, col3]);
 
         if (box.top < top) top = box.top;
         if (box.left < left) left = box.left;
@@ -1571,12 +1578,12 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
     return { left, top, right, bottom };
 }
 
-function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, originTransform: any) {
+function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, originTransform: { [key: string]: Transform }) {
     const { left, top, right, bottom } = sourceBounding(source); // 目标选区在Root坐标系上的Bounding
 
-    let clientMatrix = makeShapeTransform2By1(context.workspace.matrix); // Root到屏幕的转换矩阵
+    let clientMatrix = (context.workspace.matrix); // Root到屏幕的转换矩阵
 
-    const { col0: clientLT, col1: clientRB } = clientMatrix.transform([
+    const { [0]: clientLT, [1]: clientRB } = clientMatrix.transform([
         ColVector3D.FromXY(left, top),
         ColVector3D.FromXY(right, bottom)
     ]); // 目标选区在屏幕上的左上角和右下角；
@@ -1604,7 +1611,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
 
             // 检查是否需要调整视图缩放比例
             const { width, height } = context.workspace.root;
-            const { col0, col1 } = clientMatrix.clone().getInverse().transform([
+            const { [0]:col0, [1]:col1 } = clientMatrix.clone().getInverse().transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height)
             ]);
@@ -1623,18 +1630,18 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
                 matrix.scale(1 / Math.max(ratioW, ratioH));
                 matrix.trans(width / 2, height / 2);
 
-                clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
+                clientMatrix = (context.workspace.matrix);
                 context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
             }
 
             const centerAfterScale = clientMatrix.clone()
                 .getInverse()
-                .transform(ColVector3D.FromXY(width / 2, height / 2)).col0;
+                .transform(ColVector3D.FromXY(width / 2, height / 2));
 
             const dx = centerAfterScale.x - (right + left) / 2;
             const dy = centerAfterScale.y - (bottom + top) / 2;
 
-            const selectionTransform = new TransformRaw().trans(dx, dy);
+            const selectionTransform = new Transform().trans(dx, dy);
 
             // at last 调整选区内每个图层的位置
             for (const shape of source) {
@@ -1678,10 +1685,10 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             const _t = originTransform[`${shape.id}`];
             if (!_t) continue;
 
-            const __transform = makeShapeTransform2By1(_t)
+            const __transform = (_t.clone())
                 .addTransform(targetSelectionTransform);
 
-            shape.transform = makeShapeTransform1By2(__transform) as TransformRaw;
+            shape.transform = (__transform);
         }
     }
 
@@ -1694,10 +1701,10 @@ function fixToXY(context: Context, source: Shape[], xy: XY) {
     const bounding = sourceBounding(source);
     const dx = xy.x - bounding.left;
     const dy = xy.y - bounding.top;
-    const selectionTransform = new TransformRaw().trans(dx, dy);
+    const selectionTransform = new Transform().trans(dx, dy);
 
     for (const shape of source) {
-        shape.transform = TransformRaw.from(shape.transform)
+        shape.transform = Transform.from(shape.transform)
             .multi(selectionTransform)
             .multi(env.matrix2Root().getInverse());
     }

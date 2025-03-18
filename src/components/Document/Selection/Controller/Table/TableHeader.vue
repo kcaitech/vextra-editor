@@ -1,10 +1,18 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import {
-    ColVector3D, makeMatrixByTransform2,
-    makeShapeTransform2By1,
+    ColVector3D, 
     Matrix,
-    Matrix2, NumberArray2D,
     TableLayout,
     TableView,
     Transform
@@ -76,35 +84,45 @@ function update_position() {
 
         layout = table.getLayout();
 
-        const m = makeShapeTransform2By1(table.matrix2Root());
-        const mClient = makeShapeTransform2By1(props.context.workspace.matrix);
+        const m = (table.matrix2Root());
+        const mClient = (props.context.workspace.matrix);
         m.addTransform(mClient);
 
-        const { col0: lt, col1: rt, col2: lb } = m.transform([
+        const { [0]: lt, [1]: rt, [2]: lb } = m.transform([
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY(x + width, y),
             ColVector3D.FromXY(x, y + height)
         ]);
 
-        const X = rt.clone().subtract(lt);
-        const Y = lb.clone().subtract(lt);
+        const X = ColVector3D.FromXY(rt).subtract(ColVector3D.FromXY(lt));
+        const Y = ColVector3D.FromXY(lb).subtract(ColVector3D.FromXY(lt));
 
-        const deYDirection = new Transform({
-            matrix: new Matrix2(new NumberArray2D([4, 4], [
-                X.x, Y.x, 0, 0,
-                X.y, Y.y, 0, 0,
-                X.z, Y.z, 1, 0,
-                0, 0, 0, 1,
-            ]))
-        }).transform(ColVector3D.FromXY(0, -1)).col0;
-        const deXDirection = new Transform({
-            matrix: new Matrix2(new NumberArray2D([4, 4], [
-                X.x, Y.x, 0, 0,
-                X.y, Y.y, 0, 0,
-                X.z, Y.z, 1, 0,
-                0, 0, 0, 1,
-            ]))
-        }).transform(ColVector3D.FromXY(-1, 0)).col0;
+        const yt = new Transform(X.x, Y.x, 0,
+        X.y, Y.y, 0
+        )
+
+        // const deYDirection = new Transform({
+        //     matrix: new Matrix2(new NumberArray2D([4, 4], [
+        //         X.x, Y.x, 0, 0,
+        //         X.y, Y.y, 0, 0,
+        //         X.z, Y.z, 1, 0,
+        //         0, 0, 0, 1,
+        //     ]))
+        // }).transform(ColVector3D.FromXY(0, -1)).col0;
+        const deYDirection = yt.transform(ColVector3D.FromXY(0, -1))
+
+        const xt = new Transform(X.x, Y.x, 0,
+        X.y, Y.y, 0
+        )
+        // const deXDirection = new Transform({
+        //     matrix: new Matrix2(new NumberArray2D([4, 4], [
+        //         X.x, Y.x, 0, 0,
+        //         X.y, Y.y, 0, 0,
+        //         X.z, Y.z, 1, 0,
+        //         0, 0, 0, 1,
+        //     ]))
+        // }).transform(ColVector3D.FromXY(-1, 0)).col0;
+        const deXDirection = xt.transform(ColVector3D.FromXY(-1, 0))
         const delta = 8 / mClient.m00;
 
         const cols = layout.colWidths;
@@ -117,7 +135,7 @@ function update_position() {
             const __s = preWidth;
             const currentWidth = cols[index];
 
-            const { col0: start, col1: end, col2: point } = offsetYTrans.transform([
+            const { [0]: start, [1]: end, [2]: point } = offsetYTrans.transform([
                 ColVector3D.FromXY(__s + delta, 0),
                 ColVector3D.FromXY(__s + currentWidth - delta, 0),
                 ColVector3D.FromXY(__s + currentWidth, 0)
@@ -144,7 +162,7 @@ function update_position() {
             const __s = preHeight;
             const currentHeight = rows[index];
 
-            const { col0: start, col1: end, col2: point } = offsetXTrans.transform([
+            const { [0]: start, [1]: end, [2]: point } = offsetXTrans.transform([
                 ColVector3D.FromXY(0, __s + delta),
                 ColVector3D.FromXY(0, __s + currentHeight - delta),
                 ColVector3D.FromXY(0, __s + currentHeight)
@@ -180,20 +198,19 @@ function x_dot_mouseenter(index: number) {
     for (let i = 0; i <= index; i++) {
         width += cols[i];
     }
-    const m = makeShapeTransform2By1(props.shape.matrix2Root());
-    m.addTransform(makeShapeTransform2By1(props.context.workspace.matrix));
+    const m = (props.shape.matrix2Root());
+    m.addTransform((props.context.workspace.matrix));
 
-    addTransform = makeMatrixByTransform2(
-        new Transform()
-            .setTranslate(ColVector3D.FromXY(width, 0))
-            .addTransform(m)
-            .clearSkew()
-            .clearScaleSize()
-            .translateInLocal(ColVector3D.FromXY(-10, -14))
-    ).toString();
+    const t = new Transform().setTranslate(ColVector3D.FromXY(width, 0))
+    .addTransform(m)
+    t.clearSkew()
+    t.clearScaleSize()
+    t.translateInLocal(ColVector3D.FromXY(-10, -14))
+
+    addTransform = t.toString();
 
     const frame = props.shape.frame;
-    const { col0, col1 } = m.transform([
+    const { [0]:col0, [1]:col1 } = m.transform([
         ColVector3D.FromXY(frame.x + width, frame.y),
         ColVector3D.FromXY(frame.x + width, frame.y + frame.height)
     ]);
@@ -216,19 +233,17 @@ function y_dot_mouseenter(index: number) {
         height += rows[i];
     }
 
-    const m = makeShapeTransform2By1(props.shape.matrix2Root());
-    m.addTransform(makeShapeTransform2By1(props.context.workspace.matrix));
-    addTransform = makeMatrixByTransform2(
-        new Transform()
-            .setTranslate(ColVector3D.FromXY(0, height))
-            .addTransform(m)
-            .clearSkew()
-            .clearScaleSize()
-            .translateInLocal(ColVector3D.FromXY(-14, -10))
-    ).toString();
+    const m = (props.shape.matrix2Root().clone());
+    m.addTransform((props.context.workspace.matrix));
+    const t = new Transform().setTranslate(ColVector3D.FromXY(0, height))
+    .addTransform(m)
+    t.clearSkew()
+    t.clearScaleSize()
+    t.translateInLocal(ColVector3D.FromXY(-14, -10))
+    addTransform = t.toString();
 
     const frame = props.shape.frame;
-    const { col0, col1 } = m.transform([
+    const { [0]:col0, [1]:col1 } = m.transform([
         ColVector3D.FromXY(frame.x, frame.y + height),
         ColVector3D.FromXY(frame.x + frame.width, frame.y + height)
     ]);

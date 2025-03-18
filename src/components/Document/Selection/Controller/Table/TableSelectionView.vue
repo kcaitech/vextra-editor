@@ -1,12 +1,22 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { ClientXY, Selection } from '@/context/selection';
 import {
-    ColVector3D, makeShapeTransform1By2,
-    makeShapeTransform2By1,
+    ColVector3D, 
     ShapeType,
     TableCellView,
-    TableView, Transform
+    TableView,
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../../common';
@@ -86,15 +96,15 @@ function update_triangle() {
 
         const f = grid.get(cell.index.row, cell.index.col).frame;
 
-        const trans = makeShapeTransform2By1(shape.matrix2Root());
-        const mClient = makeShapeTransform2By1(props.context.workspace.matrix);
+        const trans = (shape.matrix2Root());
+        const mClient = (props.context.workspace.matrix);
 
         const __t = new Transform()
             .translate(ColVector3D.FromXY(f.x + f.width - 22, f.y + f.height - 22))
             .addTransform(trans)
             .addTransform(mClient);
 
-        transform = makeShapeTransform1By2(__t).toString();
+        transform = (__t).toString();
 
         triangle.value = true;
     }

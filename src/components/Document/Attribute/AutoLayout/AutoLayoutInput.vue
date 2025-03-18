@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import { StackSizing } from "@kcdesign/data";
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import Tooltip from '@/components/common/Tooltip.vue';
 
@@ -13,6 +23,7 @@ interface Props {
     draggable?: boolean;
     isMenu?: boolean;
     show?: boolean;
+    mixed?: boolean;
 }
 
 const { t } = useI18n();
@@ -138,12 +149,23 @@ function wheel(event: WheelEvent) {
     emits('wheel', event);
 }
 
-onMounted(() => {
+const getinput_value = () => {
+    if (props.value === t('attr.mixed')) return true;
+    if (inputEl.value) {
+        return isNaN(Number(inputEl.value.value)) ? true : false;
+    } else {
+        return true;
+    }
+}
 
-})
-onUnmounted(() => {
-
-})
+const selectedTop = (item: string | number) => {
+    if (props.mixed) return '-4px';
+    if (item === props.value) {
+        return '-4px';
+    } else {
+        return '-36px'
+    }
+}
 
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import down_icon from "@/assets/icons/svg/down.svg";
@@ -156,7 +178,9 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
     <div :class="{ 'md-number-input': true, active }" @wheel="wheel">
         <Tooltip :content="t(`autolayout.${name}`)">
             <div class="drag-icon">
-                <SvgIcon :icon="icon" :class="{ 'un-draggable': disabled || draggable }" @mousedown="down" />
+                <SvgIcon :icon="icon"
+                    :class="{ 'un-draggable': disabled || draggable, cursor_pointer: getinput_value() }"
+                    @mousedown="down" />
             </div>
         </Tooltip>
         <input :disabled="disabled" :style="{ opacity: draggable ? '0.4' : '1' }" ref="inputEl" :value="value"
@@ -164,21 +188,26 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
         <div class="layout-menu-svg" v-if="isMenu" @click.stop="showMenu">
             <SvgIcon :icon="down_icon" />
         </div>
-        <div class="auto-layout-options" :style="{ top: item === value ? '-4px' : '-36px' }"
+        <div class="auto-layout-options" :style="{ top: selectedTop(item) }"
             v-if="isMenu && show && (typeof item !== 'undefined')">
-            <div class="item" :class="{ hovered: hoverItem === item }" @click="changeItem(StackSizing.Fixed)"
-                @mouseenter="hoverItem = item">
+            <div v-if="mixed" class="item bottom_line">
                 <div class="icon">
-                    <SvgIcon v-if="item === value"
-                        :icon="hoverItem === item ? white_select_icon : page_select_icon"/>
+                    <SvgIcon v-if="value === t('attr.mixed')" :icon="page_select_icon" />
+                </div>
+                <div class="text">{{ t('attr.mixed') }}</div>
+            </div>
+            <div class="item" :class="{ hovered: hoverItem === item, bottom_line: value === t('attr.mixed') && !mixed }"
+                @click="changeItem(StackSizing.Fixed)" @mouseenter="hoverItem = item">
+                <div class="icon">
+                    <SvgIcon v-if="item === value" :icon="hoverItem === item ? white_select_icon : page_select_icon" />
                 </div>
                 <div class="text">{{ item }}</div>
             </div>
             <div class="item" :class="{ hovered: hoverItem !== item }" @click="changeItem(StackSizing.Auto)"
                 @mouseenter="hoverItem = t(`autolayout.${disabled ? 'adapt' : StackSizing.Auto}`)">
                 <div class="icon">
-                    <SvgIcon v-if="item !== value"
-                        :icon="hoverItem !== item ? white_select_icon : page_select_icon"/>
+                    <SvgIcon v-if="item !== value && value !== t('attr.mixed')"
+                        :icon="hoverItem !== item ? white_select_icon : page_select_icon" />
                 </div>
                 <div class="text">{{ t(`autolayout.${disabled ? 'adapt' : StackSizing.Auto}`) }}</div>
             </div>
@@ -297,9 +326,20 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
     }
 }
 
+.bottom_line {
+    border-bottom: 1px solid #efefef;
+    pointer-events: none;
+    opacity: 0.4;
+}   
+
 .disabled {
     pointer-events: none;
     opacity: 0.4;
+}
+
+.cursor_pointer {
+    cursor: default !important;
+    pointer-events: none;
 }
 
 .active {

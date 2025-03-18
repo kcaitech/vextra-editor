@@ -5,7 +5,7 @@ import {
     CurveMode,
     CurvePoint,
     ShapeType,
-    TransformRaw as Transform,
+    Transform,
     ShapeView,
     BasicArray,
     PageView,

@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView, TransformRaw } from "@kcdesign/data";
+import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView, Transform } from "@kcdesign/data";
 import { Action } from "@/context/tool";
 
 export type Segment = {
@@ -22,7 +32,7 @@ export function get_parent_points(context: Context, range?: Map<number, number[]
 
     const parent = path_shape.parent!;
 
-    let m: TransformRaw;
+    let m: Transform;
 
     if (parent.type === ShapeType.Page) {
         m = path_shape.matrix2Root();

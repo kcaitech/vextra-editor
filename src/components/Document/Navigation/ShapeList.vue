@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from "@/context";
 import { Menu } from "@/context/menu";
@@ -265,9 +275,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
             if (s.autoLayout) {
                 contextMenuItems.value.add(MenuItemType.UnAutoLayout);
             } else {
-                if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(s.type)) {
-                    contextMenuItems.value.add(MenuItemType.AutoLayout);
-                }
+                contextMenuItems.value.add(MenuItemType.AutoLayout);
             }
         }
         if (selected.length > 1) {
@@ -473,7 +481,6 @@ const stopWatch = watch(() => props.page, () => {
     shapeDirList.watch(notifySourceChange)
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }, { immediate: true });
-
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
     props.context.menu.watch(menu_watcher);

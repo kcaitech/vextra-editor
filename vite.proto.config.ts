@@ -2,7 +2,6 @@ import { fileURLToPath, URL } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
-import arraybuffer from "vite-plugin-arraybuffer";
 
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
@@ -47,7 +46,6 @@ export default defineConfig(({ command, mode }) => {
             emptyOutDir: false
         },
         plugins: [
-            arraybuffer(),
             vue(),
             cssInjectedByJsPlugin()
         ],
@@ -56,8 +54,7 @@ export default defineConfig(({ command, mode }) => {
         },
         resolve: {
             alias: {
-                '@': fileURLToPath(new URL('./src', import.meta.url)),
-                '@pal': fileURLToPath(new URL('./src/PAL/browser', import.meta.url))
+                '@': fileURLToPath(new URL('./src', import.meta.url))
             }
         }
     }

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import { ColorCtx } from "@/context/color";
 import { PathShapeView, ShapeView, TableCellType, TableView } from "@kcdesign/data";
@@ -12,7 +22,11 @@ export function deleteUnits(context: Context, shift = false) {
     }
 
     // 删除渐变色控点
-    if (context.color.selected_stop !== undefined) return context.color.notify(ColorCtx.STOP_DELETE);
+    if (context.color.selected_stop !== undefined) {
+        console.log('进入删除节点');
+        
+        return context.color.notify(ColorCtx.STOP_DELETE);
+    }
 
     // 删除路径片段
     const path_edit_mode = context.workspace.is_path_edit_mode;

@@ -1,10 +1,20 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
 import { is_conflict_comp, is_wrong_bind, states_tag_values_sort, StatusValueItem } from "@/utils/symbol";
-import { Shape, ShapeView, SymbolShape, SymbolView } from "@kcdesign/data"
+import { ShapeView, SymbolView } from "@kcdesign/data"
 import TypeHeader from '../TypeHeader.vue';
 import { Warning } from '@element-plus/icons-vue';
 

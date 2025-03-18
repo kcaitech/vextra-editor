@@ -1,10 +1,20 @@
-import { CoopRepository, importLocal, Repository } from "@kcdesign/data";
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+import { CoopRepository, importLocal, TransactDataGuard } from "@kcdesign/data";
 import LCStorage from "./local";
 import { Context } from "@/context";
 
 export async function parserDocument() {
     const storage = new LCStorage();
-    const repo = new Repository();
+    const repo = new TransactDataGuard();
     const { document, loader } = await importLocal(storage, '', '', '', repo);
     const cooprepo = new CoopRepository(document, repo)
     const context = new Context(document, cooprepo, { source: 'storage', storage } as any);

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
@@ -20,7 +30,8 @@ const controllerRef = ref<HTMLElement>();
 const underlineWidth = ref(0);
 const underlinePosition = ref(0);
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
-type Tab = "Shape" | "Comps" | "Resource" | "Comment"
+type Tab = "Shape" | "Comps" | "Resource" | "Comment";
+const plugins = props.context.pluginsMgr.search2('navigation');
 
 const currentTab = ref<Tab>("Shape");
 const tabs: { title: string, id: Tab }[] = [
@@ -30,11 +41,15 @@ const tabs: { title: string, id: Tab }[] = [
     }, {
         title: t('navi.comps'),
         id: 'Comps'
-    }, {
-        title: t('home.comment'),
-        id: 'Comment'
     }
 ]
+
+if (plugins.end.length) {
+    tabs.push({
+        title: t('home.comment'),
+        id: 'Comment'
+    })
+}
 
 function toggle(id: Tab) {
     currentTab.value = id;
@@ -94,7 +109,6 @@ onUnmounted(() => {
     props.context.navi.watch(navi_watch);
 })
 
-const plugins = props.context.pluginsMgr.search2('navigation');
 </script>
 
 <template>

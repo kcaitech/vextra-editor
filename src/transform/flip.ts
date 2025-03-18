@@ -1,7 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import {
     ColVector3D,
-    makeShapeTransform2By1,
     ShapeView,
     Transform,
 } from "@kcdesign/data"
@@ -31,11 +40,11 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
         shapes.push(shape);
 
-        const t = makeShapeTransform2By1(shape.transform);
+        const t = (shape.transform.clone());
 
         let parent2root = TC.get(parent.id);
         if (!parent2root) {
-            parent2root = makeShapeTransform2By1(parent.matrix2Root());
+            parent2root = (parent.matrix2Root());
             TC.set(parent.id, parent2root);
         }
 
@@ -44,14 +53,12 @@ export function flip(context: Context, axis: 'X' | 'Y') {
         const r = x + width;
         const b = y + height;
 
-        const { col0, col1, col2, col3 } = t.transform([
+        const box = XYsBounding(t.transform([
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY(r, y),
             ColVector3D.FromXY(r, b),
             ColVector3D.FromXY(x, b),
-        ]);
-
-        const box = XYsBounding([col0, col1, col2, col3]);
+        ]));
 
         if (box.left < left) left = box.left;
         if (box.top < top) top = box.top;
@@ -64,7 +71,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
     const selectionTransform = multi
         ? new Transform().setTranslate(ColVector3D.FromXY(left, top))
-        : makeShapeTransform2By1(shape1th.matrix2Root());
+        : (shape1th.matrix2Root());
 
     const selectionTransformInverse = selectionTransform.getInverse();
 
@@ -73,7 +80,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
         for (const shape of shapes) {
             STLIS.push({
                 shape,
-                transform: makeShapeTransform2By1(shape.transform)
+                transform: (shape.transform.clone())
                     .addTransform(TC.get(shape.parent!.id)!)
                     .addTransform(selectionTransformInverse)
             });
@@ -89,9 +96,9 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
     let flipedSelectionTransform;
     if (axis === "Y") {
-        flipedSelectionTransform = selectionTransform.clone().flipH(left + size.width / 2);
+        flipedSelectionTransform = selectionTransform.clone().flipHoriz(left + size.width / 2);
     } else {
-        flipedSelectionTransform = selectionTransform.clone().flipV(top + size.height / 2);
+        flipedSelectionTransform = selectionTransform.clone().flipVert(top + size.height / 2);
     }
 
     const params: { shape: ShapeView, transform2: Transform }[] = [];

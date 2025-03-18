@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
@@ -8,7 +18,7 @@ import PointContainerForStraightLine from "./Points/PointsContainerForStraightLi
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
-import { Matrix, ShapeView } from "@kcdesign/data";
+import { Matrix, Path, ShapeView } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -148,6 +158,16 @@ onUnmounted(() => {
     reset_hidden();
 })
 watchEffect(updateControllerView)
+// const testPath = ref<string>('');
+//
+// document.addEventListener('keydown', (event: KeyboardEvent) => {
+//     if (event.altKey) {
+//         const path: Path = (props.context.selection.selectedShapes[0].borderPath ?? new Path()).clone();
+//         const transform = props.context.selection.selectedShapes[0].matrix2Root().multiAtLeft(props.context.workspace.matrix);
+//         path.transform(transform);
+//         testPath.value = path.toString();
+//     }
+// });
 </script>
 <template>
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -160,6 +180,7 @@ watchEffect(updateControllerView)
          @mousedown="mousedown"
     >
         <path :d="line_path" class="main-path" :stroke="theme"></path>
+<!--        <path :d="testPath" fill="rgba(0, 255, 0, 0.8)" fill-rule="evenodd"/>-->
         <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
                                        :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame"
                                        :theme="theme">

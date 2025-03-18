@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
@@ -78,7 +88,7 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -112,7 +122,8 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -137,7 +148,7 @@ export class FillsPicker extends ColorPickerEditor {
     /* 拖拽修改纯色前置 */
     dragSolidBegin(): void {
         this.updateSelection();
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
         }
@@ -206,7 +217,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: Fill[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
@@ -241,7 +252,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: Fill[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
@@ -277,7 +288,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: Fill[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
@@ -298,7 +309,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     dragStopBegin() {
         this.updateSelection();
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
         }
@@ -341,7 +352,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     dragStopPositionBegin() {
         this.updateSelection();
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
         }
@@ -408,7 +419,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: BasicArray<Fill>[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
@@ -463,7 +474,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: BasicArray<Fill>[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
@@ -499,7 +510,7 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -539,7 +550,7 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -571,7 +582,7 @@ export class FillsPicker extends ColorPickerEditor {
         }
         const views: ShapeView[] = [];
         const fills: BasicArray<Fill>[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
@@ -605,7 +616,7 @@ export class FillsPicker extends ColorPickerEditor {
         } else {
             const views: ShapeView[] = [];
             const fills: BasicArray<Fill>[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
@@ -659,7 +670,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     filterDragBegin(): void {
         this.updateSelection();
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
             else this.m_fills.push(view.getFills());
         }

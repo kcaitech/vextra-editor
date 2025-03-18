@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import {
     adapt_page,
@@ -46,6 +56,8 @@ import {
 } from "@/components/Document/Creator/execute";
 import { unAutoLayoutFn } from "./auto_layout";
 import { MossClipboard } from "@/clipboard";
+import { group, ungroup } from "@/utils/group_ungroup";
+import { nextTick } from "vue";
 
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
@@ -206,12 +218,14 @@ keydownHandler['KeyG'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = ctrlKey || metaKey;
 
     if (is_ctrl && !shiftKey) {
-        context.tool.notify(Tool.GROUP, altKey); // 创建编组或容器
+        const t = context.workspace.t.bind(context.workspace);
+        const name = altKey ? t('shape.artboard') : t('shape.group')
+        group(context, context.selection.selectedShapes, name, altKey);
         return;
     }
 
     if (is_ctrl && shiftKey) {
-        context.tool.notify(Tool.UNGROUP); // 解除编组或容器
+        ungroup(context);
     }
 }
 
@@ -346,11 +360,7 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        // context.workspace.clipboard.replace() // 替换图形 // 替换图形
-        {
-            const clip = new MossClipboard(context);
-            clip.replace();
-        }
+        new MossClipboard(context).replace(); // 替换图形
         return;
     }
     if (is_ctrl) {
@@ -470,7 +480,7 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
             return;
         }
     } catch (error) {
-        console.log('wrong timing:', error);
+        console.error('wrong timing:', error);
     }
     if (event.altKey) {
         event.preventDefault();
@@ -865,10 +875,10 @@ keydownHandler['Quote'] = function (event: KeyboardEvent, context: Context) {
 
 function modifyLivingGroupForLabel(context: Context) {
     if (!context.selection.selectedShapes.length) return;
+    context.selection.setShowInterval(true);
 
     if (context.selection.hoveredShape) {
         context.selection.setLabelLivingGroup([]);
-        context.selection.setShowInterval(true);
     } else {
         const parents: Set<ShapeView> = new Set();
         for (const view of context.selection.selectedShapes) {
@@ -879,7 +889,6 @@ function modifyLivingGroupForLabel(context: Context) {
         }
         if (parents.size === 1) parents.forEach(v => {
             context.selection.setLabelLivingGroup([v]);
-            context.selection.setShowInterval(true);
         });
     }
 
@@ -891,7 +900,8 @@ keydownHandler['AltLeft'] = function (event: KeyboardEvent, context: Context) {
 }
 keydownHandler['AltRight'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
-    context.selection.setShowInterval(true);
+    if (event.repeat) return;
+    modifyLivingGroupForLabel(context);
 }
 keydownHandler['Comma'] = function (event: KeyboardEvent, context: Context) {
     const { ctrlKey, metaKey, shiftKey } = event;

@@ -5,7 +5,6 @@ import { createHtmlPlugin } from 'vite-plugin-html';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import svgLoader from 'vite-svg-loader';
 import basicSsl from '@vitejs/plugin-basic-ssl';
-import arraybuffer from "vite-plugin-arraybuffer";
 const mode = process.env.NODE_ENV;
 const PRODUCTION = mode === 'production';
 console.log('config for ' + mode);
@@ -53,7 +52,6 @@ export default defineConfig({
         },
     },
     plugins: [
-        arraybuffer(),
         svgLoader({
             // svgo: false,
             defaultImport: 'url',
@@ -82,8 +80,7 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            '@': fileURLToPath(new URL('./src', import.meta.url)),
-            '@pal': fileURLToPath(new URL('./src/PAL/browser', import.meta.url))
+            '@': fileURLToPath(new URL('./src', import.meta.url))
         }
     }
 

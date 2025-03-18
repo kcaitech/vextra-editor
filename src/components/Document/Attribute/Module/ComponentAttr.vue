@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -5,7 +15,7 @@ import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import { SymbolView, TextShapeView } from '@kcdesign/data';
-import { SymbolShape, VariableType } from '@kcdesign/data';
+import { VariableType } from '@kcdesign/data';
 import {
     AttriListItem,
     create_var_by_type,
@@ -51,9 +61,8 @@ function close() {
 const closeCompsType = (e: Event) => {
     if (e.target instanceof Element && !e.target.closest('.add-comps')) {
         close();
-        return;
     }
-    document.removeEventListener('mousedown', closeCompsType)
+    document.removeEventListener('click', closeCompsType)
 }
 
 function update_variable_list() {
@@ -67,10 +76,11 @@ function update_variable_list() {
 function selectCompsType() {
     if (compsType.value) {
         close();
+        document.removeEventListener('click', closeCompsType)
         return;
     }
     compsType.value = true;
-    document.addEventListener('mousedown', closeCompsType);
+    document.addEventListener('click', closeCompsType);
     props.context.escstack.save(v4(), close);
 }
 
@@ -159,7 +169,7 @@ const get_dialog_posi = (div: HTMLDivElement | undefined) => {
     }
 }
 
-function variable_watcher(args: any[]) {
+function variable_watcher(args: any[]) {    
     if (args && (args.includes('variables') || args.includes('childs'))) update_variable_list();
 }
 
@@ -213,11 +223,11 @@ import text_icon from "@/assets/icons/svg/text.svg"
 <template>
     <div style="position: relative; box-sizing: border-box" ref="atrrdialog">
         <!--header-->
-        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="!!variables.length">
+        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click.stop="selectCompsType" :active="!!variables.length">
             <template #tool>
                 <div class="add-comps" @click.stop="selectCompsType" :class="{ 'clicked': compsType }">
                     <SvgIcon :icon="add_icon"/>
-                    <div class="selectType" v-if="compsType" ref="selectComps" @click.stop>
+                    <div class="selectCompType" v-if="compsType" ref="selectComps" @click.stop>
                         <div class="type-title">{{ t('compos.delect_attr_type') }}</div>
                         <div class="status" @click="addModuleState">
                             <div>
@@ -296,7 +306,7 @@ import text_icon from "@/assets/icons/svg/text.svg"
         height: 16px;
     }
 
-    .selectType {
+    .selectCompType {
         position: absolute;
         top: 32px;
         right: 0;

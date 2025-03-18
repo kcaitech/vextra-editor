@@ -47,5 +47,7 @@ export const compos: any = {
     confirm: '确认',
     circle_warning: '存在循环引用',
     invalid_compos: '无效组件',
-    toggle_list_style: '切换列表'
+    toggle_list_style: '切换列表',
+    comp_state_attr: '组件状态属性',
+    state_value: '状态值'
 }

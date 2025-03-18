@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { ColVector3D, CtrlElementType, ShapeView, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ColVector3D, CtrlElementType, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
@@ -8,7 +18,7 @@ import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
 import { ScaleHandler } from "@/transform/scale";
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/path/pathEdit";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 
@@ -85,16 +95,16 @@ function getVectors() {
 
     const { x, y, width, height } = shape.frame;
 
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
-    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
+    const clientMatrix = (props.context.workspace.matrix);
+    const fromRoot = (shape.matrix2Root());
 
     const fromClient = fromRoot.addTransform(clientMatrix);
 
     const {
-        col0: vecLT,
-        col1: vecRT,
-        col2: vecRB,
-        col3: vecLB
+        [0]: vecLT,
+        [1]: vecRT,
+        [2]: vecRB,
+        [3]: vecLB
     } = fromClient.transform([
         ColVector3D.FromXY(x, y),
         ColVector3D.FromXY(x + width, y),
@@ -111,19 +121,19 @@ function getVectorsForMini() {
 
     const { x, y, width, height } = shape.frame;
 
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
-    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
+    const clientMatrix = (props.context.workspace.matrix);
+    const fromRoot = (shape.matrix2Root());
 
     const fromClient = fromRoot.addTransform(clientMatrix);
 
-    const { col0: v1, col1: v2 } = fromClient.transform([ColVector3D.FromXY(0, 1), ColVector3D.FromXY(0, 2)]);
+    const { [0]: v1, [1]: v2 } = fromClient.transform([ColVector3D.FromXY(0, 1), ColVector3D.FromXY(0, 2)]);
     const diff = 2.5 / Math.hypot(v2.x - v1.x, v2.y - v1.y); // 2.5: Assist2 / 2;
 
     const {
-        col0: vecLT,
-        col1: vecRT,
-        col2: vecRB,
-        col3: vecLB
+        [0]: vecLT,
+        [1]: vecRT,
+        [2]: vecRB,
+        [3]: vecLB
     } = fromClient.transform([
         ColVector3D.FromXY(x - diff, y - diff),
         ColVector3D.FromXY(x + width + diff, y - diff),

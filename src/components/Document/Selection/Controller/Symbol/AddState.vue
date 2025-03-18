@@ -1,12 +1,22 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { find_space_for_state, make_default_state, make_state, SymbolType } from '@/utils/symbol';
 import {
-    ColVector3D, makeMatrixByTransform2,
-    makeShapeTransform2By1,
+    ColVector3D, 
     Shape,
     ShapeView,
-    SymbolView, Transform
+    SymbolView, 
+    Transform
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -32,8 +42,8 @@ function gen_add_button_transform() {
     const shape = props.shape;
     const { x, y, width, height } = shape.frame;
 
-    const fromRoot = makeShapeTransform2By1(shape.matrix2Root());
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
+    const fromRoot = (shape.matrix2Root());
+    const clientMatrix = (props.context.workspace.matrix);
 
     const transform = new Transform()
         .setTranslate(props.symbolType === SymbolType.Union
@@ -41,10 +51,10 @@ function gen_add_button_transform() {
             : ColVector3D.FromXY(x + width, y + height / 2))
         .addTransform(fromRoot)
         .addTransform(clientMatrix)
-        .clearSkew()
-        .clearScaleSize();
+        transform.clearSkew()
+        transform.clearScaleSize();
     const translateVector = props.symbolType === SymbolType.Union ? ColVector3D.FromXY(-8, 8) : ColVector3D.FromXY(8, -8);
-    return makeMatrixByTransform2(transform.translateInLocal(translateVector)).toString();
+    return (transform.translateInLocal(translateVector)).toString();
 }
 
 function down(e: MouseEvent) {

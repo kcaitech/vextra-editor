@@ -1,5 +1,29 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+/**
+ * 文档编辑器组件
+ * @description 用于渲染和编辑设计文档的主要组件
+ */
 import _DocumentVue from "./components/Document/index.vue"
+
+/**
+ * 移动端文档编辑器组件
+ * @description 针对移动端优化的文档编辑器组件
+ */
 import _MobileDocumentVue from "./components/Mobile/Document.vue"
+
+/**
+ * 预览组件
+ * @description 用于预览设计文档的组件
+ */
 import _PreviewVue from "./components/Preview/index.vue"
 import _StaticShape from "./components/Document/Content/StaticShape.vue"
 import {
@@ -11,10 +35,10 @@ import {
     importRemote,
     importSketch,
     RadixConvert,
-    Repository,
+    TransactDataGuard,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
-import { Zip } from "@pal/zip";
+import { Zip } from "@/basic/zip";
 import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
@@ -23,12 +47,23 @@ import { importDocumentFromMDD } from "@/io";
 
 import '@/style/constant.scss'
 import '@/style/app.scss'
+import { initDataModule } from "./components/common/initmodule";
 export {i18n_messages as i18n} from '@/i18n';
 
 export * from "./openapi";
 
 export const DocumentVue = _DocumentVue
+
+/**
+ * 移动端文档编辑器组件
+ * @component
+ */
 export const MobileDocumentVue = _MobileDocumentVue
+
+/**
+ * 预览组件
+ * @component
+ */
 export const PreviewVue = _PreviewVue
 
 export const StaticShape = _StaticShape
@@ -41,7 +76,8 @@ const t = (i18n as any).global.t;
 export { useComment } from '@/components/Document/Creator/execute'
 
 async function _open(props: DocumentProps) {
-    const repo = new Repository();
+    await initDataModule();
+    const repo = new TransactDataGuard();
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;
     // let loader_: DataLoader | undefined
@@ -80,6 +116,11 @@ async function _open(props: DocumentProps) {
     }
 }
 
+/**
+ * 打开文档
+ * @param props @see DocumentProps
+ * @returns 
+ */
 export async function openDocument(props: DocumentProps) {
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;

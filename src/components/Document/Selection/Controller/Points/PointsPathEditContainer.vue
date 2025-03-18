@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -12,6 +22,7 @@ import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { Action } from '@/context/tool';
 import { PathEditor } from "@/path/pathEdit";
+import { CurveModifier } from "@/components/Document/Selection/Controller/Points/curvemodifier";
 
 interface Props {
     context: Context
@@ -108,10 +119,13 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 }
 
 /**
- * @description 边
+ * @description 边操作
  */
 function down_background_path(event: MouseEvent, segment: number, index: number) {
-    if (event.button !== 0) {
+    if (event.button !== 0) return;
+    if (event.ctrlKey) {
+        const next = (index === (shape as PathShapeView).segments[segment].points.length - 1) ? 0 : index + 1
+        new CurveModifier(props.context, shape as PathShapeView, segment, index, next).start(event);
         return;
     }
     event.stopPropagation();
@@ -313,7 +327,6 @@ function resetContactStatus() {
 
 onMounted(() => {
     shape = props.context.selection.pathshape!;
-    if (!shape) return console.error('wrong shape');
     shape.watch(update);
     update();
     window.addEventListener('blur', window_blur);
@@ -324,32 +337,26 @@ onMounted(() => {
 
 onUnmounted(() => {
     props.context.path.unwatch(path_watcher);
-
     shape?.unwatch(update);
-
     window.removeEventListener('blur', window_blur);
     props.context.workspace.unwatch(workspaceWatcher);
 })
 </script>
 <template>
     <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
-        <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
-           @mouseleave="leave">
+        <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)" @mouseleave="leave">
             <g @mousedown="(e) => down_background_path(e, si, i)">
-                <path class="background-path" :d="p.path"></path>
+                <path class="background-path" :d="p.path"/>
                 <path
                     :class="{ path: true, 'path-high-light': new_high_light === `${si}-${i}`, 'path-selected': p.is_selected }"
-                    :d="p.path">
-                </path>
+                    :d="p.path"/>
             </g>
             <rect v-if="add_rect === `${si}-${i}`"
                   :class="{ 'insert-point': true, 'insert-point-selected': add_rect === `${si}-${i}` }"
-                  :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, si, i)">
-            </rect>
+                  :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, si, i)"/>
         </g>
     </g>
-
-    <Handle :context="props.context"></Handle>
+    <Handle :context="props.context"/>
 <!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
 <!--    <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">-->
 <!--        {{ i }}-->
@@ -357,8 +364,7 @@ onUnmounted(() => {
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
-          :class="{ point: true, selected: p.selected }">
-    </rect>
+          :class="{ point: true, selected: p.selected }"/>
 </template>
 <style lang='scss' scoped>
 .point {

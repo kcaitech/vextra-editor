@@ -6,7 +6,7 @@ import {
     Shape,
     ShapeFrame,
     ShapeType,
-    TransformRaw as Transform,
+    Transform,
     DViewCtx, PropsType, PathShapeView, ShapeView, updateFrame,
     BasicArray,
     PageView,

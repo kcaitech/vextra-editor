@@ -1,15 +1,22 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import PointsPathEditContainer from "@/components/Document/Selection/Controller/Points/PointsPenMode.vue";
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Matrix } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
 
-interface Props {
-    context: Context
-}
-
-const props = defineProps<Props>();
+const props = defineProps<{context: Context}>();
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const width = computed(() => {
     const w = bounds.right - bounds.left;
@@ -57,6 +64,7 @@ onMounted(() => {
     const path_shape = props.context.selection.pathshape;
     if (path_shape) path_shape.watch(update);
     update();
+    props.context.path.fixedAction = Action.Pen;
 });
 onUnmounted(() => {
     props.context.workspace.unwatch(matrix_watcher);

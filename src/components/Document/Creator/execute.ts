@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { TransformHandler } from "@/transform/handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
@@ -12,7 +22,6 @@ import {
     FillType,
     GeneratorParams,
     GroupShapeView,
-    makeShapeTransform2By1,
     Matrix,
     ShapeFrame,
     ShapeType,
@@ -27,7 +36,7 @@ import { getHorizontalAngle } from "@/utils/common";
 import { get_contact_environment } from "@/utils/contact";
 import { debounce } from "lodash";
 import { ContextEvents } from "@/openapi";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { compare_layer_3, filter_for_group1 } from "@/utils/group_ungroup";
 
 export function __add_status_for_create(context: Context) {
@@ -777,7 +786,7 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private getTargetTransform(env: ShapeView, frame: ShapeFrame) {
-        const envFromRoot = makeShapeTransform2By1(env.matrix2Root());
+        const envFromRoot = (env.matrix2Root());
 
         const selectionTransform = new Transform()
             .setTranslate(ColVector3D.FromXY(frame.x, frame.y));
@@ -790,7 +799,8 @@ export class CreatorExecute extends TransformHandler {
         frame.width = frame.width * Math.abs(scale.x);
         frame.height = frame.height * Math.abs(scale.y);
 
-        return targetTransform.clearScaleSize();
+        targetTransform.clearScaleSize();
+        return targetTransform
     }
 
     private fixedByUserConfig() {

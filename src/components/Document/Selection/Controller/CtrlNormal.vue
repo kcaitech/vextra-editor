@@ -1,10 +1,20 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 /**
  * @description 单选通用型控件
  */
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { ArtboardView, PolygonShapeView, ShapeView, PathShapeView, SymbolRefView } from '@kcdesign/data';
+import { ArtboardView, PolygonShapeView, ShapeView, PathShapeView, SymbolRefView, Path } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -62,7 +72,6 @@ const axle = computed<ClientXY>(() => {
 const partVisible = computed(() => {
     return bounds.bottom - bounds.top > 8 || bounds.right - bounds.left > 8;
 });
-
 function updateControllerView() {
     const framePoint = props.controllerFrame;
     boundRectPath.value = genRectPath(framePoint);
@@ -153,7 +162,15 @@ function workspace_watcher(t: number) {
         if (needActivateAfterEditorDestroy) pointActivated.value = true;
     }
 }
-
+// const testPath = ref<string>('');
+// document.addEventListener('keydown', (event: KeyboardEvent) => {
+//     if (event.altKey) {
+//         const path: Path = (props.context.selection.selectedShapes[0].borderPath ?? new Path()).clone();
+//         const transform = props.context.selection.selectedShapes[0].matrix2Root().multiAtLeft(props.context.workspace.matrix);
+//         path.transform(transform);
+//         testPath.value = path.toString();
+//     }
+// });
 const stop = watchEffect(updateControllerView);
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
@@ -178,6 +195,7 @@ onUnmounted(() => {
 <svg xmlns="http://www.w3.org/2000/svg" data-area="controller" preserveAspectRatio="xMinYMin meet"
      viewBox="0 0 100 100" width="100" height="100" overflow="visible" :class="{ hidden: selection_hidden }"
      @mousedown="mousedown" @mouseenter="mouseenter" @mouseleave="mouseleave" @mousemove="move">
+<!--    <path :d="testPath" fill="rgba(255, 255, 0, 0.5)" fill-rule="evenodd"/>-->
     <path
         :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
         fill="transparent"/>

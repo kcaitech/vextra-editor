@@ -1,4 +1,14 @@
-import { AsyncApiCaller, PathShapeView, OvalModifier, Matrix, TransformRaw } from "@kcdesign/data";
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+import { AsyncApiCaller, PathShapeView, OvalModifier, Matrix, Transform } from "@kcdesign/data";
 import { Context } from '@/context';
 
 export interface Dot {
@@ -56,7 +66,7 @@ export class ArcFreeModifier {
         const oval = this.m_oval;
 
         let xy = this.context.workspace.getContentXY(event);
-        let matrix = new TransformRaw();
+        let matrix = new Transform();
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
         matrix.multiAtLeft(this.context.workspace.matrix);
@@ -146,7 +156,7 @@ export class ArcFreeModifier {
         const start = oval.startingAngle ?? 0;
         let xy = this.context.workspace.getContentXY(event);
 
-        let matrix = new TransformRaw();
+        let matrix = new Transform();
         start && matrix.rotate(start, 0.5, 0.5);
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
@@ -177,7 +187,7 @@ export class ArcFreeModifier {
         const start = oval.startingAngle ?? 0;
         let xy = this.context.workspace.getContentXY(event);
 
-        let matrix = new TransformRaw();
+        let matrix = new Transform();
         start && matrix.rotate(start, 0.5, 0.5);
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());

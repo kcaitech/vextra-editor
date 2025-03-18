@@ -1,14 +1,19 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     ColVector3D,
-    Line,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1,
     Matrix, PathShapeView,
     Rotator,
     ShapeView,
     Transform,
-    TransformMode,
-    TransformRaw,
 } from "@kcdesign/data";
 import { BoundHandler, FrameLike } from "./handler";
 import { XY } from "@/context/selection";
@@ -33,13 +38,13 @@ type Base4Rotation = {
 type BaseData4Rotate = Map<string, Base4Rotation>;
 
 export function rotate(shapes: ShapeView[], deg: number) {
-    const transformList: { shape: ShapeView, transform: TransformRaw }[] = [];
+    const transformList: { shape: ShapeView, transform: Transform }[] = [];
 
     for (const shape of shapes) {
-        const t = makeShapeTransform2By1(shape.transform);
+        const t = (shape.transform.clone());
         const { x, y, width, height } = shape.frame;
         const oa = deg % 360 * Math.PI / 180;
-        const os = t.decomposeEuler().z;
+        const os = t.decomposeRotate();
         let angle = oa - os;
 
         if (is_straight(shape)) {
@@ -55,15 +60,11 @@ export function rotate(shapes: ShapeView[], deg: number) {
             angle -= os2;
         }
 
-        t.rotateAt({
-            axis: Line.FromParallelZ(ColVector3D.FromXYZ(x + width / 2, y + height / 2, 0)),
-            angle,
-            mode: TransformMode.Local,
-        });
+        t.rotateInLocal(angle, x + width / 2, y + height / 2);
 
         transformList.push({
             shape,
-            transform: makeShapeTransform1By2(t) as TransformRaw
+            transform: (t)
         });
     }
 
@@ -260,7 +261,7 @@ export class RotateHandler extends BoundHandler {
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(makeShapeTransform2By1(alpha.matrix2Root())); // todo 考虑让 transform2FromRoot 为问题因素
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root())); // todo 考虑让 transform2FromRoot 为问题因素
 
         this.selectionTransformInverse = this.selectionTransform.getInverse();
         this.selectionSize = multi ? {
@@ -270,18 +271,19 @@ export class RotateHandler extends BoundHandler {
             width: alphaFrame.width,
             height: alphaFrame.height
         };
-        this.selectionCenter = this.selectionTransform.transform(ColVector3D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2)).col0;
-
+        const center = this.selectionTransform.transform(ColVector3D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2));
+        this.selectionCenter.x = center.x
+        this.selectionCenter.y = center.y
         for (const shape of shapes) {
             if (!this.transformCache.has(shape.parent!)) {
-                this.transformCache.set(shape.parent!, makeShapeTransform2By1(shape.parent!.matrix2Root()));
+                this.transformCache.set(shape.parent!, (shape.parent!.matrix2Root()));
             }
         }
         // this.shapeTransformListInSelection = multi ? shapes.map((shape, i) => shape.transform2.clone() // 在Parent坐标系下
         //     .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
         //     .addTransform(this.selectionTransform.getInverse())     // 在选区坐标系下
         // ) : [new Transform()];
-        this.shapeTransformListInSelection = shapes.map((shape, i) => makeShapeTransform2By1(shape.transform)
+        this.shapeTransformListInSelection = shapes.map((shape, i) => (shape.transform.clone())
             .addTransform(this.transformCache.get(shape.parent!)!)
             .addTransform(this.selectionTransform.getInverse())
         );
@@ -316,11 +318,12 @@ export class RotateHandler extends BoundHandler {
         }
 
         // 选区变换后的Transform
-        const transformForSelection = this.selectionTransform.clone().rotateAt({
-            axis: Line.FromParallelZ(ColVector3D.FromXYZ(this.selectionSize.width / 2, this.selectionSize.height / 2, 0)), // 选区的旋转轴（Z轴）（选区的中心点）
-            angle: deltaAngle,
-            mode: TransformMode.Local,
-        });
+        // const transformForSelection = this.selectionTransform.clone().rotateAt({
+        //     axis: Line.FromParallelZ(ColVector3D.FromXYZ(this.selectionSize.width / 2, this.selectionSize.height / 2, 0)), // 选区的旋转轴（Z轴）（选区的中心点）
+        //     angle: deltaAngle,
+        //     mode: TransformMode.Local,
+        // });
+        const transformForSelection = this.selectionTransform.clone().rotateInLocal(deltaAngle, this.selectionSize.width / 2, this.selectionSize.height / 2);
 
         const units: { shape: ShapeView, transform2: Transform }[] = [];
         const __is_locked = this.isLocked.bind(this);

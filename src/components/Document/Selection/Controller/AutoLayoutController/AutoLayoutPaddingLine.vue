@@ -1,20 +1,22 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
+import { ArtboardView, ColVector3D, Matrix, PaddingDir, StackSizing } from '@kcdesign/data';
 import { Selection, XY } from '@/context/selection';
-import {
-    ArtboardView,
-    ColVector3D,
-    Matrix,
-    Matrix2,
-    PaddingDir,
-    StackSizing,
-    makeShapeTransform2By1
-} from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { fixedZero } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
-import { CursorType } from '@/utils/cursor2';
+import { CursorType } from '@/utils/cursor';
 
 type Box = {
     lt: Point,
@@ -38,7 +40,7 @@ interface ControlsLine extends Box {
 }
 interface PaddingBox {
     size: number,
-    center: Matrix2
+    // center: {x: number, y: number}[]
 }
 
 const emits = defineEmits<{
@@ -77,8 +79,8 @@ function getPaddingPosition() {
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = shape.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     const topPadding = m.transform([
         ColVector3D.FromXY(x, y),
@@ -88,21 +90,21 @@ function getPaddingPosition() {
         ColVector3D.FromXY(x, y),
         ColVector3D.FromXY(x, y + height)
     ]);
-    const hor_rotate = Math.atan2(topPadding.col1.y - topPadding.col0.y, topPadding.col1.x - topPadding.col0.x) * (180 / Math.PI);
-    const ver_rotate = Math.atan2(leftPadding.col1.y - leftPadding.col0.y, leftPadding.col1.x - leftPadding.col0.x) * (180 / Math.PI) + 90;
+    const hor_rotate = Math.atan2(topPadding[1].y - topPadding[0].y, topPadding[1].x - topPadding[0].x) * (180 / Math.PI);
+    const ver_rotate = Math.atan2(leftPadding[1].y - leftPadding[0].y, leftPadding[1].x - leftPadding[0].x) * (180 / Math.PI) + 90;
     const bottomLine = m.transform([ColVector3D.FromXY(x + (width / 2), y + height - (autoLayout.stackPaddingBottom / 2)), ColVector3D.FromXY(x + (width / 2), y + height)]);
     const leftLine = m.transform([ColVector3D.FromXY(x + (autoLayout.stackHorizontalPadding / 2), y + (height / 2)), ColVector3D.FromXY(x, y + (height / 2))]);
     const rightLine = m.transform([ColVector3D.FromXY(x + width - (autoLayout.stackPaddingRight / 2), y + (height / 2)), ColVector3D.FromXY(x + width, y + (height / 2))]);
     const topLine = m.transform([ColVector3D.FromXY(x + (width / 2), y + (autoLayout.stackVerticalPadding / 2)), ColVector3D.FromXY(x + (width / 2), y)]);
-    const t_ling: ControlsLine = { lt: { x: topLine.col0.x - 7, y: topLine.col0.y - 1.5 }, rt: { x: topLine.col0.x + 7, y: topLine.col0.y - 1.5 }, rb: { x: topLine.col0.x + 7, y: topLine.col0.y + 1.5 }, lb: { x: topLine.col0.x - 7, y: topLine.col0.y + 1.5 }, offset: topLine.col0, rotate: hor_rotate }
-    const r_ling: ControlsLine = { lt: { x: rightLine.col0.x + 1.5, y: rightLine.col0.y - 7 }, rt: { x: rightLine.col0.x + 1.5, y: rightLine.col0.y + 7 }, rb: { x: rightLine.col0.x - 1.5, y: rightLine.col0.y + 7 }, lb: { x: rightLine.col0.x - 1.5, y: rightLine.col0.y - 7 }, offset: rightLine.col0, rotate: ver_rotate }
-    const b_ling: ControlsLine = { lt: { x: bottomLine.col0.x - 7, y: bottomLine.col0.y - 1.5 }, rt: { x: bottomLine.col0.x + 7, y: bottomLine.col0.y - 1.5 }, rb: { x: bottomLine.col0.x + 7, y: bottomLine.col0.y + 1.5 }, lb: { x: bottomLine.col0.x - 7, y: bottomLine.col0.y + 1.5 }, offset: bottomLine.col0, rotate: hor_rotate }
-    const l_ling: ControlsLine = { lt: { x: leftLine.col0.x + 1.5, y: leftLine.col0.y - 7 }, rt: { x: leftLine.col0.x + 1.5, y: leftLine.col0.y + 7 }, rb: { x: leftLine.col0.x - 1.5, y: leftLine.col0.y + 7 }, lb: { x: leftLine.col0.x - 1.5, y: leftLine.col0.y - 7 }, offset: leftLine.col0, rotate: ver_rotate }
+    const t_ling: ControlsLine = { lt: { x: topLine[0].x - 7, y: topLine[0].y - 1.5 }, rt: { x: topLine[0].x + 7, y: topLine[0].y - 1.5 }, rb: { x: topLine[0].x + 7, y: topLine[0].y + 1.5 }, lb: { x: topLine[0].x - 7, y: topLine[0].y + 1.5 }, offset: topLine[0], rotate: hor_rotate }
+    const r_ling: ControlsLine = { lt: { x: rightLine[0].x + 1.5, y: rightLine[0].y - 7 }, rt: { x: rightLine[0].x + 1.5, y: rightLine[0].y + 7 }, rb: { x: rightLine[0].x - 1.5, y: rightLine[0].y + 7 }, lb: { x: rightLine[0].x - 1.5, y: rightLine[0].y - 7 }, offset: rightLine[0], rotate: ver_rotate }
+    const b_ling: ControlsLine = { lt: { x: bottomLine[0].x - 7, y: bottomLine[0].y - 1.5 }, rt: { x: bottomLine[0].x + 7, y: bottomLine[0].y - 1.5 }, rb: { x: bottomLine[0].x + 7, y: bottomLine[0].y + 1.5 }, lb: { x: bottomLine[0].x - 7, y: bottomLine[0].y + 1.5 }, offset: bottomLine[0], rotate: hor_rotate }
+    const l_ling: ControlsLine = { lt: { x: leftLine[0].x + 1.5, y: leftLine[0].y - 7 }, rt: { x: leftLine[0].x + 1.5, y: leftLine[0].y + 7 }, rb: { x: leftLine[0].x - 1.5, y: leftLine[0].y + 7 }, lb: { x: leftLine[0].x - 1.5, y: leftLine[0].y - 7 }, offset: leftLine[0], rotate: ver_rotate }
     controls_line.value.push(t_ling, r_ling, b_ling, l_ling);
-    const t_padding: PaddingBox = { size: autoLayout.stackVerticalPadding, center: topLine }
-    const r_padding: PaddingBox = { size: autoLayout.stackPaddingRight, center: rightLine }
-    const b_padding: PaddingBox = { size: autoLayout.stackPaddingBottom, center: bottomLine }
-    const l_padding: PaddingBox = { size: autoLayout.stackHorizontalPadding, center: leftLine }
+    const t_padding: PaddingBox = { size: autoLayout.stackVerticalPadding,  }
+    const r_padding: PaddingBox = { size: autoLayout.stackPaddingRight,  }
+    const b_padding: PaddingBox = { size: autoLayout.stackPaddingBottom,  }
+    const l_padding: PaddingBox = { size: autoLayout.stackHorizontalPadding,  }
     paddingBox.value.push(t_padding, r_padding, b_padding, l_padding);
     if (paddingBox.value[paddingIndex.value]?.size === 0 && hover_cursor_switch.value) {
         hover_cursor_switch.value = false;

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <template>
     <div id="blur-lib-panel" class="blur-lib-panel">
         <PopoverHeader :title="t('stylelib.blurs')" @create="showCreatePanel" @close="emits('close')"/>
@@ -95,7 +105,7 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = local;
 
         for (const v of sts.variables) {
-            if (v.typeId === "blur-mask-living" && !v.disabled) cat.variables.push(v);
+            if (v.typeId === "blur-mask" && !v.disabled) cat.variables.push(v);
         }
         if (word) {
             const reg = new RegExp(`${word}`, 'img');

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
@@ -13,7 +23,7 @@ import {
     sessionRefIdKey,
     ShapeType,
     ShapeView,
-    TransformRaw,
+    Transform,
     XYsBounding
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
@@ -693,7 +703,7 @@ const setFixedTransform = () => {
     const select_box = viewBox(viewUpdater.v_matrix, selectShape);
     const t1 = select_box.top / scale;
     const l1 = select_box.left / scale;
-    const transform1 = new TransformRaw();
+    const transform1 = new Transform();
     transform1.trans(l1, t1);
     props.context.preview.setFixedTransform(selectShape.id, transform1);
     selectShape.setFixedTransform(transform1);
@@ -702,7 +712,7 @@ const setFixedTransform = () => {
             const select_box = viewBox(end_matrix.value as Matrix, s);
             const t2 = Math.max(select_box.top / scale, t1);
             const l2 = Math.max(select_box.left / scale, l1);
-            const transform2 = new TransformRaw();
+            const transform2 = new Transform();
             transform2.trans(l2, t2);
             props.context.preview.setFixedTransform(s.id, transform2);
             (s as ArtboardView).setFixedTransform(transform2);

@@ -1,15 +1,22 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script lang="ts" setup>
 import PointsPathEditContainer from "@/components/Document/Selection/Controller/Points/PointsPathEditContainer.vue";
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
-import { Matrix } from "@kcdesign/data";
+import { Transform } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
 
-interface Props {
-    context: Context
-}
-
-const props = defineProps<Props>();
+const props = defineProps<{ context: Context }>();
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const width = computed(() => {
     const w = bounds.right - bounds.left;
@@ -19,7 +26,7 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 });
-const matrix = ref<Matrix>(new Matrix());
+const matrix = ref<Transform>(new Transform());
 
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
@@ -27,21 +34,22 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 
 function modify_matrix() {
     const path_shape = props.context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
-    matrix.value = path_shape.matrix2Root().toMatrix();
+    if (!path_shape) return;
+    matrix.value = path_shape.matrix2Root();
     matrix.value.multiAtLeft(props.context.workspace.matrix);
 }
 
 function update() {
     const path_shape = props.context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
+    if (!path_shape) return;
     modify_matrix();
     const f = path_shape.frame;
-    const __points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
+    const __points = [
+        { x: f.x, y: f.y },
+        { x: f.x + f.width, y: f.y },
+        { x: f.x + f.width, y: f.y + f.height },
+        { x: f.x, y: f.y + f.height }
+    ];
     for (let i = 0; i < __points.length; i++) {
         const p = __points[i];
         __points[i] = matrix.value.computeCoord3(p);
@@ -53,25 +61,20 @@ function update() {
 }
 
 function matrix_watcher(t: number | string) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        update();
-    }
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) update();
 }
 
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
-    const path_shape = props.context.selection.pathshape;
-    if (path_shape) {
-        path_shape.watch(update);
-    }
+    props.context.selection.pathshape?.watch(update);
     update();
+    if (props.context.tool.action === Action.AutoV) {
+        props.context.path.fixedAction = Action.AutoV;
+    }
 });
 onUnmounted(() => {
     props.context.workspace.unwatch(matrix_watcher);
-    const path_shape = props.context.selection.pathshape;
-    if (path_shape) {
-        path_shape.unwatch(update);
-    }
+    props.context.selection.pathshape?.unwatch(update);
 })
 </script>
 <template>

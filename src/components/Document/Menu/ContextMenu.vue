@@ -1,14 +1,23 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
-import { nextTick, onMounted, onUnmounted, ref, h, watch, watchEffect } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, h, watchEffect } from 'vue';
 import Key from "@/components/common/Key.vue";
 import { MenuItemType } from "@/components/Document/Menu/index";
 import { useI18n } from "vue-i18n";
 import {
     adapt_page, flattenSelection,
     get_shape_within_document,
-    getName,
     lower_layer, outlineSelection,
     select_all,
     shape_track,
@@ -32,7 +41,6 @@ import { Navi } from "@/context/navigate";
 import Layers from './Layers.vue';
 import TableMenu from './TableMenu/TableMenu.vue';
 import { useMask } from "@/components/Document/Creator/execute";
-import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 import { autoLayoutFn, unAutoLayoutFn } from '@/utils/auto_layout';
 import { MossClipboard } from "@/clipboard";
 
@@ -293,12 +301,16 @@ function bottom() {
 }
 
 function groups() {
-    props.context.tool.notify(Tool.GROUP);
+    const name = props.context.workspace.t('shape.group');
+    const views = props.context.selection.selectedShapes;
+    group(props.context, views, name);
     emits('close');
 }
 
 function container() {
-    props.context.tool.notify(Tool.GROUP, true);
+    const name = props.context.workspace.t('shape.artboard');
+    const views = props.context.selection.selectedShapes;
+    group(props.context, views, name, true);
     emits('close');
 }
 
@@ -329,7 +341,7 @@ function dissolution_container() {
 }
 
 function unGroup() {
-    props.context.tool.notify(Tool.UNGROUP);
+    ungroup(props.context);
     emits('close');
 }
 
@@ -485,6 +497,7 @@ onUnmounted(() => {
 
 import down_icon from '@/assets/icons/svg/down.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { group, ungroup } from "@/utils/group_ungroup";
 </script>
 <template>
     <div ref="menu" class="__context-menu" :style="{ width: `${width || 196}px` }" @mousedown.stop @mousemove.stop

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import TypeHeader from "@/components/Document/Attribute/TypeHeader.vue";
 import { useI18n } from "vue-i18n";
@@ -13,7 +23,7 @@ import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
-import { ColVector3D, makeShapeTransform2By1, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
+import { ColVector3D, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
 import { ScaleUniformer } from "@/transform/scaleUniform";
 
 const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();
@@ -106,14 +116,14 @@ function __change_size(ratio: number) {
     for (const shape of selected) {
         const parent = shape.parent!;
         if (cache.has(parent)) continue;
-        cache.set(parent, makeShapeTransform2By1(parent.matrix2Root()));
+        cache.set(parent, (parent.matrix2Root()));
     }
 
     const selectionTransform = new Transform().setTranslate(ColVector3D.FromXY(box.left, box.top));
     const inverse = selectionTransform.getInverse();
 
     for (const shape of selected) {
-        const transform = makeShapeTransform2By1(shape.transform).addTransform(cache.get(shape.parent!)!);
+        const transform = (shape.transform.clone()).addTransform(cache.get(shape.parent!)!);
         transform.addTransform(inverse);
         units.push({ shape, transform });
     }
@@ -126,7 +136,7 @@ function __change_size(ratio: number) {
     for (const shape of selected) {
         const parent = shape.parent!;
         if (parentsTransform.has(parent)) continue;
-        const t = makeShapeTransform2By1(parent.matrix2Root());
+        const t = (parent.matrix2Root());
         parentsTransform.set(parent, t.getInverse());
     }
 
@@ -447,10 +457,13 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
 
     .trigger {
         position: absolute;
-        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 24px;
         top: 3px;
-        right: 6px;
-        width: 16px;
+        right: 4px;
+        width: 20px;
         border-radius: 4px;
 
         > svg {

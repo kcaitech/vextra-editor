@@ -1,5 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
-import { exportExForm, Repository, importMoss } from "@kcdesign/data";
+import { exportExForm, TransactDataGuard, importMoss } from "@kcdesign/data";
 import JSZip from "jszip";
 import { MossError } from "@/basic/error";
 
@@ -50,7 +60,7 @@ export function downloadByLink(content: Blob, name: string) {
     URL.revokeObjectURL(link.href);
 }
 
-export async function importDocumentFromMDD(filePack: File, repo: Repository) {
+export async function importDocumentFromMDD(filePack: File, repo: TransactDataGuard) {
     const __files = await getFiles() as {
         [p: string]: JSZip.JSZipObject
     };

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
@@ -6,9 +16,7 @@ import {
     ArtboardView,
     BorderPosition,
     ColVector3D,
-    makeShapeTransform2By1,
     Matrix,
-    Path,
     ShapeView,
     SymbolRefView,
     XYsBounding
@@ -124,10 +132,10 @@ const getPoint = (shape: ShapeView, includedBorder?: boolean) => {
         f.width += maxleftborder + maxrightborder;
         f.height += maxtopborder + maxbottomborder;
     }
-    const m = makeShapeTransform2By1(shape_root_m.clone()).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m.clone());
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
-    const { col0, col1, col2, col3 } = m.transform([
+    const { [0]:col0, [1]:col1, [2]:col2, [3]:col3 } = m.transform([
         ColVector3D.FromXY(f.x, f.y),
         ColVector3D.FromXY(f.x + f.width, f.y),
         ColVector3D.FromXY(f.x + f.width, f.y + f.height),
@@ -179,8 +187,8 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const shape_root_m = shape.matrix2Root();
-        const m = makeShapeTransform2By1(shape_root_m);
-        const clientTransform = makeShapeTransform2By1(props.context.workspace.matrix);
+        const m = (shape_root_m);
+        const clientTransform = (props.context.workspace.matrix);
         m.addTransform(clientTransform);
         let { x, y, width, height } = shape.frame;
         if (includedBorder) {
@@ -199,7 +207,7 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
             width += maxleftborder + maxrightborder;
             height += maxtopborder + maxbottomborder;
         }
-        const { col0, col1, col2, col3 } = m.transform([
+        const { [0]:col0, [1]:col1, [2]:col2, [3]:col3 } = m.transform([
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY(x + width, y),
             ColVector3D.FromXY(x + width, y + height),

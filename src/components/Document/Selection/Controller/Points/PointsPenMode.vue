@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { CurvePoint, Matrix, PathSegment, PathShapeView } from '@kcdesign/data';
@@ -14,10 +24,6 @@ import { getHorizontalAngle } from "@/utils/common";
 import { roundBy } from "@/path/common";
 import { PathHitChecker } from "@/path/hit";
 
-type Props = {
-    context: Context
-}
-
 type Dot = {
     point: {
         x: number,
@@ -28,7 +34,7 @@ type Dot = {
     selected: boolean
 }
 
-const props = defineProps<Props>();
+const props = defineProps<{context: Context}>();
 const data: {
     dots: Dot[],
     segments: Segment[][]

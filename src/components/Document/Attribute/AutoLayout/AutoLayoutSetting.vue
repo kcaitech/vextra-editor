@@ -1,15 +1,24 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
-import { AutoLayout } from "@kcdesign/data";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
-import Tooltip from '@/components/common/Tooltip.vue';
+import Tooltip from "@/components/common/Tooltip.vue";
 
 
 interface Props {
-    autoLayoutDate: AutoLayout;
+    autoLayoutDate: AutolayoutCtx;
     context: Context;
     reflush?: number;
 }
@@ -68,20 +77,42 @@ const close = () => {
 
 const changeBorderItem = (included: boolean) => {
     if (props.autoLayoutDate.bordersTakeSpace === included) return close();
-    const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);
-    editor.modifyAutoLayoutStroke(included);
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyAutoLayoutStroke(shapes, included);
     close();
 }
 
 const changeStackZIndexItem = (stack: boolean) => {
     if (props.autoLayoutDate.stackReverseZIndex === stack) return close();
-    const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);
-    editor.modifyAutoLayoutZIndex(stack);
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyAutoLayoutZIndex(shapes, stack);
     close();
 }
 
+const selectedTop = (item?: string | boolean) => {
+    if (typeof item === 'string') {
+        return '-4px';
+    }
+    if (item) {
+        return '-4px';
+    } else {
+        return '-36px'
+    }
+}
+
+const bordersTakeValue = (v?: string | boolean) => {
+    if (typeof v === 'string') return t('attr.mixed');
+    return v ? t('autolayout.included') : t('autolayout.excluded')
+}
+
+const stackReverseValue = (v?: string | boolean) => {
+    if (typeof v === 'string') return t('attr.mixed');
+    return v ? t('autolayout.stack') : t('autolayout.reverse_stack')
+}
 onMounted(() => {
 })
 onUnmounted(() => {
@@ -96,6 +127,7 @@ import included_strokes_icon from "@/assets/icons/svg/included-strokes.svg";
 import excluded_strokes_icon from "@/assets/icons/svg/excluded-strokes.svg";
 import reverse_stack_icon from "@/assets/icons/svg/reverse-stack.svg";
 import pile_up_icon from "@/assets/icons/svg/pile-up.svg";
+import { AutolayoutCtx } from './ctx';
 </script>
 
 <template>
@@ -111,18 +143,23 @@ import pile_up_icon from "@/assets/icons/svg/pile-up.svg";
                 <div class="title">{{ t('autolayout.stroke') }}</div>
                 <div class="auto-setting-options" @click.stop="openBorderTakeMenu">
                     <span>
-                        {{ autoLayoutDate.bordersTakeSpace ? t('autolayout.included') : t('autolayout.excluded')
-                        }}
+                        {{ bordersTakeValue(autoLayoutDate.bordersTakeSpace)}}
                     </span>
                     <div class="icon">
                         <SvgIcon :icon="down_icon" />
                     </div>
                     <div class="select_menu" v-if="borderSelect"
-                        :style="{ top: autoLayoutDate.bordersTakeSpace ? '-4px' : '-36px' }">
+                        :style="{ top: selectedTop(autoLayoutDate.bordersTakeSpace) }">
+                        <div v-if="typeof autoLayoutDate.bordersTakeSpace === 'string'" class="item disabled">
+                            <div class="icon">
+                                <SvgIcon :icon="page_select_icon" />
+                            </div>
+                            <div class="text">{{ t('attr.mixed') }}</div>
+                        </div>
                         <div class="item" :class="{ 'active-item': hoverBorderItem }"
                             @click.stop="changeBorderItem(true)" @mouseenter="hoverBorderItem = true">
                             <div class="icon">
-                                <SvgIcon v-if="autoLayoutDate.bordersTakeSpace"
+                                <SvgIcon v-if="selectedTop(autoLayoutDate.bordersTakeSpace)"
                                     :icon="hoverBorderItem ? white_select_icon : page_select_icon" />
                             </div>
                             <div class="text">{{ t('autolayout.included') }}</div>
@@ -146,17 +183,22 @@ import pile_up_icon from "@/assets/icons/svg/pile-up.svg";
             <div class="selected">
                 <div class="title">{{ t('autolayout.canvas_stack') }}</div>
                 <div class="auto-setting-options" @click.stop="openStackMenu">
-                    <span> {{ !autoLayoutDate.stackReverseZIndex ? t('autolayout.reverse_stack')
-                        : t('autolayout.stack') }}</span>
+                    <span> {{ stackReverseValue(autoLayoutDate.stackReverseZIndex) }}</span>
                     <div class="icon">
                         <SvgIcon :icon="down_icon" />
                     </div>
                     <div class="select_menu" v-if="stackSelect"
-                        :style="{ top: !autoLayoutDate.stackReverseZIndex ? '-36px' : '-4px' }">
+                        :style="{ top: selectedTop(autoLayoutDate.bordersTakeSpace) }">
+                        <div v-if="typeof autoLayoutDate.stackReverseZIndex === 'string'" class="item disabled">
+                            <div class="icon">
+                                <SvgIcon :icon="page_select_icon" />
+                            </div>
+                            <div class="text">{{ t('attr.mixed') }}</div>
+                        </div>
                         <div class="item" :class="{ 'active-item': hoverStackItem }"
                             @click.stop="changeStackZIndexItem(true)" @mouseenter="hoverStackItem = true">
                             <div class="icon">
-                                <SvgIcon v-if="autoLayoutDate.stackReverseZIndex"
+                                <SvgIcon v-if="autoLayoutDate.stackReverseZIndex === true"
                                     :icon="hoverStackItem ? white_select_icon : page_select_icon" />
                             </div>
                             <div class="text">{{ t('autolayout.stack') }}</div>
@@ -321,5 +363,16 @@ import pile_up_icon from "@/assets/icons/svg/pile-up.svg";
     .text {
         color: #fff;
     }
+}
+
+.disabled {
+    border-bottom: 1px solid #efefef;
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+.cursor_pointer {
+    cursor: default !important;
+    pointer-events: none;
 }
 </style>

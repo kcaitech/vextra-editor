@@ -1,6 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     CoopRepository,
-    TaskMgr,
     WatchableObject,
     TableEditor,
     PageView,
@@ -47,6 +56,7 @@ import { scout } from "@/utils/scout";
 import { Preview } from "./preview";
 import { MossClipboard } from "@/clipboard";
 import { EditorLayout } from "@/components/Document/Layout/editorlayout";
+import { TaskMgr } from "@/basic/taskmgr";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -409,14 +419,14 @@ export class Context extends WatchableObject implements IContext {
         return this.m_color;
     }
 
-    private m_doc_info: { name: string } | undefined;
+    private m_doc_info: { name: string, id: string } | undefined;
 
-    setDocumentInfo(info: { name: string }) {
+    setDocumentInfo(info: { name: string, id: string }): void {
         this.m_doc_info = info;
     }
 
-    get documentInfo(): { name: string } {
-        return this.m_doc_info || { name: '' };
+    get documentInfo(): { name: string, id: string } {
+        return this.m_doc_info || { name: '', id: '' };
     }
 
     rename(name: string) {

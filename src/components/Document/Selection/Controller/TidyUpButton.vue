@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { Context } from '@/context';
 import { fixedZero, permIsEdit } from '@/utils/common';
@@ -5,9 +15,9 @@ import { checkTidyUpShapesOrder, getSelectedWidthHeight, getVisibleShapes, layou
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Point } from '../SelectionView.vue';
 import { Selection, XY } from '@/context/selection';
-import { ColVector3D, makeShapeTransform2By1, Matrix, ShapeView } from '@kcdesign/data';
+import { ColVector3D, Matrix, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from '@/context/workspace';
-import { CursorType } from '@/utils/cursor2';
+import { CursorType } from '@/utils/cursor';
 import { LockMouse } from '@/transform/lockMouse';
 import { throttle } from 'lodash';
 import { TranslateHandler } from '@/transform/translate/translate';
@@ -76,13 +86,13 @@ const tidyUpDot = () => {
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const { x, y, width, height } = shape._p_frame;
-        const { col0, col1, col2 } = m.transform([
+        const { [0]:col0, [1]:col1, [2]:col2 } = m.transform([
             ColVector3D.FromXY(x + (width / 2), y + (height / 2)),
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY((x + width), (y + height)),
@@ -111,8 +121,8 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     if (dir) {
         for (let i = 0; i < shapes.length; i++) {
@@ -128,20 +138,20 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
                     ColVector3D.FromXY(x + width, y + height + clo_space),
                     ColVector3D.FromXY(x, y + height + clo_space)
                 ]);
-                const hor: Box = { lt: horSpace.col0, width: horSpace.col1.x - horSpace.col0.x, height: horSpace.col2.y - horSpace.col1.y };
+                const hor: Box = { lt: horSpace[0], width: horSpace[1].x - horSpace[0].x, height: horSpace[2].y - horSpace[1].y };
                 verSpaceBox.value.push(hor);
                 const spaceLine = m.transform([
                     ColVector3D.FromXY(x, y),
                     ColVector3D.FromXY(x + width, y),
                     ColVector3D.FromXY(x + width / 2, y + height + (clo_space / 2)),
                 ]);
-                const rotate = Math.atan2(spaceLine.col1.y - spaceLine.col0.y, spaceLine.col1.x - spaceLine.col0.x) * (180 / Math.PI);
+                const rotate = Math.atan2(spaceLine[1].y - spaceLine[0].y, spaceLine[1].x - spaceLine[0].x) * (180 / Math.PI);
                 const ling: ControlsLine = {
-                    lt: { x: spaceLine.col2.x - 11, y: spaceLine.col2.y - 1 },
-                    rt: { x: spaceLine.col2.x + 11, y: spaceLine.col2.y - 1 },
-                    rb: { x: spaceLine.col2.x + 11, y: spaceLine.col2.y + 1 },
-                    lb: { x: spaceLine.col2.x - 11, y: spaceLine.col2.y + 1 },
-                    offset: spaceLine.col2, rotate, index: j
+                    lt: { x: spaceLine[2].x - 11, y: spaceLine[2].y - 1 },
+                    rt: { x: spaceLine[2].x + 11, y: spaceLine[2].y - 1 },
+                    rb: { x: spaceLine[2].x + 11, y: spaceLine[2].y + 1 },
+                    lb: { x: spaceLine[2].x - 11, y: spaceLine[2].y + 1 },
+                    offset: spaceLine[2], rotate, index: j
                 }
                 tidyUpHorLines.value.push(ling);
             }
@@ -161,12 +171,12 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
                 ColVector3D.FromXY(x, y + height + col_space),
             ]);
             const ver: Box = {
-                lt: { x: box.left, y: verSpace.col0.y },
+                lt: { x: box.left, y: verSpace[0].y },
                 width: box.right - box.left,
-                height: verSpace.col1.y - verSpace.col0.y,
+                height: verSpace[1].y - verSpace[0].y,
             };
             verSpaceBox.value.push(ver);
-            const { col0, col1, col2 } = m.transform([
+            const { [0]:col0, [1]:col1, [2]:col2 } = m.transform([
                 ColVector3D.FromXY(x, y),
                 ColVector3D.FromXY(x + width, y),
                 ColVector3D.FromXY(x, y + height + (col_space / 2)),
@@ -194,8 +204,8 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     if (dir) {
         // 垂直调整
@@ -213,12 +223,12 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
                 ColVector3D.FromXY(x + width + row_space, y),
             ]);
             const hor: Box = {
-                lt: { x: horSpace.col0.x, y: box.top },
-                width: horSpace.col1.x - horSpace.col0.x,
+                lt: { x: horSpace[0].x, y: box.top },
+                width: horSpace[1].x - horSpace[0].x,
                 height: box.bottom - box.top,
             };
             horSpaceBox.value.push(hor);
-            const { col0, col1, col2 } = m.transform([
+            const { [0]:col0, [1]:col1, [2]:col2 } = m.transform([
                 ColVector3D.FromXY(x, y),
                 ColVector3D.FromXY(x + width, y),
                 ColVector3D.FromXY(x + width + (row_space / 2), y),
@@ -248,20 +258,20 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
                     ColVector3D.FromXY(x + width + row_space, y + height),
                     ColVector3D.FromXY(x + width, y + height)
                 ]);
-                const hor: Box = { lt: horSpace.col0, width: horSpace.col1.x - horSpace.col0.x, height: horSpace.col2.y - horSpace.col1.y };
+                const hor: Box = { lt: horSpace[0], width: horSpace[1].x - horSpace[0].x, height: horSpace[2].y - horSpace[1].y };
                 horSpaceBox.value.push(hor);
                 const spaceLine = m.transform([
                     ColVector3D.FromXY(x, y),
                     ColVector3D.FromXY(x + width, y),
                     ColVector3D.FromXY(x + width + (row_space / 2), y + (height / 2)),
                 ]);
-                const rotate = Math.atan2(spaceLine.col1.y - spaceLine.col0.y, spaceLine.col1.x - spaceLine.col0.x) * (180 / Math.PI);
+                const rotate = Math.atan2(spaceLine[1].y - spaceLine[0].y, spaceLine[1].x - spaceLine[0].x) * (180 / Math.PI);
                 const ling: ControlsLine = {
-                    lt: { x: spaceLine.col2.x - 11, y: spaceLine.col2.y - 1 },
-                    rt: { x: spaceLine.col2.x + 11, y: spaceLine.col2.y - 1 },
-                    rb: { x: spaceLine.col2.x + 11, y: spaceLine.col2.y + 1 },
-                    lb: { x: spaceLine.col2.x - 11, y: spaceLine.col2.y + 1 },
-                    offset: spaceLine.col2, rotate, index: j
+                    lt: { x: spaceLine[2].x - 11, y: spaceLine[2].y - 1 },
+                    rt: { x: spaceLine[2].x + 11, y: spaceLine[2].y - 1 },
+                    rb: { x: spaceLine[2].x + 11, y: spaceLine[2].y + 1 },
+                    lb: { x: spaceLine[2].x - 11, y: spaceLine[2].y + 1 },
+                    offset: spaceLine[2], rotate, index: j
                 }
                 tidyUpVerLines.value.push(ling);
             }
@@ -398,8 +408,8 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
     const matrix2 = new Matrix(props.context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     if (dir) {
         if (downDir === 'hor') {
@@ -414,8 +424,8 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
                     ColVector3D.FromXY(x + width + hor, y),
                 ]);
                 const horBox: Box = {
-                    lt: { x: horSpace.col0.x, y: box.top },
-                    width: horSpace.col1.x - horSpace.col0.x,
+                    lt: { x: horSpace[0].x, y: box.top },
+                    width: horSpace[1].x - horSpace[0].x,
                     height: box.bottom - box.top,
                 };
                 horSpaceBox.value[i] = horBox;
@@ -433,7 +443,7 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
                         ColVector3D.FromXY(x + width, y + height + ver),
                         ColVector3D.FromXY(x, y + height + ver)
                     ]);
-                    const verBox: Box = { lt: horSpace.col0, width: horSpace.col1.x - horSpace.col0.x, height: horSpace.col2.y - horSpace.col1.y };
+                    const verBox: Box = { lt: horSpace[0], width: horSpace[1].x - horSpace[0].x, height: horSpace[2].y - horSpace[1].y };
                     verSpaceBox.value[index] = verBox;
                     index++;
                 }
@@ -453,7 +463,7 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
                         ColVector3D.FromXY(x + width + hor, y + height),
                         ColVector3D.FromXY(x + width, y + height)
                     ]);
-                    const horBox: Box = { lt: horSpace.col0, width: horSpace.col1.x - horSpace.col0.x, height: horSpace.col2.y - horSpace.col1.y };
+                    const horBox: Box = { lt: horSpace[0], width: horSpace[1].x - horSpace[0].x, height: horSpace[2].y - horSpace[1].y };
                     horSpaceBox.value[index] = horBox;
                     index++;
                 }
@@ -470,9 +480,9 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
                     ColVector3D.FromXY(x, y + height + ver),
                 ]);
                 const verbox: Box = {
-                    lt: { x: box.left, y: verSpace.col0.y },
+                    lt: { x: box.left, y: verSpace[0].y },
                     width: box.right - box.left,
-                    height: verSpace.col1.y - verSpace.col0.y,
+                    height: verSpace[1].y - verSpace[0].y,
                 };
                 verSpaceBox.value[i] = verbox;
             }

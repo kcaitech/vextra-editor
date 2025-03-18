@@ -1,23 +1,29 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShapeView, Matrix, PathShapeView, Shape, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
+import { GroupShapeView, Matrix, PathShapeView, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { IScout as Scout } from "@/openapi";
 import { getVisibleBoundingByMatrix } from "@/space";
 import { EnvChain } from "@/mouse/envchain";
 
-// export { IScout as Scout } from "@/openapi";
-
-// Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
+// 基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
 export function scout(context: Context): Scout {
-    let temp = uuid().split('-');
+    const temp = uuid().split('-');
     const scoutId = temp[temp.length - 1] || 'scout';
-    temp = uuid().split('-');
-    const pathId = temp[temp.length - 1] || 'path';
     const ele: SVGElement = createSVGGeometryElement(scoutId);
-    const path: SVGGeometryElement = createPath('M 0 0 l 2 0 l 2 2 l -2 0 z', pathId); // 任意初始化一条path
+    const path: SVGGeometryElement = createPath('M 0 0 l 2 0');
     ele.appendChild(path);
     path.setAttributeNS(null, "fill-rule", "evenodd");
     document.body.appendChild(ele);
@@ -30,26 +36,30 @@ export function scout(context: Context): Scout {
 
         // 先判断包围盒
         const box = getVisibleBoundingByMatrix(shape, matrix);
-        if (point.x < box.left || point.x > box.right || point.y < box.top || point.y > box.bottom) return false;
+        const padding = shape.isBorderShape ? 4 : 0;
+        if (point.x < box.left - padding
+            || point.x > box.right + padding
+            || point.y < box.top - padding
+            || point.y > box.bottom + padding) return false;
 
         // 再判断路径
         const d = getPathOnPageString(shape, matrix);
         path.setAttributeNS(null, 'd', d);
 
-        const scale = context.workspace.curScale;
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
-        if (shape.borderPath) {
-            if (path.isPointInFill(SVGPoint)) return true;
-        }
-        let onlyStroke = shape instanceof PathShapeView && !shape.getFills().length;
-        if (onlyStroke) {
-            path.setAttributeNS(null, 'stroke-width', `${8 / scale}`);
-            return path.isPointInStroke(SVGPoint);
+        if (shape.isBorderShape) {
+            const { thicknessRight, thicknessTop, thicknessLeft, thicknessBottom } = shape.getBorders().sideSetting;
+            const min = Math.min(thicknessRight, thicknessTop, thicknessLeft, thicknessBottom);
+            if (min < 6) {
+                const scale = context.workspace.curScale;
+                path.setAttributeNS(null, 'stroke-width', `${7 / scale}`);
+                return path.isPointInStroke(SVGPoint);
+            } else {
+                return path.isPointInFill(SVGPoint);
+            }
         } else {
-            if (path.isPointInFill(SVGPoint)) return true;
-            path.setAttributeNS(null, 'stroke-width', `${4 / scale}`);
-            return path.isPointInStroke(SVGPoint);
+            return path.isPointInFill(SVGPoint);
         }
     }
 
@@ -129,14 +139,14 @@ function createSVGGeometryElement(id: string): SVGElement {
     return svg;
 }
 
-function createPath(path: string, id: string): SVGPathElement {
+function createPath(path: string): SVGPathElement {
     const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     p.setAttributeNS(null, 'd', path);
     return p;
 }
 
 function getPathOnPageString(shape: ShapeView, matrix: Matrix): string {
-    const path = shape.borderPath ? shape.borderPath.clone() : shape.getPath().clone();
+    const path = shape.isBorderShape ? shape.borderPath.clone() : shape.getPath().clone();
     path.transform(matrix);
     return path.toString();
 }

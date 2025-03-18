@@ -1,5 +1,15 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
-import { ArtboardView, ColVector3D, makeShapeTransform2By1, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboardView, ColVector3D, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "./common";
 import { getShapeFrame } from "./content";
 import { Selection, XY } from "@/context/selection";
@@ -336,7 +346,7 @@ function horFindTidyUp(shape_rows: ShapeView[][], hor: number, ver: number) {
 }
 
 export const getFrame = (shape: ShapeView) => {
-    let f = getShapeFrame(shape.data);
+    let f = getShapeFrame(shape);
     const m = shape.transform;
     if (shape.isNoTransform()) {
         f.x = f.x + m.translateX, f.y = f.y + m.translateY
@@ -368,8 +378,8 @@ export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView
     const matrix2 = new Matrix(context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
@@ -379,7 +389,7 @@ export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView
         const maxHeight = Math.max(...shape_row.map(s => s._p_frame.height));
         const grid_point_y = m.transform([
             ColVector3D.FromXY(0, startY + maxHeight + (Math.max(space.ver, -minHeight) / 2)),
-        ]).col0.y;
+        ])[0].y;
         for (let j = 0; j < shape_row.length; j++) {
             const shape = shape_row[j];
             const { width } = shape._p_frame;
@@ -388,13 +398,13 @@ export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView
                 const centerX = (width + Math.max(space.hor, -minWidth) + next_s.width) / 2;
                 const grid_point_x = m.transform([
                     ColVector3D.FromXY(startX + centerX, 0),
-                ]).col0.x;
+                ])[0].x;
                 const point = { x: grid_point_x, y: i === shape_rows.length - 1 ? Infinity : grid_point_y }
                 row.push(point);
             } else {
                 const grid_point_x = m.transform([
                     ColVector3D.FromXY(startX + width + (Math.max(space.hor, -minWidth) / 2), 0),
-                ]).col0.x;
+                ])[0].x;
                 const point = { x: grid_point_x, y: i === shape_rows.length - 1 ? Infinity : grid_point_y }
                 row.push(point);
             }
@@ -418,8 +428,8 @@ export function getShapesColsMapPosition(context: Context, shape_rows: ShapeView
     const matrix2 = new Matrix(context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
@@ -429,7 +439,7 @@ export function getShapesColsMapPosition(context: Context, shape_rows: ShapeView
         const maxWidth = Math.max(...shape_row.map(s => s._p_frame.width));
         const grid_point_x = m.transform([
             ColVector3D.FromXY(startX + maxWidth + (Math.max(space.hor, -minWidth) / 2), 0),
-        ]).col0.x;
+        ])[0].x;
         for (let j = 0; j < shape_row.length; j++) {
             const shape = shape_row[j];
             const { height } = shape._p_frame;
@@ -438,13 +448,13 @@ export function getShapesColsMapPosition(context: Context, shape_rows: ShapeView
                 const centerY = (height + Math.max(space.ver, -minHeight) + next_s.height) / 2;
                 const grid_point_y = m.transform([
                     ColVector3D.FromXY(0, startY + centerY),
-                ]).col0.y;
+                ])[0].y;
                 const point = { x: i === shape_rows.length - 1 ? Infinity : grid_point_x, y: grid_point_y }
                 col.push(point);
             } else {
                 const grid_point_y = m.transform([
                     ColVector3D.FromXY(0, startY + height + (Math.max(space.ver, -minHeight) / 2)),
-                ]).col0.y;
+                ])[0].y;
                 const point = { x: i === shape_rows.length - 1 ? Infinity : grid_point_x, y: grid_point_y }
                 col.push(point);
             }
@@ -468,8 +478,8 @@ export function getVerShapeOutlineFrame(context: Context, shape_rows: ShapeView[
     const matrix2 = new Matrix(context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
@@ -509,8 +519,8 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
     const matrix2 = new Matrix(context.workspace.matrix);
     matrix.reset(matrix2);
     const shape_root_m = parent.matrix2Root();
-    const m = makeShapeTransform2By1(shape_root_m).clone();
-    const clientTransform = makeShapeTransform2By1(matrix2);
+    const m = (shape_root_m).clone();
+    const clientTransform = (matrix2);
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;

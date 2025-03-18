@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Context } from "@/context";
 import { Bundle, MossClipboard, RefShapeBase, SourceBundle } from "@/clipboard";
 import {
@@ -5,7 +15,7 @@ import {
     TableCellType,
     import_text,
     export_text,
-    TransformRaw,
+    Transform,
     CurvePoint,
     ContactLineView,
     export_shape,
@@ -53,11 +63,11 @@ export class MossWriter {
         return masks;
     }
 
-    private __sort_symbolref(views: ShapeView[]) {
+    private __sort_symbolref(views: ShapeView[], exportCtx: ExfContext) {
         const refs = sort(views);
         const bases: RefShapeBase[] = [];
         for (const ref of refs) {
-            const base = RefUnbind.unbind(ref);
+            const base = RefUnbind.unbind(ref, exportCtx);
             if (!base) continue;
             bases.push({symbol: ref.refId, base: base as any, shapeId: ref.id})
         }
@@ -146,8 +156,8 @@ export class MossWriter {
         } else {
             let shapes = compare_layer_3(this.context.selection.selectedShapes, -1);
             if (!shapes.length) return;
-            const origin_transform_map: any = {};
-            const position_map: Map<string, TransformRaw> = new Map();
+            const origin_transform_map: {[key:string]:Transform} = {};
+            const position_map: Map<string, Transform> = new Map();
             const points_map: Map<string, CurvePoint[]> = new Map();
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
@@ -166,19 +176,21 @@ export class MossWriter {
                 }
             }
             const media = this.__sort_media(this.context.data, ctx);
-            const styles = this.__sort_styles(this.context.data, ctx);
+            const unbindRefs = this.__sort_symbolref(shapes, ctx);
+            const styles = this.__sort_styles(this.context.data, ctx); // 样式收集要后于其他收集，因为其他收集的结果可能影响样式收集结果
             const data: SourceBundle = {
                 originIds: _shapes.map(i => i.id),
                 originTransform: origin_transform_map,
                 shapes: _shapes,
                 media,
-                unbindRefs: this.__sort_symbolref(shapes),
-                styles: styles,
+                unbindRefs,
+                styles,
             }
+
             const html = this.encode(MossClipboard.source, data);
             const blob = new Blob([html || ''], { type: 'text/html' });
             const item: any = { 'text/html': blob };
-            if (navigator.userAgent.indexOf('Safari') > -1) {
+            if (!navigator.userAgent.includes('Windows') && navigator.userAgent.indexOf('Safari') > -1) {
                 if (!event?.clipboardData) return;
                 event.clipboardData.clearData();
                 event.clipboardData.setData('text/html', html);

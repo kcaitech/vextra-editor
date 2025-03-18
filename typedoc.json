@@ -1,0 +1,20 @@
+{
+    "entryPoints": ["./src/index.ts"],
+    "out": "docs",
+    "exclude": [
+        "**/node_modules/**",
+        "**/dist/**",
+    ],
+    "excludeExternals": true,
+    "externalPattern": ["**/node_modules/**"],
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "includeVersion": true,
+    "skipErrorChecking": true,
+    "disableGit": true,
+    "disableSources": true,
+    "hideGenerator": true,
+    "name": "@kcdesign/editor Documentation",
+    "tsconfig": "./tsconfig.json",
+    "plugin": ["typedoc-plugin-markdown"]
+}

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { CtrlElementType, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
@@ -10,7 +20,7 @@ import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/path/pathEdit";
 import { LineHandler } from "@/transform/line";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 
 interface Props {
     matrix: number[]
@@ -82,6 +92,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 }
 
 function point_mousemove(event: MouseEvent) {
+    event.stopPropagation();
     if (isDragging) {
         lineHandle?.execute(event);
         if (cur_ctrl_type.endsWith('rotate')) {
@@ -95,6 +106,7 @@ function point_mousemove(event: MouseEvent) {
 }
 
 function point_mouseup(event: MouseEvent) {
+    event.stopPropagation();
     if (event.button !== 0) return;
     clear_status();
 }
