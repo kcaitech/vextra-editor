@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h, nextTick } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h, nextTick, watchEffect } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
@@ -31,13 +31,14 @@ import { fontWeightConvert } from './FontNameList';
 import { Attribute } from '@/context/atrribute';
 import { format_value, is_mac } from "@/utils/common";
 import { sortValue } from '../BaseAttr/oval';
-import TextStyle from '@/components/Document/Attribute/StyleLib/TextStyle.vue';
+import TextStyle from './lib/TextStyle.vue';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
 import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { toHex } from "@/utils/color";
 import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
 import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
+import { TextContext,TextContextMgr } from './ctx';
 
 interface Props {
     context: Context
@@ -86,15 +87,35 @@ const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
+
+const textCtx = ref<TextContext>({
+    mixed: false,
+    text: undefined,
+    mask: undefined,
+    maskInfo: undefined
+})
+const textCtxMgr = new TextContextMgr(props.context, textCtx.value as TextContext);
+
 const textLibStatus = reactive<ElementStatus>({ id: '#text-lib-panel', visible: false });
 const textPanelStatusMgr = new ElementManager(
     props.context,
     textLibStatus,
-    {
-        offsetLeft: -250,
-        whiteList: ['.text-lib-panel', '.text-left']
-    }
+    { whiteList: ['.text_clover', '.text-lib-panel', '.mask-port-wrapper'] }
 );
+const showTextPanel = (event: MouseEvent) => {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('text_clover')) {
+            e && textPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
+            break;
+        }
+        if (e.classList.contains('mask-port-wrapper')) {
+            e && textPanelStatusMgr.showBy(e, { once: { offsetLeft: -4, offsetTop: 36 } });
+            break;
+        }
+        e = e.parentElement;
+    }
+}
 
 const onShowFont = () => {
     props.context.workspace.focusText()
@@ -417,13 +438,16 @@ const reflush = ref(0);
 
 function selection_wather(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
+        console.log('text')
         textFormat()
+        textCtxMgr.update();
     }
 }
 
 function workspace_wather(t: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat()
+        textCtxMgr.update();
     }
 }
 
@@ -776,6 +800,7 @@ const text_selection_wather = (t: number) => {
         }
     } else if (t === Attribute.FRAME_CHANGE) {
         textFormat();
+        textCtxMgr.update();
     }
 }
 const _textFormat = () => {
@@ -819,6 +844,7 @@ const _textFormat = () => {
             disableWeight.value = true;
             fontName.value = `${t('attr.more_value')}`
         }
+        if(format.alignmentIsMulti) selectLevel.value = `${t('attr.more_value')}`
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
         if (format.fillTypeIsMulti) mixed.value = true;
         if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
@@ -831,6 +857,8 @@ const _textFormat = () => {
             const editor = props.context.editor4TextShape(text);
             const __text = text.getText();
             const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+            console.log(format,'format');
+            
             formats.push(format)
         }
 
@@ -925,21 +953,6 @@ function click(e: Event, variate: boolean) {
     if (variate) return;
     el.select();
     variate = true;
-}
-
-const showTextPanel = (event: MouseEvent) => {
-    let e: Element | null = event.target as Element;
-    while (e) {
-        if (e.classList.contains('text-panel')) {
-            e && textPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
-            break;
-        }
-        if (e.classList.contains('text-left')) {
-            e && textPanelStatusMgr.showBy(e, { once: { offsetLeft: -256 } });
-            break;
-        }
-        e = e.parentElement;
-    }
 }
 
 const closePanel = () => {
@@ -1091,14 +1104,20 @@ const updateContextColor = () => {
         color.setImageScaleMode(undefined);
     }
 }
+watchEffect(()=>{
+    console.log(textCtxMgr.textCtx.text,'1222222222');
+    
+})
 
 const stop2 = watch(() => props.textShapes, (v) => {
     shapes.value = v;
     textFormat();
+    textCtxMgr.update();
 })
 const stop3 = watch(() => props.trigger, v => {
     if (v.includes('size') || v.includes('width') || v.includes('height') || v.includes('text')) {
         textFormat();
+        textCtxMgr.update();
     }
 })
 const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
@@ -1108,6 +1127,7 @@ onMounted(() => {
     props.context.attr.watch(text_selection_wather);
     props.context.workspace.watch(workspace_wather);
     textFormat()
+    textCtxMgr.update();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
@@ -1130,6 +1150,7 @@ import text_center_icon from '@/assets/icons/svg/text-center.svg';
 import text_right_icon from '@/assets/icons/svg/text-right.svg';
 import text_justify_icon from '@/assets/icons/svg/text-justify.svg';
 import add_icon from '@/assets/icons/svg/add.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
 import align_top_icon from '@/assets/icons/svg/align-top.svg';
 import align_middle_icon from '@/assets/icons/svg/align-middle.svg';
 import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
@@ -1146,19 +1167,23 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
-                <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
+                <div :class="{ 'active': textLibStatus.visible }" class="text_clover"
+                    @click="showTextPanel($event)">
+                    <SvgIcon :icon="style_icon" />
+                </div>
+                <TextAdvancedSettings :context="props.context" :manager="textCtxMgr" :data="textCtxMgr.textCtx.text" :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
             </template>
         </TypeHeader>
         <div class="text-container">
             <div class="text-top">
                 <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
-                    <span>{{ fontName }}</span>
+                    <span>{{ textCtxMgr.textCtx.text?.fontName }}</span>
                     <div class="down">
                         <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
                 </div>
-                <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
+                <SelectFont v-if="false" :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
                     :fontWeight="fontWeight" @setFontWeight="setFontWeight" :fontNameEl="fontNameEl">
                 </SelectFont>
                 <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
@@ -1355,8 +1380,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                 </div>
             </div>
         </div>
-        <TextStyle v-if="textLibStatus.visible" :context="props.context" :textShape="props.shape"
-            :textShapes="props.textShapes" @close="closePanel"></TextStyle>
+        <TextStyle v-if="textLibStatus.visible" :context="props.context" :manager="textCtxMgr" @close="closePanel"></TextStyle>
         <teleport to="body">
             <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
             </div>
@@ -1409,25 +1433,8 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
-    .trigger {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        >img {
-            width: 16px;
-            height: 16px;
-            transition: 0.3s;
-        }
-
-        img:hover {
-            transform: rotate(90deg);
-        }
-    }
-
-    .text-style {
+    .text-trigger,
+    .text_clover {
         width: 28px;
         height: 28px;
         display: flex;
@@ -1443,12 +1450,16 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
         }
     }
 
-    .text-style img {
+    .text_clover img {
         padding: 2px;
         box-sizing: border-box;
     }
 
-    .text-style:hover {
+    .text_clover:hover {
+        background-color: #F5F5F5;
+    }
+
+    .text-trigger:hover {
         background-color: #F5F5F5;
     }
 
@@ -1836,10 +1847,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
         }
     }
 
-    .selected_bgc {
-        background-color: var(--active-color) !important;
-        color: #fff;
-    }
+
 }
 
 .down {
@@ -1881,5 +1889,9 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
     background-position: center;
     background-size: 32px;
     z-index: 10000;
+}
+
+.active {
+    background-color: #ebebeb !important;
 }
 </style>

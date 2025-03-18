@@ -8,10 +8,10 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps<{
     context: Context;
     selected: string;
-    weightMixed: boolean;
+    weightMixed?: boolean;
     fontName: string;
-    disable: boolean;
-    reflush: number
+    disable?: boolean;
+    reflush?: number
 }>();
 const emit = defineEmits<{
     (e: "setFontWeight", weight: number, italic: boolean): void;

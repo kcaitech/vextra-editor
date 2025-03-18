@@ -4,23 +4,25 @@ import { ref, onMounted, onUnmounted, watch, watchEffect, computed, reactive } f
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType, TextShapeView, adapt2Shape, UnderlineType, StrikethroughType } from "@kcdesign/data";
+import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType, TextShapeView, adapt2Shape, UnderlineType, StrikethroughType, TextAttr, TextMask } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { format_value } from "@/utils/common";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
+import { TextContext, TextContextMgr } from "./ctx";
 const { t } = useI18n();
 interface Props {
-  event?: string,
   context: Context,
-  textShape: TextShapeView,
-  textShapes: TextShapeView[]
+  manager: TextContextMgr
+  textShape?: TextShapeView
+  textShapes?: TextShapeView[]
+  data?: AttrGetter | TextMask;
 }
 const popover = ref();
 const props = defineProps<Props>();
 const selectCase = ref()
 const selectId = ref()
-const paragraphSpace = ref()
+const paragraphSpace = ref<number | string>(props.manager.textCtx.text?.paraSpacing || 0)
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
@@ -35,14 +37,18 @@ const panelStatus = reactive<ElementStatus>({ id: '#text-detail-container', visi
 const panelStatusMgr = new ElementManager(
   props.context,
   panelStatus,
-  { whiteList: ['#text-detail-container', '.header-container'] }
+  { whiteList: ['#text-detail-container', '.text-trigger', '.title'] }
 );
 
 function showDetailPanel(event: MouseEvent) {
   let e: Element | null = event.target as Element;
   while (e) {
-    if (e.classList.contains('header-container')) {
-      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -266 } });
+    if (e.classList.contains('text-trigger')) {
+      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -326, offsetTop: -114 } });
+      break;
+    }
+    if (e.classList.contains('title')) {
+      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -200,offsetTop:0 } });
       break;
     }
     e = e.parentElement;
@@ -78,7 +84,7 @@ const onSelectId = (icon: BulletNumbersType) => {
   } else {
     editor.setTextBulletNumbersMulti(props.textShapes, icon);
   }
-  textFormat()
+  // textFormat()
 }
 
 const onSelectCase = (icon: TextTransformType) => {
@@ -99,26 +105,20 @@ const onSelectCase = (icon: TextTransformType) => {
   textAttr.transform = icon;
   props.context.textSelection.setTextAttr(textAttr);
 }
+
+
 const setParagraphSpace = () => {
   const editor = props.context.editor4TextShape(props.textShape)
-  paragraphSpace.value = paragraphSpace.value.trim()
+  if (isNaN(Number(paragraphSpace.value))) return init();
   if (length.value) {
     const { textIndex, selectLength } = getTextIndexAndLen();
-    if (!isNaN(Number(paragraphSpace.value))) {
-      if (isSelectText()) {
-        editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
-      } else {
-        editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
-      }
+    if (isSelectText()) {
+      editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
     } else {
-      textFormat()
+      editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
     }
   } else {
-    if (!isNaN(Number(paragraphSpace.value))) {
-      editor.setParaSpacingMulit(props.textShapes, Number(paragraphSpace.value));
-    } else {
-      textFormat()
-    }
+    editor.setParaSpacingMulit(props.textShapes, Number(paragraphSpace.value));
   }
   const textAttr = props.context.textSelection.getTextAttr;
   textAttr.paraSpacing = Number(paragraphSpace.value);
@@ -135,7 +135,7 @@ const onUnderlint = () => {
       editor.setTextUnderline(isUnderline.value, 0, Infinity)
     } else {
       editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
-      textFormat()
+      // textFormat()
     }
   } else {
     editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
@@ -150,7 +150,7 @@ const onDeleteline = () => {
       editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
     } else {
       editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
-      textFormat()
+      // textFormat()
     }
   } else {
     editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
@@ -183,8 +183,8 @@ function click(e: Event) {
 }
 
 const shapeWatch = watch(() => props.textShape, (value, old) => {
-  old.unwatch(textFormat);
-  value.watch(textFormat);
+  old.unwatch(init);
+  value.watch(init);
 })
 
 const textFormat = () => {
@@ -251,12 +251,36 @@ const textFormat = () => {
     if (format.transform === 'unlikeness') selectCase.value = 'none';
   }
 }
+
+function init() {
+  if (props.data instanceof TextMask) {
+    paragraphSpace.value = format_value(props.data?.text.paraSpacing || 0) as number;
+    selectCase.value = props.data?.text.transform
+    isUnderline.value = props.data?.text.underline && props.data?.text.underline !== UnderlineType.None || false;
+    isDeleteline.value = props.data?.text.strikethrough && props.data?.text.strikethrough !== StrikethroughType.None || false;
+    selectId.value = props.data?.text.bulletNumbers?.type || 'none'
+
+  } else {
+    paragraphSpace.value = format_value(props.data?.paraSpacing || 0) as number;
+    selectCase.value = props.data?.transform
+    isUnderline.value = props.data?.underline && props.data?.underline !== UnderlineType.None || false;
+    isDeleteline.value = props.data?.strikethrough && props.data?.strikethrough !== StrikethroughType.None || false;
+    selectId.value = props.data?.bulletNumbers?.type || 'none'
+
+    if (props.data?.strikethroughIsMulti) isDeleteline.value = false
+    if (props.data?.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
+    if (props.data?.transformIsMulti) selectCase.value = 'none'
+    if (props.data?.underlineIsMulti) isUnderline.value = false
+  }
+
+}
+
 function selection_wather(t: any) {
   if (t === Selection.CHANGE_TEXT) {
-    textFormat()
+    init()
   }
   if (t === Selection.CHANGE_SHAPE) {
-    textFormat()
+    init()
   }
 }
 
@@ -266,7 +290,7 @@ function workspace_wather(t: number) {
   } else if (t === WorkSpace.DELETE_LINE) {
     onDeleteline()
   } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
-    textFormat()
+    init()
   }
 }
 
@@ -278,18 +302,18 @@ function blur2() {
 }
 
 watchEffect(() => {
-  textFormat()
+  init()
 })
 
 onMounted(() => {
   props.context.workspace.watch(workspace_wather);
-  props.textShape.watch(textFormat)
+  // props.textShape.watch(init)
   props.context.selection.watch(selection_wather);
 })
 onUnmounted(() => {
   props.context.workspace.unwatch(workspace_wather);
   props.context.selection.unwatch(selection_wather);
-  props.textShape.unwatch(textFormat)
+  // props.textShape.unwatch(init)
   shapeWatch()
 })
 
@@ -316,15 +340,15 @@ import { ElementManager, ElementStatus } from '@/components/common/elementmanage
   <div v-if="panelStatus.visible" id="text-detail-container">
     <PopoverHeader :title="t('attr.text_advanced_settings')" :create="false" @close="panelStatusMgr.close()" />
     <div class="options-container">
-      <div v-if="!props.event?.includes('text')">
+      <div v-if="!(data instanceof TextMask)">
         <span>{{ t('attr.paragraph_space') }}</span>
         <div :class="{ actived: isActived3 }"
           style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
-          <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
+          <input v-blur type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
             class="input" @change="setParagraphSpace" style="width: 100%;height: 100%" @click="click">
         </div>
       </div>
-      <div v-if="!props.event?.includes('text')">
+      <div v-if="!(data instanceof TextMask)">
         <span>{{ t('attr.id_style') }}</span>
         <div class="vertical-aligning jointly-text">
           <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'none' }"
