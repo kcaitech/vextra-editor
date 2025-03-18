@@ -425,7 +425,7 @@ export class BundleHandler {
             if (this.insertTextShape(shape)) context.nextTick(context.selection.selectedPage!, () => { new SpaceHandler(context).fit() });
         } else if (plain) {
             const name = plain.length >= 20 ? plain.slice(0, 19) + '...' : plain;
-            const shape = creator.newTextShape(name);
+            const shape = creator.newTextShape(name, this.context.data.stylesMgr);
             shape.text.insertText(plain, 0);
             const layout = shape.getLayout();
             shape.size.width = layout.contentWidth;
@@ -505,7 +505,7 @@ export class BundleHandler {
         } else if (plain) {
             // 用纯文本生成图层
             const name = plain.length >= 20 ? plain.slice(0, 19) + '...' : plain;
-            const shape = creator.newTextShape(name);
+            const shape = creator.newTextShape(name, this.context.data.stylesMgr);
             shape.text.insertText(plain, 0);
             const layout = shape.getLayout();
             shape.size.width = layout.contentWidth;
