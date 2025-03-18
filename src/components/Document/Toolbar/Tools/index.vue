@@ -16,17 +16,13 @@ import Cursor from "../Buttons/Cursor.vue";
 import Frame from "../Buttons/Frame.vue";
 import GroupUngroup from "../Buttons/GroupUngroup.vue";
 import CreateText from "../Buttons/CreateText.vue";
-import CreateImage from "../Buttons/CreateImage.vue";
-import Table from "../Buttons/Table/index.vue"
 import Contact from "../Buttons/CreateContact.vue";
-import Cutout from "../Buttons/Cutout.vue";
 import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
 import Export from "../Buttons/Export.vue";
 import VertLine from "./VertLine.vue";
-import CompsVue from "./Comps.vue";
 import { watchReadyonly } from "@/components/common/watchreadonly";
 import Mask from "@/components/Document/Toolbar/Buttons/Mask.vue";
 
@@ -43,13 +39,13 @@ function select(action: string) {
     props.context.tool.setAction(action);
 }
 
-const isLable = ref(props.context.tool.isLable);
+const isLabel = ref(props.context.tool.isLable);
 
 function tool_watcher(t?: number) {
     if (t === Tool.CHANGE_ACTION) {
         selected.value = props.context.tool.action;
     } else if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.context.tool.isLable;
+        isLabel.value = props.context.tool.isLable;
     }
 }
 
@@ -65,15 +61,11 @@ const readonly = watchReadyonly(props.context, () => {
 });
 
 const cursorParams = {
-    select,
-    get is_lable() {
-        return isLable.value
-    },
     get edit() {
         return !readonly.value;
     },
     get active() {
-        return selected.value === Action.AutoV || selected.value === Action.AutoK
+        return selected.value === Action.AutoV || selected.value === Action.AutoK;
     }
 }
 
@@ -110,22 +102,6 @@ function updateComps() {
                     },
                 }
             },
-            // {
-            //     component: CreateImage,
-            //     params: {
-            //         get active() {
-            //             return selected.value === Action.AddImage
-            //         }
-            //     }
-            // },
-            // {
-            //     component: Cutout,
-            //     params: {
-            //         get active() {
-            //             return selected.value === Action.AddCutout
-            //         }
-            //     }
-            // },
             { component: VertLine }
         )
         // const efficientPlugins = props.context.pluginsMgr.search2('toolbar.tools.efficient');
@@ -167,8 +143,7 @@ function updateComps() {
                 params: {
                     get active() {
                         return selected.value === Action.Export
-                    },
-                    select
+                    }
                 }
             })
         comps.push(...toolsPlugins.end)
@@ -221,18 +196,15 @@ onUnmounted(() => {
 
 <template>
     <!-- 路径编辑 -->
-    <PathEditTool v-if="is_path_edit" class="editor-tools" :context="props.context" @select="select"
-        :selected="selected" />
+    <PathEditTool v-if="is_path_edit" class="editor-tools" :context="props.context" :selected="selected"/>
     <!-- 开发模式 --><!-- 可编辑或者只读 -->
-    <div v-else-if="isLable" class="editor-tools" @dblclick.stop>
+    <div v-else-if="isLabel" class="editor-tools" @dblclick.stop>
         <component v-for="c in devcomps" :is=c.component :context="props.context" :params="c.params" />
     </div>
     <!-- 正常工具栏 --><!-- 可编辑或者只读 -->
     <div v-else class="editor-tools" @dblclick.stop>
         <component v-for="c in _comps" :is=c.component :context="props.context" :params="c.params" />
     </div>
-
-
 </template>
 
 <style scoped lang="scss">

@@ -12,7 +12,6 @@
 import { Context } from '@/context';
 import { Assist } from '@/context/assist';
 import { ClientXY, PageXY } from '@/context/selection';
-import { Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
 interface Props {
@@ -28,7 +27,6 @@ interface Data {
 
 const props = defineProps<Props>();
 const assist = ref<boolean>(false);
-const matrix = ref<Matrix>(props.context.workspace.matrix);
 const data = reactive<Data>({
     nodesX: [],
     nodesY: [],
@@ -130,9 +128,9 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" width="100"
-         height="100" viewBox="0 0 100 100" style="position: absolute">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+         preserveAspectRatio="xMinYMin meet" overflow="visible" width="100" height="100" viewBox="0 0 100 100"
+         style="position: absolute">
         <g id="node-path">
             <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
             <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
@@ -140,7 +138,6 @@ onUnmounted(() => {
         <g v-if="assist">
             <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node-path" :key="i"/>
             <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node-path" :key="i"/>
-
             <path v-if="lineX" :d="lineX" class="a-path"/>
             <path v-if="lineY" :d="lineY" class="a-path"/>
         </g>

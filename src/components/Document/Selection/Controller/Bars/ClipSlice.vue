@@ -12,22 +12,18 @@
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Segment, get_segments } from '@/utils/pathedit';
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { get_path_by_point } from '../Points/common';
-import { PathEditor } from "@/path/pathEdit";
+import { PathClipper } from "@/path/clipper";
 
-interface Props {
-    context: Context
-}
-
-interface Dot {
+type Dot = {
     point: { x: number, y: number }
     index: number
     selected: boolean
 }
 
-const props = defineProps<Props>(); // m1155
+const props = defineProps<{ context: Context }>(); // m1155
 const data: { segments: Segment[][], dots: Dot[] } = reactive({ segments: [], dots: [] });
 const { segments, dots } = data;
 const new_high_light = ref<number>(-1);
@@ -68,8 +64,16 @@ function init_matrix() {
 }
 
 function down_background_path(segment: number, index: number) {
-    // console.log('即将进行裁剪', `${segment},${index}`);
-    new PathEditor(props.context).clip(segment, index);
+    const context = props.context;
+    context.path.select_side(segment, index);
+    const result = new PathClipper(context, shape as PathShapeView).clip();
+    if (result === 0) {
+        context.workspace.setPathEditMode(false);
+        context.path._reset();
+        context.selection.resetSelectShapes();
+    } else if (result > 0) {
+        context.path.reset();
+    }
 }
 
 function enter(index: number) {

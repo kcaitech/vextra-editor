@@ -27,12 +27,10 @@ const props = defineProps<{
     context: Context,
     params: {
         active: boolean,
-        is_lable: boolean,
-        edit: boolean,
-        select: (action: string) => void
+        edit: boolean
     }
 }>();
-const editable = props.params.edit && props.params.select;
+const editable = props.params.edit;
 const tips = ref<string>(`${t('home.object_selector')}  V`);
 const icon = ref<string>(drag_icon);
 const stashAction = ref<string>(Action.AutoV);
