@@ -57,7 +57,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<div class="wrapper">
+<div style="height: 100%;">
     <Auto :active="props.selected === Action.AutoV" @click="() => useAuto(context)"/>
     <Pen :active="props.selected === Action.Pen" @click="() => usePen(context)"/>
     <Curve :active="props.selected === Action.Curve" @click="() => props.context.tool.setAction(Action.Curve)"/>
@@ -65,8 +65,3 @@ onUnmounted(() => {
               @click="() => props.context.tool.setAction(Action.PathClip)"/>
 </div>
 </template>
-<style scoped lang="scss">
-.wrapper {
-    height: 100%;
-}
-</style>
