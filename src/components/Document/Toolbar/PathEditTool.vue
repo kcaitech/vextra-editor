@@ -49,10 +49,6 @@ function keyboard_down_watcher(e: KeyboardEvent) {
     }
 }
 
-function clickT() {
-    console.log('--click--');
-    useAuto(props.context);
-}
 onMounted(() => {
     document.addEventListener('keydown', keyboard_down_watcher);
 })
@@ -62,7 +58,7 @@ onUnmounted(() => {
 </script>
 <template>
 <div class="wrapper">
-    <Auto :active="props.selected === Action.AutoV" @click="clickT"/>
+    <Auto :active="props.selected === Action.AutoV" @click="() => useAuto(context)"/>
     <Pen :active="props.selected === Action.Pen" @click="() => usePen(context)"/>
     <Curve :active="props.selected === Action.Curve" @click="() => props.context.tool.setAction(Action.Curve)"/>
     <PathClip :active="props.selected === Action.PathClip"
