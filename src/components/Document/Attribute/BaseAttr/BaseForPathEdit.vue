@@ -415,11 +415,11 @@ onUnmounted(() => {
         <div class="options">
             <div>
                 <CheckBox :check="align" @change="modifyConfig('align', !align)"/>
-                <span>像素对齐</span>
+                <span>{{ t('setting.align') }}</span>
             </div>
             <div>
                 <CheckBox :check="adsorb" @change="modifyConfig('adsorb', !adsorb)"/>
-                <span>吸附</span>
+                <span>{{ t('setting.adsorb') }}</span>
             </div>
         </div>
         <div class="exit" @click="exit">
