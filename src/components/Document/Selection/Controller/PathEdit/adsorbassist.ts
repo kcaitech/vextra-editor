@@ -2,6 +2,8 @@ import { XY } from "@/context/selection";
 import { Segment } from "@/utils/pathedit";
 import { Context } from "@/context";
 
+export const AdsorbConfigLocalKey = 'AdsorbAssist';
+
 export type BoxInfo = {
     type: 'straight' | 'curve';
     segmentIndex: number;
@@ -284,4 +286,22 @@ function findClosestPointOnLine(x1: number, y1: number, x2: number, y2: number, 
     const y = m * x + b;
 
     return { x, y };
+}
+
+export function getAdsorbConfig() {
+    let configStr = localStorage.getItem(AdsorbConfigLocalKey);
+    if (configStr === null) {
+        localStorage.setItem(AdsorbConfigLocalKey, configStr = JSON.stringify({ adsorb: true, align: true }));
+    }
+    return JSON.parse(configStr);
+}
+
+export function modifyAdsorbConfig(key: string, val: boolean) {
+    let configStr = localStorage.getItem(AdsorbConfigLocalKey);
+    if (configStr === null) {
+        localStorage.setItem(AdsorbConfigLocalKey, configStr = JSON.stringify({ adsorb: true, align: true }));
+    }
+    const config = JSON.parse(configStr);
+    config[key] = val;
+    localStorage.setItem(AdsorbConfigLocalKey, JSON.stringify(config));
 }

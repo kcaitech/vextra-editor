@@ -20,19 +20,24 @@ import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeV
 import { Selection } from "@/context/selection";
 import MossInput from "@/components/common/MossInput.vue";
 import { format_value as format } from '@/utils/common';
+import x_icon from "@/assets/icons/svg/X.svg";
+import y_icon from "@/assets/icons/svg/Y.svg";
+import radius_icon from "@/assets/icons/svg/radius.svg";
+import straight_icon from "@/assets/icons/svg/straight.svg";
+import mirrored_icon from "@/assets/icons/svg/mirrored.svg";
+import asymmetric_icon from "@/assets/icons/svg/asymmetric.svg";
+import disconnected_icon from "@/assets/icons/svg/disconnected.svg";
+import CheckBox from "@/components/common/CheckBox.vue";
+import { getAdsorbConfig, modifyAdsorbConfig } from "@/components/Document/Selection/Controller/PathEdit/adsorbassist";
 
-interface Props {
-    context: Context
-}
-
-interface ModelState {
+type ModelState = {
     x: boolean
     y: boolean
     r: boolean
     tool: boolean
 }
 
-const props = defineProps<Props>();
+const props = defineProps<{ context: Context }>();
 const x = ref<number | string>('');
 const y = ref<number | string>('');
 const r = ref<number | string>('');
@@ -42,6 +47,9 @@ const t = useI18n().t;
 let path_shape: ShapeView | undefined = undefined;
 const path_close_status = ref<boolean>(true);
 const btn_string_for_status = ref<string>(t('attr.de_close_path'));
+
+const align = ref<boolean>(true);
+const adsorb = ref<boolean>(true);
 
 const tel = ref<boolean>(false);
 const telX = ref<number>(0);
@@ -85,7 +93,6 @@ function onChangeCurveMode(cm: CurveMode) {
     const editor = props.context.editor4Shape(path_shape);
     editor.modifyPointsCurveMode(selected_points, cm);
 }
-
 
 function updatePosition(movementX: number, movementY: number) {
     const clientHeight = document.documentElement.clientHeight;
@@ -309,6 +316,17 @@ function __update(...args: any) {
     calc();
 }
 
+function updateConfig() {
+    const config = getAdsorbConfig();
+    align.value = config.align;
+    adsorb.value = config.adsorb;
+}
+
+function modifyConfig(key: string, val: boolean) {
+    modifyAdsorbConfig(key, val);
+    updateConfig();
+}
+
 function path_watcher(t: number) {
     if (t === Path.SELECTION_CHANGE) {
         update();
@@ -340,6 +358,7 @@ onMounted(() => {
     props.context.selection.watch(selection_watcher);
     init_path_shape();
     update();
+    updateConfig();
 })
 onUnmounted(() => {
     props.context.path.unwatch(path_watcher);
@@ -348,15 +367,6 @@ onUnmounted(() => {
         path_shape.unwatch(__update);
     }
 })
-
-import x_icon from "@/assets/icons/svg/X.svg";
-import y_icon from "@/assets/icons/svg/Y.svg";
-import radius_icon from "@/assets/icons/svg/radius.svg";
-import straight_icon from "@/assets/icons/svg/straight.svg";
-import mirrored_icon from "@/assets/icons/svg/mirrored.svg";
-import asymmetric_icon from "@/assets/icons/svg/asymmetric.svg";
-import disconnected_icon from "@/assets/icons/svg/disconnected.svg";
-
 </script>
 <template>
     <div class="table">
@@ -402,10 +412,18 @@ import disconnected_icon from "@/assets/icons/svg/disconnected.svg";
                 </Tooltip>
             </div>
         </div>
-        <div class="btns">
-            <div class="exit" @click="exit">
-                {{ t('attr.exit_path_edit') }}
+        <div class="options">
+            <div>
+                <CheckBox :check="align" @change="modifyConfig('align', !align)"/>
+                <span>像素对齐</span>
             </div>
+            <div>
+                <CheckBox :check="adsorb" @change="modifyConfig('adsorb', !adsorb)"/>
+                <span>吸附</span>
+            </div>
+        </div>
+        <div class="exit" @click="exit">
+            {{ t('attr.exit_path_edit') }}
         </div>
     </div>
     <teleport to="body">
@@ -418,6 +436,7 @@ import disconnected_icon from "@/assets/icons/svg/disconnected.svg";
     width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 8px;
     padding: 12px 8px;
     box-sizing: border-box;
     visibility: visible;
@@ -431,7 +450,6 @@ import disconnected_icon from "@/assets/icons/svg/disconnected.svg";
         justify-content: space-between;
         display: flex;
         flex-direction: row;
-        margin-bottom: 8px;
 
         .position {
             width: 88px;
@@ -496,42 +514,29 @@ import disconnected_icon from "@/assets/icons/svg/disconnected.svg";
         }
     }
 
-    .btns {
-        position: relative;
+    .options {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        > div {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    }
+
+    .exit {
         width: 100%;
         height: 32px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .path-status {
-            width: 108px;
-            height: 100%;
-            background-color: #ffffff;
-            color: var(--theme-color);
-            text-align: center;
-            line-height: 32px;
-            cursor: pointer;
-            border: 1px solid #f0f0f0;
-            border-radius: var(--default-radius);
-        }
-
-        .disabled {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        .exit {
-            width: 100%;
-            height: 100%;
-            background-color: var(--active-color);
-            color: var(--theme-color-anti);
-            text-align: center;
-            line-height: 32px;
-            cursor: pointer;
-            border-radius: var(--default-radius);
-
-        }
+        background-color: var(--active-color);
+        color: var(--theme-color-anti);
+        text-align: center;
+        line-height: 32px;
+        cursor: pointer;
+        border-radius: var(--default-radius);
     }
 }
 
