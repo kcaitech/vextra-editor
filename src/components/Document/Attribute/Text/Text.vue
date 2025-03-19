@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
@@ -48,7 +48,7 @@ import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { toHex } from "@/utils/color";
 import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
 import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
-import { TextContext,TextContextMgr } from './ctx';
+import { TextContext, TextContextMgr } from './ctx';
 
 interface Props {
     context: Context
@@ -97,6 +97,7 @@ const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 const keydownval = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
+const cloverVisible = computed<boolean>(() => !(textCtx.value.mask || textCtx.value.mixed));
 
 const textCtx = ref<TextContext>({
     mixed: false,
@@ -854,7 +855,7 @@ const _textFormat = () => {
             disableWeight.value = true;
             fontName.value = `${t('attr.more_value')}`
         }
-        if(format.alignmentIsMulti) selectLevel.value = `${t('attr.more_value')}`
+        if (format.alignmentIsMulti) selectLevel.value = `${t('attr.more_value')}`
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
         if (format.fillTypeIsMulti) mixed.value = true;
         if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
@@ -867,8 +868,8 @@ const _textFormat = () => {
             const editor = props.context.editor4TextShape(text);
             const __text = text.getText();
             const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-            console.log(format,'format');
-            
+            console.log(format, 'format');
+
             formats.push(format)
         }
 
@@ -1116,10 +1117,6 @@ const updateContextColor = () => {
         color.setImageScaleMode(undefined);
     }
 }
-watchEffect(()=>{
-    console.log(textCtxMgr.textCtx.text,'1222222222');
-    
-})
 
 const stop2 = watch(() => props.textShapes, (v) => {
     shapes.value = v;
@@ -1132,6 +1129,7 @@ const stop3 = watch(() => props.trigger, v => {
         textCtxMgr.update();
     }
 })
+
 const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
 const stop5 = watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()));
 onMounted(() => {
@@ -1173,34 +1171,38 @@ import delete_icon from "@/assets/icons/svg/delete.svg";
 import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
 import { toHex as toHex2 } from '@/utils/color';
 import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/textpicker';
+import TextMaskView from './TextMaskView.vue'
 </script>
 
 <template>
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
-                <div :class="{ 'active': textLibStatus.visible }" class="text_clover"
-                    @click="showTextPanel($event)">
+                <div v-if="cloverVisible" :class="{ 'active': textLibStatus.visible }" class="text_clover" @click="showTextPanel($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
-                <TextAdvancedSettings :context="props.context" :manager="textCtxMgr" :data="textCtxMgr.textCtx.text" :textShape="shape" :textShapes="props.textShapes">
+                <TextAdvancedSettings :context="props.context" :manager="textCtxMgr" :data="textCtxMgr.textCtx.text"
+                    :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
             </template>
         </TypeHeader>
         <div class="text-container">
-            <div class="text-top">
+            <TextMaskView v-if="textCtx.mask" :context="props.context" :manager="textCtxMgr" :info="textCtx.maskInfo!"
+                :active="textLibStatus.visible" @show-style-lib="e => showTextPanel(e)"></TextMaskView>
+            <div v-if="!textCtx.mask" class="text-top">
                 <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ textCtxMgr.textCtx.text?.fontName }}</span>
                     <div class="down">
                         <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
                 </div>
-                <SelectFont v-if="false" :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
-                    :fontWeight="fontWeight" @setFontWeight="setFontWeight" :fontNameEl="fontNameEl">
+                <SelectFont v-if="false" :showFont="showFont" @set-font="setFont" :fontName="fontName"
+                    :context="props.context" :fontWeight="fontWeight" @setFontWeight="setFontWeight"
+                    :fontNameEl="fontNameEl">
                 </SelectFont>
                 <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
             </div>
-            <div class="text-middle">
+            <div v-if="!textCtx.mask" class="text-middle">
                 <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
                     :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
                 </FontWeightSelected>
@@ -1225,7 +1227,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                     </div>
                 </div>
             </div>
-            <div class="text-middle">
+            <div v-if="!textCtx.mask" class="text-middle">
                 <div class="interval jointly-text" style="margin-right: 8px;">
                     <div @mousedown="(e) => onMouseDown(e, 'row-height')">
                         <SvgIcon :icon="word_space_icon" />
@@ -1392,7 +1394,8 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                 </div>
             </div>
         </div>
-        <TextStyle v-if="textLibStatus.visible" :context="props.context" :manager="textCtxMgr" @close="closePanel"></TextStyle>
+        <TextStyle v-if="textLibStatus.visible" :context="props.context" :manager="textCtxMgr" @close="closePanel">
+        </TextStyle>
         <teleport to="body">
             <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
             </div>
@@ -1680,7 +1683,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             display: flex;
             align-items: center;
             justify-content: space-between;
-         
+
             .text-bottom-align {
                 display: flex;
                 align-items: center;
@@ -1733,7 +1736,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             display: flex;
             align-items: center;
             gap: 8px;
-           
+
 
             .color {
                 display: flex;

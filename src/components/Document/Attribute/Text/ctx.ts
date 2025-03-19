@@ -52,6 +52,15 @@ export class TextContextMgr extends StyleCtx {
             const __text = t_shape[0].getText();
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
             this.textCtx.text = format;
+            this.textCtx.mask = undefined;
+            if (format.textMask) {
+                const mask = this.context.data.stylesMgr.getSync(format.textMask) as TextMask
+                this.textCtx.mask = format.textMask
+                this.textCtx.maskInfo = {
+                    name: mask.name,
+                    desc: mask.description
+                }
+            }
         } else {
             let formats: any[] = [];
             let format: any = {};
@@ -97,7 +106,7 @@ export class TextContextMgr extends StyleCtx {
             this.textCtx.text = format;
         }
 
-        
+
     }
 
     update() {
@@ -131,6 +140,8 @@ export class TextContextMgr extends StyleCtx {
         text.strikethrough = this.textCtx.text?.strikethrough;
         text.transform = this.textCtx.text?.transform;
         const textMask = new TextMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, text);
-        this.editor.createTextMask(this.document, textMask, this.page, this.flat);
+        const { textIndex, selectLength } = this.getTextIndexAndLen();
+        const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
+        this.editor.createTextMask(this.document, textMask, this.page, textIndex, selectLength, textMask.id, t_shape);
     }
 }

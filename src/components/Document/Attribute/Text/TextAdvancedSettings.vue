@@ -47,18 +47,18 @@ const panelStatus = reactive<ElementStatus>({ id: '#text-detail-container', visi
 const panelStatusMgr = new ElementManager(
   props.context,
   panelStatus,
-  { whiteList: ['#text-detail-container', '.text-trigger', '.title'] }
+  { whiteList: ['#text-detail-container', '.header', '.title'] }
 );
 
 function showDetailPanel(event: MouseEvent) {
   let e: Element | null = event.target as Element;
   while (e) {
-    if (e.classList.contains('text-trigger')) {
-      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -326, offsetTop: -114 } });
+    if (e.classList.contains('header')) {
+      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -266 } });
       break;
     }
     if (e.classList.contains('title')) {
-      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -200,offsetTop:0 } });
+      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -258} });
       break;
     }
     e = e.parentElement;
