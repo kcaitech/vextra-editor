@@ -747,8 +747,8 @@ onUnmounted(() => {
       @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
       @mousemove="(e) => fixPreLine(e,p.segment, p.index)"
       :class="{ point: true, selected: p.selected }"/>
-    <rect v-if="preparePointVisible" class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4"
-          ry="4"/>
+<rect v-if="preparePointVisible" class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4"
+      ry="4"/>
 </template>
 <style lang='scss' scoped>
 .point {

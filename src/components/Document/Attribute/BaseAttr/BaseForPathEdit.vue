@@ -310,7 +310,7 @@ function update() {
     calc();
 }
 
-function __update(...args: any) {
+function __update() {
     modify_path_closed_status();
     get_current_curve_mode();
     calc();

@@ -35,10 +35,6 @@ const props = defineProps<Props>();
 const selected = ref<string>(Action.AutoV);
 const is_path_edit = ref<boolean>(false);
 
-function select(action: string) {
-    props.context.tool.setAction(action);
-}
-
 const isLabel = ref(props.context.tool.isLable);
 
 function tool_watcher(t?: number) {
