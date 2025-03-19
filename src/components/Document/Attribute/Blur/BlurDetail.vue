@@ -11,10 +11,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { nextTick, reactive, ref } from 'vue';
-import Popover from '@/components/common/Popover.vue';
 import { useI18n } from 'vue-i18n';
 import { LinearApi, Blur, BlurMask } from '@kcdesign/data';
-import { Menu } from "@/context/menu";
 import { hidden_selection } from '@/utils/content';
 import { watchEffect } from 'vue';
 import { BlurHandler } from '@/transform/blur';
@@ -151,10 +149,9 @@ function changeBlurInput(e: Event) {
     }
     if (value < 0) value = 0;
     if (value > 200) value = 200;
-    blurValue.value = value;
+
     props.manager.modifyBlurSaturation(props.blur.blur, value);
 
-    update();
     hidden_selection(props.context);
 }
 

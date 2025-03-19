@@ -50,9 +50,9 @@ export function scout(context: Context): Scout {
         SVGPoint.y = point.y;
         if (shape.isBorderShape) {
             const { thicknessRight, thicknessTop, thicknessLeft, thicknessBottom } = shape.getBorders().sideSetting;
-            const min = Math.min(thicknessRight, thicknessTop, thicknessLeft, thicknessBottom);
+            const scale = context.workspace.curScale;
+            const min = Math.min(thicknessRight, thicknessTop, thicknessLeft, thicknessBottom) * scale;
             if (min < 6) {
-                const scale = context.workspace.curScale;
                 path.setAttributeNS(null, 'stroke-width', `${7 / scale}`);
                 return path.isPointInStroke(SVGPoint);
             } else {
@@ -117,7 +117,8 @@ export function scout(context: Context): Scout {
     }
 
     function isPointInStrokeByWidth(d: string, point: XY, width: number): boolean {
-        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         path.setAttributeNS(null, 'stroke-width', `${width}`);
         return (path as SVGGeometryElement).isPointInStroke(SVGPoint);

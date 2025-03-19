@@ -60,9 +60,9 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        if (this.flat.length < 1) return;
-        if (this.flat.length < 2) return this.blurCtx.mixed = false;
-        const allBlur = this.flat.map(i => ({ blur: i.style.blur, view: i }));
+        if (this.selected.length < 1) return;
+        if (this.selected.length < 2) return this.blurCtx.mixed = false;
+        const allBlur = this.selected.map(i => ({ blur: i.style.blur, view: i }));
         const stringF = stringifyBlur(allBlur[0]);
         for (let i = 1; i < allBlur.length; i++) {
             const str = stringifyBlur(allBlur[i]);
@@ -72,8 +72,8 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     private updateBlur() {
-        if (this.blurCtx.mixed || this.flat.length < 1) return;
-        const represent = this.flat[0];
+        if (this.blurCtx.mixed || this.selected.length < 1) return;
+        const represent = this.selected[0];
         this.blurCtx.mask = represent.blurMask;
         if (this.blurCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.blurCtx.mask) as BlurMask;
@@ -96,7 +96,6 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     update() {
-        this.updateSelection();
         this.modifyMixedStatus();
         this.updateBlur();
     }
@@ -290,7 +289,7 @@ export class BlurContextMgr extends StyleCtx {
         const { isEnabled, saturation, type } = this.blurCtx.blur?.blur!;
         const blur = new Blur(isEnabled, new Point2D(0, 0), saturation, type);
         const blurMask = new BlurMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, blur);
-        this.editor.createBlurMask(this.document, blurMask, this.page, this.flat);
+        this.editor.createBlurMask(this.document, blurMask, this.page, this.selected);
         this.kill();
     }
 

@@ -407,23 +407,19 @@ onUnmounted(() => {
         <div class="options-container">
             <div class="setting">
                 <div class="name-title">{{ t('shadow.position') }}</div>
-                <ShadowInput ticon="X" :shadow-v="extend(data.shadow.offsetX)" @on-change="setOffsetX"
-                    @key-down="keydownOffsetX" @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd">
-                </ShadowInput>
-                <ShadowInput ticon="Y" :shadow-v="extend(data.shadow.offsetY)" @on-change="setOffsetY"
-                    @key-down="keydownOffsetY" @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd">
-                </ShadowInput>
+                <ShadowInput ticon="X" :shadow-v="extend(data.shadow.offsetX)" @change="setOffsetX"
+                    @key-down="keydownOffsetX" @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd"/>
+                <ShadowInput ticon="Y" :shadow-v="extend(data.shadow.offsetY)" @change="setOffsetY"
+                    @key-down="keydownOffsetY" @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd"/>
             </div>
             <div class="setting">
                 <div class="name-title">{{ t('shadow.effect') }}</div>
-                <ShadowInput ticon="B" :shadow-v="extend(data.shadow.blurRadius)" @on-change="setBlurRadius"
+                <ShadowInput ticon="B" :shadow-v="extend(data.shadow.blurRadius)" @change="setBlurRadius"
                     :tootip="`${t('shadow.blur')}`" @key-down="keydownBlurRadius" @dragstart="dragStart"
-                    @dragging="draggingB" @dragend="dragEnd">
-                </ShadowInput>
-                <ShadowInput ticon="S" :shadow-v="extend(data.shadow.spread)" @on-change="setSpread"
+                    @dragging="draggingB" @dragend="dragEnd"/>
+                <ShadowInput ticon="S" :shadow-v="extend(data.shadow.spread)" @change="setSpread"
                     :disabled="disabled" :tootip="spare_tip" @dragstart="dragStart" @dragging="draggingS"
-                    @dragend="dragEnd" @key-down="keydownSpread">
-                </ShadowInput>
+                    @dragend="dragEnd" @key-down="keydownSpread"/>
             </div>
             <div class="setting">
                 <div class="name-title">{{ t('shadow.color') }}</div>

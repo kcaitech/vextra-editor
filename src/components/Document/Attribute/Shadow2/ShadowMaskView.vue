@@ -34,27 +34,29 @@ const emits = defineEmits<{
 
 const t = useI18n().t;
 
-const colors = ref<Shadow[]>(props.shadows.map(i => i.shadow).reverse());
+const shadows = ref<Shadow[]>(props.shadows.map(i => i.shadow).reverse());
 const name = ref<string>(props.info.name);
 
+const style = ref<string>('');
+
 onUnmounted(watchEffect(() => {
-    colors.value = props.shadows.map(i => i.shadow).reverse();
+    shadows.value = props.shadows.map(i => i.shadow).reverse();
     name.value = props.info.name;
+    if (shadows.value.length) {
+        const represent = shadows.value[0];
+        style.value = `box-shadow: ${represent.position.includes('in') ? 'inset' : ''}`
+            + ` ${represent.offsetX > 0 ? '1px' : represent.offsetX < 0 ? '-1px' : '0'}`
+            + ` ${represent.offsetY > 0 ? '1px' : represent.offsetY < 0 ? '-1px' : '0'} `
+            + ` ${represent.blurRadius > 0 ? '1px' : '0'}`
+            + ` ${represent.spread > 0 ? '1px' : '0'}`
+            + ' #0000004d'
+    } else style.value = '';
 }));
 </script>
 <template>
     <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :active="active" :disabled="info.disabled">
         <div class="shadow-desc" @click="event => emits('show-style-lib', event)">
-            <div class="effect" :style="{
-                boxShadow: `
-                        ${colors[0].position.includes('in') ? 'inset' : ''} 
-                        ${colors[0].offsetX > 0 ? '1px' : colors[0].offsetX < 0 ? '-1px' : '0'} 
-                        ${colors[0].offsetY > 0 ? '1px' : colors[0].offsetY < 0 ? '-1px' : '0'} 
-                        ${colors[0].blurRadius > 0 ? '1px' : '0'}
-                        ${colors[0].spread > 0 ? '1px' : '0'}
-                        #0000004d
-                        `}">
-            </div>
+            <div class="effect" :style="style"/>
             <span>{{ info.disabled ? t('stylelib.deleted_style') : name }}</span>
         </div>
     </MaskPort>

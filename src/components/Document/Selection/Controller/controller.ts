@@ -35,7 +35,6 @@ import {
     update_comment
 } from "@/utils/mouse";
 import { forbidden_to_modify_frame, scout_once } from '@/utils/common';
-import { TranslateHandler } from '@/transform/translate/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
 import { Translate2 } from "@/transform/translate/translate2";
@@ -61,7 +60,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let asyncPathEditor: AsyncPathEditor | undefined = undefined;
 
-    let transporter: TranslateHandler | undefined = undefined;
     let translate2: Translate2 | undefined = undefined;
 
     function handleDblClick() {
@@ -225,7 +223,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
         if (isDragging) {
-            // transporter?.execute(e);
             translate2?.execute(e);
         } else if (check_drag_action(startPosition, mousePosition)) {
             if (asyncTransfer || isDragging) return;
@@ -387,8 +384,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             }
 
             isDragging = false;
-            transporter?.fulfil();
-            transporter = undefined;
 
             translate2?.fulfil();
             translate2 = undefined;

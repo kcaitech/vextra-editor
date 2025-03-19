@@ -17,8 +17,11 @@ import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { genOptions } from '@/utils/common';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
+import exchange_icon from '@/assets/icons/svg/exchange.svg';
+import { StrokeFillContextMgr } from '../ctx';
 
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { Selection } from "@/context/selection";
 interface Props {
     context: Context
     manager: StrokeFillContextMgr
@@ -67,16 +70,16 @@ function apexStyleSelect(selected: SelectItem) {
     props.manager.setShapesEndpoint(selected.value as MarkerType);
 }
 
-const shaow_apex = ref(false);
+const show_apex = ref(false);
 function init_v() {
     const len = props.manager.flat.length;
     s_mixed.value = false;
     e_mixed.value = false;
-    shaow_apex.value = props.manager.flat.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
-    if (shaow_apex.value) {
-        apexStyle();
-        return;
-    }
+    show_apex.value = props.manager.flat.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
+
+    if (!len) return;
+    if (show_apex.value) return apexStyle();
+
     const shape = props.manager.flat[0];
     const sm = shape.startMarkerType;
     const em = shape.endMarkerType;
@@ -101,7 +104,7 @@ function init_v() {
 
 const apexStyle = () => {
     const len = props.manager.flat.length;
-    shaow_apex.value = props.manager.flat.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
+    show_apex.value = props.manager.flat.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
     apex_mixed.value = false;
     const shape = props.manager.flat[0];
     const sm = shape.startMarkerType;
@@ -140,6 +143,9 @@ const watchList: any[] = [
         if (v?.includes('borders') || v?.includes('variables') || v?.includes('endMarkerType') || v?.includes('startMarkerType')) {
             init_v();
         }
+    }),
+    props.context.selection.watch((t: any) => {
+        if (t === Selection.CHANGE_SHAPE) init_v();
     })
 ];
 
@@ -148,30 +154,27 @@ onMounted(init_v);
 onUnmounted(() => {
     watchList.forEach(stop => stop());
 });
-
-import exchange_icon from '@/assets/icons/svg/exchange.svg';
-import { StrokeFillContextMgr } from '../ctx';
 </script>
 <template>
-    <div class="apex-select-wrap" v-if="!shaow_apex">
+    <div v-if="!show_apex" class="apex-select-wrap">
         <div class="select-wrap">
             <Select class="select" :source="borderFrontStyleOptionsSource" :selected="borderFrontStyle"
                 @select="borderApexStyleSelect" :item-view="BorderApexStyleItem"
-                :value-view="BorderApexStyleSelectedItem" :mixed="s_mixed"></Select>
+                    :value-view="BorderApexStyleSelectedItem" :mixed="s_mixed"/>
             <Select class="select" :selected="borderEndStyle" :item-view="BorderApexStyleItem"
                 :value-view="BorderApexStyleSelectedItem" :source="borderEndStyleOptionsSource"
-                @select="borderApexStyleSelect" :mixed="e_mixed"></Select>
+                    @select="borderApexStyleSelect" :mixed="e_mixed"/>
         </div>
 
         <div class="change" @click="exchange">
             <SvgIcon :icon="exchange_icon" />
         </div>
     </div>
-    <div class="apex-select-wrap" v-if="shaow_apex">
+    <div v-if="show_apex" class="apex-select-wrap">
         <div class="select-apex">
             <Select class="select" :selected="borderApexStyle" :item-view="BorderApexStyleItem"
                 :value-view="BorderApexStyleSelectedItem" :source="borderApexStyleOptionsSource"
-                @select="apexStyleSelect" :mixed="apex_mixed"></Select>
+                    @select="apexStyleSelect" :mixed="apex_mixed"/>
         </div>
         <div style="width: 28px; height: 28px;"></div>
     </div>
@@ -206,7 +209,6 @@ import { StrokeFillContextMgr } from '../ctx';
         justify-content: center;
         cursor: pointer;
         border-radius: var(--default-radius);
-        // margin-left: 4px;
 
         >img {
             width: 16px;
@@ -224,7 +226,6 @@ import { StrokeFillContextMgr } from '../ctx';
         align-items: center;
         flex: 1;
         height: 100%;
-        margin-left: 19px;
         box-sizing: border-box;
 
         .select {

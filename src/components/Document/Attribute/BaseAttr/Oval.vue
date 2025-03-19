@@ -42,7 +42,7 @@ function changeStartOnce(event: Event) {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const __target = (360 + value) % 360 / 360 * (Math.PI * 2);
-    editor.modifyShapesStartingAngle(props.context.selection.selectedShapes, __target);
+    editor.modifyShapesStartingAngle(ovalData.stash, __target);
     hidden_selection(props.context);
     target.blur();
 }
@@ -54,7 +54,7 @@ function changeSweepOnce(event: Event) {
     value = Math.max(-100, Math.min(100, value));
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    editor.modifyShapesSweep(props.context.selection.selectedShapes, value);
+    editor.modifyShapesSweep(ovalData.stash, value);
     hidden_selection(props.context);
     target.blur();
 }
@@ -66,7 +66,7 @@ function changeRatioOnce(event: Event) {
     value = Math.max(0, Math.min(100, value));
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    editor.modifyShapesRadius(props.context.selection.selectedShapes, value / 100);
+    editor.modifyShapesRadius(ovalData.stash, value / 100);
     hidden_selection(props.context);
     target.blur();
 }
@@ -78,7 +78,7 @@ function keydownStart(event: KeyboardEvent) {
         if (isNaN(value)) return;
         value = Math.max(-180, Math.min(180, value));
         const __target = (360 + value) % 360 / 360 * (Math.PI * 2);
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = ovalData.stash;
         linearApi.modifyStartingAngle(shapes, __target);
         target.select();
         event.preventDefault();
@@ -91,7 +91,7 @@ function keydownSweep(event: KeyboardEvent) {
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = Math.max(-100, Math.min(100, value));
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = ovalData.stash;
         linearApi.modifySweep(shapes, value / 100 * Math.PI * 2);
         target.select();
         event.preventDefault();
@@ -104,7 +104,7 @@ function keydownInnerRadius(event: KeyboardEvent) {
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
         value = Math.max(0, Math.min(100, value));
-        const shapes = props.context.selection.selectedShapes;
+        const shapes = ovalData.stash;
         linearApi.modifyInnerRadius(shapes, value / 100);
         target.select();
         event.preventDefault();
@@ -112,7 +112,7 @@ function keydownInnerRadius(event: KeyboardEvent) {
 }
 
 function __downStart(event: MouseEvent) {
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = ovalData.stash;
     locker.start(event, (e: MouseEvent) => {
         if (!lockApi) {
             lockApi = new LockMouse(props.context, event);
@@ -136,7 +136,7 @@ function downEnd(event: MouseEvent) {
     if (!event.altKey) return;
     event.preventDefault();
     (event.target as HTMLInputElement)?.select();
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = ovalData.stash;
     locker.start(event, (e: MouseEvent) => {
         if (!lockApi) {
             lockApi = new LockMouse(props.context, event);
@@ -153,7 +153,7 @@ function downInnerRadius(event: MouseEvent) {
     if (!event.altKey) return;
     event.preventDefault();
     (event.target as HTMLInputElement)?.select();
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = ovalData.stash;
     locker.start(event, (e: MouseEvent) => {
         if (!lockApi) {
             lockApi = new LockMouse(props.context, event);

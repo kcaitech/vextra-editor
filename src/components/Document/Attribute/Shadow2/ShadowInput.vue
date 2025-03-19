@@ -21,7 +21,7 @@ const props = defineProps<{
     disabled?: boolean
 }>();
 const emits = defineEmits<{
-    (e: 'onChange', value: number): void;
+    (e: 'change', value: number): void;
     (e: 'dragstart', event: MouseEvent): void;
     (e: 'dragging', event: MouseEvent): void;
     (e: 'dragend'): void;
@@ -33,27 +33,35 @@ const selectValue = () => {
     isActive.value = true
 }
 
-const onChange = () => {
+const change = () => {
     if (input.value) {
         let value = input.value.value;
         if (isNaN(Number(value)) || !value.trim().length) {
             return input.value.value = String(props.shadowV);
         }
-        if (Number(value) > 3000) value = '3000';
-        if (Number(value) < -3000) value = '-3000';
-        if (props.ticon === 'B') {
-            if (Number(value) > 200) value = '200';
-            if (Number(value) < 0) value = '0';
-        }
-        emits('onChange', Number(value));
+        value = getValidValue(value);
+        emits('change', Number(value));
     }
+}
+
+function getValidValue(value: string) {
+    if (isNaN(Number(value)) || !value.trim().length) {
+        return String(props.shadowV);
+    }
+    if (Number(value) > 3000) value = '3000';
+    if (Number(value) < -3000) value = '-3000';
+    if (props.ticon === 'B') {
+        if (Number(value) > 200) value = '200';
+        if (Number(value) < 0) value = '0';
+    }
+    return value;
 }
 const augment = () => {
     if (input.value && !props.disabled) {
         let value = input.value.value;
         if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
         const result = +value + 1;
-        emits('onChange', result);
+        emits('change', result);
     }
 }
 const decrease = () => {
@@ -61,7 +69,7 @@ const decrease = () => {
         let value = input.value.value;
         if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
         const result = +value - 1;
-        emits('onChange', result);
+        emits('change', result);
     }
 }
 
@@ -105,9 +113,16 @@ function windowBlur() {
     clearStatus();
 }
 
-function blur2() {
+let valueStash: string = '';
+
+function onInput(e: Event) {
+    valueStash = getValidValue((e.target as HTMLInputElement).value);
+}
+
+function inputBlur() {
     isActive.value = false
     is_select.value = false;
+    if (!input.value) emits('change', Number(valueStash));
 }
 const is_select = ref(false);
 function click() {
@@ -131,11 +146,11 @@ function click() {
             :class="{ cursor: !props.disabled }">{{ ticon }}</span>
         <Tooltip v-if="props.tootip && props.disabled" :content="props.tootip" :offset="12">
             <input v-blur ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-                :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
+                :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="change">
         </Tooltip>
         <input v-blur v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click"
-            @keydown="e => emits('keyDown', e, props.shadowV)">
+               :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="change" @blur="inputBlur"
+               @input="onInput" @click="click" @keydown="e => emits('keyDown', e, props.shadowV)">
         <div class="adjust">
             <SvgIcon :icon="down_icon" style="transform: rotate(180deg);"
                 :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment" />

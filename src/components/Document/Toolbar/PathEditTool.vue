@@ -17,25 +17,12 @@ import Pen from '@/components/Document/Toolbar/PathEdit/PathPen.vue';
 import { Context } from "@/context";
 import { Action } from "@/context/tool";
 import { onMounted, onUnmounted } from "vue";
+import { useAuto, usePen } from "@/components/Document/Creator/execute";
 
-interface Props {
-    context: Context
-    selected: string
-}
-
-const emit = defineEmits<{
-    (e: "select", action: string): void;
+const props = defineProps<{
+    context: Context;
+    selected: string;
 }>();
-
-const props = defineProps<Props>();
-
-function select(action: string) {
-    emit("select", action);
-}
-
-function is_curve_active() {
-    return props.selected === Action.Curve;
-}
 
 let o: string;
 
@@ -48,18 +35,12 @@ function keyboard_up_watcher(e: KeyboardEvent) {
 }
 
 function keyboard_down_watcher(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-    }
-    if (e.repeat) {
-        return;
-    }
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+    if (e.repeat) return;
     if (['MetaLeft', 'ControlLeft'].includes(e.code)) {
         o = props.context.tool.action;
 
-        if (o === Action.PathClip) {
-            return;
-        }
+        if (o === Action.PathClip) return;
 
         if (o !== Action.Curve) {
             props.context.tool.setAction(Action.Curve);
@@ -76,15 +57,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<div class="wrapper">
-    <Auto :active="props.selected === Action.AutoV" @select="select"></Auto>
-    <Pen :active="props.selected === Action.Pen" @select="select"></Pen>
-    <Curve :active="is_curve_active()" @select="select"></Curve>
-    <PathClip :active="props.selected === Action.PathClip" @select="select"></PathClip>
+<div style="height: 100%;">
+    <Auto :active="props.selected === Action.AutoV" @click="() => useAuto(context)"/>
+    <Pen :active="props.selected === Action.Pen" @click="() => usePen(context)"/>
+    <Curve :active="props.selected === Action.Curve" @click="() => props.context.tool.setAction(Action.Curve)"/>
+    <PathClip :active="props.selected === Action.PathClip"
+              @click="() => props.context.tool.setAction(Action.PathClip)"/>
 </div>
 </template>
-<style scoped lang="scss">
-.wrapper {
-    height: 100%;
-}
-</style>

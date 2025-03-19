@@ -85,13 +85,6 @@ function point2line(point: XY, start: XY, end: XY) {
 }
 
 /**
- * @description 点到二阶贝塞尔曲线的距离 todo 目前为止项目内的二阶贝塞尔曲线用的时三阶拟合而成，后续需要改正
- */
-function point2curve2nd(point: XY, start: XY, c1: XY, end: XY) {
-
-}
-
-/**
  * @description 计算三次贝塞尔曲线上的点
  */
 function cubicBezier(t: number, start: XY, c1: XY, c2: XY, end: XY) {
@@ -193,7 +186,6 @@ export class PathEditor extends TransformHandler {
     private isInitMatrix: boolean = false;
 
     private actionType: 'handle' | 'penHandle' | 'point' = 'handle';
-
 
     constructor(context: Context, event?: MouseEvent, needBuildMap = '', flattenPoint = false) {
         super(context, event);
@@ -1254,27 +1246,6 @@ export class PathEditor extends TransformHandler {
         this.workspace.setSelectionViewUpdater(true);
         this.workspace.linearEditorExist = false;
         super.fulfil();
-    }
-
-    // 以下是自闭合函数，函数内执行fulfil
-    clip(segmentIndex: number, index: number) {
-        try {
-            if (!this.isInitMatrix) {
-                this.init();
-            }
-
-            if (!this.asyncApiCaller) {
-                this.createApiCaller();
-            }
-
-            if (!this.asyncApiCaller || !this.isInitMatrix) {
-                return;
-            }
-
-            (this.asyncApiCaller as PathModifier).clip(this.shape, segmentIndex, index);
-        } finally {
-            this.fulfil();
-        }
     }
 
     sortSegment() {

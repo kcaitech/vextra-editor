@@ -38,7 +38,7 @@ export class OvalData {
         this.mixed = context.workspace.t('attr.mixed');
     }
 
-    stash() {
+    get stash() {
         return this.m_selected;
     }
 

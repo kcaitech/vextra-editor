@@ -193,8 +193,8 @@ const checkHorTidyUp = (selected: ShapeView[], dir: boolean) => {
                 }
             }
             if (gap_equal) {
-                const algin = center_equal ? 'center' : start_equal ? 'start' : 'end';
-                return { tidyup: false, hor: space, ver: 0, shapes: [rows], dir: false, algin };
+                const align = center_equal ? 'center' : start_equal ? 'start' : 'end';
+                return { tidyup: false, hor: space, ver: 0, shapes: [rows], dir: false, align };
             }
         }
     } else {
@@ -232,8 +232,8 @@ const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
                 }
             }
             if (gap_equal) {
-                const algin = center_equal ? 'center' : start_equal ? 'start' : 'end'
-                return { tidyup: false, hor: 0, ver: space, shapes: [rows], dir: true, algin }
+                const align = center_equal ? 'center' : start_equal ? 'start' : 'end'
+                return { tidyup: false, hor: 0, ver: space, shapes: [rows], dir: true, align }
             }
         }
     } else {
@@ -303,7 +303,7 @@ function verFindTidyUp(shape_rows: ShapeView[][], hor: number, ver: number) {
         topTrans = minY; // 重置为上边距
         leftTrans += maxWidthInRow + hor; // 换列，增加 x 坐标
     }
-    return { tidyup: istidyup, hor, ver, shapes: shape_rows, dir: true, algin: 'center' };
+    return { tidyup: istidyup, hor, ver, shapes: shape_rows, dir: true, align: 'center' };
 }
 function horFindTidyUp(shape_rows: ShapeView[][], hor: number, ver: number) {
     const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
@@ -342,7 +342,7 @@ function horFindTidyUp(shape_rows: ShapeView[][], hor: number, ver: number) {
         leftTrans = minX; // 重置为左边距
         topTrans += maxHeightInRow + ver; // 换行，增加 y 坐标
     }
-    return { tidyup: istidyup, hor, ver, shapes: shape_rows, dir: false, algin: 'center' };
+    return { tidyup: istidyup, hor, ver, shapes: shape_rows, dir: false, align: 'center' };
 }
 
 export const getFrame = (shape: ShapeView) => {
@@ -483,7 +483,7 @@ export function getVerShapeOutlineFrame(context: Context, shape_rows: ShapeView[
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
-    const algin = context.selection.tidyUpAlign;
+    const align = context.selection.tidyUpAlign;
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         const maxWidth = Math.max(...shape_row.map(s => s._p_frame.width));
@@ -491,9 +491,9 @@ export function getVerShapeOutlineFrame(context: Context, shape_rows: ShapeView[
             const shape = shape_row[j];
             const { width, height } = shape._p_frame;
             let horizontalOffset = 0;
-            if (algin === 'center') {
+            if (align === 'center') {
                 horizontalOffset = (maxWidth - width) / 2;
-            } else if (algin === 'end') {
+            } else if (align === 'end') {
                 horizontalOffset = maxWidth - width;
             }
             const transx = startX + horizontalOffset;
@@ -524,7 +524,7 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
     m.addTransform(clientTransform); //root到视图
     let startY = startXY.y;
     let startX = startXY.x;
-    const algin = context.selection.tidyUpAlign;
+    const align = context.selection.tidyUpAlign;
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         const maxHeight = Math.max(...shape_row.map(s => s._p_frame.height));
@@ -532,9 +532,9 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
             const shape = shape_row[j];
             const { width, height } = shape._p_frame;
             let verticalOffset = 0;
-            if (algin === 'center') {
+            if (align === 'center') {
                 verticalOffset = (maxHeight - height) / 2;
-            } else if (algin === 'end') {
+            } else if (align === 'end') {
                 verticalOffset = maxHeight - height;
             }
             const transy = startY + verticalOffset;

@@ -108,7 +108,6 @@ export class ShadowsContextMgr extends StyleCtx {
     }
 
     update() {
-        this.updateSelection();
         this.modifyMixedStatus();
         this.updateShadows();
     }
