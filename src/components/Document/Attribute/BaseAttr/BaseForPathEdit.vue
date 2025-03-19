@@ -413,12 +413,12 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="options">
-            <div>
-                <CheckBox :check="align" @change="modifyConfig('align', !align)"/>
+            <div @click="modifyConfig('align', !align)">
+                <CheckBox :check="align"/>
                 <span>{{ t('setting.align') }}</span>
             </div>
-            <div>
-                <CheckBox :check="adsorb" @change="modifyConfig('adsorb', !adsorb)"/>
+            <div @click="modifyConfig('adsorb', !adsorb)">
+                <CheckBox :check="adsorb"/>
                 <span>{{ t('setting.adsorb') }}</span>
             </div>
         </div>
@@ -521,10 +521,11 @@ onUnmounted(() => {
         gap: 8px;
 
         > div {
-            width: 100%;
+            width: fit-content;
             display: flex;
             align-items: center;
             gap: 8px;
+            cursor: pointer;
         }
     }
 

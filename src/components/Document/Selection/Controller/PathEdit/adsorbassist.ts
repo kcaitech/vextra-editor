@@ -1,6 +1,7 @@
 import { XY } from "@/context/selection";
-import { Segment } from "@/utils/pathedit";
 import { Context } from "@/context";
+import { Matrix } from "@kcdesign/data";
+import { roundBy } from "@/path/common";
 
 export const AdsorbConfigLocalKey = 'AdsorbAssist';
 
@@ -19,17 +20,20 @@ export type BoxInfo = {
  * @description 路径的吸附辅助
  */
 export class AdsorbAssist {
+    static viscosity = 5;
     constructor(private context: Context) {
     }
 
-    boxes: BoxInfo[] | undefined;
+    private m_boxes: BoxInfo[] | undefined;
 
-    clear() {
-        this.boxes = undefined;
+    private get segments() {
+        return this.context.path.segments;
     }
-    getSegmentBoxes(segments: Segment[][]) {
-        const boxes: BoxInfo[] = [];
 
+    private get segmentBoxes() {
+        if (this.m_boxes) return this.m_boxes;
+        const boxes: BoxInfo[] = [];
+        const segments = this.context.path.segments;
         for (const __segment of segments) for (const segment of __segment) {
             const box = segment.type === 'curve'
                 ? cubicBezierBoundingBox(segment.start, segment.from, segment.to, segment.end)
@@ -45,53 +49,109 @@ export class AdsorbAssist {
             }
             boxes.push(boxInfo);
         }
-
-        return boxes;
+        return this.m_boxes = boxes;
     }
 
-    getAdsorptionPoints(point: XY, testXY: XY) {
-        if (!this.boxes) this.boxes = this.getSegmentBoxes(this.context.path.segments);
-        if (!this.boxes?.length) return null;
-        let bestDistance = Infinity;
-        for (const box of this.boxes) {
-            box.target = false;
-            const distance = pointToRectDistance(box, point);
-            if (distance < 5) {
-                bestDistance = distance;
-                box.target = true;
+    private fixXYByPointsMap(xy: XY): XY | null {
+        let bestX = 0;
+        let bestDX = Infinity;
+        let bestY = 0;
+        let bestDY = Infinity;
+        const living = { ...xy };
+        // todo 辅助线的绘制
+        const segments = this.segments;
+        for (const _segment of segments) for (const segment of _segment) {
+            const start = segment.start;
+            const dx = Math.abs(living.x - start.x);
+            if (dx < bestDX) {
+                bestDX = dx;
+                bestX = start.x;
+            }
+            const dy = Math.abs(living.y - start.y);
+            if (dy < bestDY) {
+                bestDY = dy;
+                bestY = start.y;
             }
         }
-        testXY.x = 0;
-        testXY.y = 0;
-        if (bestDistance < 5) {
-            let bd = Infinity;
-            let bestPoint: null | XY = null;
-            for (const box of this.boxes) {
-                if (box.target) {
-                    const { segmentIndex, index } = box;
-                    const segment = this.context.path.segments[segmentIndex][index];
-                    if (box.type === 'curve') {
-                        const d = findClosestPointOnBezier(point, segment.start, segment.from, segment.to, segment.end);
-                        if (d.distance < bd) {
-                            bd = d.distance;
-                            bestPoint = d.point;
-                        }
-                    } else {
-                        const __point = findClosestPointOnLine(segment.start.x, segment.start.y, segment.end.x, segment.end.y, point.x, point.y);
-                        const d = Math.hypot(point.x - __point.x, point.y - __point.y);
-                        if (d < bd) {
-                            bd = d;
-                            bestPoint = __point;
-                        }
-                    }
+
+        let changed = false;
+        if (bestDX < AdsorbAssist.viscosity) {
+            living.x = bestX;
+            changed = true;
+        }
+        if (bestDY < AdsorbAssist.viscosity) {
+            living.y = bestY;
+            changed = true;
+        }
+        return changed ? living : null;
+    }
+
+    private fixYBySegmentsMap(point: XY): XY | null {
+        const roundAlphaBoxes: BoxInfo[] = [];
+        const boxes = this.segmentBoxes
+        for (const box of boxes) {
+            if (pointToRectDistance(box, point) < AdsorbAssist.viscosity) roundAlphaBoxes.push(box);
+        }
+        if (!roundAlphaBoxes.length) return null;
+        const segments = this.segments;
+        let bd = Infinity;
+        let bestPoint: null | XY = null;
+        for (const box of roundAlphaBoxes) {
+            const { segmentIndex, index } = box;
+            const segment = segments[segmentIndex][index];
+            if (box.type === 'curve') {
+                const d = findClosestPointOnBezier(point, segment.start, segment.from, segment.to, segment.end);
+                if (d.distance < bd) {
+                    bd = d.distance;
+                    bestPoint = d.point;
+                }
+            } else {
+                const __point = findClosestPointOnLine(segment.start.x, segment.start.y, segment.end.x, segment.end.y, point.x, point.y);
+                const d = Math.hypot(point.x - __point.x, point.y - __point.y);
+                if (d < bd) {
+                    bd = d;
+                    bestPoint = __point;
                 }
             }
-            if (bd < 5 && bestPoint) {
-                testXY.x = bestPoint.x;
-                testXY.y = bestPoint.y;
-            }
-            return [...this.boxes];
-        } else return null;
+        }
+        if (bd < AdsorbAssist.viscosity) return bestPoint!;
+        else return null;
+    }
+
+    private align(xy: XY) {
+        const __xy = new Matrix(this.context.workspace.matrix.inverse).computeCoord3(xy);
+        __xy.x = roundBy(__xy.x);
+        __xy.y = roundBy(__xy.y);
+        return this.context.workspace.matrix.computeCoord3(__xy);
+    }
+
+    private get config(): { adsorb: boolean, align: boolean } {
+        return JSON.parse(localStorage.getItem(AdsorbConfigLocalKey) ?? '');
+    }
+
+    getAssistPoint(event: MouseEvent): XY {
+        const baseXY = this.context.workspace.getContentXY(event);
+        if (event.shiftKey) {
+            // todo shift操作
+            return baseXY;
+        }
+        let livingXY = { ...baseXY };
+        const config = this.config;
+
+        if (config.align) {
+            livingXY = this.align(baseXY);
+        }
+
+        if (config.adsorb) {
+            livingXY = this.fixXYByPointsMap(baseXY) ?? livingXY;
+            livingXY = this.fixYBySegmentsMap(baseXY) ?? livingXY;
+        }
+
+        return livingXY;
+    }
+
+    clear() {
+        this.m_boxes = undefined;
     }
 }
 

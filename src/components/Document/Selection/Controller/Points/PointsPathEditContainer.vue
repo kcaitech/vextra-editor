@@ -23,7 +23,6 @@ import Handle from "../PathEdit/Handle.vue"
 import { Action } from '@/context/tool';
 import { PathEditor } from "@/path/pathEdit";
 import { CurveModifier } from "@/components/Document/Selection/Controller/Points/curvemodifier";
-import { AdsorbAssist, BoxInfo } from "@/components/Document/Selection/Controller/PathEdit/adsorbassist";
 
 type Dot = {
     point: { x: number, y: number };
@@ -50,10 +49,6 @@ let downXY: XY = { x: 0, y: 0 };
 let current_segment: number = -1;
 let current_curve_point_index: number = -1;
 let current_side: number = -1;
-const rects = ref<BoxInfo[]>([]);
-
-let testAA = new AdsorbAssist(props.context);
-let testAdPoint = ref<XY>({ x: 0, y: 0 });
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
@@ -67,8 +62,6 @@ function update() {
     segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
 
     props.context.path.set_segments(segments);
-
-    rects.value = testAA.getSegmentBoxes(segments);
 }
 
 function updatePassive() {
@@ -329,14 +322,6 @@ function resetContactStatus() {
     props.context.tool.action === Action.AutoV && props.context.path.setContactStatus(false);
 }
 
-function testMove(event: MouseEvent) {
-    const point = props.context.workspace.getContentXY(event);
-
-    const distance = testAA.getAdsorptionPoints(point, testAdPoint.value);
-    if (distance !== null) rects.value = distance;
-    else rects.value = testAA.getSegmentBoxes(props.context.path.segments);
-}
-
 onMounted(() => {
     shape = props.context.selection.pathshape!;
     shape.watch(update);
@@ -345,8 +330,6 @@ onMounted(() => {
     props.context.path.watch(path_watcher);
     props.context.workspace.watch(workspaceWatcher);
     resetContactStatus();
-
-    document.addEventListener('mousemove', testMove);
 })
 
 onUnmounted(() => {
@@ -354,8 +337,6 @@ onUnmounted(() => {
     shape?.unwatch(update);
     window.removeEventListener('blur', window_blur);
     props.context.workspace.unwatch(workspaceWatcher);
-
-    document.removeEventListener('mousemove', testMove);
 })
 </script>
 <template>
@@ -381,11 +362,6 @@ onUnmounted(() => {
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
           :class="{ point: true, selected: p.selected }"/>
-    <rect v-for="(rect, i) in rects" :key="i" :x="rect.x" :y="rect.y" :width="rect.width + 'px'"
-          :height="rect.height + 'px'" fill="none"
-          :stroke="rect.target ? 'rgba(0, 255, 0, 0.5)' :'rgba(255, 0, 0, 0.5)'" stroke-dasharray="4 2"/>
-    <rect :x="testAdPoint.x" :y="testAdPoint.y" width="10" height="10" transform="translate(-5, -5)"
-          fill="rgb(255, 0, 0)"/>
 </template>
 <style lang='scss' scoped>
 .point {

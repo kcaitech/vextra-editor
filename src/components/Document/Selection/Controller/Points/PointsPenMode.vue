@@ -21,8 +21,8 @@ import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/path/pathEdit";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
-import { roundBy } from "@/path/common";
 import { PathHitChecker } from "@/path/hit";
+import { AdsorbAssist } from "@/components/Document/Selection/Controller/PathEdit/adsorbassist";
 
 type Dot = {
     point: {
@@ -58,6 +58,8 @@ const maskPath = `M0 0, h${root.width} v${root.height} h${-root.width} z`;
 
 const preparePointVisible = ref<boolean>(false);
 
+const adsorbAssist = new AdsorbAssist(props.context);
+
 // 每次更新都是全局更新，可以有局部更新的方案会更好
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
@@ -74,51 +76,9 @@ function update() {
 
     props.context.path.set_segments(segments);
 
-    buildMap();
+    adsorbAssist.clear();
 
     if (livingPathVisible.value) modifyLivingPath();
-}
-
-const mapX = new Map<number, XY[]>();
-const mapY = new Map<number, XY[]>();
-
-function buildMap() {
-    mapX.clear();
-    mapY.clear();
-
-    const m = shape.matrix2Root();
-    const frame = shape.frame;
-    m.preScale(frame.width, frame.height);
-    m.multiAtLeft(props.context.workspace.matrix);
-
-    const segments = shape.segments;
-
-    for (let i = 0; i < segments.length; i++) {
-        const segment = segments[i];
-        if (!segment) continue;
-        const points = segment.points;
-        for (let j = 0; j < points.length; j++) {
-            const point = points[j];
-            if (!point) continue;
-            const xy = m.computeCoord3(point);
-            const xKey = Number(xy.x.toFixed(2));
-            let xContainer = mapX.get(xKey);
-            if (!xContainer) {
-                xContainer = [xy];
-                mapX.set(xKey, xContainer);
-            } else {
-                xContainer.push(xy);
-            }
-            const yKey = Number(xy.y.toFixed(2));
-            let yContainer = mapY.get(yKey);
-            if (!yContainer) {
-                yContainer = [xy];
-                mapY.set(yKey, yContainer);
-            } else {
-                yContainer.push(xy);
-            }
-        }
-    }
 }
 
 function passiveUpdate() {
@@ -132,7 +92,7 @@ function passiveUpdate() {
 
     props.context.path.set_segments(segments);
 
-    buildMap();
+    adsorbAssist.clear();
 }
 
 function point_mousedown(event: MouseEvent, segment: number, index: number) {
@@ -511,88 +471,85 @@ function getLastPoint() {
 function documentMove(e: MouseEvent) {
     props.context.path.saveEvent(e);
 
-    const __client = props.context.workspace.getContentXY(e);
+    // const __client = props.context.workspace.getContentXY(e);
+    //
+    // if (props.context.user.isPixelAlignMent) {
+    //     let root = props.context.workspace.getRootXY(e);
+    //     root.x = roundBy(root.x);
+    //     root.y = roundBy(root.y);
+    //     root = props.context.workspace.matrix.computeCoord3(root);
+    //     __client.x = root.x;
+    //     __client.y = root.y;
+    // }
+    //
+    // let delX = Infinity;
+    // let delY = Infinity;
+    //
+    // let DX = 0;
+    // let DY = 0;
+    // let TX = 0;
+    // let TY = 0;
+    //
+    // if (!mapX.size || !mapY.size) buildMap();
+    //
+    // const xs = Array.from(mapX.keys());
+    // const ys = Array.from(mapY.keys());
+    //
+    // const { x, y } = __client;
+    //
+    // for (let j = 0; j < xs.length; j++) {
+    //     const dx = xs[j] - x;
+    //     const __dx = Math.abs(dx);
+    //
+    //     if (__dx < delX) {
+    //         delX = __dx;
+    //         DX = dx;
+    //         TX = xs[j];
+    //     }
+    // }
+    //
+    // for (let k = 0; k < ys.length; k++) {
+    //     const dy = ys[k] - y;
+    //     const __dy = Math.abs(dy);
+    //
+    //     if (__dy < delY) {
+    //         delY = __dy;
+    //         DY = dy;
+    //         TY = ys[k];
+    //     }
+    // }
+    //
+    // let modified = false;
+    // const assist = props.context.assist;
+    //
+    // if (delX < PathEditor.DELTA) {
+    //     __client.x += DX;
+    //     assist.setNodesX2([...(mapX.get(TX) || []), __client]);
+    //     modified = true;
+    // } else {
+    //     assist.setNodesX2([]);
+    // }
+    //
+    // if (delY < PathEditor.DELTA) {
+    //     __client.y += DY;
+    //     assist.setNodesY2([...(mapY.get(TY) || []), __client]);
+    //     modified = true;
+    // } else {
+    //     assist.setNodesY2([]);
+    // }
+    //
+    // if (modified) {
+    //     assist.notify(Assist.UPDATE_ASSIST_PATH);
+    // } else {
+    //     assist.notify(Assist.CLEAR);
+    // }
 
-    if (props.context.user.isPixelAlignMent) {
-        let root = props.context.workspace.getRootXY(e);
-        root.x = roundBy(root.x);
-        root.y = roundBy(root.y);
-        root = props.context.workspace.matrix.computeCoord3(root);
-        __client.x = root.x;
-        __client.y = root.y;
-    }
-
-    let delX = Infinity;
-    let delY = Infinity;
-
-    let DX = 0;
-    let DY = 0;
-    let TX = 0;
-    let TY = 0;
-
-    if (!mapX.size || !mapY.size) buildMap();
-
-    const xs = Array.from(mapX.keys());
-    const ys = Array.from(mapY.keys());
-
-    const { x, y } = __client;
-
-    for (let j = 0; j < xs.length; j++) {
-        const dx = xs[j] - x;
-        const __dx = Math.abs(dx);
-
-        if (__dx < delX) {
-            delX = __dx;
-            DX = dx;
-            TX = xs[j];
-        }
-    }
-
-    for (let k = 0; k < ys.length; k++) {
-        const dy = ys[k] - y;
-        const __dy = Math.abs(dy);
-
-        if (__dy < delY) {
-            delY = __dy;
-            DY = dy;
-            TY = ys[k];
-        }
-    }
-
-    let modified = false;
-    const assist = props.context.assist;
-
-    if (delX < PathEditor.DELTA) {
-        __client.x += DX;
-        assist.setNodesX2([...(mapX.get(TX) || []), __client]);
-        modified = true;
-    } else {
-        assist.setNodesX2([]);
-    }
-
-    if (delY < PathEditor.DELTA) {
-        __client.y += DY;
-        assist.setNodesY2([...(mapY.get(TY) || []), __client]);
-        modified = true;
-    } else {
-        assist.setNodesY2([]);
-    }
-
-    if (modified) {
-        assist.notify(Assist.UPDATE_ASSIST_PATH);
-    } else {
-        assist.notify(Assist.CLEAR);
-    }
-
-    preXY.value = __client;
-    const _fixed = fixXYByShift(e);
-    if (_fixed) preXY.value = _fixed;
+    preXY.value = adsorbAssist.getAssistPoint(e);
 
     livingPath.value = '';
 
     if (e.buttons) {
         livingPathVisible.value = false;
-
         preparePointVisible.value = false;
         return;
     }
@@ -609,7 +566,7 @@ function modifyLivingPath() {
     const previous = getLastPoint();
     if (!previous) return;
 
-    const m = (shape.matrix2Root());
+    const m = shape.matrix2Root();
     m.preScale(shape.frame.width, shape.frame.height);
     m.multiAtLeft(props.context.workspace.matrix);
 
@@ -790,15 +747,8 @@ onUnmounted(() => {
       @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
       @mousemove="(e) => fixPreLine(e,p.segment, p.index)"
       :class="{ point: true, selected: p.selected }"/>
-<rect
-    v-if="preparePointVisible"
-    class="point"
-    style="pointer-events: none"
-    :x="preXY.x - 4"
-    :y="preXY.y - 4"
-    rx="4"
-    ry="4"
-/>
+    <rect v-if="preparePointVisible" class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4"
+          ry="4"/>
 </template>
 <style lang='scss' scoped>
 .point {

@@ -55,7 +55,7 @@ function down(e: MouseEvent) {
 
 function move(e: MouseEvent) {
     if (penMode.value) return;
-    // if (e.buttons !== 1) e.stopPropagation();
+    if (e.buttons !== 1) e.stopPropagation();
 }
 
 function move2(e: MouseEvent) {
