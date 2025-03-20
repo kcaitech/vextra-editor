@@ -30,6 +30,6 @@ const props = defineProps<{ context: Context }>();
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-width: 960px
+    min-width: 900px
 }
 </style>
