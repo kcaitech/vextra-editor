@@ -127,8 +127,8 @@ function disassemble() {
     if (pageDom) {
         pageDom.ctx.stopLoop();
         pageDom.dom.unbind();
-        if (!pageDom.dom.isDistroyed) {
-            pageDom?.dom.destory();
+        if (!pageDom.dom.isDestroyed) {
+            pageDom?.dom.destroy();
         }
         pageDom = undefined;
     }
