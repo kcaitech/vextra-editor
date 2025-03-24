@@ -8,12 +8,12 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { DViewCtx, Shape, ShapeView } from "@kcdesign/data";
+import { DViewCtx, ShapeView, GraphicsLibrary } from "@kcdesign/data";
 import { markRaw } from "vue";
 
 export class DomCtx extends DViewCtx {
-    constructor() {
-        super()
+    constructor(gl?: GraphicsLibrary) {
+        super(gl)
         this.setMarkRawFun(markRaw)
     }
     private idleCallback?: () => boolean;

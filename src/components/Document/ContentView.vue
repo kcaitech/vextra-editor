@@ -51,6 +51,7 @@ import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
 import { SpaceHandler } from "@/space";
+import MossCanvas from "@/components/Document/CanvasContent/MossCanvas.vue";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -553,7 +554,8 @@ const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
 comps.push(
     {
-        component: PageViewVue, params: {
+        component: MossCanvas,
+        params: {
             get data() {
                 return props.page
             },
@@ -567,6 +569,21 @@ comps.push(
             onContentVisible
         }
     },
+    // {
+    //     component: PageViewVue, params: {
+    //         get data() {
+    //             return props.page
+    //         },
+    //         get matrix() {
+    //             return matrix
+    //         },
+    //         get visibleRect() {
+    //             return visibleRect;
+    //         },
+    //         onRenderDone,
+    //         onContentVisible
+    //     }
+    // },
     // 筛选结果文本高亮
     {
         component: TextSelection, params: {
@@ -726,6 +743,9 @@ onMounted(() => {
 
     resizeObserver.observe(root.value!);
     _updateRoot(props.context, root.value!);
+
+    onRenderDone();
+    onContentVisible();
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
