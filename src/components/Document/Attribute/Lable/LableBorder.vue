@@ -89,14 +89,14 @@ function watchShapes() {
 }
 
 const watcher = (...args: any[]) => {
-    if (args.length > 0 && args.includes('style')) getBordersData();
+    if (args.length > 0 && args.includes('style')) getBorderData();
 }
 
-const getBordersData = () => {
+const getBorderData = () => {
     strokePaints.length = 0;
     const shape = props.context.selection.selectedShapes[0];
     if (props.context.selection.selectedShapes.length === 1) {
-        const borders1 = shape.getBorders();
+        const borders1 = shape.getBorder();
         for (let i = 0, l = borders1.strokePaints.length; i < l; i++) {
             const s = borders1.strokePaints[i];
             const b: StrokePaintItem = {
@@ -189,12 +189,12 @@ const copyLable = async (e: MouseEvent, v: string) => {
 
 const update_by_shapes = () => {
     watchShapes();
-    getBordersData();
+    getBorderData();
 }
 const selection_wather = (t: number | string) => {
     if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
         watchShapes();
-        getBordersData();
+        getBorderData();
     }
 }
 

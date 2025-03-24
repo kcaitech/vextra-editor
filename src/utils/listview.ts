@@ -182,39 +182,6 @@ export function modify_shape_visible_status(context: Context, shape: ShapeView) 
     editor.toggleVisible();
 }
 
-export function scroll_to_view(context: Context, shape: ShapeView) {
-    const is_p2 = context.navi.isPhase2(shape);
-    if (is_p2) {
-        fit(context, shape);
-        return;
-    }
-
-    if (isInner(context, shape)) {
-        context.selection.selectShape(shape);
-        context.navi.set_phase(shape.id);
-        return;
-    }
-
-    const workspace = context.workspace;
-    const { x: sx, y: sy, height, width } = shape.frame2Root();
-    const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
-    const { x, y, bottom, right } = workspace.root;
-    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
-    const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
-
-    if (!transX && !transY) {
-        return;
-    }
-
-    context.selection.selectShape(shape);
-
-    workspace.matrix.trans(transX, transY);
-
-    context.navi.set_phase('');
-
-    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
-}
-
 export function modify_after_drag(context: Context, detail: DragDetail) {
     context.navi.set_dragging_status(false);
 

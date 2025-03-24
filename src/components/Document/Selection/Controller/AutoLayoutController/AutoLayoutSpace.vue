@@ -185,7 +185,7 @@ function getHorSpacePosition() {
 const getIncludedBorderFrame = (shape: ShapeView, includedBorder?: boolean) => {
     let f = getShapeFrame(shape);
     if (includedBorder) {
-        const border = shape.getBorders();
+        const border = shape.getBorder();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
         const isEnabled = border.strokePaints.some(p => p.isEnabled);
         if (isEnabled) {

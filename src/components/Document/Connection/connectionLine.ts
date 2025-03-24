@@ -128,7 +128,7 @@ export class ConnectionLine extends WatchableObject {
         return this.data.isEdited;
     }
 
-    private getBorders() {
+    private getBorder() {
         return this.data.style.borders;
     }
 
