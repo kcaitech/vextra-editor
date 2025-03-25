@@ -22,22 +22,8 @@ export class DomCtx extends DViewCtx {
         return this.focusshape as ShapeView;
     }
 
-    // private level1Id: string | undefined;
-    // getFocusLevel1Id() {
-    //     return this.level1Id;
-    // }
-
     updateFocusShape(shape: ShapeView | undefined) {
         this.focusshape = shape;
-        // this.level1Id = undefined;
-        // if (shape) {
-        //     let p = shape.parent;
-        //     while (p) {
-        //         this.level1Id = shape.id;
-        //         shape = p;
-        //         p = shape.parent;
-        //     }
-        // }
     }
 
     setBeforeRenderCallback(cb: () => void) {

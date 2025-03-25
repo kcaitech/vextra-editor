@@ -91,18 +91,6 @@ export class RepoWraper {
     unwatch(f: Function) {
         throw new Error("Not implemented")
     }
-
-    // setOnLoaded(onLoaded: () => void) {
-    //     this.m_repo.setOnLoaded(onLoaded);
-    // }
-
-    // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
-    //     return this.m_repo.onCommit(...args)
-    // }
-
-    // onUndoRedo(...args: Parameters<typeof this.m_repo.onUndoRedo>): ReturnType<typeof this.m_repo.onUndoRedo> {
-    //     return this.m_repo.onUndoRedo(...args)
-    // }
 }
 
 class ToolBox implements IToolBox {
@@ -395,7 +383,7 @@ export class Context extends WatchableObject implements IContext {
     }
 
     private createVDom(page: Page) {
-        const domCtx = new DomCtx("Canvas");
+        const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
         const dom: PageDom = new PageDom(domCtx, { data: page });
         const ret = { dom, ctx: domCtx }

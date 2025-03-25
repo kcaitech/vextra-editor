@@ -308,7 +308,7 @@ export const getPosition = (shape: ShapeView) => {
     const p_artboard = parentIsArtboard(shape);
     if (shape.type === ShapeType.Cutout) {
         if (p_artboard) {
-            const __frame = shape._p_frame;
+            const __frame = shape.relativeFrame;
             const _f = shape.parent!.transform.transform(ColVector3D.FromXY(__frame.x, __frame.y));
             return { x: _f.x, y: _f.y, width: shape.frame.width, height: shape.frame.height }
         } else {
@@ -319,9 +319,9 @@ export const getPosition = (shape: ShapeView) => {
         return getGroupChildBounds(shape);
     } else {
         const { left, top, right, bottom } = getShadowMax(shape);
-        let { x, y, width: _w, height: _h } = shape._p_outerFrame;
+        let { x, y, width: _w, height: _h } = shape.relativeOuterFrame;
         if ((shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef)) {
-            const f = shape._p_visibleFrame;
+            const f = shape.relativeVisibleFrame;
             if (!(shape as ArtboardView).frameMaskDisabled) {
                 x = f.x; y = f.y; _w = f.width; _h = f.height;
             }

@@ -36,7 +36,6 @@ const props = defineProps<{
     trigger: any[]
 }>();
 const { t } = useI18n();
-const popover = ref();
 const borderStyle = ref<SelectItem>({ value: 'dash', content: t('attr.dash') });
 const borderStyleOptionsSource: SelectSource[] = genOptions([
     ['solid', t('attr.solid')],
@@ -85,7 +84,6 @@ function borderStyleSelect(selected: SelectItem) {
     const flat = props.context.selection.flat;
     const actions = get_actions_border_style(flat, selected.value as 'dash' | 'solid');
     if (actions && actions.length) props.manager.modifyStrokeStyle(actions);
-    popover.value.focus();
     hidden_selection(props.context);
 }
 
@@ -96,7 +94,6 @@ function setCornerType(type: CornerType) {
     if (flat.length < 1) return;
     const actions = get_actions_border(flat, type);
     if (actions && actions.length) props.manager.modifyCornerType(actions);
-    popover.value.focus();
     hidden_selection(props.context);
 }
 

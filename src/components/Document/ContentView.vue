@@ -554,8 +554,7 @@ const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
 comps.push(
     {
-        component: MossCanvas,
-        params: {
+        component: PageViewVue, params: {
             get data() {
                 return props.page
             },
@@ -569,21 +568,6 @@ comps.push(
             onContentVisible
         }
     },
-    // {
-    //     component: PageViewVue, params: {
-    //         get data() {
-    //             return props.page
-    //         },
-    //         get matrix() {
-    //             return matrix
-    //         },
-    //         get visibleRect() {
-    //             return visibleRect;
-    //         },
-    //         onRenderDone,
-    //         onContentVisible
-    //     }
-    // },
     // 筛选结果文本高亮
     {
         component: TextSelection, params: {
@@ -623,18 +607,6 @@ comps.push(
                     layers: shapesContainsMousedownOnPageXY,
                     onClose: contextMenuUnmount
                 });
-            }
-        }
-    },
-    // 表格菜单
-    {
-        component: CellSetting, params: {
-            get visible() {
-                return cellSetting.value
-            },
-            close: closeModal,
-            get cellStatus() {
-                return cellStatus.value
             }
         }
     },

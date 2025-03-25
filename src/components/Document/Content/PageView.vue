@@ -18,7 +18,6 @@ import ShapeTitles from './ShapeTitles.vue';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
 import { PageDom } from './vdom/page';
-import ConnectionStation from "@/components/Document/Connection/ConnectionStation.vue";
 
 type Props = {
     context: Context
@@ -61,7 +60,7 @@ function pageViewRegister(mount: boolean) {
 
 function page_watcher() {
     matrixWithFrame.reset(props.params.matrix);
-    const frame = props.params.data._p_frame;
+    const frame = props.params.data.relativeFrame;
     matrixWithFrame.preTrans(frame.x, frame.y);
     matrixWithFrame_inverse.reset(matrixWithFrame.inverse)
 

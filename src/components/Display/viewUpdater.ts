@@ -175,7 +175,7 @@ export class ViewUpdater {
             return;
         }
 
-        const frame = shape._p_frame;
+        const frame = shape.relativeFrame;
         const m = (shape.matrix2Parent());
         m.trans(-frame.x, -frame.y);
 
@@ -711,12 +711,12 @@ export class ViewUpdater {
     }) {
         const cur_shape = context.selection.selectedShapes[0];
         if (!cur_shape) return;
-        const cur_frame = cur_shape._p_frame;
+        const cur_frame = cur_shape.relativeFrame;
         const m = new Matrix()
         m.reset(this.v_matrix);
         if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP || type === PrototypeNavigationType.NAVIGATE) {
             let s: ShapeView | undefined = shape;
-            const frame = shape._p_frame;
+            const frame = shape.relativeFrame;
             const cur_box = viewBox(this.v_matrix, shape);
             if (type === PrototypeNavigationType.SWAP) {
                 const before_action = context.preview.swapEndAction;
