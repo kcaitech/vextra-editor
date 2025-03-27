@@ -37,6 +37,8 @@ const close = (e: MouseEvent) => {
 }
 
 const keyClose = (e: KeyboardEvent) => {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     e.stopPropagation();
     if (e.code === 'Escape') {
         emit('close');

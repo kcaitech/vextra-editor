@@ -60,6 +60,8 @@ import { MossClipboard } from "@/clipboard";
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
+    const active = context.active;
+    if (!active && typeof active === 'boolean') return;
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
         return;
     }

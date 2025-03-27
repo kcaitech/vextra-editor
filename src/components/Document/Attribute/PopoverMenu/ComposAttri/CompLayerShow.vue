@@ -112,6 +112,8 @@ function click(e: Event) {
 }
 
 function keyboard_watcher(e: KeyboardEvent) {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     e.stopPropagation();
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         save();

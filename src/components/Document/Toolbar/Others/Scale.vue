@@ -56,6 +56,8 @@ function onMenuBlur(e: MouseEvent) {
 }
 
 function enter(e: KeyboardEvent) {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         if (input.value) {
             page_scale(props.context, (Number(input.value.value) || props.context.workspace.matrix.m00 * 100) / 100);

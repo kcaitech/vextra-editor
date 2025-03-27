@@ -35,6 +35,8 @@ const rowBotom = ref(1);
 const colRight = ref(1);
 
 const escClose = (e: KeyboardEvent) => {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     e.stopPropagation();
     // emit('close');
     props.params.close()

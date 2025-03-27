@@ -579,6 +579,8 @@ const isSpacePressed = () => {
 }
 
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     if (e.target instanceof HTMLInputElement) return;
     if (e.repeat || !preview.value) return;
     if (e.code === 'Space') {

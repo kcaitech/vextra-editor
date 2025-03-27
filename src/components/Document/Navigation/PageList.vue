@@ -232,6 +232,8 @@ const chartMenuMount = (e: MouseEvent) => {
 }
 
 function menuEsc(e: KeyboardEvent) {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     if (e.code === 'Escape') pageMenuUnmount();
 }
 

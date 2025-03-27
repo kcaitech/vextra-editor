@@ -259,6 +259,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
         }, TIMER)
     }
     function keyboardHandle(e: KeyboardEvent) {
+        const active = context.active;
+        if (!active && typeof active === 'boolean') return;
         handle(e, context);
     }
     function selection_watcher(t?: number | string) {

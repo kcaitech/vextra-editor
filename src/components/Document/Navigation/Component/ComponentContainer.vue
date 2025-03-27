@@ -91,6 +91,8 @@ const compMenuMount = (shape: Shape, e: MouseEvent) => {
 }
 
 function Menuesc(e: KeyboardEvent) {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     if (e.code === 'Escape') compMenuUnmount();
 }
 

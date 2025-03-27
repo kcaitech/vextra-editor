@@ -155,6 +155,8 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 
 function onKeyDown(e: KeyboardEvent) {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || workspace.linearEditorExist) return;
     if (e.code === 'Space') {
         if (workspace.select || spacePressed.value) return;

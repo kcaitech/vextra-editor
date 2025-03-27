@@ -48,6 +48,8 @@ function keyboard_up_watcher(e: KeyboardEvent) {
 }
 
 function keyboard_down_watcher(e: KeyboardEvent) {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
     }

@@ -13,6 +13,7 @@
 import { pipette } from '@/utils/cursor';
 import domtoimage from './dom-to-image.js';
 import { drawTooltip, getCanvas, getCanvasRectColor, loadImage, rbgaObjToHex, renderColorInfo } from './utils';
+import { Context } from '@/context/index.js';
 export interface Point {
   x: number;
   y: number;
@@ -35,12 +36,14 @@ export interface IRgba {
 }
 
 export interface Props {
+  context: Context;
   container: any;
   listener?: Record<string, (e: any) => void>;
   scale?: number;
   useMagnifier?: boolean;
 }
 export class Eyedropper {
+  context: Context;
   container: any = {};
   listener: Record<string, (e: any) => void> = {};
   rect: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -53,8 +56,9 @@ export class Eyedropper {
   tooltipVisible = true;
   useMagnifier = false;
   constructor(props: Props) {
+    const { context, container, listener, scale = 1, useMagnifier = false } = props;
+    this.context = context;
     try {
-      const { container, listener, scale = 1, useMagnifier = false } = props;
       this.container = container || document.body;
       this.listener = listener || {};
       this.rect = this.container.getBoundingClientRect();
@@ -164,6 +168,8 @@ export class Eyedropper {
 
   // 按下Esc退出拾色
   keydown = (e: KeyboardEvent) => {
+    const active = this.context.active;
+    if (!active && typeof active === 'boolean') return;
     if (e.code === 'Escape') {
       this.destroy();
     }

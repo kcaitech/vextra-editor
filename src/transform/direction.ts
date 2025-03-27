@@ -193,6 +193,8 @@ export class Direction {
     }
 
     private __keydown(event: KeyboardEvent) {
+        const active = this.context.active;
+        if (!active && typeof active === 'boolean') return;
         if (this.__can_not(event)) return;
 
         !event.repeat && this.__checkout();

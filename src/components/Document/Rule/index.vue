@@ -363,6 +363,8 @@ let holder: any = undefined;
 let keyboardWorking = false;
 
 function keydown(event: KeyboardEvent) {
+    const active = props.context.active;
+    if (!active && typeof active === 'boolean') return;
     if (
         !props.context.user.isRuleVisible ||
         !selected.value.valid ||

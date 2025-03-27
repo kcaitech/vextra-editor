@@ -94,6 +94,8 @@ const setRadius = (event: Event) => {
 }
 
 function checkEnter(e: KeyboardEvent) {
+    const active = context.active;
+    if (!active && typeof active === 'boolean') return;
     if (e.key === 'Enter' && name.value && !data) {
         createStyle();
     }

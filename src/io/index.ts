@@ -50,8 +50,8 @@ export async function _exportDocument(context: Context) {
 export async function exportDocument(context: Context) {
     const content = await _exportDocument(context);
     const name = context.documentInfo.name;
-    const reg = new RegExp('(.sketch|.fig|.moss)$', 'img');
-    downloadByLink(content, name.replace(reg, '') + '.moss');
+    const reg = new RegExp('(.sketch|.fig|.vext)$', 'img');
+    downloadByLink(content, name.replace(reg, '') + '.vext');
 }
 
 export function downloadByLink(content: Blob, name: string) {

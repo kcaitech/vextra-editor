@@ -58,6 +58,8 @@ export class TransformHandler {
     }
 
     protected keydown(event: KeyboardEvent) {
+        const active = this.context.active;
+        if (!active && typeof active === 'boolean') return;
     }
 
     protected keyup(event: KeyboardEvent) {

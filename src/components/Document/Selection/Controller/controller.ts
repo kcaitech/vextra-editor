@@ -87,6 +87,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keydown(event: KeyboardEvent) {
+        const active = context.active;
+        if (!active && typeof active === 'boolean') return;
         // 不处理输入框内的键盘事件
         if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
 

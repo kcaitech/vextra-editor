@@ -91,9 +91,9 @@ export class RepoWraper {
         throw new Error("Not implemented")
     }
 
-    // setOnLoaded(onLoaded: () => void) {
-    //     this.m_repo.setOnLoaded(onLoaded);
-    // }
+    setOnChange(onChange: (id: string) => void) {
+        this.m_repo.setOnChange(onChange);
+    }
 
     // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
     //     return this.m_repo.onCommit(...args)
@@ -163,6 +163,7 @@ export class Context extends WatchableObject implements IContext {
     private m_props: DocumentProps;
     private m_net?: INet;
     private m_readonly?: boolean;
+    private m_active?: boolean;
 
     constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
         super();
@@ -456,4 +457,12 @@ export class Context extends WatchableObject implements IContext {
     }
 
     eventsMap: Map<string, Function[]>;
+
+    setActive(active?: boolean) {
+        this.m_active = active;
+    }
+
+    get active() {
+        return this.m_active;
+    }
 }
