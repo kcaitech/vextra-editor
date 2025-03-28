@@ -9,20 +9,20 @@
  */
 
 <script setup lang="ts">
-import { AutoLayout, StackAlign, StackMode, StackSizing, StackWrap } from '@kcdesign/data';
+import { StackAlign, StackMode, StackSizing, StackWrap } from '@kcdesign/data';
 import WrapAlignBox from './WrapAlignBox.vue';
 import HorAlignBox from './HorAlignBox.vue';
 import VerAlignBox from './VerAlignBox.vue';
 import HorGapAuto from './HorGapAuto.vue';
 import VerGapAuto from './VerGapAuto.vue';
 import { useI18n } from "vue-i18n";
-import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n();
 
 import { Context } from '@/context';
+import { AutolayoutCtx } from './ctx';
 
 const props = defineProps<{
-    autoLayoutDate: AutoLayout
+    autoLayoutDate: AutolayoutCtx
     context: Context
     reflush: number
 }>();
@@ -66,10 +66,10 @@ const position = (posi: AlignPosition) => {
 }
 
 const changeAlignMode = (primary: StackAlign, counter: StackAlign) => {
-    const shape = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shape);
-
-    editor.modifyAutoLayoutAlignItems(primary, counter);
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyAutoLayoutAlignItems(shapes, primary, counter);
 }
 </script>
 

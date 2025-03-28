@@ -275,9 +275,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
             if (s.autoLayout) {
                 contextMenuItems.value.add(MenuItemType.UnAutoLayout);
             } else {
-                if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(s.type)) {
-                    contextMenuItems.value.add(MenuItemType.AutoLayout);
-                }
+                contextMenuItems.value.add(MenuItemType.AutoLayout);
             }
         }
         if (selected.length > 1) {
@@ -483,7 +481,6 @@ const stopWatch = watch(() => props.page, () => {
     shapeDirList.watch(notifySourceChange)
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }, { immediate: true });
-
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
     props.context.menu.watch(menu_watcher);

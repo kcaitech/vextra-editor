@@ -215,7 +215,11 @@ class EnvRadar {
                 migrateItems.push({ view, toParent: env.parent, index: env.index });
             }
         } else {
-            for (const view of sortedViews) migrateItems.push({ view, toParent: target });
+            const __is_locked = translate.isLocked.bind(translate);
+            for (const view of sortedViews) {
+                if (__is_locked(view)) continue;
+                migrateItems.push({ view, toParent: target });
+            }
         }
 
         const context = this.context;
@@ -1273,7 +1277,7 @@ export class Translate2 extends BoundHandler {
         const selection = this.context.selection;
         selection.setLabelLivingGroup([]);
         selection.setLabelFixedGroup([]);
-        selection.setShowInterval(false);
+        if (!this.altStatus) selection.setShowInterval(false);
 
         if (this.altStatus) this.context.nextTick(this.page, () => {
             this.context.navi.notify(Navi.SHAPELIST_UPDATE);

@@ -16,8 +16,6 @@ import { MarkerType, PathShapeView } from '@kcdesign/data';
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { genOptions } from '@/utils/common';
 import { Context } from '@/context';
-import { hidden_selection } from '@/utils/content';
-import { get_actions_border_Apex, get_actions_border_endpoint, get_actions_border_exchange } from '@/utils/shape_style';
 import { useI18n } from 'vue-i18n';
 
 import SvgIcon from '@/components/common/SvgIcon.vue';
@@ -184,8 +182,6 @@ import { StrokeFillContextMgr } from '../ctx';
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding-top: 2px;
-    padding-bottom: 6px;
     justify-content: space-between;
     gap: 8px;
 

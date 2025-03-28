@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { ColorCtx } from '@/context/color';
-import { ClientXY, Selection } from '@/context/selection';
+import { ClientXY, Selection, XY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { getTextIndexAndLen, get_add_gradient_color, get_gradient, to_rgba } from './gradient_utils';
 import {
@@ -26,7 +26,7 @@ import {
     Stop,
     TextShapeView,
     Transform,
-    cloneGradient
+    cloneGradient, Api, ShapeView, SymbolRefView
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
@@ -35,18 +35,17 @@ import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
 import { computed } from 'vue';
-import { getShapesForStyle } from '@/utils/style';
-interface Props {
-    context: Context
-    matrix: Matrix
-}
-const props = defineProps<Props>();
+
+const props = defineProps<{
+    context: Context;
+    matrix: Matrix;
+}>();
 const matrix = new Matrix();
 type DotType = 'from' | 'to';
-interface Dot {
+type Dot = {
     x: number, y: number, type: DotType
 }
-interface Stops {
+type Stops = {
     x: number, y: number, color: Color, id?: string, r?: number
 }
 
@@ -69,16 +68,172 @@ const line_length = ref<number>(1);
 const temporary_stop = ref<Stops>();
 const temporary = ref(false);
 const enter_stop = ref(false);
-const percent_posi = ref({ x: 0, y: 0 });
+const percent_position = ref({ x: 0, y: 0 });
 const percent = ref(0);
 const percent_show = ref(false);
 const ellipse_show = ref(false);
 const is_dot_down = ref(false);
 const slope_r = ref(0);
+
+function modifyApex(position: XY, apex: 'modifyFrom' | 'modifyTo') {
+    const locate = props.context.color.locate!;
+    const shape = props.context.selection.flat[0];
+    const maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
+    const editor = gradientEditor! as GradientEditor;
+    const page = props.context.selection.selectedPage!;
+    if (maskId) {
+        const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
+        editor[apex]([(api: Api) => modifyGradientPosition(api, mask.fills[locate.index])]);
+    } else if (locate.type === 'fills') {
+        const views: ShapeView[] = [];
+        const fills: Fill[] = [];
+        const index = locate.index;
+        for (const view of props.context.selection.flat) {
+            if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
+            else fills.push(view.getFills()[index]);
+        }
+        const modifyVariables = (api: Api) => {
+            for (const view of views) modifyGradientPosition(api, editor.getFillsVariable(api, page, view).value[index]);
+        }
+        const modifyLocal = (api: Api) => {
+            for (const fill of fills) modifyGradientPosition(api, fill);
+        }
+        editor[apex]([modifyVariables, modifyLocal]);
+    } else if (locate.type === 'borders') {
+        const views: ShapeView[] = [];
+        const fills: Fill[] = [];
+        const index = locate.index;
+        for (const view of props.context.selection.flat) {
+            if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
+            else fills.push(view.getBorders().strokePaints[index]);
+        }
+        const modifyVariables = (api: Api) => {
+            for (const view of views) modifyGradientPosition(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);
+        }
+        const modifyLocal = (api: Api) => {
+            for (const fill of fills) modifyGradientPosition(api, fill);
+        }
+        editor[apex]([modifyVariables, modifyLocal]);
+    }
+
+    function modifyGradientPosition(api: Api, fill: Fill) {
+        const key = apex === "modifyFrom" ? "from" : "to";
+        const gradient = fill.gradient!;
+        const gradientCopy = editor.importGradient(gradient);
+        gradientCopy[key].x = position.x;
+        gradientCopy[key].y = position.y;
+        api.setFillGradient(fill, gradientCopy);
+    }
+}
+
+function createFillGradientStop(stop: Stop) {
+    const locate = props.context.color.locate!;
+    const idx = locate.index;
+    const shape = props.context.selection.flat[0];
+    const editor = gradientEditor = new GradientEditor(props.context.coopRepo);
+    const page = props.context.selection.selectedPage!;
+
+    let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
+    if (maskId) {
+        const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
+        const fill = mask.fills[idx];
+        editor.createStop([(api: Api) => insetStop(api, fill)]);
+    } else if (locate.type === 'fills') {
+        const views: ShapeView[] = [];
+        const fills: Fill[] = [];
+        const index = locate.index;
+        for (const view of props.context.selection.flat) {
+            if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
+            else fills.push(view.getFills()[index]);
+        }
+        const modifyVariables = (api: Api) => {
+            for (const view of views) insetStop(api, editor.getFillsVariable(api, page, view).value[index]);
+        }
+        const modifyLocal = (api: Api) => {
+            for (const fill of fills) insetStop(api, fill);
+        }
+        editor.createStop([modifyVariables, modifyLocal]);
+    } else if (locate.type === 'borders') {
+        const views: ShapeView[] = [];
+        const fills: Fill[] = [];
+        const index = locate.index;
+        for (const view of props.context.selection.flat) {
+            if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
+            else fills.push(view.getBorders().strokePaints[index]);
+        }
+        const modifyVariables = (api: Api) => {
+            for (const view of views) insetStop(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);
+        }
+        const modifyLocal = (api: Api) => {
+            for (const fill of fills) insetStop(api, fill);
+        }
+        editor.createStop([modifyVariables, modifyLocal]);
+    }
+
+    function insetStop(api: Api, fill: Fill) {
+        const gradient = fill.gradient!;
+        const gradientCopy = editor.importGradient(gradient);
+        gradientCopy.stops.push(stop);
+        gradientCopy.stops = gradientCopy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
+        api.setFillGradient(fill, gradientCopy);
+    }
+}
+
+function modifyStopPosition(position: number, id: string) {
+    const locate = props.context.color.locate!;
+    const shape = props.context.selection.flat[0];
+    const maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
+    const editor = gradientEditor! as GradientEditor;
+    const page = props.context.selection.selectedPage!;
+    if (maskId) {
+        const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
+        editor.modifyStopPosition([(api: Api) => modifyStopPosition(api, mask.fills[locate.index])]);
+    } else if (locate.type === 'fills') {
+        const views: ShapeView[] = [];
+        const fills: Fill[] = [];
+        const index = locate.index;
+        for (const view of props.context.selection.flat) {
+            if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
+            else fills.push(view.getFills()[index]);
+        }
+        const modifyVariables = (api: Api) => {
+            for (const view of views) modifyStopPosition(api, editor.getFillsVariable(api, page, view).value[index]);
+        }
+        const modifyLocal = (api: Api) => {
+            for (const fill of fills) modifyStopPosition(api, fill);
+        }
+        editor.modifyStopPosition([modifyVariables, modifyLocal]);
+    } else if (locate.type === 'borders') {
+        const views: ShapeView[] = [];
+        const fills: Fill[] = [];
+        const index = locate.index;
+        for (const view of props.context.selection.flat) {
+            if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
+            else fills.push(view.getBorders().strokePaints[index]);
+        }
+        const modifyVariables = (api: Api) => {
+            for (const view of views) modifyStopPosition(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);
+        }
+        const modifyLocal = (api: Api) => {
+            for (const fill of fills) modifyStopPosition(api, fill);
+        }
+        editor.modifyStopPosition([modifyVariables, modifyLocal]);
+    }
+
+    function modifyStopPosition(api: Api, fill: Fill) {
+        const gradient = fill.gradient!;
+        const gradientCopy = editor.importGradient(gradient);
+        const stop = gradientCopy.stops.find(i => i.id === id);
+        if (stop) stop.position = position;
+        gradientCopy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
+        api.setFillGradient(fill, gradientCopy);
+    }
+}
+
 const get_linear_points = () => {
     dot.value = false;
     stops.value = [];
-    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
+    const shape = props.context.selection.flat[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient || gradient.gradientType !== GradientType.Angular) return;
     let id = props.context.color.selected_stop ?? gradient.stops[0].id;
@@ -143,7 +298,7 @@ const dot_mousemove = (e: MouseEvent) => {
     const { x: sx, y: sy } = startPosition;
     const dx = x - sx;
     const dy = y - sy;
-    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
+    const shape = props.context.selection.flat[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     if (isDragging) {
@@ -155,26 +310,18 @@ const dot_mousemove = (e: MouseEvent) => {
         matrix.multiAtLeft(shape.matrix2Root());
         matrix.multiAtLeft(props.context.workspace.matrix);
         const m = (matrix.inverse);
-        const posi = m.computeCoord(x, y);
-        let fill: Fill[] = [];
-        if (locate.type !== 'text') {
-            let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
-            if (maskId) {
-                const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
-                fill = [mask.fills[locate.index]];
-            } else {
-                fill = locate.type === 'fills' ? [shape.getFills()[locate.index]] : [shape.getBorders().strokePaints[locate.index]];
-            }
+        const position = m.computeCoord(x, y);
+        if (locate.type === 'text') {
             if (dot_type === 'from') {
-                gradientEditor!.modifyFrom(fill, posi);
+                gradientTextEditor?.execute_from(position);
             } else if (dot_type === 'to') {
-                gradientEditor!.modifyTo(fill, posi);
+                gradientTextEditor?.execute_to(position);
             }
         } else {
             if (dot_type === 'from') {
-                gradientTextEditor?.execute_from(posi);
+                modifyApex(position, 'modifyFrom');
             } else if (dot_type === 'to') {
-                gradientTextEditor?.execute_to(posi);
+                modifyApex(position, 'modifyTo');
             }
         }
     } else {
@@ -211,7 +358,7 @@ const dot_mouseup = (e: MouseEvent) => {
 const stop_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
     e.stopPropagation();
-    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
+    const shape = props.context.selection.flat[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     const position = gradient.stops[index].position;
@@ -221,35 +368,22 @@ const stop_enter = (e: MouseEvent, index: number) => {
 const update_percent = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
     const r_p = props.context.workspace.getContentXY(e);
-    percent_posi.value.x = r_p.x + 20;
-    percent_posi.value.y = r_p.y + 20;
+    percent_position.value.x = r_p.x + 20;
+    percent_position.value.y = r_p.y + 20;
 }
 const down_stop_id = ref<string>('');
 const add_stop = (e: MouseEvent) => {
-    const posi = get_stop_position(e);
+    const position = get_stop_position(e);
     const locate = props.context.color.locate;
-    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
+    const shape = props.context.selection.flat[0];
     startPosition = props.context.workspace.getContentXY(e);
     if (!locate) return;
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
-    const _stop = get_add_gradient_color(gradient.stops, posi);
+    const _stop = get_add_gradient_color(gradient.stops, position);
     if (!_stop) return;
-    const page = props.context.selection.selectedPage!;
-    const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
-    if (locate.type !== 'text') {
-        const idx = locate.index;
-        const editor = props.context.editor4Page(page);
-        let fills: Fill[] = [];
-        let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
-        if (maskId) {
-            const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
-            fills = mask.fills;
-        } else {
-            fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
-        }
-        editor.addShapesGradientStop([{ fill: fills[idx], stop }]);
-    } else {
+    const stop = new Stop(new BasicArray(), v4(), position, _stop.color);
+    if (locate.type === 'text') {
         const { textIndex, selectLength } = getTextIndexAndLen(props.context);
         const new_gradient = cloneGradient(gradient);
         new_gradient.stops.push(stop);
@@ -265,6 +399,8 @@ const add_stop = (e: MouseEvent) => {
         })
         const editor = props.context.editor4TextShape(shape as TextShapeView);
         editor.setTextGradient(new_gradient, textIndex, selectLength);
+    } else {
+        createFillGradientStop(stop);
     }
     nextTick(() => {
         down_stop(e, stop.id);
@@ -292,7 +428,7 @@ const stop_mousedown = (e: MouseEvent, id: string) => {
 }
 const is_stop_down = ref(false);
 const down_stop = (e: MouseEvent, id: string) => {
-    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
+    const shape = props.context.selection.flat[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     temporary.value = false;
@@ -313,46 +449,38 @@ const stop_mousemove = (e: MouseEvent) => {
     const { x: sx, y: sy } = startPosition;
     const dx = x - sx;
     const dy = y - sy;
-    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
+    const shape = props.context.selection.flat[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     if (isDragging) {
         startPosition.x = x;
         startPosition.y = y;
-        get_percent_posi(e);
-        const posi = get_stop_position(e);
-        percent.value = +(posi * 100).toFixed(0);
-        let fill: Fill[] = [];
-        if (locate.type !== 'text') {
-            let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
-            if (maskId) {
-                const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
-                fill = [mask.fills[locate.index]];
-            } else {
-                fill = locate.type === 'fills' ? [shape.getFills()[locate.index]] : [shape.getBorders().strokePaints[locate.index]];
-            }
-            gradientEditor!.modifyStopPosition(fill, posi, down_stop_id.value);
+        get_percent_position(e);
+        const position = get_stop_position(e);
+        percent.value = +(position * 100).toFixed(0);
+        if (locate.type === 'text') {
+            gradientTextEditor!.execute_stop_position(position, down_stop_id.value);
         } else {
-            gradientTextEditor!.execute_stop_position(posi, down_stop_id.value);
+            modifyStopPosition(position, down_stop_id.value);
         }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
-            if (locate.type !== 'text') {
-                gradientEditor = new GradientEditor(props.context.coopRepo);
-            } else {
+            if (locate.type === 'text') {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
                 const editor = props.context.editor4TextShape(shape as TextShapeView);
                 gradientTextEditor = editor.asyncSetTextGradient([shape] as TextShapeView[], gradient, textIndex, selectLength);
+            } else {
+                gradientEditor = gradientEditor ?? new GradientEditor(props.context.coopRepo);
             }
         }
     }
 }
 
-const get_percent_posi = (e: MouseEvent) => {
+const get_percent_position = (e: MouseEvent) => {
     const r_p = props.context.workspace.getContentXY(e);
-    percent_posi.value.x = r_p.x + 20;
-    percent_posi.value.y = r_p.y + 20;
+    percent_position.value.x = r_p.x + 20;
+    percent_position.value.y = r_p.y + 20;
 }
 
 const stop_mouseup = (e: MouseEvent) => {
@@ -373,9 +501,9 @@ const stop_mouseup = (e: MouseEvent) => {
 
 const stop_content_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
-    get_percent_posi(e);
+    get_percent_position(e);
     temporary.value = false;
-    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
+    const shape = props.context.selection.flat[0];
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
     const position = gradient.stops[index].position;
@@ -387,8 +515,8 @@ const hover_ellipse_move = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
     if (enter_stop.value) enter_stop.value = false;
     e.stopPropagation();
-    const posi = get_stop_position(e);
-    percent.value = +(posi * 100).toFixed(0);
+    const position = get_stop_position(e);
+    percent.value = +(position * 100).toFixed(0);
     get_temporary_stop(e);
 }
 
@@ -401,13 +529,13 @@ const hover_ellipse_enter = (e: MouseEvent) => {
 }
 
 const get_temporary_stop = (e: MouseEvent) => {
-    const posi = get_stop_position(e);
-    const shape = getShapesForStyle(props.context.selection.selectedShapes)[0];
-    get_percent_posi(e);
-    const theta = posi * 360;
+    const position = get_stop_position(e);
+    const shape = props.context.selection.flat[0];
+    get_percent_position(e);
+    const theta = position * 360;
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
-    const stop = get_add_gradient_color(gradient.stops, posi);
+    const stop = get_add_gradient_color(gradient.stops, position);
     if (!stop) return
     const point = calculateEllipsePoint(line_length.value + 1.5, -(270 - theta));
     const r_p = rotatePoint(point.x - 1.5, point.y, dot1.value.x, dot1.value.y, rotate.value - 90);
@@ -537,6 +665,6 @@ onUnmounted(() => {
             </g>
         </g>
     </svg>
-    <Percent v-if="percent_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent" />
-    <Percent v-if="ellipse_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent" />
+    <Percent v-if="percent_show" :x="percent_position.x" :y="percent_position.y" :size="percent"/>
+    <Percent v-if="ellipse_show" :x="percent_position.x" :y="percent_position.y" :size="percent"/>
 </template>

@@ -132,6 +132,6 @@ onUnmounted(() => {
 }
 
 .active {
-    background-color: rgba(191, 191, 191, 0.7) !important;
+    background-color: #ebebeb !important;
 }
 </style>

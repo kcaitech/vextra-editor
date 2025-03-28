@@ -55,40 +55,6 @@ interface LayoutForInsert {
     layout: AutoLayout;
 }
 
-function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
-    let frame = { ...shape.frame };
-    if (includedBorder) {
-        const border = shape.getBorders();
-        let maxtopborder = 0;
-        let maxleftborder = 0;
-        let maxrightborder = 0;
-        let maxbottomborder = 0;
-        const isEnabled = border.strokePaints.some(p => p.isEnabled);
-        if (isEnabled) {
-            const outer = border.position === BorderPosition.Outer;
-            maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
-            maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
-            maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
-            maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
-        }
-        frame.x -= maxleftborder;
-        frame.y -= maxtopborder;
-        frame.width += maxleftborder + maxrightborder;
-        frame.height += maxtopborder + maxbottomborder;
-    }
-    const m = shape.transform;
-    const corners = [
-        { x: frame.x, y: frame.y },
-        { x: frame.x + frame.width, y: frame.y },
-        { x: frame.x + frame.width, y: frame.y + frame.height },
-        { x: frame.x, y: frame.y + frame.height }]
-        .map((p) => m.computeCoord(p));
-    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-}
 
 export class TranslateHandler extends TransformHandler {
     shapes: ShapeView[];

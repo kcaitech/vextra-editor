@@ -16,7 +16,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
 import { fixedZero } from '@/utils/common';
-import { CursorType } from '@/utils/cursor2';
+import { CursorType } from '@/utils/cursor';
 import { useI18n } from "vue-i18n";
 import { getShapeFrame } from '@/utils/content';
 const { t } = useI18n();
@@ -45,7 +45,7 @@ interface Point {
 }
 
 const emits = defineEmits<{
-    (e: 'hoverPaddint', index: number): void;
+    (e: 'hoverPadding', index: number): void;
 }>();
 
 
@@ -156,8 +156,10 @@ function getHorSpacePosition() {
         for (let j = 0; j < shape_row.length - 1; j++) {
             const shape = shape_row[j];
             const frame = getIncludedBorderFrame(shape, autoLayout.bordersTakeSpace);
-            const row_space = getIncludedBorderFrame(shape_row[j + 1], autoLayout.bordersTakeSpace).x - (frame.x + frame.width);
+            const next_frame = getIncludedBorderFrame(shape_row[j + 1], autoLayout.bordersTakeSpace);
+            const row_space = next_frame.x - (frame.x + frame.width);
             leftPadding = frame.x + frame.width;
+
             const horSpace = m.transform([
                 ColVector3D.FromXY(leftPadding, topPadding),
                 ColVector3D.FromXY(leftPadding + row_space, topPadding),
@@ -181,7 +183,7 @@ function getHorSpacePosition() {
 }
 
 const getIncludedBorderFrame = (shape: ShapeView, includedBorder?: boolean) => {
-    let f = getShapeFrame(shape.data);
+    let f = getShapeFrame(shape);
     if (includedBorder) {
         const border = shape.getBorders();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
@@ -321,7 +323,7 @@ function setCursor(dir: 'ver' | 'hor') {
 }
 
 const verMouseenter = (e: MouseEvent) => {
-    emits('hoverPaddint', -1);
+    emits('hoverPadding', -1);
     if (props.context.workspace.transforming) {
         return;
     }
@@ -338,7 +340,7 @@ const verMousemove = (e: MouseEvent) => {
 }
 
 const horMouseenter = (e: MouseEvent) => {
-    emits('hoverPaddint', -1);
+    emits('hoverPadding', -1);
     if (props.context.workspace.transforming) {
         return;
     }

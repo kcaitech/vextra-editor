@@ -30,7 +30,8 @@ const controllerRef = ref<HTMLElement>();
 const underlineWidth = ref(0);
 const underlinePosition = ref(0);
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
-type Tab = "Shape" | "Comps" | "Resource" | "Comment"
+type Tab = "Shape" | "Comps" | "Resource" | "Comment";
+const plugins = props.context.pluginsMgr.search2('navigation');
 
 const currentTab = ref<Tab>("Shape");
 const tabs: { title: string, id: Tab }[] = [
@@ -40,11 +41,15 @@ const tabs: { title: string, id: Tab }[] = [
     }, {
         title: t('navi.comps'),
         id: 'Comps'
-    }, {
-        title: t('home.comment'),
-        id: 'Comment'
     }
 ]
+
+if (plugins.end.length) {
+    tabs.push({
+        title: t('home.comment'),
+        id: 'Comment'
+    })
+}
 
 function toggle(id: Tab) {
     currentTab.value = id;
@@ -104,7 +109,6 @@ onUnmounted(() => {
     props.context.navi.watch(navi_watch);
 })
 
-const plugins = props.context.pluginsMgr.search2('navigation');
 </script>
 
 <template>

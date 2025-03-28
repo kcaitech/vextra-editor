@@ -8,8 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D } from '@kcdesign/data';
-import { getShadowMax } from '@/utils/cutout';
+import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D, ArtboardView } from '@kcdesign/data';
+import { getGroupChildBounds, getShadowMax, parentIsArtboard } from '@/utils/cutout';
 import JSZip from 'jszip';
 import { XYsBounding } from './common';
 
@@ -142,8 +142,7 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         let imageUrl;
         img.onload = () => {
             context && context.drawImage(img, 0, 0);
-            const dataURL = canvas.toDataURL(`image/${format.fileFormat}`);
-            imageUrl = dataURL;
+            imageUrl = canvas.toDataURL(`image/${format.fileFormat}`);
             if (context && trim) {
                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
@@ -168,8 +167,7 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                 newCanvas.height = height;
                 // 在新Canvas上绘制裁剪后的图像
                 outputCtx && outputCtx.drawImage(img, left, top, width, height, 0, 0, width, height);
-                const newDataURL = newCanvas.toDataURL(`image/${format.fileFormat}`);
-                imageUrl = newDataURL;
+                imageUrl = newCanvas.toDataURL(`image/${format.fileFormat}`);
             }
             pngImageUrls.set(id, imageUrl);
             document.body.removeChild(pcloneSvg);
@@ -190,8 +188,8 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
             const el = cloneSvg.children[0] as SVGSVGElement;
             let rotate = shape.rotation || 0;
+            const { width, height } = cloneSvg.viewBox.baseVal
             if (el) {
-                const { width, height } = cloneSvg.viewBox.baseVal
                 const { left, top, right, bottom } = getShadowMax(shape);
                 if (isNoTransform(shape)) {
                     cloneSvg.setAttribute("width", `${width * format.scale}`);
@@ -224,7 +222,6 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                     el.style.transform = newMatrix;
                 }
             }
-            const { width, height } = cloneSvg.getBoundingClientRect();
             canvas.width = width;
             canvas.height = height;
             if (ctx) {
@@ -247,13 +244,13 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                     const matrixValues = styleTransform.replace('matrix(', '').replace(')', '').split(',').map(parseFloat);
                     matrixValues[4] -= x;
                     matrixValues[5] -= y;
-                    const newMatrix = `matrix(${matrixValues.join(',')})`;
-                    child.style.transform = newMatrix;
+                    child.style.transform = `matrix(${matrixValues.join(',')})`;
                 }
             });
         }
         let imageUrl = '';
         const img = new Image();
+
         const svgString = new XMLSerializer().serializeToString(cloneSvg);
         const imgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
         imageUrl = imgUrl;
@@ -278,9 +275,11 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
                 const { x, y } = cloneSvg.viewBox.baseVal
                 const w = (right - left);
                 const h = (bottom - top);
+
                 cloneSvg.setAttribute("width", `${w}`);
                 cloneSvg.setAttribute("height", `${h}`);
                 cloneSvg.setAttribute("viewBox", `0 0 ${w / format.scale} ${h / format.scale}`);
+
                 // 获取所有子元素
                 const children: HTMLElement[] = cloneSvg.children as any;
                 Array.from(children).forEach((child) => {
@@ -303,4 +302,30 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
             resolve();
         }
     })
+}
+
+export const getPosition = (shape: ShapeView) => {
+    const p_artboard = parentIsArtboard(shape);
+    if (shape.type === ShapeType.Cutout) {
+        if (p_artboard) {
+            const __frame = shape._p_frame;
+            const _f = shape.parent!.transform.transform(ColVector3D.FromXY(__frame.x, __frame.y));
+            return { x: _f.x, y: _f.y, width: shape.frame.width, height: shape.frame.height }
+        } else {
+            const p = shape.boundingBox()
+            return { ...p }
+        }
+    } else if (shape.type === ShapeType.Group) {
+        return getGroupChildBounds(shape);
+    } else {
+        const { left, top, right, bottom } = getShadowMax(shape);
+        let { x, y, width: _w, height: _h } = shape._p_outerFrame;
+        if ((shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef)) {
+            const f = shape._p_visibleFrame;
+            if (!(shape as ArtboardView).frameMaskDisabled) {
+                x = f.x; y = f.y; _w = f.width; _h = f.height;
+            }
+        }
+        return { x: x - left, y: y - top, width: _w + left + right, height: _h + top + bottom }
+    }
 }

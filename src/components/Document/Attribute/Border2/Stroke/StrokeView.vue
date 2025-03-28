@@ -251,7 +251,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 0;
+
 
     .bottom {
         width: calc(100% - 36px);

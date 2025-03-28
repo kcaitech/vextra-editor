@@ -1,7 +1,7 @@
 {
     "name": "@kcdesign/editor",
     "description": "kcdesign editor",
-    "version": "1.0.88",
+    "version": "1.0.94",
     "private": false,
     "type": "module",
     "author": "kcaitech.com",
@@ -21,7 +21,7 @@
         "test:watch": "jest --watch"
     },
     "dependencies": {
-        "@kcdesign/data": "1.1.13",
+        "@kcdesign/data": "1.1.18",
         "@kcdesign/text2path": "0.0.1",
         "element-plus": "2.3.0",
         "jszip": "^3.10.1",

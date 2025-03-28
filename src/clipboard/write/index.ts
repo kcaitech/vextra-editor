@@ -63,11 +63,11 @@ export class MossWriter {
         return masks;
     }
 
-    private __sort_symbolref(views: ShapeView[]) {
+    private __sort_symbolref(views: ShapeView[], exportCtx: ExfContext) {
         const refs = sort(views);
         const bases: RefShapeBase[] = [];
         for (const ref of refs) {
-            const base = RefUnbind.unbind(ref);
+            const base = RefUnbind.unbind(ref, exportCtx);
             if (!base) continue;
             bases.push({symbol: ref.refId, base: base as any, shapeId: ref.id})
         }
@@ -176,19 +176,21 @@ export class MossWriter {
                 }
             }
             const media = this.__sort_media(this.context.data, ctx);
-            const styles = this.__sort_styles(this.context.data, ctx);
+            const unbindRefs = this.__sort_symbolref(shapes, ctx);
+            const styles = this.__sort_styles(this.context.data, ctx); // 样式收集要后于其他收集，因为其他收集的结果可能影响样式收集结果
             const data: SourceBundle = {
                 originIds: _shapes.map(i => i.id),
                 originTransform: origin_transform_map,
                 shapes: _shapes,
                 media,
-                unbindRefs: this.__sort_symbolref(shapes),
-                styles: styles,
+                unbindRefs,
+                styles,
             }
+
             const html = this.encode(MossClipboard.source, data);
             const blob = new Blob([html || ''], { type: 'text/html' });
             const item: any = { 'text/html': blob };
-            if (navigator.userAgent.indexOf('Safari') > -1) {
+            if (!navigator.userAgent.includes('Windows') && navigator.userAgent.indexOf('Safari') > -1) {
                 if (!event?.clipboardData) return;
                 event.clipboardData.clearData();
                 event.clipboardData.setData('text/html', html);

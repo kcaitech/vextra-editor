@@ -38,6 +38,7 @@ function update() {
 function colorCtxWatcher(t: any) {
     if (t === ColorCtx.CHANGE_STOP) {
         const id = editor.context.color.selected_stop;
+        if (id === undefined) return;
         let index = props.data.stopIds.findIndex(i => i === id);
         if (index === -1) {
             index = Math.min(props.data.stopIds.length - 1, 0);

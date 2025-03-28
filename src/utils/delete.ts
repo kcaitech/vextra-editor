@@ -22,7 +22,11 @@ export function deleteUnits(context: Context, shift = false) {
     }
 
     // 删除渐变色控点
-    if (context.color.selected_stop !== undefined) return context.color.notify(ColorCtx.STOP_DELETE);
+    if (context.color.selected_stop !== undefined) {
+        console.log('进入删除节点');
+        
+        return context.color.notify(ColorCtx.STOP_DELETE);
+    }
 
     // 删除路径片段
     const path_edit_mode = context.workspace.is_path_edit_mode;

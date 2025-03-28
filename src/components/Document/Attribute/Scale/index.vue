@@ -457,10 +457,13 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
 
     .trigger {
         position: absolute;
-        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 24px;
         top: 3px;
-        right: 6px;
-        width: 16px;
+        right: 4px;
+        width: 20px;
         border-radius: 4px;
 
         > svg {

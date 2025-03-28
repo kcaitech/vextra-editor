@@ -129,7 +129,7 @@ onUnmounted(() => watchList.forEach(stop => stop()));
 </script>
 
 <template>
-    <div class="border-trigger" @click="showDetailPanel">
+    <div class="border-trigger" :class="{ 'active': detailsPanelStatus.visible }" @click="showDetailPanel">
         <SvgIcon :icon="select_more_icon" />
     </div>
     <div v-if="detailsPanelStatus.visible" class="border-detail-container" id="border-detail-container">
@@ -168,7 +168,7 @@ onUnmounted(() => watchList.forEach(stop => stop()));
 
 <style scoped lang="scss">
 .active {
-    background-color: #EBEBEB;
+    background-color: #EBEBEB !important;
 }
 
 .border-trigger {

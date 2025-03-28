@@ -14,12 +14,9 @@ import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Matrix } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
 
-interface Props {
-    context: Context
-}
-
-const props = defineProps<Props>();
+const props = defineProps<{context: Context}>();
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const width = computed(() => {
     const w = bounds.right - bounds.left;
@@ -67,6 +64,7 @@ onMounted(() => {
     const path_shape = props.context.selection.pathshape;
     if (path_shape) path_shape.watch(update);
     update();
+    props.context.path.fixedAction = Action.Pen;
 });
 onUnmounted(() => {
     props.context.workspace.unwatch(matrix_watcher);

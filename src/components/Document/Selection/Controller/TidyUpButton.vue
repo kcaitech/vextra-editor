@@ -17,7 +17,7 @@ import { Point } from '../SelectionView.vue';
 import { Selection, XY } from '@/context/selection';
 import { ColVector3D, Matrix, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from '@/context/workspace';
-import { CursorType } from '@/utils/cursor2';
+import { CursorType } from '@/utils/cursor';
 import { LockMouse } from '@/transform/lockMouse';
 import { throttle } from 'lodash';
 import { TranslateHandler } from '@/transform/translate/translate';

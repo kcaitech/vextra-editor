@@ -10,13 +10,13 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Selection, XY } from '@/context/selection';
 import { ArtboardView, ColVector3D, Matrix, PaddingDir, StackSizing } from '@kcdesign/data';
+import { Selection, XY } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { fixedZero } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
-import { CursorType } from '@/utils/cursor2';
+import { CursorType } from '@/utils/cursor';
 
 type Box = {
     lt: Point,
@@ -44,7 +44,7 @@ interface PaddingBox {
 }
 
 const emits = defineEmits<{
-    (e: 'hoverPaddint', index: number): void;
+    (e: 'hoverPadding', index: number): void;
 }>();
 
 const props = defineProps<Props>();
@@ -118,7 +118,7 @@ let isDragging: boolean = false;
 
 const mousedown = (e: MouseEvent, index: number) => {
     e.stopPropagation();
-    emits('hoverPaddint', paddingIndex.value);
+    emits('hoverPadding', paddingIndex.value);
     cursor_down.value = true;
     paddingIndex.value = index;
     downClientXY.x = e.clientX;
@@ -134,7 +134,7 @@ let layout_padding = { top: 0, right: 0, bottom: 0, left: 0 };
 function mousemove(e: MouseEvent) {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
-    emits('hoverPaddint', paddingIndex.value);
+    emits('hoverPadding', paddingIndex.value);
     if (isDragging) {
         if (!autoLayoutModifyHandler) {
             return
@@ -210,7 +210,7 @@ function clear_status() {
     autoLayoutModifyHandler = undefined;
     isDragging = false;
     paddingIndex.value = -1;
-    emits('hoverPaddint', -1);
+    emits('hoverPadding', -1);
     if (!cursor_hover.value) {
         props.context.cursor.reset();
     }
@@ -219,7 +219,7 @@ function clear_status() {
 }
 
 const mouseenter = (e: MouseEvent, index: number) => {
-    emits('hoverPaddint', index);
+    emits('hoverPadding', index);
     paddingIndex.value = index;
     cursor_point.value = props.context.workspace.getContentXY(e);
     cursor_hover.value = true;
@@ -227,7 +227,7 @@ const mouseenter = (e: MouseEvent, index: number) => {
 }
 
 const mouseleave = (e: MouseEvent, index: number) => {
-    emits('hoverPaddint', -1);
+    emits('hoverPadding', -1);
     cursor_hover.value = false;
     if (!cursor_down.value && !isDragging) {
         paddingIndex.value = -1;

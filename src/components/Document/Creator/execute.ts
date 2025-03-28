@@ -36,7 +36,7 @@ import { getHorizontalAngle } from "@/utils/common";
 import { get_contact_environment } from "@/utils/contact";
 import { debounce } from "lodash";
 import { ContextEvents } from "@/openapi";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { compare_layer_3, filter_for_group1 } from "@/utils/group_ungroup";
 
 export function __add_status_for_create(context: Context) {

@@ -55,7 +55,7 @@ const showBorderPanel = (event: MouseEvent) => {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 0;
+
 
     .border-left {
         flex: 1;

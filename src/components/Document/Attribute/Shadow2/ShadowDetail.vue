@@ -399,7 +399,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="shadow-trigger" @click="showDetailPanel">
+    <div class="shadow-trigger" :class="{ 'active': panelStatus.visible }" @click="showDetailPanel">
         <SvgIcon :icon="gear_icon" />
     </div>
     <div v-if="panelStatus.visible" id="shadow-detail-container">
@@ -445,6 +445,9 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+.active {
+    background-color:#ebebeb !important;
+}
 .shadow-trigger {
     width: 28px;
     height: 28px;

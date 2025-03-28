@@ -333,8 +333,8 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg"
         }
 
         >.svg-wrap {
-            flex: 0 0 10px;
-            height: 10px;
+            flex: 0 0 12px;
+            height: 12px;
             display: flex;
             align-items: center;
 

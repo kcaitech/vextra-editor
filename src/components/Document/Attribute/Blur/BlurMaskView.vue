@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from "@/context";
-import { Blur } from "@kcdesign/data";
+import { Blur, BlurType } from "@kcdesign/data";
 import { onUnmounted, ref, watchEffect } from "vue";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";
@@ -39,16 +39,18 @@ const name = ref<string>(props.info.name);
 onUnmounted(watchEffect(() => {
     name.value = props.info.name;
 }));
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import background from "@/assets/icons/svg/background_blur.svg";
+import gaussian from "@/assets/icons/svg/gaussian_blur.svg";
 </script>
 <template>
     <MaskPort @delete="() => manager.removeMask()" @unbind="() => manager.unbind()" :active="active"
         :disabled="info.disabled">
         <div class="blur_desc" @click="event => emits('show-style-lib', event)">
-            <div class="effect" />
-            <div class="name">{{
-                info.disabled ? t('stylelib.deleted_style') : info.name
-                }}
+            <div class="effect">
+                <SvgIcon :icon="blur.type === BlurType.Gaussian ? gaussian : background" />
             </div>
+            <div class="name">{{ info.disabled ? t('stylelib.deleted_style') : info.name }}</div>
         </div>
     </MaskPort>
 </template>
@@ -65,10 +67,15 @@ onUnmounted(watchEffect(() => {
     .effect {
         width: 16px;
         height: 16px;
-        background-color: #fff;
-        border: 1px solid #000000e5;
-        border-radius: 3px;
-        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+
+        img {
+            width: 100%;
+            height: 100%;
+        }
     }
 
     .name {

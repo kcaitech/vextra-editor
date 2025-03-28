@@ -167,7 +167,7 @@ onUnmounted(() => {
     border-bottom: 1px solid #F0F0F0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 
     .add,
     .border-style {
@@ -238,11 +238,11 @@ onUnmounted(() => {
 
         width: 100%;
         height: fit-content;
-        padding: 6px 0;
+
     }
 }
 
 .active {
-    background-color: rgba(191, 191, 191, 0.7) !important;
+    background-color: #ebebeb !important;
 }
 </style>

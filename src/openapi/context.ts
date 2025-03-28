@@ -57,7 +57,7 @@ export interface IContext extends IWatchable {
 
     setDocumentInfo(info: { name: string }): void;
 
-    get documentInfo(): { name: string };
+    get documentInfo(): { name: string, id: string };
 
     rename(name: string): void;
     

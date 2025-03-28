@@ -25,7 +25,7 @@ import { WorkSpace } from "@/context/workspace";
 import { RotateHandler } from "@/transform/rotate";
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/path/pathEdit";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { Action } from "@/context/tool";
 

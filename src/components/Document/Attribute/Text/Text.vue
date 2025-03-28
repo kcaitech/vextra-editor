@@ -1072,6 +1072,7 @@ function clearPanelStatus() {
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
     if (color.imageScaleMode) color.setImageScaleMode(undefined);
+    props.context.color.select_stop(undefined);
 }
 
 function closeColor() {
@@ -1094,6 +1095,7 @@ const updateContextColor = () => {
         if (color.locate) color.gradient_locate(undefined);
         if (color.mode) color.switch_editor_mode(false);
         if (color.imageScaleMode) color.setImageScaleMode(undefined);
+        props.context.color.select_stop(undefined);
     } else {
         color.set_gradient_type(gradient.value?.gradientType || GradientType.Linear);
         color.gradient_locate({ index: 0, type: "text" });
@@ -1156,9 +1158,6 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
-                <!--                <div class="text-style" @click="showTextPanel($event)">-->
-                <!--                    <SvgIcon :icon="style_icon" />-->
-                <!--                </div>-->
                 <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
             </template>
@@ -1293,7 +1292,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                 </div>
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 6px; gap: 8px;">
+            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor">
                 <div style="font-size: 12px;">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
@@ -1306,7 +1305,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                 </div>
 
             </div>
-            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
+            <div class="text-colors" v-else-if="colorIsMulti || mixed">
                 <div class="color-title">
                     <div style="font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
                     <div class="add" @click="setMixedTextColor">
@@ -1315,7 +1314,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 6px;">
+            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor">
                 <div class="color-title">
                     <div class="add" @click="addTextColor">
                         <SvgIcon :icon="add_icon" />
@@ -1417,6 +1416,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
     width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 6px;
     padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
@@ -1465,6 +1465,9 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
     }
 
     .text-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
         font-size: var(--font-default-fontsize);
 
         .jointly-text {
@@ -1485,8 +1488,6 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
 
         .text-top {
             position: relative;
-            margin-bottom: 6px;
-            margin-top: 6px;
             display: flex;
 
             .select-font {
@@ -1610,7 +1611,6 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 6px;
 
             .overbold {
                 width: 32px;
@@ -1669,8 +1669,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 6px;
-
+         
             .text-bottom-align {
                 display: flex;
                 align-items: center;
@@ -1723,7 +1722,7 @@ import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/tex
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 8px;
+           
 
             .color {
                 display: flex;

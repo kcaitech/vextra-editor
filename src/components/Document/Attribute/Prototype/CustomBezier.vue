@@ -121,18 +121,18 @@ const defaultesfn = (val: number[]) => {
 const dragcanvas = () => {
     const canvas = document.getElementById("sbezier") as HTMLCanvasElement;
     const ctx = canvas?.getContext("2d");
-    const dragA = ref<boolean>(false)
-    const dragB = ref<boolean>(false)
-    const dragLineA = ref<boolean>(false)
-    const dragLineB = ref<boolean>(false)
-    const lineA = ref<Path2D>()
-    const lineB = ref<Path2D>()
-    const pointA = ref<Path2D>()
-    const pointB = ref<Path2D>()
-    let minX = 40
-    let maxX = 140
-    let minY = 40
-    let maxY = 140
+    const dragA = ref<boolean>(false);
+    const dragB = ref<boolean>(false);
+    const dragLineA = ref<boolean>(false);
+    const dragLineB = ref<boolean>(false);
+    const lineA = ref<Path2D>();
+    const lineB = ref<Path2D>();
+    const pointA = ref<Path2D>();
+    const pointB = ref<Path2D>();
+    let minX = 40;
+    let maxX = 140;
+    let minY = 40;
+    let maxY = 140;
 
     let drag = false;
     let width = 180; // Canvas的目标显示宽度

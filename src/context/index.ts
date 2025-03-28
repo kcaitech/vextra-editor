@@ -420,14 +420,14 @@ export class Context extends WatchableObject implements IContext {
         return this.m_color;
     }
 
-    private m_doc_info: { name: string } | undefined;
+    private m_doc_info: { name: string, id: string } | undefined;
 
-    setDocumentInfo(info: { name: string }) {
+    setDocumentInfo(info: { name: string, id: string }): void {
         this.m_doc_info = info;
     }
 
-    get documentInfo(): { name: string } {
-        return this.m_doc_info || { name: '' };
+    get documentInfo(): { name: string, id: string } {
+        return this.m_doc_info || { name: '', id: '' };
     }
 
     rename(name: string) {

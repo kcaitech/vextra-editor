@@ -346,7 +346,7 @@ function horFindTidyUp(shape_rows: ShapeView[][], hor: number, ver: number) {
 }
 
 export const getFrame = (shape: ShapeView) => {
-    let f = getShapeFrame(shape.data);
+    let f = getShapeFrame(shape);
     const m = shape.transform;
     if (shape.isNoTransform()) {
         f.x = f.x + m.translateX, f.y = f.y + m.translateY

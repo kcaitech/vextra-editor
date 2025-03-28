@@ -20,7 +20,7 @@ import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/path/pathEdit";
 import { LineHandler } from "@/transform/line";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 
 interface Props {
     matrix: number[]
@@ -92,6 +92,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 }
 
 function point_mousemove(event: MouseEvent) {
+    event.stopPropagation();
     if (isDragging) {
         lineHandle?.execute(event);
         if (cur_ctrl_type.endsWith('rotate')) {
@@ -105,6 +106,7 @@ function point_mousemove(event: MouseEvent) {
 }
 
 function point_mouseup(event: MouseEvent) {
+    event.stopPropagation();
     if (event.button !== 0) return;
     clear_status();
 }

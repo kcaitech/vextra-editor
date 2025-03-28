@@ -13,11 +13,12 @@ import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import PanelItem from "@/components/Document/Attribute/StyleLib/PanelItem.vue";
-import { BlurMask } from "@kcdesign/data";
+import { BlurMask, BlurType } from "@kcdesign/data";
 import { BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
 import ModifyBlurMaskPanel from "@/components/Document/Attribute/Blur/Lib/ModifyBlurMaskPanel.vue";
 
-const {data, context, manager} = defineProps<{
+
+const { data, context, manager } = defineProps<{
     context: Context;
     manager: BlurContextMgr;
     data: BlurMask;
@@ -28,7 +29,7 @@ const emits = defineEmits<{
 
 const name = ref<string>(data.name);
 
-const modifyPanelStatus = reactive<ElementStatus>({id: '#modify-blur-panel', visible: false});
+const modifyPanelStatus = reactive<ElementStatus>({ id: '#modify-blur-panel', visible: false });
 const modifyPanelStatusMgr = new ElementManager(
     context,
     modifyPanelStatus,
@@ -67,18 +68,26 @@ onUnmounted(() => {
     data.unwatch(update);
     modifyPanelStatusMgr.unmounted();
 })
+
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import background from "@/assets/icons/svg/background_blur.svg";
+import gaussian from "@/assets/icons/svg/gaussian_blur.svg";
+
 </script>
 <template>
-    <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected"
-               @modify="showModifyPanel" @disable="disable">
+    <PanelItem :context="context" :extend="modifyPanelStatus.visible" :selected="selected" @modify="showModifyPanel"
+        @disable="disable">
         <template #preview>
             <div class="content" @click="modify">
+                <div class="blur">
+                    <SvgIcon :icon="data.blur.type === BlurType.Gaussian ? gaussian : background"></SvgIcon>
+                </div>
                 <span>{{ name }}</span>
             </div>
         </template>
         <template #modal>
             <ModifyBlurMaskPanel v-if="modifyPanelStatus.visible" :context="context" :manager="manager" :data="data"
-                                 @close="() => modifyPanelStatusMgr.close()"/>
+                @close="() => modifyPanelStatusMgr.close()" />
         </template>
     </PanelItem>
 </template>
@@ -91,7 +100,21 @@ onUnmounted(() => {
     gap: 8px;
     padding-left: 8px;
     box-sizing: border-box;
-    > span {
+
+    .blur {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        img {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    span {
         display: block;
         width: 132px;
         overflow: hidden;

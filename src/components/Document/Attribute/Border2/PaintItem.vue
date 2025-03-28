@@ -135,6 +135,7 @@ function clearStatus() {
     if (color.gradient_type) color.set_gradient_type(undefined);
     if (color.locate) color.gradient_locate(undefined);
     if (color.mode) color.switch_editor_mode(false);
+    props.context.color.select_stop(undefined);
 }
 
 function close() {
@@ -152,6 +153,7 @@ const watchList = [
             if (color.gradient_type) color.set_gradient_type(undefined);
             if (color.locate) color.gradient_locate(undefined);
             if (color.mode) color.switch_editor_mode(false);
+            props.context.color.select_stop(undefined);
         } else {
             color.set_gradient_type(fillType.value as GradientType);
             color.gradient_locate({ index: fillsPicker.index, type: "borders" });

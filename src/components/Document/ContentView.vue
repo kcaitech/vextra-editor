@@ -23,7 +23,7 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-    adapt_page, color2string, drop, init_insert_table, root_scale, root_trans, selectShapes
+    adapt_page, color2string, drop, root_scale, root_trans, selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import TextSelection from './Selection/TextSelection.vue';
@@ -80,14 +80,14 @@ const cursor = ref<string>('');
 const rootId = ref<string>('content');
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>(color2string(Page.defaultBGColor));
-const avatarVisi = ref(props.context.menu.isUserCursorVisible);
+const avatarVisible = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
 const cellStatus = ref();
 const creatorMode = ref<boolean>(false);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 const image_tile_mode = ref<boolean>(false);
-const isvisible = ref(false);
+const isExportPanelVisible = ref(false);
 const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 });
 const mouse = new Mouse(props.context);
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
@@ -201,7 +201,7 @@ function search(e: MouseEvent) { // 常规图形检索
         }
     }
 
-    const shapes = ctx.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
+    const shapes = ctx.selection.getShapesByXY(xy, metaKey || ctrlKey);
     selectShapes(ctx, shapes);
 }
 
@@ -265,15 +265,12 @@ function contextMenuMount(e: MouseEvent) {
                     contextMenuItems.value.add(MenuItemType.Outline);
                     contextMenuItems.value.add(MenuItemType.Mask);
                     contextMenuItems.value.add(MenuItemType.AutoLayout);
-                    contextMenuItems.value.add(MenuItemType.Flatten);
                 } else {
                     const shape = _shapes[0] as ArtboardView;
                     if (shape.autoLayout) {
                         contextMenuItems.value.add(MenuItemType.UnAutoLayout);
                     } else {
-                        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(shape.type)) {
-                            contextMenuItems.value.add(MenuItemType.AutoLayout);
-                        }
+                        contextMenuItems.value.add(MenuItemType.AutoLayout);
                     }
                 }
             }
@@ -447,13 +444,13 @@ function updateBackground(page?: PageView) {
 function menu_watcher(type: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
     if (type === Menu.CHANGE_USER_CURSOR) {
-        avatarVisi.value = props.context.menu.isUserCursorVisible;
+        avatarVisible.value = props.context.menu.isUserCursorVisible;
     } else if (type === Menu.OPEN_SPLIT_CELL) {
         cellStatus.value = mount;
         cellSetting.value = true;
     }
     if (type === Menu.EXPORT_DIALOG) {
-        isvisible.value = props.context.menu.isExportDialog;
+        isExportPanelVisible.value = props.context.menu.isExportDialog;
         props.context.escstack.save(v4(), export_dialog_show);
     } else if (type === Menu.AUTO_LAYOUT) {
         autoLayoutFn(props.context, t);
@@ -461,8 +458,8 @@ function menu_watcher(type: number, mount?: string) {
 }
 
 const export_dialog_show = () => {
-    const is_achieve_expected_results = isvisible.value;
-    isvisible.value = false;
+    const is_achieve_expected_results = isExportPanelVisible.value;
+    isExportPanelVisible.value = false;
     return is_achieve_expected_results;
 }
 
@@ -476,8 +473,6 @@ function tool_watcher(type: number) {
         creatorMode.value = isCreatorSupportAction(props.context.curAction);
     } else if (type === Tool.INSERT_FRAME) {
         insertFrame();
-    } else if (type === Tool.INSERT_TABLE) {
-        init_insert_table(props.context, t);
     }
 }
 
@@ -589,7 +584,7 @@ comps.push(
                 return matrix
             },
             get visible() {
-                return avatarVisi.value
+                return avatarVisible.value
             }
         }
     },
@@ -684,7 +679,7 @@ comps.push(
     // 图层导出载体
     {
         component: () => {
-            if (isvisible.value) {
+            if (isExportPanelVisible.value) {
                 return h(BatchExport, {
                     context: props.context
                 });
@@ -758,13 +753,13 @@ onUnmounted(() => {
 </script>
 <template>
     <div ref="root" id="content" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
-         :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
-         @mousemove="move" @mouseleave="props.context.selection.unHoverShape"
-         @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
+        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mousemove="move" @mouseleave="props.context.selection.unHoverShape"
+        @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
         <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix as Matrix" />
-        <Rule :context="props.context" :page="(props.page as PageView)"/>
-        <ImagePicker :context="props.context"/>
+        <Rule :context="props.context" :page="(props.page as PageView)" />
+        <ImagePicker :context="props.context" />
         <!-- 页面调整控件，确保在ContentView顶层 -->
         <Space :context="props.context" :visible="spacePressed" />
     </div>

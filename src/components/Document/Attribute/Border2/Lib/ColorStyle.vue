@@ -78,7 +78,7 @@ function update() {
         if (cat.id === props.context.data.id) cat.name = local;
 
         for (const v of sts.variables) {
-            if (v.typeId === "fill-mask-living" && !v.disabled) {
+            if (v.typeId === "fill-mask" && !v.disabled) {
                 const fills = (v as FillMask).fills;
                 if (fills.some(i => i.fillType === FillType.Pattern)) continue;
                 cat.variables.push(v);

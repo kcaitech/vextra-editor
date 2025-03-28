@@ -18,7 +18,7 @@ import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
 import { ScaleHandler } from "@/transform/scale";
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/path/pathEdit";
-import { CursorType } from "@/utils/cursor2";
+import { CursorType } from "@/utils/cursor";
 import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 
