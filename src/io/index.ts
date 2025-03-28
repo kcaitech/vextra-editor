@@ -49,7 +49,7 @@ export async function _exportDocument(context: Context) {
 
 export async function exportDocument(context: Context) {
     const content = await _exportDocument(context);
-    const name = context.documentInfo.name;
+    const name = context.data.name;
     const reg = new RegExp('(.sketch|.fig|.vext)$', 'img');
     downloadByLink(content, name.replace(reg, '') + '.vext');
 }
