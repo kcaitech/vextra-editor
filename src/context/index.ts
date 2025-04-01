@@ -383,6 +383,7 @@ export class Context extends WatchableObject implements IContext {
     }
 
     private createVDom(page: Page) {
+        // const domCtx = new DomCtx("Canvas");
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
         const dom: PageDom = new PageDom(domCtx, { data: page });

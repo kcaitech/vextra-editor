@@ -226,10 +226,10 @@ function mouseup(e: MouseEvent) {
     selectedChild();
 }
 
-const isLable = ref(props.data.context.tool.isLable);
+const isLabel = ref(props.data.context.tool.isLable);
 const tool_watcher = (t?: number) => {
     if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.data.context.tool.isLable;
+        isLabel.value = props.data.context.tool.isLable;
     }
 }
 
@@ -276,11 +276,11 @@ function updater(...args: any[]) {
     visible_status.value = shape.isVisible ? 0 : 1;
 }
 
-let oldshape: ShapeView | undefined;
-const stop = watch(() => props.data.id, (value, old) => {
-    oldshape && oldshape.unwatch(updater);
-    oldshape = props.data.shapeview();
-    oldshape.watch(updater);
+let oldShape: ShapeView | undefined;
+const stop = watch(() => props.data, () => {
+    oldShape && oldShape.unwatch(updater);
+    oldShape = props.data.shapeview();
+    oldShape.watch(updater);
     watchShapes();
 }, { immediate: true })
 
@@ -379,7 +379,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.data.context.tool.unwatch(tool_watcher);
-    oldshape && oldshape.unwatch(updater);
+    oldShape && oldShape.unwatch(updater);
     props.data.context.selection.unwatch(selectedWatcher);
     props.data.context.navi.unwatch(navi_watcher);
     stop();
@@ -445,12 +445,12 @@ import masked_by_icon from "@/assets/icons/svg/masked-by.svg";
                 <SvgIcon class="svg-open" :icon="locate_icon"/>
             </div>
             <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
-                 v-if="!data.context.readonly && !isLable">
+                 v-if="!data.context.readonly && !isLabel">
                 <SvgIcon v-if="lock_status === 0" class="svg-open" :icon="lock_open_icon"/>
                 <SvgIcon v-else-if="lock_status === 1" class="svg" :icon="lock_lock_icon"/>
             </div>
             <div class="tool_eye tool" :class="{ 'visible': visible_status }"
-                 @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLable">
+                 @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLabel">
                 <SvgIcon v-if="visible_status === 0" class="svg" :icon="eye_open_icon"/>
                 <SvgIcon v-else-if="visible_status === 1" class="svg" :icon="eye_closed_icon"/>
             </div>

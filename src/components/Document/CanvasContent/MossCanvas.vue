@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// page view
 import { onMounted, ref } from "vue";
 import { Context } from "@/context";
-import { Matrix, PageView } from "@kcdesign/data";
+import { Matrix, PageView, ScreenPrinter } from "@kcdesign/data";
+import { message } from "@/utils/message";
 
 type Props = {
     context: Context;
@@ -40,13 +40,11 @@ function register() {
 
 onMounted(() => {
     register();
-    // props.context.setOnLoaded(() => {
-        const dpr = Math.ceil(window.devicePixelRatio || 1);
-        props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
-        props.params.data.m_ctx.setReLayout(props.params.data);
-        props.params.data.m_ctx.setDirty(props.params.data);
-        props.params.data.render();
-    // })
+    const dpr = Math.ceil(window.devicePixelRatio || 1);
+    props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
+    props.params.data.m_ctx.setReLayout(props.params.data);
+    props.params.data.m_ctx.setDirty(props.params.data);
+    props.params.data.render();
 
     // dev config
     document.addEventListener("keydown", (e) => {
@@ -57,6 +55,13 @@ onMounted(() => {
             props.params.data.m_ctx.setDirty(props.params.data);
             props.params.data.render();
             e.preventDefault();
+        } else if (e.code === "Backquote") {
+            const selected = props.context.selection.selectedShapes;
+            if (!selected.length) {
+                return message('info', '没有有效选区！');
+            }
+            const printer = new ScreenPrinter(props.context.data, props.params.data.data);
+            printer.print(selected);
         }
     })
 });
