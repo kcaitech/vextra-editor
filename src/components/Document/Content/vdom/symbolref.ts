@@ -22,10 +22,6 @@ export class SymbolRefDom extends (SymbolRefView) {
         const _this = this as NodeType
         optiSetDirty(_this);
     }
-    onDataChange(...args: any[]) {
-        super.onDataChange(...args);
-        this.optiel_dirty = true;
-    }
 
     render(): number {
         const version: number = super.render();

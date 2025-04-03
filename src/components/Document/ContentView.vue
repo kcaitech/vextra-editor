@@ -50,7 +50,6 @@ import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
 import { SpaceHandler } from "@/space";
-import MossCanvas from "@/components/Document/CanvasContent/MossCanvas.vue";
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;

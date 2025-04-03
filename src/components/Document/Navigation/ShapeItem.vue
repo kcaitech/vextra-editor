@@ -24,6 +24,13 @@ import { debounce } from "lodash";
 import { shutdown_menu } from "@/utils/mouse";
 import { Navi } from "@/context/navigate";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import lock_open_icon from '@/assets/icons/svg/lock-open.svg';
+import lock_lock_icon from '@/assets/icons/svg/lock-lock.svg';
+import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
+import eye_closed_icon from '@/assets/icons/svg/eye-closed.svg';
+import locate_icon from '@/assets/icons/svg/locate.svg';
+import triangle_down_icon from '@/assets/icons/svg/triangle-down.svg';
+import masked_by_icon from "@/assets/icons/svg/masked-by.svg";
 
 export interface ItemData {
     id: string
@@ -35,8 +42,8 @@ export interface ItemData {
     context: Context
 }
 
-interface Props {
-    data: ItemData
+type Props = {
+    data: ItemData;
 }
 
 interface Emits {
@@ -62,8 +69,8 @@ interface Emits {
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
-const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
-const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
+const lock_status = ref<number>(0);
+const visible_status = ref<number>(1);
 const is_tool_visible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
@@ -386,14 +393,6 @@ onUnmounted(() => {
     parent?.unwatch(parentWatcher);
     page.unwatch(pageWatcher);
 })
-
-import lock_open_icon from '@/assets/icons/svg/lock-open.svg';
-import lock_lock_icon from '@/assets/icons/svg/lock-lock.svg';
-import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
-import eye_closed_icon from '@/assets/icons/svg/eye-closed.svg';
-import locate_icon from '@/assets/icons/svg/locate.svg';
-import triangle_down_icon from '@/assets/icons/svg/triangle-down.svg';
-import masked_by_icon from "@/assets/icons/svg/masked-by.svg";
 </script>
 
 <template>
