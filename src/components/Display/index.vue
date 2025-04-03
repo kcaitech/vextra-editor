@@ -12,7 +12,7 @@
 import { onBeforeMount, shallowRef } from "vue";
 import { fetchConfig, parserDocument } from "./parser";
 import { Context } from "@/context";
-import { initDataModule } from "@/components/common/initmodule";
+import { initDataModule } from "@/basic/initmodule";
 import { message } from "@/utils/message";
 import { PageView } from "@kcdesign/data";
 import PreviewContent from "@/components/Display/PreviewContent.vue";
