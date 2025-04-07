@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import {
-    adapt_page,
+    fitView,
     component,
     flattenSelection,
     lessen,
@@ -544,7 +544,7 @@ keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl || event.shiftKey) {
         event.preventDefault();
-        adapt_page(context);
+        fitView(context);
         return;
     }
     if (event.repeat) {
@@ -562,7 +562,7 @@ keydownHandler['Numpad1'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl || event.shiftKey) {
         event.preventDefault();
-        adapt_page(context);
+        fitView(context);
         return;
     }
     if (event.repeat) {
@@ -581,7 +581,7 @@ keydownHandler['Digit2'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl || event.shiftKey) {
         event.preventDefault();
-        adapt_page(context, false, true);
+        fitView(context, false, true);
         return;
     }
     if (event.repeat) {
@@ -599,7 +599,7 @@ keydownHandler['Numpad2'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl || event.shiftKey) {
         event.preventDefault();
-        adapt_page(context, false, true);
+        fitView(context, false, true);
         return;
     }
     if (event.repeat) {

@@ -16,7 +16,7 @@ import Key from "@/components/common/Key.vue";
 import { MenuItemType } from "@/components/Document/Menu/index";
 import { useI18n } from "vue-i18n";
 import {
-    adapt_page, flattenSelection,
+    fitView, flattenSelection,
     get_shape_within_document,
     lower_layer, outlineSelection,
     select_all,
@@ -221,7 +221,7 @@ function hundred(e: MouseEvent) {
 }
 
 function canvas() {
-    adapt_page(props.context);
+    fitView(props.context);
     emits('close');
 }
 

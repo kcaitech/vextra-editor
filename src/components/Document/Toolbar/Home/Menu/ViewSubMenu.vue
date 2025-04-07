@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { adapt_page } from '@/utils/content';
+import { fitView } from '@/utils/content';
 import { onMounted } from 'vue';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -87,7 +87,7 @@ function page_scale(e: MouseEvent, scale: number) {
  * 使整个page在可视区域
  */
 function canvas() {
-    adapt_page(props.context);
+    fitView(props.context);
     emit('close');
 }
 
