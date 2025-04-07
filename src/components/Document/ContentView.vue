@@ -45,7 +45,7 @@ import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
-import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
+import { screenFontList } from './Attribute/Text/FontNameList';
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
@@ -726,8 +726,6 @@ onMounted(() => {
 
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
-    timeSlicingTask(props.context, fontNameListZh, 'zh');
-    timeSlicingTask(props.context, fontNameListEn, 'en');
 
     resizeObserver.observe(root.value!);
     _updateRoot(props.context, root.value!);

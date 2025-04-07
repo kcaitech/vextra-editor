@@ -26,12 +26,13 @@ import { setup as keyboardUnits } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ContextEvents, IContext } from '@/openapi';
 import EditorLayout from "@/components/Document/Layout/EditorLayout.vue";
+import { fontNameListEn, fontNameListZh, timeSlicingTask } from './Attribute/Text/FontNameList';
 
 const emit = defineEmits<{
     (e: 'changeCmdId', id: string): void;
 }>()
 
-const props = defineProps<{ context: IContext, active?: boolean }>()
+const props = defineProps<{ context: IContext, isDesktop?: boolean, fontCache?: string[], active?: boolean }>()
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
 const rightWidth = ref(0);
@@ -153,6 +154,13 @@ function documentWatcher(...args: any[]) {
     if (args.includes['name']) (props.context as Context).notify(ContextEvents.document_name_change);
 }
 
+watch(() => props.fontCache, (newVal) => {
+    if (newVal) {
+        const ctx: Context = props.context as Context;
+        ctx.workspace.setUserLocalFontList(newVal, props.isDesktop);
+    }
+})
+
 onMounted(() => {
     initUI();
     init_watcher();
@@ -167,6 +175,10 @@ onMounted(() => {
         ctx.watchCustomLoading((v) => {
             customLoading.value = v;
         })
+    }
+    if (!props.isDesktop) {
+        timeSlicingTask(ctx, fontNameListZh, 'zh');
+        timeSlicingTask(ctx, fontNameListEn, 'en');
     }
 })
 
