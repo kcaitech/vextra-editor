@@ -36,7 +36,7 @@ let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
 function assemble() {
     if (pageDom) {
         pageDom?.dom.unbind();
-        pageDom?.dom.destory();
+        pageDom?.dom.destroy();
         pageDom = undefined;
     }
 
@@ -83,7 +83,7 @@ function assemble() {
 
 function disassemble() {
     pageDom?.dom.unbind();
-    pageDom?.dom.destory();
+    pageDom?.dom.destroy();
 }
 
 watch(() => props.shapes, () => {

@@ -72,7 +72,7 @@ function strokeMixedStatus(stroke: BorderData, shapes: ShapeView[]) {
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shapes[i].type === ShapeType.Cutout) continue;
-        const paints = shape.getBorders();
+        const paints = shape.getBorder();
         const len = paints.strokePaints.length;
         if (len > 0 && paints.position !== stroke.position) {
             stroke.position = 'mixed';
@@ -125,17 +125,17 @@ function getSideInfo(border: Border, type: SideType) {
 }
 
 export function getSideSettingType(views: ShapeView[]) {
-    const represent = views[0].getBorders();
+    const represent = views[0].getBorder();
     const side = represent.sideSetting.sideType;
-    return views.some(view => view.getBorders().sideSetting.sideType !== side) ? undefined : side;
+    return views.some(view => view.getBorder().sideSetting.sideType !== side) ? undefined : side;
 }
 
 export function getThickness(flat: ShapeView[]) {
-    const represent = flat[0].getBorders();
+    const represent = flat[0].getBorder();
     const b = represent.sideSetting;
     let side: (number | false)[] = [b.thicknessTop, b.thicknessRight, b.thicknessBottom, b.thicknessLeft];
     for (let i = 1; i < flat.length; i++) {
-        const borders = flat[i].getBorders() || [];
+        const borders = flat[i].getBorder() || [];
         const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders.sideSetting;
         if (b.thicknessTop !== thicknessTop) side[0] = false;
         if (b.thicknessRight !== thicknessRight) side[1] = false;
@@ -198,7 +198,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     private modifyMixedStatus() {
         if (this.flat.length < 1) return;
         if (this.flat.length < 2) return this.fillCtx.mixed = false;
-        const allFills = this.flat.map(i => ({ fills: i.getBorders().strokePaints, shape: i }));
+        const allFills = this.flat.map(i => ({ fills: i.getBorder().strokePaints, shape: i }));
 
         let firstL = allFills[0].fills.length;
         for (const s of allFills) if (s.fills.length !== firstL) return this.fillCtx.mixed = true;
@@ -226,7 +226,7 @@ export class StrokeFillContextMgr extends StyleCtx {
         } else {
             this.fillCtx.maskInfo = undefined;
         }
-        const origin = represent.getBorders().strokePaints;
+        const origin = represent.getBorder().strokePaints;
         const replace: FillCatch[] = [];
         for (let i = origin.length - 1; i > -1; i--) replace.push({ fill: origin[i] });
         this.fillCtx.fills = replace;
@@ -246,10 +246,10 @@ export class StrokeFillContextMgr extends StyleCtx {
         } else {
             this.fillCtx.strokeMaskInfo = undefined;
         }
-        let origin = represent.getBorders();
+        let origin = represent.getBorder();
         let index = 0;
         while (!origin.strokePaints && index < this.flat.length) {
-            origin = this.flat[index].getBorders();
+            origin = this.flat[index].getBorder();
             index++;
         }
 
@@ -386,7 +386,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             for (const view of this.flat) {
                 if (view instanceof SymbolRefView && view.isVirtualShape) {
                     views.push(view);
-                } else actions.push({ fills: view.getBorders().strokePaints, index });
+                } else actions.push({ fills: view.getBorder().strokePaints, index });
             }
             const modifyLocalFills = (api: Api) => {
                 actions.forEach(action => api.deleteFillAt(action.fills, action.index));
@@ -420,7 +420,7 @@ export class StrokeFillContextMgr extends StyleCtx {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
-                    fills.push(view.getBorders().strokePaints[index]);
+                    fills.push(view.getBorder().strokePaints[index]);
                 }
             }
             const modifyLocalFills = (api: Api) => {
@@ -472,7 +472,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             const fillsPacks: { fill: Fill, color: Color }[] = [];
             for (const view of this.flat) {
                 if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
-                else fillsPacks.push({ fill: view.getBorders().strokePaints[index], color });
+                else fillsPacks.push({ fill: view.getBorder().strokePaints[index], color });
             }
             const modifyLocalFills = (api: Api) => {
                 for (const pack of fillsPacks) api.setFillColor(pack.fill, pack.color);
@@ -502,7 +502,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             const views: ShapeView[] = [];
             for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-                else fills.push(view.getBorders().strokePaints[index]);
+                else fills.push(view.getBorder().strokePaints[index]);
             }
             const modifyLocalFills = (api: Api) => {
                 for (const fill of fills) {

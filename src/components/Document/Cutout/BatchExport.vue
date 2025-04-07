@@ -12,7 +12,15 @@
 import { Context } from "@/context"
 import { color2string, shape_track } from "@/utils/content";
 import { getCutoutShape, getGroupChildBounds, getPageBounds, getShadowMax, parentIsArtboard } from "@/utils/cutout";
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ShapeFrame, ShapeType, ShapeView } from "@kcdesign/data";
+import {
+    ExportFileFormat,
+    ExportFormat,
+    ExportFormatNameingScheme,
+    FrameCpt,
+    ShapeFrame,
+    ShapeType,
+    ShapeView
+} from "@kcdesign/data";
 import { nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import PageCard from "@/components/common/PageCard.vue";
 import { useI18n } from "vue-i18n";
@@ -199,11 +207,11 @@ const getInfo = (shape: ShapeView) => {
     }
     if (p_artboard && shape.type === ShapeType.Cutout) {
         const page = props.context.selection.selectedPage!;
-        let frame = shape.frame2Root();
+        let frame = FrameCpt.frame2Root(shape);
         info.x = frame.x - page.frame.x;
         info.y = frame.y - page.frame.y;
         if (p_artboard.parent && p_artboard.parent.type !== ShapeType.Page) {
-            frame = p_artboard.frame2Parent();
+            frame = FrameCpt.frame2Parent(p_artboard);
             info.x = frame.x + shape.frame.x;
             info.y = frame.y + shape.frame.y;
         }
@@ -405,6 +413,7 @@ onUnmounted(() => {
 import close_icon from '@/assets/icons/svg/close.svg';
 import caution_icon from '@/assets/icons/svg/caution.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { SpaceHandler } from "@/space";
 </script>
 
 <template>

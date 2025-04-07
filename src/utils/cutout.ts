@@ -144,7 +144,7 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const { left, top, right, bottom } = getShadowMax(shape);
-        const frame = shape._p_outerFrame;
+        const frame = shape.relativeOuterFrame;
         const points = [];
         const width = frame.width + left + right;
         const height = frame.height + top + bottom;

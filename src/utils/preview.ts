@@ -254,13 +254,13 @@ export function getPreviewMatrix(shape: ShapeView) {
                     m.trans(fixed_offset.translateX < 0 ? -fixed_offset.translateX : 0, fixed_offset.translateY < 0 ? -fixed_offset.translateY : 0);
                 }
             } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS) {
-                if (s._p_frame.y + offset.translateY < 0) {
-                    m.trans(0, -(s._p_frame.y + offset.translateY));
+                if (s.relativeFrame.y + offset.translateY < 0) {
+                    m.trans(0, -(s.relativeFrame.y + offset.translateY));
                     if (fixed_offset && fixed_offset.translateY < 0) {
                         m.trans(0, -fixed_offset.translateY);
                     }
-                } else if (fixed_offset && fixed_offset.translateY < -(s._p_frame.y + offset.translateY)) {
-                    const viewTrans = (s._p_frame.y + offset.translateY) + fixed_offset.translateY
+                } else if (fixed_offset && fixed_offset.translateY < -(s.relativeFrame.y + offset.translateY)) {
+                    const viewTrans = (s.relativeFrame.y + offset.translateY) + fixed_offset.translateY
                     m.trans(0, -viewTrans);
                 }
             }
@@ -428,7 +428,7 @@ export const getAtrboardInnerOffset = (atrboard: ArtboardView) => {
     let offsetB = size.height;
     for (let i = 0; i < atrboard.childs.length; i++) {
         const child = atrboard.childs[i];
-        const frame = child._p_frame;
+        const frame = child.relativeFrame;
         const right = frame.x + frame.width;
         const bottom = frame.y + frame.height;
         if (frame.x < offsetL) offsetL = frame.x;

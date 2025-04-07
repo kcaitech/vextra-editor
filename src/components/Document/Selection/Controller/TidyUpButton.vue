@@ -91,7 +91,7 @@ const tidyUpDot = () => {
     m.addTransform(clientTransform); //root到视图
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const { x, y, width, height } = shape._p_frame;
+        const { x, y, width, height } = shape.relativeFrame;
         const { [0]:col0, [1]:col1, [2]:col2 } = m.transform([
             ColVector3D.FromXY(x + (width / 2), y + (height / 2)),
             ColVector3D.FromXY(x, y),
@@ -129,8 +129,8 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
             const shape_row = shapes[i];
             for (let j = 0; j < shape_row.length - 1; j++) {
                 const shape = shape_row[j];
-                const { x, y, width, height } = shape._p_frame;
-                const clo_space = shape_row[j + 1]._p_frame.y - (y + height);
+                const { x, y, width, height } = shape.relativeFrame;
+                const clo_space = shape_row[j + 1].relativeFrame.y - (y + height);
                 tidyUpVerSpace.value = clo_space;
                 const horSpace = m.transform([
                     ColVector3D.FromXY(x, y + height),
@@ -159,13 +159,13 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
     } else {
         for (let i = 0; i < shapes.length - 1; i++) {
             const shape_row = shapes[i];
-            const cur_row_h = Math.max(...shape_row.map(s => s._p_frame.y + s._p_frame.height));
-            const next_min_y = Math.min(...shapes[i + 1].map(s => s._p_frame.y));
+            const cur_row_h = Math.max(...shape_row.map(s => s.relativeFrame.y + s.relativeFrame.height));
+            const next_min_y = Math.min(...shapes[i + 1].map(s => s.relativeFrame.y));
             const col_space = next_min_y - cur_row_h;
             tidyUpVerSpace.value = col_space;
-            const maxh_shape = shape_row.find(s => s._p_frame.y + s._p_frame.height === cur_row_h);
+            const maxh_shape = shape_row.find(s => s.relativeFrame.y + s.relativeFrame.height === cur_row_h);
             if (!maxh_shape) continue;
-            const { x, y, width, height } = maxh_shape._p_frame;
+            const { x, y, width, height } = maxh_shape.relativeFrame;
             const verSpace = m.transform([
                 ColVector3D.FromXY(x, y + height),
                 ColVector3D.FromXY(x, y + height + col_space),
@@ -211,13 +211,13 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
         // 垂直调整
         for (let i = 0; i < shapes.length - 1; i++) {
             const shape_row = shapes[i];
-            const cur_col_w = Math.max(...shape_row.map(s => s._p_frame.x + s._p_frame.width));
-            const next_min_x = Math.min(...shapes[i + 1].map(s => s._p_frame.x));
+            const cur_col_w = Math.max(...shape_row.map(s => s.relativeFrame.x + s.relativeFrame.width));
+            const next_min_x = Math.min(...shapes[i + 1].map(s => s.relativeFrame.x));
             const row_space = next_min_x - cur_col_w;
             tidyUpHorSpace.value = row_space;
-            const maxw_shape = shape_row.find(s => s._p_frame.x + s._p_frame.width === cur_col_w);
+            const maxw_shape = shape_row.find(s => s.relativeFrame.x + s.relativeFrame.width === cur_col_w);
             if (!maxw_shape) continue;
-            const { x, y, width, height } = maxw_shape._p_frame;
+            const { x, y, width, height } = maxw_shape.relativeFrame;
             const horSpace = m.transform([
                 ColVector3D.FromXY(x + width, y),
                 ColVector3D.FromXY(x + width + row_space, y),
@@ -249,8 +249,8 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
             const shape_row = shapes[i];
             for (let j = 0; j < shape_row.length - 1; j++) {
                 const shape = shape_row[j];
-                const { x, y, width, height } = shape._p_frame;
-                const row_space = shape_row[j + 1]._p_frame.x - (x + width);
+                const { x, y, width, height } = shape.relativeFrame;
+                const row_space = shape_row[j + 1].relativeFrame.x - (x + width);
                 tidyUpHorSpace.value = row_space;
                 const horSpace = m.transform([
                     ColVector3D.FromXY(x + width, y),
@@ -324,8 +324,8 @@ const mousedown = (e: MouseEvent, dir: 'ver' | 'hor', index: number) => {
     const d = props.context.selection.isTidyUpDir;
     shapes_rows = checkTidyUpShapesOrder(selected, d);
     selectedShapes.value = [...shapes_rows];
-    minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
-    minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+    minVer = Math.min(...selected.map(s => s.relativeFrame.height - 1));
+    minHor = Math.min(...selected.map(s => s.relativeFrame.width - 1));
     props.context.workspace.setTidyUpIsTrans(true);
     lockMouseHandler = new LockMouse(props.context, e);
     document.addEventListener('mousemove', mousemove);
@@ -415,10 +415,10 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
         if (downDir === 'hor') {
             for (let i = 0; i < shapes.length - 1; i++) {
                 const shape_row = shapes[i];
-                const cur_col_w = Math.max(...shape_row.map(s => s._p_frame.x + s._p_frame.width));
-                const maxw_shape = shape_row.find(s => s._p_frame.x + s._p_frame.width === cur_col_w);
+                const cur_col_w = Math.max(...shape_row.map(s => s.relativeFrame.x + s.relativeFrame.width));
+                const maxw_shape = shape_row.find(s => s.relativeFrame.x + s.relativeFrame.width === cur_col_w);
                 if (!maxw_shape) continue;
-                const { x, y, width } = maxw_shape._p_frame;
+                const { x, y, width } = maxw_shape.relativeFrame;
                 const horSpace = m.transform([
                     ColVector3D.FromXY(x + width, y),
                     ColVector3D.FromXY(x + width + hor, y),
@@ -436,7 +436,7 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
                 const shape_row = shapes[i];
                 for (let j = 0; j < shape_row.length - 1; j++) {
                     const shape = shape_row[j];
-                    const { x, y, width, height } = shape._p_frame;
+                    const { x, y, width, height } = shape.relativeFrame;
                     const horSpace = m.transform([
                         ColVector3D.FromXY(x, y + height),
                         ColVector3D.FromXY(x + width, y + height),
@@ -456,7 +456,7 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
                 const shape_row = shapes[i];
                 for (let j = 0; j < shape_row.length - 1; j++) {
                     const shape = shape_row[j];
-                    const { x, y, width, height } = shape._p_frame;
+                    const { x, y, width, height } = shape.relativeFrame;
                     const horSpace = m.transform([
                         ColVector3D.FromXY(x + width, y),
                         ColVector3D.FromXY(x + width + hor, y),
@@ -471,10 +471,10 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
         } else {
             for (let i = 0; i < shapes.length - 1; i++) {
                 const shape_row = shapes[i];
-                const cur_row_h = Math.max(...shape_row.map(s => s._p_frame.y + s._p_frame.height));
-                const maxh_shape = shape_row.find(s => s._p_frame.y + s._p_frame.height === cur_row_h);
+                const cur_row_h = Math.max(...shape_row.map(s => s.relativeFrame.y + s.relativeFrame.height));
+                const maxh_shape = shape_row.find(s => s.relativeFrame.y + s.relativeFrame.height === cur_row_h);
                 if (!maxh_shape) continue;
-                const { x, y, height } = maxh_shape._p_frame;
+                const { x, y, height } = maxh_shape.relativeFrame;
                 const verSpace = m.transform([
                     ColVector3D.FromXY(x, y + height),
                     ColVector3D.FromXY(x, y + height + ver),

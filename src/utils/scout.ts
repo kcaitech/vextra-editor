@@ -49,7 +49,7 @@ export function scout(context: Context): Scout {
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
         if (shape.isBorderShape) {
-            const { thicknessRight, thicknessTop, thicknessLeft, thicknessBottom } = shape.getBorders().sideSetting;
+            const { thicknessRight, thicknessTop, thicknessLeft, thicknessBottom } = shape.getBorder().sideSetting;
             const min = Math.min(thicknessRight, thicknessTop, thicknessLeft, thicknessBottom);
             if (min < 6) {
                 const scale = context.workspace.curScale;

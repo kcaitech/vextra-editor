@@ -266,7 +266,7 @@ export class Clipboard {
             const selected = this.context.selection.selectedShapes;
             const shape = flattenShapes(selected).filter(s => s.type !== ShapeType.Group)[0];
             const fills = shape.getFills();
-            const border = shape.getBorders();
+            const border = shape.getBorder();
             const shadows = shape.getShadows();
             const blur = shape.blur;
 

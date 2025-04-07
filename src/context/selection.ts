@@ -25,7 +25,7 @@ import {
     isDiffStringArr,
     SNumber,
     TableCellType,
-    TidyUpAlgin
+    TidyUpAlign
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -117,7 +117,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     private userSelectionList: DocSelectionData[] = [];
     private tidy_up: boolean = true;
     private tidy_up_dir: boolean = false; //false 水平， true垂直
-    private tidy_up_align: TidyUpAlgin = 'center';
+    private tidy_up_align: TidyUpAlign = 'center';
     private m_tidyup_selectShapes: ShapeView[] = [];
     private m_hover_stroke: number = 14;
     private m_flat: ShapeView[] | undefined = undefined;
@@ -677,7 +677,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.notify(Selection.PREVIEW_HOVER_CHANGE);
     }
 
-    whetherTidyUp(v: boolean, dir: boolean, align: TidyUpAlgin) {
+    whetherTidyUp(v: boolean, dir: boolean, align: TidyUpAlign) {
         this.tidy_up = v;
         this.tidy_up_dir = dir;
         this.tidy_up_align = align;

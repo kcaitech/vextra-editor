@@ -30,7 +30,6 @@ import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action, Tool } from "@/context/tool";
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
-import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import Creator from './Creator/Creator.vue';
 import { fourWayWheel, Wheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
@@ -554,6 +553,22 @@ const comps: { component: any, params?: any }[] = [];
 const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
 comps.push(
+    // {
+    //     component: MossCanvas,
+    //     params: {
+    //         get data() {
+    //             return props.page
+    //         },
+    //         get matrix() {
+    //             return matrix
+    //         },
+    //         get visibleRect() {
+    //             return visibleRect;
+    //         },
+    //         onRenderDone,
+    //         onContentVisible
+    //     }
+    // },
     {
         component: PageViewVue, params: {
             get data() {
@@ -608,18 +623,6 @@ comps.push(
                     layers: shapesContainsMousedownOnPageXY,
                     onClose: contextMenuUnmount
                 });
-            }
-        }
-    },
-    // 表格菜单
-    {
-        component: CellSetting, params: {
-            get visible() {
-                return cellSetting.value
-            },
-            close: closeModal,
-            get cellStatus() {
-                return cellStatus.value
             }
         }
     },
@@ -728,6 +731,9 @@ onMounted(() => {
 
     resizeObserver.observe(root.value!);
     _updateRoot(props.context, root.value!);
+
+    onRenderDone();
+    onContentVisible();
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();

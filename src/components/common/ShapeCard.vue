@@ -55,10 +55,10 @@ function mount() {
     __view = new __Construct(ctx, { data }) as any;
     __view.onMounted();
     __view.watch(watcher);
-    const __el = __view.renderStatic();
-    __el.el = container.value;
-
-    elpatch(__el, undefined);
+    // const __el = __view.renderStatic();
+    // __el.el = container.value;
+    //
+    // elpatch(__el, undefined);
 }
 
 function __render() {

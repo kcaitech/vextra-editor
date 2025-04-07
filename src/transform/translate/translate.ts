@@ -244,8 +244,8 @@ export class TranslateHandler extends TransformHandler {
             // const m = (shape_root_m).clone();
             // const clientTransform = (matrix2);
             // m.addTransform(clientTransform); //root到视图
-            this.outline_frame = { ...shape._p_frame };
-            this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, shape._p_frame);
+            this.outline_frame = { ...shape.relativeFrame };
+            this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, shape.relativeFrame);
         }
     }
 
@@ -763,14 +763,14 @@ export class TranslateHandler extends TransformHandler {
             shape_rows[_i].splice(_j, 0, ...this.shapes2);
         }
         if (targetShape) {
-            const frame = targetShape._p_frame;
+            const frame = targetShape.relativeFrame;
             (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x, frame.y);
             this.getTidyUpOutileFrame(shape_rows);
         } else {
             const tarShape = shape_rows[_i][Math.max(_j - 1, 0)];
             if (!tarShape) return;
             this.getTidyUpOutileFrame(shape_rows);
-            const frame = tarShape._p_frame;
+            const frame = tarShape.relativeFrame;
             (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x + 1, frame.y + 1);
         }
         if (this.m_dir) {
@@ -795,8 +795,8 @@ export class TranslateHandler extends TransformHandler {
     getOrderShapes() {
         const shape_rows = checkTidyUpShapesOrder(this.shapes, this.m_dir);
         this.m_shape_rows = shape_rows;
-        const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
-        const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
+        const minX = Math.min(...shape_rows[0].map(s => s.relativeFrame.x));
+        const minY = Math.min(...shape_rows[0].map(s => s.relativeFrame.y));
         this.tidy_up_start = { x: minX, y: minY }
         this.tidy_up_space = layoutSpacing(shape_rows, this.m_dir);
         for (let i = 0; i < shape_rows.length; i++) {

@@ -24,6 +24,13 @@ import { debounce } from "lodash";
 import { shutdown_menu } from "@/utils/mouse";
 import { Navi } from "@/context/navigate";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import lock_open_icon from '@/assets/icons/svg/lock-open.svg';
+import lock_lock_icon from '@/assets/icons/svg/lock-lock.svg';
+import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
+import eye_closed_icon from '@/assets/icons/svg/eye-closed.svg';
+import locate_icon from '@/assets/icons/svg/locate.svg';
+import triangle_down_icon from '@/assets/icons/svg/triangle-down.svg';
+import masked_by_icon from "@/assets/icons/svg/masked-by.svg";
 
 export interface ItemData {
     id: string
@@ -35,8 +42,8 @@ export interface ItemData {
     context: Context
 }
 
-interface Props {
-    data: ItemData
+type Props = {
+    data: ItemData;
 }
 
 interface Emits {
@@ -62,8 +69,8 @@ interface Emits {
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
-const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
-const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
+const lock_status = ref<number>(0);
+const visible_status = ref<number>(1);
 const is_tool_visible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
@@ -226,10 +233,10 @@ function mouseup(e: MouseEvent) {
     selectedChild();
 }
 
-const isLable = ref(props.data.context.tool.isLable);
+const isLabel = ref(props.data.context.tool.isLable);
 const tool_watcher = (t?: number) => {
     if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.data.context.tool.isLable;
+        isLabel.value = props.data.context.tool.isLable;
     }
 }
 
@@ -276,11 +283,11 @@ function updater(...args: any[]) {
     visible_status.value = shape.isVisible ? 0 : 1;
 }
 
-let oldshape: ShapeView | undefined;
-const stop = watch(() => props.data.id, (value, old) => {
-    oldshape && oldshape.unwatch(updater);
-    oldshape = props.data.shapeview();
-    oldshape.watch(updater);
+let oldShape: ShapeView | undefined;
+const stop = watch(() => props.data, () => {
+    oldShape && oldShape.unwatch(updater);
+    oldShape = props.data.shapeview();
+    oldShape.watch(updater);
     watchShapes();
 }, { immediate: true })
 
@@ -379,21 +386,13 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.data.context.tool.unwatch(tool_watcher);
-    oldshape && oldshape.unwatch(updater);
+    oldShape && oldShape.unwatch(updater);
     props.data.context.selection.unwatch(selectedWatcher);
     props.data.context.navi.unwatch(navi_watcher);
     stop();
     parent?.unwatch(parentWatcher);
     page.unwatch(pageWatcher);
 })
-
-import lock_open_icon from '@/assets/icons/svg/lock-open.svg';
-import lock_lock_icon from '@/assets/icons/svg/lock-lock.svg';
-import eye_open_icon from '@/assets/icons/svg/eye-open.svg';
-import eye_closed_icon from '@/assets/icons/svg/eye-closed.svg';
-import locate_icon from '@/assets/icons/svg/locate.svg';
-import triangle_down_icon from '@/assets/icons/svg/triangle-down.svg';
-import masked_by_icon from "@/assets/icons/svg/masked-by.svg";
 </script>
 
 <template>
@@ -445,12 +444,12 @@ import masked_by_icon from "@/assets/icons/svg/masked-by.svg";
                 <SvgIcon class="svg-open" :icon="locate_icon"/>
             </div>
             <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
-                 v-if="!data.context.readonly && !isLable">
+                 v-if="!data.context.readonly && !isLabel">
                 <SvgIcon v-if="lock_status === 0" class="svg-open" :icon="lock_open_icon"/>
                 <SvgIcon v-else-if="lock_status === 1" class="svg" :icon="lock_lock_icon"/>
             </div>
             <div class="tool_eye tool" :class="{ 'visible': visible_status }"
-                 @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLable">
+                 @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLabel">
                 <SvgIcon v-if="visible_status === 0" class="svg" :icon="eye_open_icon"/>
                 <SvgIcon v-else-if="visible_status === 1" class="svg" :icon="eye_closed_icon"/>
             </div>

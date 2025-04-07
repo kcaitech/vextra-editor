@@ -56,6 +56,7 @@ import { scout } from "@/utils/scout";
 import { Preview } from "./preview";
 import { MossClipboard } from "@/clipboard";
 import { EditorLayout } from "@/components/Document/Layout/editorlayout";
+import { RenderContext } from "@/context/render";
 import { TaskMgr } from "@/basic/taskmgr";
 
 // 仅暴露必要的方法
@@ -165,6 +166,8 @@ export class Context extends WatchableObject implements IContext {
     private m_readonly?: boolean;
     private m_active?: boolean;
 
+    private m_render: RenderContext;
+
     constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
         super();
         (window as any).__context = this;
@@ -196,6 +199,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_preview = new Preview(this);
         this.m_clip = new MossClipboard(this);
         this.m_layout = new EditorLayout(this);
+        this.m_render = new RenderContext();
         startLoadTask(data, this.m_taskMgr);
 
         this.eventsMap = new Map();
@@ -392,6 +396,7 @@ export class Context extends WatchableObject implements IContext {
     }
 
     private createVDom(page: Page) {
+        // const domCtx = new DomCtx("Canvas");
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
         const dom: PageDom = new PageDom(domCtx, { data: page });
@@ -454,6 +459,10 @@ export class Context extends WatchableObject implements IContext {
     }
     get customLoading() {
         return this.m_custom_loading;
+    }
+
+    get render() {
+        return this.m_render;
     }
 
     eventsMap: Map<string, Function[]>;

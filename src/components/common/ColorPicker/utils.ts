@@ -639,7 +639,7 @@ function finder(context: Context, shape: ShapeView, init?: Map<string, Color[]>)
         const s = cs[i];
         if (!s) continue;
         const fills = s.getFills();
-        const borders = s.getBorders().strokePaints;
+        const borders = s.getBorder().strokePaints;
         // const fbs: Array<Fill> = [...fills, ...borders];
         const fbs: Array<Fill> = [];
         for (let j = 0; j < fbs.length; j++) {
