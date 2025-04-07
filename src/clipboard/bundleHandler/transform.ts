@@ -84,11 +84,8 @@ export class ClipboardTransformHandler {
         for (const shape of source) {
             const _t = originTransform[`${shape.id}`];
             if (!_t) continue;
-
-            const __transform = (_t.clone())
-                .addTransform(targetSelectionTransform);
-
-            shape.transform = (__transform);
+            const t = new Transform(_t.m00, _t.m01, _t.m01, _t.m10, _t.m11, _t.m12);
+            shape.transform = t.addTransform(targetSelectionTransform);
         }
     }
 
