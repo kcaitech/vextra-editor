@@ -2,42 +2,42 @@ import { GradientType, ShapeType } from "@kcdesign/data";
 export const shape: any = {
     group: "Group",
     page: "Page",
-    line: 'Line',
-    oval: 'Oval',
-    rect: 'Rect',
-    path: 'Vector',
-    artboard: 'Frame',
-    arrow: 'Arrow',
-    text: 'text',
-    image: 'image',
-    input_text: 'Input text',
-    table: 'Table',
-    contact: 'Contact',
-    cutout: 'Cutout',
-    shape_tool: 'Shape tool',
-    symbol: 'Symbol',
-    curve: "Curve",
-    clip: "Clip",
-    default: 'Default',
-    pen: 'Pen',
-    pencil: 'Pencil',
-    polygon: 'Polygon',
-    star: 'Star',
+    line: "Straight line",
+    oval: "Roundness",
+    rect: "Rectangle",
+    path: "Path",
+    artboard: "Frame",
+    arrow: "Arrow",
+    text: "Text",
+    image: "Image",
+    input_text: "Input text",
+    table: "Table",
+    contact: "Connecting line",
+    cutout: "Cutout",
+    shape_tool: "Shape tool",
+    symbol: "Component",
+    curve: "Curve tool",
+    clip: "Crop tool",
+    default: "Default",
+    pen: "Pen",
+    pencil: "Pencil",
+    polygon: "Polygon",
+    star: "Star",
 }
-shape[ShapeType.Rectangle] = 'Rectangle';
+shape[ShapeType.Rectangle] = "Rectangle";
 
 export const color = {
-    solid: 'Solid',
-    linear: 'Liner',
-    radial: 'Radial',
-    angular: 'Angular',
-    esc: 'Press ESC to exit',
-    recently: 'Recently used',
-    documentc: 'Document colors',
-    times: 'Used xx times',
-    rotate: 'Rotate',
-    reverse: 'Reverse'
+    solid: "Solid",
+    linear: "Linear gradient",
+    radial: "Radial gradient",
+    angular: "Angular gradient",
+    esc: "Press ESC to exit",
+    recently: "Recent used", // todo refer figma
+    documentc: "Document usage",
+    times: "Use xx times",
+    rotate: "Rotate 90 degrees",
+    reverse: "Reverse" // todo refer figma
 }
-color[GradientType.Linear] = 'Linear gradient';
-color[GradientType.Radial] = 'Radial gradient';
-color[GradientType.Angular] = 'Angular gradient';
+color[GradientType.Linear] = "Linear gradient";
+color[GradientType.Radial] = "Radial gradient";
+color[GradientType.Angular] = "Angular gradient";
