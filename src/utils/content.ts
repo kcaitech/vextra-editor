@@ -200,15 +200,14 @@ export function fitView(context: Context, initPage = false, is_select = false) {
     const width = box.right - box.left;
     const height = box.bottom - box.top;
     let root = context.workspace.root;
-    if (context.user.isRuleVisible) {
-        root = { ...root };
-        root.center = { ...root.center };
-        root.center.x += 10;
-        root.center.y += 10;
-        root.width -= 20;
-        root.height -= 20;
-    }
-    console.log('--root-center--', root.center);
+    // if (context.user.isRuleVisible) {
+    //     root = { ...root };
+    //     root.center = { ...root.center };
+    //     root.center.x += 10;
+    //     root.center.y += 10;
+    //     root.width -= 20;
+    //     root.height -= 20;
+    // }
     const w_max = root.width;
     const h_max = root.height;
     const ratio_w = width / w_max * 1.06;
@@ -216,8 +215,6 @@ export function fitView(context: Context, initPage = false, is_select = false) {
     const ratio = Math.max(ratio_h, ratio_w);
     if (ratio !== 1) {
         const center = { x: box.left + width / 2, y: box.top + height / 2 };
-        console.log('--center--', center.x, center.y);
-
         const delta = { x: root.center.x - center.x, y: root.center.y - center.y };
         matrix.trans(delta.x, delta.y);
         matrix.trans(-w_max / 2, -h_max / 2);
@@ -235,8 +232,6 @@ export function fitView(context: Context, initPage = false, is_select = false) {
         context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else {
         const center = { x: box.left + width / 2, y: box.top + height / 2 };
-        console.log('--center2--', center.x, center.y);
-
         const delta = { x: root.center.x - center.x, y: root.center.y - center.y };
 
         if (delta.x || delta.y) {
