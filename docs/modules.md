@@ -45,7 +45,7 @@
 
 ### DocumentProps
 
-Ƭ **DocumentProps**: \{ `fid`: `string` ; `path`: `string` ; `source`: ``"storage"`` ; `storage`: `IStorage` ; `versionId`: `string`  } \| \{ `file`: `File` ; `fmt`: ``"vext"`` \| ``"sketch"`` \| ``"fig"`` ; `source`: ``"file"``  } \| \{ `source`: ``"new"``  }
+Ƭ **DocumentProps**: \{ `fid`: `string` ; `path`: `string` ; `source`: ``"storage"`` ; `storage`: `IStorage` ; `versionId`: `string`  } \| \{ `file`: `File` ; `fmt`: ``"vext"`` \| ``"moss"`` \| ``"sketch"`` \| ``"fig"`` ; `source`: ``"file"``  } \| \{ `source`: ``"new"``  }
 
 ___
 
