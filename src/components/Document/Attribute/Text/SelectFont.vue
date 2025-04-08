@@ -171,7 +171,8 @@ const unfoldFontName = (num: number) => {
         isUnfoldLocal.value = !isUnfoldLocal.value
     }
 }
-
+// 添加加载状态
+const isLoading = ref(true)
 const getTop = () => {
     if (font_context.value) {
         const p_container = props.fontNameEl?.getBoundingClientRect()
@@ -188,25 +189,39 @@ const getTop = () => {
         }
     }
 }
-watch(() => props.showFont, (v) => {
+watch(() => props.showFont, async (v) => {
     if (v) {
+        isLoading.value = true;
         searchFont.value = '';
         nextTick(() => {
             getTop();
         })
+        // 使用 Promise 和 setTimeout 异步加载数据
+        await new Promise<void>((resolve) => {
+            setTimeout(() => {
+                const { zh, en, local, failure_local } = props.context.workspace.fontNameList;
+
+                // 分批处理数据
+                requestAnimationFrame(() => {
+                    fontList.ch = zh ? [...zh] : [];
+                    fontList.en = en ? [...en] : [];
+                });
+
+                requestAnimationFrame(() => {
+                    fontList.local = local ? [...local] : [];
+                    fontList.failure_local = failure_local ? [...failure_local] : [];
+                });
+
+                isLoading.value = false;
+                resolve();
+            }, 0);
+        });
     }
 })
 
 onMounted(() => {
     getAllTextFontName();
     getTop();
-    nextTick(() => {
-        const { zh, en, local, failure_local } = props.context.workspace.fontNameList;
-        fontList.ch = Array.from(zh);
-        fontList.en = Array.from(en);
-        fontList.local = Array.from(local);
-        fontList.failure_local = Array.from(failure_local);
-    })
 })
 
 import search_icon from '@/assets/icons/svg/search.svg';
@@ -216,12 +231,16 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
 </script>
 
 <template>
-    <div class="font-container" ref="font_context" v-show="showFont" @mousedown.stop>
+    <div class="font-container" ref="font_context" v-if="showFont" @mousedown.stop>
         <div class="search">
             <SvgIcon :icon="search_icon" />
             <input type="text" v-model="searchFont" :placeholder="t('attr.search_for_fonts')" @input="onSearchFont">
         </div>
-        <div class="font-scroll">
+        <div class="font-scroll" v-loading="isLoading">
+            <!-- 添加加载状态 -->
+            <div v-if="isLoading" class="loading-mask">
+                <div class="loading-spinner"></div>
+            </div>
             <el-scrollbar v-if="searchFont.trim().length === 0">
                 <!-- 列表中已使用字体 -->
                 <div class="text_title" @click="unfoldFontName(1)">
@@ -413,6 +432,38 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
 </template>
 
 <style lang="scss" scoped>
+.loading-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
+.loading-spinner {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 .font-container {
     position: fixed;
     right: 254px;
@@ -452,6 +503,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
     }
 
     .font-scroll {
+        position: relative;
         height: 540px;
         box-sizing: border-box;
         padding-bottom: 8px;
