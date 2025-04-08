@@ -243,8 +243,6 @@ const changeTextSize = (size: number) => {
 //设置字体
 const setFont = (font: string) => {
     textCtxMgr.setFont(font)
-    console.log(font,'font');
-    
 }
 
 const setWordSpace = (val?: number) => {
@@ -1093,14 +1091,11 @@ const updateContextColor = () => {
 }
 
 const stop2 = watch(() => props.textShapes, (v) => {
-    console.log(v);
     shapes.value = v;
     textFormat();
     textCtxMgr.update();
 })
 const stop3 = watch(() => props.trigger, v => {
-    console.log(v);
-    
     if (v.includes('layout')||v.includes('size') || v.includes('width') || v.includes('height') || v.includes('text')) {
         textFormat();
         textCtxMgr.update();

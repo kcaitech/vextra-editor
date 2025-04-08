@@ -73,8 +73,6 @@ export class StyleCtx {
     private m_panel: Set<ElementManager> = new Set();
 
     protected kill() {
-        console.log('关闭弹框');
-        
         this.m_panel.forEach(i => i.close());
     }
 

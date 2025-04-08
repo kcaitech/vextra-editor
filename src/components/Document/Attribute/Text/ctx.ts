@@ -165,6 +165,7 @@ export class TextContextMgr extends StyleCtx {
         text.fontName = this.textCtx.text?.fontName;
         text.fontSize = this.textCtx.text?.fontSize;
         text.weight = this.textCtx.text?.weight;
+        text.italic = this.textCtx.text?.italic;
         text.autoLineHeight = this.textCtx.text?.autoLineHeight;
         text.minimumLineHeight = this.textCtx.text?.minimumLineHeight;
         text.maximumLineHeight = this.textCtx.text?.maximumLineHeight;
@@ -205,8 +206,6 @@ export class TextContextMgr extends StyleCtx {
         const editor = this.context.editor4TextShape(t_shape[0]);
         if (t_shape.length === 1) {
             const { textIndex, selectLength } = this.getTextIndexAndLen()
-            console.log(textIndex, selectLength,font);
-            
             editor.setTextFontName(textIndex, selectLength, font)
         } else {
             editor.setTextFontNameMulti(t_shape, font);

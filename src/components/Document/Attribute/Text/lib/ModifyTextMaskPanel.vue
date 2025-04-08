@@ -283,15 +283,22 @@ function initData() {
     wordSpace.value = format_value(data?.text.kerning || 0)
 }
 
+function checkEnter(e: KeyboardEvent) {
+    if (e.key === 'Enter' && name.value && !data) {
+        createStyle();
+    }
+}
+
 watch(() => data, (v) => {
     if (v) initData()
 })
 
 onMounted(() => {
-    initData()
+    initData();
+    document.addEventListener('keydown', checkEnter);
 })
 onUnmounted(() => {
-
+    document.removeEventListener('keydown', checkEnter);
 });
 
 

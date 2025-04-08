@@ -123,7 +123,6 @@ const onSelectCase = (icon: TextTransformType) => {
       editor.setTextTransformMulti(props.textShapes!, icon);
     }
   }
-  console.log('icon', icon);
   // const textAttr = props.context.textSelection.getTextAttr;
   // textAttr.transform = icon;
   // props.context.textSelection.setTextAttr(textAttr);
