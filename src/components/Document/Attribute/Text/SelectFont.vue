@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Context } from '@/context';
-import { fontWeightList, isSupportFontFamily } from './FontNameList'
+import { fontWeightConvert, fontWeightList, isSupportFontFamily } from './FontNameList'
 import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
@@ -25,11 +25,9 @@ const emit = defineEmits<{
     (e: "setFontWeight", weight: number, italic: boolean): void;
 }>()
 const props = defineProps<{
-    fontName: string,
     context: Context,
-    fontWeight: string,
-    showFont?: boolean,
-    fontNameEl?: HTMLDivElement
+    manager: TextContextMgr;
+    fontname?: string | undefined;
 }>()
 type FontName = {
     used: {
@@ -63,10 +61,12 @@ const filterFontList = reactive<FontName>({
     ch: [],
     en: []
 })
-const font_context = ref<HTMLDivElement>();
+
+const fontWeight = ref(fontWeightConvert(props.manager?.textCtx.text?.weight, props.manager?.textCtx.text?.italic || false))
+
 const selectFont = (font: string) => {
     const results = fontWeightList(font, true);
-    const weight = results.filter((item: any) => item.key === props.fontWeight);
+    const weight = results.filter((item: any) => item.key === fontWeight.value);
     if (weight.length === 0) {
         emit('setFontWeight', 400, false);
     }
@@ -75,7 +75,7 @@ const selectFont = (font: string) => {
 
 const selectLocalFont = (font: string) => {
     const results = fontWeightList(font, true);
-    const weight = results.filter((item: any) => item.key === props.fontWeight);
+    const weight = results.filter((item: any) => item.key === fontWeight.value);
     const f = fontList.local.find(i => i.toLowerCase() === font.toLowerCase());
     if (!f) {
         const saveList = [...props.context.workspace.userLocalFontList, font];
@@ -172,22 +172,6 @@ const unfoldFontName = (num: number) => {
     }
 }
 
-const getTop = () => {
-    if (font_context.value) {
-        const p_container = props.fontNameEl?.getBoundingClientRect()
-        if (p_container) {
-            const body_h = document.body.clientHeight;
-            const { height, width } = font_context.value.getBoundingClientRect();
-            font_context.value.style.top = p_container.y + 'px';
-            font_context.value.style.left = (p_container.left - width - 8) + 'px';
-            const su = body_h - p_container.y;
-            const cur_t = su - height;
-            if (cur_t - 10 < 0) {
-                font_context.value.style.top = p_container.y + cur_t - 10 + 'px';
-            }
-        }
-    }
-}
 
 function loadfont() {
     searchFont.value = '';
@@ -198,24 +182,17 @@ function loadfont() {
     fontList.failure_local = [...failure_local];
 }
 
-watch(() => props.showFont, (v) => {
-    if (v) {
 
-        nextTick(() => {
-            getTop();
-        })
-    }
-})
 
 onMounted(() => {
     getAllTextFontName()
     loadfont()
-    // getTop();
 })
 
 import search_icon from '@/assets/icons/svg/search.svg';
 import down_icon from '@/assets/icons/svg/down.svg';
 import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import { TextContextMgr } from './ctx';
 
 
 </script>
@@ -239,14 +216,14 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span> {{ item }}</span>
                 </div>
                 <div class="item failurel" v-for="item in fontList.used.failurel" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span> {{ item }}</span>
                     <Tooltip :content="`${t('attr.font_is_not')}`">
                         <el-icon>
@@ -272,14 +249,14 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span> {{ item }}</span>
                     </div>
                     <div class="item failurel" v-for="item in fontList.failure_local" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span> {{ item }}</span>
                         <Tooltip :content="`${t('attr.font_missing')}`">
                             <el-icon>
@@ -300,7 +277,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                     :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span> {{ item }}</span>
                 </div>
                 <div class="line"></div>
@@ -315,7 +292,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                     :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span> {{ item }}</span>
                 </div>
             </el-scrollbar>
@@ -333,7 +310,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -342,7 +319,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span v-html="highlightText(item)"></span>
                     <Tooltip :content="`${t('attr.font_is_not')}`">
                         <el-icon>
@@ -363,7 +340,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectLocalFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -372,7 +349,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectLocalFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -389,7 +366,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -404,7 +381,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }" />
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>

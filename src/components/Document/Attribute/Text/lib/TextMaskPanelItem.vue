@@ -26,12 +26,12 @@ const modifyPanelStatusMgr = new ElementManager(
     { whiteList: ['#modify-text-panel', '.modify']}
 );
 const selected = ref<boolean>(manager.textCtx.mask === data.id);
+manager.catchPanel(modifyPanelStatusMgr)
 
 function update(...args: any[]) {
     if (args?.includes('disabled')) emits('update');
     name.value = data.name;
     selected.value = manager.textCtx.mask === data.id;
-    console.log(data.id);
     
 }
 
@@ -48,18 +48,17 @@ function showModifyPanel(trigger: MouseEvent | Element) {
 
 function modify() {
     if (selected.value) return;
+    manager.modifyTextMask(data.id);
 
 }
 function disable() {
 
 }
 onMounted(() => {
-    console.log(data,'data');
-    
-    // data.watch(update);
+    data.watch(update);
 })
 onUnmounted(() => {
-    // data.unwatch(update);
+    data.unwatch(update);
     modifyPanelStatusMgr.unmounted();
 })
 

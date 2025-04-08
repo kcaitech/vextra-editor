@@ -30,6 +30,7 @@ export class Attribute extends WatchableObject {
     private m_blurMaskFold: boolean = true;
     private m_borderMaskFold: boolean = true;
     private m_radiusMaskFold: boolean = true;
+    private m_textMaskFold: boolean = true;
     constructor() {
         super();
     }
@@ -55,6 +56,9 @@ export class Attribute extends WatchableObject {
     setBlurMaskFold() {
         this.m_blurMaskFold = !this.m_blurMaskFold;
     }
+    setTextMaskFold() {
+        this.m_textMaskFold = !this.m_textMaskFold;
+    }
     get fillMaskFold() {
         return this.m_fillMaskFold;
     }
@@ -69,5 +73,8 @@ export class Attribute extends WatchableObject {
     }
     get blurMaskFold() {
         return this.m_blurMaskFold;
+    }
+    get textMaskFold() {
+        return this.m_textMaskFold;
     }
 }

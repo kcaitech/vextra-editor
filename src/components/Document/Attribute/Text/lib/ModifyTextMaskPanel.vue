@@ -6,7 +6,8 @@
         <div v-if="data" class="data-panel">
             <div class="title">
                 <ListHeader style="padding:0;" :title="t('stylelib.text')" create />
-                <TextAdvancedSettings :context="context" :manager="manager" :data="data"></TextAdvancedSettings>
+                <TextAdvancedSettings :context="context" :manager="manager" :data="data" @transform="modifyTransform" @strikethrough="modifyStrikethrough" @underline="modifyUnderline">
+                </TextAdvancedSettings>
             </div>
             <div class="text-container">
                 <div class="text-font">
@@ -16,24 +17,25 @@
                             <SvgIcon :icon="down_text_icon" />
                         </div>
                     </div>
-                    <SelectFont v-if="fontlistStatus.visible" @set-font="" :fontName="fontName" :context="context"
-                        :fontWeight="fontWeight" @setFontWeight="">
+                    <SelectFont v-if="fontlistStatus.visible" :fontname="fontName" :context="context" :manager="manager"
+                        @set-font="modifyfontname" @set-font-weight="modifyfontweight">
                     </SelectFont>
                 </div>
                 <div class="text-size">
-                    <FontWeightSelected class="weight" :context="context" :selected="fontWeight" :fontName="fontName">
+                    <FontWeightSelected class="weight" :context="context" :manager="manager" :data="data"
+                        :selected="fontWeight" :fontName="fontName" @set-font-weight="modifyfontweight">
                     </FontWeightSelected>
                     <div class="set-size">
                         <div class="size_input">
-                            <input type="text" v-model="fontSize" class="input">
+                            <input v-select v-blur type="text" v-model="fontSize" class="input">
                             <div class="down" @click="onShowSize">
                                 <SvgIcon :icon="down_text_icon" />
                             </div>
                         </div>
                         <div class="select-size" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
                             v-if="showSize">
-                            <div v-for="(item, i) in textSizes" :key="i" @mouseover="sizeHoverIndex = i"
-                                @mouseleave="sizeHoverIndex = -1">
+                            <div v-for="(item, i) in textSizes" :key="i" @click="modifyfontsize(item)"
+                                @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">
                                 {{ item }}
                                 <div class="icon">
                                     <SvgIcon v-if="sizeSelectIndex === i"
@@ -48,13 +50,14 @@
                         <div>
                             <SvgIcon :icon="word_space_icon" />
                         </div>
-                        <input type="text" class="input" v-model="rowHeight" :placeholder="row_height">
+                        <input v-select v-blur type="text" class="input" :placeholder="row_height" v-model="rowHeight"
+                            @change="modifyrowheight">
                     </div>
                     <div class="char-space">
                         <div>
                             <SvgIcon :icon="row_height_icon" />
                         </div>
-                        <input type="text" class="input" v-model="wordSpace">
+                        <input v-select v-blur type="text" class="input" v-model="wordSpace" @change="modifyKerning">
                     </div>
                 </div>
 
@@ -77,8 +80,8 @@ import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
 
 import { Context } from '@/context';
-import { TextShapeView, AsyncTextAttrEditor, TextMask } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { TextShapeView, AsyncTextAttrEditor, TextMask, UnderlineType,StrikethroughType, TextTransformType } from '@kcdesign/data';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, is_mac } from '@/utils/common';
 import TextAdvancedSettings from '../TextAdvancedSettings.vue'
@@ -116,8 +119,8 @@ const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
 const fontName = ref<string>(DefaultFontName);
 const fontWeight = ref<string>('');
 const fontSize = ref<string | number>();
-const rowHeight = ref<string | number>();
-const wordSpace = ref<string | number>();
+const rowHeight = ref<string | number>('');
+const wordSpace = ref<string | number>('');
 
 
 const fontlistStatus = reactive<ElementStatus>({ id: '#font-container', visible: false });
@@ -145,6 +148,24 @@ const onShowSize = () => {
     const index = textSizes.value.findIndex(item => item === fontSize.value);
     if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true
+
+    context.escstack.save('onShowSize', () => {
+        const isAchieve = showSize.value;
+        showSize.value = false;
+        return isAchieve
+    })
+
+    document.addEventListener('click', onShowSizeBlur);
+}
+
+const onShowSizeBlur = (e: Event) => {
+    if (e.target instanceof Element && !e.target.closest('.text-size')) {
+        var timer = setTimeout(() => {
+            showSize.value = false;
+            clearTimeout(timer)
+            document.removeEventListener('click', onShowSizeBlur);
+        }, 10)
+    }
 }
 
 function modifyName(value: string) {
@@ -159,6 +180,85 @@ function modifyDesc(value: string) {
     manager.modifyMaskDesc(data.sheet, data.id, value);
 }
 
+function modifyfontname(value: string) {
+    fontName.value = value;
+    if (!data) return;
+    const editor = context.editor4Doc()
+    editor.modifyTextMaskFontName(data.sheet, data.id, value)
+    fontPanelStatusMgr.close()
+}
+
+function modifyfontweight(weight: number, italic: boolean) {
+    fontWeight.value = fontWeightConvert(weight, italic ?? false);
+    if (!data) return;
+    const editor = context.editor4Doc()
+    editor.modifyTextMaskFontkWeight(data.sheet, data.id, weight, italic ?? false)
+}
+
+function modifyfontsize(value: number) {
+    fontSize.value = value;
+    showSize.value = false;
+    if (!data) return;
+    const editor = context.editor4Doc()
+    editor.modifyTextMaskFontSize(data.sheet, data.id, value)
+}
+
+const regex = /^(auto|自动|0|([1-9]\d*)(?:\.\d+)?|0\.\d+|(?:0|[1-9]\d*)(?:\.\d+)?%|)$/i
+const isAuto = computed(() => {
+    return rowHeight.value?.toString().toLowerCase() === 'auto' || rowHeight.value?.toString().toLowerCase() === '自动' || rowHeight.value?.toString().toLowerCase() === ''
+})
+function modifyrowheight() {
+    if (data && !(regex.test(rowHeight.value + ''))) {
+        return rowHeight.value = weight.value;
+    }
+    if (!data) return;
+    const editor = context.editor4Doc()
+    if (isAuto.value) {
+        editor.modifyTextMaskLineheight(data.sheet, data.id, undefined, true)
+    } else {
+        const value = parseFloat(rowHeight.value?.toString().replace('%', ''));
+        if (rowHeight.value.toString().includes('%')) {
+            editor.modifyTextMaskLineheight(data.sheet, data.id, value, true)
+            rowHeight.value = format_value(value) + '%';
+        } else {
+            editor.modifyTextMaskLineheight(data.sheet, data.id, value, false)
+            rowHeight.value = format_value(value);
+        }
+
+    }
+}
+
+const k_regex = /^(0(?:\.\d+)?|([1-9]\d*)(?:\.\d+)?)$/
+
+function modifyKerning() {
+    if (data && !(k_regex.test(wordSpace.value + ''))) {
+        return wordSpace.value = format_value(data.text.kerning || 0);
+    };
+    if (!data) return;
+    const editor = context.editor4Doc()
+    const value = Number(parseFloat(wordSpace.value?.toString()).toFixed(2));
+    editor.modifyTextMaskKerning(data.sheet, data.id, value)
+    wordSpace.value = format_value(value);
+}
+
+function modifyUnderline(type: UnderlineType | undefined) {
+    if (!data) return;
+    const editor = context.editor4Doc()
+    editor.modifyTextMaskUnderline(data.sheet, data.id, type)
+}
+
+function modifyStrikethrough(type: StrikethroughType | undefined) {
+    if (!data) return;
+    const editor = context.editor4Doc()
+    editor.modifyTextMaskStrikethrough(data.sheet, data.id, type)
+}
+
+function modifyTransform(type: TextTransformType | undefined) {
+    if (!data) return;
+    const editor = context.editor4Doc()
+    editor.modifyTextMaskTransform(data.sheet, data.id, type)
+}
+
 function changeNameInput(value: string) {
     name.value = value;
 }
@@ -171,18 +271,24 @@ function createStyle() {
     manager.createStyleLib(name.value, desc.value);
 }
 
+const weight = computed(() => {
+    return data?.text.autoLineHeight ?? true ? data?.text.minimumLineHeight !== undefined ? format_value(data.text.minimumLineHeight || 0) + '%' : 'Auto' : format_value(data?.text.minimumLineHeight || 0)
+})
+
 function initData() {
-    fontName.value = data?.text.fontName ?? DefaultFontName;
+    fontName.value = data?.text.fontName || DefaultFontName;
     fontWeight.value = fontWeightConvert(data?.text.weight, data?.text.italic ?? false);
     fontSize.value = data?.text.fontSize;
     rowHeight.value = data?.text.autoLineHeight ?? true ? data?.text.minimumLineHeight !== undefined ? format_value(data.text.minimumLineHeight || 0) + '%' : 'Auto' : format_value(data?.text.minimumLineHeight || 0)
     wordSpace.value = format_value(data?.text.kerning || 0)
 }
 
+watch(() => data, (v) => {
+    if (v) initData()
+})
+
 onMounted(() => {
     initData()
-    console.log(manager.textCtx.text, 'manager.textCtx.text');
-
 })
 onUnmounted(() => {
 

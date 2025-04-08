@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script lang="ts" setup>
 import Popover from '@/components/common/Popover.vue';
@@ -28,10 +28,17 @@ interface Props {
   textShapes?: TextShapeView[]
   data?: AttrGetter | TextMask;
 }
+
+const emits = defineEmits<{
+  (e: 'underline', type: UnderlineType | undefined): void;
+  (e: 'strikethrough', type: StrikethroughType | undefined): void;
+  (e: 'transform', type: TextTransformType | undefined): void;
+}>();
+
 const popover = ref();
 const props = defineProps<Props>();
 const selectCase = ref()
-const selectId = ref()
+const selectId = ref('')
 const paragraphSpace = ref<number | string>(props.manager.textCtx.text?.paraSpacing || 0)
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
@@ -42,7 +49,9 @@ const isActived2 = ref(false)
 const isActived3 = ref(false)
 const isUnderline = ref(false)
 const isDeleteline = ref(false)
-
+const isMask = computed(() => {
+  return props.data instanceof TextMask
+})
 const panelStatus = reactive<ElementStatus>({ id: '#text-detail-container', visible: false });
 const panelStatusMgr = new ElementManager(
   props.context,
@@ -58,7 +67,7 @@ function showDetailPanel(event: MouseEvent) {
       break;
     }
     if (e.classList.contains('title')) {
-      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -258} });
+      e && panelStatusMgr.showBy(e, { once: { offsetLeft: -258 } });
       break;
     }
     e = e.parentElement;
@@ -67,7 +76,7 @@ function showDetailPanel(event: MouseEvent) {
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
-  const selection = props.context.selection.getTextSelection(props.textShape);
+  const selection = props.context.selection.textSelection;
   const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
   const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
   return { textIndex, selectLength }
@@ -78,12 +87,12 @@ function showMenu() {
   props.context.workspace.focusText()
 }
 const length = computed(() => {
-  return props.textShapes.length === 1;
+  return props.textShapes?.length === 1;
 })
 
 const onSelectId = (icon: BulletNumbersType) => {
   selectId.value = icon;
-  const editor = props.context.editor4TextShape(props.textShape)
+  const editor = props.context.editor4TextShape(props.textShape!)
   if (length.value) {
     const { textIndex, selectLength } = getTextIndexAndLen();
     if (isSelectText()) {
@@ -92,33 +101,37 @@ const onSelectId = (icon: BulletNumbersType) => {
       editor.setTextBulletNumbers(icon, textIndex, selectLength)
     }
   } else {
-    editor.setTextBulletNumbersMulti(props.textShapes, icon);
+    editor.setTextBulletNumbersMulti(props.textShapes!, icon);
   }
   // textFormat()
 }
 
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon;
-  const editor = props.context.editor4TextShape(props.textShape)
-  if (length.value) {
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    if (isSelectText()) {
-      editor.setTextTransform(icon, 0, Infinity)
-    } else {
-      editor.setTextTransform(icon, textIndex, selectLength)
-    }
-    props.context.workspace.focusText()
+  if (isMask.value) {
+    emits('transform', icon)
   } else {
-    editor.setTextTransformMulti(props.textShapes, icon);
+    const editor = props.context.editor4TextShape(props.textShape!)
+    if (length.value) {
+      const { textIndex, selectLength } = getTextIndexAndLen();
+      if (isSelectText()) {
+        editor.setTextTransform(icon, 0, Infinity)
+      } else {
+        editor.setTextTransform(icon, textIndex, selectLength)
+      }
+    } else {
+      editor.setTextTransformMulti(props.textShapes!, icon);
+    }
   }
-  const textAttr = props.context.textSelection.getTextAttr;
-  textAttr.transform = icon;
-  props.context.textSelection.setTextAttr(textAttr);
+  console.log('icon', icon);
+  // const textAttr = props.context.textSelection.getTextAttr;
+  // textAttr.transform = icon;
+  // props.context.textSelection.setTextAttr(textAttr);
 }
 
 
 const setParagraphSpace = () => {
-  const editor = props.context.editor4TextShape(props.textShape)
+  const editor = props.context.editor4TextShape(props.textShape!)
   if (isNaN(Number(paragraphSpace.value))) return init();
   if (length.value) {
     const { textIndex, selectLength } = getTextIndexAndLen();
@@ -128,7 +141,7 @@ const setParagraphSpace = () => {
       editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
     }
   } else {
-    editor.setParaSpacingMulit(props.textShapes, Number(paragraphSpace.value));
+    editor.setParaSpacingMulit(props.textShapes!, Number(paragraphSpace.value));
   }
   const textAttr = props.context.textSelection.getTextAttr;
   textAttr.paraSpacing = Number(paragraphSpace.value);
@@ -138,38 +151,46 @@ const setParagraphSpace = () => {
 //设置下划线
 const onUnderlint = () => {
   isUnderline.value = !isUnderline.value;
-  const editor = props.context.editor4TextShape(props.textShape)
-  if (length.value) {
-    const { textIndex, selectLength } = getTextIndexAndLen()
-    if (isSelectText()) {
-      editor.setTextUnderline(isUnderline.value, 0, Infinity)
-    } else {
-      editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
-      // textFormat()
-    }
+  if (isMask.value) {
+    emits('underline', isUnderline.value ? UnderlineType.Single : undefined)
   } else {
-    editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
+    const editor = props.context.editor4TextShape(props.textShape!)
+    if (length.value) {
+      const { textIndex, selectLength } = getTextIndexAndLen()
+      if (isSelectText()) {
+        editor.setTextUnderline(isUnderline.value, 0, Infinity)
+      } else {
+        editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
+        // textFormat()
+      }
+    } else {
+      editor.setTextUnderlineMulti(props.textShapes!, isUnderline.value);
+    }
   }
 }
 const onDeleteline = () => {
   isDeleteline.value = !isDeleteline.value;
-  const editor = props.context.editor4TextShape(props.textShape)
-  if (length.value) {
-    const { textIndex, selectLength } = getTextIndexAndLen()
-    if (isSelectText()) {
-      editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
-    } else {
-      editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
-      // textFormat()
-    }
+  if (isMask.value) {
+    emits('strikethrough', isDeleteline.value ? StrikethroughType.Single : undefined)
   } else {
-    editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
+    const editor = props.context.editor4TextShape(props.textShape!)
+    if (length.value) {
+      const { textIndex, selectLength } = getTextIndexAndLen()
+      if (isSelectText()) {
+        editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
+      } else {
+        editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
+        // textFormat()
+      }
+    } else {
+      editor.setTextStrikethroughMulti(props.textShapes!, isDeleteline.value);
+    }
   }
 }
 
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-  const selection = props.context.selection.getTextSelection(props.textShape);
+  const selection = props.context.selection.textSelection;
   if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
     return false
   } else {
@@ -193,8 +214,8 @@ function click(e: Event) {
 }
 
 const shapeWatch = watch(() => props.textShape, (value, old) => {
-  old.unwatch(init);
-  value.watch(init);
+  old!.unwatch(init);
+  value!.watch(init);
 })
 
 const textFormat = () => {
@@ -220,8 +241,8 @@ const textFormat = () => {
   } else {
     let formats: any[] = [];
     let format: any = {};
-    for (let i = 0; i < props.textShapes.length; i++) {
-      const text = props.textShapes[i];
+    for (let i = 0; i < props.textShapes!.length; i++) {
+      const text = props.textShapes![i];
       const editor = props.context.editor4TextShape(text);
       const format = text.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
       formats.push(format)
@@ -268,19 +289,18 @@ function init() {
     selectCase.value = props.data?.text.transform
     isUnderline.value = props.data?.text.underline && props.data?.text.underline !== UnderlineType.None || false;
     isDeleteline.value = props.data?.text.strikethrough && props.data?.text.strikethrough !== StrikethroughType.None || false;
-    selectId.value = props.data?.text.bulletNumbers?.type || 'none'
+    selectId.value = props.data?.text.bulletNumbers?.type ?? 'none'
 
   } else {
     paragraphSpace.value = format_value(props.data?.paraSpacing || 0) as number;
     selectCase.value = props.data?.transform
     isUnderline.value = props.data?.underline && props.data?.underline !== UnderlineType.None || false;
     isDeleteline.value = props.data?.strikethrough && props.data?.strikethrough !== StrikethroughType.None || false;
-    selectId.value = props.data?.bulletNumbers?.type || 'none'
-
+    selectId.value = props.data?.bulletNumbers?.type ?? 'none'
     if (props.data?.strikethroughIsMulti) isDeleteline.value = false
-    if (props.data?.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
-    if (props.data?.transformIsMulti) selectCase.value = 'none'
+    if (props.data?.paraSpacingIsMulti || props.data?.paraSpacing?.toString() === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`
     if (props.data?.underlineIsMulti) isUnderline.value = false
+    if (props.data?.transformIsMulti) selectCase.value = 'none'
   }
 
 }
@@ -381,7 +401,7 @@ import { ElementManager, ElementStatus } from '@/components/common/elementmanage
           </i>
         </div>
       </div>
-      <div>
+      <div v-if="(!manager.textCtx.mask && !manager.textCtx.mixed) || (data instanceof TextMask)">
         <span>{{ t('attr.underline') }}</span>
         <div class="underline jointly-text">
           <i :class="{ 'jointly-text': true, selected_bg: !isUnderline }" @click="onUnderlint">
@@ -396,7 +416,7 @@ import { ElementManager, ElementStatus } from '@/components/common/elementmanage
           </i>
         </div>
       </div>
-      <div>
+      <div v-if="(!manager.textCtx.mask && !manager.textCtx.mixed) || (data instanceof TextMask)">
         <span>{{ t('attr.deleteline') }}</span>
         <div class="underline jointly-text">
           <i :class="{ 'jointly-text': true, selected_bg: !isDeleteline }" @click="onDeleteline">
@@ -411,7 +431,7 @@ import { ElementManager, ElementStatus } from '@/components/common/elementmanage
           </i>
         </div>
       </div>
-      <div>
+      <div v-if="(!manager.textCtx.mask && !manager.textCtx.mixed) || (data instanceof TextMask)">
         <span>{{ t('attr.letter_case') }}</span>
         <div class="level-aligning jointly-text">
           <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'none' }"

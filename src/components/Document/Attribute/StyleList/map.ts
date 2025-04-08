@@ -13,6 +13,7 @@ import ShadowMaskView from "./ShadowMask.vue";
 import BlurMaskView from "./BlurMask.vue";
 import RadiusMaskView from "./RadiusMask.vue";
 import BorderMaskView from "./BorderMask.vue";
+import TextMaskView from "./TextMask.vue";
 
 export const mask_map = new Map<string, any>([
     ['fill-mask', FillMaskView],
@@ -20,4 +21,5 @@ export const mask_map = new Map<string, any>([
     ['blur-mask', BlurMaskView],
     ['radius-mask', RadiusMaskView],
     ['border-mask', BorderMaskView],
+    ['text-mask-living', TextMaskView],
 ])

@@ -41,7 +41,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import background from "@/assets/icons/svg/background_blur.svg";
 </script>
 <template>
-    <MaskPort :active="active" :disabled="info.disabled" :delete="false">
+    <MaskPort :active="active" :disabled="info.disabled" :delete="false" @unbind="()=>manager.unbind()">
         <div class="text_desc" @click="event => emits('show-style-lib', event)">
             <div class="effect">
                 <SvgIcon :icon="background" />

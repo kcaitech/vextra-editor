@@ -113,6 +113,9 @@ const textPanelStatusMgr = new ElementManager(
     textLibStatus,
     { whiteList: ['.text_clover', '.text-lib-panel', '.mask-port-wrapper'] }
 );
+
+textCtxMgr.catchPanel(textPanelStatusMgr)
+
 const showTextPanel = (event: MouseEvent) => {
     let e: Element | null = event.target as Element;
     while (e) {
@@ -128,32 +131,24 @@ const showTextPanel = (event: MouseEvent) => {
     }
 }
 
-const onShowFont = () => {
-    props.context.workspace.focusText()
-    if (showFont.value) {
-        return showFont.value = false
-    }
-    showFont.value = true
-
-    props.context.escstack.save('onShowFont', () => {
-        const achieve = showFont.value;
-        showFont.value = false;
-        return achieve;
-    })
-
-    document.addEventListener('mousedown', onShowFontBlur);
-}
-
-const onShowFontBlur = (e: Event) => {
-    if (e.target instanceof Element && !e.target.closest('.font-container') && !e.target.closest('.select-font')) {
-        var timer = setTimeout(() => {
-            showFont.value = false;
-            props.context.workspace.focusText()
-            clearTimeout(timer)
-            document.removeEventListener('mousedown', onShowFontBlur);
-        }, 10)
+const fontlistStatus = reactive<ElementStatus>({ id: '#font-container', visible: false });
+const fontPanelStatusMgr = new ElementManager(
+    props.context,
+    fontlistStatus,
+    { whiteList: ['.font-container', '.select-font'] }
+);
+textCtxMgr.catchPanel(fontPanelStatusMgr)
+const showFontList = (event: MouseEvent) => {
+    let e: Element | null = event.target as Element;
+    while (e) {
+        if (e.classList.contains('select-font')) {
+            fontPanelStatusMgr.showBy(e, { once: { offsetLeft: -236 } });
+            break;
+        }
+        e = e.parentElement;
     }
 }
+
 const textSizes = ref([10, 12, 14, 16, 18, 24, 36, 48, 64]);
 const sizeSelectIndex = ref(2);
 const onShowSize = () => {
@@ -189,17 +184,7 @@ const length = computed(() => {
 // 设置字重
 const setFontWeight = (weight: number, italic: boolean) => {
     fontWeight.value = fontWeightConvert(weight, italic);
-    const editor = props.context.editor4TextShape(props.shape)
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        editor.setTextWeight(weight, italic, textIndex, selectLength)
-    } else {
-        editor.setTextWeightMulti(props.textShapes, weight, italic);
-    }
-    const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.weight = weight;
-    textAttr.italic = italic;
-    props.context.textSelection.setTextAttr(textAttr);
+    textCtxMgr.setFontWeight(weight, italic)
 }
 
 // 设置水平对齐
@@ -229,8 +214,8 @@ const onSelectVertical = (icon: TextVerAlign) => {
     textAttr.verAlign = icon;
     props.context.textSelection.setTextAttr(textAttr);
 }
-//设置字体大小
 const changeTextSize = (size: number) => {
+    //设置字体大小
     fonstSize.value = size
     showSize.value = false;
     const shape = props.textShapes[0] as TextShapeView
@@ -257,18 +242,9 @@ const changeTextSize = (size: number) => {
 }
 //设置字体
 const setFont = (font: string) => {
-    fontName.value = font
-    showFont.value = false;
-    const editor = props.context.editor4TextShape(props.shape);
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        editor.setTextFontName(textIndex, selectLength, font)
-    } else {
-        editor.setTextFontNameMulti(props.textShapes, font);
-    }
-    const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.fontName = font;
-    props.context.textSelection.setTextAttr(textAttr);
+    textCtxMgr.setFont(font)
+    console.log(font,'font');
+    
 }
 
 const setWordSpace = (val?: number) => {
@@ -449,13 +425,13 @@ const reflush = ref(0);
 
 function selection_wather(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
-        console.log('text')
         textFormat()
         textCtxMgr.update();
     }
 }
 
 function workspace_wather(t: number) {
+   
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat()
         textCtxMgr.update();
@@ -868,8 +844,6 @@ const _textFormat = () => {
             const editor = props.context.editor4TextShape(text);
             const __text = text.getText();
             const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-            console.log(format, 'format');
-
             formats.push(format)
         }
 
@@ -1119,12 +1093,15 @@ const updateContextColor = () => {
 }
 
 const stop2 = watch(() => props.textShapes, (v) => {
+    console.log(v);
     shapes.value = v;
     textFormat();
     textCtxMgr.update();
 })
 const stop3 = watch(() => props.trigger, v => {
-    if (v.includes('size') || v.includes('width') || v.includes('height') || v.includes('text')) {
+    console.log(v);
+    
+    if (v.includes('layout')||v.includes('size') || v.includes('width') || v.includes('height') || v.includes('text')) {
         textFormat();
         textCtxMgr.update();
     }
@@ -1137,7 +1114,7 @@ onMounted(() => {
     props.context.attr.watch(text_selection_wather);
     props.context.workspace.watch(workspace_wather);
     textFormat()
-    textCtxMgr.update();
+    textCtxMgr.update.bind(textCtxMgr);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
@@ -1150,6 +1127,7 @@ onUnmounted(() => {
 })
 const fillTypes = [FillType.SolidColor, FillType.Gradient];
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import unbind_icon from "@/assets/icons/svg/unbind.svg";
 import down_icon from '@/assets/icons/svg/down.svg';
 import white_select_icon from '@/assets/icons/svg/white-select.svg';
 import page_select_icon from '@/assets/icons/svg/page-select.svg';
@@ -1178,7 +1156,8 @@ import TextMaskView from './TextMaskView.vue'
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
-                <div v-if="cloverVisible" :class="{ 'active': textLibStatus.visible }" class="text_clover" @click="showTextPanel($event)">
+                <div v-if="cloverVisible" :class="{ 'active': textLibStatus.visible }" class="text_clover"
+                    @click="showTextPanel($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <TextAdvancedSettings :context="props.context" :manager="textCtxMgr" :data="textCtxMgr.textCtx.text"
@@ -1187,24 +1166,32 @@ import TextMaskView from './TextMaskView.vue'
             </template>
         </TypeHeader>
         <div class="text-container">
-            <TextMaskView v-if="textCtx.mask" :context="props.context" :manager="textCtxMgr" :info="textCtx.maskInfo!"
-                :active="textLibStatus.visible" @show-style-lib="e => showTextPanel(e)"></TextMaskView>
-            <div v-if="!textCtx.mask" class="text-top">
-                <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
-                    <span>{{ textCtxMgr.textCtx.text?.fontName }}</span>
+            <div class="mask-mixed" v-if="textCtx.mixed">
+                <span>包含多个文本样式，请解绑后编辑</span>
+                <div class="unbind" @click="() => textCtxMgr.unbind()">
+                    <SvgIcon :icon="unbind_icon" />
+                </div>
+            </div>
+            <TextMaskView v-if="textCtx.mask && !textCtx.mixed" :context="props.context" :manager="textCtxMgr"
+                :info="textCtx.maskInfo!" :active="textLibStatus.visible" @show-style-lib="e => showTextPanel(e)">
+            </TextMaskView>
+            <div v-if="!textCtx.mask && !textCtx.mixed" class="text-top">
+                <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;"
+                    @click="showFontList($event)">
+                    <span>{{ textCtx.text?.fontName ?? t('attr.more_value') }}</span>
                     <div class="down">
                         <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
                 </div>
-                <SelectFont v-if="false" :showFont="showFont" @set-font="setFont" :fontName="fontName"
-                    :context="props.context" :fontWeight="fontWeight" @setFontWeight="setFontWeight"
-                    :fontNameEl="fontNameEl">
+                <SelectFont v-if="fontlistStatus.visible" @set-font="setFont" :context="props.context"
+                    :manager="textCtxMgr" @setFontWeight="setFontWeight">
                 </SelectFont>
                 <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
             </div>
-            <div v-if="!textCtx.mask" class="text-middle">
-                <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
-                    :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
+            <div v-if="!textCtx.mask && !textCtx.mixed" class="text-middle">
+                <FontWeightSelected :context="context" :manager="textCtxMgr" :selected="fontWeight"
+                    :disable="!textCtx.text?.fontName" :fontName="textCtx.text?.fontName!"
+                    @setFontWeight="setFontWeight">
                 </FontWeightSelected>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
@@ -1227,7 +1214,7 @@ import TextMaskView from './TextMaskView.vue'
                     </div>
                 </div>
             </div>
-            <div v-if="!textCtx.mask" class="text-middle">
+            <div v-if="!textCtx.mask && !textCtx.mixed" class="text-middle">
                 <div class="interval jointly-text" style="margin-right: 8px;">
                     <div @mousedown="(e) => onMouseDown(e, 'row-height')">
                         <SvgIcon :icon="word_space_icon" />
@@ -1483,6 +1470,40 @@ import TextMaskView from './TextMaskView.vue'
         flex-direction: column;
         gap: 8px;
         font-size: var(--font-default-fontsize);
+
+        .mask-mixed {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 32px;
+            background-color: #f5f5f5;
+            border-radius: 6px;
+            padding: 0 0 0 6px;
+            color: #737373;
+            font-size: 12px;
+            box-sizing: border-box;
+            overflow: hidden;
+
+            .unbind {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex: 0 0 28px;
+                width: 28px;
+                height: 100%;
+                transition: 50ms;
+                background-color: var(--input-background);
+
+                >img {
+                    width: 16px;
+                    height: 16px;
+                }
+
+                &:hover {
+                    background-color: #e5e5e5;
+                }
+            }
+        }
 
         .jointly-text {
             height: 32px;

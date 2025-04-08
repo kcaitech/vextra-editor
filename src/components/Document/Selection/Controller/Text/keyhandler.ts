@@ -212,8 +212,11 @@ function paster(e: KeyboardEvent, context: Context) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         if (e.altKey) {
+            console.log('2');
             context.workspace.clipboard.paste_for_no_format_text();
         } else {
+            console.log('1');
+            
             context.workspace.clipboard.paste_text();
         }
         context.menu.menuMount();

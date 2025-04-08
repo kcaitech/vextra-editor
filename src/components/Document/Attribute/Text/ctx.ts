@@ -13,7 +13,9 @@ import {
     TextMask,
     ShapeType,
     AttrGetter,
-    Color
+    Color,
+    BulletNumbers,
+    BulletNumbersType,
 } from "@kcdesign/data";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
@@ -38,21 +40,27 @@ export class TextContextMgr extends StyleCtx {
 
     private m_editor: TextModifier | undefined;
 
+    private _DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
     protected get editor(): TextModifier {
         return this.m_editor ?? (this.m_editor = new TextModifier(this.repo));
     }
 
+
     private updateText() {
         const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
         if (t_shape.length === 0 || !t_shape[0].text) return;
+        this.textCtx.mask = undefined
+        this.textCtx.mixed = false
         if (t_shape.length === 1) {
             const { textIndex, selectLength } = this.getTextIndexAndLen();
             const editor = this.context.editor4TextShape(t_shape[0]);
             let format: AttrGetter
             const __text = t_shape[0].getText();
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
+            format.fontName = format.fontName || this._DefaultFontName;
+            if (format.fontNameIsMulti) format.fontName = undefined;
+            if (format.weightIsMulti) format.weight = undefined;
             this.textCtx.text = format;
-            this.textCtx.mask = undefined;
             if (format.textMask) {
                 const mask = this.context.data.stylesMgr.getSync(format.textMask) as TextMask
                 this.textCtx.mask = format.textMask
@@ -60,6 +68,11 @@ export class TextContextMgr extends StyleCtx {
                     name: mask.name,
                     desc: mask.description
                 }
+            }
+            if (format.textMaskIsMulti) {
+                this.textCtx.mixed = true
+            } else {
+                this.textCtx.mixed = false
             }
         } else {
             let formats: any[] = [];
@@ -96,21 +109,42 @@ export class TextContextMgr extends StyleCtx {
                             foundEqual = false;
                             break;
                         }
+                    } else if (key === 'bulletNumbers' && formats[i][key] && referenceValue) {
+                        const { type: bullet1 } = formats[i][key];
+                        const { type: bullet2 } = referenceValue;
+                        if (bullet1 !== bullet2) {
+                            foundEqual = false;
+                            break;
+                        }
                     } else if (formats[i][key] !== referenceValue) {
                         foundEqual = false;
                         break;
                     }
                 }
                 format[key] = foundEqual ? referenceValue : 'unlikeness';
+                if (key === 'bulletNumbers' && !foundEqual) {
+                    format[key] = new BulletNumbers(BulletNumbersType.Mixed)
+                }
             }
+            if (format.fontNameIsMulti === 'unlikeness' || format.fontName === 'unlikeness') format.fontName = undefined;
+            if (format.weight === 'unlikeness' || format.weightIsMulti === 'unlikeness') format.weight = undefined;
             this.textCtx.text = format;
+            if (format.textMask === 'unlikeness' || format.textMaskIsMulti === 'unlikeness' || format.textMaskIsMulti) {
+                this.textCtx.mixed = true
+            } else if (format.textMask !== undefined) {
+                this.textCtx.mask = format.textMask
+                const mask = this.context.data.stylesMgr.getSync(format.textMask) as TextMask
+                this.textCtx.maskInfo = {
+                    name: mask.name,
+                    desc: mask.description
+                }
+            }
         }
 
 
     }
 
     update() {
-        this.updateSelection();
         this.updateText();
     }
 
@@ -127,7 +161,6 @@ export class TextContextMgr extends StyleCtx {
     }
 
     createStyleLib(name: string, desc: string) {
-        this.kill();
         const text = new TextAttr();
         text.fontName = this.textCtx.text?.fontName;
         text.fontSize = this.textCtx.text?.fontSize;
@@ -143,5 +176,55 @@ export class TextContextMgr extends StyleCtx {
         const { textIndex, selectLength } = this.getTextIndexAndLen();
         const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
         this.editor.createTextMask(this.document, textMask, this.page, textIndex, selectLength, textMask.id, t_shape);
+        const textAttr = this.context.textSelection.getTextAttr;
+        textAttr.weight = text.weight;
+        textAttr.italic = text.italic;
+        this.context.textSelection.setTextAttr(textAttr);
+        this.kill();
+        this.hiddenCtrl()
     }
+
+    modifyTextMask(maskid: string) {
+        const { textIndex, selectLength } = this.getTextIndexAndLen();
+        const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
+        this.editor.setTextMask(this.page, t_shape, textIndex, selectLength, maskid);
+        this.kill();
+        this.hiddenCtrl()
+    }
+
+    unbind() {
+        const { textIndex, selectLength } = this.getTextIndexAndLen();
+        const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
+        this.editor.unbindShapesTextMask(this.page, t_shape, textIndex, selectLength);
+        this.kill();
+    }
+
+    //设置字体
+    setFont = (font: string) => {
+        const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
+        const editor = this.context.editor4TextShape(t_shape[0]);
+        if (t_shape.length === 1) {
+            const { textIndex, selectLength } = this.getTextIndexAndLen()
+            console.log(textIndex, selectLength,font);
+            
+            editor.setTextFontName(textIndex, selectLength, font)
+        } else {
+            editor.setTextFontNameMulti(t_shape, font);
+        }
+        this.kill()
+    }
+
+    // 设置字重
+    setFontWeight = (weight: number, italic: boolean) => {
+        const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
+        const editor = this.context.editor4TextShape(t_shape[0]);
+        if (t_shape.length === 1) {
+            const { textIndex, selectLength } = this.getTextIndexAndLen()
+            editor.setTextWeight(weight, italic, textIndex, selectLength)
+        } else {
+            editor.setTextWeightMulti(t_shape, weight, italic);
+        }
+        this.kill()
+    }
+
 }

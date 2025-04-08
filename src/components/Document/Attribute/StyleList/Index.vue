@@ -26,12 +26,14 @@ const styleMasks = ref<StyleManage[]>([]);
 function update() {
     styleMasks.value = [];
     let masks = ([...props.context.data.stylelib ?? []] as StyleSheet[]).find(s => s.id === props.context.data.id);
+
     if (!masks) return;
     const fillMask: StyleManage = { typeId: 'fill-mask', variables: [] }
     const shadowMask: StyleManage = { typeId: 'shadow-mask', variables: [] }
     const borderMask: StyleManage = { typeId: 'border-mask', variables: [] }
     const blurMask: StyleManage = { typeId: 'blur-mask', variables: [] }
     const radiusMask: StyleManage = { typeId: 'radius-mask', variables: [] }
+    const textMask: StyleManage = { typeId: 'text-mask-living', variables: [] }
     for (let i = 0; i < masks.variables.length; i++) {
         const v = masks.variables[i];
         if (v.disabled) continue;
@@ -45,9 +47,11 @@ function update() {
             blurMask.variables.push(v);
         } else if (v.typeId === 'radius-mask') {
             radiusMask.variables.push(v);
+        }else if(v.typeId==='text-mask-living'){
+            textMask.variables.push(v)
         }
     }
-    styleMasks.value.push(fillMask, shadowMask, blurMask, radiusMask, borderMask);
+    styleMasks.value.push(fillMask, shadowMask, blurMask, radiusMask, borderMask,textMask);
     styleMasks.value = styleMasks.value.filter(m => m.variables.length !== 0);
 }
 
