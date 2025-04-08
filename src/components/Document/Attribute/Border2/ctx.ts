@@ -419,9 +419,7 @@ export class StrokeFillContextMgr extends StyleCtx {
             for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
-                } else {
-                    fills.push(view.getBorder().strokePaints[index]);
-                }
+                } else fills.push(view.getBorder().strokePaints[index]);
             }
             const modifyLocalFills = (api: Api) => {
                 for (const fill of fills) api.setFillEnable(fill, enable);
@@ -478,7 +476,6 @@ export class StrokeFillContextMgr extends StyleCtx {
                 for (const pack of fillsPacks) api.setFillColor(pack.fill, pack.color);
             }
             const modifyVariableFills = (api: Api) => {
-                if (!views.length) return;
                 for (const view of views) {
                     const variable = this.borderEditor.getBorderVariable(api, this.page, view).value as Border;
                     api.setFillColor(variable.strokePaints[index], color);

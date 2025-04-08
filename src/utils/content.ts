@@ -179,35 +179,47 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
 /**
  * 使page全部内容都在可视区，并居中
  */
-export function adapt_page(context: Context, initPage = false, is_select = false) {
+export function fitView(context: Context, initPage = false, is_select = false) {
     const selectedShapes = context.selection.selectedShapes || [];
-    const childs = is_select ? selectedShapes : context.selection.selectedPage?.childs || [];
-    if (!childs.length) return new Matrix();
+    const children = is_select ? selectedShapes : context.selection.selectedPage?.childs || [];
+    if (!children.length) return new Matrix();
     const matrix = context.workspace.matrix;
     const points: ClientXY[] = [];
-    for (let i = 0; i < childs.length; i++) {
-        const item = childs[i];
-        const frame = item.frame;
-        const m = item.matrix2Root();
+    for (const child of children) {
+        const f = child.frame;
+        const m = child.matrix2Root();
         m.multiAtLeft(matrix);
-        points.push(...[[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => m.computeCoord(p[0], p[1])));
+        points.push(...[
+            [f.x, f.y],
+            [f.x + f.width, f.y],
+            [f.x + f.width, f.y + f.height],
+            [f.x, f.y + f.height]
+        ].map(p => m.computeCoord(p[0], p[1])));
     }
     const box = XYsBounding(points);
     const width = box.right - box.left;
     const height = box.bottom - box.top;
-    const root = context.workspace.root;
+    let root = context.workspace.root;
+    // if (context.user.isRuleVisible) {
+    //     root = { ...root };
+    //     root.center = { ...root.center };
+    //     root.center.x += 10;
+    //     root.center.y += 10;
+    //     root.width -= 20;
+    //     root.height -= 20;
+    // }
     const w_max = root.width;
     const h_max = root.height;
-    const ratio_w = width / w_max * 1.06; // 两边留点空白
-    const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
+    const ratio_w = width / w_max * 1.06;
+    const ratio_h = height / h_max * 1.12;
     const ratio = Math.max(ratio_h, ratio_w);
     if (ratio !== 1) {
-        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
-        matrix.trans(del.x, del.y);
-        matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
+        const center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const delta = { x: root.center.x - center.x, y: root.center.y - center.y };
+        matrix.trans(delta.x, delta.y);
+        matrix.trans(-w_max / 2, -h_max / 2);
         const max = initPage ? 1 : 256;
-        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) { // 不能小于2%,不能大于25600%
+        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
             matrix.scale(1 / ratio);
         } else {
             if (matrix.m00 / ratio <= 0.02) {
@@ -216,13 +228,14 @@ export function adapt_page(context: Context, initPage = false, is_select = false
                 matrix.scale(max / matrix.m00);
             }
         }
-        matrix.trans(root.width / 2, root.height / 2);
+        matrix.trans(w_max / 2, h_max / 2);
         context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else {
-        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
-        if (del.x || del.y) {
-            matrix.trans(del.x, del.y);
+        const center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const delta = { x: root.center.x - center.x, y: root.center.y - center.y };
+
+        if (delta.x || delta.y) {
+            matrix.trans(delta.x, delta.y);
             context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }

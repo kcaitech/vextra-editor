@@ -23,7 +23,7 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-    adapt_page, color2string, drop, root_scale, root_trans, selectShapes
+    fitView, color2string, drop, root_scale, root_trans, selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import TextSelection from './Selection/TextSelection.vue';
@@ -415,7 +415,7 @@ function selectEnd() {
 function initMatrix(cur: PageView) {
     let info = matrixMap.get(cur.id);
     if (!info) {
-        const m = new Matrix(adapt_page(props.context, true));
+        const m = new Matrix(fitView(props.context, true));
         info = { m, x: cur.frame.x, y: cur.frame.y };
         matrixMap.set(cur.id, info);
     }
