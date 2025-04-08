@@ -69,11 +69,7 @@ export class TextContextMgr extends StyleCtx {
                     desc: mask.description
                 }
             }
-            if (format.textMaskIsMulti) {
-                this.textCtx.mixed = true
-            } else {
-                this.textCtx.mixed = false
-            }
+            this.textCtx.mixed = format.textMaskIsMulti;
         } else {
             let formats: any[] = [];
             let format: any = {};
@@ -188,7 +184,7 @@ export class TextContextMgr extends StyleCtx {
     modifyTextMask(maskid: string) {
         const { textIndex, selectLength } = this.getTextIndexAndLen();
         const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
-        this.editor.setTextMask(this.page, t_shape, textIndex, selectLength, maskid);
+        this.editor.setTextMask(this.document, this.page, t_shape, textIndex, selectLength, maskid);
         this.kill();
         this.hiddenCtrl()
     }
@@ -196,7 +192,7 @@ export class TextContextMgr extends StyleCtx {
     unbind() {
         const { textIndex, selectLength } = this.getTextIndexAndLen();
         const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
-        this.editor.unbindShapesTextMask(this.page, t_shape, textIndex, selectLength);
+        this.editor.unbindShapesTextMask(this.document, this.page, t_shape, textIndex, selectLength);
         this.kill();
     }
 
