@@ -168,8 +168,6 @@ export class Eyedropper {
 
   // 按下Esc退出拾色
   keydown = (e: KeyboardEvent) => {
-    const active = this.context.active;
-    if (!active && typeof active === 'boolean') return;
     if (e.code === 'Escape') {
       this.destroy();
     }

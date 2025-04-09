@@ -177,9 +177,13 @@ const getTop = () => {
     if (font_context.value) {
         const p_container = props.fontNameEl?.getBoundingClientRect()
         const maxTop = props.context.workspace.root.y;
+        const documentHeight = props.context.workspace.element!.clientHeight;
         if (p_container) {
             const body_h = document.body.clientHeight;
             const { height, width } = font_context.value.getBoundingClientRect();
+            if (height > documentHeight) {
+                font_context.value.style.maxHeight = `${documentHeight}px`;
+            }
             font_context.value.style.top = p_container.y + 'px';
             font_context.value.style.left = (p_container.left - width - 8) + 'px';
             const su = body_h - p_container.y;
