@@ -197,6 +197,10 @@ export class TextContextMgr extends StyleCtx {
         this.kill();
     }
 
+    disableMask(mask: StyleMangerMember) {
+        this.editor.disableMask(mask);
+    }
+
     //设置字体
     setFont = (font: string) => {
         const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];

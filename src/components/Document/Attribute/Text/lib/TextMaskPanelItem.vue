@@ -52,7 +52,7 @@ function modify() {
 
 }
 function disable() {
-
+    manager.disableMask(data);
 }
 onMounted(() => {
     data.watch(update);
