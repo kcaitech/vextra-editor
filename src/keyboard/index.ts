@@ -9,6 +9,7 @@ export class KeyboardMgr {
     }
 
     private map: Map<Function, (ev: Event) => void> = new Map();
+
     addEventListener(type: string, listener: Function, options?: boolean | AddEventListenerOptionsEx | undefined) {
         const handler = (event: Event) => {
             // todo 抽离权限相关逻辑
