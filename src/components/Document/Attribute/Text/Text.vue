@@ -12,7 +12,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h, nextTick, watchEffect } from 'vue';
+import { onMounted, ref, onUnmounted, computed, shallowRef, reactive, h, nextTick } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import {
@@ -62,7 +62,7 @@ const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
 
 const props = defineProps<Props>();
 const { t } = useI18n();
-const fonstSize = ref<any>(14)
+const fontSize = ref<any>(14)
 const showSize = ref(false)
 const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
@@ -81,7 +81,7 @@ const highlight = ref<Color>()
 const fillType = ref<FillType>(FillType.SolidColor);
 const gradient = ref<Gradient>();
 const textSize = ref<HTMLInputElement>()
-const higlighAlpha = ref<HTMLInputElement>()
+const highlightAlpha = ref<HTMLInputElement>()
 const sizeHoverIndex = ref(-1);
 const fontWeight = ref('Regular');
 const weightMixed = ref<boolean>(false);
@@ -156,7 +156,7 @@ const onShowSize = () => {
     if (showSize.value) {
         return showSize.value = false
     }
-    const index = textSizes.value.findIndex(item => item === fonstSize.value);
+    const index = textSizes.value.findIndex(item => item === fontSize.value);
     if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true
 
@@ -216,7 +216,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
 }
 const changeTextSize = (size: number) => {
     //设置字体大小
-    fonstSize.value = size
+    fontSize.value = size
     showSize.value = false;
     const shape = props.textShapes[0] as TextShapeView
     const editor = props.context.editor4TextShape(shape)
@@ -399,7 +399,7 @@ const setTextSize = () => {
 }
 
 function keydownSize(event: KeyboardEvent) {
-    let value = sortValue(fonstSize.value.toString());
+    let value = sortValue(fontSize.value.toString());
     let old = value
     if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
         keydownval.value = true
@@ -470,8 +470,8 @@ const alpha_message = (type: string) => {
         if (!textColor.value) return;
         return alphaFill.value.value = (textColor.value!.alpha * 100) + '%'
     } else {
-        if (!highlight.value || !higlighAlpha.value) return;
-        return higlighAlpha.value.value = (highlight.value!.alpha * 100) + '%'
+        if (!highlight.value || !highlightAlpha.value) return;
+        return highlightAlpha.value.value = (highlight.value!.alpha * 100) + '%'
     }
 }
 
@@ -811,7 +811,7 @@ const _textFormat = () => {
         selectVertical.value = format.verAlign || 'top'
         selectText.value = format.textBehaviour || 'flexible'
         fontName.value = format.fontName || DefaultFontName
-        fonstSize.value = format_value(format.fontSize || 14) as number
+        fontSize.value = format_value(format.fontSize || 14) as number
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
@@ -830,7 +830,7 @@ const _textFormat = () => {
             fontName.value = `${t('attr.more_value')}`
         }
         if (format.alignmentIsMulti) selectLevel.value = `${t('attr.more_value')}`
-        if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
+        if (format.fontSizeIsMulti) fontSize.value = `${t('attr.more_value')}`
         if (format.fillTypeIsMulti) mixed.value = true;
         if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
         props.context.workspace.focusText()
@@ -886,7 +886,7 @@ const _textFormat = () => {
         selectVertical.value = format.verAlign || 'top';
         selectText.value = format.textBehaviour;
         fontName.value = format.fontName || DefaultFontName;
-        fonstSize.value = format_value(format.fontSize || 14) as number
+        fontSize.value = format_value(format.fontSize || 14) as number
         highlight.value = format.highlight;
         textColor.value = format.color;
         isBold.value = format.weight;
@@ -901,7 +901,7 @@ const _textFormat = () => {
         }
         if (format.minimumLineHeight === 'unlikeness' || format.autoLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
         if (format.minimumLineHeightIsMulti === 'unlikeness' || format.autoLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-        if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
+        if (format.fontSize === 'unlikeness') fontSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
@@ -1190,9 +1190,9 @@ import TextMaskView from './TextMaskView.vue'
                 </FontWeightSelected>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
-                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                            @focus="selectSizeValue" @input="handleSize" @click="(e) => click(e, is_size_select)"
-                            @keydown="e => keydownSize(e)">
+                        <input type="text" v-model="fontSize" ref="textSize" class="input" @change="setTextSize"
+                               @focus="selectSizeValue" @input="handleSize" @click="(e) => click(e, is_size_select)"
+                               @keydown="e => keydownSize(e)">
                         <div class="down" @click="onShowSize">
                             <SvgIcon :icon="down_icon" style="" />
                         </div>
@@ -1340,9 +1340,9 @@ import TextMaskView from './TextMaskView.vue'
                         <ColorBlock :colors="([highlight || new Color(1, 216, 216, 216)] as Color[])"
                             @click="showHighlightPanel" />
                         <component v-blur :is="HexHighlightInput()" />
-                        <input v-blur ref="higlighAlpha" class="alphaFill" type="alphaFill"
-                            :value="filterAlpha2() + '%'" @focus="selectAllOnFocus"
-                            @change="(e) => onAlphaChange(e, 'highlight')" />
+                        <input v-blur ref="highlightAlpha" class="alphaFill" type="alphaFill"
+                               :value="filterAlpha2() + '%'" @focus="selectAllOnFocus"
+                               @change="(e) => onAlphaChange(e, 'highlight')" />
                         <ColorPicker v-if="highlightPanelStatus.visible" :editor="highlightPicker"
                             :type="FillType.SolidColor" :include="[]" :color="rgbaHighlight!" @close="closeHighlight" />
                     </div>
