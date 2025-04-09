@@ -10,6 +10,8 @@ export class KeyboardMgr {
 
     addEventListener(type: string, listener: Function, options?: boolean | AddEventListenerOptionsEx | undefined) {
         const handler = (event: Event) => {
+            // todo 抽离权限相关逻辑
+
             // if (!this.context.active) return;
 
             const target = event.target as HTMLElement;
