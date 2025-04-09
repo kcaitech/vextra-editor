@@ -306,17 +306,13 @@ const autoLineHeight = [
 
 const setRowHeight = (val?: number) => {
     const editor = props.context.editor4TextShape(props.shape)
-    let isAuto = isAutoLineHeight.value;
+    let isAuto;
     if ((rowHeight.value as string).toLowerCase() === 'auto' || rowHeight.value === '自动') {
         rowHeight.value = '';
     }
     if (rowHeight.value.length < 1) {
         isAuto = true;
-    } else if (rowHeight.value[rowHeight.value.length - 1] === '%') {
-        isAuto = true;
-    } else {
-        isAuto = false;
-    }
+    } else isAuto = rowHeight.value[rowHeight.value.length - 1] === '%';
     const value = rowHeight.value[rowHeight.value.length - 1] === '%' ? rowHeight.value.slice(0, -1) : rowHeight.value;
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
