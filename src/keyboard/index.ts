@@ -8,6 +8,8 @@ export class KeyboardMgr {
     constructor(private context: Context) {
     }
 
+    private map: Map<Function, (ev: Event) => void> = new Map();
+
     addEventListener(type: string, listener: Function, options?: boolean | AddEventListenerOptionsEx | undefined) {
         const handler = (event: Event) => {
             // todo 抽离权限相关逻辑
@@ -23,8 +25,18 @@ export class KeyboardMgr {
             listener(event, this.context);
         };
 
+        this.map.set(listener, handler);
+
         document.addEventListener(type, handler, options);
 
         return () => document.removeEventListener(type, handler);
+    }
+
+    removeEventListener(type: string, listener: Function) {
+        const handler = this.map.get(listener);
+        if (handler) {
+            this.map.delete(listener);
+            document.removeEventListener(type, handler);
+        }
     }
 }
