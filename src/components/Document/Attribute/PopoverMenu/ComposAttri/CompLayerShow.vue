@@ -112,8 +112,6 @@ function click(e: Event) {
 }
 
 function keyboard_watcher(e: KeyboardEvent) {
-    const active = props.context.active;
-    if (!active && typeof active === 'boolean') return;
     e.stopPropagation();
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         save();
@@ -153,7 +151,7 @@ watchEffect(() => {
         fixed.value = true;
     }
 })
-
+const boardMgr = new KeyboardMgr(props.context);
 onMounted(() => {
     if (comps.value) {
         const body_h = document.body.clientHeight;
@@ -170,14 +168,15 @@ onMounted(() => {
             cur_top.value = 40
         }
     }
-    document.addEventListener('keydown', keyboard_watcher);
+    boardMgr.addEventListener('keydown', keyboard_watcher);
 })
 onUnmounted(() => {
-    document.removeEventListener('keydown', keyboard_watcher);
+    boardMgr.removeEventListener('keydown', keyboard_watcher);
 })
 
 import close_icon from '@/assets/icons/svg/close.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { KeyboardMgr } from '@/keyboard';
 </script>
 
 <template>

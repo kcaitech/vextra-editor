@@ -19,6 +19,7 @@ import { Component } from '@/context/component';
 import { Shape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';
 import { SymbolListItem } from '@/utils/symbol';
+import { KeyboardMgr } from '@/keyboard';
 
 interface Props {
     context: Context
@@ -72,7 +73,7 @@ const compMenuMount = (shape: Shape, e: MouseEvent) => {
 
     compMenu.value = true
     e.stopPropagation()
-    document.addEventListener('keydown', Menuesc);
+    boardMgr.addEventListener('keydown', Menuesc);
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
@@ -91,13 +92,11 @@ const compMenuMount = (shape: Shape, e: MouseEvent) => {
 }
 
 function Menuesc(e: KeyboardEvent) {
-    const active = props.context.active;
-    if (!active && typeof active === 'boolean') return;
     if (e.code === 'Escape') compMenuUnmount();
 }
-
+const boardMgr = new KeyboardMgr(props.context);
 const compMenuUnmount = (e?: MouseEvent, name?: string, shape?: Shape) => {
-    document.removeEventListener('keydown', Menuesc);
+    boardMgr.removeEventListener('keydown', Menuesc);
     if (name === 'gocomp') {
         if (shape) {
             const page = props.context.selection.selectedPage;

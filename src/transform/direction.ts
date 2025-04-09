@@ -21,6 +21,7 @@ import { StyleManager } from "@/transform/style";
 import { hidden_selection } from "@/utils/content";
 import { MossError } from "@/basic/error";
 import { UserConfig } from "@/context/user"
+import { KeyboardMgr } from "@/keyboard";
 
 export class DirectionCalc {
     static STEP = 1;
@@ -138,6 +139,7 @@ export class Direction {
     private readonly api: LinearApi;
     private readonly style: StyleManager;
     private directionCalc: DirectionCalc;
+    private boardMgr: KeyboardMgr;
     constructor(context: Context) {
         this.context = context;
 
@@ -146,9 +148,9 @@ export class Direction {
         this.api = new LinearApi(context.coopRepo, context.data, page);
         this.style = new StyleManager(context);
         this.directionCalc = new DirectionCalc();
-
-        document.addEventListener('keydown', this.keydown);
-        document.addEventListener('keyup', this.keyup);
+        this.boardMgr = new KeyboardMgr(context)
+        this.boardMgr.addEventListener('keydown', this.keydown);
+        this.boardMgr.addEventListener('keyup', this.keyup);
     }
 
     private __mode: ActionMode | undefined;
@@ -193,8 +195,6 @@ export class Direction {
     }
 
     private __keydown(event: KeyboardEvent) {
-        const active = this.context.active;
-        if (!active && typeof active === 'boolean') return;
         if (this.__can_not(event)) return;
 
         !event.repeat && this.__checkout();
@@ -492,8 +492,8 @@ export class Direction {
     destroy() {
         this.__clear_timer();
 
-        document.removeEventListener('keydown', this.keydown);
-        document.removeEventListener('keyup', this.keyup);
+        this.boardMgr.removeEventListener('keydown', this.keydown);
+        this.boardMgr.removeEventListener('keyup', this.keyup);
     }
 
     clear() {

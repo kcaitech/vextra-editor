@@ -18,6 +18,7 @@ import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vu
 import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
 import { ShadowsContextMgr, ShadowCatch } from "../ctx";
+import { KeyboardMgr } from "@/keyboard";
 
 /**
  * 修改样式弹框
@@ -77,22 +78,20 @@ function createStyle() {
 }
 
 function checkEnter(e: KeyboardEvent) {
-    const active = context.active;
-    if (!active && typeof active === 'boolean') return;
     if (e.key === 'Enter' && name.value && !data) {
         createStyle();
     }
 }
-
+const boardMgr = new KeyboardMgr(context);
 onMounted(() => {
     update();
     data?.watch(update);
-    document.addEventListener('keydown', checkEnter);
+    boardMgr.addEventListener('keydown', checkEnter);
 });
 
 onUnmounted(() => {
     data?.unwatch(update);
-    document.removeEventListener('keydown', checkEnter);
+    boardMgr.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>

@@ -580,7 +580,6 @@ const isSpacePressed = () => {
 }
 
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
-    if (e.target instanceof HTMLInputElement) return;
     if (e.repeat || !preview.value) return;
     if (e.code === 'Space') {
         if (spacePressed.value || !isSpacePressed()) return;
@@ -591,7 +590,7 @@ function onKeyDown(e: KeyboardEvent) { // 键盘监听
 }
 
 function onKeyUp(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement || !preview.value) return;
+    if (!preview.value) return;
     if (spacePressed.value && e.code === 'Space') {
         spacePressed.value = false;
         props.context.workspace.pageDragging(false);

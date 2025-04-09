@@ -50,6 +50,7 @@ import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
 import { SpaceHandler } from "@/space";
+import { KeyboardMgr } from '@/keyboard';
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -154,8 +155,6 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    const active = props.context.active;
-    if (!active && typeof active === 'boolean') return;
     if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || workspace.linearEditorExist) return;
     if (e.code === 'Space') {
         if (workspace.select || spacePressed.value) return;
@@ -700,7 +699,7 @@ const stop1 = watch(() => props.page, (cur, old) => {
     info!.m.reset(matrix.toArray())
     updateBackground(cur);
 });
-
+const boardMgr = new KeyboardMgr(props.context);
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
@@ -716,8 +715,8 @@ onMounted(() => {
     rootRegister(true);
     updateBackground();
     screenFontList(props.context);
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
+    boardMgr.addEventListener('keydown', onKeyDown);
+    boardMgr.addEventListener('keyup', onKeyUp);
     document.addEventListener('copy', copy_watcher);
     document.addEventListener('cut', cut_watcher);
     document.addEventListener('paste', paster_watcher);
@@ -743,8 +742,8 @@ onUnmounted(() => {
     props.page.unwatch(page_watcher);
     props.context.color.unwatch(color_watcher);
     resizeObserver.disconnect();
-    document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('keyup', onKeyUp);
+    boardMgr.removeEventListener('keydown', onKeyDown);
+    boardMgr.removeEventListener('keyup', onKeyUp);
     document.removeEventListener('copy', copy_watcher);
     document.removeEventListener('cut', cut_watcher);
     document.removeEventListener('paste', paster_watcher);

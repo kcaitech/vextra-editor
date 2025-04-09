@@ -23,6 +23,7 @@ import { RootReferHandler } from "@/components/Document/Rule/rootReferHandler";
 import { ActiveGuide, LineTheme, ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
 import { v4 } from "uuid";
 import { cloneDeep } from "lodash";
+import { KeyboardMgr } from "@/keyboard";
 
 const props = defineProps<{
     context: Context;
@@ -363,8 +364,6 @@ let holder: any = undefined;
 let keyboardWorking = false;
 
 function keydown(event: KeyboardEvent) {
-    const active = props.context.active;
-    if (!active && typeof active === 'boolean') return;
     if (
         !props.context.user.isRuleVisible ||
         !selected.value.valid ||
@@ -457,7 +456,7 @@ watch(() => props.page, (n, o) => {
     o.unwatch(pageWatcher);
     n.watch(pageWatcher);
 })
-
+const boardMgr = new KeyboardMgr(props.context);
 onMounted(() => {
     props.context.tool.watch(toolWatcher);
     props.context.workspace.watch(workspaceWatcher);
@@ -469,7 +468,7 @@ onMounted(() => {
 
     referUnderContainerRenderer.updateUnderRootContainerMap();
 
-    document.addEventListener('keydown', keydown);
+    boardMgr.addEventListener('keydown', keydown);
     ruleVisible.value = props.context.user.isRuleVisible;
     scaleRenderer.render();
     forWatchOne();
@@ -482,7 +481,7 @@ onUnmounted(() => {
     props.page.unwatch(pageWatcher);
     referLineSelection.removeScout();
     referUnderContainerRenderer.clearContainerWatcher();
-    document.removeEventListener('keydown', keydown);
+    boardMgr.removeEventListener('keydown', keydown);
     one?.unwatch(oneAction);
 })
 </script>

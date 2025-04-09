@@ -28,6 +28,7 @@ import { PageXY } from "@/context/selection";
 import { XYsBounding } from './common';
 import { EventIndex } from "@/components/Display/PreviewControls/actions";
 import { IScout } from '@/openapi';
+import { KeyboardMgr } from '@/keyboard';
 
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
@@ -61,11 +62,6 @@ export function getFrameList(page: PageView) {
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
-    const active = context.active;
-    if (!active && typeof active === 'boolean') return;
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
-        return;
-    }
     const f = keydownHandler[event.code];
     f && f(event, context);
 }
@@ -76,13 +72,13 @@ function keyup(event: KeyboardEvent, context: Context) {
 export function keyboard(context: Context) {
     const down = (event: KeyboardEvent) => keydown(event, context);
     const up = (event: KeyboardEvent) => keyup(event, context);
-
-    document.addEventListener('keydown', down);
-    document.addEventListener('keyup', up);
+    const boardMgr = new KeyboardMgr(context);
+    boardMgr.addEventListener('keydown', down);
+    boardMgr.addEventListener('keyup', up);
 
     const remove_keyboard_units = () => {
-        document.removeEventListener('keydown', down);
-        document.removeEventListener('keyup', up);
+        boardMgr.removeEventListener('keydown', down);
+        boardMgr.removeEventListener('keyup', up);
     }
 
     return remove_keyboard_units;
