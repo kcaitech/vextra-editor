@@ -289,7 +289,6 @@ function init() {
     isUnderline.value = props.data?.text.underline && props.data?.text.underline !== UnderlineType.None || false;
     isDeleteline.value = props.data?.text.strikethrough && props.data?.text.strikethrough !== StrikethroughType.None || false;
     selectId.value = props.data?.text.bulletNumbers?.type ?? 'none'
-
   } else {
     paragraphSpace.value = format_value(props.data?.paraSpacing || 0) as number;
     selectCase.value = props.data?.transform
@@ -338,12 +337,19 @@ onMounted(() => {
   props.context.workspace.watch(workspace_wather);
   // props.textShape.watch(init)
   props.context.selection.watch(selection_wather);
+  if(props.data instanceof TextMask) {
+    props.data.watch(init);
+  }
 })
 onUnmounted(() => {
   props.context.workspace.unwatch(workspace_wather);
   props.context.selection.unwatch(selection_wather);
   // props.textShape.unwatch(init)
   shapeWatch()
+  if(props.data instanceof TextMask) {
+    props.data.unwatch(init);
+  }
+
 })
 
 import SvgIcon from '@/components/common/SvgIcon.vue';

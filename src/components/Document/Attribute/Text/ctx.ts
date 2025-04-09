@@ -66,7 +66,8 @@ export class TextContextMgr extends StyleCtx {
                 this.textCtx.mask = format.textMask
                 this.textCtx.maskInfo = {
                     name: mask.name,
-                    desc: mask.description
+                    desc: mask.description,
+                    disabled:mask.disabled
                 }
             }
             this.textCtx.mixed = format.textMaskIsMulti;

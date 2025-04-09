@@ -276,6 +276,8 @@ const weight = computed(() => {
 })
 
 function initData() {
+    name.value = data?.name ?? t('stylelib.format');
+    desc.value = data?.description ?? '';
     fontName.value = data?.text.fontName || DefaultFontName;
     fontWeight.value = fontWeightConvert(data?.text.weight, data?.text.italic ?? false);
     fontSize.value = data?.text.fontSize;
@@ -295,9 +297,11 @@ watch(() => data, (v) => {
 
 onMounted(() => {
     initData();
+    data?.watch(initData);
     document.addEventListener('keydown', checkEnter);
 })
 onUnmounted(() => {
+    data?.unwatch(initData);
     document.removeEventListener('keydown', checkEnter);
 });
 
