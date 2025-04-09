@@ -23,6 +23,7 @@ export class KeyboardMgr {
         };
 
         document.addEventListener(type, handler, options);
+
         return () => document.removeEventListener(type, handler);
     }
 }
