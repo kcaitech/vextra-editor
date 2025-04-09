@@ -176,6 +176,7 @@ const isLoading = ref(true)
 const getTop = () => {
     if (font_context.value) {
         const p_container = props.fontNameEl?.getBoundingClientRect()
+        const maxTop = props.context.workspace.root.y;
         if (p_container) {
             const body_h = document.body.clientHeight;
             const { height, width } = font_context.value.getBoundingClientRect();
@@ -184,7 +185,7 @@ const getTop = () => {
             const su = body_h - p_container.y;
             const cur_t = su - height;
             if (cur_t - 10 < 0) {
-                font_context.value.style.top = p_container.y + cur_t - 10 + 'px';
+                font_context.value.style.top = Math.max(p_container.y + cur_t - 10, maxTop) + 'px';
             }
         }
     }
