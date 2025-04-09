@@ -38,13 +38,13 @@ onUnmounted(watchEffect(() => {
     name.value = props.info.name;
 }));
 import SvgIcon from "@/components/common/SvgIcon.vue";
-import background from "@/assets/icons/svg/background_blur.svg";
+import text from "@/assets/icons/svg/text-icon.svg";
 </script>
 <template>
     <MaskPort :active="active" :disabled="info.disabled" :delete="false" @unbind="()=>manager.unbind()">
         <div class="text_desc" @click="event => emits('show-style-lib', event)">
             <div class="effect">
-                <SvgIcon :icon="background" />
+                <SvgIcon :icon="text" />
             </div>
             <div class="name">{{ info.disabled ? t('stylelib.deleted_style') : info.name }}</div>
         </div>

@@ -63,8 +63,7 @@ onUnmounted(() => {
 })
 
 import SvgIcon from "@/components/common/SvgIcon.vue";
-import background from "@/assets/icons/svg/background_blur.svg";
-import gaussian from "@/assets/icons/svg/gaussian_blur.svg";
+import text from "@/assets/icons/svg/text-icon.svg";
 
 </script>
 <template>
@@ -73,7 +72,7 @@ import gaussian from "@/assets/icons/svg/gaussian_blur.svg";
         <template #preview>
             <div class="content" @click="modify">
                 <div class="blur">
-                    <SvgIcon :icon="gaussian"></SvgIcon>
+                    <SvgIcon :icon="text"></SvgIcon>
                 </div>
                 <span>{{ name }}</span>
             </div>

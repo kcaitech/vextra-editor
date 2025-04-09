@@ -183,6 +183,7 @@ export class TextContextMgr extends StyleCtx {
 
     modifyTextMask(maskid: string) {
         const { textIndex, selectLength } = this.getTextIndexAndLen();
+        if (selectLength === 0) return this.kill();
         const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
         this.editor.setTextMask(this.document, this.page, t_shape, textIndex, selectLength, maskid);
         this.kill();
