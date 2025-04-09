@@ -1,13 +1,8 @@
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import {
-    Api,
     BasicArray,
-    Blur,
-    BlurMask,
-    BlurType,
-    Point2D, TextModifier,
-    ShapeView,
-    SymbolRefView, StyleMangerMember,
+    TextModifier,
+    StyleMangerMember,
     TextAttr,
     TextShapeView,
     TextMask,
@@ -20,10 +15,8 @@ import {
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
 import { v4 } from "uuid";
-import { fontWeightConvert } from './FontNameList';
-import { format_value, is_mac } from "@/utils/common";
+import { is_mac } from "@/utils/common";
 import { gradient_equals } from "../../Selection/Controller/ColorEdit/gradient_utils";
-
 
 export type TextContext = {
     mixed: boolean;
