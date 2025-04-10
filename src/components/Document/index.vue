@@ -9,7 +9,7 @@
 */
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -24,7 +24,7 @@ import { Component } from '@/context/component';
 import { initDataModule } from '@/basic/initmodule';
 import { setup as keyboardUnits } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
-import { ContextEvents, IContext } from '@/openapi';
+import { ContextEnvironment, ContextEvents, IContext } from '@/openapi';
 import EditorLayout from "@/components/Document/Layout/EditorLayout.vue";
 import { fontNameListEn, fontNameListZh, timeSlicingTask } from './Attribute/Text/FontNameList';
 
@@ -152,7 +152,7 @@ function documentWatcher(...args: any[]) {
 watch(() => props.fontCache, (newVal) => {
     if (newVal) {
         const ctx: Context = props.context as Context;
-        ctx.workspace.setUserLocalFontList(newVal, props.isDesktop);
+        ctx.workspace.setUserLocalFontList(newVal);
     }
 })
 
@@ -170,7 +170,7 @@ onMounted(() => {
             customLoading.value = v;
         })
     }
-    if (!props.isDesktop) {
+    if (ctx.env === ContextEnvironment.Web) {
         timeSlicingTask(ctx, fontNameListZh, 'zh');
         timeSlicingTask(ctx, fontNameListEn, 'en');
     }

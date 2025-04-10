@@ -9,9 +9,10 @@
  */
 
 import { Context } from "@/context";
-import { exportExForm, TransactDataGuard, importMoss } from "@kcdesign/data";
+import { exportExForm, importMoss, TransactDataGuard } from "@kcdesign/data";
 import JSZip from "jszip";
 import { MossError } from "@/basic/error";
+import { ContextEnvironment } from "@/openapi";
 
 export async function _exportDocument(context: Context) {
     const __data = context.data;
@@ -51,7 +52,7 @@ export async function exportDocument(context: Context) {
     const content = await _exportDocument(context);
     const name = context.data.name;
     const reg = new RegExp('(.sketch|.fig|.vext|.moss)$', 'img');
-    if (context.workspace.desktop) {
+    if (context.env === ContextEnvironment.Client) {
         downloadByLink(content, name.replace(reg, '') + '.vext');
     } else {
         downloadByLink(content, name.replace(reg, '') + '.moss');

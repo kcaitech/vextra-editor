@@ -92,7 +92,6 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         center: { x: 0, y: 0 }
     };
     private m_linear_editor_exist: boolean = false;
-    private m_desktop: boolean = false;
 
     constructor(context: Context) {
         super();
@@ -368,14 +367,9 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         return this.m_font_name_list;
     }
 
-    setUserLocalFontList(list: string[], desktop?: boolean) {
+    setUserLocalFontList(list: string[]) {
         this.m_origin_fontList = list;
-        this.m_desktop = desktop || false;
         this.notify(WorkSpace.LOCAL_FONT_LIST_UPDATE);
-    }
-
-    get desktop() {
-        return this.m_desktop;
     }
 
     get userLocalFontList() {

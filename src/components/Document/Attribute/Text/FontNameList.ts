@@ -9,6 +9,7 @@
  */
 
 import { Context } from "@/context";
+import { ContextEnvironment } from "@/openapi";
 
 export const fontNameListZh = [
     'PingFang SC', 'Adobe 仿宋 Std', 'Adobe 宋体 Std', 'Adobe 楷体 Std', 'Adobe 黑体 Std', 'Hei',
@@ -306,7 +307,7 @@ export function timeSlicingTask(context: Context, fontList: string[], lang: stri
 
 export const screenFontList = (context: Context) => {
     const fontList = context.workspace.userLocalFontList;
-    if (context.workspace.desktop) {
+    if (context.env === ContextEnvironment.Client) {
         fontList.forEach(font => {
             context.workspace.setFontNameListLocal(font);
         });
