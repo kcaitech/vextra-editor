@@ -32,7 +32,7 @@ const emit = defineEmits<{
     (e: 'changeCmdId', id: string): void;
 }>()
 
-const props = defineProps<{ context: IContext, isDesktop?: boolean, fontCache?: string[], active?: boolean }>()
+const props = defineProps<{ context: IContext, fontCache?: string[] }>()
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
 const rightWidth = ref(0);
@@ -73,14 +73,9 @@ function initUI() {
 
 function init_keyboard_units() {
     const ctx: Context = props.context as Context;
-    ctx.setActive(props.active);
     uninstall_keyboard_units = keyboardUnits(ctx)
 }
 
-watch(() => props.active, () => {
-    const ctx: Context = props.context as Context;
-    ctx.setActive(props.active);
-})
 const not_perm_hidden_right = () => {
     const readonly = (props.context as Context).readonly;
     if (readonly && !isLable.value) {
