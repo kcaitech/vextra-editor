@@ -1371,7 +1371,7 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
                         @click="(e) => click(e, is_higligh_alpha_select)" @blur="is_higligh_alpha_select = false" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
-                    <SvgIcon class="svg" :icon="delete"/>
+                    <!-- <SvgIcon class="svg" :icon="delete"/> -->
                 </div>
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">

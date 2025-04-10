@@ -50,9 +50,13 @@ export class TextContextMgr extends StyleCtx {
             let format: AttrGetter
             const __text = t_shape[0].getText();
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
+            console.log('format', format);
+
             format.fontName = format.fontName || this._DefaultFontName;
             if (format.fontNameIsMulti) format.fontName = undefined;
             if (format.weightIsMulti) format.weight = undefined;
+            if (format.italicIsMulti) format.weight = undefined;
+            if (format.fontSizeIsMulti) format.fontSize = undefined;
             this.textCtx.text = format;
             if (format.textMask) {
                 const mask = this.context.data.stylesMgr.getSync(format.textMask) as TextMask
@@ -60,7 +64,7 @@ export class TextContextMgr extends StyleCtx {
                 this.textCtx.maskInfo = {
                     name: mask.name,
                     desc: mask.description,
-                    disabled:mask.disabled
+                    disabled: mask.disabled
                 }
             }
             this.textCtx.mixed = format.textMaskIsMulti;
@@ -116,8 +120,11 @@ export class TextContextMgr extends StyleCtx {
                     format[key] = new BulletNumbers(BulletNumbersType.Mixed)
                 }
             }
-            if (format.fontNameIsMulti === 'unlikeness' || format.fontName === 'unlikeness') format.fontName = undefined;
-            if (format.weight === 'unlikeness' || format.weightIsMulti === 'unlikeness') format.weight = undefined;
+            console.log('format', format);
+            if (format.fontNameIsMulti === 'unlikeness' || format.fontNameIsMulti === true || format.fontName === 'unlikeness') format.fontName = undefined;
+            if (format.weight === 'unlikeness' || format.weightIsMulti === 'unlikeness' || format.italicIsMulti === true) format.weight = undefined;
+            if (format.italicIsMulti === 'unlikeness' || format.italicIsMulti === true || format.italic === 'unlikeness') format.weight = undefined;
+            if (format.fontSizeIsMulti === 'unlikeness' || format.fontSizeIsMulti === true || format.fontSize === 'unlikeness') format.fontSize = undefined;
             this.textCtx.text = format;
             if (format.textMask === 'unlikeness' || format.textMaskIsMulti === 'unlikeness' || format.textMaskIsMulti) {
                 this.textCtx.mixed = true
@@ -126,7 +133,8 @@ export class TextContextMgr extends StyleCtx {
                 const mask = this.context.data.stylesMgr.getSync(format.textMask) as TextMask
                 this.textCtx.maskInfo = {
                     name: mask.name,
-                    desc: mask.description
+                    desc: mask.description,
+                    disabled: mask.disabled
                 }
             }
         }

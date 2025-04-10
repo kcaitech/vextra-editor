@@ -150,13 +150,13 @@ const showFontList = (event: MouseEvent) => {
 }
 
 const textSizes = ref([10, 12, 14, 16, 18, 24, 36, 48, 64]);
-const sizeSelectIndex = ref(2);
+const sizeSelectIndex = ref(-1);
 const onShowSize = () => {
     props.context.workspace.focusText()
     if (showSize.value) {
         return showSize.value = false
     }
-    const index = textSizes.value.findIndex(item => item === fontSize.value);
+    const index = textSizes.value.findIndex(item => item === textCtx.value.text?.fontSize);
     if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true
 
@@ -317,6 +317,8 @@ const setRowHeight = (val?: number) => {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         if (!isNaN(Number(value))) {
+            console.log(value, 'value');
+            
             keydownval.value
                 ?
                 linearApi.modifyTextLineHeight(val!, isAuto, textIndex, selectLength, props.shape)
@@ -425,7 +427,7 @@ function selection_wather(t: number | string) {
 }
 
 function workspace_wather(t: number) {
-   
+
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat()
         textCtxMgr.update();
@@ -1092,7 +1094,7 @@ const stop2 = watch(() => props.textShapes, (v) => {
     textCtxMgr.update();
 })
 const stop3 = watch(() => props.trigger, v => {
-    if (v.includes('layout')||v.includes('size') || v.includes('width') || v.includes('height') || v.includes('text')) {
+    if (v.includes('layout') || v.includes('size') || v.includes('width') || v.includes('height') || v.includes('text')) {
         textFormat();
         textCtxMgr.update();
     }
@@ -1169,7 +1171,7 @@ import TextMaskView from './TextMaskView.vue'
             <div v-if="!textCtx.mask && !textCtx.mixed" class="text-top">
                 <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;"
                     @click="showFontList($event)">
-                    <span>{{ textCtx.text?.fontName ?? t('attr.more_value') }}</span>
+                    <span>{{ textCtx.text?.fontName ? textCtx.text?.fontName : t('attr.more_value') }}</span>
                     <div class="down">
                         <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
@@ -1186,14 +1188,14 @@ import TextMaskView from './TextMaskView.vue'
                 </FontWeightSelected>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
-                        <input type="text" v-model="fontSize" ref="textSize" class="input" @change="setTextSize"
-                               @focus="selectSizeValue" @input="handleSize" @click="(e) => click(e, is_size_select)"
-                               @keydown="e => keydownSize(e)">
+                        <input type="text" :value="textCtx.text?.fontSize ?? t('attr.more_value')" ref="textSize"
+                            class="input" @change="setTextSize" @focus="selectSizeValue" @input="handleSize"
+                            @click="(e) => click(e, is_size_select)" @keydown="e => keydownSize(e)">
                         <div class="down" @click="onShowSize">
                             <SvgIcon :icon="down_icon" style="" />
                         </div>
                     </div>
-                    <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
+                    <div class="font-size-list" ref="sizeList" :style="{ top: -(sizeSelectIndex * 34) + 'px' }"
                         v-if="showSize">
                         <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)"
                             @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
@@ -1337,8 +1339,8 @@ import TextMaskView from './TextMaskView.vue'
                             @click="showHighlightPanel" />
                         <component v-blur :is="HexHighlightInput()" />
                         <input v-blur ref="highlightAlpha" class="alphaFill" type="alphaFill"
-                               :value="filterAlpha2() + '%'" @focus="selectAllOnFocus"
-                               @change="(e) => onAlphaChange(e, 'highlight')" />
+                            :value="filterAlpha2() + '%'" @focus="selectAllOnFocus"
+                            @change="(e) => onAlphaChange(e, 'highlight')" />
                         <ColorPicker v-if="highlightPanelStatus.visible" :editor="highlightPicker"
                             :type="FillType.SolidColor" :include="[]" :color="rgbaHighlight!" @close="closeHighlight" />
                     </div>
