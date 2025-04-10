@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ArtboardView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlgin } from '@kcdesign/data';
+import { ArtboardView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlign } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -569,8 +569,8 @@ async function modifyTelDown(e: MouseEvent) {
     const selected = props.shapes;
     const d = props.context.selection.isTidyUpDir;
     orderShapes = checkTidyUpShapesOrder(selected, d);
-    minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
-    minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+    minVer = Math.min(...selected.map(s => s.relativeFrame.height - 1));
+    minHor = Math.min(...selected.map(s => s.relativeFrame.width - 1));
     lockMouseHandler = new LockMouse(props.context, e);
     document.addEventListener("pointerlockchange", pointerLockChange, false);
 }
@@ -760,7 +760,7 @@ const changeHorTidyUp = (value: string) => {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     disableTidyUp(shapes, dir);
-    const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+    const minHor = Math.min(...selected.map(s => s.relativeFrame.width - 1));
     horSpace.value = Math.max(hor, -minHor);
     const align = props.context.selection.tidyUpAlign;
     editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir, align);
@@ -776,7 +776,7 @@ function keydownHorTidyUp(e: KeyboardEvent) {
         const shapes = checkTidyUpShapesOrder(selected, dir);
         const ver = typeof verSpace.value === 'number' ? verSpace.value : 0
         disableTidyUp(shapes, dir);
-        const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+        const minHor = Math.min(...selected.map(s => s.relativeFrame.width - 1));
         horSpace.value = Math.max(hor, -minHor);
         const align = props.context.selection.tidyUpAlign;
         linearApi.tidyUpShapesLayout(shapes, horSpace.value, ver, dir, align)
@@ -799,7 +799,7 @@ const changeVerTidyUp = (value: string) => {
     const editor = props.context.editor4Page(page);
     const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
     disableTidyUp(shapes, dir);
-    const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+    const minVer = Math.min(...selected.map(s => s.relativeFrame.height - 1));
     verSpace.value = Math.max(ver, -minVer);
     editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir, props.context.selection.tidyUpAlign);
 }
@@ -814,7 +814,7 @@ function keydownVerTidyUp(e: KeyboardEvent) {
         const shapes = checkTidyUpShapesOrder(selected, dir);
         const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
         disableTidyUp(shapes, dir);
-        const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+        const minVer = Math.min(...selected.map(s => s.relativeFrame.height - 1));
         verSpace.value = Math.max(ver, -minVer);
         linearApi.tidyUpShapesLayout(shapes, hor, verSpace.value, dir, props.context.selection.tidyUpAlign);
         e.preventDefault();
@@ -860,7 +860,7 @@ const _whetherTidyUp = () => {
     verTidyUp.value = tidyup;
     horTidyUp.value = tidyup;
     disableTidyUp(shapes, dir);
-    props.context.selection.whetherTidyUp(tidyup, dir, Info.align as TidyUpAlgin);
+    props.context.selection.whetherTidyUp(tidyup, dir, Info.align as TidyUpAlign);
 }
 
 const disableTidyUp = (shapes: ShapeView[][], d: boolean) => {

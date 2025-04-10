@@ -1,15 +1,15 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -21,13 +21,18 @@ import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
-import { initDataModule } from '@/components/common/initmodule';
+import { initDataModule } from '@/basic/initmodule';
 import { setup as keyboardUnits } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
-import { ContextEvents, IContext } from '@/openapi';
+import { ContextEnvironment, ContextEvents, IContext } from '@/openapi';
 import EditorLayout from "@/components/Document/Layout/EditorLayout.vue";
+import { fontNameListEn, fontNameListZh, timeSlicingTask } from './Attribute/Text/FontNameList';
 
-const props = defineProps<{ context: IContext }>()
+const emit = defineEmits<{
+    (e: 'changeCmdId', id: string): void;
+}>()
+
+const props = defineProps<{ context: IContext, fontCache?: string[] }>()
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
 const rightWidth = ref(0);
@@ -61,7 +66,7 @@ function selectionWatcher(t: number | string) {
     }
 }
 
-const isLable = ref<boolean>(false);
+const label = ref<boolean>(false);
 
 function initUI() {
 }
@@ -73,11 +78,11 @@ function init_keyboard_units() {
 
 const not_perm_hidden_right = () => {
     const readonly = (props.context as Context).readonly;
-    if (readonly && !isLable.value) {
+    if (readonly && !label.value) {
         rightWidth.value = 0
-    } else if (isLable.value && readonly) {
+    } else if (label.value && readonly) {
         rightWidth.value = 240
-    } else if (!isLable.value && !readonly) {
+    } else if (!label.value && !readonly) {
         rightWidth.value = 240
     }
 }
@@ -85,7 +90,7 @@ const not_perm_hidden_right = () => {
 const tool_watcher = (t: number) => {
     const ctx: Context = props.context as Context;
     if (t === Tool.LABLE_CHANGE) {
-        isLable.value = ctx.tool.isLable;
+        label.value = ctx.tool.isLable;
         not_perm_hidden_right();
     }
 }
@@ -101,6 +106,9 @@ function init_watcher() {
     ctx.component.watch(component_watcher);
     ctx.tool.watch(tool_watcher);
     ctx.data.watch(documentWatcher);
+    ctx.repo.setOnChange((id: string) => {
+        emit('changeCmdId', id);
+    });
 }
 
 function workspaceWatcher(t: number, o?: any) {
@@ -141,11 +149,17 @@ function documentWatcher(...args: any[]) {
     if (args.includes['name']) (props.context as Context).notify(ContextEvents.document_name_change);
 }
 
+watch(() => props.fontCache, (newVal) => {
+    if (newVal) {
+        const ctx: Context = props.context as Context;
+        ctx.workspace.setUserLocalFontList(newVal);
+    }
+})
+
 onMounted(() => {
     initUI();
     init_watcher();
     init_keyboard_units();
-    // sessionStorage.setItem('project_id', ''); // 不是editor要处理的
     initDataModule().catch((e) => {
         console.error(e)
     });
@@ -155,6 +169,10 @@ onMounted(() => {
         ctx.watchCustomLoading((v) => {
             customLoading.value = v;
         })
+    }
+    if (ctx.env === ContextEnvironment.Web) {
+        timeSlicingTask(ctx, fontNameListZh, 'zh');
+        timeSlicingTask(ctx, fontNameListEn, 'en');
     }
 })
 
@@ -179,22 +197,22 @@ onUnmounted(() => {
 </script>
 
 <template>
-<EditorLayout :context="(context as Context)">
-    <template #top>
-        <Toolbar v-if="contentVisible" :context="(context as Context)"/>
-    </template>
-    <template #left>
-        <Navigation v-if="curPage && contentVisible" :context="(context as Context)"
-                    @switchpage="switchPage" :page="(curPage as PageView)"/>
-    </template>
-    <template #center>
-        <ContentView v-if="curPage && !customLoading" :context="(context as Context)" :page="(curPage as PageView)"
-                     @closeLoading="closeLoading" @contentVisible="onContentVisible"/>
-    </template>
-    <template #right>
-        <Attribute v-if="contentVisible" :context="(context as Context)"/>
-    </template>
-</EditorLayout>
-<Bridge v-if="bridge" :context="(context as Context)"/>
-<Loading v-if="loading || customLoading" :size="20"/>
+    <EditorLayout :context="(context as Context)">
+        <template #top>
+            <Toolbar v-if="contentVisible" :context="(context as Context)" />
+        </template>
+        <template #left>
+            <Navigation v-if="curPage && contentVisible" :context="(context as Context)" @switchpage="switchPage"
+                :page="(curPage as PageView)" />
+        </template>
+        <template #center>
+            <ContentView v-if="curPage && !customLoading" :context="(context as Context)" :page="(curPage as PageView)"
+                @closeLoading="closeLoading" @contentVisible="onContentVisible" />
+        </template>
+        <template #right>
+            <Attribute v-if="contentVisible" :context="(context as Context)" />
+        </template>
+    </EditorLayout>
+    <Bridge v-if="bridge" :context="(context as Context)" />
+    <Loading v-if="loading || customLoading" :size="20" />
 </template>

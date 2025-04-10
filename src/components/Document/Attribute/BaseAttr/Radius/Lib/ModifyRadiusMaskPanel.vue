@@ -16,6 +16,7 @@ import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";
 import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.vue";
 import { RadiusContextMgr } from "../ctx";
+import { KeyboardMgr } from "@/keyboard";
 
 /**
  * 修改样式弹框
@@ -98,16 +99,16 @@ function checkEnter(e: KeyboardEvent) {
         createStyle();
     }
 }
-
+const boardMgr = new KeyboardMgr(context);
 onMounted(() => {
     update();
     data?.watch(update);
-    document.addEventListener('keydown', checkEnter);
+    boardMgr.addEventListener('keydown', checkEnter);
 });
 
 onUnmounted(() => {
     data?.unwatch(update);
-    document.removeEventListener('keydown', checkEnter);
+    boardMgr.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>

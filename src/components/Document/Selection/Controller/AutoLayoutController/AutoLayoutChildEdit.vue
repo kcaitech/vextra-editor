@@ -117,7 +117,7 @@ const getPoint = (shape: ShapeView, includedBorder?: boolean) => {
     const shape_root_m = shape.matrix2Root();
     const f = { ...shape.frame };
     if (includedBorder) {
-        const border = shape.getBorders();
+        const border = shape.getBorder();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
         const isEnabled = border.strokePaints.some(p => p.isEnabled);
         if (isEnabled) {
@@ -192,7 +192,7 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
         m.addTransform(clientTransform);
         let { x, y, width, height } = shape.frame;
         if (includedBorder) {
-            const border = shape.getBorders();
+            const border = shape.getBorder();
             let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
             const isEnabled = border.strokePaints.some(p => p.isEnabled);
             if (isEnabled) {

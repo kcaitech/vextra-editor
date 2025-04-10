@@ -102,7 +102,7 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
             const mask = context.data.stylesMgr.getSync(maskId) as FillMask;
             fills = mask.fills;
         } else {
-            fills = locate.type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
+            fills = locate.type === 'fills' ? shape.getFills() : shape.getBorder().strokePaints;
         }
         if (!fills[locate.index]) return;
         return fills[locate.index].gradient;

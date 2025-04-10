@@ -23,14 +23,13 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-    adapt_page, color2string, drop, root_scale, root_trans, selectShapes
+    fitView, color2string, drop, root_scale, root_trans, selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action, Tool } from "@/context/tool";
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
-import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import Creator from './Creator/Creator.vue';
 import { fourWayWheel, Wheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
@@ -46,11 +45,12 @@ import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
-import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
+import { screenFontList } from './Attribute/Text/FontNameList';
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
 import { SpaceHandler } from "@/space";
+import { KeyboardMgr } from '@/keyboard';
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -155,7 +155,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || workspace.linearEditorExist) return;
+    if (e.repeat || workspace.linearEditorExist) return;
     if (e.code === 'Space') {
         if (workspace.select || spacePressed.value) return;
         spacePressed.value = true;
@@ -165,7 +165,6 @@ function onKeyDown(e: KeyboardEvent) {
 }
 
 function onKeyUp(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
     if (spacePressed.value && e.code === 'Space') {
         spacePressed.value = false;
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
@@ -414,7 +413,7 @@ function selectEnd() {
 function initMatrix(cur: PageView) {
     let info = matrixMap.get(cur.id);
     if (!info) {
-        const m = new Matrix(adapt_page(props.context, true));
+        const m = new Matrix(fitView(props.context, true));
         info = { m, x: cur.frame.x, y: cur.frame.y };
         matrixMap.set(cur.id, info);
     }
@@ -552,6 +551,22 @@ const comps: { component: any, params?: any }[] = [];
 const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
 comps.push(
+    // {
+    //     component: MossCanvas,
+    //     params: {
+    //         get data() {
+    //             return props.page
+    //         },
+    //         get matrix() {
+    //             return matrix
+    //         },
+    //         get visibleRect() {
+    //             return visibleRect;
+    //         },
+    //         onRenderDone,
+    //         onContentVisible
+    //     }
+    // },
     {
         component: PageViewVue, params: {
             get data() {
@@ -606,18 +621,6 @@ comps.push(
                     layers: shapesContainsMousedownOnPageXY,
                     onClose: contextMenuUnmount
                 });
-            }
-        }
-    },
-    // 表格菜单
-    {
-        component: CellSetting, params: {
-            get visible() {
-                return cellSetting.value
-            },
-            close: closeModal,
-            get cellStatus() {
-                return cellStatus.value
             }
         }
     },
@@ -695,7 +698,7 @@ const stop1 = watch(() => props.page, (cur, old) => {
     info!.m.reset(matrix.toArray())
     updateBackground(cur);
 });
-
+const boardMgr = new KeyboardMgr(props.context);
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
@@ -711,8 +714,8 @@ onMounted(() => {
     rootRegister(true);
     updateBackground();
     screenFontList(props.context);
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
+    boardMgr.addEventListener('keydown', onKeyDown);
+    boardMgr.addEventListener('keyup', onKeyUp);
     document.addEventListener('copy', copy_watcher);
     document.addEventListener('cut', cut_watcher);
     document.addEventListener('paste', paster_watcher);
@@ -721,11 +724,12 @@ onMounted(() => {
 
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
-    timeSlicingTask(props.context, fontNameListZh, 'zh');
-    timeSlicingTask(props.context, fontNameListEn, 'en');
 
     resizeObserver.observe(root.value!);
     _updateRoot(props.context, root.value!);
+
+    onRenderDone();
+    onContentVisible();
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
@@ -737,8 +741,8 @@ onUnmounted(() => {
     props.page.unwatch(page_watcher);
     props.context.color.unwatch(color_watcher);
     resizeObserver.disconnect();
-    document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('keyup', onKeyUp);
+    boardMgr.removeEventListener('keydown', onKeyDown);
+    boardMgr.removeEventListener('keyup', onKeyUp);
     document.removeEventListener('copy', copy_watcher);
     document.removeEventListener('cut', cut_watcher);
     document.removeEventListener('paste', paster_watcher);

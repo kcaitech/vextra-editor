@@ -14,6 +14,7 @@ import { Context } from '@/context';
 import { Close } from '@element-plus/icons-vue'
 import { TableView } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
+import { KeyboardMgr } from '@/keyboard';
 const { t } = useI18n();
 interface Props {
     context: Context,
@@ -77,12 +78,12 @@ const InsertCell = (state: string) => {
     // emit('close');
     props.params.close()
 }
-
+const boardMgr = new KeyboardMgr(props.context);
 onMounted(() => {
-    document.addEventListener('keydown', escClose);
+    boardMgr.addEventListener('keydown', escClose);
 })
 onUnmounted(() => {
-    document.removeEventListener('keydown', escClose);
+    boardMgr.removeEventListener('keydown', escClose);
 })
 </script>
 

@@ -18,8 +18,5 @@ export * from "./workspace"
 export * from "./toolbox"
 export type DocumentProps = (
     { source: 'storage', storage: IStorage, path: string, fid: string, versionId: string } |
-    { source: 'file', file: File, fmt: 'moss' | 'sketch' | 'fig' } |
+    { source: 'file', file: File, fmt: 'vext' | 'sketch' | 'fig' | 'moss' } |
     { source: 'new' })
-// { coop?: ICoopNet } & // 通过CoopRepo设置
-// { communication?: ICommunication } &
-// { readonly?: boolean }

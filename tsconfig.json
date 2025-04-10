@@ -43,6 +43,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx",
+    "src/**/*.worker.ts",
     "client/**/*.ts",
     "client/**/*.vue"
   ],

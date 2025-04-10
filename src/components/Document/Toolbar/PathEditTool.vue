@@ -16,6 +16,7 @@ import Pen from '@/components/Document/Toolbar/PathEdit/PathPen.vue';
 
 import { Context } from "@/context";
 import { Action } from "@/context/tool";
+import { KeyboardMgr } from '@/keyboard';
 import { onMounted, onUnmounted } from "vue";
 import { useAuto, usePen } from "@/components/Document/Creator/execute";
 
@@ -27,7 +28,7 @@ const props = defineProps<{
 let o: string;
 
 function keyboard_up_watcher(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || !props.context.workspace.is_path_edit_mode) return;
+    if (!props.context.workspace.is_path_edit_mode) return;
     if (['MetaLeft', 'ControlLeft'].includes(e.code)) {
         props.context.tool.setAction(o);
         document.removeEventListener('keyup', keyboard_up_watcher);
@@ -35,7 +36,6 @@ function keyboard_up_watcher(e: KeyboardEvent) {
 }
 
 function keyboard_down_watcher(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
     if (e.repeat) return;
     if (['MetaLeft', 'ControlLeft'].includes(e.code)) {
         o = props.context.tool.action;
@@ -48,12 +48,12 @@ function keyboard_down_watcher(e: KeyboardEvent) {
         }
     }
 }
-
+const boardMgr = new KeyboardMgr(props.context);
 onMounted(() => {
-    document.addEventListener('keydown', keyboard_down_watcher);
+    boardMgr.addEventListener('keydown', keyboard_down_watcher);
 })
 onUnmounted(() => {
-    document.removeEventListener('keydown', keyboard_down_watcher);
+    boardMgr.removeEventListener('keydown', keyboard_down_watcher);
 })
 </script>
 <template>

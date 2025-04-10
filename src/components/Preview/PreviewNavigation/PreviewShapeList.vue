@@ -17,7 +17,6 @@ import { PageView, Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { debounce } from "lodash";
 import { Navi } from "@/context/navigate";
-import { ElMessage } from "element-plus";
 import { Selection } from "@/context/selection";
 import { getFlowInfo, getFlowPathShapes, getFlowShapes } from "@/utils/preview";
 import SvgIcon from "@/components/common/SvgIcon.vue";

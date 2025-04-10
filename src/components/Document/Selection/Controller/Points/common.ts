@@ -10,7 +10,6 @@
 
 import { getHorizontalAngle } from "@/utils/common"
 import {
-    ContactLineView,
     CtrlElementType, CurvePoint,
     Matrix,
     PathShapeView,

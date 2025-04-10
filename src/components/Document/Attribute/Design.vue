@@ -403,5 +403,8 @@ section {
         padding-bottom: 100px;
         box-sizing: border-box;
     }
+    :deep(.el-scrollbar__wrap) {
+        outline: none;
+    }
 }
 </style>

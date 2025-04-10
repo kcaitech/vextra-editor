@@ -47,7 +47,7 @@ import { Path } from "./path";
 import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
 import { Attribute } from "./atrribute";
-import { DocumentProps, INet, IScout, IToolBox } from "@/openapi";
+import { ContextEnvironment, DocumentProps, INet, IScout, IToolBox } from "@/openapi";
 import { PluginsMgr } from "./pluginsmgr";
 import { events } from "./events";
 import { IContext } from "@/openapi";
@@ -56,10 +56,11 @@ import { scout } from "@/utils/scout";
 import { Preview } from "./preview";
 import { MossClipboard } from "@/clipboard";
 import { EditorLayout } from "@/components/Document/Layout/editorlayout";
+import { RenderContext } from "@/context/render";
 import { TaskMgr } from "@/basic/taskmgr";
 
 // 仅暴露必要的方法
-export class RepoWraper {
+class RepoWrapper {
     private m_repo: CoopRepository;
 
     constructor(repo: CoopRepository) {
@@ -91,17 +92,9 @@ export class RepoWraper {
         throw new Error("Not implemented")
     }
 
-    // setOnLoaded(onLoaded: () => void) {
-    //     this.m_repo.setOnLoaded(onLoaded);
-    // }
-
-    // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
-    //     return this.m_repo.onCommit(...args)
-    // }
-
-    // onUndoRedo(...args: Parameters<typeof this.m_repo.onUndoRedo>): ReturnType<typeof this.m_repo.onUndoRedo> {
-    //     return this.m_repo.onUndoRedo(...args)
-    // }
+    setOnChange(onChange: (id: string) => void) {
+        this.m_repo.setOnChange(onChange);
+    }
 }
 
 class ToolBox implements IToolBox {
@@ -134,7 +127,7 @@ export class Context extends WatchableObject implements IContext {
 
     private m_data: Document;
     private m_editor: Editor;
-    private m_repo: RepoWraper;
+    private m_repo: RepoWrapper;
     private m_coopRepo: CoopRepository;
     private m_taskMgr: TaskMgr;
     private m_textEditor?: TextShapeEditor;
@@ -164,13 +157,18 @@ export class Context extends WatchableObject implements IContext {
     private m_net?: INet;
     private m_readonly?: boolean;
 
+    private m_render: RenderContext;
+
+    inactive: boolean;
+    env: ContextEnvironment;
+
     constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
         super();
         (window as any).__context = this;
         this.m_data = data;
         this.m_coopRepo = repo;
         this.m_props = props;
-        this.m_repo = new RepoWraper(this.m_coopRepo);
+        this.m_repo = new RepoWrapper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
         this.m_selection = new Selection(data, this); //选区相关
         repo.setSelection(this.m_selection);
@@ -195,9 +193,14 @@ export class Context extends WatchableObject implements IContext {
         this.m_preview = new Preview(this);
         this.m_clip = new MossClipboard(this);
         this.m_layout = new EditorLayout(this);
+        this.m_render = new RenderContext();
         startLoadTask(data, this.m_taskMgr);
 
         this.eventsMap = new Map();
+
+        this.env = ContextEnvironment.Web;
+        this.inactive = false;
+
     }
 
     private _storage: Map<string, string> = new Map();
@@ -297,7 +300,7 @@ export class Context extends WatchableObject implements IContext {
         return this.m_data;
     }
 
-    get repo(): RepoWraper {
+    get repo(): RepoWrapper {
         return this.m_repo;
     }
 
@@ -391,6 +394,7 @@ export class Context extends WatchableObject implements IContext {
     }
 
     private createVDom(page: Page) {
+        // const domCtx = new DomCtx("Canvas");
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
         const dom: PageDom = new PageDom(domCtx, { data: page });
@@ -419,28 +423,13 @@ export class Context extends WatchableObject implements IContext {
         return this.m_color;
     }
 
-    private m_doc_info: { name: string, id: string } | undefined;
-
-    setDocumentInfo(info: { name: string, id: string }): void {
-        this.m_doc_info = info;
-    }
-
-    get documentInfo(): { name: string, id: string } {
-        return this.m_doc_info || { name: '', id: '' };
-    }
-
     rename(name: string) {
-        const editor = this.editor4Doc();
-        editor.rename(name);
+        this.editor4Doc().rename(name);
     }
 
     get layout() {
         return this.m_layout;
     }
-
-    // setOnLoaded(onLoaded: () => void) {
-    //     this.m_repo.setOnLoaded(onLoaded);
-    // }
 
     private m_custom_loading = false;
     private m_custom_loading_watcher: (show: boolean) => void = () => { };
@@ -453,6 +442,10 @@ export class Context extends WatchableObject implements IContext {
     }
     get customLoading() {
         return this.m_custom_loading;
+    }
+
+    get render() {
+        return this.m_render;
     }
 
     eventsMap: Map<string, Function[]>;

@@ -10,7 +10,7 @@
 
 import { ViewType, ShapeType } from "@kcdesign/data";
 
-import { ArtboradDom } from "./artboard";
+import { ArtboardDom } from "./artboard";
 import { ContactLineDom } from "./contactline";
 import { GroupShapeDom } from "./groupshape";
 import { LineDom } from "./line";
@@ -30,7 +30,7 @@ import { Table2Dom } from "./table2";
 
 
 export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
-    comsMap.set(ShapeType.Artboard, ArtboradDom);
+    comsMap.set(ShapeType.Artboard, ArtboardDom);
     comsMap.set(ShapeType.Group, GroupShapeDom);
     comsMap.set(ShapeType.Image, RectShapeDom);
     comsMap.set(ShapeType.BoolShape, BoolShapeDom);
