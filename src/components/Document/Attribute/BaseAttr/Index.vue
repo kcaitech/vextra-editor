@@ -860,7 +860,7 @@ const _whetherTidyUp = () => {
     verTidyUp.value = tidyup;
     horTidyUp.value = tidyup;
     disableTidyUp(shapes, dir);
-    props.context.selection.whetherTidyUp(tidyup, dir, Info.algin as TidyUpAlgin);
+    props.context.selection.whetherTidyUp(tidyup, dir, Info.align as TidyUpAlign);
 }
 
 const disableTidyUp = (shapes: ShapeView[][], d: boolean) => {

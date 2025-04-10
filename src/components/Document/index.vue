@@ -66,7 +66,7 @@ function selectionWatcher(t: number | string) {
     }
 }
 
-const isLable = ref<boolean>(false);
+const label = ref<boolean>(false);
 
 function initUI() {
 }
@@ -83,11 +83,11 @@ watch(() => props.active, () => {
 })
 const not_perm_hidden_right = () => {
     const readonly = (props.context as Context).readonly;
-    if (readonly && !isLable.value) {
+    if (readonly && !label.value) {
         rightWidth.value = 0
-    } else if (isLable.value && readonly) {
+    } else if (label.value && readonly) {
         rightWidth.value = 240
-    } else if (!isLable.value && !readonly) {
+    } else if (!label.value && !readonly) {
         rightWidth.value = 240
     }
 }
@@ -95,7 +95,7 @@ const not_perm_hidden_right = () => {
 const tool_watcher = (t: number) => {
     const ctx: Context = props.context as Context;
     if (t === Tool.LABLE_CHANGE) {
-        isLable.value = ctx.tool.isLable;
+        label.value = ctx.tool.isLable;
         not_perm_hidden_right();
     }
 }
@@ -165,7 +165,6 @@ onMounted(() => {
     initUI();
     init_watcher();
     init_keyboard_units();
-    // sessionStorage.setItem('project_id', ''); // 不是editor要处理的
     initDataModule().catch((e) => {
         console.error(e)
     });

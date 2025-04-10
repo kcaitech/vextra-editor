@@ -155,7 +155,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || workspace.linearEditorExist) return;
+    if (e.repeat || workspace.linearEditorExist) return;
     if (e.code === 'Space') {
         if (workspace.select || spacePressed.value) return;
         spacePressed.value = true;
@@ -165,7 +165,6 @@ function onKeyDown(e: KeyboardEvent) {
 }
 
 function onKeyUp(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
     if (spacePressed.value && e.code === 'Space') {
         spacePressed.value = false;
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {

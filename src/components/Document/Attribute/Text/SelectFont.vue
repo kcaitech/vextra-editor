@@ -28,6 +28,8 @@ const props = defineProps<{
     context: Context,
     manager: TextContextMgr;
     fontname?: string | undefined;
+    showFont: boolean;
+    fontNameEl?: HTMLDivElement
 }>()
 type FontName = {
     used: {
@@ -171,6 +173,8 @@ const unfoldFontName = (num: number) => {
         isUnfoldLocal.value = !isUnfoldLocal.value
     }
 }
+const font_context = ref<HTMLDivElement>();
+
 // 添加加载状态
 const isLoading = ref(true)
 const getTop = () => {
