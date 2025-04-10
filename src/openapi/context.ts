@@ -17,8 +17,16 @@ import { IToolBox } from "./toolbox";
 
 export interface IEscStack {
     save(key: string, call: () => boolean): void;
+}
 
-    remove(key: string): void;
+export enum ContextEnvironment  {
+    Web,
+    Client,
+}
+
+export type DocumentRootInfo = {
+    id: string;
+    name: string;
 }
 
 export namespace ContextEvents {
@@ -55,13 +63,13 @@ export interface IContext extends IWatchable {
 
     setReadonly(readonly: boolean): void;
 
-    setDocumentInfo(info: { name: string }): void;
-
-    get documentInfo(): { name: string, id: string };
-
     rename(name: string): void;
     
     nextTick(page: PageView, cb: () => void): void;
 
     setCustomLoading(show: boolean): void;
+
+    inactive: boolean;
+
+    env: ContextEnvironment;
 }

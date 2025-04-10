@@ -9,8 +9,7 @@
  */
 
 <script setup lang="ts">
-import MossInput2 from '@/components/common/MossInput2.vue';
-
+import RadiusInput from '@/components/common/RadiusInput.vue';
 import radius_icon from "@/assets/icons/svg/radius.svg";
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import white_for_radius_icon from "@/assets/icons/svg/white-for-radius.svg";
@@ -23,6 +22,7 @@ import { onUnmounted, ref } from 'vue';
 import { LinearApi } from '@kcdesign/data';
 import { sortValue } from '../oval';
 import { useI18n } from "vue-i18n";
+import { computeString } from "@/utils/content";
 
 const { t } = useI18n();
 
@@ -35,8 +35,9 @@ const props = defineProps<{
 const keyupdate = ref<boolean>(false);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
 function change(value: any, index: number) {
-    value = get_value_from_input(value);
-
+    const valueAfterCompute = computeString(value);
+    if (isNaN(valueAfterCompute)) return;
+    value = get_value_from_input(valueAfterCompute);
     if (props.manager.radiusCtx.rect) {
         setting_for_extend(value, index);
         return;
@@ -145,16 +146,17 @@ function keydownRadius(event: KeyboardEvent, index: number) {
 
 <template>
     <div class="tr">
-        <MossInput2 :icon="radius_icon" :draggable="typeof data[0] === 'number'" :value="data[0]" :disabled="disabled"
+        <RadiusInput :icon="radius_icon" :draggable="typeof data[0] === 'number'" :value="data[0]" :disabled="disabled"
             @change="value => change(value, 0)" @dragstart="dragstart" @dragging="(e) => dragging(e, 0)"
             @dragend="dragend" @keydown="keydownRadius($event, 0)" @keyup="checkKeyup">
-        </MossInput2>
+        </RadiusInput>
         <div class="space" v-if="!manager.radiusCtx.rect"></div>
-        <MossInput2 v-if="manager.radiusCtx.rect" class="r-90" :icon="radius_icon" :draggable="typeof data[1] === 'number'"
+        <RadiusInput v-if="manager.radiusCtx.rect" class="r-90" :icon="radius_icon"
+                     :draggable="typeof data[1] === 'number'"
             :value="data[1]" :disabled="disabled" @change="value => change(value, 1)" @dragstart="dragstart"
             @dragging="(e) => dragging(e, 1)" @dragend="dragend" @keydown="keydownRadius($event, 1)"
             @keyup="checkKeyup">
-        </MossInput2>
+        </RadiusInput>
         <Tooltip v-if="manager.can_be_rect" :content="t('attr.independentCorners')">
             <div class="more-for-radius" @click="manager.rectToggle()" :class="{ 'active': manager.radiusCtx.rect }">
                 <SvgIcon :icon="manager.radiusCtx.rect ? white_for_radius_icon : more_for_radius_icon"
@@ -163,15 +165,15 @@ function keydownRadius(event: KeyboardEvent, index: number) {
         </Tooltip>
     </div>
     <div class="tr" v-if="manager.radiusCtx.rect">
-        <MossInput2 class="r-270" :icon="radius_icon" :draggable="typeof data[3] === 'number'" :value="data[3]"
+        <RadiusInput class="r-270" :icon="radius_icon" :draggable="typeof data[3] === 'number'" :value="data[3]"
             :disabled="disabled" @change="value => change(value, 3)" @dragstart="dragstart"
             @dragging="(e) => dragging(e, 3)" @dragend="dragend" @keydown="keydownRadius($event, 3)"
             @keyup="checkKeyup">
-        </MossInput2>
-        <MossInput2 class="r-180" :icon="radius_icon" :draggable="typeof data[2] === 'number'" :value="data[2]"
+        </RadiusInput>
+        <RadiusInput class="r-180" :icon="radius_icon" :draggable="typeof data[2] === 'number'" :value="data[2]"
             :disabled="disabled" @change="value => change(value, 2)" @dragstart="dragstart"
             @dragging="(e) => dragging(e, 2)" @dragend="dragend" @keydown="keydownRadius($event, 2)"
-            @keyup="checkKeyup"></MossInput2>
+                     @keyup="checkKeyup"></RadiusInput>
         <div style="width: 28px;height: 28px;"></div>
     </div>
     <teleport to="body">

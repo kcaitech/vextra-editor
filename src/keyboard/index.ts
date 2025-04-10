@@ -12,10 +12,9 @@ export class KeyboardMgr {
 
     addEventListener(type: string, listener: Function, options?: boolean | AddEventListenerOptionsEx | undefined) {
         const handler = (event: Event) => {
-            // todo 抽离权限相关逻辑
+            // todo 后续应该将权限相关逻辑抽离到这里
 
-            const active = this.context.active; //焦点不在当前文档，阻止键盘事件继续执行
-            if (!active && typeof active === 'boolean') return;
+            if (this.context.inactive) return; // 焦点不在当前文档，阻止键盘事件继续执行
 
             const target = event.target as HTMLElement;
 
