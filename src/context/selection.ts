@@ -23,7 +23,7 @@ import {
     SelectionState,
     ArrayOpSelection,
     isDiffStringArr,
-    SNumber,
+    // SNumber,
     TableCellType,
     TidyUpAlign
 } from "@kcdesign/data";
@@ -453,7 +453,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         const textShape = this.textSelection.shape;
         if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0 && textShape) {
             state.text = new ArrayOpSelection(v4(), textShape.text.getCrdtPath(),
-                SNumber.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
+                Number.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
                 this.textSelection.cursorEnd - this.textSelection.cursorStart)
         }
         return state;
@@ -469,7 +469,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         if (isDiffStringArr(path, curPath)) return;
         if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0) {
             return new ArrayOpSelection(v4(), path,
-                SNumber.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
+                Number.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
                 this.textSelection.cursorEnd - this.textSelection.cursorStart)
         }
     }

@@ -39,7 +39,7 @@ export interface IContext extends IWatchable {
 
     setCurAction(uuid: string): void;
 
-    lastRemoteCmdVersion(): string | undefined;
+    lastRemoteCmdVersion(): number | undefined;
 
     hasPendingSyncCmd(): boolean;
 

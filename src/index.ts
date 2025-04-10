@@ -34,7 +34,7 @@ import {
     importFigma,
     importRemote,
     importSketch,
-    RadixConvert,
+    // RadixConvert,
     TransactDataGuard,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
@@ -109,7 +109,7 @@ async function _open(props: DocumentProps) {
     }
 
     // todo 移动到data
-    if (cooprepo) cooprepo.setBaseVer(new RadixConvert(62).from(data!.lastCmdId))
+    if (cooprepo) cooprepo.setBaseVer((data!.lastCmdVer))
 
     if (data) {
         return { data, cooprepo: cooprepo! }
