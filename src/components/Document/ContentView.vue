@@ -45,11 +45,12 @@ import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
-import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
+import { screenFontList } from './Attribute/Text/FontNameList';
 import { autoLayoutFn } from '@/utils/auto_layout';
 import { Mouse } from "@/mouse";
 import ImagePicker from "@/imageLoader/ImagePicker.vue";
 import { SpaceHandler } from "@/space";
+import { KeyboardMgr } from '@/keyboard';
 
 const emits = defineEmits<{
     (e: 'closeLoading'): void;
@@ -698,7 +699,7 @@ const stop1 = watch(() => props.page, (cur, old) => {
     info!.m.reset(matrix.toArray())
     updateBackground(cur);
 });
-
+const boardMgr = new KeyboardMgr(props.context);
 onBeforeMount(props.context.user.updateUserConfig.bind(props.context.user));
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
@@ -714,8 +715,8 @@ onMounted(() => {
     rootRegister(true);
     updateBackground();
     screenFontList(props.context);
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
+    boardMgr.addEventListener('keydown', onKeyDown);
+    boardMgr.addEventListener('keyup', onKeyUp);
     document.addEventListener('copy', copy_watcher);
     document.addEventListener('cut', cut_watcher);
     document.addEventListener('paste', paster_watcher);
@@ -724,8 +725,6 @@ onMounted(() => {
 
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
-    timeSlicingTask(props.context, fontNameListZh, 'zh');
-    timeSlicingTask(props.context, fontNameListEn, 'en');
 
     resizeObserver.observe(root.value!);
     _updateRoot(props.context, root.value!);
@@ -743,8 +742,8 @@ onUnmounted(() => {
     props.page.unwatch(page_watcher);
     props.context.color.unwatch(color_watcher);
     resizeObserver.disconnect();
-    document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('keyup', onKeyUp);
+    boardMgr.removeEventListener('keydown', onKeyDown);
+    boardMgr.removeEventListener('keyup', onKeyUp);
     document.removeEventListener('copy', copy_watcher);
     document.removeEventListener('cut', cut_watcher);
     document.removeEventListener('paste', paster_watcher);

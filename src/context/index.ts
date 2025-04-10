@@ -91,6 +91,18 @@ export class RepoWraper {
     unwatch(f: Function) {
         throw new Error("Not implemented")
     }
+
+    setOnChange(onChange: (id: string) => void) {
+        this.m_repo.setOnChange(onChange);
+    }
+
+    // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
+    //     return this.m_repo.onCommit(...args)
+    // }
+
+    // onUndoRedo(...args: Parameters<typeof this.m_repo.onUndoRedo>): ReturnType<typeof this.m_repo.onUndoRedo> {
+    //     return this.m_repo.onUndoRedo(...args)
+    // }
 }
 
 class ToolBox implements IToolBox {
@@ -152,6 +164,7 @@ export class Context extends WatchableObject implements IContext {
     private m_props: DocumentProps;
     private m_net?: INet;
     private m_readonly?: boolean;
+    private m_active?: boolean;
 
     private m_render: RenderContext;
 
@@ -453,4 +466,12 @@ export class Context extends WatchableObject implements IContext {
     }
 
     eventsMap: Map<string, Function[]>;
+
+    setActive(active?: boolean) {
+        this.m_active = active;
+    }
+
+    get active() {
+        return this.m_active;
+    }
 }

@@ -18,6 +18,7 @@ import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.
 import { StrokeFillContextMgr } from "../ctx";
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from "@/utils/common";
+import { KeyboardMgr } from "@/keyboard";
 
 /**
  * 修改样式弹框
@@ -130,16 +131,16 @@ function checkEnter(e: KeyboardEvent) {
         createStyle();
     }
 }
-
+const boardMgr = new KeyboardMgr(context);
 onMounted(() => {
     update();
     data?.watch(update);
-    document.addEventListener('keydown', checkEnter);
+    boardMgr.addEventListener('keydown', checkEnter);
 });
 
 onUnmounted(() => {
     data?.unwatch(update);
-    document.removeEventListener('keydown', checkEnter);
+    boardMgr.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>

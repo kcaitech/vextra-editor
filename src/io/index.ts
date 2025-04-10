@@ -49,9 +49,13 @@ export async function _exportDocument(context: Context) {
 
 export async function exportDocument(context: Context) {
     const content = await _exportDocument(context);
-    const name = context.documentInfo.name;
-    const reg = new RegExp('(.sketch|.fig|.moss)$', 'img');
-    downloadByLink(content, name.replace(reg, '') + '.moss');
+    const name = context.data.name;
+    const reg = new RegExp('(.sketch|.fig|.vext|.moss)$', 'img');
+    if (context.workspace.desktop) {
+        downloadByLink(content, name.replace(reg, '') + '.vext');
+    } else {
+        downloadByLink(content, name.replace(reg, '') + '.moss');
+    }
 }
 
 export function downloadByLink(content: Blob, name: string) {
@@ -83,7 +87,7 @@ export async function importDocumentFromMDD(filePack: File, repo: TransactDataGu
         __doc[name.replace(/images\/|pages\//, '')] = content;
     }
 
-    return importMoss(filePack.name.replace(/.moss/, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
+    return importMoss(filePack.name.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
 
     function getFiles() {
         const reader = new FileReader();

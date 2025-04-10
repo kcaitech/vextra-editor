@@ -94,7 +94,7 @@ async function _open(props: DocumentProps) {
         } else if (props.fmt === 'fig') {
             data = await importFigma(props.file, repo)
             cooprepo = new CoopRepository(data, repo)
-        } else if (props.fmt === 'moss') {
+        } else if (props.fmt === 'vext' || props.fmt === 'moss') {
             data = await importDocumentFromMDD(props.file, repo);
             cooprepo = new CoopRepository(data, repo)
         }
