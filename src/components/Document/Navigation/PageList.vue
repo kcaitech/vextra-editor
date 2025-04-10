@@ -210,7 +210,7 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     }
     pageMenu.value = true
     e.stopPropagation()
-    document.addEventListener('keydown', menuEsc);
+    boardMgr.addEventListener('keydown', menuEsc);
     document.addEventListener('mousedown', handleClickOutside);
     chartMenuMount(e);
 }
@@ -242,9 +242,9 @@ function handleClickOutside(event: MouseEvent) {
         document.removeEventListener('mousedown', handleClickOutside);
     }
 }
-
+const boardMgr = new KeyboardMgr(props.context);
 function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
-    document.removeEventListener('keydown', menuEsc);
+    boardMgr.removeEventListener('keydown', menuEsc);
     if (item === 'rename') {
         e?.stopPropagation();
         props.context.selection.reName(id);
@@ -336,6 +336,7 @@ onUnmounted(() => {
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import add_icon from '@/assets/icons/svg/add.svg';
 import down_icon from '@/assets/icons/svg/down.svg';
+import { KeyboardMgr } from "@/keyboard";
 </script>
 
 <template>

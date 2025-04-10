@@ -9,15 +9,24 @@
  */
 
 import { measure } from "@/layout/text/measure";
-import { initModule } from "@kcdesign/data";
+import { initModule as initData } from "@kcdesign/data";
 import { text2path } from "@kcdesign/text2path";
 
 let __inited: boolean = false;
 
+let _measure = measure;
+let _text2path = text2path;
+
+export function initModule(measure?: typeof _measure, text2path?: typeof _text2path) {
+    // if (!measure || !text2path) throw new Error('measure or text2path is undefined')
+    if (measure) _measure = measure;
+    if (text2path) _text2path = text2path;
+}
+
 export async function initDataModule() {
     if (__inited) return;
 
-    initModule(measure, text2path)
+    initData(_measure, _text2path)
 
     __inited = true;
 }

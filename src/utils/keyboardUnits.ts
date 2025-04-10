@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import {
-    adapt_page,
+    fitView,
     component,
     flattenSelection,
     lessen,
@@ -57,14 +57,11 @@ import {
 import { unAutoLayoutFn } from "./auto_layout";
 import { MossClipboard } from "@/clipboard";
 import { group, ungroup } from "@/utils/group_ungroup";
+import { KeyboardMgr } from "@/keyboard";
 
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
-        return;
-    }
-
     const rf = context.keyHandlers[event.code];
     rf && rf(event, context);
 
@@ -73,9 +70,6 @@ function keydown(event: KeyboardEvent, context: Context) {
 }
 
 function keyup(event: KeyboardEvent, context: Context) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
-        return;
-    }
     if (event.code === 'AltLeft' || event.code === 'AltRight') {
         event.preventDefault();
         context.selection.setShowInterval(false);
@@ -88,13 +82,12 @@ function keyup(event: KeyboardEvent, context: Context) {
 export function setup(context: Context) {
     const down = (event: KeyboardEvent) => keydown(event, context);
     const up = (event: KeyboardEvent) => keyup(event, context);
-
-    document.addEventListener('keydown', down);
-    document.addEventListener('keyup', up);
-
+    const boardMgr = new KeyboardMgr(context);
+    const stop1 = boardMgr.addEventListener('keydown', down);
+    const stop2 = boardMgr.addEventListener('keyup', up);
     return () => {
-        document.removeEventListener('keydown', down);
-        document.removeEventListener('keyup', up);
+        stop1();
+        stop2();
     }
 }
 
@@ -543,7 +536,7 @@ keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl || event.shiftKey) {
         event.preventDefault();
-        adapt_page(context);
+        fitView(context);
         return;
     }
     if (event.repeat) {
@@ -561,7 +554,7 @@ keydownHandler['Numpad1'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl || event.shiftKey) {
         event.preventDefault();
-        adapt_page(context);
+        fitView(context);
         return;
     }
     if (event.repeat) {
@@ -580,7 +573,7 @@ keydownHandler['Digit2'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl || event.shiftKey) {
         event.preventDefault();
-        adapt_page(context, false, true);
+        fitView(context, false, true);
         return;
     }
     if (event.repeat) {
@@ -598,7 +591,7 @@ keydownHandler['Numpad2'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl || event.shiftKey) {
         event.preventDefault();
-        adapt_page(context, false, true);
+        fitView(context, false, true);
         return;
     }
     if (event.repeat) {

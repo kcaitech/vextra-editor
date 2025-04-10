@@ -295,7 +295,7 @@ export class ProtoAction {
                 const offsety = box.top - (action.extraScrollOffset?.y || 0);
                 this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety }, action);
             } else {
-                const frame = target_shape._p_frame;
+                const frame = target_shape.relativeFrame;
                 const offsetx = -frame.x + (action.extraScrollOffset?.x || 0);
                 const offsety = -frame.y + (action.extraScrollOffset?.y || 0);
                 this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety }, action, scroll_shape);

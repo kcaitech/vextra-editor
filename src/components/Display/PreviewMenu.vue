@@ -131,7 +131,7 @@ const hiddenHotZone = () => {
     }
     emit('close');
 }
-
+const boardMgr = new KeyboardMgr(props.context);
 onMounted(() => {
     hotZone();
     props.context.preview.setMenuVisible(true);
@@ -139,18 +139,19 @@ onMounted(() => {
     setPosition();
     props.context.preview.watch(previewWatcher);
     document.addEventListener('click', close);
-    document.addEventListener('keydown', keyClose);
+    boardMgr.addEventListener('keydown', keyClose);
 })
 onUnmounted(() => {
     props.context.preview.watch(previewWatcher);
     props.context.preview.setMenuVisible(false);
     document.removeEventListener('click', close);
-    document.removeEventListener('keydown', keyClose);
+    boardMgr.removeEventListener('keydown', keyClose);
 })
 
 import SvgIcon from '../common/SvgIcon.vue';
 import choose_icon from '@/assets/icons/svg/choose.svg';
 import arrow_right_icon from '@/assets/icons/svg/arrow-right.svg';
+import { KeyboardMgr } from '@/keyboard';
 </script>
 
 <template>

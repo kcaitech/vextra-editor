@@ -43,11 +43,11 @@ import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
 import { IContext } from "@/openapi";
-import { importDocumentFromMDD } from "@/io";
+import { _exportDocument, importDocumentFromMDD } from "@/io";
 
 import '@/style/constant.scss'
 import '@/style/app.scss'
-import { initDataModule } from "./components/common/initmodule";
+import { initDataModule } from "./basic/initmodule";
 export {i18n_messages as i18n} from '@/i18n';
 
 export * from "./openapi";
@@ -94,7 +94,7 @@ async function _open(props: DocumentProps) {
         } else if (props.fmt === 'fig') {
             data = await importFigma(props.file, repo)
             cooprepo = new CoopRepository(data, repo)
-        } else if (props.fmt === 'moss') {
+        } else if (props.fmt === 'vext' || props.fmt === 'moss') {
             data = await importDocumentFromMDD(props.file, repo);
             cooprepo = new CoopRepository(data, repo)
         }
@@ -136,3 +136,9 @@ export async function openDocument(props: DocumentProps) {
 
     return new Context(data, cooprepo, props) as IContext;
 }
+
+export async function exportDocument(context: IContext) {
+    return _exportDocument(context as Context)
+}
+
+export { initModule } from "./basic/initmodule";

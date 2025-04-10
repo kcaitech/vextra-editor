@@ -238,7 +238,7 @@ function _createController2() {
     let adjust = false;
     for (let i = 0; i < temp.length; i++) {
         const shape = temp[i];
-        if (!shape || shape.m_isdistroyed) {
+        if (!shape || shape.m_is_destroyed) {
             adjust = true;
         } else {
             selection.push(shape);

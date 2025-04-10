@@ -116,7 +116,7 @@ function mount() {
 
 function unBind() {
     pageDom?.dom.unbind();
-    pageDom?.dom.destory();
+    pageDom?.dom.destroy();
     pageDom = undefined;
 }
 

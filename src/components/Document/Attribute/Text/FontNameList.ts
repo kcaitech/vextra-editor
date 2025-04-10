@@ -306,9 +306,13 @@ export function timeSlicingTask(context: Context, fontList: string[], lang: stri
 
 export const screenFontList = (context: Context) => {
     const fontList = context.workspace.userLocalFontList;
-    if (fontList.length) {
-        let index = 0;
-        function executeBatch() {
+    if (context.workspace.desktop) {
+        fontList.forEach(font => {
+            context.workspace.setFontNameListLocal(font);
+        });
+    } else if (fontList.length) {
+            let index = 0;
+            function executeBatch() {
             const end = Math.min(index + 10, fontList.length);
             for (let i = index; i < end; i++) {
                 try {

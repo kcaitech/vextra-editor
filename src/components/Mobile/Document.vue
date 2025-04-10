@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { initDataModule } from '@/components/common/initmodule';
+import { initDataModule } from '@/basic/initmodule';
 import { Context } from "@/context";
 import {
     Matrix,

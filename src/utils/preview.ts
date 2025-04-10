@@ -28,6 +28,7 @@ import { PageXY } from "@/context/selection";
 import { XYsBounding } from './common';
 import { EventIndex } from "@/components/Display/PreviewControls/actions";
 import { IScout } from '@/openapi';
+import { KeyboardMgr } from '@/keyboard';
 
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
@@ -61,9 +62,6 @@ export function getFrameList(page: PageView) {
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
-        return;
-    }
     const f = keydownHandler[event.code];
     f && f(event, context);
 }
@@ -74,13 +72,13 @@ function keyup(event: KeyboardEvent, context: Context) {
 export function keyboard(context: Context) {
     const down = (event: KeyboardEvent) => keydown(event, context);
     const up = (event: KeyboardEvent) => keyup(event, context);
-
-    document.addEventListener('keydown', down);
-    document.addEventListener('keyup', up);
+    const boardMgr = new KeyboardMgr(context);
+    boardMgr.addEventListener('keydown', down);
+    boardMgr.addEventListener('keyup', up);
 
     const remove_keyboard_units = () => {
-        document.removeEventListener('keydown', down);
-        document.removeEventListener('keyup', up);
+        boardMgr.removeEventListener('keydown', down);
+        boardMgr.removeEventListener('keyup', up);
     }
 
     return remove_keyboard_units;
@@ -252,13 +250,13 @@ export function getPreviewMatrix(shape: ShapeView) {
                     m.trans(fixed_offset.translateX < 0 ? -fixed_offset.translateX : 0, fixed_offset.translateY < 0 ? -fixed_offset.translateY : 0);
                 }
             } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS) {
-                if (s._p_frame.y + offset.translateY < 0) {
-                    m.trans(0, -(s._p_frame.y + offset.translateY));
+                if (s.relativeFrame.y + offset.translateY < 0) {
+                    m.trans(0, -(s.relativeFrame.y + offset.translateY));
                     if (fixed_offset && fixed_offset.translateY < 0) {
                         m.trans(0, -fixed_offset.translateY);
                     }
-                } else if (fixed_offset && fixed_offset.translateY < -(s._p_frame.y + offset.translateY)) {
-                    const viewTrans = (s._p_frame.y + offset.translateY) + fixed_offset.translateY
+                } else if (fixed_offset && fixed_offset.translateY < -(s.relativeFrame.y + offset.translateY)) {
+                    const viewTrans = (s.relativeFrame.y + offset.translateY) + fixed_offset.translateY
                     m.trans(0, -viewTrans);
                 }
             }
@@ -426,7 +424,7 @@ export const getAtrboardInnerOffset = (atrboard: ArtboardView) => {
     let offsetB = size.height;
     for (let i = 0; i < atrboard.childs.length; i++) {
         const child = atrboard.childs[i];
-        const frame = child._p_frame;
+        const frame = child.relativeFrame;
         const right = frame.x + frame.width;
         const bottom = frame.y + frame.height;
         if (frame.x < offsetL) offsetL = frame.x;

@@ -64,7 +64,7 @@ export class Shot {
     }
 
     isPointInView(view: ShapeView, point: XY) {
-        const box = view._p_outerFrame;
+        const box = view.relativeOuterFrame;
         const xy = this.m_point ?? this.transform.computeCoord3(point);
         if (xy.x < box.x || xy.y < box.y || xy.y > box.x + box.width || xy.y > box.y + box.height) return false;
         const d = view.getPath().clone();

@@ -12,6 +12,7 @@ import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
 import { AsyncApiCaller, PageView, ShapeView } from "@kcdesign/data";
 import { Tool } from "@/context/tool";
+import { KeyboardMgr } from "@/keyboard";
 
 export type FrameLike = {
     x: number;
@@ -33,6 +34,7 @@ export class TransformHandler {
     alignPixel: boolean;
 
     asyncApiCaller: AsyncApiCaller | undefined;
+    private boardMgr: KeyboardMgr;
 
     constructor(context: Context, event?: MouseEvent) {
         this.context = context;
@@ -46,9 +48,9 @@ export class TransformHandler {
 
         this.alignPixel = context.user.isPixelAlignMent;
         this.beforeTransform();
-
-        document.addEventListener('keydown', this.__keydown);
-        document.addEventListener('keyup', this.__keyup);
+        this.boardMgr = new KeyboardMgr(context)
+        this.boardMgr.addEventListener('keydown', this.__keydown);
+        this.boardMgr.addEventListener('keyup', this.__keyup);
     }
 
     protected beforeTransform() {
@@ -74,8 +76,8 @@ export class TransformHandler {
         this.workspace.setCtrl('page');
         context.cursor.cursor_freeze(false);
 
-        document.removeEventListener('keydown', this.__keydown);
-        document.removeEventListener('keyup', this.__keyup);
+        this.boardMgr.removeEventListener('keydown', this.__keydown);
+        this.boardMgr.removeEventListener('keyup', this.__keyup);
     }
 
     updateCtrlView(rule: number) {

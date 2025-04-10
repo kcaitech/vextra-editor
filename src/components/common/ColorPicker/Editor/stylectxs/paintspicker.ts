@@ -84,7 +84,7 @@ export class PaintsPicker extends ColorPickerEditor {
         const fills: BasicArray<Fill>[] = [];
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-            else fills.push(view.getBorders().strokePaints);
+            else fills.push(view.getBorder().strokePaints);
         }
         const modifyVariable = (api: Api) => {
             views.forEach(view => {
@@ -118,7 +118,7 @@ export class PaintsPicker extends ColorPickerEditor {
         const fills: BasicArray<Fill>[] = [];
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-            else fills.push(view.getBorders().strokePaints);
+            else fills.push(view.getBorder().strokePaints);
         }
         const modifyVariable = (api: Api) => {
             views.forEach(view => {
@@ -144,7 +144,7 @@ export class PaintsPicker extends ColorPickerEditor {
         this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
-            else this.m_fills.push(view.getBorders().strokePaints);
+            else this.m_fills.push(view.getBorder().strokePaints);
         }
     }
 
@@ -213,7 +213,7 @@ export class PaintsPicker extends ColorPickerEditor {
             const fills: Fill[] = [];
             for (const view of this.selected) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-                else fills.push(view.getBorders().strokePaints[this.index]);
+                else fills.push(view.getBorder().strokePaints[this.index]);
             }
             const modifyVariable = (api: Api) => {
                 views.forEach(view => {
@@ -248,7 +248,7 @@ export class PaintsPicker extends ColorPickerEditor {
             const fills: Fill[] = [];
             for (const view of this.selected) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-                else fills.push(view.getBorders().strokePaints[this.index]);
+                else fills.push(view.getBorder().strokePaints[this.index]);
             }
             const modifyVariable = (api: Api) => {
                 views.forEach(view => {
@@ -284,7 +284,7 @@ export class PaintsPicker extends ColorPickerEditor {
             const fills: Fill[] = [];
             for (const view of this.selected) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-                else fills.push(view.getBorders().strokePaints[this.index]);
+                else fills.push(view.getBorder().strokePaints[this.index]);
             }
             const modifyVariable = (api: Api) => {
                 views.forEach(view => {
@@ -305,7 +305,7 @@ export class PaintsPicker extends ColorPickerEditor {
         this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
-            else this.m_fills.push(view.getBorders().strokePaints);
+            else this.m_fills.push(view.getBorder().strokePaints);
         }
     }
 
@@ -348,7 +348,7 @@ export class PaintsPicker extends ColorPickerEditor {
         this.updateSelection();
         for (const view of this.selected) {
             if (view instanceof SymbolRefView || view.isVirtualShape) this.m_views.push(view);
-            else this.m_fills.push(view.getBorders().strokePaints);
+            else this.m_fills.push(view.getBorder().strokePaints);
         }
     }
 
@@ -415,7 +415,7 @@ export class PaintsPicker extends ColorPickerEditor {
             const fills: BasicArray<Fill>[] = [];
             for (const view of this.selected) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-                else fills.push(view.getBorders().strokePaints);
+                else fills.push(view.getBorder().strokePaints);
             }
             const modifyVariable = (api: Api) => {
                 views.forEach(view => {
@@ -470,7 +470,7 @@ export class PaintsPicker extends ColorPickerEditor {
             const fills: BasicArray<Fill>[] = [];
             for (const view of this.selected) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-                else fills.push(view.getBorders().strokePaints);
+                else fills.push(view.getBorder().strokePaints);
             }
             const modifyVariable = (api: Api) => {
                 views.forEach(view => {

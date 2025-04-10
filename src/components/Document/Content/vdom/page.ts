@@ -142,14 +142,14 @@ export class PageDom extends (PageView) {
                 unOptiNode(c);
             } else if (c.canOptiNode) {
 
-                if (!(intersect_rect(c._p_visibleFrame, client_drop_rect))) {
+                if (!(intersect_rect(c.relativeVisibleFrame, client_drop_rect))) {
                     opti2none(c);// 这个是优化隐藏
 
                     const id = objectId(c);
                     optimize.push(id);
                     this.m_optimize.set(id, { node: c });
 
-                } else if (intersect_rect(c._p_visibleFrame, client_visible_rect)) {
+                } else if (intersect_rect(c.relativeVisibleFrame, client_visible_rect)) {
 
                     optiNodesCount += c.nodeCount;
                     optiNodes.push(c);

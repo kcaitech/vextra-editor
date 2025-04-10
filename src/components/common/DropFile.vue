@@ -32,7 +32,7 @@ const emit = defineEmits<{
     (e: 'pick', value: File): void;
 }>();
 
-const picker = new FilePicker('.sketch,.fig,.moss', (file) => {
+const picker = new FilePicker('.sketch,.fig,.vext,.moss', (file) => {
     emit('pick', file)
 });
 

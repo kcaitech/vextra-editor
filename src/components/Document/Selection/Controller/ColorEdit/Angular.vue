@@ -105,7 +105,7 @@ function modifyApex(position: XY, apex: 'modifyFrom' | 'modifyTo') {
         const index = locate.index;
         for (const view of props.context.selection.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-            else fills.push(view.getBorders().strokePaints[index]);
+            else fills.push(view.getBorder().strokePaints[index]);
         }
         const modifyVariables = (api: Api) => {
             for (const view of views) modifyGradientPosition(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);
@@ -159,7 +159,7 @@ function createFillGradientStop(stop: Stop) {
         const index = locate.index;
         for (const view of props.context.selection.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-            else fills.push(view.getBorders().strokePaints[index]);
+            else fills.push(view.getBorder().strokePaints[index]);
         }
         const modifyVariables = (api: Api) => {
             for (const view of views) insetStop(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);
@@ -209,7 +209,7 @@ function modifyStopPosition(position: number, id: string) {
         const index = locate.index;
         for (const view of props.context.selection.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
-            else fills.push(view.getBorders().strokePaints[index]);
+            else fills.push(view.getBorder().strokePaints[index]);
         }
         const modifyVariables = (api: Api) => {
             for (const view of views) modifyStopPosition(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);

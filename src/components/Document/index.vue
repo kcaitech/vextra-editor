@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, shallowRef, ref, watch } from 'vue';
@@ -21,13 +21,18 @@ import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
-import { initDataModule } from '@/components/common/initmodule';
+import { initDataModule } from '@/basic/initmodule';
 import { setup as keyboardUnits } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ContextEvents, IContext } from '@/openapi';
 import EditorLayout from "@/components/Document/Layout/EditorLayout.vue";
+import { fontNameListEn, fontNameListZh, timeSlicingTask } from './Attribute/Text/FontNameList';
 
-const props = defineProps<{ context: IContext }>()
+const emit = defineEmits<{
+    (e: 'changeCmdId', id: string): void;
+}>()
+
+const props = defineProps<{ context: IContext, isDesktop?: boolean, fontCache?: string[], active?: boolean }>()
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
 const rightWidth = ref(0);
@@ -68,9 +73,14 @@ function initUI() {
 
 function init_keyboard_units() {
     const ctx: Context = props.context as Context;
+    ctx.setActive(props.active);
     uninstall_keyboard_units = keyboardUnits(ctx)
 }
 
+watch(() => props.active, () => {
+    const ctx: Context = props.context as Context;
+    ctx.setActive(props.active);
+})
 const not_perm_hidden_right = () => {
     const readonly = (props.context as Context).readonly;
     if (readonly && !isLable.value) {
@@ -101,6 +111,9 @@ function init_watcher() {
     ctx.component.watch(component_watcher);
     ctx.tool.watch(tool_watcher);
     ctx.data.watch(documentWatcher);
+    ctx.repo.setOnChange((id: string) => {
+        emit('changeCmdId', id);
+    });
 }
 
 function workspaceWatcher(t: number, o?: any) {
@@ -141,6 +154,13 @@ function documentWatcher(...args: any[]) {
     if (args.includes['name']) (props.context as Context).notify(ContextEvents.document_name_change);
 }
 
+watch(() => props.fontCache, (newVal) => {
+    if (newVal) {
+        const ctx: Context = props.context as Context;
+        ctx.workspace.setUserLocalFontList(newVal, props.isDesktop);
+    }
+})
+
 onMounted(() => {
     initUI();
     init_watcher();
@@ -155,6 +175,10 @@ onMounted(() => {
         ctx.watchCustomLoading((v) => {
             customLoading.value = v;
         })
+    }
+    if (!props.isDesktop) {
+        timeSlicingTask(ctx, fontNameListZh, 'zh');
+        timeSlicingTask(ctx, fontNameListEn, 'en');
     }
 })
 
@@ -179,22 +203,22 @@ onUnmounted(() => {
 </script>
 
 <template>
-<EditorLayout :context="(context as Context)">
-    <template #top>
-        <Toolbar v-if="contentVisible" :context="(context as Context)"/>
-    </template>
-    <template #left>
-        <Navigation v-if="curPage && contentVisible" :context="(context as Context)"
-                    @switchpage="switchPage" :page="(curPage as PageView)"/>
-    </template>
-    <template #center>
-        <ContentView v-if="curPage && !customLoading" :context="(context as Context)" :page="(curPage as PageView)"
-                     @closeLoading="closeLoading" @contentVisible="onContentVisible"/>
-    </template>
-    <template #right>
-        <Attribute v-if="contentVisible" :context="(context as Context)"/>
-    </template>
-</EditorLayout>
-<Bridge v-if="bridge" :context="(context as Context)"/>
-<Loading v-if="loading || customLoading" :size="20"/>
+    <EditorLayout :context="(context as Context)">
+        <template #top>
+            <Toolbar v-if="contentVisible" :context="(context as Context)" />
+        </template>
+        <template #left>
+            <Navigation v-if="curPage && contentVisible" :context="(context as Context)" @switchpage="switchPage"
+                :page="(curPage as PageView)" />
+        </template>
+        <template #center>
+            <ContentView v-if="curPage && !customLoading" :context="(context as Context)" :page="(curPage as PageView)"
+                @closeLoading="closeLoading" @contentVisible="onContentVisible" />
+        </template>
+        <template #right>
+            <Attribute v-if="contentVisible" :context="(context as Context)" />
+        </template>
+    </EditorLayout>
+    <Bridge v-if="bridge" :context="(context as Context)" />
+    <Loading v-if="loading || customLoading" :size="20" />
 </template>

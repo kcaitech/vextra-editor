@@ -375,11 +375,11 @@ export function get_actions_export_format_file_format(shapes: ShapeView[], index
 
 export function get_borders_corner(shapes: ShapeView[]): false | CornerType {
     const shape = shapes[0];
-    const styleborders = shape.getBorders();
+    const styleborders = shape.getBorder();
     if (!styleborders.strokePaints.length) return false;
     const corner = styleborders.cornerType;
     const mixed = shapes.every(shape => {
-        const borders = shape.getBorders();
+        const borders = shape.getBorder();
         return borders.cornerType === corner;
     });
     if (mixed) {

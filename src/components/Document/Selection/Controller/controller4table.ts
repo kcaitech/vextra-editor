@@ -22,6 +22,7 @@ import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
 import { TextSelectionLite as TextSelection } from '@/context/textselectionlite';
 import { DBL_CLICK } from "@/const";
+import { KeyboardMgr } from '@/keyboard';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -279,11 +280,12 @@ function useControllerCustom(context: Context, i18nT: Function) {
         workspace.value.setCtrl('page');
         context.cursor.cursor_freeze(false);
     }
+    const boardMgr = new KeyboardMgr(context);
     function init() {
         context.workspace.watch(workspace_watcher);
         context.selection.watch(selection_watcher);
         window.addEventListener('blur', windowBlur);
-        document.addEventListener('keydown', keyboardHandle);
+        boardMgr.addEventListener('keydown', keyboardHandle);
         document.addEventListener('mousedown', mousedown);
         checkStatus();
         initController();
@@ -295,7 +297,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         context.workspace.unwatch(workspace_watcher);
         context.selection.unwatch(selection_watcher);
         window.removeEventListener('blur', windowBlur);
-        document.removeEventListener('keydown', keyboardHandle);
+        boardMgr.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         table.unwatch(get_matrix4table);
         is_diposed = true;

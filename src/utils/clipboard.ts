@@ -266,7 +266,7 @@ export class Clipboard {
             const selected = this.context.selection.selectedShapes;
             const shape = flattenShapes(selected).filter(s => s.type !== ShapeType.Group)[0];
             const fills = shape.getFills();
-            const border = shape.getBorders();
+            const border = shape.getBorder();
             const shadows = shape.getShadows();
             const blur = shape.blur;
 
@@ -1523,13 +1523,14 @@ function sourceBounding(source: Shape[]) {
             width = shape.size.width;
             height = shape.size.height;
         }
-        const box = XYsBounding(shape.transform.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, height),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(0, height),
-        ]));
-        // const box = XYsBounding([col0, col1, col2, col3]);
+        const __t = shape.transform;
+        const t = new Transform(__t.m00, __t.m01, __t.m02, __t.m10, __t.m11, __t.m12);
+        const box = XYsBounding([
+            { x: 0, y: 0 },
+            { x: width, y: 0 },
+            { x: width, y: height },
+            { x: 0, y: height }
+        ].map(i => t.computeCoord3(i)));
 
         if (box.top < top) top = box.top;
         if (box.left < left) left = box.left;
