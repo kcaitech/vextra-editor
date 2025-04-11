@@ -450,8 +450,7 @@ export function make_symbol(context: Context, t: Function) {
     const repeats: number = context.data.symbolsMgr.size;
     name = repeats ? `${name} ${repeats}` : name;
 
-    const shapes: ShapeView[] = compare_layer_3(selected);
-    return editor.makeSymbol(context.data, shapes.map((s) => adapt2Shape(s)), name);
+    return editor.makeSymbol(context.data, compare_layer_3(selected), name);
 }
 
 export function is_exist_invalid_shape(selected: ShapeView[]) {
