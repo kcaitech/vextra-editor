@@ -290,8 +290,6 @@ function init() {
     isDeleteline.value = props.data?.text.strikethrough && props.data?.text.strikethrough !== StrikethroughType.None || false;
     selectId.value = props.data?.text.bulletNumbers?.type ?? 'none'
   } else {
-    console.log(props.data);
-    
     paragraphSpace.value = format_value(props.data?.paraSpacing || 0) as number;
     selectCase.value = props.data?.transform
     isUnderline.value = props.data?.underline && props.data?.underline !== UnderlineType.None || false;
