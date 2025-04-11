@@ -1207,9 +1207,9 @@ import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
                         <SvgIcon :icon="down_icon" style="width: 12px;height: 12px"/>
                     </div>
                 </div>
-                <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
+                <!-- <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
                     :fontWeight="fontWeight" @setFontWeight="setFontWeight" :fontNameEl="fontNameEl">
-                </SelectFont>
+                </SelectFont> -->
             </div>
             <div class="text-middle">
                 <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"

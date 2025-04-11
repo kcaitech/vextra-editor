@@ -198,39 +198,34 @@ const getTop = () => {
         }
     }
 }
-watch(() => props.showFont, async (v) => {
-    if (v) {
-        isLoading.value = true;
-        searchFont.value = '';
-        nextTick(() => {
-            getTop();
-        })
-        // 使用 Promise 和 setTimeout 异步加载数据
-        await new Promise<void>((resolve) => {
-            setTimeout(() => {
-                const { zh, en, local, failure_local } = props.context.workspace.fontNameList;
 
-                // 分批处理数据
-                requestAnimationFrame(() => {
-                    fontList.ch = zh ? [...zh] : [];
-                    fontList.en = en ? [...en] : [];
-                });
+const fontNameList = async () => {
+    isLoading.value = true;
+    searchFont.value = '';
+    await new Promise<void>((resolve) => {
+        setTimeout(() => {
+            const { zh, en, local, failure_local } = props.context.workspace.fontNameList;
 
-                requestAnimationFrame(() => {
-                    fontList.local = local ? [...local] : [];
-                    fontList.failure_local = failure_local ? [...failure_local] : [];
-                });
+            // 分批处理数据
+            requestAnimationFrame(() => {
+                fontList.ch = zh ? [...zh] : [];
+                fontList.en = en ? [...en] : [];
+            });
 
-                isLoading.value = false;
-                resolve();
-            }, 0);
-        });
-    }
-})
+            requestAnimationFrame(() => {
+                fontList.local = local ? [...local] : [];
+                fontList.failure_local = failure_local ? [...failure_local] : [];
+            });
 
-onMounted(() => {
+            isLoading.value = false;
+            resolve();
+        }, 0);
+    });
+}
+
+onMounted(async () => {
     getAllTextFontName();
-    getTop();
+    fontNameList();
 })
 
 import search_icon from '@/assets/icons/svg/search.svg';

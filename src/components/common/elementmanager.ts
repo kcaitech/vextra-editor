@@ -132,13 +132,14 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
     private _move(event: MouseEvent) {
         const {clientX, clientY} = event;
         if (this.dragging) {
+            const maxTop = this.context.workspace.root.y;
             const dx = clientX - this.downXY.x;
             const dy = clientY - this.downXY.y;
             const left = this.clientX + dx;
             const top = this.clientY + dy;
             const target = this.target;
             target.style.left = `${left}px`;
-            target.style.top = `${top}px`;
+            target.style.top = `${Math.max(top, maxTop)}px`;
         } else if (Math.hypot(clientX - this.downXY.x, clientY - this.downXY.y) > 5) this.dragging = true;
     }
 
@@ -190,13 +191,13 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
 
         const clientWidth = document.documentElement.clientWidth;
         const clientHeight = document.documentElement.clientHeight;
+        const maxTop = this.context.workspace.root.y;
 
         let {left, top} = this.trigger ? fromTrigger() : fromPreset();
-
         const exceedW = clientWidth - (left + rect.width);
         if (exceedW < 0) left = Math.max(0, left + exceedW);
         const exceedH = clientHeight - 4 - (top + rect.height);
-        if (exceedH < 0) top = Math.max(0, top + exceedH);
+        if (exceedH < maxTop) top = Math.max(maxTop, top + exceedH);
 
         this.clientX = left;
         this.clientY = top;
@@ -286,11 +287,11 @@ export class ElementManager { /* 可用于窗口状态处理，窗口应该要�
         const clientHeight = document.documentElement.clientHeight;
 
         let { x: left, y: top } = rect;
-
+        const maxTop = this.context.workspace.root.y;
         const exceedW = clientWidth - (left + rect.width);
         if (exceedW < 0) left = Math.max(0, left + exceedW);
         const exceedH = clientHeight - 4 - (top + rect.height);
-        if (exceedH < 0) top = Math.max(0, top + exceedH);
+        if (exceedH < maxTop) top = Math.max(maxTop, top + exceedH);
 
         this.clientX = left;
         this.clientY = top;

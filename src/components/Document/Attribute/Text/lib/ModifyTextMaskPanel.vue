@@ -6,7 +6,8 @@
         <div v-if="data" class="data-panel">
             <div class="title">
                 <ListHeader style="padding:0;" :title="t('stylelib.text')" create />
-                <TextAdvancedSettings :context="context" :manager="manager" :data="data" @transform="modifyTransform" @strikethrough="modifyStrikethrough" @underline="modifyUnderline">
+                <TextAdvancedSettings :context="context" :manager="manager" :data="data" @transform="modifyTransform"
+                    @strikethrough="modifyStrikethrough" @underline="modifyUnderline">
                 </TextAdvancedSettings>
             </div>
             <div class="text-container">
@@ -17,8 +18,9 @@
                             <SvgIcon :icon="down_text_icon" />
                         </div>
                     </div>
-                    <SelectFont v-if="fontlistStatus.visible" :fontname="fontName" :context="context" :manager="manager"
-                        @set-font="modifyfontname" @set-font-weight="modifyfontweight">
+                    <SelectFont v-if="fontlistStatus.visible" :show-font="fontlistStatus.visible" :fontname="fontName"
+                        :context="context" :manager="manager" @set-font="modifyfontname"
+                        @set-font-weight="modifyfontweight">
                     </SelectFont>
                 </div>
                 <div class="text-size">
@@ -27,7 +29,8 @@
                     </FontWeightSelected>
                     <div class="set-size">
                         <div class="size_input">
-                            <input v-select v-blur type="text" v-model="fontSize" class="input">
+                            <input v-select v-blur class="input" type="text" v-model="fontSize"
+                                @change="modifyfontsize()">
                             <div class="down" @click="onShowSize">
                                 <SvgIcon :icon="down_text_icon" />
                             </div>
@@ -80,7 +83,7 @@ import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
 
 import { Context } from '@/context';
-import { TextShapeView, AsyncTextAttrEditor, TextMask, UnderlineType,StrikethroughType, TextTransformType } from '@kcdesign/data';
+import { TextShapeView, AsyncTextAttrEditor, TextMask, UnderlineType, StrikethroughType, TextTransformType } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, is_mac } from '@/utils/common';
@@ -195,12 +198,24 @@ function modifyfontweight(weight: number, italic: boolean) {
     editor.modifyTextMaskFontkWeight(data.sheet, data.id, weight, italic ?? false)
 }
 
-function modifyfontsize(value: number) {
-    fontSize.value = value;
+const size_regex = /^[1-9]\d*(?:\.\d{1,2})?$/
+function modifyfontsize(value?: number) {
+    let v: number = 0;
+    if (value !== undefined) {
+        fontSize.value = value;
+        v = value;
+    } else {
+        if (size_regex.test(fontSize.value + '')) {
+            v = fontSize.value as number;
+        } else {
+            fontSize.value = data?.text.fontSize || 0;
+            return;
+        }
+    }
     showSize.value = false;
     if (!data) return;
     const editor = context.editor4Doc()
-    editor.modifyTextMaskFontSize(data.sheet, data.id, value)
+    editor.modifyTextMaskFontSize(data.sheet, data.id, v)
 }
 
 const regex = /^(auto|自动|0|([1-9]\d*)(?:\.\d+)?|0\.\d+|(?:0|[1-9]\d*)(?:\.\d+)?%|)$/i

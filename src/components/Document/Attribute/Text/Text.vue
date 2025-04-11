@@ -1176,7 +1176,7 @@ import TextMaskView from './TextMaskView.vue'
                         <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
                 </div>
-                <SelectFont v-if="fontlistStatus.visible" @set-font="setFont" :context="props.context"
+                <SelectFont v-if="fontlistStatus.visible" :show-font="fontlistStatus.visible" @set-font="setFont" :context="props.context"
                     :manager="textCtxMgr" @setFontWeight="setFontWeight">
                 </SelectFont>
                 <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
