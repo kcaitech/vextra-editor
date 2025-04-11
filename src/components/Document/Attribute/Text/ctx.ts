@@ -50,8 +50,6 @@ export class TextContextMgr extends StyleCtx {
             let format: AttrGetter
             const __text = t_shape[0].getText();
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
-            console.log('format', format);
-
             format.fontName = format.fontName || this._DefaultFontName;
             if (format.fontNameIsMulti) format.fontName = undefined;
             if (format.weightIsMulti) format.weight = undefined;
@@ -120,7 +118,6 @@ export class TextContextMgr extends StyleCtx {
                     format[key] = new BulletNumbers(BulletNumbersType.Mixed)
                 }
             }
-            console.log('format', format);
             if (format.fontNameIsMulti === 'unlikeness' || format.fontNameIsMulti === true || format.fontName === 'unlikeness') format.fontName = undefined;
             if (format.weight === 'unlikeness' || format.weightIsMulti === 'unlikeness' || format.italicIsMulti === true) format.weight = undefined;
             if (format.italicIsMulti === 'unlikeness' || format.italicIsMulti === true || format.italic === 'unlikeness') format.weight = undefined;
