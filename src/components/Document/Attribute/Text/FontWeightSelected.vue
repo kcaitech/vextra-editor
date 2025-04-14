@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from "vue";
@@ -14,14 +14,17 @@ import { fontWeightList, fontweightNameConvert } from "./FontNameList";
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n';
+import { TextContextMgr } from "./ctx";
 
 const props = defineProps<{
     context: Context;
     selected: string;
-    weightMixed: boolean;
-    fontName: string;
-    disable: boolean;
-    reflush: number
+    weightMixed?: boolean;
+    fontName: string | undefined;
+    disable?: boolean;
+    reflush?: number
+    manager?: TextContextMgr;
+    data?: TextMask;
 }>();
 const emit = defineEmits<{
     (e: "setFontWeight", weight: number, italic: boolean): void;
@@ -37,7 +40,7 @@ const transTop = () => {
 }
 const showWeightList = () => {
     if (props.disable) return;
-    getFontWeightList(props.fontName);
+    if (props.fontName) getFontWeightList(props.fontName);
     transTop();
     isSelectList.value = true;
     props.context.escstack.save('showWeightList', () => {
@@ -76,6 +79,7 @@ function getFontWeightList(fontName: string) {
 const keyboardBold = () => {
     const { weight, italic } = fontweightNameConvert(props.selected);
     if (weight >= 700) return;
+    if (!props.fontName) return
     const results = fontWeightList(props.fontName, true);
     results.forEach((item: any) => {
         if (italic === item.italic && item.weight >= 700) {
@@ -86,6 +90,7 @@ const keyboardBold = () => {
 const keyboardItalic = () => {
     const { weight, italic } = fontweightNameConvert(props.selected);
     if (italic) return;
+    if (!props.fontName) return
     const results = fontWeightList(props.fontName, true);
     results.forEach((item: any) => {
         if (item.italic) {
@@ -95,7 +100,7 @@ const keyboardItalic = () => {
 }
 
 watch(() => props.fontName, (v) => {
-    getFontWeightList(v);
+    if (v) getFontWeightList(v);
 })
 
 const watcher_workspace = (t: number) => {
@@ -117,6 +122,7 @@ import down_icon from '@/assets/icons/svg/down.svg';
 import white_select_icon from '@/assets/icons/svg/white-select.svg';
 import page_select_icon from '@/assets/icons/svg/page-select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import { TextMask } from "@kcdesign/data";
 
 </script>
 
@@ -124,17 +130,17 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
     <div v-bind="$attrs" class="font_weight jointly-text">
         <div :class="{ font_weight_preview: !disable, disabled: disable }" :style="{ opacity: disable ? 0.5 : 1 }"
             style="padding-right: 0;" @click="showWeightList">
-            <span v-if="weightMixed">{{ t('attr.more_value') }}</span>
+            <span v-if="!manager?.textCtx.text?.weight && !data">{{ t('attr.more_value') }}</span>
             <span v-else>{{ selected }}</span>
             <div class="down">
-                <SvgIcon :icon="down_icon" style="width: 12px;height: 12px"/>
+                <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
             </div>
         </div>
         <div class="font_weight_select" v-if="isSelectList" :style="{ top: -top * 32 - 8 + 'px' }">
             <div class="font_weight_item" v-for="(item, index) in fontWeight" :key="index"
                 @mouseenter="() => hovered = index" :class="{ active: hovered === index }" @click="selectItem(item)">
                 <div class="icon" v-if="selected === item">
-                    <SvgIcon :icon="hovered === index ? white_select_icon : page_select_icon"/>
+                    <SvgIcon :icon="hovered === index ? white_select_icon : page_select_icon" />
                 </div>
                 <div class="icon" v-else></div>
                 <span> {{ item }} </span>

@@ -622,6 +622,7 @@ function systemEyeDropper() {
 function eyeDropperInit(): Eyedropper {
     const root = props.context.workspace.root.element;
     return new Eyedropper({
+        context: props.context,
         container: root,
         scale: 2,
         listener: {

@@ -3,4 +3,6 @@ export const setting = {
     pixelAlignMentOff: 'Pixel Align Off',
     pixelGridOn: 'Pixel grid visible',
     pixelGridOff: 'Pixel grid hidden',
+    adsorb: 'Adsorb',
+    align: 'Pixel Align'
 }

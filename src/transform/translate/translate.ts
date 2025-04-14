@@ -21,7 +21,6 @@ import {
     Transform,
     TranslateUnit,
     Transporter, AutoLayout,
-    BorderPosition, ShapeFrame,
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
@@ -765,11 +764,11 @@ export class TranslateHandler extends TransformHandler {
         if (targetShape) {
             const frame = targetShape.relativeFrame;
             (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x, frame.y);
-            this.getTidyUpOutileFrame(shape_rows);
+            this.getTidyUpOutlineFrame(shape_rows);
         } else {
             const tarShape = shape_rows[_i][Math.max(_j - 1, 0)];
             if (!tarShape) return;
-            this.getTidyUpOutileFrame(shape_rows);
+            this.getTidyUpOutlineFrame(shape_rows);
             const frame = tarShape.relativeFrame;
             (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x + 1, frame.y + 1);
         }
@@ -778,13 +777,13 @@ export class TranslateHandler extends TransformHandler {
         } else {
             this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
         }
-        const algin = this.context.selection.tidyUpAlign;
-        (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, algin, this.tidy_up_start);
+        const align = this.context.selection.tidyUpAlign;
+        (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, align, this.tidy_up_start);
         this.__trans();
         this.m_adjusted_shape_rows = shape_rows;
     }
     // 画出拖动图形所在整理后的位置描边
-    getTidyUpOutileFrame(shape_rows: ShapeView[][]) {
+    getTidyUpOutlineFrame(shape_rows: ShapeView[][]) {
         if (this.m_dir) {
             getVerShapeOutlineFrame(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start, this.shapes2[0].id);
         } else {
@@ -825,9 +824,9 @@ export class TranslateHandler extends TransformHandler {
     // 拖动结束后进行一次整理
     _tidyUp() {
         if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
-            const algin = this.context.selection.tidyUpAlign;
+            const align = this.context.selection.tidyUpAlign;
             if (this.m_adjusted_shape_rows.length === 0) this.m_adjusted_shape_rows = [...this.m_shape_rows];
-            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, algin, this.tidy_up_start);
+            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, align, this.tidy_up_start);
         }
     }
 

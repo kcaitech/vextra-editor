@@ -90,8 +90,8 @@ export class LockMouse extends TransformHandler {
     executeShadowS(actions: { shadow: Shadow, value: number }[]) {
         (this.asyncApiCaller as LockMouseHandler).executeShadowS(actions);
     }
-    executeTidyup(shapes_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlign) {
-        (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver, dir, algin);
+    executeTidyup(shapes_rows: ShapeView[][], hor: number, ver: number, dir: boolean, align: TidyUpAlign) {
+        (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver, dir, align);
     }
 
     executeUniformScale(units: UniformScaleUnit[], ratio: number) {

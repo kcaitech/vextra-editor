@@ -39,6 +39,7 @@ import { DomCtx } from '@/components/Document/Content/vdom/domctx';
 import { initComsMap } from '@/components/Document/Content/vdom/comsmap';
 import { SymbolDom } from '@/components/Document/Content/vdom/symbol';
 import { is_mac } from '@/utils/common';
+import { KeyboardMgr } from "@/keyboard";
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -579,7 +580,6 @@ const isSpacePressed = () => {
 }
 
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
-    if (e.target instanceof HTMLInputElement) return;
     if (e.repeat || !preview.value) return;
     if (e.code === 'Space') {
         if (spacePressed.value || !isSpacePressed()) return;
@@ -590,7 +590,7 @@ function onKeyDown(e: KeyboardEvent) { // 键盘监听
 }
 
 function onKeyUp(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement || !preview.value) return;
+    if (!preview.value) return;
     if (spacePressed.value && e.code === 'Space') {
         spacePressed.value = false;
         props.context.workspace.pageDragging(false);
@@ -901,15 +901,17 @@ const backTargetShape = (s?: string) => {
         }
     })
 }
-
+const boardMgr = new KeyboardMgr(props.context);
+let stop_down: () => void;
+let stop_up: () => void;
 const onMouseEnter = (e: MouseEvent) => {
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
+    stop_down = boardMgr.addEventListener('keydown', onKeyDown);
+    stop_up = boardMgr.addEventListener('keyup', onKeyUp);
     onMouseMove_CV(e);
 }
 const onMouseLeave = () => {
-    document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('keyup', onKeyUp);
+    stop_down();
+    stop_up();
 }
 
 const viewUpdater = new ViewUpdater(props.context);
@@ -1000,8 +1002,8 @@ onUnmounted(() => {
     props.context.selection.scout?.remove();
     props.context.preview.unwatch(previewWatcher);
     props.context.selection.unwatch(selectionWatcher);
-    document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('keyup', onKeyUp);
+    stop_down();
+    stop_up();
     props.context.sessionStorage.delete(sessionRefIdKey);
 
     viewUpdater.atTarget();

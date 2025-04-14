@@ -97,7 +97,6 @@ export class FillsContextMgr extends StyleCtx {
 
     update() {
         this.fillCtx.listStatus = JSON.parse(localStorage.getItem("styleList") ?? JSON.stringify(false));
-        this.updateSelection();
         this.modifyMixedStatus();
         this.updateFills();
     }

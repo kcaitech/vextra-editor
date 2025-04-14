@@ -15,27 +15,21 @@ import { useI18n } from "vue-i18n";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Action } from '@/context/tool';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import dialog_icon from '@/assets/icons/svg/dialog.svg';
 
 const { t } = useI18n();
 
 const props = defineProps<{
     context: Context,
     params: {
-        active: boolean,
-        select: (action: string) => void
+        active: boolean
     }
 }>();
 
-// const emit = defineEmits<{
-//     (e: "select", action: string): void;
-// }>();
 const exportClick = () => {
     props.context.menu.setExportDialog(true);
-    // emit('select', Action.Export);
-
     props.context.tool.setAction(Action.Export);
 }
-import dialog_icon from '@/assets/icons/svg/dialog.svg';
 </script>
 
 <template>

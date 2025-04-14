@@ -8,13 +8,9 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-// import { IContext } from "@/IContext";
-// import { {x: number, y: number}, {x: number, y: number} } from "@/IContext/selection";
-// import { XY } from "@/context/selection";
 import {
     Matrix,
     ShapeView,
-    // SymbolRefView
 } from "@kcdesign/data";
 
 interface XY {

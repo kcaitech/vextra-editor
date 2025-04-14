@@ -164,6 +164,7 @@ const stopWatchVisible = watch(() => props.params.visible, (v) => {
         props.context.selection.watch(selection_watcher);
         props.context.tool.watch(tool_watcher);
         props.context.tool.notify(Tool.RULE_CLEAR);
+        props.context.selection.unHoverShape();
         window.addEventListener('blur', window_blur);
     } else {
         props.context.selection.unwatch(selection_watcher);

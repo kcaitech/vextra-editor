@@ -35,13 +35,13 @@ import {
     update_comment
 } from "@/utils/mouse";
 import { forbidden_to_modify_frame, scout_once } from '@/utils/common';
-import { TranslateHandler } from '@/transform/translate/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
 import { Translate2 } from "@/transform/translate/translate2";
 import { Action } from "@/context/tool";
 import { ActionMode, Direction, DirectionCalc } from "@/transform/direction";
 import { multi_select_shape } from "@/utils/listview";
+import { KeyboardMgr } from '@/keyboard';
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -61,7 +61,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let asyncPathEditor: AsyncPathEditor | undefined = undefined;
 
-    let transporter: TranslateHandler | undefined = undefined;
     let translate2: Translate2 | undefined = undefined;
 
     function handleDblClick() {
@@ -225,7 +224,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
         if (isDragging) {
-            // transporter?.execute(e);
             translate2?.execute(e);
         } else if (check_drag_action(startPosition, mousePosition)) {
             if (asyncTransfer || isDragging) return;
@@ -387,8 +385,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             }
 
             isDragging = false;
-            transporter?.fulfil();
-            transporter = undefined;
 
             translate2?.fulfil();
             translate2 = undefined;
@@ -397,14 +393,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
         timerClear();
     }
-
+    const boardMgr = new KeyboardMgr(context);
     function init() {
         shapes = selection.selectedShapes;
         workspace.watch(workspace_watcher);
         selection.watch(selection_watcher);
         add_blur_for_window(windowBlur);
-        document.addEventListener('keydown', keydown);
-        document.addEventListener('keyup', keyup);
+        boardMgr.addEventListener('keydown', keydown);
+        boardMgr.addEventListener('keyup', keyup);
         document.addEventListener('mousedown', mousedown);
         checkStatus();
         initController();
@@ -420,8 +416,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         selection.unwatch(selection_watcher);
         direction.destroy();
         remove_blur_from_window(windowBlur);
-        document.removeEventListener('keydown', keydown);
-        document.removeEventListener('keyup', keyup);
+        boardMgr.removeEventListener('keydown', keydown);
+        boardMgr.removeEventListener('keyup', keyup);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
         abortTransact();

@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Context } from '@/context';
-import { fontWeightList, isSupportFontFamily } from './FontNameList'
+import { fontWeightConvert, fontWeightList, isSupportFontFamily } from './FontNameList'
 import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
@@ -25,10 +25,10 @@ const emit = defineEmits<{
     (e: "setFontWeight", weight: number, italic: boolean): void;
 }>()
 const props = defineProps<{
-    fontName: string,
     context: Context,
-    fontWeight: string,
-    showFont: boolean,
+    manager: TextContextMgr;
+    fontname?: string | undefined;
+    showFont: boolean;
     fontNameEl?: HTMLDivElement
 }>()
 type FontName = {
@@ -63,10 +63,12 @@ const filterFontList = reactive<FontName>({
     ch: [],
     en: []
 })
-const font_context = ref<HTMLDivElement>();
+
+const fontWeight = ref(fontWeightConvert(props.manager?.textCtx.text?.weight, props.manager?.textCtx.text?.italic || false))
+
 const selectFont = (font: string) => {
     const results = fontWeightList(font, true);
-    const weight = results.filter((item: any) => item.key === props.fontWeight);
+    const weight = results.filter((item: any) => item.key === fontWeight.value);
     if (weight.length === 0) {
         emit('setFontWeight', 400, false);
     }
@@ -75,7 +77,7 @@ const selectFont = (font: string) => {
 
 const selectLocalFont = (font: string) => {
     const results = fontWeightList(font, true);
-    const weight = results.filter((item: any) => item.key === props.fontWeight);
+    const weight = results.filter((item: any) => item.key === fontWeight.value);
     const f = fontList.local.find(i => i.toLowerCase() === font.toLowerCase());
     if (!f) {
         const saveList = [...props.context.workspace.userLocalFontList, font];
@@ -171,76 +173,99 @@ const unfoldFontName = (num: number) => {
         isUnfoldLocal.value = !isUnfoldLocal.value
     }
 }
+const font_context = ref<HTMLDivElement>();
 
+// 添加加载状态
+const isLoading = ref(true)
 const getTop = () => {
     if (font_context.value) {
         const p_container = props.fontNameEl?.getBoundingClientRect()
+        const maxTop = props.context.workspace.root.y;
+        const documentHeight = props.context.workspace.element!.clientHeight;
         if (p_container) {
             const body_h = document.body.clientHeight;
             const { height, width } = font_context.value.getBoundingClientRect();
+            if (height > documentHeight) {
+                font_context.value.style.maxHeight = `${documentHeight}px`;
+            }
             font_context.value.style.top = p_container.y + 'px';
             font_context.value.style.left = (p_container.left - width - 8) + 'px';
             const su = body_h - p_container.y;
             const cur_t = su - height;
             if (cur_t - 10 < 0) {
-                font_context.value.style.top = p_container.y + cur_t - 10 + 'px';
+                font_context.value.style.top = Math.max(p_container.y + cur_t - 10, maxTop) + 'px';
             }
         }
     }
 }
-watch(() => props.showFont, (v) => {
-    if (v) {
-        searchFont.value = '';
-        const { zh, en, local, failure_local } = props.context.workspace.fontNameList;
-        fontList.ch = [...zh];
-        fontList.en = [...en];
-        fontList.local = [...local];
-        fontList.failure_local = [...failure_local];
-        nextTick(() => {
-            getTop();
-        })
-    }
-})
 
-onMounted(() => {
-    getAllTextFontName()
-    getTop();
+const fontNameList = async () => {
+    isLoading.value = true;
+    searchFont.value = '';
+    await new Promise<void>((resolve) => {
+        setTimeout(() => {
+            const { zh, en, local, failure_local } = props.context.workspace.fontNameList;
+
+            // 分批处理数据
+            requestAnimationFrame(() => {
+                fontList.ch = zh ? [...zh] : [];
+                fontList.en = en ? [...en] : [];
+            });
+
+            requestAnimationFrame(() => {
+                fontList.local = local ? [...local] : [];
+                fontList.failure_local = failure_local ? [...failure_local] : [];
+            });
+
+            isLoading.value = false;
+            resolve();
+        }, 0);
+    });
+}
+
+onMounted(async () => {
+    getAllTextFontName();
+    fontNameList();
 })
 
 import search_icon from '@/assets/icons/svg/search.svg';
 import down_icon from '@/assets/icons/svg/down.svg';
 import page_select_icon from '@/assets/icons/svg/page-select.svg';
-
+import { TextContextMgr } from './ctx';
 
 </script>
 
 <template>
-    <div class="font-container" ref="font_context" v-if="showFont" @mousedown.stop>
+    <div class="font-container" id="font-container">
         <div class="search">
-            <SvgIcon :icon="search_icon"/>
+            <SvgIcon :icon="search_icon" />
             <input type="text" v-model="searchFont" :placeholder="t('attr.search_for_fonts')" @input="onSearchFont">
         </div>
-        <div class="font-scroll">
+        <div class="font-scroll" v-loading="isLoading">
+            <!-- 添加加载状态 -->
+            <div v-if="isLoading" class="loading-mask">
+                <div class="loading-spinner"></div>
+            </div>
             <el-scrollbar v-if="searchFont.trim().length === 0">
                 <!-- 列表中已使用字体 -->
                 <div class="text_title" @click="unfoldFontName(1)">
                     <span class="font-title">{{ t('attr.used_font') }}</span>
-                    <span class="title_svg"
-                        :style="{ transform: !isUnfoldUsed ? `rotate(-90deg)` : `rotate(0deg)` }"><SvgIcon
-                            :icon="down_icon"/></span>
+                    <span class="title_svg" :style="{ transform: !isUnfoldUsed ? `rotate(-90deg)` : `rotate(0deg)` }">
+                        <SvgIcon :icon="down_icon" />
+                    </span>
                 </div>
                 <div class="item" v-for="item in fontList.used.success" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span> {{ item }}</span>
                 </div>
                 <div class="item failurel" v-for="item in fontList.used.failurel" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span> {{ item }}</span>
                     <Tooltip :content="`${t('attr.font_is_not')}`">
                         <el-icon>
@@ -258,21 +283,22 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                     <div class="text_title" @click="unfoldFontName(4)">
                         <span class="font-title">{{ t('attr.local_font') }}</span>
                         <span class="title_svg"
-                            :style="{ transform: !isUnfoldLocal ? `rotate(-90deg)` : `rotate(0deg)` }"><SvgIcon
-                                :icon="down_icon"/></span>
+                            :style="{ transform: !isUnfoldLocal ? `rotate(-90deg)` : `rotate(0deg)` }">
+                            <SvgIcon :icon="down_icon" />
+                        </span>
                     </div>
                     <div class="item" v-for="item in fontList.local" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span> {{ item }}</span>
                     </div>
                     <div class="item failurel" v-for="item in fontList.failure_local" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span> {{ item }}</span>
                         <Tooltip :content="`${t('attr.font_missing')}`">
                             <el-icon>
@@ -281,34 +307,34 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         </Tooltip>
                     </div>
                 </div>
-                <div class="line"></div>
+                <div v-if="fontList.local.length" class="line"></div>
                 <!-- 列表中文字体 -->
-                <div class="text_title" @click="unfoldFontName(2)">
+                <div v-if="fontList.ch.length" class="text_title" @click="unfoldFontName(2)">
                     <span class="font-title">{{ t('attr.chinese_font') }}</span>
-                    <span class="title_svg"
-                        :style="{ transform: !isUnfoldZh ? `rotate(-90deg)` : `rotate(0deg)` }"><SvgIcon
-                            :icon="down_icon"/></span>
+                    <span class="title_svg" :style="{ transform: !isUnfoldZh ? `rotate(-90deg)` : `rotate(0deg)` }">
+                        <SvgIcon :icon="down_icon" />
+                    </span>
                 </div>
                 <div class="item" v-for="item in fontList.ch" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span> {{ item }}</span>
                 </div>
-                <div class="line"></div>
+                <div v-if="fontList.ch.length" class="line"></div>
                 <!-- 列表英文字体 -->
-                <div class="text_title" @click="unfoldFontName(3)">
+                <div v-if="fontList.en.length" class="text_title" @click="unfoldFontName(3)">
                     <span class="font-title">{{ t('attr.english_font') }}</span>
-                    <span class="title_svg"
-                        :style="{ transform: !isUnfoldEn ? `rotate(-90deg)` : `rotate(0deg)` }"><SvgIcon
-                            :icon="down_icon"/></span>
+                    <span class="title_svg" :style="{ transform: !isUnfoldEn ? `rotate(-90deg)` : `rotate(0deg)` }">
+                        <SvgIcon :icon="down_icon" />
+                    </span>
                 </div>
                 <div class="item" v-for="item in fontList.en" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span> {{ item }}</span>
                 </div>
             </el-scrollbar>
@@ -316,9 +342,9 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                 <div class="text_title" @click="unfoldFontName(1)"
                     v-if="filterFontList.used.success.length !== 0 && filterFontList.used.failurel.length !== 0">
                     <span class="font-title">{{ t('attr.used_font') }}</span>
-                    <span class="title_svg"
-                        :style="{ transform: !isUnfoldUsed ? `rotate(-90deg)` : `rotate(0deg)` }"><SvgIcon
-                            :icon="down_icon"/></span>
+                    <span class="title_svg" :style="{ transform: !isUnfoldUsed ? `rotate(-90deg)` : `rotate(0deg)` }">
+                        <SvgIcon :icon="down_icon" />
+                    </span>
                 </div>
                 <!-- 已使用的字体 -->
                 <template v-if="filterFontList.used.success.length !== 0 && filterFontList.used.failurel.length !== 0">
@@ -326,7 +352,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -335,7 +361,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
                     <SvgIcon :icon="page_select_icon"
-                        :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                        :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                     <span v-html="highlightText(item)"></span>
                     <Tooltip :content="`${t('attr.font_is_not')}`">
                         <el-icon>
@@ -347,16 +373,16 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                 <!-- 检索的本地字体 -->
                 <div class="text_title" v-if="filterFontList.local.length !== 0" @click="unfoldFontName(4)">
                     <span class="font-title">{{ t('attr.local_font') }}</span>
-                    <span class="title_svg"
-                        :style="{ transform: !isUnfoldLocal ? `rotate(-90deg)` : `rotate(0deg)` }"><SvgIcon
-                            :icon="down_icon"/></span>
+                    <span class="title_svg" :style="{ transform: !isUnfoldLocal ? `rotate(-90deg)` : `rotate(0deg)` }">
+                        <SvgIcon :icon="down_icon" />
+                    </span>
                 </div>
                 <template v-if="filterFontList.local.length !== 0">
                     <div class="item" v-for="item in filterFontList.local" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectLocalFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -365,7 +391,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectLocalFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -373,31 +399,31 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
                 <!-- 中文字体 -->
                 <div class="text_title" v-if="filterFontList.ch.length !== 0" @click="unfoldFontName(2)">
                     <span class="font-title">{{ t('attr.chinese_font') }}</span>
-                    <span class="title_svg"
-                        :style="{ transform: !isUnfoldZh ? `rotate(-90deg)` : `rotate(0deg)` }"><SvgIcon
-                            :icon="down_icon"/></span>
+                    <span class="title_svg" :style="{ transform: !isUnfoldZh ? `rotate(-90deg)` : `rotate(0deg)` }">
+                        <SvgIcon :icon="down_icon" />
+                    </span>
                 </div>
                 <template v-if="filterFontList.ch.length !== 0">
                     <div class="item" v-for="item in filterFontList.ch" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
                 <div class="text_title" v-if="filterFontList.en.length !== 0" @click="unfoldFontName(3)">
                     <span class="font-title">{{ t('attr.english_font') }}</span>
-                    <span class="title_svg"
-                        :style="{ transform: !isUnfoldEn ? `rotate(-90deg)` : `rotate(0deg)` }"><SvgIcon
-                            :icon="down_icon"/></span>
+                    <span class="title_svg" :style="{ transform: !isUnfoldEn ? `rotate(-90deg)` : `rotate(0deg)` }">
+                        <SvgIcon :icon="down_icon" />
+                    </span>
                 </div>
                 <template v-if="filterFontList.en.length !== 0">
                     <div class="item" v-for="item in filterFontList.en" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
                         <SvgIcon :icon="page_select_icon"
-                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"/>
+                            :style="{ visibility: item == (manager?.textCtx.text?.fontName ?? fontname) ? 'visible' : 'hidden' }" />
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -411,6 +437,38 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
 </template>
 
 <style lang="scss" scoped>
+.loading-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
+.loading-spinner {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 .font-container {
     position: fixed;
     right: 254px;
@@ -450,6 +508,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
     }
 
     .font-scroll {
+        position: relative;
         height: 540px;
         box-sizing: border-box;
         padding-bottom: 8px;

@@ -924,7 +924,7 @@ export function redo(context: Context) {
 }
 
 export async function upload_image(context: Context, ref: string, buff: Uint8Array) {
-    if (!context.net) return false;
+    if (!context.net) return true;
     try {
         const __buff = new Uint8Array(buff);
         let count = 0;
