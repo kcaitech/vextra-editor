@@ -23,7 +23,7 @@ export interface IWorkspace extends IWatchable {
     /**
      * 文档内容所在dom元素
      */
-    get element(): HTMLElement | undefined;
+    get element(): HTMLElement;
 
     get curScale(): number;
 

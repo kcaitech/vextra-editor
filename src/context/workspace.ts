@@ -129,11 +129,11 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
 
     private m_element: HTMLElement | undefined;
 
-    get element(): HTMLElement | undefined {
+    get element(): HTMLElement {
         if (this.m_element) return this.m_element;
         const content: NodeListOf<HTMLElement> = document.querySelectorAll('#content');
         this.m_element = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
-        return this.m_element;
+        return this.m_element!;
     }
 
     get is_path_edit_mode() {
