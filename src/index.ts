@@ -142,3 +142,5 @@ export async function exportDocument(context: IContext) {
 }
 
 export { initModule } from "./basic/initmodule";
+
+export { DragKit } from "./components/common/draggable";

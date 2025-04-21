@@ -29,11 +29,10 @@ const props = defineProps<Props>();
 const controllerRef = ref<HTMLElement>();
 const underlineWidth = ref(0);
 const underlinePosition = ref(0);
-const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 type Tab = "Shape" | "Comps" | "Resource" | "Comment";
 const plugins = props.context.pluginsMgr.search2('navigation');
 
-const currentTab = ref<Tab>("Shape");
+const currentTab = ref<Tab>("Comment");
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('navi.shape'),
@@ -78,12 +77,8 @@ function updateUnderlinePosition() {
     underlinePosition.value = left + width / 2;
 }
 
-const showHiddenLeft = () => {
-    emit('showNavigation')
-}
 const tool_watch = (t: number) => {
     if (t === Tool.COMPONENT) {
-        // if (!props.showLeft) showHiddenLeft(); // todo
         currentTab.value = 'Comps';
         props.context.navi.set_current_navi_module(currentTab.value);
         updateUnderlinePosition();
@@ -97,7 +92,6 @@ const navi_watch = (t: number) => {
     }
 }
 
-
 onMounted(() => {
     props.context.navi.set_current_navi_module(currentTab.value);
     props.context.tool.watch(tool_watch);
@@ -108,7 +102,6 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watch);
     props.context.navi.watch(navi_watch);
 })
-
 </script>
 
 <template>
