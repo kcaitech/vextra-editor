@@ -34,7 +34,6 @@ import {
     importFigma,
     importRemote,
     importSketch,
-    // RadixConvert,
     TransactDataGuard,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
@@ -69,11 +68,6 @@ export const PreviewVue = _PreviewVue
 export const StaticShape = _StaticShape
 
 const t = (i18n as any).global.t;
-
-/**
- * @deprecated 不能这么导出
- */
-export { useComment } from '@/components/Document/Creator/execute'
 
 async function _open(props: DocumentProps) {
     await initDataModule();

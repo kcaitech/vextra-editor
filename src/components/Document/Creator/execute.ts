@@ -228,15 +228,6 @@ export function useImage(context: Context) {
     context.tool.notify(Tool.SELECT_IMAGE);
 }
 
-export function useComment(context: Context) {
-    if (context.workspace.is_path_edit_mode) return;
-    context.cursor.setType(CursorType.Comment, 0);
-    context.escstack.save('tool-action', () => {
-        context.cursor.reset();
-        return context.tool.reset();
-    });
-}
-
 export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;
     private livingPoint: XY;

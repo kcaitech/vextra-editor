@@ -17,6 +17,7 @@ import { IToolBox } from "./toolbox";
 
 export interface IEscStack {
     save(key: string, call: () => boolean): void;
+    execute(): void;
 }
 
 export enum ContextEnvironment  {
