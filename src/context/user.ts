@@ -38,8 +38,7 @@ export type DocSelectionData = {
     // 以下字段仅读取时有效
     user_id?: string,
     permission?: number,
-    avatar?: string,
-    nickname?: string,
+    user?: UserInfo,
     enter_time?: number,
 }
 

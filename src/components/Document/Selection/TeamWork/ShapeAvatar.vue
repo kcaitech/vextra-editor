@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from "vue";
@@ -17,7 +17,7 @@ import { ClientXY } from "@/context/selection"
 import { XYsBounding } from "@/utils/common";
 import { Selection } from '@/context/selection';
 import { throttle } from 'lodash';
-import { DocSelectionData } from "@/context/user";
+import { DocSelectionData, UserInfo } from "@/context/user";
 const props = defineProps<{
     context: Context
     matrix: Matrix
@@ -27,15 +27,13 @@ interface Avatar {
     y: number
     rotate: number
     shape: ShapeView
-    avatar: string | undefined
-    userSelectInfo: DocSelectionData
+    user: UserInfo | undefined
 }
 interface MultipShape {
     x: number
     y: number
     shapes: ShapeView[]
-    avatar: string | undefined
-    userSelectInfo: DocSelectionData
+    user: UserInfo | undefined
     shapesIds: string
 }
 
@@ -45,8 +43,8 @@ const avatars = ref<Avatar[]>([]);
 const multipShape = ref<MultipShape[]>([]);
 const shapes = ref<ShapeView[]>([]);
 const userSelectionInfo = ref<DocSelectionData[]>(props.context.selection.getUserSelection);
-const groupedShapes = ref();
-const multipShapeGroup = ref<any>({});
+const groupedShapes = ref<Map<string, Avatar[]>>(new Map());
+const multipShapeGroup = ref<Map<string, MultipShape[]>>(new Map());
 const setOrigin = () => {
     matrix.reset(props.matrix);
     origin.x = matrix.m02;
@@ -55,8 +53,8 @@ const setOrigin = () => {
 const setPosition = () => {
     avatars.value.length = 0;
     multipShape.value.length = 0;
-    groupedShapes.value = [];
-    multipShapeGroup.value = [];
+    groupedShapes.value = new Map();
+    multipShapeGroup.value = new Map();
     const page = props.context.selection.selectedPage;
     if (!page) return;
     for (let i = 0; i < userSelectionInfo.value.length; i++) {
@@ -98,8 +96,8 @@ const setPosition = () => {
             anchor.y -= origin.y;
             anchor.x -= origin.x;
             anchor.y -= 24
-            const avatar = userSelectInfo.avatar
-            avatars.value.push({ x: anchor.x, y: anchor.y, avatar, shape: shape, rotate, userSelectInfo })
+            const user = userSelectInfo.user
+            avatars.value.push({ x: anchor.x, y: anchor.y, shape: shape, rotate, user })
         } else if (shapes.length > 1) {
             if (arraysOfObjectsWithIdAreEqual(shapes, selection) && props.context.workspace.isTranslating) continue;
             const points: { x: number, y: number }[] = [];
@@ -112,26 +110,26 @@ const setPosition = () => {
                 points.push(...ps);
             }
             const b = XYsBounding(points);
-            const avatar = userSelectInfo.avatar
+            const user = userSelectInfo.user
             let anchor = { x: b.right, y: b.top }
             anchor.y -= 24
             const shapesIds = shapes.map(shape => shape.id).sort().join(',');
-            multipShape.value.push({ x: anchor.x, y: anchor.y, avatar, shapes: shapes, userSelectInfo, shapesIds })
+            multipShape.value.push({ x: anchor.x, y: anchor.y, shapes: shapes, user, shapesIds })
         }
     }
     avatars.value.forEach((item, i) => {
-        if (!groupedShapes.value[item.shape.id]) {
-            groupedShapes.value[item.shape.id] = [];
+        if (!groupedShapes.value.has(item.shape.id)) {
+            groupedShapes.value.set(item.shape.id, []);
         }
-        groupedShapes.value[item.shape.id].push(item);
+        groupedShapes.value.get(item.shape.id)?.push(item);
     });
 
     multipShape.value.forEach(item => {
         const shapesIds = item.shapes.map(shape => shape.id).sort().join(',');
-        if (!multipShapeGroup.value[shapesIds]) {
-            multipShapeGroup.value[shapesIds] = [];
+        if (!multipShapeGroup.value.has(shapesIds)) {
+            multipShapeGroup.value.set(shapesIds, []);
         }
-        multipShapeGroup.value[shapesIds].push(item);
+        multipShapeGroup.value.get(shapesIds)?.push(item);
     });
 }
 function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
@@ -219,23 +217,29 @@ onUnmounted(() => {
 <template>
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <div class="avatar_content" v-for="(a, index) in avatars" :key="index"
-            :style="{ top: `${a.y}px`, left: `${a.x - (Math.min(groupedShapes[a.shape.id].length, 4) * 20)}px`, transform: `rotate(${a.rotate}deg)` }">
-            <template v-for="(u, i) in groupedShapes[a.shape.id]" :key="i">
-                <div class="avatars" v-if="i < 3"><img :src="u.avatar" alt=""></div>
+            :style="{ top: `${a.y}px`, left: `${a.x - (Math.min(groupedShapes.get(a.shape.id)?.length || 0, 4) * 20)}px`, transform: `rotate(${a.rotate}deg)` }">
+            <template v-for="(u, i) in groupedShapes.get(a.shape.id) || []" :key="i">
+                <div class="avatars" v-if="i < 3">
+                    <img v-if="u.user?.avatar" :src="u.user?.avatar" alt="">
+                    <div v-else>{{ u.user?.nickname?.slice(0, 1) || 'N' }}</div>
+                </div>
             </template>
-            <div class="avatars bgc" v-if="groupedShapes[a.shape.id].length > 3">{{ groupedShapes[a.shape.id].length }}
+            <div class="avatars bgc" v-if="groupedShapes.get(a.shape.id) && groupedShapes.get(a.shape.id)!.length > 3">{{ groupedShapes.get(a.shape.id)?.length }}
             </div>
         </div>
     </div>
     <div class="container" v-if="multipShape">
         <div class="avatar_content" v-for="(m, index) in multipShape" :key="index"
-            :style="{ top: `${m.y}px`, left: `${m.x - (Math.min(multipShapeGroup[m.shapesIds].length, 4) * 20)}px` }">
-            <template v-for="(u, i) in multipShapeGroup[m.shapesIds]" :key="i">
-                <div class="avatars" v-if="i < 3"><img :src="u.avatar" alt=""></div>
+            :style="{ top: `${m.y}px`, left: `${m.x - (Math.min(multipShapeGroup.get(m.shapesIds)?.length || 0, 4) * 20)}px` }">
+            <template v-for="(u, i) in multipShapeGroup.get(m.shapesIds) || []" :key="i">
+                <div class="avatars" v-if="i < 3">
+                    <img v-if="u.user?.avatar" :src="u.user?.avatar" alt="">
+                    <div v-else>{{ u.user?.nickname?.slice(0, 1) || 'N' }}</div>
+                </div>
             </template>
-            <div class="avatars bgc" v-if="multipShapeGroup[m.shapesIds].length > 3">{{
-        multipShapeGroup[m.shapesIds].length
-    }}</div>
+            <div class="avatars bgc" v-if="multipShapeGroup.get(m.shapesIds) && multipShapeGroup.get(m.shapesIds)!.length > 3">{{
+                multipShapeGroup.get(m.shapesIds)?.length
+                }}</div>
         </div>
     </div>
 </template>
@@ -268,6 +272,17 @@ onUnmounted(() => {
                 height: 100%;
                 border-radius: 50%;
                 pointer-events: none;
+            }
+
+            >div {
+                width: 100%;
+                height: 100%;
+                text-align: center;
+                line-height: 20px;
+                color: var(--theme-color-anti);
+                font-weight: 600;
+                border-radius: 50%;
+                background-color: rgb(24, 120, 245);
             }
         }
 
