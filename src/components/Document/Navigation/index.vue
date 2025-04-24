@@ -32,7 +32,7 @@ const underlinePosition = ref(0);
 type Tab = "Shape" | "Comps" | "Resource" | "Comment";
 const plugins = props.context.pluginsMgr.search2('navigation');
 
-const currentTab = ref<Tab>("Comment");
+const currentTab = ref<Tab>("Shape");
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('navi.shape'),

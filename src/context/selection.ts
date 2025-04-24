@@ -9,7 +9,6 @@
  */
 
 import {
-    adapt2Shape,
     ISave4Restore, PageView,
     ShapeType,
     ShapeView,
@@ -23,13 +22,11 @@ import {
     SelectionState,
     ArrayOpSelection,
     isDiffStringArr,
-    // SNumber,
     TableCellType,
     TidyUpAlign
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
-import { cloneDeep } from "lodash";
 import {
     finder_layers,
     finder_contact,
@@ -225,12 +222,24 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
      * @returns 符合检索条件的图形
      */
     getLayers(position: PageXY): ShapeView[] {
-        position = cloneDeep(position);
+        position = {x: position.x, y: position.y};
         const result: ShapeView[] = [];
         if (this.scout) {
             const page = this.m_selectPage;
             if (page && page.childs.length) {
                 result.push(...finder_layers(this.scout, page.childs, position));
+            }
+        }
+        return result;
+    }
+
+    getViews(offsetX: number, offsetY: number): ShapeView[] {
+        const toRoot = this.m_context.workspace.matrix.inverseCoord(offsetX, offsetY);
+        const result: ShapeView[] = [];
+        if (this.scout) {
+            const page = this.m_selectPage;
+            if (page && page.childs.length) {
+                result.push(...finder_layers(this.scout, page.childs, toRoot));
             }
         }
         return result;

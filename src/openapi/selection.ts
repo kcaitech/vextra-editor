@@ -35,4 +35,6 @@ export interface ISelection extends IWatchable {
     selectShape(shape?: ShapeView): void;
     locateShape(shapes: ShapeView[]): void;
     userSelectionData(data: DocSelectionData[]): void;
+
+    getViews(offsetX: number, offsetY: number): ShapeView[];
 }
