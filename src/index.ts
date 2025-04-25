@@ -74,12 +74,10 @@ async function _open(props: DocumentProps) {
     const repo = new TransactDataGuard();
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;
-    // let loader_: DataLoader | undefined
     if (props.source === 'storage') {
-        const { document, loader } = await importRemote(props.storage, props.path, props.fid, props.versionId, repo);
+        const { document } = await importRemote(props.storage, props.path, props.fid, props.versionId, repo);
         data = document
         cooprepo = new CoopRepository(data, repo)
-        // loader_ = loader
     } else if (props.source === 'file') {
         if (props.fmt === 'sketch') {
             const lzdata = new LzDataLocal(new Zip(props.file));

@@ -363,17 +363,6 @@ export class BundleHandler {
             if (source.styles?.length) {
                 this.insertMasks(source.styles);  // 样式
             }
-            // 当剪切板内只有一个容器，并且该容器存在于文档，并且此时没有选区或者选区正是该容器时，粘贴在容器右边的空白区域上
-            // 有可进入选区
-            // 无可进入选区
-            //      目标区域在屏幕中
-            //          可以原位粘贴
-            //              原位粘贴
-            //          不可以原位粘贴
-            //              向右偏移
-            //              居中
-            //      目标区域不在屏幕中
-            //          居中
             const context = this.context;
             const page = context.selection.selectedPage!;
             const selected = context.selection.selectedShapes;

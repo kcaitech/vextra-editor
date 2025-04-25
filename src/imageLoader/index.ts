@@ -239,7 +239,10 @@ export class ImageLoader {
                 const { ref, buff } = assets;
                 if (keySet.has(ref)) continue;
                 const res = await upload_image(context, ref, buff);
-                if (!res) {
+                if (res) {
+                    keySet.add(ref);
+                    count++;
+                } else {
                     let container = failed.get(shape.id)!;
                     if (!container) {
                         container = { shape, refs: [] };
@@ -247,12 +250,10 @@ export class ImageLoader {
                     }
                     container.refs.push(ref);
                     someError = true;
-                } else {
-                    keySet.add(ref);
-                    count++;
                 }
             }
         }
+
         if (someError) {
             const page = this.context.selection.selectedPage!;
             failed.forEach(v => {
