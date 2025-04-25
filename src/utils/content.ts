@@ -928,43 +928,17 @@ export async function upload_image(context: Context, ref: string, buff: Uint8Arr
     try {
         const __buff = new Uint8Array(buff);
         let count = 0;
-        while (count < 3 && !(await context.net.upload(ref, __buff.buffer))) {
-            count++;
-        }
+        while (count < 3 && !(await context.net.upload(ref, __buff.buffer))) count++;
         if (count >= 3) {
-            throw new Error('fail');
+            message('danger', '上传失败');
+            return false;
+        } else {
+            return true;
         }
-        return true;
     } catch (error) {
         message('danger', '上传失败');
-        console.log('upload_image:', error);
-        return false;
+        throw error;
     }
-}
-
-export const get_table_range = (table: TableSelection) => {
-    const is_edting = table.editingCell;
-    let range
-    if (is_edting) {
-        range = {
-            rowStart: is_edting.index.row,
-            rowEnd: is_edting.index.row,
-            colStart: is_edting.index.col,
-            colEnd: is_edting.index.col
-        };
-    } else {
-        range = {
-            rowStart: table.tableRowStart,
-            rowEnd: table.tableRowEnd,
-            colStart: table.tableColStart,
-            colEnd: table.tableColEnd
-        };
-    }
-    return range;
-}
-
-export const is_editing = (table: TableSelection) => {
-    return table.editingCell || table.tableRowStart > -1 || table.tableColStart > -1;
 }
 
 export function hidden_selection(context: Context) {
