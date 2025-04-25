@@ -1068,8 +1068,9 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             const keys = Object.keys(medias);
             const assets: UploadAssets[] = [];
             for (const ref of keys) {
-                const buff = medias[ref]?.buff;
-                buff && assets.push({ ref, buff });
+                const buff = medias[ref]?.buff ?? Uint8Array.from(atob(medias[ref].split(",")[1]), c => c.charCodeAt(0));
+                const base64 = medias[ref]?.base64 ?? medias[ref];
+                buff && base64 && assets.push({ ref, buff, base64 });
             }
             const uploadPackages = insert_result.shapes.map(shape => ({ shape, upload: assets }));
             const loader = new ImageLoader(context);
@@ -1128,7 +1129,8 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
     const assets: UploadAssets[] = [];
     for (const ref of keys) {
         const buff = source.media[ref]?.buff;
-        buff && assets.push({ ref, buff });
+        const base64 = source.media[ref]?.base64;
+        buff && assets.push({ ref, buff, base64 });
     }
     const uploadPackages = r.map(shape => ({ shape, upload: assets }));
     const loader = new ImageLoader(context);
@@ -1273,7 +1275,7 @@ export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
         if (parseResult.mediaResourceMgr && shape) {
             const upload: UploadAssets[] = [];
             parseResult.mediaResourceMgr.forEach((v, k) => {
-                upload.push({ ref: k, buff: v.buff });
+                upload.push({ ref: k, buff: v.buff, base64: v.base64 });
             })
             const loader = new ImageLoader(context);
             loader.upload([{ shape, upload }]);

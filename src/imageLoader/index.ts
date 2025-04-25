@@ -38,15 +38,6 @@ export class ImageLoader {
         this.context = context;
     }
 
-    buffToBase64(buff: Uint8Array) {
-        let binary = '';
-        const len = buff.byteLength;
-        for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(buff[i]);
-        }
-        return btoa(binary);
-    }
-
     async SVGReader(file: File) {
         const reader = new FileReader();
         reader.readAsText(file);
@@ -246,13 +237,13 @@ export class ImageLoader {
             const { shape, upload } = buffPack;
             if (!upload.length) continue;
             for (const assets of upload) {
-                const { ref, buff } = assets;
+                const { ref, buff, base64 } = assets;
                 if (keySet.has(ref)) continue;
                 const res = await upload_image(context, ref, buff);
                 if (res) {
                     keySet.add(ref);
                     count++;
-                    if (!mgr.has(ref)) mgr.add(ref, { buff, base64: this.buffToBase64(buff) });
+                    if (!mgr.has(ref)) mgr.add(ref, { buff, base64 });
                 } else {
                     let container = failed.get(shape.id)!;
                     if (!container) {

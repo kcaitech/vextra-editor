@@ -660,7 +660,7 @@ export class FillsPicker extends ColorPickerEditor {
                 const missions = this.getModifyRefMissions(keys[0], { buff, base64 }, size.width, size.height);
                 this.editor.modifyFillImageRef(missions);
                 this.hiddenCtrl();
-                const upload = this.flat.map(shape => ({ shape, upload: [{ buff, ref: keys[0] }] }));
+                const upload = this.flat.map(shape => ({ shape, upload: [{ buff, ref: keys[0], base64 }] }));
                 imageLoader.upload(upload)
             })
             .finally(() => {

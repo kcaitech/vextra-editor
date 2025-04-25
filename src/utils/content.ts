@@ -165,7 +165,7 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
                 if (parseResult.mediaResourceMgr && shape) {
                     const upload: UploadAssets[] = [];
                     parseResult.mediaResourceMgr.forEach((v, k) => {
-                        upload.push({ ref: k, buff: v.buff });
+                        upload.push({ ref: k, buff: v.buff, base64: v.base64 });
                     })
                     const loader = new ImageLoader(context);
                     loader.upload([{ shape, upload }]);

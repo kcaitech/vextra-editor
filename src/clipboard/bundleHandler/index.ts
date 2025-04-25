@@ -353,7 +353,7 @@ export class BundleHandler {
                 const page = context.selection.selectedPage!;
                 const editor = context.editor4Page(page);
                 editor.setShapesFillAsImage(actions);
-                new ImageLoader(context).upload(selected.map(shape => ({ shape, upload: [{ buff, ref }] })));
+                new ImageLoader(context).upload(selected.map(shape => ({ shape, upload: [{ buff, ref, base64 }] })));
             } else {
                 this.insertImage(allMedia);
             }
@@ -398,7 +398,8 @@ export class BundleHandler {
                 const assets: UploadAssets[] = [];
                 for (const ref of keys) {
                     const buff = media[ref].buff ?? Uint8Array.from(atob(media[ref].split(",")[1]), c => c.charCodeAt(0));
-                    buff && assets.push({ ref, buff });
+                    const base64 = media[ref].base64 ?? media[ref];
+                    buff && base64 && assets.push({ ref, buff, base64 });
                 }
                 const uploadPackages = params.map(o => ({ shape: o.shape, upload: assets }));
                 new ImageLoader(context).upload(uploadPackages);
@@ -447,7 +448,7 @@ export class BundleHandler {
                 manager.add(ref, { buff, base64 });
                 name = name.replace(new RegExp(`.${format}|.jpg$`, 'img'), '') || 'image';
                 const frame = new ShapeFrame(0, 0, width, height);
-                const asset: UploadAssets = { buff, ref };
+                const asset: UploadAssets = { buff, ref, base64 };
                 assets.push(asset);
                 source.push(creator.newImageFillShape(name, frame, manager, {
                     width,
@@ -474,8 +475,9 @@ export class BundleHandler {
             const keys = Object.keys(source.media);
             const assets: UploadAssets[] = [];
             for (const ref of keys) {
-                const buff = source.media[ref]?.buff;
-                buff && assets.push({ ref, buff });
+                const buff = source.media[ref]?.buff ?? Uint8Array.from(atob(source.media[ref].split(",")[1]), c => c.charCodeAt(0));
+                const base64 = source.media[ref]?.base64 ?? source.media[ref];
+                buff && base64 && assets.push({ ref, buff, base64 });
             }
             const uploadPackages = result.map(shape => ({ shape, upload: assets }));
             new ImageLoader(context).upload(uploadPackages).then(result => {
@@ -511,7 +513,7 @@ export class BundleHandler {
                 if (!shape) continue;
                 source.push(shape);
                 const upload: UploadAssets[] = [];
-                mediaResourceMgr.forEach((v, k) => upload.push({ ref: k, buff: v.buff }));
+                mediaResourceMgr.forEach((v, k) => upload.push({ ref: k, buff: v.buff, base64: v.base64 }));
                 assets.push(...upload)
             }
             const context = this.context;
