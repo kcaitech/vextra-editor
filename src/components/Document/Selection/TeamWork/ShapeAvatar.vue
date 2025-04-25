@@ -45,6 +45,7 @@ const shapes = ref<ShapeView[]>([]);
 const userSelectionInfo = ref<DocSelectionData[]>(props.context.selection.getUserSelection);
 const groupedShapes = ref<Map<string, Avatar[]>>(new Map());
 const multipShapeGroup = ref<Map<string, MultipShape[]>>(new Map());
+const user_id = localStorage.getItem('user_id') || '';
 const setOrigin = () => {
     matrix.reset(props.matrix);
     origin.x = matrix.m02;
@@ -60,7 +61,7 @@ const setPosition = () => {
     for (let i = 0; i < userSelectionInfo.value.length; i++) {
         const userSelectInfo = userSelectionInfo.value[i];
         const selection: ShapeView[] = props.context.selection.selectedShapes;
-        if (page.id !== userSelectInfo.select_page_id) continue;
+        if (page.id !== userSelectInfo.select_page_id || user_id === userSelectInfo.user?.id) continue;
         const shapes: ShapeView[] = [];
         const len = userSelectInfo.select_shape_id_list.length;
         for (let i = 0; i < len; i++) {

@@ -46,6 +46,7 @@ const usersSelectionList = ref<DocSelectionData[]>(props.context.selection.getUs
 const matrix = new Matrix();
 const shapes = ref<ShapeView[]>([]);
 const submatrix = reactive(new Matrix());
+const user_id = localStorage.getItem('user_id') || '';
 
 const createShapeTracing = () => { // 描边 
     clear();
@@ -56,7 +57,7 @@ const createShapeTracing = () => { // 描边
         const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
         const selection: ShapeView[] = props.context.selection.selectedShapes;
         const userSelectInfo = usersSelectionList.value[i];
-        if (page.id !== userSelectInfo.select_page_id) continue;
+        if (page.id !== userSelectInfo.select_page_id || user_id === userSelectInfo.user?.id) continue;
         const shapes: ShapeView[] = [];
         const len = userSelectInfo.select_shape_id_list.length;
         for (let i = 0; i < len; i++) {
