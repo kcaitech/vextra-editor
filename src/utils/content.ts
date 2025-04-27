@@ -560,7 +560,7 @@ export function selectShapes(context: Context, shapes: ShapeView | undefined) {
 }
 
 export const permIsEdit = (context: Context) => {
-    return Boolean(!context.readonly);
+    return !context.readonly;
 }
 
 export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
