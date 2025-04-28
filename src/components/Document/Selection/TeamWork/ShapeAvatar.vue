@@ -273,6 +273,7 @@ onUnmounted(() => {
                 height: 100%;
                 border-radius: 50%;
                 pointer-events: none;
+                object-fit: cover;
             }
 
             >div {

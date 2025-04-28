@@ -79,5 +79,8 @@ export const prototype = {
     sticky_fixed: 'Sticky fixed',
     open_in_new_tab: 'Open in new tab',
 
+    default:'Default',
+    bezier:'Bezier',
+
     warning:`There is a conflict in the triggering behavior, and other behaviors will be triggered first.`
 }

@@ -13,7 +13,7 @@
         <canvas id="sbezier"></canvas>
     </div>
     <div class="default">
-        <span>预设</span>
+        <span>{{t('prototype.default')}}</span>
         <div class="items">
             <div class="item" v-for="(i, index) in easingFn" :key="i[0]" @click="defaultesfn(i[1])">
                 <SvgIcon :icon="bezier_icons[index + 1]"/>
@@ -21,7 +21,7 @@
         </div>
     </div>
     <div class="custom">
-        <span>参数</span>
+        <span>{{t('prototype.bezier')}}</span>
         <div class="values">
             <input v-select ref="inputs" class="value" v-for="(_, index) in 4" :key="index" v-model="customval[index]"
                 @change="changevalue($event, index)" @keyup.enter="inputs![index].blur()" type="text">
@@ -36,7 +36,7 @@ import {
     PrototypeEasingBezier
 } from '@kcdesign/data';
 import { computed, onMounted, ref, watch, watchEffect } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 import bezier1_icon from '@/assets/icons/svg/bezier1.svg';
 import bezier2_icon from '@/assets/icons/svg/bezier2.svg';
 import bezier3_icon from '@/assets/icons/svg/bezier3.svg';
@@ -67,6 +67,7 @@ const props = defineProps<{
 const emits = defineEmits<{
     (e: "setBezier", data: PrototypeEasingBezier): void;
 }>();
+const { t } = useI18n()
 const inputs = ref<Array<HTMLInputElement> | null>()
 const customval = ref<Array<string>>([])
 const cp1 = ref<Position>({ x: 0, y: 0 })
