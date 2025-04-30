@@ -20,7 +20,6 @@ import {
     GroupShapeView,
     import_shape_from_clipboard,
     import_text,
-    BasicError,
     Page,
     PathShape,
     Shape,
@@ -50,6 +49,7 @@ import { getText } from "@/utils/attri_setting";
 import { UploadAssets } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { ImageLoader } from "@/imageLoader";
+import { BasicError } from '@/basic/error';
 
 interface SystemClipboardItem {
     type: ShapeType
