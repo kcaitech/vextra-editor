@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Bundle, MossClipboard, RefShapeBase, SourceBundle } from "@/clipboard";
+import { Bundle, Clipboard, RefShapeBase, SourceBundle } from "@/clipboard";
 import {
     Text,
     TableCellType,
@@ -36,7 +36,7 @@ class ExfContext {
     styles = new Set<string>();
 }
 
-export class MossWriter {
+export class Writer {
     private context: Context;
 
     constructor(context: Context) {
@@ -137,7 +137,7 @@ export class MossWriter {
         if (text) {
             const _text = export_text(text);
             const plain_text = text.getText(0, text.length);
-            const html = this.encode(MossClipboard.paras, _text, plain_text);
+            const html = this.encode(Clipboard.paras, _text, plain_text);
             const text_html = new Blob([html || ''], { type: 'text/html' });
             const text_plain = new Blob([plain_text], { type: 'text/plain' });
             const content = [new ClipboardItem({ "text/plain": text_plain, 'text/html': text_html })];
@@ -187,7 +187,7 @@ export class MossWriter {
                 styles,
             }
 
-            const html = this.encode(MossClipboard.source, data);
+            const html = this.encode(Clipboard.source, data);
             const blob = new Blob([html || ''], { type: 'text/html' });
             const item: any = { 'text/html': blob };
             if (!navigator.userAgent.includes('Windows') && navigator.userAgent.indexOf('Safari') > -1) {

@@ -9,9 +9,9 @@
  */
 
 import { Context } from "@/context";
-import { exportExForm, importMoss, TransactDataGuard } from "@kcdesign/data";
+import { exportExForm, importVext, TransactDataGuard } from "@kcdesign/data";
 import JSZip from "jszip";
-import { MossError } from "@/basic/error";
+import { BasicError } from "@/basic/error";
 import { ContextEnvironment } from "@/openapi";
 
 export async function _exportDocument(context: Context) {
@@ -52,11 +52,11 @@ export async function exportDocument(context: Context) {
     const content = await _exportDocument(context);
     const name = context.data.name;
     const reg = new RegExp('(.sketch|.fig|.vext|.moss)$', 'img');
-    if (context.env === ContextEnvironment.Client) {
+    // if (context.env === ContextEnvironment.Client) {
         downloadByLink(content, name.replace(reg, '') + '.vext');
-    } else {
-        downloadByLink(content, name.replace(reg, '') + '.moss');
-    }
+    // } else {
+    //     downloadByLink(content, name.replace(reg, '') + '.moss');
+    // }
 }
 
 export function downloadByLink(content: Blob, name: string) {
@@ -88,7 +88,7 @@ export async function importDocumentFromMDD(filePack: File, repo: TransactDataGu
         __doc[name.replace(/images\/|pages\//, '')] = content;
     }
 
-    return importMoss(filePack.name.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
+    return importVext(filePack.name.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
 
     function getFiles() {
         const reader = new FileReader();
@@ -96,7 +96,7 @@ export async function importDocumentFromMDD(filePack: File, repo: TransactDataGu
         return new Promise((resolve, reject) => {
             reader.onload = (event) => {
                 const buff = event.target!.result as ArrayBuffer;
-                if (!buff) reject(new MossError('无法获取文档内容'));
+                if (!buff) reject(new BasicError('无法获取文档内容'));
                 const zip = new JSZip();
                 zip.loadAsync(buff).then(res => {
                     resolve(res.files)

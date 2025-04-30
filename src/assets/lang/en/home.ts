@@ -363,7 +363,7 @@ export const attr: any = {
 export const login = {
     login_failure: 'Login failure',
     welcome: 'Welcome',
-    name: 'MossDesign',
+    name: 'Vextra',
     describe: 'Online collaborative professional product design software',
     miniprogram: 'MiniProgram',
     scan_code: 'Scan wechat'

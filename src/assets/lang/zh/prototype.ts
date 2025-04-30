@@ -79,5 +79,8 @@ export const prototype={
     sticky_fixed: '吸顶固定',
     open_in_new_tab: '在新页面打开',
 
+    default:'预设',
+    bezier:'参数',
+
     warning:'触发行为存在冲突，其他行为会被优先触发。'
 }

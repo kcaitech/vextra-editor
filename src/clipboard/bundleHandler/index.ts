@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Bundle, ImageBundle, MossClipboard, SourceBundle, SVGBundle } from "@/clipboard";
+import { Bundle, ImageBundle, Clipboard, SourceBundle, SVGBundle } from "@/clipboard";
 import { ImageLoader } from "@/imageLoader";
 import {
     adapt2Shape,
@@ -78,7 +78,7 @@ export class BundleHandler {
     private getSource(HTML: string | undefined) {
         if (!HTML) return undefined;
         HTML = this.decode(HTML);
-        const source = HTML && HTML.slice(0, 60).indexOf(MossClipboard.source) > -1 ? JSON.parse(HTML.split(MossClipboard.source)[1]) : undefined;
+        const source = HTML && HTML.slice(0, 60).indexOf(Clipboard.source) > -1 ? JSON.parse(HTML.split(Clipboard.source)[1]) : undefined;
         if (source) {
             const {unbindRefs, shapes} = source as SourceBundle;
             const manger = this.context.data.symbolsMgr;
@@ -103,7 +103,7 @@ export class BundleHandler {
     private getParas(HTML: string | undefined) {
         if (!HTML) return undefined;
         HTML = this.decode(HTML);
-        return HTML && HTML.slice(0, 60).indexOf(MossClipboard.paras) > -1 ? JSON.parse(HTML.split(MossClipboard.paras)[1]) : undefined;
+        return HTML && HTML.slice(0, 60).indexOf(Clipboard.paras) > -1 ? JSON.parse(HTML.split(Clipboard.paras)[1]) : undefined;
     }
 
     private insertImage(medias: (SVGBundle | ImageBundle)[]) {

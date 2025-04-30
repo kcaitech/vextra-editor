@@ -18,7 +18,7 @@ import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
 import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
-import MossInput from "@/components/common/MossInput.vue";
+import CommonInput from "@/components/common/CommonInput.vue";
 import { format_value as format } from '@/utils/common';
 import x_icon from "@/assets/icons/svg/X.svg";
 import y_icon from "@/assets/icons/svg/Y.svg";
@@ -371,18 +371,18 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr">
-            <MossInput :icon="x_icon" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
+            <CommonInput :icon="x_icon" :draggable="true" :value="format(x)" :disabled="model_state.x" @change="onChangeX"
                 @dragstart="dragstart" @dragging="draggingX" @dragend="dragend">
-            </MossInput>
-            <MossInput :icon="y_icon" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
+            </CommonInput>
+            <CommonInput :icon="y_icon" :draggable="true" :value="format(y)" :disabled="model_state.y" @change="onChangeY"
                 @dragstart="dragstart" @dragging="draggingY" @dragend="dragend">
-            </MossInput>
+            </CommonInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <div class="tr">
-            <MossInput :icon="radius_icon" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
+            <CommonInput :icon="radius_icon" :draggable="true" :value="format(r)" :disabled="model_state.r" @change="onChangeR"
                 @dragstart="dragstart" @dragging="draggingR" @dragend="dragend">
-            </MossInput>
+            </CommonInput>
         </div>
         <div class="tr">
             <div :class="{ tool: true, tool_disabled: model_state.tool }">

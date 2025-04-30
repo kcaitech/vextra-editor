@@ -5,10 +5,6 @@ export const start = {
 
 }
 
-export const moss = {
-
-}
-
 export const design = {
     title: 'Professional design',
     description_1: 'Professional vector editing tools to meet the fine editing; Efficient component functionality, ',

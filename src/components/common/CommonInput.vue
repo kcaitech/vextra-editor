@@ -100,14 +100,14 @@ watch(() => props.position, (v) => {
 </script>
 
 <template>
-<div :class="{ 'moss-input': true, disabled, active }" @click.stop="focus">
+<div :class="{ 'vext-input': true, disabled, active }" @click.stop="focus">
     <SvgIcon :icon="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown.stop="down"/>
     <input ref="inputEl" :value="value" @change="change" @blur="blur" @keydown="keydown"/>
 </div>
 </template>
 
 <style scoped lang="scss">
-.moss-input {
+.vext-input {
     display: flex;
     gap: 8px;
     align-items: center;

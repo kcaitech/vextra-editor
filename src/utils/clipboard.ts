@@ -20,7 +20,6 @@ import {
     GroupShapeView,
     import_shape_from_clipboard,
     import_text,
-    MossError,
     Page,
     PathShape,
     Shape,
@@ -50,6 +49,7 @@ import { getText } from "@/utils/attri_setting";
 import { UploadAssets } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { ImageLoader } from "@/imageLoader";
+import { BasicError } from '@/basic/error';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -63,9 +63,9 @@ class ExfContext {
 }
 
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
-const identity = 'moss/source';
-const paras = 'moss/paras'; // 文字段落
-const properties = 'moss/properties'; // 图层属性
+const identity = 'vext/source';
+const paras = 'vext/paras'; // 文字段落
+const properties = 'vext/properties'; // 图层属性
 
 export class Clipboard {
     context: Context;
@@ -824,7 +824,7 @@ export class Clipboard {
                 // const type = data[0].types[0];
                 // const val = await data[0].getType(type);
                 // const filePack = await loader.packFile(val as any, true);
-                throw new MossError('external data');
+                throw new BasicError('external data');
             }
             clipboard_text_html_replace(this.context, data[0], src);
             return true;

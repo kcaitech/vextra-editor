@@ -19,7 +19,7 @@ import {
 } from "@kcdesign/data";
 import { StyleManager } from "@/transform/style";
 import { hidden_selection } from "@/utils/content";
-import { MossError } from "@/basic/error";
+import { BasicError } from "@/basic/error";
 import { UserConfig } from "@/context/user"
 import { KeyboardMgr } from "@/keyboard";
 
@@ -458,7 +458,7 @@ export class Direction {
     private __sort(env: ShapeView, target: Map<number, string>, order: Map<string, number>, fireTarget: Set<string>, shapes: string[]) {
         const children = shapes.filter(i => !fireTarget.has(i));
         const childs = env.childs.filter(s => s.isVisible);
-        if (children.length + target.size !== childs.length) throw new MossError('wrong match');
+        if (children.length + target.size !== childs.length) throw new BasicError('wrong match');
         const orderAfterSort: string[] = [];
         let flowIndex = 0;
         for (let i = 0; i < shapes.length; i++) {
