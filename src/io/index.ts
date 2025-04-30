@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { exportExForm, importMoss, TransactDataGuard } from "@kcdesign/data";
+import { exportExForm, importVext, TransactDataGuard } from "@kcdesign/data";
 import JSZip from "jszip";
 import { BasicError } from "@/basic/error";
 import { ContextEnvironment } from "@/openapi";
@@ -88,7 +88,7 @@ export async function importDocumentFromMDD(filePack: File, repo: TransactDataGu
         __doc[name.replace(/images\/|pages\//, '')] = content;
     }
 
-    return importMoss(filePack.name.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
+    return importVext(filePack.name.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
 
     function getFiles() {
         const reader = new FileReader();
