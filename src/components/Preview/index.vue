@@ -31,7 +31,7 @@ const { t } = useI18n();
 const loading = ref<boolean>(false);
 const showLeft = ref<boolean>(true);
 const curPage = shallowRef<PageView | undefined>(undefined);
-const leftTriggleVisible = ref<boolean>(false);
+const leftTriggerVisible = ref<boolean>(false);
 let uninstall_keyboard_units: () => void = () => {
 };
 const showTop = ref<boolean>(true);
@@ -96,14 +96,14 @@ function mouseenter() {
         clearTimeout(timerForLeft);
         timerForLeft = undefined;
     }
-    leftTriggleVisible.value = true;
+    leftTriggerVisible.value = true;
 }
 
 function mouseleave() {
     const delay = 80;
     timerForLeft = setTimeout(() => {
         if (!timerForLeft) return;
-        leftTriggleVisible.value = false;
+        leftTriggerVisible.value = false;
         clearTimeout(timerForLeft);
         timerForLeft = undefined;
     }, delay);
@@ -151,7 +151,7 @@ onUnmounted(() => {
                   @changeLeftWidth="changeLeftWidth">
         <template #slot1>
             <Navigation v-if="curPage" id="navigation" :context="context" @mouseenter="mouseenter"
-                        :page="curPage as PageView" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
+                        :page="curPage as PageView" :showLeft="showLeft" :leftTriggleVisible="leftTriggerVisible"
                         @showNavigation="showHiddenLeft" @switchpage="switchPage">
             </Navigation>
         </template>
