@@ -34,9 +34,9 @@ export async function fetchConfig(): Promise<Config> {
         script.src = './static/.config.js';
         document.head.append(script);
         script.onload = () => {
-            const __moss_config = JSON.parse(JSON.stringify((window as any).__moss_config));
+            const __vext_config = JSON.parse(JSON.stringify((window as any).__vext_config));
             script.remove();
-            resolve(__moss_config)
+            resolve(__vext_config)
         }
     })
 }

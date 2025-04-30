@@ -552,7 +552,7 @@ const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
 comps.push(
     // {
-    //     component: MossCanvas,
+    //     component: VextCanvas,
     //     params: {
     //         get data() {
     //             return props.page

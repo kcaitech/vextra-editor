@@ -15,7 +15,7 @@ export class LockedPointer {
         if (this.m_pointer_el) return;
 
         const div = document.createElement('div');
-        div.classList.add('locked-pointer-moss-0922');
+        div.classList.add('locked-pointer-vext-0922');
 
         document.body.append(div);
 

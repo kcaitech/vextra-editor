@@ -26,11 +26,11 @@ export default class LCStorage implements IStorage {
                     script.src = './static/' + uri + '.js';
                     document.head.append(script);
                     script.onload = () => {
-                        const __moss_content = JSON.stringify((window as any).__moss_content_string);
-                        (window as any).__moss_content_string = undefined;
+                        const __vext_content = JSON.stringify((window as any).__vext_content_string);
+                        (window as any).__vext_content_string = undefined;
                         script.remove();
                         const encoder = new TextEncoder();
-                        const u8a = encoder.encode(__moss_content)
+                        const u8a = encoder.encode(__vext_content)
                         this.scriptMap.set(uri, u8a);
                         resolve(u8a);
                     }
