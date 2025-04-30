@@ -15,7 +15,7 @@
             <div class="content" @click="picker.invoke()">
                 <SvgIcon :icon="drop_here_icon" class-name="drop-icon" />
                 <!-- <DropHereIcon /> -->
-                <p class="tip">Click or Drop Sketch/Fig/Moss Files Here</p>
+                <p class="tip">Click or Drop Sketch/Fig/Vext Files Here</p>
             </div>
             <slot />
         </div>

@@ -5,10 +5,6 @@ export const start = {
 
 }
 
-export const moss = {
-
-}
-
 export const design = {
     title: '专业UI设计功能',
     description_1: '专业的矢量编辑工具，满足精细化编辑；高效的组件功能，',

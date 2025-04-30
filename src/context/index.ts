@@ -54,7 +54,7 @@ import { IContext } from "@/openapi";
 import { EscStack } from "./escstack";
 import { scout } from "@/utils/scout";
 import { Preview } from "./preview";
-import { MossClipboard } from "@/clipboard";
+import { Clipboard } from "@/clipboard";
 import { EditorLayout } from "@/components/Document/Layout/editorlayout";
 import { RenderContext } from "@/context/render";
 import { TaskMgr } from "@/basic/taskmgr";
@@ -148,7 +148,7 @@ export class Context extends WatchableObject implements IContext {
     private m_user: User;
     private m_attr: Attribute;
     private m_preview: Preview;
-    private m_clip: MossClipboard;
+    private m_clip: Clipboard;
     private m_layout: EditorLayout;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
@@ -191,7 +191,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_user = new User();
         this.m_attr = new Attribute();
         this.m_preview = new Preview(this);
-        this.m_clip = new MossClipboard(this);
+        this.m_clip = new Clipboard(this);
         this.m_layout = new EditorLayout(this);
         this.m_render = new RenderContext();
         startLoadTask(data, this.m_taskMgr);

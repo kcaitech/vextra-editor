@@ -55,7 +55,7 @@ import {
     useText,
 } from "@/components/Document/Creator/execute";
 import { unAutoLayoutFn } from "./auto_layout";
-import { MossClipboard } from "@/clipboard";
+import { Clipboard } from "@/clipboard";
 import { group, ungroup } from "@/utils/group_ungroup";
 import { KeyboardMgr } from "@/keyboard";
 
@@ -352,7 +352,7 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        new MossClipboard(context).replace(); // 替换图形
+        new Clipboard(context).replace(); // 替换图形
         return;
     }
     if (is_ctrl) {

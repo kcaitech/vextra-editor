@@ -13,7 +13,7 @@ import { ResourceMgr, Shape, Transform, } from "@kcdesign/data";
 import { ClipboardEventReader } from "@/clipboard/read/clipboardEventReader";
 import { NavigatorClipboardReader } from "@/clipboard/read/navigatorClipboardReader";
 import { BundleHandler } from "@/clipboard/bundleHandler";
-import { MossWriter } from "@/clipboard/write";
+import { Writer } from "@/clipboard/write";
 import { XY } from "@/context/selection";
 
 export type ImageBundle = {
@@ -49,10 +49,10 @@ export type SourceBundle = {
     styles: any[];
 }
 
-export class MossClipboard {
-    static source = 'moss/source';
-    static paras = 'moss/paras';
-    static properties = 'moss/properties';
+export class Clipboard {
+    static source = 'vext/source';
+    static paras = 'vext/paras';
+    static properties = 'vext/properties';
 
     private readonly context: Context;
     private cache: Bundle | undefined;
@@ -62,7 +62,7 @@ export class MossClipboard {
 
     async write(event?: ClipboardEvent): Promise<boolean> {
         const cache: Bundle = {};
-        await new MossWriter(this.context).write(cache, event);
+        await new Writer(this.context).write(cache, event);
         if (Object.keys(cache).length) {
             this.cache = cache;
             return true;
@@ -71,7 +71,7 @@ export class MossClipboard {
 
     async writeAsPNG(blob: Blob, name: string, width: number, height: number) {
         const cache: Bundle = {};
-        if (await new MossWriter(this.context).writeAsPNG(cache, blob, name, width, height)) {
+        if (await new Writer(this.context).writeAsPNG(cache, blob, name, width, height)) {
             this.cache = cache;
             return true;
         } else return false;
@@ -132,7 +132,7 @@ export class MossClipboard {
         const writeSuccess = await this.write(event);
         if (!writeSuccess) return;
         const textshape = this.context.selection.textshape;
-        const text = new MossWriter(this.context).text;
+        const text = new Writer(this.context).text;
 
         if (text && textshape) {
             const selection = this.context.textSelection;

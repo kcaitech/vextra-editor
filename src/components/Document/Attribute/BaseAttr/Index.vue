@@ -34,7 +34,7 @@ import {
 } from '@/utils/attri_setting';
 import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
-import MossInput from "@/components/common/MossInput.vue";
+import CommonInput from "@/components/common/CommonInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
 import { computeString } from "@/utils/content";
 import { Attribute } from '@/context/atrribute';
@@ -956,11 +956,11 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr">
-            <MossInput :icon="x_icon" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
+            <CommonInput :icon="x_icon" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
                 @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @keydown="keydownX">
-            </MossInput>
-            <MossInput :icon="y_icon" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
-                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY"></MossInput>
+            </CommonInput>
+            <CommonInput :icon="y_icon" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY"></CommonInput>
             <div v-if="s_adapt" class="adapt" @click="adapt">
                 <Tooltip :content="t('attr.adapt')">
                     <SvgIcon :icon="adapt_icon" style="outline: none;" />
@@ -969,13 +969,13 @@ onUnmounted(() => {
             <div v-else style="width: 28px;height: 28px;" />
         </div>
         <div class="tr">
-            <MossInput :icon="w_icon" draggable :value="format(w)" @change="changeW"
+            <CommonInput :icon="w_icon" draggable :value="format(w)" @change="changeW"
                 :disabled="model_disable_state.width" @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"
-                @keydown="keydownW"></MossInput>
-            <MossInput :icon="h_icon" draggable :value="format(h)" @change="changeH"
+                @keydown="keydownW"></CommonInput>
+            <CommonInput :icon="h_icon" draggable :value="format(h)" @change="changeH"
                 :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"
                 @keydown="keydownH">
-            </MossInput>
+            </CommonInput>
             <Tooltip :content="t('attr.constrainProportions')">
                 <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
                     <SvgIcon :icon="isLock ? lock_icon : lock_open_icon" :class="{ 'active': isLock }" />
@@ -986,9 +986,9 @@ onUnmounted(() => {
             </Tooltip>
         </div>
         <div class="tr">
-            <MossInput :icon="angle_icon" draggable :value="formatRotate(rotate)" @change="changeR"
+            <CommonInput :icon="angle_icon" draggable :value="formatRotate(rotate)" @change="changeR"
                 :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
-                @dragend="dragend" @keydown="keydownR"></MossInput>
+                @dragend="dragend" @keydown="keydownR"></CommonInput>
             <div class="flip-wrapper">
                 <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
                     <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
@@ -1006,13 +1006,13 @@ onUnmounted(() => {
             <div style="width: 28px;height: 28px;" />
         </div>
         <div class="tr" v-if="s_counts">
-            <MossInput :icon="angle_count_icon" draggable :value="format(counts)" @change="changeCounts"
+            <CommonInput :icon="angle_count_icon" draggable :value="format(counts)" @change="changeCounts"
                 :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
-                @dragend="dragend"></MossInput>
-            <MossInput v-if="s_inner_angle" :icon="inner_angle_icon" draggable
+                @dragend="dragend"></CommonInput>
+            <CommonInput v-if="s_inner_angle" :icon="inner_angle_icon" draggable
                 :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
                 :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
-                @dragend="dragend"></MossInput>
+                @dragend="dragend"></CommonInput>
             <div style="width:28px;height: 28px;" />
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"
@@ -1020,14 +1020,14 @@ onUnmounted(() => {
         <ContentClip v-if="s_clip" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up">
-            <MossInput :icon="hor_space2_icon" :value="format(horSpace)" :draggable="!horTidyUp"
+            <CommonInput :icon="hor_space2_icon" :value="format(horSpace)" :draggable="!horTidyUp"
                        @change="changeHorTidyUp" :disabled="horTidyUp" @dragstart="dragstart"
                        @dragging="(e) => draggingTidyUp(e, 'hor')" @dragend="dragend" @keydown="keydownHorTidyUp">
-            </MossInput>
-            <MossInput :icon="ver_space2_icon" :value="format(verSpace)" :draggable="!verTidyUp"
+            </CommonInput>
+            <CommonInput :icon="ver_space2_icon" :value="format(verSpace)" :draggable="!verTidyUp"
                        @change="changeVerTidyUp" :disabled="verTidyUp" @dragstart="dragstart"
                        @dragging="(e) => draggingTidyUp(e, 'ver')" @dragend="dragend" @keydown="keydownVerTidyUp">
-            </MossInput>
+            </CommonInput>
             <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
