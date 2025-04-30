@@ -136,7 +136,7 @@ function component_watcher(t: number) {
 
 const stop = watch(fileName, (newVal) => {
     if (newVal) {
-        (window as any).wx.miniProgram.postMessage({
+        (window as any).wx?.miniProgram.postMessage({
             data: {
                 name: newVal,
                 id: docInfo.value.document.id

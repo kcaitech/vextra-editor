@@ -131,7 +131,7 @@ watch(fileName, (NewNanme) => {
     if (NewNanme) {
         miniprogram = navigator.userAgent.includes('miniProgram')
         if (miniprogram) {
-            (window as any).wx.miniProgram.postMessage({
+            (window as any).wx?.miniProgram.postMessage({
                 data: {
                     name: NewNanme,
                     id: docInfo.value.document.id
