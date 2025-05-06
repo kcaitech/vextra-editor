@@ -25,10 +25,10 @@ import {
     ShapeType,
     TextBehaviour,
     TextShapeView,
-    cloneGradient
+    cloneGradient,
+    TextVerAlign, TextHorAlign, Color
 } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, Color } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -74,12 +74,12 @@ import { toHex as toHex2 } from '@/utils/color';
 import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/textpicker';
 import TextMaskView from './TextMaskView.vue'
 
-interface Props {
-    context: Context
-    shape: TextShapeView
-    textShapes: TextShapeView[]
-    selectionChange: number
-    trigger: any[]
+type Props = {
+    context: Context;
+    shape: TextShapeView;
+    textShapes: TextShapeView[];
+    selectionChange: number;
+    trigger: any[];
 }
 
 const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
@@ -174,14 +174,15 @@ const showFontList = (event: MouseEvent) => {
     }
 }
 
-const textSizes = ref([10, 12, 14, 16, 18, 24, 36, 48, 64]);
+const textSizes = [10, 12, 14, 16, 18, 24, 36, 48, 64];
 const sizeSelectIndex = ref(-1);
 const onShowSize = () => {
     props.context.workspace.focusText()
     if (showSize.value) {
-        return showSize.value = false
+        showSize.value = false;
+        return;
     }
-    const index = textSizes.value.findIndex(item => item === textCtx.value.text?.fontSize);
+    const index = textSizes.findIndex(item => item === textCtx.value.text?.fontSize);
     if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true
 
@@ -436,10 +437,9 @@ const handleSize = () => {
 }
 
 const reflush = ref(0);
-// 获取当前文字格式
 
 function selection_watcher(t: number | string) {
-    if (t === Selection.CHANGE_TEXT) {
+    if (t === Selection.CHANGE_TEXT || t === Selection.CHANGE_SHAPE) {
         textFormat()
         textCtxMgr.update();
     }
@@ -1129,7 +1129,7 @@ const stopList = [
 
 onMounted(() => {
     textFormat()
-    textCtxMgr.update.bind(textCtxMgr);
+    textCtxMgr.update();
 })
 onUnmounted(() => {
     stopList.forEach(stop => stop());
@@ -1149,10 +1149,10 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div class="text-container">
-            <div class="mask-mixed" v-if="textCtx.mixed">
+            <div v-if="textCtx.mixed" class="mask-mixed">
                 <span>包含多个文本样式，请解绑后编辑</span>
                 <div class="unbind" @click="() => textCtxMgr.unbind()">
-                    <SvgIcon :icon="unbind_icon" />
+                    <SvgIcon :icon="unbind_icon"/>
                 </div>
             </div>
             <TextMaskView v-if="textCtx.mask && !textCtx.mixed" :context="props.context" :manager="textCtxMgr"
@@ -1160,28 +1160,25 @@ onUnmounted(() => {
             </TextMaskView>
             <div v-if="!textCtx.mask && !textCtx.mixed" class="text-top">
                 <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;"
-                    @click="showFontList($event)">
+                     @click="showFontList($event)">
                     <span>{{ textCtx.text?.fontName ? textCtx.text?.fontName : t('attr.more_value') }}</span>
                     <div class="down">
                         <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
                 </div>
                 <SelectFont v-if="fontListStatus.visible" :show-font="fontListStatus.visible" @set-font="setFont"
-                            :context="props.context"
-                            :manager="textCtxMgr" @setFontWeight="setFontWeight">
-                </SelectFont>
-                <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
+                            :context="props.context" :manager="textCtxMgr" @setFontWeight="setFontWeight"/>
+                <div v-if="showFont" class="overlay" @click.stop @mousedown.stop="showFont = false"/>
             </div>
             <div v-if="!textCtx.mask && !textCtx.mixed" class="text-middle">
                 <FontWeightSelected :context="context" :manager="textCtxMgr" :selected="fontWeight"
                     :disable="!textCtx.text?.fontName" :fontName="textCtx.text?.fontName!"
-                    @setFontWeight="setFontWeight">
-                </FontWeightSelected>
+                                    @setFontWeight="setFontWeight"/>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
-                        <input type="text" :value="textCtx.text?.fontSize ?? t('attr.more_value')" ref="textSize"
+                        <input ref="textSize" type="text" :value="textCtx.text?.fontSize ?? t('attr.more_value')"
                             class="input" @change="setTextSize" @focus="selectSizeValue" @input="handleSize"
-                            @click="(e) => click(e, is_size_select)" @keydown="e => keydownSize(e)">
+                               @click="(e) => click(e, is_size_select)" @keydown="e => keydownSize(e)"/>
                         <div class="down" @click="onShowSize">
                             <SvgIcon :icon="down_icon" style="" />
                         </div>
@@ -1290,9 +1287,8 @@ onUnmounted(() => {
                 </div>
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor">
-                <div style="font-size: 12px;">{{ t('attr.font_color') }}
-                </div>
+            <div v-if="!colorIsMulti && !mixed && textColor" class="text-color">
+                <div style="font-size: 12px;">{{ t('attr.font_color') }}</div>
                 <div class="color">
                     <ColorBlock :colors="([textColor || new Color(1, 6, 6, 6)] as Color[])" @click="showColorPanel" />
                     <component v-blur :is="compo" />
@@ -1302,7 +1298,7 @@ onUnmounted(() => {
                         :include="fillTypes" :color="rgbaColor!" :gradient="color_gradient" @close="closeColor" />
                 </div>
             </div>
-            <div class="text-colors" v-else-if="colorIsMulti || mixed">
+            <div v-else-if="colorIsMulti || mixed" class="text-colors">
                 <div class="color-title">
                     <div style="font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
                     <div class="add" @click="setMixedTextColor">
@@ -1311,7 +1307,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor">
+            <div v-else-if="!colorIsMulti && !mixed && !textColor" class="text-colors">
                 <div class="color-title">
                     <div class="add" @click="addTextColor">
                         <SvgIcon :icon="add_icon" />
@@ -1319,7 +1315,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <!-- 高亮颜色 -->
-            <div class="highlight-color" v-if="!highlightIsMulti && highlight">
+            <div v-if="!highlightIsMulti && highlight" class="highlight-color">
                 <div style="font-size: 12px;" :class="{ 'check': highlight, 'nocheck': !highlight }">{{
                     t('attr.highlight_color') }}
                 </div>
@@ -1339,7 +1335,7 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
-            <div class="text-colors" v-else-if="highlightIsMulti">
+            <div v-else-if="highlightIsMulti" class="text-colors">
                 <div class="color-title">
                     <div style="font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{
@@ -1351,7 +1347,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight" @click="addHighlight">
+            <div v-else-if="!highlightIsMulti && !highlight" class="text-colors" @click="addHighlight">
                 <div class="color-title">
                     <div style="font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{
