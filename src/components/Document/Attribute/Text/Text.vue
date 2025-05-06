@@ -244,6 +244,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
     props.context.textSelection.setTextAttr(textAttr);
 }
 const changeTextSize = (size: number) => {
+    console.log('- size', size);
     //设置字体大小
     fontSize.value = size
     showSize.value = false;
@@ -264,10 +265,13 @@ const changeTextSize = (size: number) => {
             :
             editor.setTextFontSizeMulti((shapes.value as TextShapeView[]), size);
     }
+
     keydownVal.value = false;
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.fontSize = format_value(size) as number;
     props.context.textSelection.setTextAttr(textAttr);
+
+    console.log('- fontSize', fontSize.value);
 }
 //设置字体
 const setFont = (font: string) => {
@@ -825,7 +829,7 @@ const _textFormat = () => {
         selectVertical.value = format.verAlign || 'top'
         selectText.value = format.textBehaviour || 'flexible'
         fontName.value = format.fontName || DefaultFontName
-        fontSize.value = format_value(format.fontSize || 14) as number
+        fontSize.value = format_value(format.fontSize || 14) as number;
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
@@ -1173,11 +1177,11 @@ onUnmounted(() => {
                                     @setFontWeight="setFontWeight"/>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
-                        <input ref="textSize" type="text" :value="textCtx.text?.fontSize ?? t('attr.more_value')"
+                        <input ref="textSize" type="text" :value="fontSize"
                             class="input" @change="setTextSize" @focus="selectSizeValue" @input="handleSize"
                                @click="(e) => click(e, is_size_select)" @keydown="e => keydownSize(e)"/>
                         <div class="down" @click="onShowSize">
-                            <SvgIcon :icon="down_icon" style="" />
+                            <SvgIcon :icon="down_icon"/>
                         </div>
                     </div>
                     <div class="font-size-list" ref="sizeList" :style="{ top: -(sizeSelectIndex * 34) + 'px' }"
