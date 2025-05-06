@@ -12,14 +12,11 @@
 import { Selection } from '@/context/selection';
 import {
     adapt2Shape,
-    ArtboardView,
     BoolOp,
     BoolShapeView,
     GroupShape,
     GroupShapeView,
-    Shape,
     ShapeType,
-    ShapeView
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
@@ -28,7 +25,6 @@ import { flattenSelection } from '@/utils/content';
 import { debounce } from 'lodash';
 import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 import BooleanObject from "./BooleanObject.vue"
-import { Tool } from '@/context/tool';
 
 const { t } = useI18n();
 const props = defineProps<{ context: Context, params: any }>();
