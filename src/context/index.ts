@@ -117,7 +117,7 @@ class ToolBox implements IToolBox {
     }
 
     silent() {
-        this._context.toolbox.silent();
+        this._context.tool.silent();
     }
 }
 

@@ -100,13 +100,8 @@ function updateComps() {
             },
             { component: VertLine }
         )
-        // const efficientPlugins = props.context.pluginsMgr.search2('toolbar.tools.efficient');
-        // comps.push(...efficientPlugins.begin)
-        // comps.push({ component: CompsVue })
         comps.push({ component: GroupUngroup })
         comps.push({ component: Mask });
-        // comps.push(...efficientPlugins.end)
-
         comps.push({ component: VertLine })
         comps.push(
             // 先屏蔽掉表格
