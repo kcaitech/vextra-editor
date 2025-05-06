@@ -610,6 +610,7 @@ onUnmounted(() => {
         border-right: 1px solid var(--grey);
         border-bottom: 1px solid var(--grey);
         position: absolute;
+        z-index: 1;
     }
 
     .d-hor {
