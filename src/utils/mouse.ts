@@ -28,7 +28,7 @@ export function is_mouse_on_content(e: MouseEvent): boolean {
 /**
  * @description 判断鼠标下落时，是否正进行文本编辑
  */
-export function down_while_is_text_editing(e: MouseEvent, context: Context) {
+export function down_while_is_text_editing(context: Context) {
     const selection = context.selection;
     const shapes = selection.selectedShapes;
     const textshape = selection.textshape;

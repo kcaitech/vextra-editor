@@ -523,14 +523,14 @@ const textFormat = (_t?: any) => {
 
 const _textFormat = throttle(textFormat, 160, { leading: true })
 
-function selection_wather(t: number | string) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
         textFormat();
     } else if (t === Selection.CHANGE_SHAPE) {
         textFormat();
     }
 }
-function workspace_wather(t: number) {
+function workspace_watcher(t: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat();
     } else if (t === WorkSpace.TABLE_TEXT_GRADIENT_UPDATE) {
@@ -1159,13 +1159,13 @@ function click(e: Event, variate: boolean) {
 onMounted(() => {
     _textFormat();
     props.shape.watch(_textFormat);
-    props.context.selection.watch(selection_wather);
-    props.context.workspace.watch(workspace_wather);
+    props.context.selection.watch(selection_watcher);
+    props.context.workspace.watch(workspace_watcher);
     watch_cells();
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_wather);
-    props.context.workspace.unwatch(workspace_wather);
+    props.context.selection.unwatch(selection_watcher);
+    props.context.workspace.unwatch(workspace_watcher);
     props.shape.unwatch(_textFormat);
     shapeWatch();
     watchCells.forEach(v => {

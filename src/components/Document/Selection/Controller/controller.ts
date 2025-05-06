@@ -202,7 +202,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function mousedown(e: MouseEvent) {
         if (workspace.isEditing
             && is_mouse_on_content(e)
-            && down_while_is_text_editing(e, context)
+            && down_while_is_text_editing(context)
         ) return;
 
         if (workspace.isPageDragging) return;

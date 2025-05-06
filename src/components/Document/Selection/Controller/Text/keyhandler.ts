@@ -13,6 +13,7 @@ import { TextShapeView, TableCellView } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { Attribute } from "@/context/atrribute";
+import { down_while_is_text_editing } from "@/utils/mouse";
 
 const keydelays = 15;
 
@@ -183,17 +184,8 @@ const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextSh
 
 const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.textSelection;
-    if (selection.cursorStart > -1) {
-        context.selection.resetSelectShapes();
-        const timer = setTimeout(() => {
-            const s = context.selection.selectedPage?.getShape(editor.shape.id);
-            context.selection.selectShape(s);
-            // clearTimeout(timer);
-        })
-        context.cursor.reset();
-        context.workspace.contentEdit(false);
-    }
+    e.stopPropagation();
+    down_while_is_text_editing(context);
 
 }, keydelays);
 
