@@ -498,6 +498,8 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import search_icon from '@/assets/icons/svg/search.svg';
 import down_icon from '@/assets/icons/svg/down.svg';
 import close_x_icon from '@/assets/icons/svg/close-x.svg';
+import close_white from '@/assets/icons/svg/close-white.svg';
+
 import delete_type_icon from '@/assets/icons/svg/delete-type.svg';
 </script>
 
@@ -524,8 +526,7 @@ import delete_type_icon from '@/assets/icons/svg/delete-type.svg';
             </div>
         </div>
         <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-            <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types">
-            </ShapeTypes>
+            <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types" />
         </div>
         <div class="blocks" v-if="includes_type.length">
             <div class="block-wrap" v-for="(item, index) in includes_type" :key="index"
@@ -533,7 +534,7 @@ import delete_type_icon from '@/assets/icons/svg/delete-type.svg';
                 <div class="block">
                     <div class="content">{{ t(`shape.${item}`) }}</div>
                     <div class="close" @click.stop="(e) => update_types(item, false, e.shiftKey)">
-                        <SvgIcon :icon="close_x_icon"/>
+                        <SvgIcon :icon="close_white"/>
                     </div>
                 </div>
             </div>
@@ -555,8 +556,7 @@ import delete_type_icon from '@/assets/icons/svg/delete-type.svg';
                   @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
                   @after-drag-2="after_drag"/>
         <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop
-                     :items="contextMenuItems">
-        </ContextMenu>
+                     :items="contextMenuItems" />
     </div>
 </div>
 </template>
@@ -646,8 +646,7 @@ import delete_type_icon from '@/assets/icons/svg/delete-type.svg';
                 justify-content: center;
                 transition: 0.15s;
 
-                > svg {
-                    color: rgb(111, 111, 111);
+                > img {
                     width: 10px;
                     height: 10px;
                 }
@@ -715,7 +714,7 @@ import delete_type_icon from '@/assets/icons/svg/delete-type.svg';
                         justify-content: flex-end;
                         margin-left: auto;
 
-                        > svg {
+                        > img {
                             width: 12px;
                             height: 14px;
                         }

@@ -23,6 +23,8 @@ export const shape: any = {
     pencil: "Pencil",
     polygon: "Polygon",
     star: "Star",
+    instance: "Instance",
+    bool: "Bool"
 }
 shape[ShapeType.Rectangle] = "Rectangle";
 
