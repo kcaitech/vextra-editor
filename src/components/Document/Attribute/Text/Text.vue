@@ -26,7 +26,9 @@ import {
     TextBehaviour,
     TextShapeView,
     cloneGradient,
-    TextVerAlign, TextHorAlign, Color
+    TextVerAlign,
+    TextHorAlign,
+    Color
 } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Reg_HEX } from "@/utils/RegExp";
@@ -433,8 +435,6 @@ const handleSize = () => {
     executed.value = true;
     sizeValue.value = textSize.value!.value;
 }
-
-const reflush = ref(0);
 
 function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
@@ -934,7 +934,6 @@ const _textFormat = () => {
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
     updateContextColor();
-    reflush.value++;
 }
 const textFormat = throttle(_textFormat, 0, { leading: true })
 
