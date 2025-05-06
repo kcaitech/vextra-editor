@@ -112,26 +112,6 @@ export class Tool extends WatchableObject {
 
     setAction(uuid: string) {
         this.m_current_action = uuid;
-        // 各功能各自控制
-        // if (uuid.startsWith('add')) {
-        //     this.m_context.menu.menuMount();
-        //     this.m_context.escstack.save('tool-action', this.reset.bind(this));
-        //     // if (action === Action.AddComment) {
-        //     //     if (this.m_context.workspace.documentPerm === 1) {
-        //     //         return;
-        //     //     }
-        //     //     this.m_context.comment.commentInput(false);
-        //     //     this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
-        //     //     this.m_context.cursor.setType('comment', 0);
-        //     // } else if (uuid === Action.Pen) {
-        //         this.m_context.cursor.setType('pen', 0);
-        //     } else {
-        //         this.m_context.cursor.setType('cross', 0);
-        //     }
-        // } else {
-        //     this.m_context.cursor.reset();
-        // }
-
         this.notify(Tool.CHANGE_ACTION);
         this.m_context.notify(ContextEvents.action_change)
     }
@@ -147,6 +127,12 @@ export class Tool extends WatchableObject {
         this.notify(Tool.CHANGE_ACTION);
         this.m_context.notify(ContextEvents.action_change)
         return exe_result;
+    }
+
+    silent() {
+        this.m_current_action = '';
+        this.m_context.cursor.reset();
+        this.notify(Tool.CHANGE_ACTION);
     }
 
     get isShowTitle() {

@@ -15,6 +15,7 @@ export * from "./scout"
 
 export interface IToolBox {
     get scout(): IScout;
-    // get storage(): Map<string, any>;
     get event(): IEventEmitter;
+
+    silent: Function; // 停用内置工具，使用插件工具
 }

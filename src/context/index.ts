@@ -116,6 +116,9 @@ class ToolBox implements IToolBox {
         return this._event;
     }
 
+    silent() {
+        this._context.toolbox.silent();
+    }
 }
 
 export class Context extends WatchableObject implements IContext {
