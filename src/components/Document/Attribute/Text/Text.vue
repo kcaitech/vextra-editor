@@ -337,8 +337,6 @@ const setRowHeight = (val?: number) => {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         if (!isNaN(Number(value))) {
-            console.log(value, 'value');
-
             keydownVal.value
                 ?
                 linearApi.modifyTextLineHeight(val!, isAuto, textIndex, selectLength, props.shape)
@@ -439,7 +437,7 @@ const handleSize = () => {
 const reflush = ref(0);
 
 function selection_watcher(t: number | string) {
-    if (t === Selection.CHANGE_TEXT || t === Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_TEXT) {
         textFormat()
         textCtxMgr.update();
     }
@@ -1125,7 +1123,7 @@ const stopList = [
     }),
     watch(() => props.selectionChange, textFormat),
     watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()))
-]
+];
 
 onMounted(() => {
     textFormat()
