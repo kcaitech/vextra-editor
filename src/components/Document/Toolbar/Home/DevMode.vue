@@ -22,10 +22,10 @@ interface Props {
 const props = defineProps<Props>();
 const { t } = useI18n();
 
-const isLable = ref(props.context.tool.isLable);
+const isLable = ref(props.context.tool.isLabel);
 const tool_watcher = (t: number) => {
-    if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.context.tool.isLable;
+    if (t === Tool.LABEL_CHANGE) {
+        isLable.value = props.context.tool.isLabel;
     }
 }
 

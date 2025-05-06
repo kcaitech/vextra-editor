@@ -44,7 +44,7 @@ function onMouseDown(e: MouseEvent) {
 
 const onRename = () => {
     if (props.data.context.readonly) return;
-    if (props.data.context.tool.isLable) return;
+    if (props.data.context.tool.isLabel) return;
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {

@@ -149,7 +149,7 @@ export function startEdit(context: Context) {
         return;
     }
 
-    if (context.tool.isLable) {
+    if (context.tool.isLabel) {
         return;
     }
 

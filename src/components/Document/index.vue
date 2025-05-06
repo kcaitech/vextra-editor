@@ -89,8 +89,8 @@ const not_perm_hidden_right = () => {
 
 const tool_watcher = (t: number) => {
     const ctx: Context = props.context as Context;
-    if (t === Tool.LABLE_CHANGE) {
-        label.value = ctx.tool.isLable;
+    if (t === Tool.LABEL_CHANGE) {
+        label.value = ctx.tool.isLabel;
         not_perm_hidden_right();
     }
 }

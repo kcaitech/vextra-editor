@@ -151,7 +151,7 @@ function selectionWatcher(t: string | number) { // selection的部分动作可�
 }
 
 function tool_watcher(t: number) {
-    if (t === Tool.LABLE_CHANGE) {
+    if (t === Tool.LABEL_CHANGE) {
         createController();
         watchShapes();
         labelLineStatus();
@@ -315,7 +315,7 @@ function for_path_shape(shape: PathShapeView) {
 }
 
 function modify_controller_type(shapes: ShapeView[],) {
-    if (!permIsEdit(props.context) || props.context.tool.isLable) {
+    if (!permIsEdit(props.context) || props.context.tool.isLabel) {
         controllerType.value = ControllerType.Readonly;
         return;
     }
@@ -410,7 +410,7 @@ function window_blur() {
 //标注线
 const isLabelLine = ref(false);
 const labelLineStatus = () => {
-    const label = props.context.tool.isLable;
+    const label = props.context.tool.isLabel;
     const interval = props.context.selection.is_interval;
 
     isLabelLine.value = label || interval;

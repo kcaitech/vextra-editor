@@ -19,7 +19,7 @@ import { compare_layer_3 } from "./group_ungroup";
 import { get_symbolref_by_layer } from "./symbol";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context) {
-    if (!permIsEdit(context) || context.tool.isLable) {
+    if (!permIsEdit(context) || context.tool.isLabel) {
         return;
     }
     const { target, shiftKey } = e;

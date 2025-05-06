@@ -289,7 +289,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
             const index = contextMenuItems.value.has(MenuItemType.Component);
             if (index) contextMenuItems.value.delete(MenuItemType.Component);
         }
-        if (props.context.readonly || props.context.tool.isLable) {
+        if (props.context.readonly || props.context.tool.isLabel) {
             contextMenuItems.value.clear();
             contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Copy]);
         }
@@ -464,7 +464,7 @@ function after_drag(detail: DragDetail) {
 }
 
 const allow_to_drag = () => {
-    return !props.context.readonly && !props.context.tool.isLable;
+    return !props.context.readonly && !props.context.tool.isLabel;
 }
 
 const stopWatch = watch(() => props.page, () => {

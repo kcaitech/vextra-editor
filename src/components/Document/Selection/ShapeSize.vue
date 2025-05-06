@@ -32,7 +32,7 @@ const trans = ref({ x: 0, y: 0 });
 const rotate = ref(0);
 const isSizeBox = ref(false);
 const getShapePositionSize = () => {
-    if (!props.context.tool.isLable) {
+    if (!props.context.tool.isLabel) {
         return;
     }
     const shapes = props.context.selection.selectedShapes;
@@ -166,7 +166,7 @@ const workspaceUpdate = (t: number | string) => {
     }
 }
 const tool_watcher = (t: number) => {
-    if (t === Tool.LABLE_CHANGE) {
+    if (t === Tool.LABEL_CHANGE) {
         size_box_show();
         getShapePositionSize();
     }
@@ -196,7 +196,7 @@ const watcher = () => {
 }
 
 const size_box_show = () => {
-    const isLable = props.context.tool.isLable;
+    const isLable = props.context.tool.isLabel;
     const shapes = props.context.selection.selectedShapes;
     const isTrans = props.context.workspace.isTranslating;
     if (isLable && shapes.length > 0 && !isTrans) {

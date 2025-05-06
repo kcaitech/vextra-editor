@@ -154,7 +154,7 @@ function selection_watcher(type: number | string) {
 function tool_watcher(type: number) {
     if (type === Tool.CHANGE_ACTION) {
         modify_cursor();
-    } else if (type === Tool.LABLE_CHANGE) {
+    } else if (type === Tool.LABEL_CHANGE) {
         props.context.workspace.setPathEditMode(false);
     }
 }

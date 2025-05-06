@@ -127,7 +127,7 @@ const setVisible = (e: MouseEvent) => {
 const onRename = () => {
     if (is_state(props.data.shapeview())
         || props.data.context.readonly
-        || props.data.context.tool.isLable
+        || props.data.context.tool.isLabel
     ) {
         return;
     }
@@ -227,10 +227,10 @@ function mouseup(e: MouseEvent) {
     selectedChild();
 }
 
-const isLabel = ref(props.data.context.tool.isLable);
+const isLabel = ref(props.data.context.tool.isLabel);
 const tool_watcher = (t?: number) => {
-    if (t === Tool.LABLE_CHANGE) {
-        isLabel.value = props.data.context.tool.isLable;
+    if (t === Tool.LABEL_CHANGE) {
+        isLabel.value = props.data.context.tool.isLabel;
     }
 }
 

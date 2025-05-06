@@ -70,7 +70,7 @@ const tidyUp = () => {
 
 
 const hover_mousemove = (e: MouseEvent) => {
-    if (props.context.workspace.transforming || !permIsEdit(props.context) || props.context.tool.isLable) {
+    if (props.context.workspace.transforming || !permIsEdit(props.context) || props.context.tool.isLabel) {
         return isHover.value = false;
     }
     cursor_point.value = props.context.workspace.getContentXY(e);

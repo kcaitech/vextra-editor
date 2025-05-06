@@ -146,7 +146,7 @@ const setVisible = (e: MouseEvent) => {
 const onRename = () => {
     if (is_state(props.data.shape)
         || !isEdit
-        || props.data.context.tool.isLable
+        || props.data.context.tool.isLabel
         || props.data.shape.isVirtualShape) return;
     isInput.value = true
     nextTick(() => {
@@ -261,10 +261,10 @@ function icon_class() {
     }
 }
 
-const isLable = ref(props.data.context.tool.isLable);
+const isLable = ref(props.data.context.tool.isLabel);
 const tool_watcher = (t?: number) => {
-    if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.data.context.tool.isLable;
+    if (t === Tool.LABEL_CHANGE) {
+        isLable.value = props.data.context.tool.isLabel;
     }
 }
 

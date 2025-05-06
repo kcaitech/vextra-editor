@@ -146,7 +146,7 @@ function clearStatus() {
 function down(e: MouseEvent) {
     const context = props.context;
     const action = context.tool.action;
-    if (!permIsEdit(context) || context.tool.isLable) {
+    if (!permIsEdit(context) || context.tool.isLabel) {
         return;
     }
     if (e.button !== 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理

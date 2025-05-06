@@ -35,13 +35,13 @@ const props = defineProps<Props>();
 const selected = ref<string>(Action.AutoV);
 const is_path_edit = ref<boolean>(false);
 
-const isLabel = ref(props.context.tool.isLable);
+const isLabel = ref(props.context.tool.isLabel);
 
 function tool_watcher(t?: number) {
     if (t === Tool.CHANGE_ACTION) {
         selected.value = props.context.tool.action;
-    } else if (t === Tool.LABLE_CHANGE) {
-        isLabel.value = props.context.tool.isLable;
+    } else if (t === Tool.LABEL_CHANGE) {
+        isLabel.value = props.context.tool.isLabel;
     }
 }
 

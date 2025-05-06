@@ -135,7 +135,7 @@ export function modify_imgs(context: Context, media: Media[], upload_container?:
 }
 
 export function drop(e: DragEvent, context: Context) {
-    if (!permIsEdit(context) || context.tool.isLable) return;
+    if (!permIsEdit(context) || context.tool.isLabel) return;
     e.preventDefault();
     const data = e?.dataTransfer?.files as any;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) return;
@@ -431,31 +431,31 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
     const BASE_ITEM = ['all', 'copy', 'copyAs'];
     let contextMenuItems: string[] = []
     if (area === 'artboard') { // 点击在容器上
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'group') { // 点击在编组上
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'component') {
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'instance') {
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'controller') { // 点击在选区上
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container', 'forward', 'back', 'top', 'bottom'];
         } else {
             contextMenuItems = BASE_ITEM;
@@ -463,23 +463,23 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
 
         let types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
         if (types & 1) { // 存在容器
-            if (permIsEdit(context) && !context.tool.isLable) {
+            if (permIsEdit(context) && !context.tool.isLabel) {
                 contextMenuItems.push('dissolution');
             }
         }
         if (types & 2) { // 存在编组
-            if (permIsEdit(context) && !context.tool.isLable) {
+            if (permIsEdit(context) && !context.tool.isLabel) {
                 contextMenuItems.push('un_group');
             }
         }
         if (types & 4) { // 存在实例
             const shapes = context.selection.selectedShapes;
-            if (permIsEdit(context) && one_of_is_symbolref(shapes) && !context.tool.isLable) {
+            if (permIsEdit(context) && one_of_is_symbolref(shapes) && !context.tool.isLabel) {
                 contextMenuItems.push('instance');
             }
         }
         if (types & 8) { // 存在组件
-            if (permIsEdit(context) && !context.tool.isLable) {
+            if (permIsEdit(context) && !context.tool.isLabel) {
                 const index = contextMenuItems.findIndex((item) => item === 'component');
                 if (index > -1) contextMenuItems.splice(index, 1);
             }
@@ -492,13 +492,13 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             }
         }
     } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'text-selection') {
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             const selection = context.textSelection;
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text'];
@@ -509,7 +509,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'table') {
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             const selection = context.textSelection;
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
@@ -520,13 +520,13 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'table_cell') {
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             contextMenuItems = ['insert_column', 'delete_column', 'merge_cell'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else {
-        if (permIsEdit(context) && !context.tool.isLable) {
+        if (permIsEdit(context) && !context.tool.isLabel) {
             contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title', "cutout"];
         } else {
             contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title', "cutout"];

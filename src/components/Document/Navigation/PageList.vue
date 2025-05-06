@@ -67,7 +67,7 @@ const getPageName = () => {
     cur_page_name.value = name || t('navi.page');
 }
 
-const isLable = ref(props.context.tool.isLable);
+const isLable = ref(props.context.tool.isLabel);
 const rightTarget = ref<string>('');
 const pageList = ref<HTMLDivElement>()
 
@@ -203,7 +203,7 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     if (props.context.data.pagesList.length === 1) {
         pageMenuItems[3].disable = true;
     }
-    if (props.context.readonly || props.context.tool.isLable) {
+    if (props.context.readonly || props.context.tool.isLabel) {
         pageMenuItems = [
             { name: 'copy_link', id: id, disable: false },
         ]
@@ -293,12 +293,12 @@ function navi_watcher(t?: number) {
 }
 
 const tool_watcher = (t?: number) => {
-    if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.context.tool.isLable;
+    if (t === Tool.LABEL_CHANGE) {
+        isLable.value = props.context.tool.isLabel;
     }
 }
 const allow_to_drag = () => {
-    return !props.context.readonly && !props.context.tool.isLable;
+    return !props.context.readonly && !props.context.tool.isLabel;
 }
 const scrollList = (index: number) => {
     const itemScrollH = index * 32;

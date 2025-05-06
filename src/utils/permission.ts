@@ -12,5 +12,5 @@
 import { Context } from "@/context";
 
 export const permIsEdit = (context: Context) => {
-    return Boolean(!context.readonly && !context.tool.isLable);
+    return Boolean(!context.readonly && !context.tool.isLabel);
 }

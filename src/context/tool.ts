@@ -10,7 +10,6 @@
 
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
-// import { Comment } from "./comment";
 import { ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
 import { XY } from "@/context/selection";
 import { ContextEvents } from "@/openapi";
@@ -57,7 +56,7 @@ const A2R = new Map([
     [Action.Star, ShapeType.Star],
 ]);
 
-export const ResultByAction = (action: string): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
+export const ResultByAction = (action: string): ShapeType | undefined => A2R.get(action);
 
 export interface Block {
     dataStart: number; // 刻度值
@@ -78,7 +77,7 @@ export class Tool extends WatchableObject {
     static INSERT_FRAME = 6;
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
-    static LABLE_CHANGE = 12;
+    static LABEL_CHANGE = 12;
     static NEW_FILE = 9;
     static COMPONENT = 10;
     static SELECT_IMAGE = 11;
@@ -98,7 +97,7 @@ export class Tool extends WatchableObject {
     private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
     private m_contact_apex: ShapeView | undefined;
     private m_contact_from: boolean = false;
-    private m_lable_status: boolean = false;
+    private m_label_status: boolean = false;
     private m_cutout_visible = true;
 
     constructor(context: Context) {
@@ -199,13 +198,13 @@ export class Tool extends WatchableObject {
         this.m_contact_from = v;
     }
 
-    get isLable() {
-        return this.m_lable_status;
+    get isLabel() {
+        return this.m_label_status;
     }
 
-    setLableSwitch(v: boolean) {
-        this.m_lable_status = v;
-        this.notify(Tool.LABLE_CHANGE);
+    setLabelSwitch(v: boolean) {
+        this.m_label_status = v;
+        this.notify(Tool.LABEL_CHANGE);
     }
 
     private m_refer_selection: ReferLineSelection | undefined;

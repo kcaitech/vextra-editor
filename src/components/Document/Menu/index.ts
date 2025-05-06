@@ -162,7 +162,7 @@ export function getArea(context: Context, e: MouseEvent) {
 export function getMenuItems(context: Context, event: MouseEvent, area: MountedAreaType) {
     const BASE_ITEM = [MenuItemType.All, MenuItemType.Copy, MenuItemType.CopyAs];
     const positivePermission = !context.readonly;
-    const lable = context.tool.isLable;
+    const lable = context.tool.isLabel;
 
     const positive = positivePermission && !lable;
 

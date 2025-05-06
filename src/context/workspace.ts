@@ -335,7 +335,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         return e.button === 0
             && shapes.length > 0
             && (action === Action.AutoV || action === Action.AutoK)
-            && !this.context.tool.isLable
+            && !this.context.tool.isLabel
             && !this.isEditing;
     }
 

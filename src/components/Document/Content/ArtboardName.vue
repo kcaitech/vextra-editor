@@ -41,7 +41,7 @@ let translate2: Translate2 | undefined = undefined;
 let startPosition: XY = { x: 0, y: 0 };
 
 const onRename = () => {
-    if (!permIsEdit(props.context) || props.context.tool.isLable) return;
+    if (!permIsEdit(props.context) || props.context.tool.isLabel) return;
 
     isInput.value = true
     nextTick(() => {
@@ -140,7 +140,7 @@ function down(e: MouseEvent) {
             }
         }
 
-        if (context.tool.isLable) return;
+        if (context.tool.isLabel) return;
 
         startPosition = { x: e.x, y: e.y };
         translate2 = new Translate2(context, e, context.selection.selectedShapes);

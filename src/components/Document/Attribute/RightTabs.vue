@@ -41,7 +41,7 @@ const tabs: { title: string, id: Tab }[] = [
         id: 'Prototype'
     }
 ];
-const isLable = ref(props.context.tool.isLable);
+const isLable = ref(props.context.tool.isLabel);
 
 function toggle(id: Tab) {
     currentTab.value = id;
@@ -77,8 +77,8 @@ function updateUnderlinePosition() {
     underlinePosition.value = left + width / 2;
 }
 const tool_watcher = (t: number) => {
-    if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.context.tool.isLable;
+    if (t === Tool.LABEL_CHANGE) {
+        isLable.value = props.context.tool.isLabel;
     }
 }
 const menu_watcher = (t: number) => {

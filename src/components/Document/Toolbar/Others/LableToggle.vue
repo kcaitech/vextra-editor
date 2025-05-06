@@ -24,10 +24,10 @@ const props = defineProps<Props>();
 const isLable = ref(false);
 const visible = ref(false)
 const vis = ref(false);
-const isActive = ref(props.context.tool.isLable);
+const isActive = ref(props.context.tool.isLabel);
 const input = ref<HTMLInputElement>();
 watch(isActive, (v) => {
-    props.context.tool.setLableSwitch(v);
+    props.context.tool.setLabelSwitch(v);
     vis.value = true;
     const active = props.context.tool.action;
     if (!v || active === Action.AutoV /* || active === Action.AddComment */) return;

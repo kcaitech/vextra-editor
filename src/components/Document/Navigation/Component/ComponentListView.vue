@@ -80,7 +80,7 @@ function down(e: MouseEvent, shape: Shape) {
 function move(e: MouseEvent) {
     if (
         props.context.readonly
-        || props.context.tool.isLable
+        || props.context.tool.isLabel
     ) {
         return;
     }

@@ -28,7 +28,7 @@ import { hidden_selection, selectShapes } from './content';
 // import { Perm } from '@/context/workspace';
 // import { permIsEdit } from './permission';
 export const permIsEdit = (context: Context) => {
-    return Boolean(!context.readonly && !context.tool.isLable);
+    return Boolean(!context.readonly && !context.tool.isLabel);
 }
 
 // 打印
