@@ -350,6 +350,11 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (!permIsEdit(context)) return;
     const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl && event.shiftKey && event.altKey) {
+        event.preventDefault();
+        context.editor4Page(context.selection.selectedPage!).adapt(context.selection.selectedShapes);
+        return;
+    }
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
         new Clipboard(context).replace(); // 替换图形
