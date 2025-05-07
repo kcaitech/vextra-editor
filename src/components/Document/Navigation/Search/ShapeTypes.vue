@@ -45,37 +45,8 @@ const template: SelectedItem[] = Array.from(Object.values(ShapeType)).filter(i =
         selected: false,
         type: type as ShapeType,
     }
-})
-//     [
-//   {
-//     selected: false,
-//       type: ShapeType.Artboard
-//   },
-//   {
-//     selected: false,
-//       type: ShapeType.Group
-//   },
-//   {
-//     selected: false,
-//       type: ShapeType.Rectangle
-//   },
-//   {
-//     selected: false,
-//       type: ShapeType.Oval
-//   },
-//   {
-//     selected: false,
-//       type: ShapeType.Line
-//   },
-//   {
-//     selected: false,
-//       type: ShapeType.Text
-//   },
-//   {
-//     selected: false,
-//       type: ShapeType.Image
-//   }
-// ]
+});
+
 function check(index: number, e: MouseEvent) {
   const is_ed = all_types.value[index].selected
   all_types.value[index].selected = !is_ed;

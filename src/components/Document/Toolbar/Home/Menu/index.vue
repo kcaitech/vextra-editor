@@ -12,6 +12,7 @@
 import { nextTick, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import menu_icon from '@/assets/icons/svg/menu.svg';
 import ExportVue from "./Export.vue"
 import ExportDocView from "./ExportDoc.vue"
 
@@ -74,7 +75,6 @@ onUnmounted(() => {
     stop();
     document.removeEventListener('click', onMenuBlur);
 })
-import menu_icon from '@/assets/icons/svg/menu.svg';
 </script>
 <template>
 <div class="icon-for-trigger" :class="{ active: popoverVisible }" @click="showMenu" ref="trigger">
