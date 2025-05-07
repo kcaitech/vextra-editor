@@ -22,6 +22,7 @@ import {
     FillType,
     GeneratorParams,
     GroupShapeView,
+    MarkerType,
     Matrix,
     ShapeFrame,
     ShapeType,
@@ -573,6 +574,11 @@ export class CreatorExecute extends TransformHandler {
             if (!this.namePrefix) {
                 this.namePrefix = this.workspace.t(`shape.${type}`);
             }
+
+            if (this.action === Action.AddArrow) {
+                this.namePrefix = this.workspace.t('shape.arrow');
+            }
+
             const namePrefix = this.namePrefix!;
 
             const targetTransform = this.getTargetTransform(this.downEnv, frame);
@@ -593,16 +599,12 @@ export class CreatorExecute extends TransformHandler {
 
             const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
 
-            if (!shape) {
-                return;
-            }
+            if (!shape) return;
 
             const selection = this.context.selection;
             this.context.nextTick(selection.selectedPage!, () => {
                     this.shape = selection.selectedPage!.getShape(shape.id);
-                    if (!this.shape) {
-                        return;
-                    }
+                    if (!this.shape) return;
                     this.context.assist.set_trans_target([(this.shape)]);
                     selection.selectShape(this.shape);
                 }
@@ -777,7 +779,7 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private getTargetTransform(env: ShapeView, frame: ShapeFrame) {
-        const envFromRoot = (env.matrix2Root());
+        const envFromRoot = env.matrix2Root();
 
         const selectionTransform = new Transform()
             .setTranslate(ColVector3D.FromXY(frame.x, frame.y));
