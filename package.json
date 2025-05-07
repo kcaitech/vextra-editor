@@ -13,9 +13,8 @@
     "scripts": {
         "dev": "cross-env NODE_ENV=development vite build --mode development --watch",
         "client": "cross-env IS_DEV_SERVER=1 vite dev --mode development --config vite.client.config.ts",
-        "build-main": "vite build",
         "build-proto": "vite build --config ./vite.proto.config.ts",
-        "build": "npm run build-main & npm run build-proto",
+        "build": "vite build",
         "doc": "typedoc --options ./typedoc.json",
         "test": "jest",
         "test:watch": "jest --watch"
