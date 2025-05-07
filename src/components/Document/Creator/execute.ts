@@ -612,10 +612,10 @@ export class CreatorExecute extends TransformHandler {
         } else {
             const _start = { x: this.fixedPoint.x, y: this.fixedPoint.y + 0.5 };
 
-            let m = (this.shape.matrix2Root());
+            let m = this.shape.matrix2Root();
             m.preScale(this.frame.width, this.frame.height); // 可有可无
 
-            m = (m.inverse);
+            m = m.inverse;
 
             const living = { ...this.livingPoint };
             if (this.alignPixel) {
@@ -737,9 +737,7 @@ export class CreatorExecute extends TransformHandler {
 
         const type = ResultByAction(this.action);
 
-        if (!type) {
-            return;
-        }
+        if (!type) return;
 
         const namePrefix = this.workspace.t(`shape.${type}`);
 
@@ -886,9 +884,7 @@ export class CreatorExecute extends TransformHandler {
                 selection.selectedPage!,
                 () => {
                     const __s = selection.selectedPage!.getShape(shape.id);
-                    if (!__s) {
-                        return;
-                    }
+                    if (!__s) return;
                     selection.selectShape(__s);
                 }
             );
