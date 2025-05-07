@@ -21,11 +21,8 @@ import {
     ShapeView,
     GroupShapeView,
     Transform,
-    TextShapeView
 } from "@kcdesign/data";
 import { Action } from "@/context/tool";
-import { CursorType } from "@/utils/cursor";
-import { WorkSpace } from "@/context/workspace";
 
 export type Segment = {
     type: 'straight' | 'curve';
