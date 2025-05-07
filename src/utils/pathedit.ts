@@ -10,8 +10,22 @@
 
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { ContactLineView, CurveMode, CurvePoint, Matrix, PathShapeView, PathType, ShapeType, ShapeView, GroupShapeView, Transform } from "@kcdesign/data";
+import {
+    ContactLineView,
+    CurveMode,
+    CurvePoint,
+    Matrix,
+    PathShapeView,
+    PathType,
+    ShapeType,
+    ShapeView,
+    GroupShapeView,
+    Transform,
+    TextShapeView
+} from "@kcdesign/data";
 import { Action } from "@/context/tool";
+import { CursorType } from "@/utils/cursor";
+import { WorkSpace } from "@/context/workspace";
 
 export type Segment = {
     type: 'straight' | 'curve';
@@ -424,12 +438,16 @@ export function enter_path_edit_mode(context: Context, event: KeyboardEvent) {
         } else {
             if (!shape.pathType || shape.isVirtualShape || shape instanceof ContactLineView) return;
             context.tool.setAction(Action.AutoV);
-            context.workspace.setPathEditMode(true); // --开启对象编辑
-            context.escstack.save('path-edit', () => {
-                const al = context.workspace.is_path_edit_mode;
-                context.workspace.setPathEditMode(false);
-                return al
-            });
+            if (context.workspace.is_path_edit_mode) {
+                context.workspace.setPathEditMode(false); // --关闭对象编辑
+            } else {
+                context.workspace.setPathEditMode(true); // --开启对象编辑
+                context.escstack.save('path-edit', () => {
+                    const al = context.workspace.is_path_edit_mode;
+                    context.workspace.setPathEditMode(false);
+                    return al
+                });
+            }
         }
     } else {
         const target: ShapeView[] = [];
