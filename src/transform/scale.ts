@@ -126,6 +126,10 @@ export class ScaleHandler extends BoundHandler {
             this.altStatus = true;
             this.passiveExecute();
         }
+        if (event.ctrlKey || event.metaKey) {
+            this.ctrlStatus = true;
+            this.passiveExecute();
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -135,6 +139,10 @@ export class ScaleHandler extends BoundHandler {
         }
         if (event.code === "AltLeft") {
             this.altStatus = false;
+            this.passiveExecute();
+        }
+        if (event.code === "ControlLeft" || event.code === "MetaLeft") {
+            this.ctrlStatus = false;
             this.passiveExecute();
         }
     }
@@ -421,12 +429,11 @@ export class ScaleHandler extends BoundHandler {
     }
 
     private __execute() {
-        if (this.context.tool.action === Action.AutoV) this.__execute_normal();
+        if (this.context.tool.action === Action.AutoV) this.__execute_with_options();
         else if (this.context.tool.action === Action.AutoK) this.__execute_uniform();
     }
 
-    private __execute_normal() {
-
+    private __execute_with_options() {
         if (!this.shapes.length) return;
 
         // 光标在选区坐标系下的坐标
@@ -682,7 +689,6 @@ export class ScaleHandler extends BoundHandler {
             units.push({ shape, size, transform2: t, scale: __scale, w_change, h_change });
         });
 
-
         if (this.alignPixel) {
             for (const unit of units) {
                 const { size, transform2, scale } = unit;
@@ -715,7 +721,11 @@ export class ScaleHandler extends BoundHandler {
         }
 
         // 更新shape
-        (this.asyncApiCaller as Scaler).execute(units);
+        if (this.ctrlStatus) {
+            (this.asyncApiCaller as Scaler).executeWithoutConstraint(units);
+        } else {
+            (this.asyncApiCaller as Scaler).execute(units);
+        }
 
         this.updateCtrlView(1);
     }
@@ -874,6 +884,7 @@ export class ScaleHandler extends BoundHandler {
             const t = transform.clone()
                 .addTransform(transformForSelection)
                 .addTransform(inverseCache.get(shape.parent!)!);
+
 
             const scale = t.decomposeScale();
             const oSize = sizes[i] as ShapeSize;

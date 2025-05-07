@@ -31,6 +31,7 @@ export class TransformHandler {
 
     shiftStatus: boolean = false;
     altStatus: boolean = false;
+    ctrlStatus: boolean = false;
     alignPixel: boolean;
 
     asyncApiCaller: AsyncApiCaller | undefined;
@@ -44,6 +45,7 @@ export class TransformHandler {
         if (event) {
             this.shiftStatus = event.shiftKey;
             this.altStatus = event.altKey;
+            this.ctrlStatus = event.ctrlKey || event.metaKey;
         }
 
         this.alignPixel = context.user.isPixelAlignMent;
