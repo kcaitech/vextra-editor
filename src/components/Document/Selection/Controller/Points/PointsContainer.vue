@@ -105,8 +105,8 @@ function updateDotLayout() {
     const shape = props.shape;
     const { x, y, width, height } = shape.frame;
 
-    const clientMatrix = (props.context.workspace.matrix);
-    const fromRoot = (shape.matrix2Root());
+    const clientMatrix = props.context.workspace.matrix;
+    const fromRoot = shape.matrix2Root();
 
     const fromClient = fromRoot.addTransform(clientMatrix);
 
@@ -140,7 +140,7 @@ function updateDotLayout() {
     dots.push(
         {
             type: CtrlElementType.RectLT,
-            transform: (ltTransform).toString(), // 随时准备换回去
+            transform: (ltTransform).toString(),
         },
         {
             type: CtrlElementType.RectRT,

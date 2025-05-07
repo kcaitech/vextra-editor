@@ -43,7 +43,7 @@ import {
 import { v4 } from "uuid";
 import { menu_locate2 } from "@/utils/common";
 import { one_of_is_symbolref } from "@/utils/symbol";
-import { locateShape } from "@/transform/locate";
+import { locateShape } from "@/space/locate";
 import { MenuItemType } from "../Menu";
 
 type List = InstanceType<typeof ListView>;
@@ -86,7 +86,7 @@ class Iter implements IDataIter<ItemData> {
             shape: () => {
                 return _shape;
             },
-            shapeview: () => {
+            view: () => {
                 return shape
             },
             selected: props.context.selection.isSelectedShape(shape.id),
@@ -221,7 +221,6 @@ const modify_visible_status = (shape: ShapeView) => {
 }
 
 function shapeScrollToContentView(shape: ShapeView) {
-    // scroll_to_view(props.context, shape);
     locateShape(props.context, shape);
 }
 

@@ -35,7 +35,7 @@ import masked_by_icon from "@/assets/icons/svg/masked-by.svg";
 export interface ItemData {
     id: string
     shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
-    shapeview: () => ShapeView
+    view: () => ShapeView
     selected: boolean
     expand: boolean
     level: number
@@ -81,31 +81,31 @@ const watchedShapes = new Map();
 const shapeItem = ref<HTMLDivElement | null>(null);
 const t = useI18n().t;
 const symbol_c = computed<boolean>(() => {
-    return is_component_class(props.data.shapeview());
+    return is_component_class(props.data.view());
 })
 const abbr_view = ref<number>(0);
-const maskView = ref<boolean>(!!props.data.shapeview().masked);
+const maskView = ref<boolean>(!!props.data.view().masked);
 
 function toggleExpand(e: Event) {
     if (!showTriangle.value) return;
     e.stopPropagation();
-    emits("toggleexpand", props.data.shapeview());
+    emits("toggleexpand", props.data.view());
 }
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation();
     props.data.context.navi.set_phase('');
-    emits('scrolltoview', props.data.shapeview());
+    emits('scrolltoview', props.data.view());
 }
 const fitToggleContainer = (e: MouseEvent) => {
     e.stopPropagation();
-    props.data.context.navi.set_phase(props.data.shapeview().id);
-    emits('scrolltoview', props.data.shapeview());
+    props.data.context.navi.set_phase(props.data.view().id);
+    emits('scrolltoview', props.data.view());
 }
 
 function hoverShape(e: MouseEvent) {
     if (e.buttons !== 0) return;
-    emits("hovershape", props.data.shapeview());
+    emits("hovershape", props.data.view());
     is_tool_visible.value = true;
 }
 
@@ -118,14 +118,14 @@ function unHoverShape(e: MouseEvent) {
 
 const setLock = (e: MouseEvent) => {
     e.stopPropagation();
-    emits('set-lock', props.data.shapeview())
+    emits('set-lock', props.data.view())
 }
 const setVisible = (e: MouseEvent) => {
     e.stopPropagation();
-    emits('set-visible', props.data.shapeview());
+    emits('set-visible', props.data.view());
 }
 const onRename = () => {
-    if (is_state(props.data.shapeview())
+    if (is_state(props.data.view())
         || props.data.context.readonly
         || props.data.context.tool.isLabel
     ) {
@@ -134,7 +134,7 @@ const onRename = () => {
     isInput.value = true
     nextTick(() => {
         if (!nameInput.value) return;
-        (nameInput.value as HTMLInputElement).value = props.data.shapeview().name.trim();
+        (nameInput.value as HTMLInputElement).value = props.data.view().name.trim();
         nameInput.value.focus();
         nameInput.value.select();
         nameInput.value?.addEventListener('blur', stopInput);
@@ -150,7 +150,7 @@ const onChangeName = (e: Event) => {
     if (value.length === 0 || value.length > 40 || value.trim().length === 0) {
         return
     }
-    emits('rename', value, props.data.shapeview());
+    emits('rename', value, props.data.view());
 }
 
 const stopInput = () => {
@@ -178,7 +178,7 @@ const onInputBlur = (e: MouseEvent) => {
     }
 }
 const selectedChild = () => {
-    let parent = props.data.shapeview().parent
+    let parent = props.data.view().parent
     let child
     while (parent) {
         if (parent.type === ShapeType.Page) {
@@ -197,7 +197,7 @@ const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
     shutdown_menu(e, props.data.context);
     if (e.button === 0) {
-        const shape = props.data.shapeview();
+        const shape = props.data.view();
         const { ctrlKey, metaKey, shiftKey } = e;
         const selected = props.data.context.selection.selectedShapes;
         if (selected.length > 1) {
@@ -210,7 +210,7 @@ const mousedown = (e: MouseEvent) => {
         emits("selectshape", shape, ctrlKey || metaKey, shiftKey);
         selectedChild();
     } else if (e.button === 2) {
-        emits('item-mousedown', e, props.data.shapeview())
+        emits('item-mousedown', e, props.data.view())
         selectedChild();
     }
 }
@@ -223,7 +223,7 @@ function mouseup(e: MouseEvent) {
     if (props.data.context.navi.is_item_dragging || e.metaKey || e.shiftKey || e.ctrlKey) {
         return;
     }
-    emits("selectshape", props.data.shapeview(), false, false);
+    emits("selectshape", props.data.view(), false, false);
     selectedChild();
 }
 
@@ -235,7 +235,7 @@ const tool_watcher = (t?: number) => {
 }
 
 function is_group() {
-    return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(props.data.shapeview().type);
+    return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(props.data.view().type);
 }
 
 function _updateAbbrView() {
@@ -248,16 +248,16 @@ function parentWatcher(...args: any[]) {
     if (args.includes('mask-env-change')) updater(...args)
 }
 
-let parent = props.data.shapeview().parent;
+let parent = props.data.view().parent;
 parent && parent.watch(parentWatcher);
 
 function updater(...args: any[]) {
     if (args.includes('mask-env-change')) {
         props.data.context.nextTick(props.data.context.selection.selectedPage!, () => {
-            maskView.value = !!props.data.shapeview().masked;
-            if (props.data.shapeview().parent?.id !== parent?.id) {
+            maskView.value = !!props.data.view().masked;
+            if (props.data.view().parent?.id !== parent?.id) {
                 parent?.unwatch(parentWatcher);
-                parent = props.data.shapeview().parent;
+                parent = props.data.view().parent;
                 parent?.watch(parentWatcher);
             }
         })
@@ -266,7 +266,7 @@ function updater(...args: any[]) {
     if (args.includes('mask') || args.includes('fills') || args.includes('autoLayout')) return _updateAbbrView();
     if (args.includes('size') || args.includes('points')) return update_abbr_view();
 
-    const shape = props.data.shapeview();
+    const shape = props.data.view();
 
     const data = shape.data;
 
@@ -280,14 +280,14 @@ function updater(...args: any[]) {
 let oldShape: ShapeView | undefined;
 const stop = watch(() => props.data, () => {
     oldShape && oldShape.unwatch(updater);
-    oldShape = props.data.shapeview();
+    oldShape = props.data.view();
     oldShape.watch(updater);
     watchShapes();
 }, { immediate: true })
 
 function watchShapes() {
     const needWatchShapes = new Map();
-    let shape = props.data.shapeview();
+    let shape = props.data.view();
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
         if (!p.__watcher.has(updater)) {
@@ -350,7 +350,7 @@ const selectedWatcher = (t?: any) => {
     }
 }
 const getHovered = () => {
-    const shape = props.data.shapeview();
+    const shape = props.data.view();
     const hoverShape = props.data.context.selection.hoveredShape;
     hovered.value = Boolean(hoverShape && shape.id === hoverShape.id);
 }
@@ -359,7 +359,7 @@ const navi_watcher = (t: number) => {
         if (!showTriangle.value || !props.data.expand) {
             return;
         }
-        emits("toggleexpand", props.data.shapeview());
+        emits("toggleexpand", props.data.view());
     } else if (t === Navi.RENAME) {
         if (props.data.selected) {
             if (props.data.context.selection.selectedShapes.length === 1) {
@@ -427,11 +427,11 @@ onUnmounted(() => {
          @dblclick="fitToggleContainer"
          :style="{ opacity: visible_status ? 0.3 : 1 }"
     >
-        <Abbr :view="abbr_view" :shape="data.shapeview()" :theme="symbol_c ? '#7f58f9' : '#595959'"/>
+        <Abbr :view="abbr_view" :shape="data.view()" :theme="symbol_c ? '#7f58f9' : '#595959'"/>
     </div>
     <!-- 内容描述 -->
     <div class="text" :style="{ display: isInput ? 'none' : '', opacity: !visible_status ? 1 : .3 }">
-        <div class="txt" @dblclick="onRename">{{ get_name(props.data.shapeview(), t('compos.dlt')) }}</div>
+        <div class="txt" @dblclick="onRename">{{ get_name(props.data.view(), t('compos.dlt')) }}</div>
         <div class="tool_icon" @mousedown.stop
              :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
             <div class="tool_lock tool" @click="toggleContainer" @dblclick="fitToggleContainer">
