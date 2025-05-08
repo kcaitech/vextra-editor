@@ -792,6 +792,11 @@ keydownHandler['Delete'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['BracketRight'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl && event.shiftKey && permIsEdit(context)) {
+        event.preventDefault();
+        upper_layer(context);
+        return;
+    }
     if (is_ctrl) {
         event.preventDefault();
         if (!permIsEdit(context)) {
@@ -800,13 +805,15 @@ keydownHandler['BracketRight'] = function (event: KeyboardEvent, context: Contex
         upper_layer(context, 1);
         return;
     }
-    event.preventDefault();
-    if (!permIsEdit(context)) return;
-    upper_layer(context);
 }
 
 keydownHandler['BracketLeft'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl && event.shiftKey && permIsEdit(context)) {
+        event.preventDefault();
+        lower_layer(context);
+        return;
+    }
     if (is_ctrl) {
         event.preventDefault();
         if (!permIsEdit(context)) {
@@ -815,9 +822,6 @@ keydownHandler['BracketLeft'] = function (event: KeyboardEvent, context: Context
         lower_layer(context, 1);
         return;
     }
-    event.preventDefault();
-    if (!permIsEdit(context)) return;
-    lower_layer(context);
 }
 keydownHandler['Equal'] = function (event: KeyboardEvent, context: Context) {
     // todo 缩放页面视图
