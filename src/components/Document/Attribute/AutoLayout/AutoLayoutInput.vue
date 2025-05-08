@@ -45,6 +45,8 @@ interface Emits {
     (e: "showMenu", v: boolean): void;
 
     (e: "changeItem", value: StackSizing): void;
+
+    (e: "keydown", event: KeyboardEvent): void;
 }
 
 const props = defineProps<Props>();
@@ -138,6 +140,10 @@ const close = () => {
     document.removeEventListener('click', handleClick);
 }
 
+const keydown = (event: KeyboardEvent) => {
+    emits('keydown', event);
+}
+
 const changeItem = (v: StackSizing) => {
     emits('showMenu', false);
     emits('changeItem', v);
@@ -183,7 +189,7 @@ const selectedTop = (item: string | number) => {
             </div>
         </Tooltip>
         <input :disabled="disabled" :style="{ opacity: draggable ? '0.4' : '1' }" ref="inputEl" :value="value"
-            @click="click" @change="change" @blur="blur" @focus="foucs" />
+               @click="click" @change="change" @blur="blur" @focus="foucs" @keydown="keydown"/>
         <div class="layout-menu-svg" v-if="isMenu" @click.stop="showMenu">
             <SvgIcon :icon="down_icon" />
         </div>

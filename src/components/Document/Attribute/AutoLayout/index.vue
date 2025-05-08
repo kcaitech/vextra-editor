@@ -269,14 +269,13 @@ function dragstart(e: MouseEvent) {
 function draggingHorSpace(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
-    if (!autoLayoutModifyHandler) {
-        return
-    }
+    if (!autoLayoutModifyHandler) return;
 
     if (!autoLayoutModifyHandler.asyncApiCaller) {
         autoLayoutModifyHandler.createApiCaller();
     }
-    const shape = props.context.selection.selectedShapes[0] as ArtboardView;
+
+    const shape = props.context.selection.selectedShapes[0];
     const autoLayout = shape.autoLayout;
     if (!autoLayout) return;
     let space = e.movementX;
@@ -287,9 +286,7 @@ function draggingHorSpace(e: MouseEvent) {
 function draggingVerSpace(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
-    if (!autoLayoutModifyHandler) {
-        return
-    }
+    if (!autoLayoutModifyHandler) return;
 
     if (!autoLayoutModifyHandler.asyncApiCaller) {
         autoLayoutModifyHandler.createApiCaller();
@@ -299,9 +296,7 @@ function draggingVerSpace(e: MouseEvent) {
     if (!autoLayout) return;
     let space = e.movementX;
     space += autoLayout.stackCounterSpacing;
-    if (autoLayout.stackMode !== StackMode.Vertical && space < 0) {
-        space = 0;
-    }
+    if (autoLayout.stackMode !== StackMode.Vertical && space < 0) space = 0;
     autoLayoutModifyHandler.executeSpace(space, 'ver');
 }
 
@@ -449,6 +444,58 @@ const isLayout = () => {
     }
 }
 
+function keydownHorSpace(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        event.preventDefault();
+        const offset = event.code === 'ArrowUp' ? 1 : -1;
+        const views = props.context.selection.selectedShapes.filter(i => i.autoLayout);
+        linearApi.modifyAutoLayoutSpace(views, 'hor', views[0].autoLayout!.stackSpacing + offset);
+    }
+}
+
+function keydownVerSpace(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        event.preventDefault();
+        const offset = event.code === 'ArrowUp' ? 1 : -1;
+        const views = props.context.selection.selectedShapes.filter(i => i.autoLayout);
+        const autoLayout = views[0].autoLayout!;
+        const space = autoLayout.stackCounterSpacing + offset;
+        const value = autoLayout.stackMode !== StackMode.Vertical && space < 0 ? 0 : space;
+        linearApi.modifyAutoLayoutSpace(views, 'ver', value);
+    }
+}
+
+function keydownPadding(event: KeyboardEvent, dir: PaddingDir) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        event.preventDefault();
+        const views = props.context.selection.selectedShapes.filter(i => i.autoLayout);
+        const autoLayout = views[0].autoLayout!;
+        let offset = event.code === 'ArrowUp' ? 1 : -1;
+
+        if (dir === 'hor') {
+            const h = offset + autoLayout.stackHorizontalPadding;
+            const r = offset + autoLayout.stackPaddingRight;
+            linearApi.modifyAutoLayoutHorPadding(views, h, r);
+        } else if (dir === 'ver') {
+            const v = offset + autoLayout.stackVerticalPadding;
+            const b = offset + autoLayout.stackPaddingBottom;
+            linearApi.modifyAutoLayoutVerPadding(views, v, b);
+        } else {
+            let value: number;
+            if (dir === 'top') {
+                value = offset + autoLayout.stackVerticalPadding;
+            } else if (dir === 'left') {
+                value = offset + autoLayout.stackHorizontalPadding;
+            } else if (dir === 'right') {
+                value = offset + autoLayout.stackPaddingRight;
+            } else {
+                value = offset + autoLayout.stackPaddingBottom;
+            }
+            linearApi.modifyAutoLayoutPadding(views, dir, value);
+        }
+    }
+}
+
 const stopList = [
     watch(() => isActive.value, () => {
         updateData();
@@ -511,24 +558,25 @@ onUnmounted(() => {
                         </Tooltip>
                     </div>
                 </div>
-                <div class="hor" v-if="autoLayoutDate.stackMode !== StackMode.Vertical">
+                <div v-if="autoLayoutDate.stackMode !== StackMode.Vertical" class="hor">
                     <AutoLayoutInput :icon="hor_space_icon" :isMenu="true" :show="horSpaceMenu" name="hor_gap"
                         :draggable="autoLayoutDate.stackHorizontalGapSizing === StackSizing.Auto"
                         :item="autoLayoutDate.stackSpacing"
                         :value="autoLayoutDate.stackHorizontalGapSizing === StackSizing.Auto ? t(`autolayout.${StackSizing.Auto}`) : autoLayoutDate.stackSpacing"
                                      @change="changeHorSpace" @showMenu="showHorSpaceMenu" @dragstart="dragstart"
-                                     @dragging="draggingHorSpace" @dragend="dragend"
+                                     @dragging="draggingHorSpace" @dragend="dragend" @keydown="keydownHorSpace"
                                      @changeItem="(v) => changeGapSizing(v, 'hor')"/>
                 </div>
-                <div class="ver"
-                    v-if="!autoLayoutDate.stackWrap || autoLayoutDate.stackMode === StackMode.Vertical || autoLayoutDate.stackWrap === StackWrap.Wrap">
+                <div
+                    v-if="!autoLayoutDate.stackWrap || autoLayoutDate.stackMode === StackMode.Vertical || autoLayoutDate.stackWrap === StackWrap.Wrap"
+                    class="ver">
                     <AutoLayoutInput :icon="ver_space_icon" :isMenu="true" :show="verSpaceMenu" name="ver_gap"
                         :draggable="autoLayoutDate.stackVerticalGapSizing === StackSizing.Auto"
                         :item="autoLayoutDate.stackCounterSpacing"
                         :value="autoLayoutDate.stackVerticalGapSizing === StackSizing.Auto ? t(`autolayout.${StackSizing.Auto}`) : autoLayoutDate.stackCounterSpacing"
                                      @change="changeVorSpace" @showMenu="showVerSpaceMenu" @dragstart="dragstart"
                                      @dragging="draggingVerSpace" @dragend="dragend"
-                                     @changeItem="(v) => changeGapSizing(v, 'ver')"/>
+                                     @changeItem="(v) => changeGapSizing(v, 'ver')" @keydown="keydownVerSpace"/>
                 </div>
             </div>
             <div class="container-center">
@@ -548,20 +596,24 @@ onUnmounted(() => {
                     :name="unfold ? 'left_padding' : 'hor_padding'"
                     :value="unfold ? autoLayoutDate.stackHorizontalPadding : paddingValue(autoLayoutDate.stackHorizontalPadding, autoLayoutDate.stackPaddingRight)"
                     @change="(v) => changePadding(v, unfold ? 'left' : 'hor')" @dragstart="dragstart"
-                                 @dragging="(e) => draggingPadding(e, unfold ? 'left' : 'hor')" @dragend="dragend"/>
+                                 @dragging="(e) => draggingPadding(e, unfold ? 'left' : 'hor')" @dragend="dragend"
+                                 @keydown="(e) => keydownPadding(e, unfold ? 'left' : 'hor')"/>
                 <AutoLayoutInput v-if="unfold" :icon=right_padding_icon :value="autoLayoutDate.stackPaddingRight"
                     name="right_padding" @change="(v) => changePadding(v, 'right')" @dragstart="dragstart"
-                                 @dragging="(e) => draggingPadding(e, 'right')" @dragend="dragend"/>
+                                 @dragging="(e) => draggingPadding(e, 'right')" @dragend="dragend"
+                                 @keydown="(e) => keydownPadding(e, 'right')"/>
             </div>
             <div class="container-input">
                 <AutoLayoutInput :icon="unfold ? top_padding_icon : ver_padding_icon"
                     :name="unfold ? 'top_padding' : 'ver_padding'"
                     :value="unfold ? autoLayoutDate.stackVerticalPadding : paddingValue(autoLayoutDate.stackVerticalPadding, autoLayoutDate.stackPaddingBottom)"
                     @change="(v) => changePadding(v, unfold ? 'top' : 'ver')" @dragstart="dragstart"
-                                 @dragging="(e) => draggingPadding(e, unfold ? 'top' : 'ver')" @dragend="dragend"/>
+                                 @dragging="(e) => draggingPadding(e, unfold ? 'top' : 'ver')" @dragend="dragend"
+                                 @keydown="(e) => keydownPadding(e, unfold ? 'top' : 'ver')"/>
                 <AutoLayoutInput v-if="unfold" :icon="bottom_padding_icon" :value="autoLayoutDate.stackPaddingBottom"
                     name="bottom_padding" @change="(v) => changePadding(v, 'bottom')" @dragstart="dragstart"
-                                 @dragging="(e) => draggingPadding(e, 'bottom')" @dragend="dragend"/>
+                                 @dragging="(e) => draggingPadding(e, 'bottom')" @dragend="dragend"
+                                 @keydown="(e) => keydownPadding(e, 'bottom')"/>
             </div>
             <div class="container-right">
                 <Tooltip :content="t(`autolayout.${!unfold ? 'unfold' : 'fold'}`)">
