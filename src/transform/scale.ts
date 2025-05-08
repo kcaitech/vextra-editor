@@ -12,8 +12,7 @@ import { Context } from "@/context";
 import { BoundHandler, FrameLike } from "./handler";
 import {
     ColVector3D, CtrlElementType, Scaler, ShapeSize, ShapeView, SymbolView, UniformScaleUnit,
-    ArtboardView, GroupShapeView, SymbolRefView,
-    Transform
+    ArtboardView, GroupShapeView, SymbolRefView, Transform
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
@@ -115,9 +114,7 @@ export class ScaleHandler extends BoundHandler {
     }
 
     protected keydown(event: KeyboardEvent) {
-        if (event.repeat) {
-            return;
-        }
+        if (event.repeat) return;
         if (event.shiftKey) {
             this.shiftStatus = true;
             this.passiveExecute();
@@ -224,11 +221,8 @@ export class ScaleHandler extends BoundHandler {
         const inverseCache = this.transformInverseCache;
         const bases = this.baseFrames;
 
-        for (let i = 0; i < shapes.length; i++) {
-            const shape = shapes[i];
-
-            const f = boundingBox2Root(shape, matrixParent2rootCache);
-
+        for (const view of shapes) {
+            const f = boundingBox2Root(view, matrixParent2rootCache);
             if (f.boxX < left) left = f.boxX;
             if (f.boxY < top) top = f.boxY;
 
@@ -237,12 +231,12 @@ export class ScaleHandler extends BoundHandler {
             const _bottom = f.boxY + f.boxHeight;
             if (_bottom > bottom) bottom = _bottom;
 
-            bases.set(shape.id, f);
+            bases.set(view.id, f);
 
-            if (!cache.has(shape.parent!)) {
-                const transform = (shape.parent!.matrix2Root());
-                cache.set(shape.parent!, transform);
-                inverseCache.set(shape.parent!, transform.getInverse());
+            if (!cache.has(view.parent!)) {
+                const transform = view.parent!.matrix2Root();
+                cache.set(view.parent!, transform);
+                inverseCache.set(view.parent!, transform.getInverse());
             }
         }
 
@@ -264,12 +258,12 @@ export class ScaleHandler extends BoundHandler {
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform((alpha.matrix2Root()));
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(alpha.matrix2Root());
 
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;
 
-        this.shapeTransformListInSelection = shapes.map((shape) => (shape.transform.clone())  // 在Parent坐标系下
+        this.shapeTransformListInSelection = shapes.map((shape) => shape.transform.clone()  // 在Parent坐标系下
             .addTransform(cache.get(shape.parent!)!)  // 在Root坐标系下
             .addTransform(selectionInverse))  // 在选区坐标系下
 
@@ -279,8 +273,8 @@ export class ScaleHandler extends BoundHandler {
                 height: this.originSelectionBox.height
             }
             : {
-                width: alpha.frame.width,
-                height: alpha.frame.height
+                width: alphaFrame.width,
+                height: alphaFrame.height
             };
     }
 
@@ -437,14 +431,13 @@ export class ScaleHandler extends BoundHandler {
         if (!this.shapes.length) return;
 
         // 光标在选区坐标系下的坐标
-        const cursorPointFromRoot = ColVector3D.FromXY(this.livingPoint.x, this.livingPoint.y);
-        const cursorPointFromSelection = ColVector3D.FromXY(this.selectionTransformInverse.transform(cursorPointFromRoot));
+        const cursorPointFromSelection = this.selectionTransformInverse.map(this.livingPoint);
 
         const { width: selectionWidth, height: selectionHeight } = this.selectionSize;
 
         // 选区的左上角和右下角（在原选区坐标系下）
-        const ltPointForSelection = ColVector3D.FromXY(0, 0);
-        const rbPointForSelection = ColVector3D.FromXY(selectionWidth, selectionHeight);
+        const ltPointForSelection = { x: 0, y: 0 };
+        const rbPointForSelection = { x: selectionWidth, y: selectionHeight };
 
         const ratio = selectionWidth / selectionHeight;
 
@@ -639,23 +632,24 @@ export class ScaleHandler extends BoundHandler {
         // Transform = T·R·K·S
         // 不修改旋转和斜切，只修改平移和缩放
         const transformForSelection = this.selectionTransform.clone();
-        const __scale = transformForSelection.decomposeScale();
+        const scaleTransform = transformForSelection.decompose().scale
+        const scale = { x: scaleTransform.m00, y: scaleTransform.m11 };
 
         transformForSelection.setTranslate(transformForSelection.transform(ltPointForSelection));
-        transformForSelection.setScale(new ColVector3D([
-            sizeForSelection.width / this.selectionSize.width * (__scale.x > 0 ? 1 : -1),
-            sizeForSelection.height / this.selectionSize.height * (__scale.y > 0 ? 1 : -1),
-            1,
-        ]));
+        transformForSelection.setScale({
+            x: sizeForSelection.width / this.selectionSize.width * (scale.x > 0 ? 1 : -1),
+            y: sizeForSelection.height / this.selectionSize.height * (scale.y > 0 ? 1 : -1)
+        });
+
         const w_change = sizeForSelection.width / this.selectionSize.width !== 1;
         const h_change = sizeForSelection.height / this.selectionSize.height !== 1;
         const units: {
-            shape: ShapeView,
-            size: ShapeSize,
-            transform2: Transform,
-            scale: { x: number, y: number },
-            w_change: boolean,
-            h_change: boolean
+            shape: ShapeView;
+            size: ShapeSize;
+            transform2: Transform;
+            scale: { x: number, y: number };
+            w_change: boolean;
+            h_change: boolean;
         }[] = [];
 
         const shapes = this.shapes;
@@ -720,7 +714,6 @@ export class ScaleHandler extends BoundHandler {
             }
         }
 
-        // 更新shape
         if (this.ctrlStatus) {
             (this.asyncApiCaller as Scaler).executeWithoutConstraint(units);
         } else {
