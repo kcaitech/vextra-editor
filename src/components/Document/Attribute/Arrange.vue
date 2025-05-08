@@ -10,8 +10,7 @@
 
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { ArtboardView, ShapeType, ShapeView, SymbolView } from '@kcdesign/data';
-import { PositionAdjust } from "@kcdesign/data";
+import { ArtboardView, Shape, ShapeType, ShapeView, SymbolView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch } from 'vue';
 import {
     align_left,
@@ -57,16 +56,16 @@ const props = defineProps<Props>();
 const { t } = useI18n();
 const model_enable = reactive<{ hv: boolean, o: boolean }>({ hv: false, o: false });
 
-// 需要鼠标进入指定区域
-// 需要按下Shift
-// 需要有适合的对象
-
 // 靠左对齐
 function flex_start() {
     if (!model_enable.o) {
         return;
     }
-    const actions: PositionAdjust[] = relative ? align_left_relative(props.shapes) : align_left(props.shapes);
+    const actions: {
+        target: Shape,
+        transX: number,
+        transY: number
+    }[] = relative ? align_left_relative(props.shapes) : align_left(props.shapes);
     const editor = props.context.editor4Page(props.context.selection.selectedPage!);
     if (actions.find(i => i.transX !== 0)) {
         editor.arrange(actions);
@@ -76,7 +75,11 @@ function flex_start() {
 // 水平线对齐
 function justify_middle_h() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = relative ? align_center_x_relative(props.shapes) : align_center_x(props.shapes);
+    const actions: {
+        target: Shape,
+        transX: number,
+        transY: number
+    }[] = relative ? align_center_x_relative(props.shapes) : align_center_x(props.shapes);
     const editor = props.context.editor4Page(props.context.selection.selectedPage!);
     if (actions.find(i => i.transX !== 0)) {
         editor.arrange(actions);
@@ -86,7 +89,11 @@ function justify_middle_h() {
 // 靠右对齐
 function flex_end() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = relative ? align_right_relative(props.shapes) : align_right(props.shapes);
+    const actions: {
+        target: Shape,
+        transX: number,
+        transY: number
+    }[] = relative ? align_right_relative(props.shapes) : align_right(props.shapes);
     const editor = props.context.editor4Page(props.context.selection.selectedPage!);
     if (actions.find(i => i.transX !== 0)) editor.arrange(actions);
 }
@@ -94,7 +101,11 @@ function flex_end() {
 // 靠顶部对齐
 function flex_start_col() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = relative ? align_top_relative(props.shapes) : align_top(props.shapes);
+    const actions: {
+        target: Shape,
+        transX: number,
+        transY: number
+    }[] = relative ? align_top_relative(props.shapes) : align_top(props.shapes);
     const editor = props.context.editor4Page(props.context.selection.selectedPage!);
     if (actions.find(i => i.transY !== 0)) {
         editor.arrange(actions);
@@ -104,7 +115,11 @@ function flex_start_col() {
 // 中线对齐
 function justify_middle_v() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = relative ? align_center_y_relative(props.shapes) : align_center_y(props.shapes);
+    const actions: {
+        target: Shape,
+        transX: number,
+        transY: number
+    }[] = relative ? align_center_y_relative(props.shapes) : align_center_y(props.shapes);
     const editor = props.context.editor4Page(props.context.selection.selectedPage!);
     if (actions.find(i => i.transY !== 0)) {
         editor.arrange(actions);
@@ -114,7 +129,11 @@ function justify_middle_v() {
 // 靠底部对齐
 function flex_end_col() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = relative ? align_bottom_relative(props.shapes) : align_bottom(props.shapes);
+    const actions: {
+        target: Shape,
+        transX: number,
+        transY: number
+    }[] = relative ? align_bottom_relative(props.shapes) : align_bottom(props.shapes);
     const editor = props.context.editor4Page(props.context.selection.selectedPage!);
     if (actions.find(i => i.transY !== 0)) {
         editor.arrange(actions);
@@ -225,8 +244,8 @@ function reset_model() {
 
 const update = throttle(_modify_model_disable, 160, { leading: true });
 
-let shift: boolean = false;
 let target: HTMLElement | null = null;
+let shift: boolean = false;
 let relative: boolean = false;
 
 function checkRelative() {
@@ -240,16 +259,14 @@ function checkRelative() {
         }
     }
     if (relative) {
-        target.style.border = '1px solid';
+        target.style.border = '1.5px solid rgb(64, 64, 64)';
         target.style.boxSizing = 'border-box';
     }
 }
 
 function removeBorder() {
     relative = false;
-    if (target) {
-        target.style.border = 'none';
-    }
+    if (target) target.style.border = 'none';
 }
 
 function keydown(event: KeyboardEvent) {
