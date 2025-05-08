@@ -57,89 +57,67 @@ const props = defineProps<Props>();
 const { t } = useI18n();
 const model_enable = reactive<{ hv: boolean, o: boolean }>({ hv: false, o: false });
 
+// 需要鼠标进入指定区域
+// 需要按下Shift
+// 需要有适合的对象
+
 // 靠左对齐
 function flex_start() {
     if (!model_enable.o) {
         return;
     }
-    const actions: PositionAdjust[] = align_left(props.shapes);
-    // const actions: PositionAdjust[] = align_left_relative(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transX !== 0)) {
-            editor.arrange(actions);
-        }
+    const actions: PositionAdjust[] = relative ? align_left_relative(props.shapes) : align_left(props.shapes);
+    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+    if (actions.find(i => i.transX !== 0)) {
+        editor.arrange(actions);
     }
 }
 
 // 水平线对齐
 function justify_middle_h() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = align_center_x(props.shapes);
-    // const actions: PositionAdjust[] = align_center_x_relative(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transX !== 0)) {
-            editor.arrange(actions);
-        }
+    const actions: PositionAdjust[] = relative ? align_center_x_relative(props.shapes) : align_center_x(props.shapes);
+    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+    if (actions.find(i => i.transX !== 0)) {
+        editor.arrange(actions);
     }
 }
 
 // 靠右对齐
 function flex_end() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = align_right(props.shapes);
-    // const actions: PositionAdjust[] = align_right_relative(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transX !== 0)) {
-            editor.arrange(actions);
-        }
-    }
+    const actions: PositionAdjust[] = relative ? align_right_relative(props.shapes) : align_right(props.shapes);
+    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+    if (actions.find(i => i.transX !== 0)) editor.arrange(actions);
 }
 
 // 靠顶部对齐
 function flex_start_col() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = align_top(props.shapes);
-    // const actions: PositionAdjust[] = align_top_relative(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transY !== 0)) {
-            editor.arrange(actions);
-        }
+    const actions: PositionAdjust[] = relative ? align_top_relative(props.shapes) : align_top(props.shapes);
+    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+    if (actions.find(i => i.transY !== 0)) {
+        editor.arrange(actions);
     }
 }
 
 // 中线对齐
 function justify_middle_v() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = align_center_y(props.shapes);
-    // const actions: PositionAdjust[] = align_center_y_relative(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transY !== 0)) {
-            editor.arrange(actions);
-        }
+    const actions: PositionAdjust[] = relative ? align_center_y_relative(props.shapes) : align_center_y(props.shapes);
+    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+    if (actions.find(i => i.transY !== 0)) {
+        editor.arrange(actions);
     }
 }
 
 // 靠底部对齐
 function flex_end_col() {
     if (!model_enable.o) return;
-    const actions: PositionAdjust[] = align_bottom(props.shapes);
-    // const actions: PositionAdjust[] = align_bottom_relative(props.shapes);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        if (actions.find(i => i.transY !== 0)) {
-            editor.arrange(actions);
-        }
+    const actions: PositionAdjust[] = relative ? align_bottom_relative(props.shapes) : align_bottom(props.shapes);
+    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+    if (actions.find(i => i.transY !== 0)) {
+        editor.arrange(actions);
     }
 }
 
@@ -247,67 +225,74 @@ function reset_model() {
 
 const update = throttle(_modify_model_disable, 160, { leading: true });
 
-const stop = watch(() => props.trigger, update); // 监听图层变化
-const stop2 = watch(() => props.selectionChange, update); // 监听选区变化
-
+let shift: boolean = false;
 let target: HTMLElement | null = null;
+let relative: boolean = false;
 
-function relative() {
-    if (!target) return;
-    let allowed = false;
+function checkRelative() {
+    relative = false;
+    if (!target || !shift) return;
     const selected = props.context.selection.selectedShapes;
     for (const view of selected) {
-        if (view.parent instanceof ArtboardView || view.parent instanceof SymbolView) {
-            allowed = true;
+        if ((view.parent instanceof ArtboardView || view.parent instanceof SymbolView) && !view.parent.autoLayout) {
+            relative = true;
             break;
         }
     }
-    if (allowed) {
+    if (relative) {
         target.style.border = '1px solid';
         target.style.boxSizing = 'border-box';
     }
 }
 
 function removeBorder() {
+    relative = false;
     if (target) {
         target.style.border = 'none';
-        target = null;
     }
 }
 
 function keydown(event: KeyboardEvent) {
     if (event.shiftKey) {
-        relative();
-        document.addEventListener('keyup', keyup);
+        shift = true;
+        checkRelative();
     }
 }
 
 function keyup(event: KeyboardEvent) {
     if (event.code === 'ShiftLeft') {
         removeBorder();
-        document.removeEventListener('keyup', keyup);
+        shift = false;
     }
 }
 
 function mouseenter(event: MouseEvent) {
     target = (event.target as Element).closest('.item');
-    if (target) {
-        document.addEventListener('keydown', keydown);
-    }
+    checkRelative();
 }
 
 function mouseleave() {
     removeBorder();
+    target = null;
 }
+
+const stopList = [
+    watch(() => props.trigger, update),
+    watch(() => props.selectionChange, update),
+    props.context.arrange.watch(arrange_watcher),
+    () => {
+        document.removeEventListener('keydown', keydown);
+        document.removeEventListener('keyup', keyup);
+    }
+]
 
 onMounted(() => {
     _modify_model_disable();
-    props.context.arrange.watch(arrange_watcher);
+    document.addEventListener('keydown', keydown);
+    document.addEventListener('keyup', keyup);
 })
 onUnmounted(() => {
-    stop();
-    stop2();
-    props.context.arrange.unwatch(arrange_watcher);
+    stopList.forEach(stop => stop());
 })
 </script>
 <template>
@@ -319,27 +304,32 @@ onUnmounted(() => {
             </div>
         </Tooltip>
         <Tooltip :content="`${t('home.align_h_c')} ${string_by_sys('Alt H')}`" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_middle_h">
+            <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_middle_h" @mouseenter="mouseenter"
+                 @mouseleave="mouseleave">
                 <SvgIcon :icon="justify_middle_h_icon"/>
             </div>
         </Tooltip>
         <Tooltip :content="`${t('home.align_right')} ${string_by_sys('Alt D')}`" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end">
+            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end" @mouseenter="mouseenter"
+                 @mouseleave="mouseleave">
                 <SvgIcon :icon="flex_end_icon"/>
             </div>
         </Tooltip>
         <Tooltip :content="`${t('home.align_top')} ${string_by_sys('Alt W')}`" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_start_col">
+            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_start_col" @mouseenter="mouseenter"
+                 @mouseleave="mouseleave">
                 <SvgIcon :icon="flex_start_col_icon"/>
             </div>
         </Tooltip>
         <Tooltip :content="`${t('home.align_v_c')} ${string_by_sys('Alt V')}`" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_middle_v">
+            <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_middle_v" @mouseenter="mouseenter"
+                 @mouseleave="mouseleave">
                 <SvgIcon :icon="justify_middle_v_icon"/>
             </div>
         </Tooltip>
         <Tooltip :content="`${t('home.align_bottom')} ${string_by_sys('Alt S')}`" :offset="15">
-            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end_col">
+            <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end_col" @mouseenter="mouseenter"
+                 @mouseleave="mouseleave">
                 <SvgIcon :icon="flex_end_col_icon"/>
             </div>
         </Tooltip>
