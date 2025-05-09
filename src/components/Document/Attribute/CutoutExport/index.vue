@@ -536,6 +536,7 @@ function getShapesSvg(shapes: ShapeView[]) {
         )
         renderSvgs.value = toRaw(r_Items);
     }
+    console.log('renderSvgs', renderSvgs.value);
 }
 
 let page = props.context.selection.selectedPage!;
@@ -623,7 +624,7 @@ import { color2string } from '@/utils/content';
             <template v-for="(svg) in renderSvgs" :key="svg.id">
                 <svg ref="pageSvg" :width="svg.width" :height="svg.height" overflow="visible"
                     :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"
-                    v-html="(svg.shapes[0] as ShapeDom).el?.outerHTML || ''"
+                    v-html="(svg.shapes[0] as ShapeDom)?.el?.outerHTML || ''"
                     :style="{ 'background-color': svg.background }"></svg>
             </template>
         </div>
