@@ -321,7 +321,11 @@ keydownHandler['KeyL'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['KeyM'] = function (event: KeyboardEvent, context: Context) {
     const isCtrl = event.ctrlKey || event.metaKey;
-    if (isCtrl && event.altKey) return useMask(context);
+    if (isCtrl && event.altKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        return useMask(context);
+    }
 }
 
 keydownHandler['KeyN'] = function (event: KeyboardEvent, context: Context) {

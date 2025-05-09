@@ -238,7 +238,7 @@ function getShapeRange(listviewSource: IDataSource<ItemData>, start: number, end
     const range: Map<string, ShapeView> = new Map();
     const it = listviewSource.iterAt(from);
     for (let i = from; i <= to && it.hasNext(); i++) {
-        const shape: ShapeView = it.next().shapeview();
+        const shape: ShapeView = it.next().view();
         const childs = shape.childs;
         if (childs && childs.length) {
             for (let c_i = 0; c_i < childs.length; c_i++) {
@@ -274,7 +274,7 @@ export interface IDataSource<T extends { id: string }> {
 export interface ItemData {
     id: string
     shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
-    shapeview: () => ShapeView
+    view: () => ShapeView
 }
 
 export function range_select_shape(context: Context, shapeDirList: ShapeDirList, listviewSource: IDataSource<ItemData>, shape: ShapeView) {
