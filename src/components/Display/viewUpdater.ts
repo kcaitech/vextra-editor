@@ -1206,7 +1206,7 @@ export class ViewUpdater {
         const viewbox = view.getBoundingClientRect();
         const downX = e.clientX - viewbox.x;
         const downY = e.clientY - viewbox.y;
-        if (shape.prototypeInterActions && shape.prototypeInterActions.length) {
+        if (shape.prototypeInteractions && shape.prototypeInteractions.length) {
             const box = viewBox(matrix, shape);
             if (downX < box.left || downX > box.right || downY < box.top || downY > box.bottom) {
                 boxs.add(box);

@@ -604,7 +604,7 @@ const onMouseMove_CV = (e: MouseEvent) => {
         search(e); // 图形检索(hover)
         const h_shape = props.context.selection.hoveredShape;
         if (preview.value && !spacePressed.value) {
-            if (h_shape && h_shape.prototypeInterActions?.length) {
+            if (h_shape && h_shape.prototypeInteractions?.length) {
                 preview.value.style.cursor = 'pointer'
             } else {
                 preview.value.style.cursor = 'default'
@@ -653,12 +653,12 @@ function search(e: MouseEvent) {
     } else {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy, true);
     }
-    const actions = hover_shape?.prototypeInterActions;
+    const actions = hover_shape?.prototypeInteractions;
     reflush.value++;
     if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
         let p = hover_shape.parent;
         while (p && p.type !== ShapeType.Page) {
-            if (p.prototypeInterActions && p.prototypeInterActions.length) {
+            if (p.prototypeInteractions && p.prototypeInteractions.length) {
                 selectShapes(props.context, p);
                 break;
             } else {
@@ -723,14 +723,14 @@ const setFixedTransform = () => {
 const updateSearch = (e?: MouseEvent) => {
     const hover_shape = search2(e || event);
     if (hover_shape) {
-        const actions = hover_shape?.prototypeInterActions;
+        const actions = hover_shape?.prototypeInteractions;
         if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
             let p = hover_shape.parent;
             if (p && p.type === ShapeType.Page) {
                 return;
             }
             while (p && p.type !== ShapeType.Page) {
-                if (p.prototypeInterActions && p.prototypeInterActions.length) {
+                if (p.prototypeInteractions && p.prototypeInteractions.length) {
                     props.context.selection.previewHoverShape(p);
                     break;
                 } else {
