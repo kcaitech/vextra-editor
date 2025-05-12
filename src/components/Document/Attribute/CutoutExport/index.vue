@@ -37,35 +37,40 @@ import {
 } from '@/utils/shape_style';
 import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getPosition, getSvgImageData } from '@/utils/image';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import export_menu_icon from "@/assets/icons/svg/export-menu.svg"
+import add_icon from "@/assets/icons/svg/add.svg"
+import { ShapeDom } from '../../Content/vdom/shape';
+import { getCutoutShape, getPageBounds, parentIsArtboard } from '@/utils/cutout';
+import { color2string } from '@/utils/content';
 
 const { t } = useI18n();
 
-interface Props {
-    context: Context
-    shapes: ShapeView[]
-    trigger: any[]
+type Props = {
+    context: Context;
+    shapes: ShapeView[];
+    trigger: any[];
 }
 
-interface SvgFormat {
-    id: string
-    width: number
-    height: number
-    x: number
-    y: number
-    background: string
-    shapes: ShapeView[]
+type SvgFormat = {
+    id: string;
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+    background: string;
+    shapes: ShapeView[];
 }
 
-export interface FormatItems {
-    id: number,
-    format: ExportFormat
+export type FormatItems = {
+    id: number;
+    format: ExportFormat;
 }
 
 const props = defineProps<Props>();
 const isPreinstall = ref(false);
 
 const sizeItems: string[] = ['0.5x', '1x', '2x', '3x', '4x', '5x'];
-const perfixItems: ExportFormatNameingScheme[] = [ExportFormatNameingScheme.Prefix, ExportFormatNameingScheme.Suffix];
+const prefixItems: ExportFormatNameingScheme[] = [ExportFormatNameingScheme.Prefix, ExportFormatNameingScheme.Suffix];
 const formatItems: string[] = ['PNG', 'JPG', 'SVG'];
 const fileFormat: ExportFileFormat[] = [ExportFileFormat.Png, ExportFileFormat.Jpg, ExportFileFormat.Svg, ExportFileFormat.Pdf];
 const preinstallArgus: FormatItems[] = reactive([]);
@@ -170,21 +175,21 @@ const preinstall = (v: string) => {
 }
 const addDefault = (len: number) => {
     const format = new ExportFormat(new BasicArray(), v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
-    const formars = [format];
+    const formats = [format];
     if (len === 1) {
         const shape = props.shapes[0];
         const editor = props.context.editor4Shape(shape);
         editor.addExportFormat([format]);
     } else if (len > 1) {
         if (mixed.value) {
-            const actions = get_actions_export_format_unify(props.shapes, formars);
+            const actions = get_actions_export_format_unify(props.shapes, formats);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesExportFormatUnify(actions);
             }
         } else {
-            const actions = get_actions_add_export_format(props.shapes, formars);
+            const actions = get_actions_add_export_format(props.shapes, formats);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
@@ -195,7 +200,7 @@ const addDefault = (len: number) => {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.pageAddExportFormat(formars);
+            editor.pageAddExportFormat(formats);
         }
     }
 }
@@ -204,21 +209,21 @@ const addAndroid = (len: number) => {
     const format2 = new ExportFormat([1] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, 'xhdpi/', ExportFormatNameingScheme.Prefix, 2, ExportVisibleScaleType.Scale);
     const format3 = new ExportFormat([2] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, 'xxhdpi/', ExportFormatNameingScheme.Prefix, 3, ExportVisibleScaleType.Scale);
     const format4 = new ExportFormat([3] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, 'xxxhdpi/', ExportFormatNameingScheme.Prefix, 4, ExportVisibleScaleType.Scale);
-    const formars = [format1, format2, format3, format4]
+    const formats = [format1, format2, format3, format4]
     if (len === 1) {
         const shape = props.shapes[0];
         const editor = props.context.editor4Shape(shape);
-        editor.addExportFormat(formars);
+        editor.addExportFormat(formats);
     } else if (len > 1) {
         if (mixed.value) {
-            const actions = get_actions_export_format_unify(props.shapes, formars, true);
+            const actions = get_actions_export_format_unify(props.shapes, formats, true);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesExportFormatUnify(actions);
             }
         } else {
-            const actions = get_actions_add_export_format(props.shapes, formars);
+            const actions = get_actions_add_export_format(props.shapes, formats);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
@@ -229,7 +234,7 @@ const addAndroid = (len: number) => {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.pageAddExportFormat(formars);
+            editor.pageAddExportFormat(formats);
         }
     }
 }
@@ -237,21 +242,21 @@ const addIos = (len: number) => {
     const format1 = new ExportFormat([0] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
     const format2 = new ExportFormat([1] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, '@2x', ExportFormatNameingScheme.Suffix, 2, ExportVisibleScaleType.Scale);
     const format3 = new ExportFormat([2] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, '@3x', ExportFormatNameingScheme.Suffix, 3, ExportVisibleScaleType.Scale);
-    const formars = [format1, format2, format3]
+    const formats = [format1, format2, format3]
     if (len === 1) {
         const shape = props.shapes[0];
         const editor = props.context.editor4Shape(shape);
-        editor.addExportFormat(formars);
+        editor.addExportFormat(formats);
     } else if (len > 1) {
         if (mixed.value) {
-            const actions = get_actions_export_format_unify(props.shapes, formars, true);
+            const actions = get_actions_export_format_unify(props.shapes, formats, true);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesExportFormatUnify(actions);
             }
         } else {
-            const actions = get_actions_add_export_format(props.shapes, formars);
+            const actions = get_actions_add_export_format(props.shapes, formats);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
@@ -262,7 +267,7 @@ const addIos = (len: number) => {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.pageAddExportFormat(formars);
+            editor.pageAddExportFormat(formats);
         }
     }
 }
@@ -271,16 +276,16 @@ function first() {
     if (preinstallArgus.length === 0 && !mixed.value) preinstall('default');
 }
 
-const changePerfix = (index: number, idx: number) => {
+const changePrefix = (index: number, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const len = selected.length;
     if (len === 1) {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
-        editor.setExportFormatPerfix(_idx, perfixItems[index]);
+        editor.setExportFormatPerfix(_idx, prefixItems[index]);
     } else if (len > 1) {
-        const actions = get_actions_export_format_perfix(selected, _idx, perfixItems[index]);
+        const actions = get_actions_export_format_perfix(selected, _idx, prefixItems[index]);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -290,7 +295,7 @@ const changePerfix = (index: number, idx: number) => {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setPageExportFormatPrefix(_idx, perfixItems[index]);
+            editor.setPageExportFormatPrefix(_idx, prefixItems[index]);
         }
     }
 }
@@ -471,11 +476,11 @@ const exportPageImage = async () => {
     await Promise.all(promises);
 }
 
-
 function update_by_shapes() {
     updateData();
     showCheckbox();
 }
+
 const DEFAULT_COLOR = () => {
     const backgroundColor = props.context.selection.selectedPage?.backgroundColor;
     if (backgroundColor) {
@@ -484,9 +489,10 @@ const DEFAULT_COLOR = () => {
         return 'rgba(239,239,239,1)';
     }
 }
+
 function getShapesSvg(shapes: ShapeView[]) {
     if (shapes.length > 0) {
-        let r_Items: SvgFormat[] = [];
+        let items: SvgFormat[] = [];
         for (let i = 0; i < shapes.length; i++) {
             const shape = shapes[i];
             let shapeItem: ShapeView[] = [];
@@ -505,7 +511,7 @@ function getShapesSvg(shapes: ShapeView[]) {
                 shapeItem = [shape];
             }
             const { x, y, width, height } = getPosition(shape);
-            r_Items.push(
+            items.push(
                 {
                     id: shape.id + i,
                     width,
@@ -517,7 +523,7 @@ function getShapesSvg(shapes: ShapeView[]) {
                 }
             )
         }
-        renderSvgs.value = toRaw(r_Items);
+        renderSvgs.value = toRaw(items);
     } else if (shapes.length === 0) {
         let r_Items: SvgFormat[] = [];
         const page = props.context.selection.selectedPage;
@@ -554,10 +560,6 @@ const stop = watch(() => props.trigger, (v) => {
     update(v);
 })
 
-const page_unwatcher = () => {
-    page.unwatch(updateData);
-}
-// hooks
 onMounted(() => {
     update_by_shapes();
     props.context.selection.watch(selection_watcher);
@@ -565,15 +567,8 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     stop();
-    page_unwatcher();
+    page.unwatch(updateData);
 });
-
-import export_menu_icon from "@/assets/icons/svg/export-menu.svg"
-import add_icon from "@/assets/icons/svg/add.svg"
-import { ShapeDom } from '../../Content/vdom/shape';
-import { getCutoutShape, getPageBounds, parentIsArtboard } from '@/utils/cutout';
-import { color2string } from '@/utils/content';
-
 </script>
 
 <template>
@@ -596,10 +591,11 @@ import { color2string } from '@/utils/content';
             <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
         </div>
         <div v-else-if="!mixed">
-            <div class="argus" v-if="preinstallArgus.length > 0" preinstallArgus.length>
+            <div class="argus" v-if="preinstallArgus.length > 0">
                 <ExportArguments v-for="(argus, index) in preinstallArgus" :key="argus.id" :index="index" :argus="argus"
-                    :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
-                    :length="preinstallArgus.length" :formatItems="formatItems" @changePerfix="changePerfix"
+                                 :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="prefixItems"
+                                 :length="preinstallArgus.length" :formatItems="formatItems"
+                                 @changePerfix="changePrefix"
                     @change-format="changeFormat" @delete="deleteArgus">
                 </ExportArguments>
             </div>
@@ -619,7 +615,7 @@ import { color2string } from '@/utils/content';
                 :trim_bg="trim_bg">
             </Preview>
         </div>
-        <div class="exportsvg" :reflush="reflush">
+        <div class="export-svg" :reflush="reflush">
             <template v-for="(svg) in renderSvgs" :key="svg.id">
                 <svg ref="pageSvg" :width="svg.width" :height="svg.height" overflow="visible"
                     :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"
@@ -650,7 +646,6 @@ import { color2string } from '@/utils/content';
         .name {
             flex-shrink: 0;
             height: 14px;
-            font-family: HarmonyOS Sans;
             font-size: 12px;
             font-weight: normal;
             font-feature-settings: "kern" on;
@@ -767,7 +762,7 @@ import { color2string } from '@/utils/content';
     }
 }
 
-.exportsvg {
+.export-svg {
     position: fixed;
     left: 100000px;
     top: 100000px;
