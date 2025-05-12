@@ -18,7 +18,6 @@ import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.
 import { StrokeFillContextMgr } from "../ctx";
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from "@/utils/common";
-import { KeyboardMgr } from "@/keyboard";
 
 /**
  * 修改样式弹框
@@ -36,11 +35,11 @@ const { t } = useI18n();
 const name = ref<string>(data?.name ?? t('stylelib.borders'));
 const desc = ref<string>(data?.description ?? '');
 const thickness = ref<string>('');
-const oldvalue = ref<string>('');
+const oldValue = ref<string>('');
 const border = ref<BorderMaskType | undefined>(data?.border);
-const positonValue = ref<BorderPosition>(data?.border.position ?? BorderPosition.Inner);
+const positionValue = ref<BorderPosition>(data?.border.position ?? BorderPosition.Inner);
 
-const positonOptionsSource: SelectSource[] = genOptions([
+const positionOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
     [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
     [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
@@ -62,9 +61,9 @@ function update() {
         const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = sideSetting;
         thickness.value = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join(', ');
         if (position === undefined) return;
-        positonValue.value = position as BorderPosition;
+        positionValue.value = position as BorderPosition;
     }
-    oldvalue.value = thickness.value;
+    oldValue.value = thickness.value;
 }
 
 function modifyName(value: string) {
@@ -88,29 +87,29 @@ function changeDescInput(value: string) {
 }
 
 function createStyle() {
-    if (!thickness.value || !positonValue.value) return;
+    if (!thickness.value || !positionValue.value || data || !name.value) return;
     const value = thickness.value.split(', ').map(i => Number(i));
     const side = new BorderSideSetting(SideType.Custom, value[0], value[3], value[2], value[1]);
-    const border = new BorderMaskType(positonValue.value, side);
+    const border = new BorderMaskType(positionValue.value, side);
     manager.createStrokeStyleLib(name.value, desc.value, border);
 }
 
 const setThickness = (event: Event) => {
-    let arrs = thickness.value.replaceAll(/，/g, ',').replaceAll(/-/g, '').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
-    const b = arrs.some(i => isNaN(Number(i)));
-    if (b || !arrs.length) return thickness.value = oldvalue.value;
-    if (arrs.length === 1) {
-        arrs = arrs.concat(...arrs, ...arrs, ...arrs);
+    let arr = thickness.value.replaceAll(/，/g, ',').replaceAll(/-/g, '').replaceAll(/\s+/g, '').split(',').slice(0, 4).filter(Boolean);
+    const b = arr.some(i => isNaN(Number(i)));
+    if (b || !arr.length) return thickness.value = oldValue.value;
+    if (arr.length === 1) {
+        arr = arr.concat(...arr, ...arr, ...arr);
     }
-    if (arrs.length === 2) {
-        arrs = arrs.concat(arrs[0], arrs[1]);
+    if (arr.length === 2) {
+        arr = arr.concat(arr[0], arr[1]);
     }
-    if (arrs.length === 3) {
-        arrs = arrs.concat(arrs[1]);
+    if (arr.length === 3) {
+        arr = arr.concat(arr[1]);
     }
-    thickness.value = arrs.join(', ')
-    if (thickness.value === oldvalue.value) return;
-    oldvalue.value = thickness.value;
+    thickness.value = arr.join(', ')
+    if (thickness.value === oldValue.value) return;
+    oldValue.value = thickness.value;
     const num = thickness.value.split(', ').map(i => Number(i));
     
     if (!data) return;
@@ -120,27 +119,19 @@ const setThickness = (event: Event) => {
 }
 
 function positionSelect(selected: SelectItem) {
-    positonValue.value = selected.value as BorderPosition;
+    positionValue.value = selected.value as BorderPosition;
     if (!data) return;
     if (data?.border.position === selected.value) return;
     manager.modifyBorderPositionMask(data.border, selected.value as BorderPosition);
 }
 
-function checkEnter(e: KeyboardEvent) {
-    if (e.key === 'Enter' && name.value && !data) {
-        createStyle();
-    }
-}
-const boardMgr = new KeyboardMgr(context);
 onMounted(() => {
     update();
     data?.watch(update);
-    boardMgr.addEventListener('keydown', checkEnter);
 });
 
 onUnmounted(() => {
     data?.unwatch(update);
-    boardMgr.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
@@ -148,12 +139,12 @@ onUnmounted(() => {
         <PanelHeader :title="data ? t('stylelib.editor_border') : t('stylelib.create_border')"
             @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
-            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
+                      @change-name-input="changeNameInput" @change-desc-input="changeDescInput" @create="createStyle"/>
         <div v-if="data" class="data-panel">
             <div class="type">
                 <div class="title">{{ t('stylelib.position') }}</div>
-                <Select class="select" :context="context" :shapes="manager.flat" :source="positonOptionsSource"
-                        :selected="positonOptionsSource.find(i => i.data.value === (border?.position || positonValue))?.data"
+                <Select class="select" :context="context" :shapes="manager.flat" :source="positionOptionsSource"
+                        :selected="positionOptionsSource.find(i => i.data.value === (border?.position || positionValue))?.data"
                         @select="positionSelect" :entry="'style'" />
             </div>
             <div class="thickness">

@@ -451,7 +451,7 @@ export const delayAction = (context: Context, matrix: Matrix) => {
 }
 
 function executeDelayActionShape(context: Context, shape: ShapeView, protoActionFn: ProtoAction, matrix: Matrix) {
-    const actions = shape.prototypeInterActions;
+    const actions = shape.prototypeInteractions;
     if (actions?.length) {
         for (let i = 0; i < actions.length; i++) {
             const action = actions[i];

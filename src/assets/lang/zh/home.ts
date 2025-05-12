@@ -173,7 +173,8 @@ export const home = {
     download: '开始下载',
     downloading: '下载中',
     downloaded: '下载完成',
-    no_board: '当前文档不存在可执行容器'
+    no_board: '当前文档不存在可执行容器',
+    clipboard_not_allowed: '读取剪切板的权限被限制'
 }
 
 export const search = {

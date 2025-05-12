@@ -24,6 +24,7 @@ import { ActiveGuide, LineTheme, ReferLineSelection } from "@/components/Documen
 import { v4 } from "uuid";
 import { cloneDeep } from "lodash";
 import { KeyboardMgr } from "@/keyboard";
+import { SpaceHandler } from "@/space";
 
 const props = defineProps<{
     context: Context;
@@ -95,7 +96,6 @@ const referLineSelection = new ReferLineSelection(
 );
 
 const pageWatcher = (...args: any) => {
-    // console.log('...args:', ...args);
     if (args.length === 1 && args[0] === 'childs') {
         referUnderContainerRenderer.updateUnderRootContainerMap();
         return;
@@ -201,23 +201,21 @@ function downHor(event: MouseEvent) {
 
 function moveHor(event: MouseEvent) {
     if (isDrag) {
-        referLineHandler?.modifyOffset(event);
+        const rootOffset =  referLineHandler?.modifyOffset(event);
         referLineSelection.updateHoveredSelection(hovered.value.env.id);
+        if (rootOffset !== undefined) measure('horizontal', rootOffset);
     } else {
         const y = props.context.workspace.getContentXY(event).y;
         const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
         if (y >= 20 && enoughDelta) {
             isDrag = true;
             referLineHandler?.createApiCaller(event);
-            // hovered.value.valid = true;
         }
     }
 }
 
 function downVer(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
     downXY = event;
     event.stopPropagation();
     referLineHandler = new ReferLineHandler(props.context, GuideAxis.X);
@@ -230,8 +228,9 @@ function downVer(event: MouseEvent) {
 
 function moveVer(event: MouseEvent) {
     if (isDrag) {
-        referLineHandler?.modifyOffset(event);
+        const rootOffset = referLineHandler?.modifyOffset(event);
         referLineSelection.updateHoveredSelection(hovered.value.env.id);
+        if (rootOffset !== undefined) measure('vertical', rootOffset);
     } else {
         const x = props.context.workspace.getContentXY(event).x;
         const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
@@ -240,6 +239,134 @@ function moveVer(event: MouseEvent) {
             isDrag = true;
             referLineHandler?.createApiCaller(event);
         }
+    }
+}
+
+const measureBox = ref<{
+    visible: boolean;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    distance: number;
+    dotX: number;
+    dotY: number;
+}>({
+    visible: false,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    startX: 0,
+    startY: 0,
+    endX: 0,
+    endY: 0,
+    distance: 0,
+    dotX: 0,
+    dotY: 0,
+})
+
+function measure(dir: 'vertical' | 'horizontal', rootOffset: number) {
+    if (!props.context.selection.selectedShapes) return;
+    const bounding = SpaceHandler.ViewsRootBounding(props.context.selection.selectedShapes);
+    const clientTransform = props.context.workspace.matrix;
+    const xy1 = clientTransform.computeCoord2(bounding.left, bounding.top);
+    const xy2 = clientTransform.computeCoord2(bounding.right, bounding.bottom);
+    let distance: number;
+    let startX: number;
+    let startY: number;
+    let endX: number;
+    let endY: number;
+    let dotX: number;
+    let dotY: number;
+    if (dir === 'vertical') {
+        if (rootOffset > bounding.right) {
+            distance = rootOffset - bounding.right;
+            endX = bounding.right;
+        } else if (rootOffset < bounding.left) {
+            distance = bounding.left - rootOffset;
+            endX = bounding.left;
+        } else {
+            distance = Math.max(Math.abs(bounding.left - rootOffset), Math.abs(bounding.right - rootOffset));
+            if (Math.abs(bounding.left - rootOffset) < Math.abs(bounding.right - rootOffset)) {
+                endX = bounding.left;
+            } else {
+                endX = bounding.right;
+            }
+        }
+        startX = rootOffset;
+        startY = (bounding.top + bounding.bottom) / 2;
+        endY = startY;
+        dotX = (endX + startX) / 2;
+        dotY = endY + 10;
+    } else {
+        if (rootOffset > bounding.bottom) {
+            distance = rootOffset - bounding.bottom;
+            endY = bounding.bottom;
+        } else if (rootOffset < bounding.top) {
+            distance = bounding.top - rootOffset;
+            endY = bounding.top;
+        } else {
+            distance = Math.max(Math.abs(bounding.top - rootOffset), Math.abs(bounding.bottom - rootOffset));
+            if (Math.abs(bounding.top - rootOffset) < Math.abs(bounding.bottom - rootOffset)) {
+                endY = bounding.top;
+            } else {
+                endY = bounding.bottom;
+            }
+        }
+        startX = (bounding.left + bounding.right) / 2;
+        startY = rootOffset;
+        endX = startX;
+        dotX = endX + 10;
+        dotY = (endY + startY) / 2;
+    }
+
+    const transStart = clientTransform.map({ x: startX, y: startY });
+    startX = transStart.x;
+    startY = transStart.y;
+
+    const transEnd = clientTransform.map({ x: endX, y: endY });
+    endX = transEnd.x;
+    endY = transEnd.y;
+
+    const transDot = clientTransform.map({ x: dotX, y: dotY });
+    dotX = transDot.x;
+    dotY = transDot.y;
+
+    measureBox.value = {
+        visible: true,
+        x: xy1.x,
+        y: xy1.y,
+        width: xy2.x - xy1.x,
+        height: xy2.y - xy1.y,
+        startX,
+        startY,
+        endX,
+        endY,
+        distance,
+        dotX,
+        dotY
+    };
+}
+
+function clearMeasure() {
+    measureBox.value = {
+        visible: false,
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        startX: 0,
+        startY: 0,
+        endX: 0,
+        endY: 0,
+        distance: 0,
+        dotX: 0,
+        dotY: 0,
     }
 }
 
@@ -275,13 +402,9 @@ function clear() {
 }
 
 function downHover(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
 
-    if (!hovered.value.valid) {
-        return;
-    }
+    if (!hovered.value.valid) return;
 
     event.stopPropagation();
 
@@ -299,13 +422,9 @@ function downHover(event: MouseEvent) {
 }
 
 function downSelect(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
 
-    if (!selected.value.valid) {
-        return;
-    }
+    if (!selected.value.valid) return;
 
     event.stopPropagation();
 
@@ -325,9 +444,7 @@ function downSelect(event: MouseEvent) {
 }
 
 function modifyOffset(event: MouseEvent) {
-    if (!referLineHandler) {
-        return;
-    }
+    if (!referLineHandler) return;
 
     if (isDrag) {
         if (!selected.value.valid) {
@@ -362,6 +479,7 @@ function blur() {
 
 let holder: any = undefined;
 let keyboardWorking = false;
+let altStatus = false;
 
 function keydown(event: KeyboardEvent) {
     if (
@@ -398,6 +516,17 @@ function keydown(event: KeyboardEvent) {
         if (selected.value.axis === GuideAxis.Y) {
             modifyOffsetByKeyboard(step);
         }
+    }
+
+    if (event.altKey) {
+        altStatus = true;
+    }
+}
+
+function keyup(event: KeyboardEvent) {
+    if (event.code === "AltLeft") {
+        clearMeasure();
+        altStatus = false;
     }
 }
 
@@ -469,6 +598,7 @@ onMounted(() => {
     referUnderContainerRenderer.updateUnderRootContainerMap();
 
     boardMgr.addEventListener('keydown', keydown);
+    document.addEventListener('keyup', keyup);
     ruleVisible.value = props.context.user.isRuleVisible;
     scaleRenderer.render();
     forWatchOne();
@@ -482,6 +612,7 @@ onUnmounted(() => {
     referLineSelection.removeScout();
     referUnderContainerRenderer.clearContainerWatcher();
     boardMgr.removeEventListener('keydown', keydown);
+    document.removeEventListener('keyup', keyup);
     one?.unwatch(oneAction);
 })
 </script>
@@ -516,6 +647,13 @@ onUnmounted(() => {
                 :stroke-dasharray="p.dash ? '3, 3' : 'none'"
             />
             <path v-for="(p, i) in selected.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
+        </g>
+        <g v-if="measureBox.visible">
+            <path
+                :d="`M${measureBox.x} ${measureBox.y} h${measureBox.width}  v${measureBox.height} h-${measureBox.width} z`"
+                stroke="#ff4400" stroke-width="0.5" fill="none"/>
+            <path :d="`M${measureBox.startX} ${measureBox.startY} L${measureBox.endX} ${measureBox.endY}`"
+                  stroke="#ff4400" stroke-width="0.5" fill="none"/>
         </g>
     </svg>
     <div class="contact-block"/>
@@ -559,6 +697,10 @@ onUnmounted(() => {
             <div class="end-data"> {{ formatNumber(b.dataEnd) }}</div>
         </div>
     </div>
+    <div v-if="measureBox.visible && measureBox.distance > 3" class="measure-block"
+         :style="{ left: measureBox.dotX + 'px',top: measureBox.dotY +'px' }">
+        {{ Math.round(measureBox.distance) }}
+    </div>
 </div>
 </template>
 <style scoped lang="scss">
@@ -573,6 +715,21 @@ onUnmounted(() => {
     font-weight: 500;
 
     overflow: hidden;
+
+    .measure-block {
+        position: absolute;
+        background-color: #ff4400;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        padding: 4px;
+        height: 22px;
+        width: fit-content;
+        color: #FFFFFF;
+        font-size: 12px;
+    }
 
     > svg {
         pointer-events: none;

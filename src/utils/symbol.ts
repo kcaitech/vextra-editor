@@ -33,7 +33,6 @@ import { get_name } from "@/utils/shapelist";
 import { XY } from "@/context/selection";
 import { isTarget } from "@/utils/common";
 import { message } from "@/utils/message";
-import { SymbolDom } from "@/components/Document/Content/vdom/symbol";
 
 export enum SymbolType {
     Symbol = 'symbol',
@@ -1004,18 +1003,6 @@ export function is_valid_name(symbol: SymbolView | SymbolShape, name: string, ty
 }
 
 /**
- * @description 判断选中图形是否支持创建组件
- * @param shapes
- */
-export function is_allow_to_create_sym(shapes: Shape[]) {
-    let vaild = true;
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        if (shapes[i].type === ShapeType.Symbol || shapes[i].type === ShapeType.SymbolUnion) return false;
-    }
-    return true;
-}
-
-/**
  * @description 判断组件状态是否允许删除
  */
 export function is_status_allow_to_delete(symbol: SymbolView) {
@@ -1038,14 +1025,6 @@ export function is_state(shape: Shape | ShapeView) {
 
 function is_sym(shape: ShapeView) {
     return shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolUnion;
-}
-
-/**
- * @description 仅为组件(不是union)
- * @param shape
- */
-export function is_symbol_but_not_union(shape: Shape) {
-    return shape.type === ShapeType.Symbol;
 }
 
 /**

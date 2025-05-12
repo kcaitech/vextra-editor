@@ -37,15 +37,10 @@ export async function _exportDocument(context: Context) {
         }
     }
     const zip = new JSZip();
-    const documentBlob = new Blob([JSON.stringify(data.document_meta)]);
-    zip.file('document-meta.json', documentBlob);
-    const pages = zip.folder('pages')!;
-    packPages(pages);
-    const imgs = zip.folder('images')!;
-    await packImages(imgs);
-
-    const content = await zip.generateAsync({ type: 'blob' });
-    return content
+    zip.file('document-meta.json', new Blob([JSON.stringify(data.document_meta)]));
+    packPages(zip.folder('pages')!);
+    await packImages(zip.folder('images')!);
+    return await zip.generateAsync({ type: 'blob' });
 }
 
 export async function exportDocument(context: Context) {

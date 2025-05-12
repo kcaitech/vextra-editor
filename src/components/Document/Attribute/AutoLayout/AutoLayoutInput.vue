@@ -13,8 +13,12 @@ import { StackSizing } from "@kcdesign/data";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import Tooltip from '@/components/common/Tooltip.vue';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import down_icon from "@/assets/icons/svg/down.svg";
+import white_select_icon from "@/assets/icons/svg/white-select.svg";
+import page_select_icon from "@/assets/icons/svg/page-select.svg";
 
-interface Props {
+type Props = {
     icon: string;
     value: string | number;
     name: string;
@@ -38,9 +42,11 @@ interface Emits {
     (e: "dragend"): void;
 
     (e: "wheel", event: WheelEvent): void;
-    (e: "shwoMenu", v: boolean): void;
+    (e: "showMenu", v: boolean): void;
 
     (e: "changeItem", value: StackSizing): void;
+
+    (e: "keydown", event: KeyboardEvent): void;
 }
 
 const props = defineProps<Props>();
@@ -120,7 +126,7 @@ function foucs() {
 }
 
 const showMenu = () => {
-    emits('shwoMenu', true);
+    emits('showMenu', true);
     document.addEventListener('click', handleClick);
 }
 
@@ -130,12 +136,16 @@ const handleClick = (e: MouseEvent) => {
 }
 
 const close = () => {
-    emits('shwoMenu', false);
+    emits('showMenu', false);
     document.removeEventListener('click', handleClick);
 }
 
+const keydown = (event: KeyboardEvent) => {
+    emits('keydown', event);
+}
+
 const changeItem = (v: StackSizing) => {
-    emits('shwoMenu', false);
+    emits('showMenu', false);
     emits('changeItem', v);
 }
 
@@ -152,7 +162,7 @@ function wheel(event: WheelEvent) {
 const getinput_value = () => {
     if (props.value === t('attr.mixed')) return true;
     if (inputEl.value) {
-        return isNaN(Number(inputEl.value.value)) ? true : false;
+        return isNaN(Number(inputEl.value.value));
     } else {
         return true;
     }
@@ -167,11 +177,6 @@ const selectedTop = (item: string | number) => {
     }
 }
 
-import SvgIcon from "@/components/common/SvgIcon.vue";
-import down_icon from "@/assets/icons/svg/down.svg";
-import white_select_icon from "@/assets/icons/svg/white-select.svg";
-import page_select_icon from "@/assets/icons/svg/page-select.svg";
-
 </script>
 
 <template>
@@ -184,7 +189,7 @@ import page_select_icon from "@/assets/icons/svg/page-select.svg";
             </div>
         </Tooltip>
         <input :disabled="disabled" :style="{ opacity: draggable ? '0.4' : '1' }" ref="inputEl" :value="value"
-            @click="click" @change="change" @blur="blur" @focus="foucs" />
+               @click="click" @change="change" @blur="blur" @focus="foucs" @keydown="keydown"/>
         <div class="layout-menu-svg" v-if="isMenu" @click.stop="showMenu">
             <SvgIcon :icon="down_icon" />
         </div>

@@ -76,10 +76,10 @@ const changeAlignMode = (primary: StackAlign, counter: StackAlign) => {
 <template>
     <HorGapAuto :reflush="reflush"
         v-if="autoLayoutDate.stackHorizontalGapSizing === StackSizing.Auto && autoLayoutDate.stackMode !== StackMode.Vertical"
-        :autoLayoutDate="autoLayoutDate" :context="context"></HorGapAuto>
+        :autoLayoutDate="autoLayoutDate" :context="context" />
     <VerGapAuto :reflush="reflush"
         v-else-if="autoLayoutDate.stackVerticalGapSizing === StackSizing.Auto && autoLayoutDate.stackMode === StackMode.Vertical"
-        :autoLayoutDate="autoLayoutDate" :context="context"></VerGapAuto>
+        :autoLayoutDate="autoLayoutDate" :context="context" />
     <div class="align-container" v-else>
         <div class="base">
             <div>

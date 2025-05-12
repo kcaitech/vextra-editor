@@ -25,10 +25,12 @@ import {
     ShapeType,
     TextBehaviour,
     TextShapeView,
-    cloneGradient
+    cloneGradient,
+    TextVerAlign,
+    TextHorAlign,
+    Color
 } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, Color } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -49,13 +51,37 @@ import { toHex } from "@/utils/color";
 import { selectAllOnFocus } from '@/components/Document/Attribute/basic';
 import { GradientCatch, getGradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 import { TextContext, TextContextMgr } from './ctx';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import unbind_icon from "@/assets/icons/svg/unbind.svg";
+import down_icon from '@/assets/icons/svg/down.svg';
+import white_select_icon from '@/assets/icons/svg/white-select.svg';
+import page_select_icon from '@/assets/icons/svg/page-select.svg';
+import word_space_icon from '@/assets/icons/svg/word-space.svg';
+import row_height_icon from '@/assets/icons/svg/row-height.svg';
+import text_left_icon from '@/assets/icons/svg/text-left.svg';
+import text_center_icon from '@/assets/icons/svg/text-center.svg';
+import text_right_icon from '@/assets/icons/svg/text-right.svg';
+import text_justify_icon from '@/assets/icons/svg/text-justify.svg';
+import add_icon from '@/assets/icons/svg/add.svg';
+import style_icon from '@/assets/icons/svg/styles.svg';
+import align_top_icon from '@/assets/icons/svg/align-top.svg';
+import align_middle_icon from '@/assets/icons/svg/align-middle.svg';
+import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
+import text_autowidth_icon from '@/assets/icons/svg/text-autowidth.svg';
+import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
+import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
+import delete_icon from "@/assets/icons/svg/delete.svg";
+import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
+import { toHex as toHex2 } from '@/utils/color';
+import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/textpicker';
+import TextMaskView from './TextMaskView.vue'
 
-interface Props {
-    context: Context
-    shape: TextShapeView
-    textShapes: TextShapeView[]
-    selectionChange: number
-    trigger: any[]
+type Props = {
+    context: Context;
+    shape: TextShapeView;
+    textShapes: TextShapeView[];
+    selectionChange: number;
+    trigger: any[];
 }
 
 const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
@@ -95,9 +121,10 @@ const lineHeight = ref<HTMLInputElement>()
 const rowHeight = ref();
 const row_height = ref(`${t('attr.auto')}`)
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
-const keydownval = ref<boolean>(false)
+const keydownVal = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
 const cloverVisible = computed<boolean>(() => !(textCtx.value.mask || textCtx.value.mixed));
+const fillTypes = [FillType.SolidColor, FillType.Gradient];
 
 const textCtx = ref<TextContext>({
     mixed: false,
@@ -131,10 +158,10 @@ const showTextPanel = (event: MouseEvent) => {
     }
 }
 
-const fontlistStatus = reactive<ElementStatus>({ id: '#font-container', visible: false });
+const fontListStatus = reactive<ElementStatus>({ id: '#font-container', visible: false });
 const fontPanelStatusMgr = new ElementManager(
     props.context,
-    fontlistStatus,
+    fontListStatus,
     { whiteList: ['.font-container', '.select-font'] }
 );
 textCtxMgr.catchPanel(fontPanelStatusMgr)
@@ -149,14 +176,15 @@ const showFontList = (event: MouseEvent) => {
     }
 }
 
-const textSizes = ref([10, 12, 14, 16, 18, 24, 36, 48, 64]);
+const textSizes = [10, 12, 14, 16, 18, 24, 36, 48, 64];
 const sizeSelectIndex = ref(-1);
 const onShowSize = () => {
     props.context.workspace.focusText()
     if (showSize.value) {
-        return showSize.value = false
+        showSize.value = false;
+        return;
     }
-    const index = textSizes.value.findIndex(item => item === textCtx.value.text?.fontSize);
+    const index = textSizes.findIndex(item => item === textCtx.value.text?.fontSize);
     if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true
 
@@ -171,10 +199,11 @@ const onShowSize = () => {
 
 const onShowSizeBlur = (e: Event) => {
     if (e.target instanceof Element && !e.target.closest('.text-size')) {
-        var timer = setTimeout(() => {
+        let timer: any = setTimeout(() => {
             showSize.value = false;
-            clearTimeout(timer)
             document.removeEventListener('click', onShowSizeBlur);
+            clearTimeout(timer);
+            timer = null;
         }, 10)
     }
 }
@@ -215,6 +244,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
     props.context.textSelection.setTextAttr(textAttr);
 }
 const changeTextSize = (size: number) => {
+    console.log('- size', size);
     //设置字体大小
     fontSize.value = size
     showSize.value = false;
@@ -222,23 +252,26 @@ const changeTextSize = (size: number) => {
     const editor = props.context.editor4TextShape(shape)
 
     if (shapes.value.length === 1) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        keydownval.value
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        keydownVal.value
             ?
             linearApi.modifyTextFontSize(textIndex, selectLength, size, shape)
             :
             editor.setTextFontSize(textIndex, selectLength, size)
     } else {
-        keydownval.value
+        keydownVal.value
             ?
             linearApi.modifyTextFontSizeMulti((props.textShapes as TextShapeView[]), size)
             :
             editor.setTextFontSizeMulti((shapes.value as TextShapeView[]), size);
     }
-    keydownval.value = false;
+
+    keydownVal.value = false;
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.fontSize = format_value(size) as number;
     props.context.textSelection.setTextAttr(textAttr);
+
+    console.log('- fontSize', fontSize.value);
 }
 //设置字体
 const setFont = (font: string) => {
@@ -252,11 +285,9 @@ const setWordSpace = (val?: number) => {
     }
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        // if (wordSpace.value.slice(-1) === '%') {
-        //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
-        // }
+
         if (!isNaN(Number(wordSpace.value))) {
-            keydownval.value
+            keydownVal.value
                 ?
                 linearApi.modifyTextCharSpacing(val!, textIndex, selectLength, props.shape)
                 :
@@ -266,7 +297,7 @@ const setWordSpace = (val?: number) => {
         }
     } else {
         if (!isNaN(Number(wordSpace.value))) {
-            keydownval.value
+            keydownVal.value
                 ?
                 linearApi.modifyTextCharSpacingMulti(props.textShapes, val!)
                 :
@@ -278,14 +309,14 @@ const setWordSpace = (val?: number) => {
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.kerning = Number(wordSpace.value);
     props.context.textSelection.setTextAttr(textAttr);
-    keydownval.value = false
+    keydownVal.value = false
 }
 
 function keydownSpace(event: KeyboardEvent) {
     let value = sortValue(wordSpace.value.toString());
     let old = value
     if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
-        keydownval.value = true
+        keydownVal.value = true
         value = value + (event.code === 'ArrowUp' ? 1 : -1)
         value = value <= 1 ? 1 : value;
         if (isNaN(value) || old === value) return;
@@ -298,11 +329,6 @@ function keydownSpace(event: KeyboardEvent) {
         charSpacing.value?.blur();
     }
 }
-
-const autoLineHeight = [
-    'auto',
-    '自动'
-]
 
 const setRowHeight = (val?: number) => {
     const editor = props.context.editor4TextShape(props.shape)
@@ -317,9 +343,7 @@ const setRowHeight = (val?: number) => {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         if (!isNaN(Number(value))) {
-            console.log(value, 'value');
-            
-            keydownval.value
+            keydownVal.value
                 ?
                 linearApi.modifyTextLineHeight(val!, isAuto, textIndex, selectLength, props.shape)
                 :
@@ -330,7 +354,7 @@ const setRowHeight = (val?: number) => {
         }
     } else {
         if (!isNaN(Number(value))) {
-            keydownval.value
+            keydownVal.value
                 ?
                 linearApi.modifyTextLineHeightMulti(props.textShapes, val!, isAuto)
                 :
@@ -345,14 +369,14 @@ const setRowHeight = (val?: number) => {
     textAttr.maximumLineHeight = value.length === 0 ? undefined : Number(value);
     textAttr.minimumLineHeight = value.length === 0 ? undefined : Number(value);
     props.context.textSelection.setTextAttr(textAttr);
-    keydownval.value = false;
+    keydownVal.value = false;
 }
 
 function keydownHeight(event: KeyboardEvent) {
     let value = sortValue(rowHeight.value.toString());
     let old = value
     if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
-        keydownval.value = true
+        keydownVal.value = true
         value = value + (event.code === 'ArrowUp' ? 1 : -1)
         value = value <= 1 ? 1 : value;
         if (isNaN(value) || old === value) return;
@@ -400,7 +424,7 @@ function keydownSize(event: KeyboardEvent) {
     let value = sortValue(fontSize.value.toString());
     let old = value
     if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
-        keydownval.value = true
+        keydownVal.value = true
         value = value + (event.code === 'ArrowUp' ? 1 : -1)
         value = value <= 1 ? 1 : value;
         if (isNaN(value) || old === value) return;
@@ -413,20 +437,17 @@ function keydownSize(event: KeyboardEvent) {
 }
 const handleSize = () => {
     executed.value = true;
-    const value = textSize.value!.value;
-    sizeValue.value = value;
+    sizeValue.value = textSize.value!.value;
 }
-const reflush = ref(0);
-// 获取当前文字格式
 
-function selection_wather(t: number | string) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
         textFormat()
         textCtxMgr.update();
     }
 }
 
-function workspace_wather(t: number) {
+function workspace_watcher(t: number) {
 
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat()
@@ -527,13 +548,13 @@ function setColor(clr: string, alpha: number, type: string) {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         if (type === 'color') {
-            keydownval.value
+            keydownVal.value
                 ?
                 linearApi.modifyTextColor(textIndex, selectLength, new Color(alpha, r, g, b), shape)
                 :
                 editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
         } else {
-            keydownval.value
+            keydownVal.value
                 ?
                 linearApi.modifyTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b), shape)
                 :
@@ -541,20 +562,20 @@ function setColor(clr: string, alpha: number, type: string) {
         }
     } else {
         if (type === 'color') {
-            keydownval.value
+            keydownVal.value
                 ?
                 linearApi.modifyTextColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
                 :
                 editor.setTextColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
         } else {
-            keydownval.value
+            keydownVal.value
                 ?
                 linearApi.modifyTextHighlightColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
                 :
                 editor.setTextHighlightColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
         }
     }
-    keydownval.value = false;
+    keydownVal.value = false;
 }
 
 const deleteHighlight = () => {
@@ -652,8 +673,7 @@ const selectSizeValue = () => {
     if (textSize.value) {
         executed.value = true;
         getTextShapes();
-        const value = textSize.value.value;
-        sizeValue.value = value;
+        sizeValue.value = textSize.value.value;
     }
 }
 const getTextShapes = () => {
@@ -692,7 +712,7 @@ const filterAlpha2 = () => {
 
 const pointX = ref<number>()
 const pointY = ref<number>()
-const showpoint = ref<boolean>(false)
+const showPoint = ref<boolean>(false)
 let type = 'row-height';
 let textAttrEditor: AsyncTextAttrEditor | undefined = undefined;
 const onMouseDown = async (e: MouseEvent, t: string) => {
@@ -710,7 +730,7 @@ const onMouseDown = async (e: MouseEvent, t: string) => {
     e.stopPropagation()
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove);
-    showpoint.value = true;
+    showPoint.value = true;
     document.addEventListener('pointerlockchange', pointerLockChange, false);
 }
 
@@ -750,7 +770,7 @@ function onMouseMove(e: MouseEvent) {
 
 function onMouseUp() {
     document.exitPointerLock()
-    showpoint.value = false
+    showPoint.value = false
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
     if (textAttrEditor) {
@@ -760,7 +780,7 @@ function onMouseUp() {
     document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
-const text_selection_wather = (t: number) => {
+const text_selection_watcher = (t: number) => {
     if (t === Attribute.ADD_SIZE_CHANGE) {
         if (textSize.value) {
             let value = textSize.value.value.trim();
@@ -809,7 +829,7 @@ const _textFormat = () => {
         selectVertical.value = format.verAlign || 'top'
         selectText.value = format.textBehaviour || 'flexible'
         fontName.value = format.fontName || DefaultFontName
-        fontSize.value = format_value(format.fontSize || 14) as number
+        fontSize.value = format_value(format.fontSize || 14) as number;
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
@@ -918,7 +938,6 @@ const _textFormat = () => {
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
     updateContextColor();
-    reflush.value++;
 }
 const textFormat = throttle(_textFormat, 0, { leading: true })
 
@@ -928,12 +947,9 @@ const is_size_select = ref(false);
 
 function click(e: Event, variate: boolean) {
     const el = e.target as HTMLInputElement;
-    if (el.selectionStart !== el.selectionEnd) {
-        return;
-    }
+    if (el.selectionStart !== el.selectionEnd) return;
     if (variate) return;
     el.select();
-    variate = true;
 }
 
 const closePanel = () => {
@@ -1088,81 +1104,56 @@ const updateContextColor = () => {
     }
 }
 
-const stop2 = watch(() => props.textShapes, (v) => {
-    shapes.value = v;
-    textFormat();
-    textCtxMgr.update();
-})
-const stop3 = watch(() => props.trigger, v => {
-    if (v.includes('layout') || v.includes('size') || v.includes('width') || v.includes('height') || v.includes('text')) {
+const stopList = [
+    props.context.selection.watch(selection_watcher),
+    props.context.attr.watch(text_selection_watcher),
+    props.context.workspace.watch(workspace_watcher),
+    watch(() => props.textShapes, (v) => {
+        shapes.value = v;
         textFormat();
         textCtxMgr.update();
-    }
-})
+    }),
+    watch(() => props.textShapes, (v) => {
+        shapes.value = v;
+        textFormat();
+        textCtxMgr.update();
+    }),
+    watch(() => props.trigger, v => {
+        if (v.includes('layout') || v.includes('size') || v.includes('width') || v.includes('height') || v.includes('text')) {
+            textFormat();
+            textCtxMgr.update();
+        }
+    }),
+    watch(() => props.selectionChange, textFormat),
+    watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()))
+];
 
-const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
-const stop5 = watch(() => fillType.value, () => nextTick(() => colorPanelStatusMgr.repositioning()));
 onMounted(() => {
-    props.context.selection.watch(selection_wather);
-    props.context.attr.watch(text_selection_wather);
-    props.context.workspace.watch(workspace_wather);
     textFormat()
-    textCtxMgr.update.bind(textCtxMgr);
+    textCtxMgr.update();
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_wather);
-    props.context.attr.unwatch(text_selection_wather);
-    props.context.workspace.unwatch(workspace_wather);
-    stop2();
-    stop3();
-    stop4();
-    stop5();
+    stopList.forEach(stop => stop());
 })
-const fillTypes = [FillType.SolidColor, FillType.Gradient];
-import SvgIcon from '@/components/common/SvgIcon.vue';
-import unbind_icon from "@/assets/icons/svg/unbind.svg";
-import down_icon from '@/assets/icons/svg/down.svg';
-import white_select_icon from '@/assets/icons/svg/white-select.svg';
-import page_select_icon from '@/assets/icons/svg/page-select.svg';
-import word_space_icon from '@/assets/icons/svg/word-space.svg';
-import row_height_icon from '@/assets/icons/svg/row-height.svg';
-import text_left_icon from '@/assets/icons/svg/text-left.svg';
-import text_center_icon from '@/assets/icons/svg/text-center.svg';
-import text_right_icon from '@/assets/icons/svg/text-right.svg';
-import text_justify_icon from '@/assets/icons/svg/text-justify.svg';
-import add_icon from '@/assets/icons/svg/add.svg';
-import style_icon from '@/assets/icons/svg/styles.svg';
-import align_top_icon from '@/assets/icons/svg/align-top.svg';
-import align_middle_icon from '@/assets/icons/svg/align-middle.svg';
-import align_bottom_icon from '@/assets/icons/svg/align-bottom.svg';
-import text_autowidth_icon from '@/assets/icons/svg/text-autowidth.svg';
-import text_autoheight_icon from '@/assets/icons/svg/text-autoheight.svg';
-import text_fixedsize_icon from '@/assets/icons/svg/text-fixedsize.svg';
-import delete_icon from "@/assets/icons/svg/delete.svg";
-import { RGBACatch } from '@/components/common/ColorPicker/Editor/solidcolorlineareditor';
-import { toHex as toHex2 } from '@/utils/color';
-import { TextPicker } from '@/components/common/ColorPicker/Editor/stylectxs/textpicker';
-import TextMaskView from './TextMaskView.vue'
 </script>
 
 <template>
     <div class="text-panel">
-        <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
+        <TypeHeader :title="t('attr.text')" :active="true">
             <template #tool>
                 <div v-if="cloverVisible" :class="{ 'active': textLibStatus.visible }" class="text_clover"
                     @click="showTextPanel($event)">
                     <SvgIcon :icon="style_icon" />
                 </div>
                 <TextAdvancedSettings :context="props.context" :manager="textCtxMgr" :data="textCtxMgr.textCtx.text"
-                    :textShape="shape" :textShapes="props.textShapes">
-                </TextAdvancedSettings>
+                                      :textShape="shape" :textShapes="props.textShapes"/>
             </template>
         </TypeHeader>
         <div class="text-container">
-            <div class="mask-mixed" v-if="textCtx.mixed">
+            <div v-if="textCtx.mixed" class="mask-mixed">
                 <span>包含多个文本样式，请解绑后编辑</span>
                 <div class="unbind" @click="() => textCtxMgr.unbind()">
-                    <SvgIcon :icon="unbind_icon" />
+                    <SvgIcon :icon="unbind_icon"/>
                 </div>
             </div>
             <TextMaskView v-if="textCtx.mask && !textCtx.mixed" :context="props.context" :manager="textCtxMgr"
@@ -1170,29 +1161,27 @@ import TextMaskView from './TextMaskView.vue'
             </TextMaskView>
             <div v-if="!textCtx.mask && !textCtx.mixed" class="text-top">
                 <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;"
-                    @click="showFontList($event)">
+                     @click="showFontList($event)">
                     <span>{{ textCtx.text?.fontName ? textCtx.text?.fontName : t('attr.more_value') }}</span>
                     <div class="down">
                         <SvgIcon :icon="down_icon" style="width: 12px;height: 12px" />
                     </div>
                 </div>
-                <SelectFont v-if="fontlistStatus.visible" :show-font="fontlistStatus.visible" @set-font="setFont" :context="props.context"
-                    :manager="textCtxMgr" @setFontWeight="setFontWeight">
-                </SelectFont>
-                <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
+                <SelectFont v-if="fontListStatus.visible" :show-font="fontListStatus.visible" @set-font="setFont"
+                            :context="props.context" :manager="textCtxMgr" @setFontWeight="setFontWeight"/>
+                <div v-if="showFont" class="overlay" @click.stop @mousedown.stop="showFont = false"/>
             </div>
             <div v-if="!textCtx.mask && !textCtx.mixed" class="text-middle">
                 <FontWeightSelected :context="context" :manager="textCtxMgr" :selected="fontWeight"
                     :disable="!textCtx.text?.fontName" :fontName="textCtx.text?.fontName!"
-                    @setFontWeight="setFontWeight">
-                </FontWeightSelected>
+                                    @setFontWeight="setFontWeight"/>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
-                        <input type="text" :value="textCtx.text?.fontSize ?? t('attr.more_value')" ref="textSize"
+                        <input ref="textSize" type="text" :value="fontSize"
                             class="input" @change="setTextSize" @focus="selectSizeValue" @input="handleSize"
-                            @click="(e) => click(e, is_size_select)" @keydown="e => keydownSize(e)">
+                               @click="(e) => click(e, is_size_select)" @keydown="e => keydownSize(e)"/>
                         <div class="down" @click="onShowSize">
-                            <SvgIcon :icon="down_icon" style="" />
+                            <SvgIcon :icon="down_icon"/>
                         </div>
                     </div>
                     <div class="font-size-list" ref="sizeList" :style="{ top: -(sizeSelectIndex * 34) + 'px' }"
@@ -1257,19 +1246,19 @@ import TextMaskView from './TextMaskView.vue'
             <div class="text-bottom">
                 <div class="text-bottom-align">
                     <div class="vertical-aligning jointly-text" style="margin-right: 8px;">
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'top' }"
+                        <i :class="{ 'jointly-text': true, 'font-position': true, selected_bg: selectVertical === 'top' }"
                             @click="onSelectVertical(TextVerAlign.Top)">
                             <Tooltip :content="t('attr.align_top')" :offset="15">
                                 <SvgIcon :icon="align_top_icon" />
                             </Tooltip>
                         </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'middle' }"
+                        <i :class="{ 'jointly-text': true, 'font-position': true, selected_bg: selectVertical === 'middle' }"
                             @click="onSelectVertical(TextVerAlign.Middle)">
                             <Tooltip :content="t('attr.align_middle')" :offset="15">
                                 <SvgIcon :icon="align_middle_icon" />
                             </Tooltip>
                         </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'bottom' }"
+                        <i :class="{ 'jointly-text': true, 'font-position': true, selected_bg: selectVertical === 'bottom' }"
                             @click="onSelectVertical(TextVerAlign.Bottom)">
                             <Tooltip :content="t('attr.align_bottom')" :offset="15">
                                 <SvgIcon :icon="align_bottom_icon" />
@@ -1277,19 +1266,19 @@ import TextMaskView from './TextMaskView.vue'
                         </i>
                     </div>
                     <div class="vertical-aligning jointly-text">
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'flexible' }"
+                        <i :class="{ 'jointly-text': true, 'font-position': true, selected_bg: selectText === 'flexible' }"
                             @click="onSelectText(TextBehaviour.Flexible)">
                             <Tooltip :content="t('attr.autowidth')" :offset="15">
                                 <SvgIcon :icon="text_autowidth_icon" />
                             </Tooltip>
                         </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixed' }"
+                        <i :class="{ 'jointly-text': true, 'font-position': true, selected_bg: selectText === 'fixed' }"
                             @click="onSelectText(TextBehaviour.Fixed)">
                             <Tooltip :content="t('attr.autoheight')" :offset="15">
                                 <SvgIcon :icon="text_autoheight_icon" />
                             </Tooltip>
                         </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
+                        <i :class="{ 'jointly-text': true, 'font-position': true, selected_bg: selectText === 'fixWidthAndHeight' }"
                             @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
                             <Tooltip :content="t('attr.fixedsize')" :offset="15">
                                 <SvgIcon :icon="text_fixedsize_icon" />
@@ -1299,20 +1288,18 @@ import TextMaskView from './TextMaskView.vue'
                 </div>
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor">
-                <div style="font-size: 12px;">{{ t('attr.font_color') }}
-                </div>
+            <div v-if="!colorIsMulti && !mixed && textColor" class="text-color">
+                <div style="font-size: 12px;">{{ t('attr.font_color') }}</div>
                 <div class="color">
                     <ColorBlock :colors="([textColor || new Color(1, 6, 6, 6)] as Color[])" @click="showColorPanel" />
                     <component v-blur :is="compo" />
-                    <input v-blur ref="alphaFill" class="alphaFill" type="alphaFill" :value="filterAlpha() + '%'"
+                    <input v-blur ref="alphaFill" class="alphaFill" :value="filterAlpha() + '%'"
                         @focus="selectAllOnFocus" @change="(e) => onAlphaChange(e, 'color')" />
                     <ColorPicker v-if="colorPanelStatus.visible" :editor="colorPicker" :type="colorType"
                         :include="fillTypes" :color="rgbaColor!" :gradient="color_gradient" @close="closeColor" />
                 </div>
-
             </div>
-            <div class="text-colors" v-else-if="colorIsMulti || mixed">
+            <div v-else-if="colorIsMulti || mixed" class="text-colors">
                 <div class="color-title">
                     <div style="font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
                     <div class="add" @click="setMixedTextColor">
@@ -1321,7 +1308,7 @@ import TextMaskView from './TextMaskView.vue'
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor">
+            <div v-else-if="!colorIsMulti && !mixed && !textColor" class="text-colors">
                 <div class="color-title">
                     <div class="add" @click="addTextColor">
                         <SvgIcon :icon="add_icon" />
@@ -1329,7 +1316,7 @@ import TextMaskView from './TextMaskView.vue'
                 </div>
             </div>
             <!-- 高亮颜色 -->
-            <div class="highlight-color" v-if="!highlightIsMulti && highlight">
+            <div v-if="!highlightIsMulti && highlight" class="highlight-color">
                 <div style="font-size: 12px;" :class="{ 'check': highlight, 'nocheck': !highlight }">{{
                     t('attr.highlight_color') }}
                 </div>
@@ -1338,7 +1325,7 @@ import TextMaskView from './TextMaskView.vue'
                         <ColorBlock :colors="([highlight || new Color(1, 216, 216, 216)] as Color[])"
                             @click="showHighlightPanel" />
                         <component v-blur :is="HexHighlightInput()" />
-                        <input v-blur ref="highlightAlpha" class="alphaFill" type="alphaFill"
+                        <input v-blur ref="highlightAlpha" class="alphaFill"
                             :value="filterAlpha2() + '%'" @focus="selectAllOnFocus"
                             @change="(e) => onAlphaChange(e, 'highlight')" />
                         <ColorPicker v-if="highlightPanelStatus.visible" :editor="highlightPicker"
@@ -1349,7 +1336,7 @@ import TextMaskView from './TextMaskView.vue'
                     </div>
                 </div>
             </div>
-            <div class="text-colors" v-else-if="highlightIsMulti">
+            <div v-else-if="highlightIsMulti" class="text-colors">
                 <div class="color-title">
                     <div style="font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{
@@ -1361,7 +1348,7 @@ import TextMaskView from './TextMaskView.vue'
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight" @click="addHighlight">
+            <div v-else-if="!highlightIsMulti && !highlight" class="text-colors" @click="addHighlight">
                 <div class="color-title">
                     <div style="font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{
@@ -1377,8 +1364,7 @@ import TextMaskView from './TextMaskView.vue'
         <TextStyle v-if="textLibStatus.visible" :context="props.context" :manager="textCtxMgr" @close="closePanel">
         </TextStyle>
         <teleport to="body">
-            <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
-            </div>
+            <div v-if="showPoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }" />
         </teleport>
     </div>
 </template>
@@ -1595,11 +1581,11 @@ import TextMaskView from './TextMaskView.vue'
 
             .font-size-list {
                 position: absolute;
-                left: 0px;
+                left: 0;
                 width: 100%;
                 border-radius: 6px;
                 background-color: #fff;
-                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
                 border: 1px solid #EBEBEB;
                 color: #262626;
                 padding: 4px 0;
@@ -1730,7 +1716,7 @@ import TextMaskView from './TextMaskView.vue'
                 border-radius: var(--default-radius);
             }
 
-            .font-posi {
+            .font-position {
                 width: 30px;
                 height: 28px;
                 display: flex;
@@ -1815,7 +1801,6 @@ import TextMaskView from './TextMaskView.vue'
             }
         }
 
-
         .text-colors {
             .color-title {
                 display: flex;
@@ -1875,8 +1860,6 @@ import TextMaskView from './TextMaskView.vue'
             background-color: #F5F5F5;
         }
     }
-
-
 }
 
 .down {

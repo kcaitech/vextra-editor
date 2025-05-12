@@ -249,7 +249,7 @@ import CustomBezier from "./Prototype/CustomBezier.vue"
 import {
     PrototypeStartingPoint,
     ArtboardView,
-    PrototypeInterAction,
+    PrototypeInteraction,
     PrototypeActions,
     PrototypeConnectionType,
     PrototypeNavigationType,
@@ -298,7 +298,7 @@ const reflush_by_shapes = ref<number>(0);
 const constraintShow = ref<boolean>(true);
 const animationtimevalue = ref<HTMLInputElement[]>()
 const prototypestart = ref<Prototypestart | undefined>({ name: "", desc: "" })
-const prototypeinteraction = ref<PrototypeInterAction[]>()
+const prototypeinteraction = ref<PrototypeInteraction[]>()
 const aftertimeout = ref<HTMLInputElement[]>()
 const connectionURL = ref<HTMLInputElement[]>()
 const scroll = ref<string>('')
@@ -1199,7 +1199,7 @@ const setTransitionDuration = (id: string) => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    const oldval = shape.prototypeInterActions?.find(item => item.id === id)?.actions.transitionDuration;
+    const oldval = shape.prototypeInteractions?.find(item => item.id === id)?.actions.transitionDuration;
     const value = getDuration(animationtimevalue.value![0].value, oldval);
     e.setPrototypeActionTransitionDuration(shape as ShapeView, id, value / 1000)
     animationtimevalue.value![0].value = value + 'ms';
@@ -1286,7 +1286,7 @@ const createAction = () => {
     let events: PrototypeEvents[] = []
     const event = ref<PrototypeEvents>()
 
-    shape.prototypeInterActions?.forEach(i => {
+    shape.prototypeInteractions?.forEach(i => {
         events.push(i.event.interactionType)
     })
 
@@ -1305,7 +1305,7 @@ const createAction = () => {
     const Action = new PrototypeActions(PrototypeConnectionType.NONE, true);
     Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
-    e.insertPrototypeAction(shape, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));
+    e.insertPrototypeAction(shape, new PrototypeInteraction(new BasicArray<number>(), id, Event, Action));
     acitonindex.value = id
     updateData()
 }
@@ -1399,7 +1399,7 @@ function updateData() {
     if (types.includes(shape.type)) {
         isContainer.value = true
         isProtoType.value.set('shape', { shape, isContainer })
-    } else if (((shape.parent?.isContainer || shape.parent?.type === ShapeType.SymbolRef) && shape.parent.type !== ShapeType.Page) || (shape.prototypeInterActions !== undefined && shape.prototypeInterActions.length !== 0)) {
+    } else if (((shape.parent?.isContainer || shape.parent?.type === ShapeType.SymbolRef) && shape.parent.type !== ShapeType.Page) || (shape.prototypeInteractions !== undefined && shape.prototypeInteractions.length !== 0)) {
         isContainer.value = false
         isProtoType.value.set('shape', { shape, isContainer })
     } else {
@@ -1424,7 +1424,7 @@ function updateData() {
     if (isProtoType.value.size) {
         isProtoType.value.forEach((v, k) => {
             if (k) prototypestart.value = v.shape.prototypeStartPoint;
-            prototypeinteraction.value = v.shape.prototypeInterActions;
+            prototypeinteraction.value = v.shape.prototypeInteractions;
             if (prototypeinteraction.value) {
                 prototypeinteraction.value = [...prototypeinteraction.value].reverse()
             }

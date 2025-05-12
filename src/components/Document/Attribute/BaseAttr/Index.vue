@@ -957,10 +957,9 @@ onUnmounted(() => {
     <div class="table">
         <div class="tr">
             <CommonInput :icon="x_icon" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
-                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @keydown="keydownX">
-            </CommonInput>
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @keydown="keydownX" />
             <CommonInput :icon="y_icon" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
-                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY"></CommonInput>
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY" />
             <div v-if="s_adapt" class="adapt" @click="adapt">
                 <Tooltip :content="t('attr.adapt')">
                     <SvgIcon :icon="adapt_icon" style="outline: none;" />
@@ -971,11 +970,10 @@ onUnmounted(() => {
         <div class="tr">
             <CommonInput :icon="w_icon" draggable :value="format(w)" @change="changeW"
                 :disabled="model_disable_state.width" @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"
-                @keydown="keydownW"></CommonInput>
+                @keydown="keydownW" />
             <CommonInput :icon="h_icon" draggable :value="format(h)" @change="changeH"
                 :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"
-                @keydown="keydownH">
-            </CommonInput>
+                @keydown="keydownH" />
             <Tooltip :content="t('attr.constrainProportions')">
                 <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
                     <SvgIcon :icon="isLock ? lock_icon : lock_open_icon" :class="{ 'active': isLock }" />
@@ -988,7 +986,7 @@ onUnmounted(() => {
         <div class="tr">
             <CommonInput :icon="angle_icon" draggable :value="formatRotate(rotate)" @change="changeR"
                 :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
-                @dragend="dragend" @keydown="keydownR"></CommonInput>
+                @dragend="dragend" @keydown="keydownR" />
             <div class="flip-wrapper">
                 <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
                     <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
@@ -1008,11 +1006,11 @@ onUnmounted(() => {
         <div class="tr" v-if="s_counts">
             <CommonInput :icon="angle_count_icon" draggable :value="format(counts)" @change="changeCounts"
                 :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
-                @dragend="dragend"></CommonInput>
+                @dragend="dragend" />
             <CommonInput v-if="s_inner_angle" :icon="inner_angle_icon" draggable
                 :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
                 :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
-                @dragend="dragend"></CommonInput>
+                @dragend="dragend" />
             <div style="width:28px;height: 28px;" />
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"
@@ -1022,12 +1020,10 @@ onUnmounted(() => {
         <div class="tr" v-if="s_tidy_up">
             <CommonInput :icon="hor_space2_icon" :value="format(horSpace)" :draggable="!horTidyUp"
                        @change="changeHorTidyUp" :disabled="horTidyUp" @dragstart="dragstart"
-                       @dragging="(e) => draggingTidyUp(e, 'hor')" @dragend="dragend" @keydown="keydownHorTidyUp">
-            </CommonInput>
+                       @dragging="(e) => draggingTidyUp(e, 'hor')" @dragend="dragend" @keydown="keydownHorTidyUp" />
             <CommonInput :icon="ver_space2_icon" :value="format(verSpace)" :draggable="!verTidyUp"
                        @change="changeVerTidyUp" :disabled="verTidyUp" @dragstart="dragstart"
-                       @dragging="(e) => draggingTidyUp(e, 'ver')" @dragend="dragend" @keydown="keydownVerTidyUp">
-            </CommonInput>
+                       @dragging="(e) => draggingTidyUp(e, 'ver')" @dragend="dragend" @keydown="keydownVerTidyUp" />
             <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">

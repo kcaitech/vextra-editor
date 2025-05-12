@@ -12,8 +12,6 @@ import { Context } from "@/context";
 import { Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Menu } from "@/context/menu";
 import { ClientXY, PageXY } from "@/context/selection";
-import { WorkSpace } from "@/context/workspace";
-// import { Comment } from "@/context/comment";
 import { scout_once, XYsBounding } from "@/utils/common";
 import { multi_select_shape } from "./listview";
 import { is_straight } from "@/utils/attri_setting";
@@ -28,7 +26,7 @@ export function is_mouse_on_content(e: MouseEvent): boolean {
 /**
  * @description 判断鼠标下落时，是否正进行文本编辑
  */
-export function down_while_is_text_editing(e: MouseEvent, context: Context) {
+export function down_while_is_text_editing(context: Context) {
     const selection = context.selection;
     const shapes = selection.selectedShapes;
     const textshape = selection.textshape;
@@ -217,36 +215,6 @@ export function modify_mouse_position_by_type(update_type: number, startPosition
 }
 
 /**
- * @description 获取当前图形的最近 父级容器
- */
-export function get_closest_container(context: Context, shape: ShapeView): ShapeView {
-    let result = context.selection.selectedPage!
-    let p = shape.parent;
-    while (p) {
-        if (
-            p.type === ShapeType.Artboard ||
-            p.type === ShapeType.Symbol ||
-            p.type === ShapeType.SymbolUnion
-        ) {
-            return p;
-        }
-        p = p.parent;
-    }
-    return result
-}
-
-
-/**
- * @description 结束图形拖动，开启控件更新机并立刻更新一次、重置辅助对象、控制权由控件转移到编辑器、解除光标固定
- */
-export function end_transalte(context: Context) {
-    context.workspace.translating(false);
-    context.workspace.setSelectionViewUpdater(true);
-    context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
-    context.assist.reset();
-}
-
-/**
  * @description 当移动图形上挂有评论时，需要更新评论位置信息
  */
 export function update_comment(context: Context, need_update_comment: boolean) {
@@ -287,15 +255,4 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
             selection.resetSelectShapes();
         }
     }
-}
-
-/**
- * @description 是否摆脱辅助吸附
- */
-export function is_rid_stick(context: Context, a: number, b: number) {
-    return Math.abs(a - b) >= context.assist.stickness;
-}
-
-export function is_up_from_ctrl_element(e: MouseEvent) {
-    return !!(e.target as Element)?.closest('[data-area="controller-element"]');
 }

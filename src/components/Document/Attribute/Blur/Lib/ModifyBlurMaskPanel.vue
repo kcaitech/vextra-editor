@@ -18,8 +18,6 @@ import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
 import { BlurCatch, BlurContextMgr } from "../ctx";
 import BlurPanel from "@/components/Document/Attribute/Blur/BlurPanel.vue"
-import { KeyboardMgr } from "@/keyboard";
-
 
 /**
  * 修改样式弹框
@@ -76,31 +74,24 @@ function changeDescInput(value: string) {
 }
 
 function createStyle() {
+    if (!name.value || data) return;
     manager.createStyleLib(name.value, desc.value);
 }
 
-function checkEnter(e: KeyboardEvent) {
-    if (e.key === 'Enter' && name.value && !data) {
-        createStyle();
-    }
-}
-const boardMgr = new KeyboardMgr(context);
 onMounted(() => {
     update();
     data?.watch(update);
-    boardMgr.addEventListener('keydown', checkEnter);
 })
 
 onUnmounted(() => {
     data?.unwatch(update);
-    boardMgr.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-blur-panel" id="modify-blur-panel">
         <PanelHeader :title="data ? t('stylelib.editor_blur') : t('stylelib.create_blur')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
-            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
+                      @change-name-input="changeNameInput" @change-desc-input="changeDescInput" @create="createStyle"/>
         <div v-if="data" class="data-panel">
             <ListHeader :title="t('stylelib.blur')" create />
             <div class="fills-container">

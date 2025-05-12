@@ -89,7 +89,6 @@ function _update() {
 function selectionWatcher(t: number | string) {
     if (t === props.mainNotify) {
         update();
-        // cursor_tracking(cursor_points);  功能不完善，暂时关闭
     } else if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
         const text_selection = props.selection;
         text_selection.reset();

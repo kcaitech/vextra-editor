@@ -174,6 +174,7 @@ export const home = {
     downloading: 'Downloading',
     downloaded: 'Downloaded',
     no_board: 'No frame exists',
+    clipboard_not_allowed: 'Failed to execute read on Clipboard: Read permission denied',
 }
 
 export const search = {

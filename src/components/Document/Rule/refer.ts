@@ -201,25 +201,30 @@ export class ReferLineHandler extends TransformHandler {
         }
 
         let offset;
+        let rootOffset;
         if (currentEnv.id === this.page.id) {
             if (axis === GuideAxis.X) {
-                offset = __root_xy.x;
+                rootOffset = offset = __root_xy.x;
             } else {
-                offset = __root_xy.y;
+                rootOffset = offset = __root_xy.y;
             }
         } else {
             const m = (currentEnv.matrix2Root().inverse);
 
             if (axis === GuideAxis.X) {
                 offset = m.computeCoord3(__root_xy).x;
+                rootOffset = __root_xy.x;
             } else {
                 offset = m.computeCoord3(__root_xy).y;
+                rootOffset = __root_xy.y;
             }
         }
 
         this.api.modifyOffset(currentEnv, index, offset, needRecovery);
 
         this.migrate();
+
+        return rootOffset;
     }
 
     modifyOffsetByKeyboard(del: number) {

@@ -7,9 +7,17 @@
  * For more information about the AGPL-3.0 license, please visit:
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
-
-import { ArtboardView, PageView, Shape, ShapeType, ShapeView, adapt2Shape, PathShapeView, Matrix, Transform } from "@kcdesign/data";
-import { PositionAdjust } from "@kcdesign/data";
+import {
+    ArtboardView,
+    PageView,
+    Shape,
+    ShapeType,
+    ShapeView,
+    adapt2Shape,
+    PathShapeView,
+    Transform,
+    SymbolView
+} from "@kcdesign/data";
 import { is_straight } from "@/utils/attri_setting";
 
 function getFrameAnchor(view: ShapeView) {
@@ -21,8 +29,8 @@ function getFrameAnchor(view: ShapeView) {
         const __m = new Transform();
         __m.preScale(width, height);
         __m.multiAtLeft(m);
-        const lt = __m.computeCoord((view as PathShapeView).segments[0].points[0]);
-        const rb = __m.computeCoord((view as PathShapeView).segments[0].points[1]);
+        const lt = __m.map((view as PathShapeView).segments[0].points[0]);
+        const rb = __m.map((view as PathShapeView).segments[0].points[1]);
         return [[lt.x, lt.y], [rb.x, rb.y]];
     } else {
         return [
@@ -94,7 +102,6 @@ export function get_colony_bottom(shapes: ShapeView[]) {
     }
     return Math.max(..._ys);
 }
-
 // 个体的最左端
 export function get_individuality_left(shape: ShapeView) {
     const _xs: number[] = [];
@@ -173,20 +180,27 @@ export function align_left(shapes: ShapeView[]) {
         } else {
             c_apex = get_colony_left([first]);
         }
-    }
-    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+    } else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_left([first_p]);
-    }
-    else {
+    } else {
         c_apex = get_colony_left(shapes);
     }
 
-    const actions: PositionAdjust[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if ((shape as ArtboardView).autoLayout) continue;
-        const s_apex = get_individuality_left(shape);
-        actions.push({ target: adapt2Shape(shape), transX: c_apex - s_apex, transY: 0 });
+    const actions: { target: Shape, transX: number, transY: number }[] = [];
+    for (const view of shapes) {
+        if (view.parent?.autoLayout) continue;
+        const s_apex = get_individuality_left(view);
+        const intoParent = view.parent!.matrix2Root().inverse;
+        const target = view
+            .matrix2Root()
+            .trans(c_apex - s_apex, 0)
+            .multiAtLeft(intoParent);
+
+        actions.push({
+            target: adapt2Shape(view),
+            transX: target.translateX - view.transform.translateX,
+            transY: target.translateY - view.transform.translateY
+        });
     }
 
     return actions;
@@ -194,16 +208,12 @@ export function align_left(shapes: ShapeView[]) {
 // 水平线对齐
 export function align_center_x(shapes: ShapeView[]) {
     let c_apex = 0;
-    if (!shapes.length) {
-        return [];
-    }
+    if (!shapes.length) return [];
 
     const first = shapes[0];
     const first_p = first.parent;
 
-    if (!first_p) {
-        return [];
-    }
+    if (!first_p) return [];
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
         if (first.childs.length > 1) {
@@ -211,20 +221,27 @@ export function align_center_x(shapes: ShapeView[]) {
         } else {
             c_apex = get_colony_center_x([first]);
         }
-    }
-    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+    } else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_center_x([first_p]);
-    }
-    else {
+    } else {
         c_apex = get_colony_center_x(shapes);
     }
 
-    const actions: PositionAdjust[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if ((shape as ArtboardView).autoLayout) continue;
-        const s_apex = get_individuality_center_x(shape);
-        actions.push({ target: adapt2Shape(shape), transX: c_apex - s_apex, transY: 0 });
+    const actions: { target: Shape, transX: number, transY: number }[] = [];
+    for (const view of shapes) {
+        if (view.parent?.autoLayout) continue;
+        const s_apex = get_individuality_center_x(view);
+        const intoParent = view.parent!.matrix2Root().inverse;
+        const target = view
+            .matrix2Root()
+            .trans(c_apex - s_apex, 0)
+            .multiAtLeft(intoParent);
+
+        actions.push({
+            target: adapt2Shape(view),
+            transX: target.translateX - view.transform.translateX,
+            transY: target.translateY - view.transform.translateY
+        });
     }
     return actions;
 }
@@ -244,36 +261,37 @@ export function align_right(shapes: ShapeView[]) {
         } else {
             c_apex = get_colony_right([first]);
         }
-    }
-    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+    } else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_right([first_p]);
-    }
-    else {
+    } else {
         c_apex = get_colony_right(shapes);
     }
 
-    const actions: PositionAdjust[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if ((shape as ArtboardView).autoLayout) continue;
-        const s_apex = get_individuality_right(shape);
-        actions.push({ target: adapt2Shape(shape), transX: c_apex - s_apex, transY: 0 });
+    const actions: { target: Shape, transX: number, transY: number }[] = [];
+    for (const view of shapes) {
+        if ((view as ArtboardView).autoLayout) continue;
+        const s_apex = get_individuality_right(view);
+        const intoParent = view.parent!.matrix2Root().inverse;
+        const target = view
+            .matrix2Root()
+            .trans(c_apex - s_apex, 0)
+            .multiAtLeft(intoParent);
+
+        actions.push({
+            target: adapt2Shape(view),
+            transX: target.translateX - view.transform.translateX,
+            transY: target.translateY - view.transform.translateY
+        });
     }
     return actions;
 }
 // 靠顶部对齐
 export function align_top(shapes: ShapeView[]) {
     let c_apex = 0;
-    if (!shapes.length) {
-        return [];
-    }
-
+    if (!shapes.length) return [];
     const first = shapes[0];
     const first_p = first.parent;
-
-    if (!first_p) {
-        return [];
-    }
+    if (!first_p) return [];
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
         if (first.childs.length > 1) {
@@ -281,36 +299,37 @@ export function align_top(shapes: ShapeView[]) {
         } else {
             c_apex = get_colony_top([first]);
         }
-    }
-    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+    } else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_top([first_p]);
-    }
-    else {
+    } else {
         c_apex = get_colony_top(shapes);
     }
-
-    const actions: PositionAdjust[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if ((shape as ArtboardView).autoLayout) continue;
-        const s_apex = get_individuality_top(shape);
-        actions.push({ target: adapt2Shape(shape), transX: 0, transY: c_apex - s_apex });
+    const actions: { target: Shape, transX: number, transY: number }[] = [];
+    for (const view of shapes) {
+        if (view.parent?.autoLayout) continue;
+        const s_apex = get_individuality_top(view);
+        const intoParent = view.parent!.matrix2Root().inverse;
+        const target = view
+            .matrix2Root()
+            .trans(0, c_apex - s_apex)
+            .multiAtLeft(intoParent);
+        actions.push({
+            target: adapt2Shape(view),
+            transX: target.translateX - view.transform.translateX,
+            transY: target.translateY - view.transform.translateY
+        });
     }
     return actions;
 }
 // 中线对齐
 export function align_center_y(shapes: ShapeView[]) {
     let c_apex = 0;
-    if (!shapes.length) {
-        return [];
-    }
+    if (!shapes.length) return [];
 
     const first = shapes[0];
     const first_p = first.parent;
 
-    if (!first_p) {
-        return [];
-    }
+    if (!first_p) return [];
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
         if (first.childs.length > 1) {
@@ -318,35 +337,39 @@ export function align_center_y(shapes: ShapeView[]) {
         } else {
             c_apex = get_colony_center_y([first]);
         }
-    }
-    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+    } else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_center_y([first_p]);
-    }
-    else {
+    } else {
         c_apex = get_colony_center_y(shapes);
     }
 
-    const actions: PositionAdjust[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if ((shape as ArtboardView).autoLayout) continue;
-        const s_apex = get_individuality_center_y(shape);
-        actions.push({ target: adapt2Shape(shape), transX: 0, transY: c_apex - s_apex });
+    const actions: { target: Shape, transX: number, transY: number }[] = [];
+    for (const view of shapes) {
+        if (view.parent?.autoLayout) continue;
+        const s_apex = get_individuality_center_y(view);
+        const intoParent = view.parent!.matrix2Root().inverse;
+        const target = view
+            .matrix2Root()
+            .trans(0, c_apex - s_apex)
+            .multiAtLeft(intoParent);
+
+        actions.push({
+            target: adapt2Shape(view),
+            transX: target.translateX - view.transform.translateX,
+            transY: target.translateY - view.transform.translateY
+        });
     }
     return actions;
 }
+// 靠底部对齐
 export function align_bottom(shapes: ShapeView[]) {
     let c_apex = 0;
-    if (!shapes.length) {
-        return [];
-    }
+    if (!shapes.length) return [];
 
     const first = shapes[0];
     const first_p = first.parent;
 
-    if (!first_p) {
-        return [];
-    }
+    if (!first_p) return [];
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
         if (first.childs.length > 1) {
@@ -354,82 +377,79 @@ export function align_bottom(shapes: ShapeView[]) {
         } else {
             c_apex = get_colony_bottom([first]);
         }
-    }
-    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+    } else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_bottom([first_p]);
-    }
-    else {
+    } else {
         c_apex = get_colony_bottom(shapes);
     }
 
-    const actions: PositionAdjust[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if ((shape as ArtboardView).autoLayout) continue;
-        const s_apex = get_individuality_bottom(shape);
-        actions.push({ target: adapt2Shape(shape), transX: 0, transY: c_apex - s_apex });
+    const actions: { target: Shape, transX: number, transY: number }[] = [];
+    for (const view of shapes) {
+        if (view.parent?.autoLayout) continue;
+        const s_apex = get_individuality_bottom(view);
+        const intoParent = view.parent!.matrix2Root().inverse;
+        const target = view
+            .matrix2Root()
+            .trans(0, c_apex - s_apex)
+            .multiAtLeft(intoParent);
+
+        actions.push({
+            target: adapt2Shape(view),
+            transX: target.translateX - view.transform.translateX,
+            transY: target.translateY - view.transform.translateY
+        });
     }
     return actions;
 }
-
 // 水平均匀分布
 export function distribute_horizontally(shapes: ShapeView[]) {
-    if (!shapes.length) {
-        return [];
-    }
-
+    if (!shapes.length) return [];
     const first = shapes[0];
-
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
     }
-
-    const new_shapes: { left: number, right: number, width: number, shape: Shape }[] = [];
+    const pre: { left: number, right: number, width: number, shape: ShapeView }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if ((shape as ArtboardView).autoLayout) continue;
+        if (shape.parent?.autoLayout) continue;
         const { left, right } = get_individuality_l_r(shape);
-        new_shapes.push({ shape: adapt2Shape(shape), left, right, width: right - left });
+        pre.push({ shape, left, right, width: right - left });
     }
-    new_shapes.sort((a, b) => {
-        if (a.left > b.left) {
-            return 1;
-        } else if (a.left < b.left) {
-            return -1;
-        } else {
-            return 0;
-        }
-    });
-    let right_max = new_shapes[0];
-    for (let i = 1; i < new_shapes.length; i++) {
-        if (new_shapes[i].right > right_max.right) {
-            right_max = new_shapes[i];
+    pre.sort((a, b) => a.left - b.left);
+    let right_max = pre[0];
+    for (let i = 1; i < pre.length; i++) {
+        if (pre[i].right > right_max.right) {
+            right_max = pre[i];
         }
     }
-    if (right_max !== new_shapes[0]) {
-        let inner_space = new_shapes[new_shapes.length - 1].left - new_shapes[0].right;
-        for (let i = 1; i < new_shapes.length - 1; i++) {
-            inner_space -= new_shapes[i].width;
+    if (right_max !== pre[0]) {
+        let inner_space = pre[pre.length - 1].left - pre[0].right;
+        for (let i = 1; i < pre.length - 1; i++) {
+            inner_space -= pre[i].width;
         }
-        const gap = inner_space / (new_shapes.length - 1);
-        const actions: PositionAdjust[] = [];
-        for (let i = 1; i < new_shapes.length - 1; i++) {
-            const s_left = new_shapes[i].left;
+        const gap = inner_space / (pre.length - 1);
+        const actions: { target: Shape, transX: number, transY: number }[] = [];
+        for (let i = 1; i < pre.length - 1; i++) {
+            const s_left = pre[i].left;
+            const view = pre[i].shape;
+            const intoParent = view.parent!.matrix2Root().inverse;
+            const target = view
+                .matrix2Root()
+                .trans(pre[i - 1].right + gap - s_left, 0)
+                .multiAtLeft(intoParent);
             actions.push({
-                target: new_shapes[i].shape,
-                transX: new_shapes[i - 1].right + gap - s_left,
-                transY: 0
+                target: adapt2Shape(view),
+                transX: target.translateX - view.transform.translateX,
+                transY: target.translateY - view.transform.translateY
             })
-            new_shapes[i].right = new_shapes[i - 1].right + new_shapes[i].width + gap;
+            pre[i].right = pre[i - 1].right + pre[i].width + gap;
         }
         return actions;
     }
 }
 // 垂直均匀分布
 export function vertical_uniform_distribution(shapes: ShapeView[]) {
-    if (!shapes.length) {
-        return [];
-    }
+    if (!shapes.length) return [];
 
     const first = shapes[0];
 
@@ -437,44 +457,194 @@ export function vertical_uniform_distribution(shapes: ShapeView[]) {
         shapes = first.childs || [];
     }
 
-    const new_shapes: { top: number, bottom: number, height: number, shape: Shape }[] = [];
+    const pre: { top: number, bottom: number, height: number, shape: ShapeView }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if ((shape as ArtboardView).autoLayout) continue;
+        if (shape.parent?.autoLayout) continue;
         const { top, bottom } = get_individuality_t_b(shape);
-        new_shapes.push({ shape: adapt2Shape(shape), top, bottom, height: bottom - top });
+        pre.push({ shape, top, bottom, height: bottom - top });
     }
-    new_shapes.sort((a, b) => {
-        if (a.top > b.top) {
-            return 1;
-        } else if (a.top < b.top) {
-            return -1;
-        } else {
-            return 0;
-        }
-    });
-    let right_max = new_shapes[0];
-    for (let i = 1; i < new_shapes.length; i++) {
-        if (new_shapes[i].bottom > right_max.bottom) {
-            right_max = new_shapes[i];
+    pre.sort((a, b) => a.top - b.top);
+    let right_max = pre[0];
+    for (let i = 1; i < pre.length; i++) {
+        if (pre[i].bottom > right_max.bottom) {
+            right_max = pre[i];
         }
     }
-    if (right_max !== new_shapes[0]) {
-        let inner_space = new_shapes[new_shapes.length - 1].top - new_shapes[0].bottom;
-        for (let i = 1; i < new_shapes.length - 1; i++) {
-            inner_space -= new_shapes[i].height;
+    if (right_max !== pre[0]) {
+        let inner_space = pre[pre.length - 1].top - pre[0].bottom;
+        for (let i = 1; i < pre.length - 1; i++) {
+            inner_space -= pre[i].height;
         }
-        const gap = inner_space / (new_shapes.length - 1);
-        const actions: PositionAdjust[] = [];
-        for (let i = 1; i < new_shapes.length - 1; i++) {
-            const s_top = new_shapes[i].top;
+        const gap = inner_space / (pre.length - 1);
+        const actions: { target: Shape, transX: number, transY: number }[] = [];
+        for (let i = 1; i < pre.length - 1; i++) {
+            const s_top = pre[i].top;
+            const view = pre[i].shape;
+            const intoParent = view.parent!.matrix2Root().inverse;
+            const target = view
+                .matrix2Root()
+                .trans(0, pre[i - 1].bottom + gap - s_top)
+                .multiAtLeft(intoParent);
             actions.push({
-                target: new_shapes[i].shape,
-                transX: 0,
-                transY: new_shapes[i - 1].bottom + gap - s_top,
+                target: adapt2Shape(view),
+                transX: target.translateX - view.transform.translateX,
+                transY: target.translateY - view.transform.translateY
             })
-            new_shapes[i].bottom = new_shapes[i - 1].bottom + new_shapes[i].height + gap;
+            pre[i].bottom = pre[i - 1].bottom + pre[i].height + gap;
         }
         return actions;
     }
+}
+
+function getGroups(shapes: ShapeView[]) {
+    const map: Map<ShapeView, ShapeView[]> = new Map();
+    for (const shape of shapes) {
+        const parent = shape.parent;
+        if (parent instanceof ArtboardView || parent instanceof SymbolView) {
+            if (parent.autoLayout) continue;
+            const group = map.get(parent) ?? [];
+            map.set(parent, group);
+            group.push(shape);
+        }
+    }
+    return map;
+}
+
+export function align_left_relative(shapes: ShapeView[]) {
+    const map = getGroups(shapes);
+    if (!map.size) return [];
+    const offsets: { target: Shape, transX: number, transY: number }[] = [];
+    map.forEach((group, parent) => {
+        const target = get_individuality_left(parent);
+        const match = get_colony_left(group);
+        const offset = target - match;
+        const intoParent = parent.matrix2Root().inverse;
+        for (const view of group) {
+            const targetTrans = view.matrix2Root();
+            targetTrans.trans(offset, 0);
+            targetTrans.multiAtLeft(intoParent);
+            offsets.push({
+                target: adapt2Shape(view),
+                transX: targetTrans.translateX - view.transform.translateX,
+                transY: targetTrans.translateY - view.transform.translateY
+            });
+        }
+    });
+    return offsets;
+}
+
+export function align_center_x_relative(shapes: ShapeView[]) {
+    const map = getGroups(shapes);
+    if (!map.size) return [];
+    const offsets: { target: Shape, transX: number, transY: number }[] = [];
+    map.forEach((group, parent) => {
+        const target = get_individuality_center_x(parent);
+        const match = get_colony_center_x(group);
+        const offset = target - match;
+        const intoParent = parent.matrix2Root().inverse;
+        for (const view of group) {
+            const targetTrans = view.matrix2Root();
+            targetTrans.trans(offset, 0);
+            targetTrans.multiAtLeft(intoParent);
+            offsets.push({
+                target: adapt2Shape(view),
+                transX: targetTrans.translateX - view.transform.translateX,
+                transY: targetTrans.translateY - view.transform.translateY
+            });
+        }
+    });
+    return offsets;
+}
+
+export function align_right_relative(shapes: ShapeView[]) {
+    const map = getGroups(shapes);
+    if (!map.size) return [];
+    const offsets: { target: Shape, transX: number, transY: number }[] = [];
+    map.forEach((group, parent) => {
+        const target = get_individuality_right(parent);
+        const match = get_colony_right(group);
+        const offset = target - match;
+        const intoParent = parent.matrix2Root().inverse;
+        for (const view of group) {
+            const targetTrans = view.matrix2Root();
+            targetTrans.trans(offset, 0);
+            targetTrans.multiAtLeft(intoParent);
+            offsets.push({
+                target: adapt2Shape(view),
+                transX: targetTrans.translateX - view.transform.translateX,
+                transY: targetTrans.translateY - view.transform.translateY
+            });
+        }
+    });
+    return offsets;
+}
+
+export function align_top_relative(shapes: ShapeView[]) {
+    const map = getGroups(shapes);
+    if (!map.size) return [];
+    const offsets: { target: Shape, transX: number, transY: number }[] = [];
+    map.forEach((group, parent) => {
+        const target = get_individuality_top(parent);
+        const match = get_colony_top(group);
+        const offset = target - match;
+        const intoParent = parent.matrix2Root().inverse;
+        for (const view of group) {
+            const targetTrans = view.matrix2Root();
+            targetTrans.trans(0, offset);
+            targetTrans.multiAtLeft(intoParent);
+            offsets.push({
+                target: adapt2Shape(view),
+                transX: targetTrans.translateX - view.transform.translateX,
+                transY: targetTrans.translateY - view.transform.translateY
+            });
+        }
+    });
+    return offsets;
+}
+
+export function align_center_y_relative(shapes: ShapeView[]) {
+    const map = getGroups(shapes);
+    if (!map.size) return [];
+    const offsets: { target: Shape, transX: number, transY: number }[] = [];
+    map.forEach((group, parent) => {
+        const target = get_individuality_center_y(parent);
+        const match = get_colony_center_y(group);
+        const offset = target - match;
+        const intoParent = parent.matrix2Root().inverse;
+        for (const view of group) {
+            const targetTrans = view.matrix2Root();
+            targetTrans.trans(0, offset);
+            targetTrans.multiAtLeft(intoParent);
+            offsets.push({
+                target: adapt2Shape(view),
+                transX: targetTrans.translateX - view.transform.translateX,
+                transY: targetTrans.translateY - view.transform.translateY
+            });
+        }
+    });
+    return offsets;
+}
+
+export function align_bottom_relative(shapes: ShapeView[]) {
+    const map = getGroups(shapes);
+    if (!map.size) return [];
+    const offsets: { target: Shape, transX: number, transY: number }[] = [];
+    map.forEach((group, parent) => {
+        const target = get_individuality_bottom(parent);
+        const match = get_colony_bottom(group);
+        const offset = target - match;
+        const intoParent = parent.matrix2Root().inverse;
+        for (const view of group) {
+            const targetTrans = view.matrix2Root();
+            targetTrans.trans(0, offset);
+            targetTrans.multiAtLeft(intoParent);
+            offsets.push({
+                target: adapt2Shape(view),
+                transX: targetTrans.translateX - view.transform.translateX,
+                transY: targetTrans.translateY - view.transform.translateY
+            });
+        }
+    });
+    return offsets;
 }

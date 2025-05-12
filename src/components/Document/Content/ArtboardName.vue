@@ -15,7 +15,6 @@ import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
 import { Translate2 } from "@/transform/translate/translate2";
-
 import { TitleAttri } from "@/components/Document/Content/titleRenderer";
 import { multi_select_shape } from "@/utils/listview";
 
@@ -107,7 +106,7 @@ const ChangeReName = (e: Event) => {
 }
 
 const hoverShape = (e: MouseEvent) => {
-    if (isDragging) return;
+    if (isDragging || props.data.shape.isLocked) return;
     emit('hover', props.data.shape)
 }
 
@@ -117,6 +116,8 @@ const unHoverShape = (e: MouseEvent) => {
 }
 
 function down(e: MouseEvent) {
+    if (props.data.shape.isLocked) return;
+
     const context = props.context;
     const shape = toRaw(props.data.shape);
 
@@ -133,7 +134,6 @@ function down(e: MouseEvent) {
 
         if (e.shiftKey) {
             multi_select_shape(props.context, shape);
-            // context.selection.rangeSelectShape([...context.selection.selectedShapes, shape]);
         } else {
             if (!context.selection.isSelectedShape(shape)) {
                 context.selection.selectShape(shape);

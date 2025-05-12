@@ -363,6 +363,7 @@ export class BundleHandler {
             if (source.styles?.length) {
                 this.insertMasks(source.styles);  // 样式
             }
+            // 如果选区内全都是容器，粘贴到每个选中的容器
             const context = this.context;
             const page = context.selection.selectedPage!;
             const selected = context.selection.selectedShapes;
@@ -382,7 +383,7 @@ export class BundleHandler {
             }
             const container = Array.from(containerSet.values());
             const handler = new ClipboardTransformHandler();
-            if (selected.length === 1 && selected[0] instanceof ArtboardView && originIds.length === 1 && originIds[0] === selected[0].id) { // 特殊场景
+            if (selected.length === 1 && selected[0] instanceof ArtboardView && originIds.length === 1 && originIds[0] === selected[0].id) {
                 params = handler.rightBy(context, source, selected[0]);
             } else if (container.length) {
                 params = handler.fitEnvs(context, container, source);
