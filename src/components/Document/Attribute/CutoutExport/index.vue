@@ -536,7 +536,6 @@ function getShapesSvg(shapes: ShapeView[]) {
         )
         renderSvgs.value = toRaw(r_Items);
     }
-    console.log('renderSvgs', renderSvgs.value);
 }
 
 let page = props.context.selection.selectedPage!;
