@@ -203,7 +203,7 @@ function moveHor(event: MouseEvent) {
     if (isDrag) {
         const rootOffset =  referLineHandler?.modifyOffset(event);
         referLineSelection.updateHoveredSelection(hovered.value.env.id);
-        if (rootOffset !== undefined) measure('horizontal', rootOffset);
+        // if (rootOffset !== undefined) measure('horizontal', rootOffset);
     } else {
         const y = props.context.workspace.getContentXY(event).y;
         const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
@@ -230,7 +230,7 @@ function moveVer(event: MouseEvent) {
     if (isDrag) {
         const rootOffset = referLineHandler?.modifyOffset(event);
         referLineSelection.updateHoveredSelection(hovered.value.env.id);
-        if (rootOffset !== undefined) measure('vertical', rootOffset);
+        // if (rootOffset !== undefined) measure('vertical', rootOffset);
     } else {
         const x = props.context.workspace.getContentXY(event).x;
         const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
@@ -648,13 +648,13 @@ onUnmounted(() => {
             />
             <path v-for="(p, i) in selected.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
         </g>
-        <g v-if="measureBox.visible">
-            <path
-                :d="`M${measureBox.x} ${measureBox.y} h${measureBox.width}  v${measureBox.height} h-${measureBox.width} z`"
-                stroke="#ff4400" stroke-width="0.5" fill="none"/>
-            <path :d="`M${measureBox.startX} ${measureBox.startY} L${measureBox.endX} ${measureBox.endY}`"
-                  stroke="#ff4400" stroke-width="0.5" fill="none"/>
-        </g>
+<!--        <g v-if="measureBox.visible">-->
+<!--            <path-->
+<!--                :d="`M${measureBox.x} ${measureBox.y} h${measureBox.width}  v${measureBox.height} h-${measureBox.width} z`"-->
+<!--                stroke="#ff4400" stroke-width="0.5" fill="none"/>-->
+<!--            <path :d="`M${measureBox.startX} ${measureBox.startY} L${measureBox.endX} ${measureBox.endY}`"-->
+<!--                  stroke="#ff4400" stroke-width="0.5" fill="none"/>-->
+<!--        </g>-->
     </svg>
     <div class="contact-block"/>
     <div class="d-hor" @mousemove="moveStop" @mousedown="downHor">
@@ -697,10 +697,10 @@ onUnmounted(() => {
             <div class="end-data"> {{ formatNumber(b.dataEnd) }}</div>
         </div>
     </div>
-    <div v-if="measureBox.visible && measureBox.distance > 3" class="measure-block"
-         :style="{ left: measureBox.dotX + 'px',top: measureBox.dotY +'px' }">
-        {{ Math.round(measureBox.distance) }}
-    </div>
+<!--    <div v-if="measureBox.visible && measureBox.distance > 3" class="measure-block"-->
+<!--         :style="{ left: measureBox.dotX + 'px',top: measureBox.dotY +'px' }">-->
+<!--        {{ Math.round(measureBox.distance) }}-->
+<!--    </div>-->
 </div>
 </template>
 <style scoped lang="scss">
