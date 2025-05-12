@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D, ArtboardView } from '@kcdesign/data';
+import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D, ArtboardView, GroupShapeView } from '@kcdesign/data';
 import { getGroupChildBounds, getShadowMax, parentIsArtboard } from '@/utils/cutout';
 import JSZip from 'jszip';
 import { XYsBounding } from './common';
@@ -315,12 +315,10 @@ export const getPosition = (shape: ShapeView) => {
             const p = shape.boundingBox()
             return { ...p }
         }
-    } else if (shape.type === ShapeType.Group) {
-        return getGroupChildBounds(shape);
     } else {
         const { left, top, right, bottom } = getShadowMax(shape);
         let { x, y, width: _w, height: _h } = shape.relativeOuterFrame;
-        if ((shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef)) {
+        if (shape instanceof GroupShapeView) {
             const f = shape.relativeVisibleFrame;
             if (!(shape as ArtboardView).frameMaskDisabled) {
                 x = f.x; y = f.y; _w = f.width; _h = f.height;
