@@ -344,10 +344,10 @@ export class StrokeFillContextMgr extends StyleCtx {
             for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
-                } else containers.push(view.getFills());
+                } else containers.push(view.getBorder().strokePaints);
             }
             const borderEditor = this.borderEditor;
-            const master = this.flat[0].getFills().map(i => borderEditor.importFill(i));
+            const master = this.flat[0].getBorder().strokePaints.map(i => borderEditor.importFill(i));
 
             const modifyLocalFills = (api: Api) => {
                 if (!containers.length) return;

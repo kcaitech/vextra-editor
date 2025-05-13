@@ -76,9 +76,7 @@ const watchList: any[] = [
         }
     })
 ]
-onMounted(() => {
-    blurCtxMgr.update();
-});
+onMounted(blurCtxMgr.update.bind(blurCtxMgr));
 onUnmounted(() => {
     watchList.forEach(stop => stop());
     blurPanelStatusMgr.unmounted();
