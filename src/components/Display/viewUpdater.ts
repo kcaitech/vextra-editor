@@ -115,13 +115,13 @@ export class ViewUpdater {
         }
 
         const frame = shape.frame;
-
+        
         const svgEl = (this.m_page_card.pageSvg as SVGSVGElement);
         svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
         svgEl.style['transition'] = ''
-        svgEl.style['transform'] = m.toString();
+        svgEl.style.transform = m.toString();
         svgEl.style.zIndex = '0';
         svgEl.style.opacity = '1';
         this.m_context.preview.setScale(this.getScale(m));
@@ -163,7 +163,6 @@ export class ViewUpdater {
         const rootCX = root.width / 2;
         const rootCY = root.height / 2;
         transformMatrix.trans(rootCX - cx, rootCY - cy);
-
         return transformMatrix;
     }
 
@@ -197,7 +196,7 @@ export class ViewUpdater {
 
     private __update(...args: any[]) {
         (this.m_page_card as any)?.repaint() // 执行PreviewPageCard内部重绘函数
-        if (args.includes('frame') || args.includes('rotation') || args.includes('transform') || args.includes('layout')) {
+        if (args.includes('style') || args.includes('transform') || args.includes('layout') || args.includes('childs')) {
             const save_m = this.matrix.clone();
             this.modifyTransform();
             this.setAttri(save_m);
@@ -439,7 +438,7 @@ export class ViewUpdater {
     modifyTransform() {
         const shape = this.m_current_view;
         const container = this.m_container;
-
+        
         if (!shape || !container || !this.m_page_card) {
             return;
         }

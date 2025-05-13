@@ -189,8 +189,21 @@ function getBase64(): Promise<string> {
         const _svg = svg.cloneNode(true) as SVGSVGElement;
         document.body.appendChild(_svg);
         const size = props.size;
-        _svg.setAttribute('width', `${size}`);
-        _svg.setAttribute('height', `${size}`);
+
+        // 获取 SVG 的实际尺寸
+        const svgRect = _svg.getBBox();
+        const svgWidth = svgRect.width;
+        const svgHeight = svgRect.height;
+        
+        // 计算缩放比例，确保 SVG 完整显示在画布中
+        const scale = Math.min(size / svgWidth, size / svgHeight);
+        const scaledWidth = svgWidth * scale;
+        const scaledHeight = svgHeight * scale;
+        const x = (size - scaledWidth) / 2;
+        const y = (size - scaledHeight) / 2;
+
+        // _svg.setAttribute('width', `${size}`);
+        // _svg.setAttribute('height', `${size}`);
         canvas.width = size;
         canvas.height = size;
         const svgString = new XMLSerializer().serializeToString(_svg);
@@ -198,7 +211,7 @@ function getBase64(): Promise<string> {
         const img = new Image();
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
         img.onload = () => {
-            context!.drawImage(img, 0, 0);
+            context!.drawImage(img, -x, -y);
             resolve(canvas.toDataURL('image/png', 1));
         }
         img.onerror = reject;

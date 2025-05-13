@@ -61,7 +61,7 @@ onUnmounted(() => {
     props.context.preview.watch(watcher);
 })
 
-import down_icon from '@/assets/icons/svg/down.svg';
+import down_icon from '@/assets/icons/svg/white-down.svg';
 </script>
 <template>
     <div class="scale-display-warp" @click="showMenu">

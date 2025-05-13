@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script setup lang="ts">
 import { Context } from '@/context';
@@ -84,19 +84,22 @@ function page_watcher() {
         cur_shape = toRaw([shape]);
     }
     
-    viewUpdater.atPage(page.data);
-    viewUpdater.atTarget(shape);
-
     const naviList = props.context.preview.naviShapeList;
     const frameList = naviList.length > 0 ? naviList : getFrameList(page);
     listLength.value = frameList.length;
-
+    
     const index = frameList.findIndex(item => item.id === shape.id);
     curPage.value = index + 1;
 
-    initMatrix();
-    viewUpdater.overlayBox(shape);
-    if (event) search(event);
+    viewUpdater.atPage(page.data);
+    viewUpdater.atTarget(shape);
+    
+    nextTick(() => {
+        viewUpdater.setPageCard(pageCard.value as any);
+        initMatrix();
+        viewUpdater.overlayBox(shape);
+        if (event) search(event);
+    });
 }
 
 function changePage() {
@@ -309,7 +312,6 @@ const selectionWatcher = (v: number | string) => {
             ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
             props.context.selection.selectShape(undefined);
         }
-        
         watch_shapes();
         if (!viewUpdater.pageCard?.pageSvg || !viewUpdater.currentPage) {
             changePage();
@@ -984,11 +986,11 @@ onMounted(() => {
     props.context.preview.watch(previewWatcher);
     // 等cur_shape触发pageCard的挂载
     const page = props.context.selection.selectedPage!
-    page_watcher();
     nextTick(() => {
         // 然后初始化视图渲染管理器
         viewUpdater.mount(preview.value!, page.data, props.context.selection.selectedShapes[0], pageCard.value as any);
         watch_shapes();
+        page_watcher();
     })
 
     if (preview.value) {
@@ -1087,7 +1089,7 @@ import right_arrow_icon from "@/assets/icons/svg/right-arrow.svg"
         top: 0;
         opacity: 0;
         pointer-events: none;
-        z-index: 19;
+        z-index: 15;
     }
 
     .toggleBox {
@@ -1121,6 +1123,15 @@ import right_arrow_icon from "@/assets/icons/svg/right-arrow.svg"
             width: 18px;
             height: 18px;
             cursor: pointer;
+            img {
+                fill: #fff;
+                width: 100%;
+                height: 100%;
+            }
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
         }
 
         .page {
@@ -1137,6 +1148,15 @@ import right_arrow_icon from "@/assets/icons/svg/right-arrow.svg"
             width: 18px;
             height: 18px;
             cursor: pointer;
+            img {
+                fill: #fff;
+                width: 100%;
+                height: 100%;
+            }
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
         }
 
         svg {
@@ -1167,6 +1187,6 @@ import right_arrow_icon from "@/assets/icons/svg/right-arrow.svg"
     bottom: 0;
     background-color: black;
     pointer-events: none;
-    z-index: 20;
+    z-index: 18;
 }
 </style>

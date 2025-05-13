@@ -167,5 +167,6 @@ onUnmounted(() => {
 svg {
     position: absolute;
     transform-origin: top left;
+    overflow: visible;
 }
 </style>

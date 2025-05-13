@@ -31,3 +31,7 @@ declare module "*.wasm?arraybuffer&base64" {
   const content: ArrayBuffer
   export default content
 }
+
+declare module "element-plus" {
+  export const ElMessage: any;
+}
