@@ -23,6 +23,8 @@ export const shape: any = {
     pencil: '铅笔',
     polygon: '多边形',
     star: '星形',
+    instance: "实例",
+    bool: "布尔对象"
 }
 shape[ShapeType.Rectangle] = '矩形';
 

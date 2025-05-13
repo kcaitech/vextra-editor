@@ -9,7 +9,6 @@
  */
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -17,7 +16,14 @@ const { name, desc } = defineProps<{
     name: string;
     desc: string;
 }>();
-const emits = defineEmits(["modifyName", "modifyDesc", "changeNameInput", "changeDescInput"]);
+
+const emits = defineEmits([
+    "modifyName",
+    "modifyDesc",
+    "changeNameInput",
+    "changeDescInput",
+    "create"
+]);
 
 function blur(event: KeyboardEvent) {
     (event.target as HTMLInputElement).blur();
@@ -48,13 +54,13 @@ function changeDescInput(event: Event) {
     <div class="detail">
         <div class="name">
             <label for="name">{{ t('stylelib.name') }}</label>
-            <input v-focus type="text" id="name" :value="name" @change="modifyName" @input="changeNameInput"
-                @keydown.esc="blur" autocomplete="off">
+            <input v-focus type="text" id="name" :value="name" autocomplete="off" @change="modifyName"
+                   @input="changeNameInput" @keydown.esc="blur" @keydown.enter="emits('create')">
         </div>
         <div class="des">
             <label for="des">{{ t('stylelib.description') }}</label>
-            <input type="text" id="des" :value="desc" @change="modifyDesc" @input="changeDescInput" @keydown.esc="blur"
-                autocomplete="off">
+            <input type="text" id="des" :value="desc" autocomplete="off" @change="modifyDesc" @input="changeDescInput"
+                   @keydown.esc="blur" @keydown.enter="() => {name && emits('create')}">
         </div>
     </div>
 </template>

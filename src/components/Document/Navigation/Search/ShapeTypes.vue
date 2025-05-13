@@ -14,61 +14,48 @@ import { Context } from '@/context';
 import { ShapeType } from '@kcdesign/data';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-interface Props {
+
+type Props = {
   context: Context
   selected: ShapeType[]
 }
 interface Emits {
   (e: 'update-types', st: ShapeType, push: boolean, multi: boolean): void;
 }
-export interface SelectedItem {
+
+export type SelectedItem = {
   selected: boolean
-  shapetype: ShapeType
+    type: ShapeType
 }
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
 const props = defineProps<Props>();
 const all_types = ref<SelectedItem[]>([]);
 const hoverIndex = ref(-1);
-const template: SelectedItem[] = [
-  {
-    selected: false,
-    shapetype: ShapeType.Artboard
-  },
-  {
-    selected: false,
-    shapetype: ShapeType.Group
-  },
-  {
-    selected: false,
-    shapetype: ShapeType.Rectangle
-  },
-  {
-    selected: false,
-    shapetype: ShapeType.Oval
-  },
-  {
-    selected: false,
-    shapetype: ShapeType.Line
-  },
-  {
-    selected: false,
-    shapetype: ShapeType.Text
-  },
-  {
-    selected: false,
-    shapetype: ShapeType.Image
-  }
-]
+const template: SelectedItem[] = Array.from(Object.values(ShapeType)).filter(i => ![
+    ShapeType.Triangle, ShapeType.TableCell, ShapeType.Table2, ShapeType.Table, ShapeType.SymbolUnion,ShapeType.Path2,
+].includes(i)).map(type => {
+    if (type === ShapeType.SymbolRef) {
+        type = 'instance' as ShapeType;
+    }
+    if (type === ShapeType.BoolShape) {
+        type = 'bool' as ShapeType;
+    }
+    return {
+        selected: false,
+        type: type as ShapeType,
+    }
+});
+
 function check(index: number, e: MouseEvent) {
   const is_ed = all_types.value[index].selected
   all_types.value[index].selected = !is_ed;
-  emit('update-types', all_types.value[index].shapetype, !is_ed, e.shiftKey);
+    emit('update-types', all_types.value[index].type, !is_ed, e.shiftKey);
 }
 function init() {
   for (let i = 0; i < template.length; i++) {
     const t = template[i];
-    if (props.selected.includes(t.shapetype)) {
+      if (props.selected.includes(t.type)) {
       t.selected = true;
       all_types.value.push(t);
     } else {
@@ -86,7 +73,7 @@ import page_select_icon from '@/assets/icons/svg/page-select.svg';
 <template>
   <div class="types-wrap">
     <div v-for="(item, index) in all_types" :key="index" class="type-block" @click="(e) => check(index, e)" @mouseover="hoverIndex = index" @mouseleave="hoverIndex = -1">
-      <div class="content"> {{ t(`shape.${item.shapetype}`) }}</div>
+        <div class="content"> {{ t(`shape.${item.type}`) }}</div>
       <div class="de-check">
         <SvgIcon v-if="item.selected" :icon="hoverIndex === index ? white_select_icon: page_select_icon"/>
       </div>

@@ -2,7 +2,7 @@
     <div id="modify-text-panel" class="modify-text-panel">
         <PanelHeader :title="data ? t('stylelib.editor_text') : t('stylelib.create_text')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
-            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
+                      @change-name-input="changeNameInput" @change-desc-input="changeDescInput" @create="createStyle"/>
         <div v-if="data" class="data-panel">
             <div class="title">
                 <ListHeader style="padding:0;" :title="t('stylelib.text')" create />
@@ -18,9 +18,9 @@
                             <SvgIcon :icon="down_text_icon" />
                         </div>
                     </div>
-                    <SelectFont v-if="fontlistStatus.visible" :show-font="fontlistStatus.visible" :fontname="fontName"
-                        :context="context" :manager="manager" @set-font="modifyfontname"
-                        @set-font-weight="modifyfontweight">
+                    <SelectFont v-if="fontListStatus.visible" :show-font="fontListStatus.visible" :fontname="fontName"
+                                :context="context" :manager="manager" @set-font="modifyfontname"
+                                @set-font-weight="modifyfontweight">
                     </SelectFont>
                 </div>
                 <div class="text-size">
@@ -83,18 +83,14 @@ import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
 
 import { Context } from '@/context';
-import { TextShapeView, AsyncTextAttrEditor, TextMask, UnderlineType, StrikethroughType, TextTransformType } from '@kcdesign/data';
+import { TextMask, UnderlineType, StrikethroughType, TextTransformType } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, is_mac } from '@/utils/common';
 import TextAdvancedSettings from '../TextAdvancedSettings.vue'
 import SelectFont from '../SelectFont.vue'
-import { Selection } from '@/context/selection';
-import { WorkSpace } from '@/context/workspace';
 import { fontWeightConvert } from '../FontNameList';
 import FontWeightSelected from '../FontWeightSelected.vue';
-import { sortValue } from '@/components/Document/Attribute/BaseAttr/oval';
-import { Attribute } from '@/context/atrribute';
 import { TextContextMgr } from '../ctx';
 import { ElementManager, ElementStatus } from '@/components/common/elementmanager';
 
@@ -126,10 +122,10 @@ const rowHeight = ref<string | number>('');
 const wordSpace = ref<string | number>('');
 
 
-const fontlistStatus = reactive<ElementStatus>({ id: '#font-container', visible: false });
+const fontListStatus = reactive<ElementStatus>({ id: '#font-container', visible: false });
 const fontPanelStatusMgr = new ElementManager(
     context,
-    fontlistStatus,
+    fontListStatus,
     { whiteList: ['.font-container', '.select-font'] }
 );
 
@@ -163,11 +159,11 @@ const onShowSize = () => {
 
 const onShowSizeBlur = (e: Event) => {
     if (e.target instanceof Element && !e.target.closest('.text-size')) {
-        var timer = setTimeout(() => {
+        const timer = setTimeout(() => {
             showSize.value = false;
             clearTimeout(timer)
             document.removeEventListener('click', onShowSizeBlur);
-        }, 10)
+        }, 10);
     }
 }
 
@@ -283,6 +279,7 @@ function changeDescInput(value: string) {
 }
 
 function createStyle() {
+    if (!name.value || data) return;
     manager.createStyleLib(name.value, desc.value);
 }
 
@@ -300,12 +297,6 @@ function initData() {
     wordSpace.value = format_value(data?.text.kerning || 0)
 }
 
-function checkEnter(e: KeyboardEvent) {
-    if (e.key === 'Enter' && name.value && !data) {
-        createStyle();
-    }
-}
-
 watch(() => data, (v) => {
     if (v) initData()
 })
@@ -313,11 +304,9 @@ watch(() => data, (v) => {
 onMounted(() => {
     initData();
     data?.watch(initData);
-    document.addEventListener('keydown', checkEnter);
 })
 onUnmounted(() => {
     data?.unwatch(initData);
-    document.removeEventListener('keydown', checkEnter);
 });
 
 

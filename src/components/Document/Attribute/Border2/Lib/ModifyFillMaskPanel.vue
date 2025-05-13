@@ -73,30 +73,23 @@ function changeDescInput(value: string) {
 }
 
 function createStyle() {
+    if (data || !name.value) return;
     manager.createStyleLib(name.value, desc.value);
 }
 
-function checkEnter(e: KeyboardEvent) {
-    if (e.key === 'Enter' && name.value && !data) {
-        createStyle();
-    }
-}
-const boardMgr = new KeyboardMgr(context);
 onMounted(() => {
     data?.watch(update);
-    boardMgr.addEventListener('keydown', checkEnter);
 });
 
 onUnmounted(() => {
     data?.unwatch(update);
-    boardMgr.removeEventListener('keydown', checkEnter);
 })
 </script>
 <template>
     <div class="modify-fill-style-panel" id="modify-fill-style-panel">
         <PanelHeader :title="data ? t('stylelib.editor_color') : t('stylelib.create_color')" @close="emits('close')" />
         <MaskBaseInfo :name="name" :desc="desc" @modify-name="modifyName" @modify-desc="modifyDesc"
-            @change-name-input="changeNameInput" @change-desc-input="changeDescInput" />
+                      @change-name-input="changeNameInput" @change-desc-input="changeDescInput" @create="createStyle"/>
         <div v-if="data" class="data-panel">
             <ListHeader :title="t('stylelib.color')" @create="manager.create(data)"/>
             <div class="fills-container">

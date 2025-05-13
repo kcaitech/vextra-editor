@@ -38,7 +38,6 @@ export class TextContextMgr extends StyleCtx {
         return this.m_editor ?? (this.m_editor = new TextModifier(this.repo));
     }
 
-
     private updateText() {
         const t_shape = this.flat.filter(item => item.type === ShapeType.Text) as TextShapeView[];
         if (t_shape.length === 0 || !t_shape[0].text) return;
@@ -118,10 +117,10 @@ export class TextContextMgr extends StyleCtx {
                     format[key] = new BulletNumbers(BulletNumbersType.Mixed)
                 }
             }
-            if (format.fontNameIsMulti === 'unlikeness' || format.fontNameIsMulti === true || format.fontName === 'unlikeness') format.fontName = undefined;
-            if (format.weight === 'unlikeness' || format.weightIsMulti === 'unlikeness' || format.italicIsMulti === true) format.weight = undefined;
-            if (format.italicIsMulti === 'unlikeness' || format.italicIsMulti === true || format.italic === 'unlikeness') format.weight = undefined;
-            if (format.fontSizeIsMulti === 'unlikeness' || format.fontSizeIsMulti === true || format.fontSize === 'unlikeness') format.fontSize = undefined;
+            if (format.fontNameIsMulti === 'unlikeness' || format.fontNameIsMulti || format.fontName === 'unlikeness') format.fontName = undefined;
+            if (format.weight === 'unlikeness' || format.weightIsMulti === 'unlikeness' || format.italicIsMulti) format.weight = undefined;
+            if (format.italicIsMulti === 'unlikeness' || format.italicIsMulti || format.italic === 'unlikeness') format.weight = undefined;
+            if (format.fontSizeIsMulti === 'unlikeness' || format.fontSizeIsMulti || format.fontSize === 'unlikeness') format.fontSize = undefined;
             this.textCtx.text = format;
             if (format.textMask === 'unlikeness' || format.textMaskIsMulti === 'unlikeness' || format.textMaskIsMulti) {
                 this.textCtx.mixed = true

@@ -49,10 +49,10 @@ export function scout(context: Context): Scout {
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
         if (shape.isBorderShape) {
+            const scale = context.workspace.curScale;
             const { thicknessRight, thicknessTop, thicknessLeft, thicknessBottom } = shape.getBorder().sideSetting;
-            const min = Math.min(thicknessRight, thicknessTop, thicknessLeft, thicknessBottom);
+            const min = Math.min(thicknessRight, thicknessTop, thicknessLeft, thicknessBottom) * scale;
             if (min < 6) {
-                const scale = context.workspace.curScale;
                 path.setAttributeNS(null, 'stroke-width', `${7 / scale}`);
                 return path.isPointInStroke(SVGPoint);
             } else {

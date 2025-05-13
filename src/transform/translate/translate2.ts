@@ -106,13 +106,13 @@ class EnvRadar {
     }
 
     private __can_not_land(view: ShapeView) {
-        return !!(view as ArtboardView).autoLayout || this.target === view;
+        return !!view.autoLayout || this.target === view;
     }
 
     private __get_matrix(view: ShapeView) {
         let matrix = this.__root_envs.get(view)!;
         if (!matrix) {
-            matrix = (view.matrix2Root().inverse.toMatrix());
+            matrix = view.matrix2Root().inverse.toMatrix();
             this.__root_envs.set(view, matrix);
         }
         return matrix;
@@ -140,7 +140,7 @@ class EnvRadar {
         function deep(shapes: ShapeView[]) {
             for (const view of shapes) {
                 const type = view.type;
-                if (type === ShapeType.SymbolRef || type === ShapeType.Table || type === ShapeType.BoolShape || type === ShapeType.SymbolUnion) continue;
+                if (type === ShapeType.SymbolRef || type === ShapeType.BoolShape || type === ShapeType.SymbolUnion) continue;
                 if (type === ShapeType.Artboard || type === ShapeType.Symbol) set.add(view.id);
                 if (view.childs.length) deep(view.childs);
             }
@@ -340,7 +340,7 @@ class SelModel {
         this.offsetY = transport.living.y - box.y;
     }
 
-    private __box(shapes: ShapeView[]) {
+    private __box(views: ShapeView[]) {
         const cache = new Map<ShapeView, Transform>();
         let left = Infinity;
         let right = -Infinity;
@@ -349,44 +349,42 @@ class SelModel {
 
         const original: Map<string, TranslateBaseItem> = new Map();
 
-        for (const shape of shapes) {
-            const parent = shape.parent!;
+        for (const view of views) {
+            const parent = view.parent!;
 
             let p2r = cache.get(parent)!;
             if (!p2r) {
-                p2r = (parent.matrix2Root());
+                p2r = parent.matrix2Root();
                 cache.set(parent, p2r);
             }
 
-            const transform = (shape.transform.clone());
+            const transform = view.transform.clone();
             transform.addTransform(p2r);
 
-            original.set(shape.id, {
-                transformRaw: shape.transform.clone(),
+            original.set(view.id, {
+                transformRaw: view.transform.clone(),
                 transform: transform.clone(),
-                view: shape
+                view
             });
 
-            const { x, y, width, height } = shape.frame;
+            const { x, y, width, height } = view.frame;
 
             let points: XY[];
-            if (is_straight(shape)) {
+            if (is_straight(view)) {
                 const unitTransform = new Transform().scale(width, height).addTransform(transform);
-                const lt = (shape as PathShapeView).segments[0].points[0];
-                const rb = (shape as PathShapeView).segments[0].points[1];
+                const lt = (view as PathShapeView).segments[0].points[0];
+                const rb = (view as PathShapeView).segments[0].points[1];
                 points = unitTransform.transform([
                     ColVector3D.FromXY(lt.x, lt.y),
                     ColVector3D.FromXY(rb.x, rb.y)
                 ])
-                // points = [col0, col1];
             } else {
-                points = transform.transform([
-                    ColVector3D.FromXY(x, y),
-                    ColVector3D.FromXY(x + width, y),
-                    ColVector3D.FromXY(x + width, y + height),
-                    ColVector3D.FromXY(x, y + height),
-                ])
-                // points = [col0, col1, col2, col3];
+                points = [
+                    { x, y },
+                    { x: x + width, y },
+                    { x: x + width, y: y + height },
+                    { x, y: y + height }
+                ].map(p => transform.map(p));
             }
 
             for (const point of points) {
@@ -468,6 +466,11 @@ class SelModel {
         let livingXs = [l, (l + r) / 2, r];
         let livingYs = [t, (t + b) / 2, b];
 
+        if (this.alignPixel) {
+            livingXs[1] = Math.round(livingXs[1]);
+            livingYs[1] = Math.round(livingYs[1]);
+        }
+
         const assist = this.context.assist;
 
         const assistResult = assist.alignPoints(livingXs, livingYs);
@@ -492,8 +495,13 @@ class SelModel {
             assistYWork = true;
         }
 
-        const cx = (l + r) / 2;
-        const cy = (t + b) / 2;
+        let cx = (l + r) / 2;
+        let cy = (t + b) / 2;
+
+        if (this.alignPixel) {
+            cx = Math.round(cx);
+            cy = Math.round(cy);
+        }
 
         const fixedTarget = assist.fixedTarget;
 
@@ -579,7 +587,6 @@ class SelModel {
 
     collect() {
         const views = this.translate.selManager.shapes;
-
         this.__last_env = this.context.assist.set_collect_target(views);
         this.context.assist.set_trans_target(views);
     }

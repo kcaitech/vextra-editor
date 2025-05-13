@@ -303,7 +303,7 @@ function init() {
 
 }
 
-function selection_wather(t: any) {
+function selection_watcher(t: any) {
   if (t === Selection.CHANGE_TEXT) {
     init()
   }
@@ -312,7 +312,7 @@ function selection_wather(t: any) {
   }
 }
 
-function workspace_wather(t: number) {
+function workspace_watcher(t: number) {
   if (t === WorkSpace.UNDER_LINE) {
     onUnderlint()
   } else if (t === WorkSpace.DELETE_LINE) {
@@ -334,16 +334,16 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  props.context.workspace.watch(workspace_wather);
+  props.context.workspace.watch(workspace_watcher);
   // props.textShape.watch(init)
-  props.context.selection.watch(selection_wather);
+  props.context.selection.watch(selection_watcher);
   if(props.data instanceof TextMask) {
     props.data.watch(init);
   }
 })
 onUnmounted(() => {
-  props.context.workspace.unwatch(workspace_wather);
-  props.context.selection.unwatch(selection_wather);
+  props.context.workspace.unwatch(workspace_watcher);
+  props.context.selection.unwatch(selection_watcher);
   // props.textShape.unwatch(init)
   shapeWatch()
   if(props.data instanceof TextMask) {

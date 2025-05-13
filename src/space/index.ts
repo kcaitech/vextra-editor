@@ -215,4 +215,26 @@ export class SpaceHandler {
 
         workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
+
+    static ViewsRootBounding(views: ShapeView[]) {
+        let left = Infinity;
+        let right = -Infinity;
+        let top = Infinity;
+        let bottom = -Infinity;
+        for (const view of views) {
+            const transform = view.matrix2Root();
+            const frame = view.frame;
+            const box = XYsBounding([
+                { x: frame.x, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height },
+            ].map(p => transform.transform(p)));
+            if (box.left < left) left = box.left;
+            if (box.top < top) top = box.top;
+            if (box.bottom > bottom) bottom = box.bottom;
+            if (box.right > right) right = box.right;
+        }
+        return { left, top, right, bottom };
+    }
 }

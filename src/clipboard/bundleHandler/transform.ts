@@ -43,7 +43,6 @@ export class ClipboardTransformHandler {
                 ColVector3D.FromXY(width, 0),
                 ColVector3D.FromXY(0, height),
             ]));
-            // const box = XYsBounding([col0, col1, col2, col3]);
 
             if (box.top < top) top = box.top;
             if (box.left < left) left = box.left;
@@ -84,8 +83,8 @@ export class ClipboardTransformHandler {
         for (const shape of source) {
             const _t = originTransform[`${shape.id}`];
             if (!_t) continue;
-            const t = new Transform(_t.m00, _t.m01, _t.m01, _t.m10, _t.m11, _t.m12);
-            shape.transform = t.addTransform(targetSelectionTransform);
+            const t = new Transform(_t.m00, _t.m01, _t.m02, _t.m10, _t.m11, _t.m12);
+            shape.transform = t.multiAtLeft(targetSelectionTransform);
         }
     }
 
@@ -106,7 +105,6 @@ export class ClipboardTransformHandler {
 
         for (let i = 0; i < source.length; i++) {
             const shape = source[i];
-            // const __transform = (shape.transform.clone());
             let width, height;
             if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
                 const children = (shape as GroupShape).childs;
@@ -123,7 +121,6 @@ export class ClipboardTransformHandler {
                 ColVector3D.FromXY(width, 0),
                 ColVector3D.FromXY(0, height),
             ]));
-            // const box = XYsBounding([col0, col1, col2, col3]);
 
             if (box.top < top) top = box.top;
             if (box.left < left) left = box.left;
@@ -197,12 +194,11 @@ export class ClipboardTransformHandler {
         const matrix = workspace.matrix;
         const center = matrix.inverseCoord(root.center);
         const start = { x: center.x - width / 2, y: center.y - height / 2 };
-        // const inverse1 = new Transform().setTranslate(ColVector3D.FromXY(start.x - box.left, start.y - box.top));
-        const inverse2 = context.selection.selectedPage!.matrix2Root().getInverse();
+        const inverse = context.selection.selectedPage!.matrix2Root().getInverse();
         for (const shape of shapes) {
             const transform = (shape.transform).clone();
             transform.trans(start.x - box.left, start.y - box.top)
-            transform.multi(inverse2);
+            transform.multi(inverse);
             shape.transform = transform
         }
         const parent = adapt2Shape(context.selection.selectedPage!) as GroupShape;
@@ -234,11 +230,10 @@ export class ClipboardTransformHandler {
         return shapes.map(shape => {
             const box = this.sourceBounding([shape]);
             const parent = getParent(shape, context.selection.getLayers({ x: box.left, y: box.top })) as GroupShapeView;
-            shape.transform = (shape.transform).clone().multi(parent.matrix2Root().getInverse());
+            shape.transform = shape.transform.clone().multiAtLeft(parent.matrix2Root().getInverse());
             return { shape, parent: adapt2Shape(parent) as GroupShape }
         });
     }
-
 
     plain(context: Context, source: SourceBundle, envs: EnvLike[]) {
 

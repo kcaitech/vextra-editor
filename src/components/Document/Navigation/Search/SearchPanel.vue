@@ -18,7 +18,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { ShapeType, ShapeView, TextShapeView } from '@kcdesign/data';
 import { Navi } from '@/context/navigate';
-import { locateShape } from "@/transform/locate";
+import { locateShape } from "@/space/locate";
 import { multi_select_shape } from "@/utils/listview";
 
 interface Props {

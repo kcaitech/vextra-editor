@@ -91,7 +91,7 @@ function pathMousedown(e: MouseEvent) {
     eventTypeZIndex.dblclick = false
     eventTypeZIndex.mousedown = false
     if (e.button === 0) {
-        const protoActions = hoveredShape.prototypeInterActions;
+        const protoActions = hoveredShape.prototypeInteractions;
         if (!protoActions) return;
         if (dbl_action()) {
             if (!eventTypeZIndex.dblclick && eventTypeIndex.click === -1 && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
@@ -141,7 +141,7 @@ const onMouseUp = (e: MouseEvent) => {
     emit('updateSearch', e);
     const hoveredShape = props.context.selection.hoveredShape;
     if (!hoveredShape) return;
-    const protoActions = hoveredShape.prototypeInterActions;
+    const protoActions = hoveredShape.prototypeInteractions;
     if (!protoActions) return;
     if (!protoActionFn) {
         protoActionFn = new ProtoAction(props.context);
@@ -199,7 +199,7 @@ const onMouseenter = () => {
     const hoveredShape = props.context.selection.hoveredShape;
     protoActionFn = new ProtoAction(props.context);
     if (hoveredShape) {
-        const protoActions = hoveredShape.prototypeInterActions;
+        const protoActions = hoveredShape.prototypeInteractions;
         if (!protoActions) return;
         eventTypeIndex = eventPriority(hoveredShape);
         for (let i = protoActions.length - 1; i > -1; i--) {
@@ -249,7 +249,7 @@ const onMouseenter = () => {
 const moveOutAction = () => {
     const shape = props.context.preview.saveShape;
     if (!shape) return;
-    const protoActions = shape!.prototypeInterActions;
+    const protoActions = shape!.prototypeInteractions;
     if (!protoActions) return;
     for (let i = 0; i < protoActions.length; i++) {
         const protoAction = protoActions[i];

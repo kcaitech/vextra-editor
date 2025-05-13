@@ -178,7 +178,7 @@ export function finderShape(matrix: Matrix, scout: IScout, scope: ShapeView[], h
         if (!item.isVisible) {
             continue;
         }
-        if (!(isAction && (!item.prototypeInterActions || !item.prototypeInterActions.length))) {
+        if (!(isAction && (!item.prototypeInteractions || !item.prototypeInteractions.length))) {
             const path = item.getPath().clone();
             const m = getPreviewMatrix(item);
             m.multiAtLeft(matrix.clone());
@@ -280,7 +280,7 @@ export function selectShapes(context: Context, shapes: ShapeView | undefined) {
 }
 
 export function eventPriority(shape: ShapeView): EventIndex {
-    const protoActions = shape.prototypeInterActions;
+    const protoActions = shape.prototypeInteractions;
     let eventTypeIndex: EventIndex = {
         click: -1,
         dblclick: -1,
@@ -349,10 +349,10 @@ const getFlows = (page: PageView, shapes: ShapeView[], flows: Map<string, string
 }
 
 const flowShapes = (page: PageView, startShape: ShapeView, target_ids: Set<string>) => {
-    if (startShape.prototypeInterActions) {
+    if (startShape.prototypeInteractions) {
         const target_id: Set<string> = new Set();
-        for (let index = 0; index < startShape.prototypeInterActions.length; index++) {
-            const action = startShape.prototypeInterActions[index].actions;
+        for (let index = 0; index < startShape.prototypeInteractions.length; index++) {
+            const action = startShape.prototypeInteractions[index].actions;
             if (!action) continue;
             const t = action.navigationType === PrototypeNavigationType.NAVIGATE || action.navigationType === PrototypeNavigationType.OVERLAY;
             if (action.targetNodeID && t && !target_ids.has(action.targetNodeID)) {

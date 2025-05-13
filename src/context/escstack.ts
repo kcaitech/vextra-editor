@@ -9,7 +9,7 @@
  */
 
 import { IEscStack } from "@/openapi";
-
+import { debounce } from "lodash";
 
 interface EscItem {
     key: string
@@ -19,9 +19,6 @@ interface EscItem {
 export class EscStack implements IEscStack {
     private m_stack_map: Map<string, EscItem> = new Map();
 
-    // constructor() {
-    //     super();
-    // }
     save(key: string, call: () => boolean) {
         if (this.m_stack_map.has(key)) { // 先删后加，保持先来的后出
             this.m_stack_map.delete(key);
@@ -37,7 +34,7 @@ export class EscStack implements IEscStack {
         return this.m_stack_map.has(key);
     }
 
-    execute() {
+    private _execute() {
         const queue = Array.from(this.m_stack_map.values());
         for (let i = queue.length - 1; i > -1; i--) {
             const item = queue[i];
@@ -46,6 +43,9 @@ export class EscStack implements IEscStack {
             if (item.task()) break;
         }
     }
+
+    // debounce 防止被多次调用
+    execute = debounce(this._execute.bind(this), 60);
 
     clear() {
         const queue = Array.from(this.m_stack_map.values());

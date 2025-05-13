@@ -38,8 +38,8 @@ type ProtoInput = InstanceType<typeof TextInput>;
 const props = defineProps<Props>();
 const { isDblClick } = useController(props.context);
 const matrix = new Matrix();
-const submatrix = reactive(new Matrix());
-const boundrectPath = ref("");
+const subMatrix = reactive(new Matrix());
+const boundRectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const selection_hidden = ref<boolean>(false);
@@ -59,11 +59,10 @@ const height = computed(() => {
 let downIndex: { index: number, before: boolean };
 
 function update() {
-    // if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p.toMatrix());
     matrix.multiAtLeft(props.matrix);
-    if (!submatrix.equals(matrix)) submatrix.reset(matrix)
+    if (!subMatrix.equals(matrix)) subMatrix.reset(matrix)
     const frame = props.shape.frame;
     const points = [
         { x: 0, y: 0 }, // left top
@@ -71,15 +70,15 @@ function update() {
         { x: frame.width, y: frame.height }, // right bottom
         { x: 0, y: frame.height }, // left bottom
     ];
-    const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
-    boundrectPath.value = genRectPath(boundrect);
-    props.context.workspace.setCtrlPath(boundrectPath.value);
-    const p0 = boundrect[0];
+    const boundRect = points.map((point) => matrix.computeCoord(point.x, point.y));
+    boundRectPath.value = genRectPath(boundRect);
+    props.context.workspace.setCtrlPath(boundRectPath.value);
+    const p0 = boundRect[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
     bounds.right = p0.x;
     bounds.bottom = p0.y;
-    boundrect.reduce((bounds, point) => {
+    boundRect.reduce((bounds, point) => {
         if (point.x < bounds.left) bounds.left = point.x;
         else if (point.x > bounds.right) bounds.right = point.x;
         if (point.y < bounds.top) bounds.top = point.y;
@@ -101,7 +100,7 @@ function onMouseDown(e: MouseEvent) {
                 props.context.navi.set_focus_text();
             }
             editing.value = true;
-            workspace.contentEdit(editing.value);
+            workspace.contentEdit(true);
             props.context.cursor.setType(CursorType.Text, 0);
         }
         if (!editing.value) return;
@@ -291,28 +290,22 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :viewBox=genViewBox(bounds) :width="width" :height="height"
+    <svg xmlns="http://www.w3.org/2000/svg" data-area="controller" id="text-selection" overflow="visible"
+         preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds) :width="width" :height="height"
          :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" @mousedown="onMouseDown"
-         overflow="visible"
          @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ hidden: selection_hidden }">
-        <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
+        <SelectView :context="props.context" :shape="(props.shape)" :matrix="subMatrix.toArray()"
                     :main-notify="Selection.CHANGE_TEXT"
-                    :selection="props.context.selection.getTextSelection(props.shape)">
-        </SelectView>
-        <path v-if="editing" :d="boundrectPath" fill="none" :stroke="theme" stroke-dasharray="2,2"></path>
+                    :selection="props.context.selection.getTextSelection(props.shape)"/>
+        <path v-if="editing" :d="boundRectPath" fill="none" :stroke="theme" stroke-dasharray="2,2"/>
         <BarsContainer v-if="!editing" :context="props.context" :shape="props.shape"
-                       :c-frame="props.controllerFrame" :theme="theme" @dblclick="dblFromPart">
-        </BarsContainer>
+                       :c-frame="props.controllerFrame" :theme="theme" @dblclick="dblFromPart"/>
         <PointsContainer v-if="!editing" :context="props.context" :shape="props.shape"
-                         :c-frame="props.controllerFrame" :axle="axle" :theme="theme" @dblclick="dblFromPart">
-        </PointsContainer>
+                         :c-frame="props.controllerFrame" :axle="axle" :theme="theme" @dblclick="dblFromPart"/>
     </svg>
-    <TextInput ref="input" :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
+    <TextInput ref="input" :context="props.context" :shape="(props.shape)" :matrix="subMatrix.toArray()"
                :main-notify="Selection.CHANGE_TEXT"
-               :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
+               :selection="props.context.selection.getTextSelection(props.shape)"/>
 </template>
 <style lang='scss' scoped>
 .hidden {
