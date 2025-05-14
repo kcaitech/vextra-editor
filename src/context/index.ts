@@ -119,6 +119,10 @@ class ToolBox implements IToolBox {
     silent() {
         this._context.tool.silent();
     }
+
+    reset() {
+        this._context.tool.reset();
+    }
 }
 
 export class Context extends WatchableObject implements IContext {

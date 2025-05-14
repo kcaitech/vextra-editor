@@ -18,4 +18,5 @@ export interface IToolBox {
     get event(): IEventEmitter;
 
     silent: Function; // 停用内置工具，使用插件工具
+    reset: Function;
 }
