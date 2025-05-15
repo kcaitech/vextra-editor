@@ -930,6 +930,16 @@ const workspace_watcher = (t: string | number) => {
     }
 }
 
+const oval_radius_update = () => {
+    const selected = props.shapes;
+    if (selected.length === 1) {
+        const shape = selected[0];
+        s_radius = !!shape.radiusType;
+    } else if (selected.length > 1) {
+        s_radius = selected.some(item => !!item.radiusType);
+    }
+}
+
 const stop1 = watch(() => props.selectionChange, selection_change);
 const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
@@ -938,6 +948,9 @@ const stop3 = watch(() => props.trigger, v => {
     }
     if (v.includes('textBehaviour')) {
         textBehaviour();
+    }
+    if (v.includes('endingAngle') || v.includes('startingAngle') || v.includes('innerRadius')) {
+        oval_radius_update();
     }
 });
 

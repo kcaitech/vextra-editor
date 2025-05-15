@@ -84,7 +84,7 @@ export class ShadowsContextMgr extends StyleCtx {
     private updateShadows() {
         if (this.shadowCtx.mixed || this.flat.length < 1) return;
 
-        const represent = this.selected[0];
+        const represent = this.flat[0];
         this.shadowCtx.mask = represent.shadowsMask;
         if (this.shadowCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.shadowCtx.mask) as ShadowMask;
@@ -128,7 +128,7 @@ export class ShadowsContextMgr extends StyleCtx {
         } else {
             const actions: { shadows: BasicArray<Shadow>, shadow: Shadow }[] = [];
             const viewActions: { view: ShapeView, shadow: Shadow }[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 const color = new Color(0.3, 0, 0, 0);
                 const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
@@ -152,19 +152,19 @@ export class ShadowsContextMgr extends StyleCtx {
     }
 
     unify() {
-        const shadowsMaskView = this.selected.find(i => i.shadowsMask);
+        const shadowsMaskView = this.flat.find(i => i.shadowsMask);
         if (shadowsMaskView) {
-            this.editor.unifyShapesShadowsMask(this.selected, shadowsMaskView.fillsMask!);
+            this.editor.unifyShapesShadowsMask(this.flat, shadowsMaskView.fillsMask!);
         } else {
             const containers: BasicArray<Shadow>[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else containers.push(view.getShadows());
             }
             const editor = this.editor;
-            const master = this.selected[0].getShadows().map(i => editor.importShadow(i));
+            const master = this.flat[0].getShadows().map(i => editor.importShadow(i));
             const modifyLocalFills = (api: Api) => {
                 if (!containers.length) return;
                 for (const container of containers) {
@@ -197,7 +197,7 @@ export class ShadowsContextMgr extends StyleCtx {
         } else {
             const shadowsContainer: BasicArray<Shadow>[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
@@ -228,7 +228,7 @@ export class ShadowsContextMgr extends StyleCtx {
         } else {
             const shadows: Shadow[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
@@ -258,7 +258,7 @@ export class ShadowsContextMgr extends StyleCtx {
             const index = this.getIndexByShadow(shadow);
             const views: ShapeView[] = [];
             const shadowsPacks: { shadow: Shadow, color: Color }[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
                 else shadowsPacks.push({ shadow: view.getShadows()[index], color });
             }
@@ -305,7 +305,7 @@ export class ShadowsContextMgr extends StyleCtx {
         } else {
             const shadows: Shadow[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
@@ -336,7 +336,7 @@ export class ShadowsContextMgr extends StyleCtx {
         } else {
             const shadows: Shadow[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
@@ -367,7 +367,7 @@ export class ShadowsContextMgr extends StyleCtx {
         } else {
             const shadows: Shadow[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
@@ -398,7 +398,7 @@ export class ShadowsContextMgr extends StyleCtx {
         } else {
             const shadows: Shadow[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
@@ -429,7 +429,7 @@ export class ShadowsContextMgr extends StyleCtx {
         } else {
             const shadows: Shadow[] = [];
             const views: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     views.push(view);
                 } else {
@@ -453,23 +453,23 @@ export class ShadowsContextMgr extends StyleCtx {
     createStyleLib(name: string, desc: string) {
         const shadows = new BasicArray<Shadow>(...this.shadowCtx.shadows.map(i => i.shadow).reverse());
         const shadowMask = new ShadowMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, shadows);
-        this.editor.createShadowsMask(this.document, shadowMask, this.page, this.selected);
+        this.editor.createShadowsMask(this.document, shadowMask, this.page, this.flat);
         this.kill();
     }
 
     modifyShadowMask(id: string) {
         if (Object.keys(this.shadowCtx).length === 0) return;
-        this.editor.setShapesShadowsMask(this.page, this.selected, id);
+        this.editor.setShapesShadowsMask(this.page, this.flat, id);
         this.kill();
         this.hiddenCtrl();
     }
 
     unbind() {
-        this.editor.unbindShapesShadowsMask(this.page, this.selected);
+        this.editor.unbindShapesShadowsMask(this.page, this.flat);
     }
 
     removeMask() {
-        this.editor.removeShapesShadowsMask(this.page, this.selected);
+        this.editor.removeShapesShadowsMask(this.page, this.flat);
     }
 
     disableMask(mask: StyleMangerMember) {
