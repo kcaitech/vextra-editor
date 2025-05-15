@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script setup lang="ts">
 import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
@@ -267,14 +267,39 @@ function updater(...args: any[]) {
     if (args.includes('size') || args.includes('points')) return update_abbr_view();
 
     const shape = props.data.view();
+    console.log(shape.name, 'ssssssssssss');
 
     const data = shape.data;
 
     const children = data.naviChilds || (data as any).childs || shape.naviChilds || [];
     showTriangle.value = children.length > 0 && shape.type !== ShapeType.Table;
 
-    lock_status.value = shape.isLocked ? 1 : 0;
-    visible_status.value = shape.isVisible ? 0 : 1;
+    update_lock_status(shape);
+    update_visible_status(shape);
+}
+
+function update_lock_status(shape: ShapeView) {
+    function p_lock_status() {
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) {
+            if (p.isLocked) return 2;
+            p = p.parent;
+        }
+        return 0;
+    }
+    lock_status.value = shape.isLocked ? 1 : p_lock_status();
+}
+
+function update_visible_status(shape: ShapeView) {
+    function p_visible_status() {
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) {
+            if (!p.isVisible) return 2;
+            p = p.parent;
+        }
+        return 0;
+    }
+    visible_status.value = !shape.isVisible ? 1 : p_visible_status();
 }
 
 let oldShape: ShapeView | undefined;
@@ -290,9 +315,7 @@ function watchShapes() {
     let shape = props.data.view();
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        if (!p.__watcher.has(updater)) {
-            needWatchShapes.set(p.id, p);
-        }
+        needWatchShapes.set(p.id, p);
         p = p.parent;
     }
     watchedShapes.forEach((v, k) => {
@@ -390,67 +413,55 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div ref="shapeItem"
-     :class="{
+    <div ref="shapeItem" :class="{
         container: true,
         selected: props.data.selected,
         selectedChild: selectedChild(),
         component: symbol_c,
         hovered: hovered && !props.data.selected,
         firstAngle: topAngle, lastAngle: bottomAngle
-     }"
-     @mousemove="hoverShape"
-     @mouseleave="unHoverShape"
-     @mousedown="mousedown"
-     @mouseup="mouseup"
->
-    <!-- 缩进 -->
-    <div class="ph" :style="{ width: `${ph_width}px` }"/>
-    <!-- 开合 -->
-    <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }"
-         @mousedown.stop="toggleExpand" @mouseup.stop>
-        <SvgIcon
-            v-if="showTriangle"
-            :icon="triangle_down_icon"
-            :id="props.data.expand ? 'down' : 'right'"
-            :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"
-        />
-    </div>
-    <!-- icon -->
-    <SvgIcon
-        v-if="maskView"
-        class="zero-symbol"
-        :icon="masked_by_icon"
-        style="width: 12px; height: 12px;margin-right: 3px"
-    />
-    <div class="container-svg zero-symbol"
-         @dblclick="fitToggleContainer"
-         :style="{ opacity: visible_status ? 0.3 : 1 }"
-    >
-        <Abbr :view="abbr_view" :shape="data.view()" :theme="symbol_c ? '#7f58f9' : '#595959'"/>
-    </div>
-    <!-- 内容描述 -->
-    <div class="text" :style="{ display: isInput ? 'none' : '', opacity: !visible_status ? 1 : .3 }">
-        <div class="txt" @dblclick="onRename">{{ get_name(props.data.view(), t('compos.dlt')) }}</div>
-        <div class="tool_icon" @mousedown.stop
-             :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
-            <div class="tool_lock tool" @click="toggleContainer" @dblclick="fitToggleContainer">
-                <SvgIcon class="svg-open" :icon="locate_icon"/>
-            </div>
-            <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
-                 v-if="!data.context.readonly && !isLabel">
-                <SvgIcon v-if="lock_status === 0" class="svg-open" :icon="lock_open_icon"/>
-                <SvgIcon v-else-if="lock_status === 1" class="svg" :icon="lock_lock_icon"/>
-            </div>
-            <div class="tool_eye tool" :class="{ 'visible': visible_status }"
-                 @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLabel">
-                <SvgIcon v-if="visible_status === 0" class="svg" :icon="eye_open_icon"/>
-                <SvgIcon v-else-if="visible_status === 1" class="svg" :icon="eye_closed_icon"/>
+    }" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown" @mouseup="mouseup">
+        <!-- 缩进 -->
+        <div class="ph" :style="{ width: `${ph_width}px` }" />
+        <!-- 开合 -->
+        <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }"
+            @mousedown.stop="toggleExpand" @mouseup.stop>
+            <SvgIcon v-if="showTriangle" :icon="triangle_down_icon" :id="props.data.expand ? 'down' : 'right'"
+                :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }" />
+        </div>
+        <!-- icon -->
+        <SvgIcon v-if="maskView" class="zero-symbol" :icon="masked_by_icon"
+            style="width: 12px; height: 12px;margin-right: 3px" />
+        <div class="container-svg zero-symbol" @dblclick="fitToggleContainer"
+            :style="{ opacity: visible_status ? 0.4 : 1 }">
+            <Abbr :view="abbr_view" :shape="data.view()" :theme="symbol_c ? '#7f58f9' : '#595959'" />
+        </div>
+        <!-- 内容描述 -->
+        <div class="text" :style="{ display: isInput ? 'none' : '' }">
+            <div class="txt" :style="{ opacity: !visible_status ? 1 : .4 }" @dblclick="onRename">{{
+                get_name(props.data.view(), t('compos.dlt')) }}</div>
+            <div class="tool_icon" @mousedown.stop
+                :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
+                <div class="tool_lock tool" @click="toggleContainer" @dblclick="fitToggleContainer">
+                    <SvgIcon class="svg-open" :icon="locate_icon" />
+                </div>
+                <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
+                    v-if="!data.context.readonly && !isLabel">
+                    <SvgIcon v-if="lock_status === 0" class="svg-open" :icon="lock_open_icon" />
+                    <SvgIcon v-else-if="lock_status === 1" class="svg" :icon="lock_lock_icon" />
+                    <div v-else-if="lock_status === 2" class="dot">●</div>
+                </div>
+                <div class="tool_eye tool" :class="{ 'visible': visible_status }"
+                    @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLabel">
+                    <SvgIcon v-if="visible_status === 0" class="svg" :icon="eye_open_icon" />
+                    <SvgIcon v-else-if="visible_status === 1" class="svg" :icon="eye_closed_icon" />
+                    <div v-else-if="visible_status === 2" class="dot">●</div>
+                </div>
             </div>
         </div>
+        <input v-if="isInput" @change="onChangeName" @click.stop @mousedown.stop class="rename" type="text"
+            ref="nameInput">
     </div>
-    <input v-if="isInput" @change="onChangeName" @click.stop @mousedown.stop class="rename" type="text" ref="nameInput">
-</div>
 </template>
 
 <style scoped lang="scss">
@@ -463,13 +474,13 @@ onUnmounted(() => {
     height: 32px;
     box-sizing: border-box;
 
-    > .ph {
+    >.ph {
         height: 100%;
         flex-shrink: 0;
         flex-grow: 0;
     }
 
-    > .triangle {
+    >.triangle {
         box-sizing: border-box;
         padding-left: 6px;
         width: 18px;
@@ -480,19 +491,19 @@ onUnmounted(() => {
         justify-content: center;
         cursor: pointer;
 
-        > svg {
+        >svg {
             width: 12px;
             height: 12px;
         }
     }
 
-    > .slot {
+    >.slot {
         width: 18px;
         margin-right: 3px;
         height: 100%;
     }
 
-    > .container-svg {
+    >.container-svg {
         width: 14px;
         height: 100%;
         display: flex;
@@ -501,7 +512,7 @@ onUnmounted(() => {
         margin-right: 3px;
     }
 
-    > .text {
+    >.text {
         flex: 1;
         line-height: 30px;
         font-size: var(--font-default-fontsize);
@@ -516,7 +527,7 @@ onUnmounted(() => {
         color: var(--left-navi-font-color);
         background-color: transparent;
 
-        > .txt {
+        >.txt {
             width: 100%;
             height: 30px;
             line-height: 30px;
@@ -528,14 +539,14 @@ onUnmounted(() => {
             padding-left: 2px;
         }
 
-        > .tool_icon {
+        >.tool_icon {
             display: flex;
             align-items: center;
             width: 66px;
             height: 100%;
             margin-left: 6px;
 
-            > .tool {
+            >.tool {
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -544,7 +555,7 @@ onUnmounted(() => {
                 margin-right: 2px;
             }
 
-            > .tool_lock {
+            >.tool_lock {
                 display: flex;
                 align-items: center;
                 color: #595959;
@@ -555,21 +566,24 @@ onUnmounted(() => {
                     color: #595959;
                 }
 
+                .dot {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 6px;
+                    width: 13px;
+                    height: 13px;
+                    color: #000;
+                }
+
                 .svg-open {
                     width: 13px;
                     height: 13px;
                     color: #595959;
                 }
-
-                .dot {
-                    width: 4px;
-                    height: 4px;
-                    border-radius: 50%;
-                    background-color: #8C8C8C;
-                }
             }
 
-            > .tool_eye {
+            >.tool_eye {
                 margin-right: 10px;
 
                 .svg {
@@ -579,11 +593,15 @@ onUnmounted(() => {
                 }
 
                 .dot {
-                    width: 4px;
-                    height: 4px;
-                    border-radius: 50%;
-                    background-color: var(--theme-color);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 6px;
+                    width: 13px;
+                    height: 13px;
+                    color: #000;
                 }
+
             }
 
             .visible {
@@ -592,7 +610,7 @@ onUnmounted(() => {
         }
     }
 
-    > .rename {
+    >.rename {
         flex: 1;
         height: 24px;
         width: 100%;
@@ -634,8 +652,8 @@ onUnmounted(() => {
 .component {
     color: var(--component-color);
 
-    & > .text > .txt,
-    & > .text > .tool_icon {
+    &>.text>.txt,
+    &>.text>.tool_icon {
         color: var(--component-color);
     }
 }
