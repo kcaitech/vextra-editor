@@ -267,7 +267,6 @@ function updater(...args: any[]) {
     if (args.includes('size') || args.includes('points')) return update_abbr_view();
 
     const shape = props.data.view();
-    console.log(shape.name, 'ssssssssssss');
 
     const data = shape.data;
 
