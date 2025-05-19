@@ -314,8 +314,14 @@ function for_path_shape(shape: PathShapeView) {
     controllerType.value = shape.isStraight ? ControllerType.Line : ControllerType.Rect;
 }
 
+const isController = () => {
+    const selection = props.context.selection.selectedShapes;
+    return selection.some(shape => !shape.isLocked);
+}
+
+
 function modify_controller_type(shapes: ShapeView[],) {
-    if (!permIsEdit(props.context) || props.context.tool.isLabel) {
+    if (!permIsEdit(props.context) || props.context.tool.isLabel || !isController()) {
         controllerType.value = ControllerType.Readonly;
         return;
     }

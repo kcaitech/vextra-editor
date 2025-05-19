@@ -39,7 +39,7 @@ export function open_preview(doc_id: string, context: Context, t: Function, artb
     }
     const artboard = page.artboardList[0];
     const frame_id = artboardId ? artboardId : artboard.id;
-    const href = `${window.location.href.split('?')[0]}?id=${doc_id}&page_id=${page.id.slice(0, 8)}&frame_id=${frame_id.slice(0, 8)}`;
+    const href = `${window.location.href}/${frame_id.slice(0, 8)}`;
     const url = href.replace(/document/, 'prototype');
     const p_window = context.preview.previewWindow;
 

@@ -155,6 +155,7 @@ const getEndElement = () => {
     }
     return el;
 }
+
 const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
     if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;

@@ -269,8 +269,6 @@ const changeTextSize = (size: number) => {
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.fontSize = format_value(size) as number;
     props.context.textSelection.setTextAttr(textAttr);
-
-    console.log('- fontSize', fontSize.value);
 }
 //设置字体
 const setFont = (font: string) => {
@@ -280,33 +278,35 @@ const setFont = (font: string) => {
 const setWordSpace = (val?: number) => {
     const editor = props.context.editor4TextShape(props.shape)
     if (wordSpace.value.length < 1) {
-        wordSpace.value = 0
+        wordSpace.value = 0 + '%'
     }
+    let value = sortValue(wordSpace.value.toString());
+
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
 
-        if (!isNaN(Number(wordSpace.value))) {
+        if (!isNaN(value)) {
             keydownVal.value
                 ?
                 linearApi.modifyTextCharSpacing(val!, textIndex, selectLength, props.shape)
                 :
-                editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
+                editor.setCharSpacing(value, textIndex, selectLength)
         } else {
             textFormat()
         }
     } else {
-        if (!isNaN(Number(wordSpace.value))) {
+        if (!isNaN(value)) {
             keydownVal.value
                 ?
                 linearApi.modifyTextCharSpacingMulti(props.textShapes, val!)
                 :
-                editor.setCharSpacingMulit(props.textShapes, Number(wordSpace.value))
+                editor.setCharSpacingMulit(props.textShapes, value)
         } else {
             textFormat()
         }
     }
     const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.kerning = Number(wordSpace.value);
+    textAttr.kerning = value;
     props.context.textSelection.setTextAttr(textAttr);
     keydownVal.value = false
 }
@@ -758,11 +758,11 @@ function onMouseMove(e: MouseEvent) {
             textAttrEditor.execute_line_height(rowHeight.value);
         }
     } else {
-        if (isNaN(wordSpace.value) || wordSpace.value < 0) return;
-        wordSpace.value = Number(wordSpace.value) + e.movementX;
+        let value = sortValue(wordSpace.value.toString());
+        if (isNaN(value)) return;
+        wordSpace.value = Number(value) + e.movementX + '%';
         if (textAttrEditor) {
-            wordSpace.value = wordSpace.value < 0 ? 0 : Number(wordSpace.value)
-            textAttrEditor.execute_char_spacing(wordSpace.value);
+            textAttrEditor.execute_char_spacing(Number(value) + e.movementX);
         }
     }
 }
@@ -822,7 +822,7 @@ const _textFormat = () => {
         colorIsMulti.value = format.colorIsMulti;
         isAutoLineHeight.value = format.autoLineHeight ?? true;
         rowHeight.value = format.autoLineHeight ?? true ? format.minimumLineHeight !== undefined ? format_value(format.minimumLineHeight || 0) + '%' : 'Auto' : format_value(format.minimumLineHeight || 0)
-        wordSpace.value = format_value(format.kerning || 0)
+        wordSpace.value = format_value(format.kerning || 0) + '%'
         highlightIsMulti.value = format.highlightIsMulti
         selectLevel.value = format.alignment || 'left'
         selectVertical.value = format.verAlign || 'top'
@@ -899,7 +899,7 @@ const _textFormat = () => {
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
-        wordSpace.value = format_value(format.kerning || 0);
+        wordSpace.value = format_value(format.kerning || 0) + '%';
         selectVertical.value = format.verAlign || 'top';
         selectText.value = format.textBehaviour;
         fontName.value = format.fontName || DefaultFontName;

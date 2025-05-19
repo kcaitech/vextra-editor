@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
+* Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+*
+* This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+* The full license text can be found in the LICENSE file in the root directory of this source tree.
+*
+* For more information about the AGPL-3.0 license, please visit:
+* https://www.gnu.org/licenses/agpl-3.0.html
+*/
 
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
@@ -111,15 +111,15 @@ const verTidyUp = ref(true);
 const horSpace = ref<number | string>('');
 const verSpace = ref<number | string>('');
 const s_tidy_up = ref(false);
-let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_oval, s_clip } = reactive({
+const attr_state = reactive({
     s_flip: true,
     s_radius: false,
     s_adapt: false,
-    s_length: false,
     s_counts: false,
     s_inner_angle: false,
     s_oval: false,
-    s_clip: false
+    s_clip: false,
+    s_length: false
 });
 const model_disable_state: ModelState = reactive({
     x: false,
@@ -133,7 +133,7 @@ const model_disable_state: ModelState = reactive({
     counts: false,
     innerAngle: false,
     ovalOptions: false,
-    clip: false
+    clip: false,
 });
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
@@ -335,7 +335,7 @@ function keydownH(event: KeyboardEvent) {
 }
 
 function lockToggle() {
-    if (s_length) {
+    if (attr_state.s_length) {
         return;
     }
 
@@ -455,28 +455,30 @@ function layout() {
     const selected = props.shapes;
     if (selected.length === 1) {
         const shape = selected[0];
-        s_radius = !!shape.radiusType;
-        s_adapt = shape.type === ShapeType.Artboard;
-        if (shape.type === ShapeType.Cutout) s_flip = false;
-        if (is_straight(shape) || shape.type === ShapeType.Contact) s_length = true;
+        attr_state.s_radius = !!shape.radiusType;
+        attr_state.s_adapt = shape.type === ShapeType.Artboard;
+        if (shape.type === ShapeType.Cutout) attr_state.s_flip = false;
+        if (is_straight(shape) || shape.type === ShapeType.Contact) attr_state.s_length = true;
     } else if (selected.length > 1) {
-        s_radius = selected.some(item => !!item.radiusType);
+        attr_state.s_radius = selected.some(item => !!item.radiusType);
     }
 
-    s_counts = showCounts(selected);
-    s_inner_angle = showInnerAngle(selected);
-    s_oval = showOvalOptions(selected);
-    s_clip = selected.some(i => !i.isVirtualShape && (i.type === ShapeType.Artboard || i.type === ShapeType.Symbol || i.type === ShapeType.SymbolRef));
+    if (parentSymbolRef()) attr_state.s_length = true;
+    
+    attr_state.s_counts = showCounts(selected);
+    attr_state.s_inner_angle = showInnerAngle(selected);
+    attr_state.s_oval = showOvalOptions(selected);
+    attr_state.s_clip = selected.some(i => !i.isVirtualShape && (i.type === ShapeType.Artboard || i.type === ShapeType.Symbol || i.type === ShapeType.SymbolRef));
 }
 
 function reset_layout() {
-    s_adapt = false;
-    s_flip = true;
-    s_radius = false;
-    s_length = false;
-    s_counts = false;
-    s_inner_angle = false;
-    s_oval = false;
+    attr_state.s_adapt = false;
+    attr_state.s_flip = true;
+    attr_state.s_radius = false;
+    attr_state.s_length = false;
+    attr_state.s_counts = false;
+    attr_state.s_inner_angle = false;
+    attr_state.s_oval = false;
 }
 
 function check_model_state() {
@@ -930,6 +932,16 @@ const workspace_watcher = (t: string | number) => {
     }
 }
 
+const oval_radius_update = () => {
+    const selected = props.shapes;
+    if (selected.length === 1) {
+        const shape = selected[0];
+        attr_state.s_radius = !!shape.radiusType;
+    } else if (selected.length > 1) {
+        attr_state.s_radius = selected.some(item => !!item.radiusType);
+    }
+}
+
 const stop1 = watch(() => props.selectionChange, selection_change);
 const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
@@ -938,6 +950,9 @@ const stop3 = watch(() => props.trigger, v => {
     }
     if (v.includes('textBehaviour')) {
         textBehaviour();
+    }
+    if (v.includes('endingAngle') || v.includes('startingAngle') || v.includes('innerRadius')) {
+        oval_radius_update();
     }
 });
 
@@ -960,7 +975,7 @@ onUnmounted(() => {
                 @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @keydown="keydownX" />
             <CommonInput :icon="y_icon" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
                 @dragstart="dragstart" @dragging="draggingY" @dragend="dragend" @keydown="keydownY" />
-            <div v-if="s_adapt" class="adapt" @click="adapt">
+            <div v-if="attr_state.s_adapt" class="adapt" @click="adapt">
                 <Tooltip :content="t('attr.adapt')">
                     <SvgIcon :icon="adapt_icon" style="outline: none;" />
                 </Tooltip>
@@ -975,11 +990,8 @@ onUnmounted(() => {
                 :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"
                 @keydown="keydownH" />
             <Tooltip :content="t('attr.constrainProportions')">
-                <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
-                    <SvgIcon :icon="isLock ? lock_icon : lock_open_icon" :class="{ 'active': isLock }" />
-                </div>
-                <div v-else class="lock" style="background-color: #F4F5F5;opacity: 0.4; pointer-events: none">
-                    <SvgIcon :icon="lock_open_icon" />
+                <div class="lock" @click="lockToggle" :class="{ 'active': isLock, 'disabled': attr_state.s_length }">
+                    <SvgIcon :icon="(isLock && !attr_state.s_length) ? lock_icon : lock_open_icon" :class="{ 'active': isLock }" />
                 </div>
             </Tooltip>
         </div>
@@ -988,13 +1000,13 @@ onUnmounted(() => {
                 :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
                 @dragend="dragend" @keydown="keydownR" />
             <div class="flip-wrapper">
-                <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
+                <Tooltip v-if="attr_state.s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
                     <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="fliph">
                         <SvgIcon :icon="fliph_icon" />
                     </div>
                 </Tooltip>
-                <Tooltip v-if="s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
+                <Tooltip v-if="attr_state.s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
                     <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="flipv">
                         <SvgIcon :icon="flipv_icon" />
@@ -1003,27 +1015,27 @@ onUnmounted(() => {
             </div>
             <div style="width: 28px;height: 28px;" />
         </div>
-        <div class="tr" v-if="s_counts">
+        <div class="tr" v-if="attr_state.s_counts">
             <CommonInput :icon="angle_count_icon" draggable :value="format(counts)" @change="changeCounts"
                 :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
                 @dragend="dragend" />
-            <CommonInput v-if="s_inner_angle" :icon="inner_angle_icon" draggable
+            <CommonInput v-if="attr_state.s_inner_angle" :icon="inner_angle_icon" draggable
                 :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
                 :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
                 @dragend="dragend" />
             <div style="width:28px;height: 28px;" />
         </div>
-        <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"
+        <Radius v-if="attr_state.s_radius" :context="context" :disabled="model_disable_state.radius"
             :selectionChange="selectionChange" :trigger="trigger" />
-        <ContentClip v-if="s_clip" :context="context" :trigger="trigger" :selection-change="selectionChange" />
-        <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
+        <ContentClip v-if="attr_state.s_clip" :context="context" :trigger="trigger" :selection-change="selectionChange" />
+        <Oval v-if="attr_state.s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange" />
         <div class="tr" v-if="s_tidy_up">
             <CommonInput :icon="hor_space2_icon" :value="format(horSpace)" :draggable="!horTidyUp"
-                       @change="changeHorTidyUp" :disabled="horTidyUp" @dragstart="dragstart"
-                       @dragging="(e) => draggingTidyUp(e, 'hor')" @dragend="dragend" @keydown="keydownHorTidyUp" />
+                @change="changeHorTidyUp" :disabled="horTidyUp" @dragstart="dragstart"
+                @dragging="(e) => draggingTidyUp(e, 'hor')" @dragend="dragend" @keydown="keydownHorTidyUp" />
             <CommonInput :icon="ver_space2_icon" :value="format(verSpace)" :draggable="!verTidyUp"
-                       @change="changeVerTidyUp" :disabled="verTidyUp" @dragstart="dragstart"
-                       @dragging="(e) => draggingTidyUp(e, 'ver')" @dragend="dragend" @keydown="keydownVerTidyUp" />
+                @change="changeVerTidyUp" :disabled="verTidyUp" @dragstart="dragstart"
+                @dragging="(e) => draggingTidyUp(e, 'ver')" @dragend="dragend" @keydown="keydownVerTidyUp" />
             <div class="adapt" @click="tidyUp" :style="{ opacity: !verTidyUp || !horTidyUp ? 0.4 : 1 }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
@@ -1242,5 +1254,14 @@ onUnmounted(() => {
 
 .tidy-up-disable {
     pointer-events: none;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.4;
+
+    &:hover {
+        background: #F4F5F5 !important;
+    }
 }
 </style>

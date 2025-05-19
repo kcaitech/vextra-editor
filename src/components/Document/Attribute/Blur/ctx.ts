@@ -60,9 +60,9 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     private modifyMixedStatus() {
-        if (this.selected.length < 1) return;
-        if (this.selected.length < 2) return this.blurCtx.mixed = false;
-        const allBlur = this.selected.map(i => ({ blur: i.style.blur, view: i }));
+        if (this.flat.length < 1) return;
+        if (this.flat.length < 2) return this.blurCtx.mixed = false;
+        const allBlur = this.flat.map(i => ({ blur: i.style.blur, view: i }));
         const stringF = stringifyBlur(allBlur[0]);
         for (let i = 1; i < allBlur.length; i++) {
             const str = stringifyBlur(allBlur[i]);
@@ -72,8 +72,8 @@ export class BlurContextMgr extends StyleCtx {
     }
 
     private updateBlur() {
-        if (this.blurCtx.mixed || this.selected.length < 1) return;
-        const represent = this.selected[0];
+        if (this.blurCtx.mixed || this.flat.length < 1) return;
+        const represent = this.flat[0];
         this.blurCtx.mask = represent.blurMask;
         if (this.blurCtx.mask) {
             const mask = this.context.data.stylesMgr.getSync(this.blurCtx.mask) as BlurMask;
@@ -110,7 +110,7 @@ export class BlurContextMgr extends StyleCtx {
         const blur = new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
         const views: ShapeView[] = [];
         const needOverride: ShapeView[] = [];
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) {
                 needOverride.push(view);
             } else {
@@ -133,14 +133,14 @@ export class BlurContextMgr extends StyleCtx {
     unify() {
         const editor = this.editor;
 
-        const blurMaskView = this.selected.find(i => i.blurMask);
+        const blurMaskView = this.flat.find(i => i.blurMask);
         if (blurMaskView) {
-            editor.unifyShapesBlurMask(this.selected, blurMaskView.blurMask!);
+            editor.unifyShapesBlurMask(this.flat, blurMaskView.blurMask!);
         } else {
-            const blur = editor.importBlur(this.selected.find(i => i.blur)!.blur!);
+            const blur = editor.importBlur(this.flat.find(i => i.blur)!.blur!);
             const locals: ShapeView[] = [];
             const links: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     links.push(view);
                 } else {
@@ -172,7 +172,7 @@ export class BlurContextMgr extends StyleCtx {
         } else {
             const locals: ShapeView[] = [];
             const links: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     links.push(view);
                 } else {
@@ -204,7 +204,7 @@ export class BlurContextMgr extends StyleCtx {
         } else {
             const locals: ShapeView[] = [];
             const links: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     links.push(view);
                 } else {
@@ -236,7 +236,7 @@ export class BlurContextMgr extends StyleCtx {
         } else {
             const locals: ShapeView[] = [];
             const links: ShapeView[] = [];
-            for (const view of this.selected) {
+            for (const view of this.flat) {
                 if (view instanceof SymbolRefView || view.isVirtualShape) {
                     links.push(view);
                 } else {
@@ -263,7 +263,7 @@ export class BlurContextMgr extends StyleCtx {
         const locals: ShapeView[] = [];
         const links: ShapeView[] = [];
 
-        for (const view of this.selected) {
+        for (const view of this.flat) {
             if (view instanceof SymbolRefView || view.isVirtualShape) {
                 links.push(view);
             } else {
@@ -290,23 +290,23 @@ export class BlurContextMgr extends StyleCtx {
         const { isEnabled, saturation, type } = this.blurCtx.blur?.blur!;
         const blur = new Blur(isEnabled, new Point2D(0, 0), saturation, type);
         const blurMask = new BlurMask([0] as BasicArray<number>, this.context.data.id, v4(), name, desc, blur);
-        this.editor.createBlurMask(this.document, blurMask, this.page, this.selected);
+        this.editor.createBlurMask(this.document, blurMask, this.page, this.flat);
         this.kill();
     }
 
     modifyBlurMask(maskID: string) {
         if (Object.keys(this.blurCtx).length === 0) return;
-        this.editor.setShapesBlurMask(this.page, this.selected, maskID);
+        this.editor.setShapesBlurMask(this.page, this.flat, maskID);
         this.kill();
         this.hiddenCtrl();
     }
 
     unbind() {
-        this.editor.unbindShapesBlurMask(this.page, this.selected);
+        this.editor.unbindShapesBlurMask(this.page, this.flat);
     }
 
     removeMask() {
-        this.editor.removeShapesBlurMask(this.page, this.selected);
+        this.editor.removeShapesBlurMask(this.page, this.flat);
     }
 
     disableMask(data: StyleMangerMember) {
