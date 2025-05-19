@@ -244,7 +244,6 @@ const onSelectVertical = (icon: TextVerAlign) => {
     props.context.textSelection.setTextAttr(textAttr);
 }
 const changeTextSize = (size: number) => {
-    console.log('- size', size);
     //设置字体大小
     fontSize.value = size
     showSize.value = false;
