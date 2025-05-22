@@ -314,6 +314,15 @@ function container() {
     emits('close');
 }
 
+function setAsThumbnail() {
+    const target = props.context.selection.selectedShapes[0];
+    if (target instanceof ArtboardView) {
+        props.context.editor4Doc().modifyThumbnailViewId(target.id);
+        props.context.menu.notify(Menu.GEN_THUMBNAIL);
+    }
+    emits('close');
+}
+
 function dissolution_container() {
     const selection = props.context.selection;
     const artboards = selection.selectedShapes.filter(s => s.type === ShapeType.Artboard);
@@ -666,6 +675,9 @@ import { group, ungroup } from "@/utils/group_ungroup";
         <div v-if="items.has(MenuItemType.Mask)" @click="mask" class="menu-item">
             <span>{{ t('system.set_mask') }}</span>
             <Key code="Ctrl Alt M"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Thumbnail)" @click="setAsThumbnail" class="menu-item">
+            <span>{{ t('system.set_as_thumbnail') }}</span>
         </div>
         <div v-if="items.has(MenuItemType.UnGroup)" @click="unGroup" class="menu-item">
             <span>{{ t('system.un_group') }}</span>

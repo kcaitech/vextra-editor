@@ -456,4 +456,8 @@ export class Context extends WatchableObject implements IContext {
     }
 
     eventsMap: Map<string, Function[]>;
+
+    updateThumbnail() {
+        this.m_menu.notify(Menu.GEN_THUMBNAIL);
+    }
 }

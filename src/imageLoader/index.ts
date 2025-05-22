@@ -272,10 +272,4 @@ export class ImageLoader {
 
         return !someError;
     }
-
-    // 上传缩略图
-    async thumbnail(file: File): Promise<void> {
-        const pack = await this.packFile(file, false) as ImagePack;
-        this.context.net?.genThumbnail(pack.name, pack.buff);
-    }
 }

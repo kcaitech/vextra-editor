@@ -73,4 +73,6 @@ export interface IContext extends IWatchable {
     inactive: boolean;
 
     env: ContextEnvironment;
+
+    updateThumbnail(): void;
 }

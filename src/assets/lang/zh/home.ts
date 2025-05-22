@@ -77,7 +77,8 @@ export const system = {
     gohome: '返回官网',
     trynow: '立即体验',
     updatetips: '版本已更新_',
-    timeout: '上传超时，请检查网络或将过大文件分割成多个文件'
+    timeout: '上传超时，请检查网络或将过大文件分割成多个文件',
+    'set_as_thumbnail': '设为封面'
 }
 
 export const home = {

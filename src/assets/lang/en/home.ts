@@ -77,7 +77,8 @@ export const system = {
     gohome: 'Return to official website',
     trynow: 'Try it now',
     updatetips: 'Update_',
-    timeout: 'Timeout'
+    timeout: 'Timeout',
+    'set_as_thumbnail': 'Set as thumbnail'
 }
 
 export const home = {

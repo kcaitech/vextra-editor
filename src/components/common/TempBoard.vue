@@ -90,6 +90,78 @@ function write() {
     })
 }
 
+function updateThumbnail() {
+    const page = props.context.selection.selectedPage!;
+
+    let backgroundColor: string | undefined;
+    let views: ShapeView[] = [];
+    if (props.context.data.thumbnailViewId) {
+        const thumbnailView = page.getView(props.context.data.thumbnailViewId);
+        if (thumbnailView) {
+            views = [thumbnailView];
+        } else {
+            const firstPage = props.context.data.pagesList[0];
+            if (page.id !== firstPage.id) return;
+            views = [...page.childs];
+            backgroundColor = page.backgroundColor?.toHex() ?? undefined;
+        }
+    } else {
+        const firstPage = props.context.data.pagesList[0];
+        if (page.id !== firstPage.id) return;
+        views = [...page.childs];
+        backgroundColor = page.backgroundColor?.toHex() ?? undefined;
+    }
+
+    renderItems.length = 0;
+    pedal.value = false;
+
+    if (!views.length) return;
+
+    renderItems = views;
+
+    const points: XY[] = [];
+    for (let i = 0; i < renderItems.length; i++) {
+        const shape = renderItems[i];
+        const frame = shape.outerFrame;
+
+        const { left, top, right, bottom } = getShadowMax(shape);
+
+        const x = frame.x - left;
+        const y = frame.y - top;
+        const _right = frame.width + right;
+        const _bottom = frame.height + bottom;
+        points.push(...[
+            { x, y },
+            { x: _right, y },
+            { x: _right, y: _bottom },
+            { x, y: _bottom }
+        ].map(p => shape.matrix2Parent().computeCoord3(p)));
+    }
+
+    const box = XYsBounding(points);
+    xy.value = { x: box.left, y: box.top };
+    width.value = box.right - box.left;
+    height.value = box.bottom - box.top;
+
+    pedal.value = true;
+
+    nextTick(async () => {
+        getBlob(backgroundColor).then((blob) => {
+            if (!blob) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const arrayBuffer = reader.result as ArrayBuffer;
+                const uint8Array = new Uint8Array(arrayBuffer);
+                console.log('update thumbnail');
+                props.context.net?.genThumbnail('thumbnail', 'image/png', uint8Array);
+            }
+            reader.readAsArrayBuffer(blob);
+        });
+
+        pedal.value = false;
+    })
+}
+
 /**
  * @description quality = 0.5
  */
@@ -147,7 +219,7 @@ const emits = defineEmits<{
     (e: 'loaded', b64: string): void;
 }>();
 
-function getBlob(): Promise<Blob | null> {
+function getBlob(backgroundColor?: string): Promise<Blob | null> {
     const svg = pageCard.value?.pageSvg as SVGElement;
     return new Promise((resolve) => {
         if (!svg) return resolve(null);
@@ -163,6 +235,12 @@ function getBlob(): Promise<Blob | null> {
         _svg.setAttribute('height', `${height}`);
         canvas.width = width;
         canvas.height = height;
+        if (backgroundColor) {
+            context.save();
+            context.fillStyle = backgroundColor;
+            context.fillRect(0, 0, width, height);
+            context.restore();
+        }
         const svgString = new XMLSerializer().serializeToString(_svg);
         document.body.removeChild(_svg);
         const img = new Image();
@@ -222,6 +300,8 @@ function menuWatcher(t: number, target: ShapeView) {
         write();
     } else if (t === Menu.WRITE_MEDIA_LAZY) {
         write4LazyLoader(target);
+    } else if (t === Menu.GEN_THUMBNAIL) {
+        updateThumbnail();
     }
 }
 

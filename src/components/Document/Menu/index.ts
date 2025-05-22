@@ -66,6 +66,8 @@ export enum MenuItemType {
 
     AutoLayout,
     UnAutoLayout,
+
+    Thumbnail,
 }
 
 export enum MountedAreaType { // 不同区域生成不同的菜单项
@@ -170,7 +172,7 @@ export function getMenuItems(context: Context, event: MouseEvent, area: MountedA
 
     if (area === MountedAreaType.Artboard) {
         if (positive) {
-            contextMenuItems = new Set([...BASE_ITEM, MenuItemType.PasteHere, MenuItemType.Replace, MenuItemType.Visible, MenuItemType.Component, MenuItemType.Lock, MenuItemType.Forward, MenuItemType.Back, MenuItemType.Top, MenuItemType.Bottom, MenuItemType.Groups, MenuItemType.Container, MenuItemType.Dissolution]);
+            contextMenuItems = new Set([...BASE_ITEM, MenuItemType.PasteHere, MenuItemType.Replace, MenuItemType.Visible, MenuItemType.Component, MenuItemType.Lock, MenuItemType.Forward, MenuItemType.Back, MenuItemType.Top, MenuItemType.Bottom, MenuItemType.Groups, MenuItemType.Container, MenuItemType.Dissolution, MenuItemType.Thumbnail]);
         } else {
             contextMenuItems = new Set(BASE_ITEM);
         }
@@ -199,6 +201,7 @@ export function getMenuItems(context: Context, event: MouseEvent, area: MountedA
             const type = get_selected_types(context);
             if (type & 1) {
                 contextMenuItems.add(MenuItemType.Dissolution);
+                contextMenuItems.add(MenuItemType.Thumbnail);
             } else if (type & 2) {
                 contextMenuItems.add(MenuItemType.UnGroup);
             } else if (type & 4) {
