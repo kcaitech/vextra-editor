@@ -694,8 +694,8 @@ comps.push(...plugins.end);
 const stop1 = watch(() => props.page, (cur, old) => {
     old.unwatch(page_watcher)
     cur.watch(page_watcher)
-    let info = matrixMap.get(old.id);
-    info!.m.reset(matrix.toArray())
+    const info = matrixMap.get(old.id); // 可能为undefined。matrixMap在renderDone时才给对应的page添加了Matrix信息
+    if (info) info.m.reset(matrix.toArray())
     updateBackground(cur);
 });
 const boardMgr = new KeyboardMgr(props.context);
