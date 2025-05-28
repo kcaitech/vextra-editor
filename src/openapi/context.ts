@@ -75,4 +75,6 @@ export interface IContext extends IWatchable {
     env: ContextEnvironment;
 
     updateThumbnail(): void;
+
+    uploadSymbolResource(name: string, path: string, data: ArrayBufferLike): Promise<boolean>;
 }
