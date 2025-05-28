@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { Context } from "@/context";
-import { Matrix, PageView, ScreenPrinter } from "@kcdesign/data";
+import { Matrix, PageView } from "@kcdesign/data";
 import { message } from "@/utils/message";
 
 type Props = {
@@ -70,8 +70,9 @@ onMounted(() => {
             if (!selected.length) {
                 return message('info', '没有有效选区！');
             }
-            const printer = new ScreenPrinter(props.context.data, props.params.data.data);
-            printer.print(selected);
+            // todo
+            // const printer = new ScreenPrinter(props.context.data, props.params.data.data);
+            // printer.print(selected);
         }
     })
 });
