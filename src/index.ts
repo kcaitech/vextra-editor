@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ * Copyright (c) 2023-2025 KCai Technology (https://kcaitech.com). All rights reserved.
  *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * This file is part of the Vextra project, which is licensed under the AGPL-3.0 license.
  * The full license text can be found in the LICENSE file in the root directory of this source tree.
  *
  * For more information about the AGPL-3.0 license, please visit:
@@ -31,18 +31,18 @@ import {
     createDocument,
     DocEditor,
     Document,
+    exportVext,
     importFigma,
     importRemote,
     importSketch,
+    importVext,
     TransactDataGuard,
 } from '@kcdesign/data';
-import { LzDataLocal } from "./basic/lzdatalocal";
-import { Zip } from "@/basic/zip";
+
 import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
 import { IContext } from "@/openapi";
-import { _exportDocument, importDocumentFromMDD } from "@/io";
 
 import '@/style/constant.scss'
 import '@/style/app.scss'
@@ -80,14 +80,13 @@ async function _open(props: DocumentProps) {
         cooprepo = new CoopRepository(data, repo)
     } else if (props.source === 'file') {
         if (props.fmt === 'sketch') {
-            const lzdata = new LzDataLocal(new Zip(props.file));
-            data = await importSketch(props.file.name.replace(/.sketch$/, ''), lzdata, repo);
+            data = await importSketch(props.file, repo);
             cooprepo = new CoopRepository(data, repo)
         } else if (props.fmt === 'fig') {
             data = await importFigma(props.file, repo)
             cooprepo = new CoopRepository(data, repo)
         } else if (props.fmt === 'vext' || props.fmt === 'moss') {
-            data = await importDocumentFromMDD(props.file, repo);
+            data = await importVext(props.file, repo);
             cooprepo = new CoopRepository(data, repo)
         }
     } else if (props.source === 'new') {
@@ -130,7 +129,7 @@ export async function openDocument(props: DocumentProps) {
 }
 
 export async function exportDocument(context: IContext) {
-    return _exportDocument(context as Context)
+    return exportVext(context.data, 'blob') as Promise<Blob>;
 }
 
 export { initModule } from "./basic/initmodule";
