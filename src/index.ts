@@ -19,6 +19,7 @@ import _DocumentVue from "./components/Document/index.vue"
  * @description 针对移动端优化的文档编辑器组件
  */
 import _MobileDocumentVue from "./components/Mobile/Document.vue"
+import _View from "./components/common/ShapeDesc/View.vue"
 
 /**
  * 预览组件
@@ -135,3 +136,7 @@ export async function exportDocument(context: IContext) {
 export { initModule } from "./basic/initmodule";
 
 export { DragKit } from "./components/common/draggable";
+
+export { ShapeDescContext } from "./components/common/ShapeDesc/shapeDescContext";
+
+export const View = _View;

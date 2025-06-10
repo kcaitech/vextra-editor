@@ -254,7 +254,6 @@ export class BundleHandler {
                     const bundle = { ...media } as SVGBundle;
                     const shape = import_shape_from_clipboard(
                         context.data,
-                        adapt2Shape(page) as Page,
                         [bundle.shape!]
                     ).pop()!;
                     transformId(shape);
@@ -291,7 +290,7 @@ export class BundleHandler {
         if (container.length) {
             for (let i = 0; i < container.length; i++) {
                 const env = container[i];
-                const __shape = import_shape_from_clipboard(context.data, page, [shape]).pop()!;
+                const __shape = import_shape_from_clipboard(context.data, [shape]).pop()!;
                 const start = { x: (env.frame.width - area.width) / 2, y: (env.frame.height - area.height) / 2 };
                 const offset = new Transform().setTranslate(ColVector3D.FromXY(start.x, start.y));
                 const t = (__shape.transform.clone());
@@ -300,7 +299,7 @@ export class BundleHandler {
                 actions.push({ parent: adapt2Shape(env) as GroupShape, shape: __shape });
             }
         } else {
-            const __shape = import_shape_from_clipboard(context.data, page, [shape]).pop()!;
+            const __shape = import_shape_from_clipboard(context.data, [shape]).pop()!;
             const root = context.workspace.root;
             const start = context.workspace.matrix.inverseCoord(root.center.x, root.center.y);
             start.x -= area.width / 2;
@@ -467,7 +466,7 @@ export class BundleHandler {
             // 检查有没有图层内容
             const context = this.context;
             const page = context.selection.selectedPage!;
-            const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
+            const shapes = import_shape_from_clipboard(context.data, source.shapes, source.media);
             if (!shapes.length) throw new Error('invalid source');
             // 进行替换
             const editor = context.editor4Page(page);

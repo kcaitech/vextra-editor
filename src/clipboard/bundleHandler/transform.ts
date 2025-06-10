@@ -160,8 +160,8 @@ export class ClipboardTransformHandler {
             this.__fit_to_env(__source, env, data.originTransform);
 
             const shapes = i
-                ? import_shape_from_clipboard(context.data, page, __source)
-                : import_shape_from_clipboard(context.data, page, __source, data.media);
+                ? import_shape_from_clipboard(context.data, __source)
+                : import_shape_from_clipboard(context.data, __source, data.media);
 
             const parent = adapt2Shape(env) as GroupShape;
             for (const shape of shapes) actions.push({ parent, shape });
@@ -176,7 +176,7 @@ export class ClipboardTransformHandler {
         const box = view.boundingBox();
         const transform = view.transform.clone();
         transform.translateX += box.width + 12;
-        const shapes = import_shape_from_clipboard(context.data, adapt2Shape(context.selection.selectedPage!) as Page, source.shapes)
+        const shapes = import_shape_from_clipboard(context.data, source.shapes)
         shapes[0].transform = transform;
         return [{ parent: adapt2Shape(view.parent!) as GroupShape, shape: shapes[0] }];
     }
@@ -185,7 +185,7 @@ export class ClipboardTransformHandler {
      * @description 提供相对于屏幕居中的图层插入参数
      */
     center(context: Context, source: SourceBundle): InsertAction[] {
-        const shapes = import_shape_from_clipboard(context.data, adapt2Shape(context.selection.selectedPage!) as Page, source.shapes)
+        const shapes = import_shape_from_clipboard(context.data, source.shapes)
         const box = this.sourceBounding(shapes);
         const width = box.right - box.left;
         const height = box.bottom - box.top;
@@ -210,7 +210,7 @@ export class ClipboardTransformHandler {
      */
     fitOrigin(context: Context, source: SourceBundle): InsertAction[] {
         const page = adapt2Shape(context.selection.selectedPage!) as Page;
-        const shapes = import_shape_from_clipboard(context.data, page, source.shapes);
+        const shapes = import_shape_from_clipboard(context.data, source.shapes);
         const ids = new Set<string>(source.originIds);
         const getParent = ((shape: Shape, layers: ShapeView[]) => {
             for (const l of layers) {

@@ -1020,7 +1020,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         if (xy) {
             const insert_env = fixToXY(context, source, xy);
 
-            const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
+            const shapes = import_shape_from_clipboard(context.data, source, medias);
             if (!shapes.length) {
                 throw new Error('invalid source: !shapes.length');
             }
@@ -1039,8 +1039,8 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                 fixToEnv(context, __source, env, originTransform);
 
                 const shapes = i > 0
-                    ? import_shape_from_clipboard(context.data, page_data, __source)
-                    : import_shape_from_clipboard(context.data, page_data, __source, medias);
+                    ? import_shape_from_clipboard(context.data, __source)
+                    : import_shape_from_clipboard(context.data, __source, medias);
 
                 actions.push({ env: adapt2Shape(env) as GroupShape, shapes });
             }
@@ -1054,7 +1054,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
             fixToEnv(context, source, insert_env as GroupShapeView, originTransform);
 
-            const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
+            const shapes = import_shape_from_clipboard(context.data, source, medias);
 
             if (!shapes.length) throw new Error('invalid source: !shapes.length');
 
@@ -1116,7 +1116,7 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
 
     const source = JSON.parse(text_html.split(identity)[1]);
 
-    const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
+    const shapes = import_shape_from_clipboard(context.data, source.shapes, source.media);
     if (!shapes.length) throw new Error('invalid source');
 
 

@@ -18,7 +18,6 @@ const props = defineProps<{ context: Context, visible: boolean }>();
 const cursorClass = ref<'grab' | 'grabbing'>('grab');
 
 let lastXY: XY = { x: 0, y: 0 };
-let moving = false;
 
 function down(event: MouseEvent) {
     if (event.button !== 0) return;
@@ -36,14 +35,10 @@ function move(event: MouseEvent) {
     const dx = event.x - lastXY.x;
     const dy = event.y - lastXY.y;
 
-    if (moving) {
-        const workspace = props.context.workspace;
-        workspace.matrix.trans(dx, dy);
-        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
-        lastXY = event;
-    } else if (Math.hypot(dx, dy) > 5) {
-        moving = true;
-    }
+    const workspace = props.context.workspace;
+    workspace.matrix.trans(dx, dy);
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    lastXY = event;
 }
 
 function up() {
@@ -55,7 +50,6 @@ function blur() {
 }
 
 function clear() {
-    moving = false;
     cursorClass.value = 'grab';
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
