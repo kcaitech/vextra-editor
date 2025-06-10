@@ -10,7 +10,7 @@
 
 import { measure } from "@/layout/text/measure";
 import { initModule as initData } from "@kcdesign/data";
-import { text2path } from "@kcdesign/text2path";
+import { text2path } from "@kcaitech/text2path";
 
 let __inited: boolean = false;
 
