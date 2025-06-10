@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { IStorage } from '@kcdesign/data'
+import { IO } from '@kcdesign/data'
 
 export * from './plugins'
 export * from "./context"
@@ -17,6 +17,6 @@ export * from "./selection"
 export * from "./workspace"
 export * from "./toolbox"
 export type DocumentProps = (
-    { source: 'storage', storage: IStorage, path: string, fid: string, versionId: string } |
+    { source: 'storage', storage: IO.IStorage, path: string, fid: string, versionId: string } |
     { source: 'file', file: File, fmt: 'vext' | 'sketch' | 'fig' | 'moss' } |
     { source: 'new' })

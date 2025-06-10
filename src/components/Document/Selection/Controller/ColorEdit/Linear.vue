@@ -32,7 +32,10 @@ import {
     Stop,
     TextShapeView,
     Transform,
-    cloneGradient, Api, ShapeView, SymbolRefView
+    IO,
+    ShapeView,
+    SymbolRefView,
+    Coop
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
@@ -41,6 +44,7 @@ import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
 
+type Api = Coop.Api;
 type Dot = {
     x: number;
     y: number;
@@ -400,7 +404,7 @@ const add_stop = (e: MouseEvent) => {
     const stop = new Stop(new BasicArray(), v4(), position, _stop.color);
     if (locate.type === 'text') {
         const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-        const new_gradient = cloneGradient(gradient);
+        const new_gradient = IO.Clipboard.cloneGradient(gradient);
         new_gradient.stops.push(stop);
         const s = new_gradient.stops as BasicArray<Stop>;
         s.sort((a, b) => {

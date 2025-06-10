@@ -13,13 +13,13 @@ import { Context } from '@/context';
 import {
     ShapeView,
     Shape,
-    export_shape,
+    IO,
     adapt2Shape,
     BasicArray,
     Border,
     Fill,
     Style,
-    Shadow, Page, ShapeType, Transform, XYsBounding,
+    Shadow, Page, ShapeType, Transform, utils,
     BorderSideSetting,
     BorderPosition,
     BorderStyle,
@@ -59,7 +59,7 @@ function getViewBox() {
     const m = data.matrix2Root();
     const f = data.frame;
     const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(i => m.computeCoord3(i));
-    const box = XYsBounding(points);
+    const box = utils.XYsBounding(points);
 
     const height = box.bottom - box.top;
     const width = box.right - box.left;
@@ -123,7 +123,7 @@ function unBind() {
 function simplify() {
     const data = props.shape instanceof ShapeView ? adapt2Shape(props.shape) : props.shape;
 
-    const { ctx } = export_shape([data]);
+    const { ctx } = IO.Clipboard.export_shape([data]);
     const context = props.context;
     const mediaFetchTasks: Promise<boolean>[] = [];
     const loader = context.data.mediasMgr;

@@ -27,8 +27,10 @@ import {
     Stop,
     TextShapeView,
     Transform,
-    cloneGradient,
-    Api, ShapeView, SymbolRefView
+    IO,
+    ShapeView,
+    SymbolRefView,
+    Coop
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
@@ -42,7 +44,7 @@ import { SelectedShapesWatcher } from "@/components/common/selectionwatcher";
 type DotType = 'from' | 'to' | 'ellipse';
 type Dot = { x: number; y: number; type: DotType; };
 type Stops = { x: number; y: number; color: Color; id?: string; };
-
+type Api = Coop.Api;
 const props = defineProps<{
     context: Context
     matrix: Matrix
@@ -483,7 +485,7 @@ const add_stop = (e: MouseEvent) => {
     const stop = new Stop(new BasicArray(), v4(), position, _stop.color);
     if (locate.type == 'text') {
         const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-        const new_gradient = cloneGradient(gradient);
+        const new_gradient = IO.Clipboard.cloneGradient(gradient);
         new_gradient.stops.push(stop);
         const s = new_gradient.stops as BasicArray<Stop>;
         s.sort((a, b) => a.position > b.position ? 1 : -1);

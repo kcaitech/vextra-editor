@@ -9,7 +9,7 @@
  */
 
 import { Bundle } from "@/clipboard";
-import { svgParser as SVGParse } from "@kcdesign/data";
+import { IO } from "@kcdesign/data";
 import { Reader } from "@/clipboard/read/reader";
 import { Context } from "@/context";
 import { message } from "@/utils/message";
@@ -30,7 +30,7 @@ export class NavigatorClipboardReader extends Reader {
                     const blob = await item.getType("text/plain");
                     const text = await blob.text();
                     if (this.maySvgText(text)) {
-                        const svg = SVGParse.parse(text);
+                        const svg = IO.SvgParser.parse(text);
                         const svgs = bundle["SVG"];
                         svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
                     } else bundle["plain"] = text;

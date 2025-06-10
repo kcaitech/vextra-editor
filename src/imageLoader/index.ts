@@ -16,7 +16,7 @@ import {
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
-import { svgParser as parse_svg } from "@kcdesign/data";
+import { IO } from "@kcdesign/data";
 import { upload_image } from "@/utils/content";
 import { XY } from "@/context/selection";
 
@@ -45,7 +45,7 @@ export class ImageLoader {
             reader.onload = (event) => {
                 const svg = event?.target?.result;
                 if (!svg) reject('no result');
-                const parseResult = parse_svg.parse(svg as string);
+                const parseResult = IO.SvgParser.parse(svg as string);
                 if (!parseResult.shape) reject('svg can not parse');
                 else parseResult.shape.name = file.name.replace(/.svg$/i, '') || this.context.workspace.t('shape.artboard');
                 resolve(parseResult);

@@ -21,14 +21,16 @@ import {
     Stop,
     FillMask,
     PaintFilterType,
-    ShapeView, Api, SymbolRefView, GradientType, Matrix, Point2D,
+    ShapeView, SymbolRefView, GradientType, Matrix, Point2D,
     FillType
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
 import { modify_imgs } from "@/utils/content";
-import { updateRecently } from "@/components/common/ColorPicker/utils";
+import { Coop } from "@kcdesign/data";
+type Api = Coop.Api;
+
 
 export class FillsPicker extends ColorPickerEditor {
     fill: Fill | undefined;

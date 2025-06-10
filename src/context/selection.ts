@@ -9,7 +9,7 @@
  */
 
 import {
-    ISave4Restore, PageView,
+    PageView,
     ShapeType,
     ShapeView,
     SymbolRefView,
@@ -19,11 +19,10 @@ import {
     TableView,
     TextShapeView,
     WatchableObject,
-    SelectionState,
-    ArrayOpSelection,
-    isDiffStringArr,
     TableCellType,
-    TidyUpAlign
+    TidyUpAlign,
+    IO,
+    Coop
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -73,7 +72,7 @@ export const enum SelectionTheme {
     Symbol = '#7F58F9'
 }
 
-export class Selection extends WatchableObject implements ISave4Restore, ISelection {
+export class Selection extends WatchableObject implements Coop.ISave4Restore, ISelection {
     static CHANGE_PAGE = SelectionEvents.page_change;
     static CHANGE_SHAPE = SelectionEvents.shape_change;
     static CHANGE_SHAPE_HOVER = SelectionEvents.shape_hover_change;
@@ -413,8 +412,8 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         return this.textSelection;
     }
 
-    save(): SelectionState {
-        const state: SelectionState = {
+    save(): Coop.SelectionState {
+        const state: Coop.SelectionState = {
             shapes: []
         }
         if (this.selectedShapes.length > 0) {
@@ -461,29 +460,29 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         // text
         const textShape = this.textSelection.shape;
         if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0 && textShape) {
-            state.text = new ArrayOpSelection(v4(), textShape.text.getCrdtPath(),
+            state.text = new Coop.ArrayOpSelection(v4(), textShape.text.getCrdtPath(),
                 Number.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
                 this.textSelection.cursorEnd - this.textSelection.cursorStart)
         }
         return state;
     }
 
-    saveText(path: string[]): ArrayOpSelection | undefined {
+    saveText(path: string[]): Coop.ArrayOpSelection | undefined {
         const shape = this.focusTextShape;
         if (!shape) return;
         const text = shape.text;
         if (!text) return;
         const curPath = text.getCrdtPath();
         if (path.length !== curPath.length) return;
-        if (isDiffStringArr(path, curPath)) return;
+        if (Coop.isDiffStringArr(path, curPath)) return;
         if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0) {
-            return new ArrayOpSelection(v4(), path,
+            return new Coop.ArrayOpSelection(v4(), path,
                 Number.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
                 this.textSelection.cursorEnd - this.textSelection.cursorStart)
         }
     }
 
-    restoreText(op: ArrayOpSelection): void {
+    restoreText(op: Coop.ArrayOpSelection): void {
         const path = op.path;
         const shape = this.focusTextShape;
         if (!shape) return;
@@ -491,14 +490,14 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         if (!text) return;
         const curPath = text.getCrdtPath();
         if (path.length !== curPath.length) return;
-        if (isDiffStringArr(path, curPath)) return;
+        if (Coop.isDiffStringArr(path, curPath)) return;
         if ((this.textSelection.cursorStart !== op.start || this.textSelection.cursorEnd !== (op.start + op.length))) {
             if (op.length === 0) this.textSelection.setCursor(op.start, false);
             else this.textSelection.selectText(op.start, op.start + op.length);
         }
     }
 
-    restore(state: SelectionState): void {
+    restore(state: Coop.SelectionState): void {
         if (!this.selectedPage) return;
         const shapes = state.shapes.map(id => this.selectedPage?.getShape(id) as ShapeView);
         if (shapes.findIndex((s) => s === undefined) >= 0) {
@@ -506,7 +505,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
                 const shapes = state.shapes.map(id => this.selectedPage?.getShape(id) as ShapeView).filter(s => s !== undefined);
                 this.rangeSelectShape(shapes);
             })
-        } else if (isDiffStringArr(state.shapes, this.selectedShapes.map(s => s.id))) {
+        } else if (Coop.isDiffStringArr(state.shapes, this.selectedShapes.map(s => s.id))) {
             this.rangeSelectShape(shapes);
         }
         // table

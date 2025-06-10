@@ -18,11 +18,13 @@ import {
     ImageScaleMode,
     Stop,
     FillMask,
-    ShapeView, Api, SymbolRefView, GradientType, Matrix, Point2D,
+    ShapeView, SymbolRefView, GradientType, Matrix, Point2D,
     FillType,
     BorderPaintsAsyncApi
 } from "@kcdesign/data";
 import { v4 } from "uuid";
+import { Coop } from "@kcdesign/data";
+type Api = Coop.Api;
 
 export class PaintsPicker extends ColorPickerEditor {
     paint: Fill | undefined;

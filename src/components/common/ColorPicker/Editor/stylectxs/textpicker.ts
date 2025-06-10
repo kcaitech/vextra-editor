@@ -16,13 +16,15 @@ import {
     Color,
     TextAsyncApi,
     Stop,
-    ShapeView, Api, GradientType, Matrix, Point2D,
+    ShapeView, GradientType, Matrix, Point2D,
     FillType,
     AttrGetter,
     TextShapeView,
-    ShapeType
+    ShapeType,
+    Coop
 } from "@kcdesign/data";
 import { v4 } from "uuid";
+type Api = Coop.Api;
 
 export class TextPicker extends ColorPickerEditor {
     format: AttrGetter | undefined

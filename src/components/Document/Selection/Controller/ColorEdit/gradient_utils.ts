@@ -23,7 +23,7 @@ import {
     Fill,
     FillMask
 } from "@kcdesign/data";
-import { importGradient } from "@kcdesign/data";
+import { basicio } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 
@@ -153,7 +153,7 @@ export function calculateArcLengthAtAngle(a: number, b: number, theta: number) {
 export function getGradient(gradient: Gradient | undefined, grad_type: GradientType, color: Color) {
     let new_gradient: Gradient | undefined;
     if (gradient) {
-        new_gradient = importGradient(gradient);
+        new_gradient = basicio.importGradient(gradient);
         new_gradient.gradientType = grad_type;
         if (grad_type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
             new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);

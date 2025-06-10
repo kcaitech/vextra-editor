@@ -35,7 +35,7 @@ import {
     ShapeType,
     TextBehaviour,
     TextShapeView,
-    cloneGradient,
+    IO,
     TextVerAlign,
     TextHorAlign,
     Color
@@ -527,7 +527,7 @@ function onColorChange(e: Event, type: string) {
 
 const set_gradient_opacity = (opacity: number) => {
     if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
+    const g = IO.Clipboard.cloneGradient(gradient.value);
     g.gradientOpacity = opacity;
     editor_gradient(g);
 }

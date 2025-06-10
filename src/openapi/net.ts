@@ -8,9 +8,9 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ICoopNet } from "@kcdesign/data";
+import { Coop } from "@kcdesign/data";
 
-export interface INet extends ICoopNet {
+export interface INet extends Coop.ICoopNet {
     upload(name: string, data: ArrayBufferLike): Promise<boolean>
 
     genThumbnail(name: string, contentType: string, data: ArrayBufferLike): Promise<boolean>

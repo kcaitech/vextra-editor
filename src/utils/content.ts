@@ -37,8 +37,7 @@ import { adjust_content_xy } from "./clipboard";
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
 import { is_circular_ref2, is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
-import { TableSelection } from "@/context/tableselection";
-import { svgParser as parse_svg } from "@kcdesign/data";
+import { IO } from "@kcdesign/data";
 import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
@@ -148,7 +147,7 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
     reader.onload = function (event) {
         const svg = event.target?.result;
         if (svg) {
-            const parseResult = parse_svg.parse(svg as string);
+            const parseResult = IO.SvgParser.parse(svg as string);
             if (parseResult.shape) {
                 parseResult.shape.name = file.name.replace(".svg", "");
                 if (xy) {

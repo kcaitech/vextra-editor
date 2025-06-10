@@ -14,12 +14,14 @@ import { onMounted, onUnmounted, ref } from "vue";
 import {
     FillsAsyncApi,
     ColVector3D,
-    ShapeView, Fill, SymbolRefView, Api,
+    ShapeView, Fill, SymbolRefView, Coop,
     Transform
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { DragKit } from "@/components/common/draggable";
 import { CursorType } from "@/utils/cursor";
+
+type Api = Coop.Api;
 
 interface Props {
     context: Context;

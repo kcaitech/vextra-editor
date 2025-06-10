@@ -9,7 +9,7 @@
  */
 
 import {
-    CoopRepository,
+    Coop,
     WatchableObject,
     TableEditor,
     PageView,
@@ -61,9 +61,9 @@ import { TaskMgr } from "@/basic/taskmgr";
 
 // 仅暴露必要的方法
 class RepoWrapper {
-    private m_repo: CoopRepository;
+    private m_repo: Coop.CoopRepository;
 
-    constructor(repo: CoopRepository) {
+    constructor(repo: Coop.CoopRepository) {
         this.m_repo = repo;
     }
 
@@ -135,7 +135,7 @@ export class Context extends WatchableObject implements IContext {
     private m_data: Document;
     private m_editor: Editor;
     private m_repo: RepoWrapper;
-    private m_coopRepo: CoopRepository;
+    private m_coopRepo: Coop.CoopRepository;
     private m_taskMgr: TaskMgr;
     private m_textEditor?: TextShapeEditor;
     private m_selection: Selection;
@@ -169,7 +169,7 @@ export class Context extends WatchableObject implements IContext {
     inactive: boolean;
     env: ContextEnvironment;
 
-    constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
+    constructor(data: Document, repo: Coop.CoopRepository, props: DocumentProps) {
         super();
         (window as any).__context = this;
         this.m_data = data;
@@ -324,7 +324,7 @@ export class Context extends WatchableObject implements IContext {
         return !!this.m_readonly;
     }
 
-    get coopRepo(): CoopRepository {
+    get coopRepo(): Coop.CoopRepository {
         return this.m_coopRepo;
     }
 

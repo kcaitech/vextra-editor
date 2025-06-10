@@ -23,7 +23,7 @@ import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
-import { ColVector3D, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
+import { ColVector3D, ShapeSize, ShapeView, Transform, IO, utils } from "@kcdesign/data";
 import { ScaleUniformer } from "@/transform/scaleUniform";
 
 const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();
@@ -58,7 +58,7 @@ function __get_box() {
             ColVector3D.FromXY(frame.x, bottom),
         ]));
     }
-    return XYsBounding(points);
+    return utils.XYsBounding(points);
 }
 
 function getSize() {

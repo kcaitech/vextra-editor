@@ -19,7 +19,7 @@ import {
     Matrix,
     ShapeView,
     SymbolRefView,
-    XYsBounding
+    utils
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { genRectPath } from "../../common";
@@ -100,7 +100,7 @@ function hoverDottedPaths() {
         const points: { x: number, y: number }[] = [];
         const ps: { x: number, y: number }[] = getPoint(child, bordersTakeSpace);
         points.push(...ps);
-        const b = XYsBounding(points);
+        const b = utils.XYsBounding(points);
         const framePoint = [                                                                                                                                                                                                             
             { x: b.left, y: b.top },
             { x: b.right, y: b.top },
@@ -169,7 +169,7 @@ function selectDottedPaths() {
         { x: 0, y: f.height }
     ].map(p => shape_root_m.computeCoord(p.x, p.y));
     points.push(...ps);
-    const b = XYsBounding(points);
+    const b = utils.XYsBounding(points);
     const framePoint = [
         { x: b.left, y: b.top },
         { x: b.right, y: b.top },
@@ -223,7 +223,7 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
         const ps: { x: number, y: number }[] = getPoint(shape, includedBorder);
         points.push(...ps);
     }
-    const b = XYsBounding(points);
+    const b = utils.XYsBounding(points);
     const framePoint = [
         { x: b.left + 2, y: b.top + 2 },
         { x: b.right - 2, y: b.top + 2 },
