@@ -36,4 +36,10 @@ async function onPickFile(file: File) {
 <template>
     <DropFile v-if="state==='home'" @pick="onPickFile"/>
     <DocumentVue v-if="state==='editor' && context" :context="context"/>
+    
+    <footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 12px; color: #666;">
+        <a href="https://kcaitech.com" target="_blank" style="text-decoration: none; color: #666;">
+            Copyright (c) 2023-2025 KCai Technology
+        </a>
+    </footer>
 </template>
