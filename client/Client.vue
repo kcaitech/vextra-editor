@@ -33,12 +33,34 @@ async function onPickFile(file: File) {
 
 </script>
 
+<style scoped>
+.copyright-footer {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+}
+
+.copyright-link {
+    text-decoration: none;
+    color: #666;
+    /* transition: color 0.3s ease; */
+}
+
+.copyright-link:hover {
+    color: #1c7dff;
+}
+</style>
+
 <template>
     <DropFile v-if="state==='home'" @pick="onPickFile"/>
     <DocumentVue v-if="state==='editor' && context" :context="context"/>
     
-    <footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 12px; color: #666;">
-        <a href="https://kcaitech.com" target="_blank" style="text-decoration: none; color: #666;">
+    <footer class="copyright-footer">
+        <a href="https://kcaitech.com" target="_blank" class="copyright-link">
             Copyright (c) 2023-2025 KCai Technology
         </a>
     </footer>
