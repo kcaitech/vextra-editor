@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ArtboardView, EL } from "@kcdesign/data";
+import { ArtboardView, EL, GraphicsLibrary } from "@kcdesign/data";
 import { NodeType, optiRender, optiSetDirty } from "./optinode";
 
 // const MAX_NODE_SUPPORT = 50; // 小于这个的不转成image了
@@ -38,14 +38,14 @@ export class ArtboardDom extends (ArtboardView) {
     canOptiNode = true;
     // optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
 
-    render(): number {
-        const version: number = super.render();
+    render(gl: GraphicsLibrary): number {
+        const version: number = super.render(gl);
         optiRender(this, version);
         return version;
     }
-    asyncRender(): number {
+    asyncRender(gl: GraphicsLibrary): number {
         // if (!this.el && this.parent) this.m_ctx.setDirty(this.parent); // 子对象更新后，parent也要更新
-        const version: number = super.asyncRender();
+        const version: number = super.asyncRender(gl);
         optiRender(this, version);
         return version;
     }

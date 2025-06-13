@@ -282,7 +282,7 @@ const symbolTranAnimate = (action: PrototypeActions, action_s: any) => {
     m.trans(box.left - sym_box.left, box.top - sym_box.top);
     const view = new SymbolDom(domCtx, { data: sym });
     view.layout();
-    view.render();
+    view.render('SVG');
     const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
     const time = action.transitionDuration ?? 0.3;
     symRefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`

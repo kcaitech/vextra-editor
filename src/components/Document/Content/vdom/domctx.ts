@@ -12,8 +12,8 @@ import { DViewCtx, ShapeView, GraphicsLibrary } from "@kcdesign/data";
 import { markRaw } from "vue";
 
 export class DomCtx extends DViewCtx {
-    constructor(gl?: GraphicsLibrary) {
-        super(gl)
+    constructor() {
+        super()
         this.setMarkRawFun(markRaw)
     }
     private idleCallback?: () => boolean;
@@ -39,8 +39,8 @@ export class DomCtx extends DViewCtx {
         return this.idleCallback?.() ?? ret;
     }
 
-    protected aloop(): boolean {
+    protected aloop(gl: GraphicsLibrary): boolean {
         if (this.beforeRender) this.beforeRender();
-        return super.aloop();
+        return super.aloop(gl);
     }
 }

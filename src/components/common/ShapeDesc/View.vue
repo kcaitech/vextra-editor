@@ -113,7 +113,7 @@ function assemble() {
 
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
-        pageDom.dom.render();
+        pageDom.dom.render('SVG');
     }
 
     nextTick(getSrcURL);

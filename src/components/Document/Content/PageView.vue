@@ -154,7 +154,7 @@ const prepareDom = (page: Page | PageView) => {
 
     removeRenderIdle = dom.dom.once("renderidle", () => {
         dom.dom.bind(svg);
-        dom.dom.asyncRender();
+        dom.dom.asyncRender('SVG');
         pageReady.value = true;
         removeRenderIdle = undefined;
         props.params.onRenderDone?.();

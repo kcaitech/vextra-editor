@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, Matrix, objectId, PageView, PropsType, ShapeView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, Matrix, objectId, PageView, PropsType, ShapeView } from "@kcdesign/data";
 import { elpatch } from "./patch";
 import { DomCtx } from "./domctx";
 import { NodeType, opti2none, optiNode, OptiStatus, OptiType, unOptiNode } from "./optinode";
@@ -66,8 +66,8 @@ export class PageDom extends (PageView) {
     //     return this.m_save_version < 0;
     // }
 
-    render(): number {
-        const version: number = super.render();
+    render(gl: GraphicsLibrary): number {
+        const version: number = super.render(gl);
         if (version !== this.m_save_version && this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;
@@ -77,8 +77,8 @@ export class PageDom extends (PageView) {
         return version;
     }
 
-    asyncRender(): number {
-        const version: number = super.asyncRender();
+    asyncRender(gl: GraphicsLibrary): number {
+        const version: number = super.asyncRender(gl);
         if (version !== this.m_save_version && this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;
@@ -136,8 +136,8 @@ export class PageDom extends (PageView) {
         const optiNodes: (ShapeView & NodeType)[] = [];
         let optiNodesCount = 0;
 
-        for (let i = 0, len = node.m_children.length; i < len; i++) {
-            const c = node.m_children[i] as (ShapeView & NodeType);
+        for (let i = 0, len = node.children.length; i < len; i++) {
+            const c = node.children[i] as (ShapeView & NodeType);
             if (!c.isVisible) {
                 unOptiNode(c);
             } else if (c.canOptiNode) {
@@ -163,7 +163,7 @@ export class PageDom extends (PageView) {
 
                 const c = optiNodes[i];
 
-                if (c.nodeCount > OPTI_INSIDE_COUNT && ((c.nodeCount / c.m_children.length) > OPTI_MIN_COUNT || focusid[objectId(c)])) {
+                if (c.nodeCount > OPTI_INSIDE_COUNT && ((c.nodeCount / c.children.length) > OPTI_MIN_COUNT || focusid[objectId(c)])) {
 
                     const transform = c.transform.inverse;
                     const vlt = transform.computeCoord(client_visible_rect);

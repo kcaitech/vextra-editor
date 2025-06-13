@@ -42,9 +42,9 @@ function register() {
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = "high";
             props.context.render.registerRenderCtx(ctx);
-            props.params.data.m_ctx.m_canvas = ctx;
+            props.params.data.ctx.setCanvas(ctx);
         }
-        props.params.data.render();
+        props.params.data.render('Canvas');
     }
 }
 
@@ -52,18 +52,18 @@ onMounted(() => {
     register();
     const dpr = Math.ceil(window.devicePixelRatio || 1);
     props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
-    props.params.data.m_ctx.setReLayout(props.params.data);
-    props.params.data.m_ctx.setDirty(props.params.data);
-    props.params.data.render();
+    props.params.data.ctx.setReLayout(props.params.data);
+    props.params.data.ctx.setDirty(props.params.data);
+    props.params.data.render('Canvas');
 
     // dev config
     document.addEventListener("keydown", (e) => {
         if (e.code === "F5") {
             const dpr = Math.ceil(window.devicePixelRatio || 1);
             props.context.render.renderCtx.clearRect(0, 0, width.value * dpr, height.value * dpr);
-            props.params.data.m_ctx.setReLayout(props.params.data);
-            props.params.data.m_ctx.setDirty(props.params.data);
-            props.params.data.render();
+            props.params.data.ctx.setReLayout(props.params.data);
+            props.params.data.ctx.setDirty(props.params.data);
+            props.params.data.render('Canvas');
             e.preventDefault();
         } else if (e.code === "Backquote") {
             const selected = props.context.selection.selectedShapes;
