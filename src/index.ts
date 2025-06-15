@@ -28,12 +28,11 @@ import _View from "./components/common/ShapeDesc/View.vue"
 import _PreviewVue from "./components/Preview/index.vue"
 import _StaticShape from "./components/Document/Content/StaticShape.vue"
 import {
-    Repo,
+    Coop,
     createDocument,
     DocEditor,
     Document,
     IO,
-    basicio,
     TransactDataGuard,
 } from '@kcdesign/data';
 
@@ -70,26 +69,26 @@ const t = (i18n as any).global.t;
 async function _open(props: DocumentProps) {
     await initDataModule();
     const repo = new TransactDataGuard();
-    let cooprepo: Repo.CoopRepository | undefined;
+    let cooprepo: Coop.CoopRepository | undefined;
     let data: Document | undefined;
     if (props.source === 'storage') {
         const { document } = await IO.importRemote(props.storage, props.path, props.fid, props.versionId, repo);
         data = document
-        cooprepo = new Repo.CoopRepository(data, repo)
+        cooprepo = new Coop.CoopRepository(data, repo)
     } else if (props.source === 'file') {
         if (props.fmt === 'sketch') {
             data = await IO.importSketch(props.file, repo);
-            cooprepo = new Repo.CoopRepository(data, repo)
+            cooprepo = new Coop.CoopRepository(data, repo)
         } else if (props.fmt === 'fig') {
             data = await IO.importFigma(props.file, repo)
-            cooprepo = new Repo.CoopRepository(data, repo)
+            cooprepo = new Coop.CoopRepository(data, repo)
         } else if (props.fmt === 'vext' || props.fmt === 'moss') {
             data = await IO.importVext(props.file, repo);
-            cooprepo = new Repo.CoopRepository(data, repo)
+            cooprepo = new Coop.CoopRepository(data, repo)
         }
     } else if (props.source === 'new') {
         data = createDocument(t('system.new_file'), repo);
-        cooprepo = new Repo.CoopRepository(data, repo)
+        cooprepo = new Coop.CoopRepository(data, repo)
         cooprepo.setInitingDocument(true);
         const editor = new DocEditor(data, cooprepo);
         const page = editor.create(t('system.page1'));
@@ -111,7 +110,7 @@ async function _open(props: DocumentProps) {
  * @returns 
  */
 export async function openDocument(props: DocumentProps) {
-    let cooprepo: Repo.CoopRepository | undefined;
+    let cooprepo: Coop.CoopRepository | undefined;
     let data: Document | undefined;
     try {
         const result = await _open(props);
