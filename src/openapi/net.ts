@@ -10,7 +10,7 @@
 
 import { Repo } from "@kcdesign/data";
 
-export interface INet extends Repo.ICoopNet {
+export interface INet extends Repo.INet {
     upload(name: string, data: ArrayBufferLike): Promise<boolean>
 
     genThumbnail(name: string, contentType: string, data: ArrayBufferLike): Promise<boolean>
