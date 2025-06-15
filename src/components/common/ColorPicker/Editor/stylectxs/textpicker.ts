@@ -21,10 +21,10 @@ import {
     AttrGetter,
     TextShapeView,
     ShapeType,
-    Coop
+    Repo
 } from "@kcdesign/data";
 import { v4 } from "uuid";
-type Api = Coop.Api;
+type Api = Repo.Api;
 
 export class TextPicker extends ColorPickerEditor {
     format: AttrGetter | undefined

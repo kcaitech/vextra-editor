@@ -22,7 +22,7 @@ import {
     BorderMaskType,
     BorderModifier,
     SideType,
-    Coop,
+    Repo,
     SymbolRefView,
     Border,
     MarkerType,
@@ -34,7 +34,7 @@ import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/compo
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import { FillCatch, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
-type Api = Coop.Api;
+type Api = Repo.Api;
 
 function stringifyFills(sye: { shape: ShapeView, fills: Fill[] }) {
     if (sye.shape.borderFillsMask) return sye.shape.borderFillsMask;

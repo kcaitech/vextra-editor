@@ -23,8 +23,8 @@ import {
     BorderPaintsAsyncApi
 } from "@kcdesign/data";
 import { v4 } from "uuid";
-import { Coop } from "@kcdesign/data";
-type Api = Coop.Api;
+import { Repo } from "@kcdesign/data";
+type Api = Repo.Api;
 
 export class PaintsPicker extends ColorPickerEditor {
     paint: Fill | undefined;

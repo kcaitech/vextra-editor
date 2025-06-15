@@ -28,8 +28,8 @@ import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
 import { modify_imgs } from "@/utils/content";
-import { Coop } from "@kcdesign/data";
-type Api = Coop.Api;
+import { Repo } from "@kcdesign/data";
+type Api = Repo.Api;
 
 
 export class FillsPicker extends ColorPickerEditor {

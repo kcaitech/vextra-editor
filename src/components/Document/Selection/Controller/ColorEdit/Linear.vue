@@ -35,7 +35,7 @@ import {
     IO,
     ShapeView,
     SymbolRefView,
-    Coop
+    Repo
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
@@ -44,7 +44,7 @@ import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
 
-type Api = Coop.Api;
+type Api = Repo.Api;
 type Dot = {
     x: number;
     y: number;

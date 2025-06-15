@@ -12,8 +12,8 @@ import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/colore
 import { BasicArray, Color, Shadow, ShadowAsyncApi, ShadowMask, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { Coop } from "@kcdesign/data";
-type Api = Coop.Api;
+import { Repo } from "@kcdesign/data";
+type Api = Repo.Api;
 
 export class ShadowColorPicker extends ColorPickerEditor {
     shadow: Shadow | undefined;

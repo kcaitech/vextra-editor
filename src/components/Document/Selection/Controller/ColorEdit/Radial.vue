@@ -30,7 +30,7 @@ import {
     IO,
     ShapeView,
     SymbolRefView,
-    Coop
+    Repo
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
@@ -44,7 +44,7 @@ import { SelectedShapesWatcher } from "@/components/common/selectionwatcher";
 type DotType = 'from' | 'to' | 'ellipse';
 type Dot = { x: number; y: number; type: DotType; };
 type Stops = { x: number; y: number; color: Color; id?: string; };
-type Api = Coop.Api;
+type Api = Repo.Api;
 const props = defineProps<{
     context: Context
     matrix: Matrix

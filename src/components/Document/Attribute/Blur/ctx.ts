@@ -10,7 +10,7 @@
 
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import {
-    Coop,
+    Repo,
     BasicArray,
     Blur,
     BlurMask,
@@ -22,7 +22,7 @@ import {
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
 import { v4 } from "uuid";
-type Api = Coop.Api;
+type Api = Repo.Api;
 
 export type BlurCatch = {
     enable: boolean;

@@ -15,11 +15,11 @@ import {
     ShadowMask,
     ShadowPosition,
     ShadowsModifier,
-    Coop,
+    Repo,
     ShapeView, SymbolRefView, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
-type Api = Coop.Api;
+type Api = Repo.Api;
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
