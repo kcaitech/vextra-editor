@@ -29,7 +29,7 @@ import _PreviewVue from "./components/Preview/index.vue"
 import _StaticShape from "./components/Document/Content/StaticShape.vue"
 import {
     Coop,
-    createDocument,
+    creator,
     DocEditor,
     Document,
     IO,
@@ -87,7 +87,7 @@ async function _open(props: DocumentProps) {
             cooprepo = new Coop.CoopRepository(data, repo)
         }
     } else if (props.source === 'new') {
-        data = createDocument(t('system.new_file'), repo);
+        data = creator.newDocument(t('system.new_file'), repo);
         cooprepo = new Coop.CoopRepository(data, repo)
         cooprepo.setInitingDocument(true);
         const editor = new DocEditor(data, cooprepo);
