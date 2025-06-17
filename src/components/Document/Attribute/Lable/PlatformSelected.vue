@@ -108,12 +108,13 @@ import down_icon from "@/assets/icons/svg/down.svg"
             display: flex;
             align-items: center;
             background-color: #F5F5F5;
+            white-space: nowrap;
 
             span {
                 flex: 1;
             }
 
-            >svg {
+            >img {
                 width: 12px;
                 height: 12px;
                 color: #666666;
