@@ -28,28 +28,3 @@ const i18n = createI18n({
 })
 export default i18n;
 
-
-/*
-在ts中使用
-import i18n from '@/i18n'
-import { ElMessage } from 'element-plus'
-
-export async function doTest() {
-  ElMessage({
-    message: i18n.global.t('message.hello')
-  })
-  console.log(i18n.global.t('message.hello'))
-}
-
-在vue中使用
-<script lang="ts" setup>
-    import { useI18n } from 'vue-i18n'
-    const { t } = useI18n()
-    console.log('i18n', t('message.hello'))
-</script>
-
-<template>
-    {{ $t("message.hello") }}
-</template>
-
-*/

@@ -202,7 +202,7 @@ export const frame = {
     custom: '自定义',
     phone: '手机',
     pad: '平板',
-    deskdop: '桌面',
+    desktop: '桌面',
     presentation: '预览',
     watch: '手表',
     paper: '纸张',
