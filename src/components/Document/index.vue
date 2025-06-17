@@ -116,7 +116,7 @@ function init_watcher() {
     ctx.component.watch(component_watcher);
     ctx.tool.watch(tool_watcher);
     ctx.data.watch(documentWatcher);
-    ctx.repo.setOnChange((id: string) => {
+    ctx.repo.onChange((id: string) => {
         emit('changeCmdId', id);
     });
 }

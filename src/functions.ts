@@ -41,15 +41,12 @@ async function _open(props: DocumentProps, repoCreator: (data: Document, guard: 
     } else if (props.source === 'new') {
         data = creator.newDocument(t('system.new_file'), repo);
         cooprepo = repoCreator(data, repo)
-        cooprepo.setInitingDocument(true);
+        cooprepo.startInitData();
         const editor = new DocEditor(data, cooprepo);
         const page = editor.create(t('system.page1'));
         editor.insert(0, page);
-        cooprepo.setInitingDocument(false);
+        cooprepo.endInitData();
     }
-
-    // todo 移动到data
-    if (cooprepo) cooprepo.setBaseVer((data!.lastCmdVer))
 
     if (data) {
         return { data, cooprepo: cooprepo! }
