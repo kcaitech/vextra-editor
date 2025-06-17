@@ -66,7 +66,7 @@ export class ReferLineHandler extends TransformHandler {
         if (this.asyncApiCaller) {
             return;
         }
-        this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new ReferHandleApiCaller(this.context.repo, this.context.data, this.page);
         this.workspace.translating(true);
 
         if (index === undefined) {
@@ -229,7 +229,7 @@ export class ReferLineHandler extends TransformHandler {
 
     modifyOffsetByKeyboard(del: number) {
         if (!this.asyncApiCaller) {
-            this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
+            this.asyncApiCaller = new ReferHandleApiCaller(this.context.repo, this.context.data, this.page);
         }
 
         const index = this.m_index;
@@ -300,7 +300,7 @@ export class ReferLineHandler extends TransformHandler {
     }
 
     delete(env: ShapeView, index: number) {
-        this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new ReferHandleApiCaller(this.context.repo, this.context.data, this.page);
         this.api.delete(env, index);
         super.fulfil();
     }

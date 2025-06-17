@@ -158,7 +158,7 @@ function point_mousemove(event: MouseEvent) {
             search = true;
             workspace.scaling(true);
             const page = props.context.selection.selectedPage!;
-            modifier = new ContactLineModifier(props.context.coopRepo, page, props.shape);
+            modifier = new ContactLineModifier(props.context.repo, page, props.shape);
             modifier.simplify();
         }
     }

@@ -193,7 +193,7 @@ const dot_mousemove = (e: MouseEvent) => {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             if (locate.type !== 'text') {
-                gradientEditor = new GradientEditor(props.context.coopRepo);
+                gradientEditor = new GradientEditor(props.context.repo);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
                 const editor = props.context.editor4TextShape(shape as TextShapeView);
@@ -310,7 +310,7 @@ function createFillGradientStop(stop: Stop) {
     const locate = props.context.color.locate!;
     const idx = locate.index;
     const shape = props.context.selection.flat[0];
-    const editor = gradientEditor = new GradientEditor(props.context.coopRepo);
+    const editor = gradientEditor = new GradientEditor(props.context.repo);
     const page = props.context.selection.selectedPage!;
 
     let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
@@ -553,7 +553,7 @@ const stop_mousemove = (e: MouseEvent) => {
                 const editor = props.context.editor4TextShape(shape as TextShapeView);
                 gradientTextEditor = editor.asyncSetTextGradient([shape] as TextShapeView[], gradient, textIndex, selectLength);
             } else {
-                gradientEditor = gradientEditor ?? new GradientEditor(props.context.coopRepo);
+                gradientEditor = gradientEditor ?? new GradientEditor(props.context.repo);
             }
         }
     }

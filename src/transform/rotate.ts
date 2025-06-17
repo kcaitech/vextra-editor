@@ -105,7 +105,7 @@ export class RotateHandler extends BoundHandler {
     }
 
     createApiCaller() {
-        this.asyncApiCaller = new Rotator(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new Rotator(this.context.repo, this.context.data, this.page);
 
         this.workspace.rotating(true);
         this.workspace.setSelectionViewUpdater(false);

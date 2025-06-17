@@ -33,7 +33,7 @@ const props = defineProps<{
     disabled: boolean;
 }>();
 const keyupdate = ref<boolean>(false);
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!);
 function change(value: any, index: number) {
     const valueAfterCompute = computeString(value);
     if (isNaN(valueAfterCompute)) return;

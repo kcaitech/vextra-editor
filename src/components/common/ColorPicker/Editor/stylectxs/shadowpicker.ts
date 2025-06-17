@@ -39,7 +39,7 @@ export class ShadowColorPicker extends ColorPickerEditor {
 
     private get api(): ShadowAsyncApi {
         return (this.m_api as unknown as ShadowAsyncApi)
-            ?? (this.m_api = new ShadowAsyncApi(this.context.coopRepo, this.context.data, this.page));
+            ?? (this.m_api = new ShadowAsyncApi(this.context.repo, this.context.data, this.page));
     }
 
     setSolidColor(c: RGBACatch): void {

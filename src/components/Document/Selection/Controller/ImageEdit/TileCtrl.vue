@@ -58,7 +58,7 @@ const dragKit = new DragKit({
         if (!shape) return;
 
         const page = ctx.selection.selectedPage!;
-        if (!editor) editor = new FillsAsyncApi(ctx.coopRepo, ctx.data, page);
+        if (!editor) editor = new FillsAsyncApi(ctx.repo, ctx.data, page);
         const rootXY = ctx.workspace.getRootXY(event);
         const matrix2root = ctx.selection.selectedShapes[0].matrix2Root().inverse;
         const xy = matrix2root.computeCoord3(rootXY);

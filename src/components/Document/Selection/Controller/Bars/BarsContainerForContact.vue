@@ -154,7 +154,7 @@ function point_mousemove(event: MouseEvent) {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             submatrix.reset(workspace.matrix.inverse);
             const page = props.context.selection.selectedPage!;
-            modifier = new ContactLineModifier(props.context.coopRepo, page, props.shape);
+            modifier = new ContactLineModifier(props.context.repo, page, props.shape);
             modifier.solidify(drag_index);
             isDragging = true;
         }

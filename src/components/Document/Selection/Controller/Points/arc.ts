@@ -59,7 +59,7 @@ export class ArcFreeModifier {
 
     createApiCaller() {
         if (this.context.readonly) return;
-        this.asyncApiCaller = new OvalModifier(this.context.coopRepo, this.context.data, this.context.selection.selectedPage!);
+        this.asyncApiCaller = new OvalModifier(this.context.repo, this.context.data, this.context.selection.selectedPage!);
     }
 
     modifyStart(event: MouseEvent) {

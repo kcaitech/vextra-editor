@@ -837,7 +837,7 @@ export class PathEditor extends TransformHandler {
     }
 
     createApiCaller(segment = -1, index = -1, needStore = false) {
-        this.asyncApiCaller = new PathModifier(this.context.coopRepo, this.context.data, this.page, needStore);
+        this.asyncApiCaller = new PathModifier(this.context.repo, this.context.data, this.page, needStore);
 
         let addRes = false;
         if (index > -1 && segment > -1) {
@@ -1250,7 +1250,7 @@ export class PathEditor extends TransformHandler {
 
     sortSegment() {
         try {
-            if (this.context.coopRepo.isInTransact()) {
+            if (this.context.repo.isInTransact()) {
                 return;
             }
 

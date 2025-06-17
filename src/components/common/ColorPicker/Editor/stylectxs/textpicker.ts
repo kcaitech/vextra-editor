@@ -37,7 +37,7 @@ export class TextPicker extends ColorPickerEditor {
 
     private get editor(): TextAsyncApi {
         return (this.m_api as unknown as TextAsyncApi)
-            ?? (this.m_api = new TextAsyncApi(this.context.coopRepo, this.context.data, this.page));
+            ?? (this.m_api = new TextAsyncApi(this.context.repo, this.context.data, this.page));
     }
 
     protected commit() {

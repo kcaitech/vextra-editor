@@ -271,10 +271,6 @@ export class Context extends WatchableObject implements IContext {
         return !!this.m_readonly;
     }
 
-    get coopRepo(): Repo.IRepository {
-        return this.m_repo;
-    }
-
     get selection() {
         return this.m_selection;
     }

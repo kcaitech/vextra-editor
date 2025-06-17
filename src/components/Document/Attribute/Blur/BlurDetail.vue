@@ -45,7 +45,7 @@ const Detail = reactive({
 })
 let blurModifyHandler: BlurHandler | undefined = undefined;
 
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!);
 
 const progressBar = ref<HTMLDivElement>();
 const progress = ref<HTMLDivElement>();

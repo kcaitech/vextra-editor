@@ -25,7 +25,7 @@ export class PointHandler extends TransformHandler {
         this.shapes = context.selection.selectedShapes;
     }
     createApiCaller() {
-        this.asyncApiCaller = new PointModifyHandler(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new PointModifyHandler(this.context.repo, this.context.data, this.page);
     }
 
     fulfil() {

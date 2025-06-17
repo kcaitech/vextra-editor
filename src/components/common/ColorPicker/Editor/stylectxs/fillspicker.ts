@@ -50,7 +50,7 @@ export class FillsPicker extends ColorPickerEditor {
 
     private get editor(): FillsAsyncApi {
         return (this.m_api as unknown as FillsAsyncApi)
-            ?? (this.m_api = new FillsAsyncApi(this.context.coopRepo, this.context.data, this.page));
+            ?? (this.m_api = new FillsAsyncApi(this.context.repo, this.context.data, this.page));
     }
 
     protected commit() {

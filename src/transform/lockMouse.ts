@@ -23,7 +23,7 @@ export class LockMouse extends TransformHandler {
     }
 
     createApiCaller(transType?: 'scaling' | 'translating' | 'rotating') {
-        this.asyncApiCaller = new LockMouseHandler(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new LockMouseHandler(this.context.repo, this.context.data, this.page);
         if (transType) {
             this.workspace[transType](true);
             this.workspace.setSelectionViewUpdater(false);

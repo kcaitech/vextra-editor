@@ -44,7 +44,7 @@ export class PaintsPicker extends ColorPickerEditor {
 
     private get editor(): BorderPaintsAsyncApi {
         return (this.m_api as unknown as BorderPaintsAsyncApi)
-            ?? (this.m_api = new BorderPaintsAsyncApi(this.context.coopRepo, this.context.data, this.page));
+            ?? (this.m_api = new BorderPaintsAsyncApi(this.context.repo, this.context.data, this.page));
     }
 
     protected commit() {

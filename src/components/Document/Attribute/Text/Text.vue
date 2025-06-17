@@ -130,7 +130,7 @@ const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const rowHeight = ref();
 const row_height = ref(`${t('attr.auto')}`)
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!)
 const keydownVal = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
 const cloverVisible = computed<boolean>(() => !(textCtx.value.mask || textCtx.value.mixed));

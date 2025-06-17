@@ -169,7 +169,7 @@ export class LineHandler extends TransformHandler {
     }
 
     createApiCaller() {
-        this.asyncApiCaller = new LineHandleApiCaller(this.context.coopRepo, this.context.data, this.page, this.lineShape);
+        this.asyncApiCaller = new LineHandleApiCaller(this.context.repo, this.context.data, this.page, this.lineShape);
 
         if (this.ctrlElement.endsWith('rotate')) {
             this.workspace.rotating(true);
