@@ -211,12 +211,7 @@ export const frame = {
 }
 
 export const fileMenu = {
-    create_new: '新建文件',
-    create_copy: '创建文件副本',
-    save: '保存',
-    rename: '重命名',
     view: '视图',
-    guide: '快捷键指南'
 }
 
 export const pageMenu = {

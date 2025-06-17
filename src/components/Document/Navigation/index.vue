@@ -140,6 +140,7 @@ onUnmounted(() => {
         height: 40px;
         position: relative;
         overflow: hidden;
+        justify-content: center;
 
         > .tab {
             cursor: pointer;

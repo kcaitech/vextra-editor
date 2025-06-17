@@ -40,7 +40,7 @@ onUnmounted(() => {
 <template>
 
     <div class="model" v-if="isLable" >
-        <span style="color: #BFBFBF; font-size: 12px">【开发模式】</span>
+        <span style="color: #BFBFBF; font-size: 12px">【{{ t('lable.development') }}】</span>
     </div>
 
 
@@ -51,5 +51,6 @@ onUnmounted(() => {
     flex: 0 0 72px;
     display: flex;
     align-items: center;
+    white-space: nowrap;
 }
 </style>
