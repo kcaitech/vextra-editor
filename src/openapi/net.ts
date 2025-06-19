@@ -8,9 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Repo } from "@kcdesign/data";
-
-export interface INet extends Repo.INet {
+export interface INet {
     upload(name: string, data: ArrayBufferLike): Promise<boolean>
 
     genThumbnail(name: string, contentType: string, data: ArrayBufferLike): Promise<boolean>
