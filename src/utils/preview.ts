@@ -54,7 +54,7 @@ export function open_preview(doc_id: string, context: Context, t: Function, artb
 }
 
 export function getFrameList(page: PageView) {
-    if (!page.childs.length) page.m_ctx.layoutAll();
+    if (!page.childs.length) page.ctx.layoutAll();
     return page.childs.filter(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
 }
 

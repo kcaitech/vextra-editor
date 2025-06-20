@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Document, IWatchable, PageView } from "@kcdesign/data";
+import { Document, IWatchable, PageView, Repo } from "@kcdesign/data";
 import { INet } from "./net";
 import { IPluginsMgr } from "./plugins";
 import { ISelection } from "./selection";
@@ -40,17 +40,13 @@ export interface IContext extends IWatchable {
 
     get data(): Document;
 
-    get pluginsMgr(): IPluginsMgr;
+    get repo(): Repo.IRepository;
 
-    setNet(net: INet): void;
+    get pluginsMgr(): IPluginsMgr;
 
     get curAction(): string | undefined;
 
     setCurAction(uuid: string): void;
-
-    lastRemoteCmdVersion(): number | undefined;
-
-    hasPendingSyncCmd(): boolean;
 
     get selection(): ISelection
 
@@ -75,4 +71,8 @@ export interface IContext extends IWatchable {
     env: ContextEnvironment;
 
     updateThumbnail(): void;
+
+    uploadSymbolResource(name: string, path: string, data: ArrayBufferLike): Promise<boolean>;
+
+    setNet(net: INet): void;
 }

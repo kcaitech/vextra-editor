@@ -23,6 +23,7 @@ import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import {
     ArtboardView,
+    IO,
     Matrix,
     OverlayBackgroundInteraction,
     OverlayBackgroundType,
@@ -34,7 +35,7 @@ import {
     ShapeType,
     ShapeView,
     Transform,
-    XYsBounding
+    utils,
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
 import { finderShape, getFrameList, getScrollShape, scrollAtrboard, selectShapes, viewBox } from '@/utils/preview';
@@ -277,11 +278,11 @@ const symbolTranAnimate = (action: PrototypeActions, action_s: any) => {
         _m.computeCoord2(cur_frame.width, cur_frame.height),
         _m.computeCoord2(0, cur_frame.height)
     ];
-    const sym_box = XYsBounding(points);
+    const sym_box = utils.XYsBounding(points);
     m.trans(box.left - sym_box.left, box.top - sym_box.top);
     const view = new SymbolDom(domCtx, { data: sym });
     view.layout();
-    view.render();
+    view.render('SVG');
     const bezier = action.easingFunction ? [action.easingFunction.x1, action.easingFunction.y1, action.easingFunction.x2, action.easingFunction.y2] : [0, 0, 1, 1];
     const time = action.transitionDuration ?? 0.3;
     symRefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
@@ -586,7 +587,7 @@ const isSpacePressed = () => {
     const frame = shape.frame;
     const matrix = viewUpdater.v_matrix;
     const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => matrix.computeCoord(p[0], p[1]));
-    const box = XYsBounding(points);
+    const box = utils.XYsBounding(points);
     const width = box.right - box.left;
     const height = box.bottom - box.top;
     return width > root.width || height > root.height;

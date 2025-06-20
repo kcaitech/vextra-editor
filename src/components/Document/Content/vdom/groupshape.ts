@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GroupShapeView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, GroupShapeView } from "@kcdesign/data";
 import { NodeType, optiRender, optiSetDirty, OptiType } from "./optinode";
 
 export class GroupShapeDom extends (GroupShapeView) {
@@ -27,13 +27,13 @@ export class GroupShapeDom extends (GroupShapeView) {
         this.optiel_dirty = true;
     }
 
-    render(): number {
-        const version: number = super.render();
+    render(gl: GraphicsLibrary): number {
+        const version: number = super.render(gl);
         optiRender(this, version);
         return version;
     }
-    asyncRender(): number {
-        const version: number = super.asyncRender();
+    asyncRender(gl: GraphicsLibrary): number {
+        const version: number = super.asyncRender(gl);
         optiRender(this, version);
         return version;
     }

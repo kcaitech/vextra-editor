@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Matrix, ShapeView, ArtboardView, SymbolView, GroupShapeView, XYsBounding, Shape, ShapeType, GroupShape, ColVector3D } from "@kcdesign/data";
+import { Matrix, ShapeView, ArtboardView, SymbolView, GroupShapeView, Shape, ShapeType, GroupShape, ColVector3D, utils } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 
@@ -22,7 +22,7 @@ export type BoundingLike = {
 
 export function getVisibleBoundingByMatrix(shape: ShapeView, matrix: Matrix): BoundingLike {
     const frame = shape.isBorderShape ? shape.borderPathBox : shape.visibleFrame;
-    return XYsBounding([
+    return utils.XYsBounding([
         { x: frame.x, y: frame.y },
         { x: frame.x + frame.width, y: frame.y },
         { x: frame.x + frame.width, y: frame.y + frame.height },
@@ -56,7 +56,7 @@ export class SpaceHandler {
                 height = shape.size.height;
             }
             const __transform = (shape.transform);
-            const box = XYsBounding(__transform.transform([
+            const box = utils.XYsBounding(__transform.transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height),
                 ColVector3D.FromXY(width, 0),
@@ -85,7 +85,7 @@ export class SpaceHandler {
                 { x: frame.x, y: frame.y + frame.height },
             ].map(i => matrix.computeCoord3(i)));
         }
-        return XYsBounding(points);
+        return utils.XYsBounding(points);
     }
 
     private __include(view: ShapeView, lt: XY, rb: XY) {
@@ -224,7 +224,7 @@ export class SpaceHandler {
         for (const view of views) {
             const transform = view.matrix2Root();
             const frame = view.frame;
-            const box = XYsBounding([
+            const box = utils.XYsBounding([
                 { x: frame.x, y: frame.y },
                 { x: frame.x + frame.width, y: frame.y },
                 { x: frame.x + frame.width, y: frame.y + frame.height },

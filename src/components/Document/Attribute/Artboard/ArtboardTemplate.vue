@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { templates, TL } from "@/components/Document/Attribute/Artboard/template";
+import { getTemplates, TL } from "@/components/Document/Attribute/Artboard/template";
 import Folder from "@/components/Document/Attribute/Artboard/Folder.vue";
 import { onBeforeMount, ref } from "vue";
 import { Context } from "@/context";
@@ -20,7 +20,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const t = useI18n().t;
+const { t } = useI18n();
+const templates = getTemplates(t);
 
 const extendStatus = ref<boolean[]>([]);
 

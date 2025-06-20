@@ -1262,7 +1262,7 @@ export class Translate2 extends BoundHandler {
 
     connect() {
         if (this.__api) throw new Error('already connected');
-        this.__api = new Transporter(this.context.coopRepo, this.context.data, this.page, this.selManager.shapes);
+        this.__api = new Transporter(this.context.repo, this.context.data, this.page, this.selManager.shapes);
         if (this.altStatus) this.selManager.drawn();
         this.workspace.translating(true);
         if (this.mode === TranslateMode.Flex) this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.client);

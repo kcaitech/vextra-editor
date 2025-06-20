@@ -73,7 +73,7 @@ const verSizingMenu = ref(false);
 const unfold = ref(false);
 const reflush = ref(0);
 const isDisable = ref(false);
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!)
 
 function autoLayout(): void {
     const selectShapes = props.context.selection.selectedShapes;

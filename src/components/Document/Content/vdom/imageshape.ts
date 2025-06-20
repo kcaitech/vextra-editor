@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { DViewCtx, EL, ImageShapeView, PropsType } from "@kcdesign/data";
+import { DViewCtx, EL, GraphicsLibrary, ImageShapeView, PropsType } from "@kcdesign/data";
 import { IMAGE_DEFAULT } from "./common";
 import { elpatch } from "./patch";
 
@@ -22,8 +22,8 @@ export class ImageShapeDom extends (ImageShapeView) {
     m_save_version: number = -1;
     m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");
 
-    render(): number {
-        const version: number = super.render();
+    render(gl: GraphicsLibrary): number {
+        const version: number = super.render(gl);
         if (version !== this.m_save_version || !this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;
@@ -33,8 +33,8 @@ export class ImageShapeDom extends (ImageShapeView) {
         return version;
     }
 
-    asyncRender(): number {
-        const version: number = super.asyncRender();
+    asyncRender(gl: GraphicsLibrary): number {
+        const version: number = super.asyncRender(gl);
         if (version !== this.m_save_version || !this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;

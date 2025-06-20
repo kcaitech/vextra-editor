@@ -32,7 +32,7 @@ let lockApi: LockMouse | undefined = undefined;
 const options = reactive<OvalOptions>({start: 0, sweep: 100, ratio: 0, disabled: false});
 
 const ovalData = new OvalData(props.context, options);
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!)
 
 function changeStartOnce(event: Event) {
     const target = event.target as HTMLInputElement;

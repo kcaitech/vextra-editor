@@ -354,7 +354,7 @@ import down_icon from "@/assets/icons/svg/down.svg"
         margin-right: 4px;
     }
 
-    >svg {
+    >img {
         width: 12px;
         height: 12px;
         color: #BFBFBF;

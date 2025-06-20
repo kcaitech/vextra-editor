@@ -14,12 +14,8 @@ import {
     ColVector3D, ContactLineView,
     CurvePoint,
     Document,
-    export_shape,
-    export_text,
     GroupShape,
     GroupShapeView,
-    import_shape_from_clipboard,
-    import_text,
     Page,
     PathShape,
     Shape,
@@ -30,7 +26,8 @@ import {
     TextShape,
     TextShapeEditor,
     Transform,
-    exportContextSettings
+    IO,
+    basicio
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
@@ -40,10 +37,8 @@ import { XYsBounding } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
-import { svgParser as SVGParse } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { BorderData } from "@/utils/shape_style";
-import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 import { flattenShapes } from "@/utils/cutout";
 import { getText } from "@/utils/attri_setting";
 import { UploadAssets } from "@kcdesign/data";
@@ -112,7 +107,7 @@ export class Clipboard {
                 return;
             }
             if (!first_text && i.cell.text) {
-                first_text = import_text(this.context.data, i.cell.text) as Text;
+                first_text = IO.Clipboard.import_text(this.context.data, i.cell.text) as Text;
             }
             const t = i.cell.text?.getText(0, i.cell.text?.length || 0) || '';
             if (!t.length) {
@@ -153,7 +148,7 @@ export class Clipboard {
     }
 
     write_text(text: Text, event?: ClipboardEvent): boolean {
-        const _text = export_text(text);
+        const _text = IO.Clipboard.export_text(text);
 
         const plain_text = text.getText(0, text.length);
 
@@ -215,7 +210,7 @@ export class Clipboard {
         }
 
         // 先导出将要写入的数据
-        const { shapes: _shapes, ctx } = export_shape(shapes.map((s => adapt2Shape(s))));
+        const { shapes: _shapes, ctx } = IO.Clipboard.export_shape(shapes.map((s => adapt2Shape(s))));
         if (!_shapes) return false;
 
         for (let i = 0, len = _shapes.length; i < len; i++) {
@@ -276,19 +271,19 @@ export class Clipboard {
             const text = getText([shape]);
 
             const data: any = {};
-            data['fills'] = fills.map(i => exportFill(i));
+            data['fills'] = fills.map(i => basicio.exportFill(i));
             data['fillsMask'] = shape.fillsMask;
-            data['borders'] = exportBorder(border);
+            data['borders'] = basicio.exportBorder(border);
             data['bordersMask'] = shape.bordersMask;
             data['borderFillsMask'] = shape.borderFillsMask;
-            data['shadows'] = shadows.map(i => exportShadow(i));
+            data['shadows'] = shadows.map(i => basicio.exportShadow(i));
             data['shadowsMask'] = shape.shadowsMask;
             data['blurMask'] = shape.blurMask;
             data['radius'] = radius;
             data['radiusMask'] = shape.radiusMask;
             data['mark'] = mark;
-            if (contextSetting) data['contextSetting'] = exportContextSettings(contextSetting);
-            if (blur instanceof Blur) data['blur'] = exportBlur(blur);
+            if (contextSetting) data['contextSetting'] = basicio.exportContextSettings(contextSetting);
+            if (blur instanceof Blur) data['blur'] = basicio.exportBlur(blur);
             if (text) data['text'] = text;
             const code = encode_html(properties, data);
 
@@ -802,7 +797,7 @@ export class Clipboard {
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
         const source = JSON.parse(html.split(`${paras}`)[1]);
-        const text = import_text(this.context.data, source, false) as Text;
+        const text = IO.Clipboard.import_text(this.context.data, source, false) as Text;
         const res = editor.insertFormatText(text, s, Math.abs(start - end));
         selection.setCursor(s + text.length, false);
 
@@ -890,7 +885,7 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
             source.paras[0].spans[0].placeholder = false;
             source.paras[0].text = source.paras[0].text.slice(1);
         }
-        const text = import_text(context.data, source, false) as Text;
+        const text = IO.Clipboard.import_text(context.data, source, false) as Text;
 
         editor.insertFormatText(text, s, Math.abs(start - end));
         selection.setCursor(s + text.length, false);
@@ -973,7 +968,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
     if (is_paras) {
         // 文字段落
         const source = JSON.parse(text_html.split(paras)[1]);
-        const t_s = import_text(context.data, source, true);
+        const t_s = IO.Clipboard.import_text(context.data, source, true);
         if (!t_s) throw new Error('invalid paras');
         const page = context.selection.selectedPage!;
         const shape: TextShape = (t_s as TextShape);
@@ -1020,7 +1015,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         if (xy) {
             const insert_env = fixToXY(context, source, xy);
 
-            const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
+            const shapes = IO.Clipboard.import_shape_from_clipboard(context.data, source, medias);
             if (!shapes.length) {
                 throw new Error('invalid source: !shapes.length');
             }
@@ -1039,8 +1034,8 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                 fixToEnv(context, __source, env, originTransform);
 
                 const shapes = i > 0
-                    ? import_shape_from_clipboard(context.data, page_data, __source)
-                    : import_shape_from_clipboard(context.data, page_data, __source, medias);
+                    ? IO.Clipboard.import_shape_from_clipboard(context.data, __source)
+                    : IO.Clipboard.import_shape_from_clipboard(context.data, __source, medias);
 
                 actions.push({ env: adapt2Shape(env) as GroupShape, shapes });
             }
@@ -1054,7 +1049,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
             fixToEnv(context, source, insert_env as GroupShapeView, originTransform);
 
-            const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
+            const shapes = IO.Clipboard.import_shape_from_clipboard(context.data, source, medias);
 
             if (!shapes.length) throw new Error('invalid source: !shapes.length');
 
@@ -1116,7 +1111,7 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
 
     const source = JSON.parse(text_html.split(identity)[1]);
 
-    const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
+    const shapes = IO.Clipboard.import_shape_from_clipboard(context.data, source.shapes, source.media);
     if (!shapes.length) throw new Error('invalid source');
 
 
@@ -1262,7 +1257,7 @@ function clipboard_text_plain2(context: Context, data: string, _xy?: PageXY) {
 }
 
 export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
-    const parseResult = SVGParse.parse(text);
+    const parseResult = IO.SvgParser.parse(text);
 
     if (parseResult.shape) {
         const xy = _xy || adjust_content_xy(context, parseResult.shape.frame, false);

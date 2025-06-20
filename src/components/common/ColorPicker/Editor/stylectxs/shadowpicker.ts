@@ -9,9 +9,11 @@
  */
 
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { Api, BasicArray, Color, Shadow, ShadowAsyncApi, ShadowMask, ShapeView, SymbolRefView } from "@kcdesign/data";
+import { BasicArray, Color, Shadow, ShadowAsyncApi, ShadowMask, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
+import { Repo } from "@kcdesign/data";
+type Api = Repo.Api;
 
 export class ShadowColorPicker extends ColorPickerEditor {
     shadow: Shadow | undefined;
@@ -37,7 +39,7 @@ export class ShadowColorPicker extends ColorPickerEditor {
 
     private get api(): ShadowAsyncApi {
         return (this.m_api as unknown as ShadowAsyncApi)
-            ?? (this.m_api = new ShadowAsyncApi(this.context.coopRepo, this.context.data, this.page));
+            ?? (this.m_api = new ShadowAsyncApi(this.context.repo, this.context.data, this.page));
     }
 
     setSolidColor(c: RGBACatch): void {

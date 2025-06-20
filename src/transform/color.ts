@@ -22,7 +22,7 @@ export class ColorHandler extends TransformHandler {
     }
 
     createApiCaller() {
-        this.asyncApiCaller = new ColorPicker(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new ColorPicker(this.context.repo, this.context.data, this.page);
     }
 
     fulfil() {

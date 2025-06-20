@@ -284,7 +284,7 @@ export class CreatorExecute extends TransformHandler {
     }
 
     createApiCaller() {
-        this.asyncApiCaller = new CreatorApiCaller(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new CreatorApiCaller(this.context.repo, this.context.data, this.page);
     }
 
     modifyFrame(e: MouseEvent) {

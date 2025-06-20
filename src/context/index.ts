@@ -9,7 +9,7 @@
  */
 
 import {
-    CoopRepository,
+    Repo,
     WatchableObject,
     TableEditor,
     PageView,
@@ -59,44 +59,6 @@ import { EditorLayout } from "@/components/Document/Layout/editorlayout";
 import { RenderContext } from "@/context/render";
 import { TaskMgr } from "@/basic/taskmgr";
 
-// 仅暴露必要的方法
-class RepoWrapper {
-    private m_repo: CoopRepository;
-
-    constructor(repo: CoopRepository) {
-        this.m_repo = repo;
-    }
-
-    canRedo(): boolean {
-        return this.m_repo.canRedo();
-    }
-
-    canUndo(): boolean {
-        return this.m_repo.canUndo();
-    }
-
-    undo() {
-        this.m_repo.undo();
-    }
-
-    redo() {
-        this.m_repo.redo();
-    }
-
-    watch(f: Function) {
-        // todo
-        throw new Error("Not implemented")
-    }
-
-    unwatch(f: Function) {
-        throw new Error("Not implemented")
-    }
-
-    setOnChange(onChange: (id: string) => void) {
-        this.m_repo.setOnChange(onChange);
-    }
-}
-
 class ToolBox implements IToolBox {
 
     _scout: IScout | undefined;
@@ -134,8 +96,7 @@ export class Context extends WatchableObject implements IContext {
 
     private m_data: Document;
     private m_editor: Editor;
-    private m_repo: RepoWrapper;
-    private m_coopRepo: CoopRepository;
+    private m_repo: Repo.IRepository;
     private m_taskMgr: TaskMgr;
     private m_textEditor?: TextShapeEditor;
     private m_selection: Selection;
@@ -169,13 +130,12 @@ export class Context extends WatchableObject implements IContext {
     inactive: boolean;
     env: ContextEnvironment;
 
-    constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
+    constructor(data: Document, repo: Repo.IRepository, props: DocumentProps) {
         super();
         (window as any).__context = this;
         this.m_data = data;
-        this.m_coopRepo = repo;
+        this.m_repo = repo;
         this.m_props = props;
-        this.m_repo = new RepoWrapper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
         this.m_selection = new Selection(data, this); //选区相关
         repo.setSelection(this.m_selection);
@@ -184,7 +144,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_menu = new Menu(this); // 菜单相关
         this.m_tool = new Tool(this); // 工具栏相关
         this.m_navi = new Navi(); // 导航栏相关
-        this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
+        this.m_editor = new Editor(this.m_data, this.m_repo, this.m_selection);
         this.m_cursor = new Cursor(); // 光标变换
         this.m_escstack = new EscStack(); // esc任务队列
         this.m_assist = new Assist(this); // 辅助线相关
@@ -248,17 +208,8 @@ export class Context extends WatchableObject implements IContext {
         this.keyHandlers[keyCode] = handler;
     }
 
-    lastRemoteCmdVersion(): number | undefined {
-        return this.m_coopRepo.lastRemoteCmdVersion()
-    }
-
-    hasPendingSyncCmd(): boolean {
-        return this.m_coopRepo.hasPendingSyncCmd();
-    }
-
     setNet(net: INet): void {
         this.m_net = net;
-        this.m_coopRepo.setNet(net);
     }
 
     get net() {
@@ -307,7 +258,7 @@ export class Context extends WatchableObject implements IContext {
         return this.m_data;
     }
 
-    get repo(): RepoWrapper {
+    get repo(): Repo.IRepository {
         return this.m_repo;
     }
 
@@ -322,10 +273,6 @@ export class Context extends WatchableObject implements IContext {
 
     get readonly() {
         return !!this.m_readonly;
-    }
-
-    get coopRepo(): CoopRepository {
-        return this.m_coopRepo;
     }
 
     get selection() {
@@ -459,5 +406,9 @@ export class Context extends WatchableObject implements IContext {
 
     updateThumbnail() {
         this.m_menu.notify(Menu.GEN_THUMBNAIL);
+    }
+
+    async uploadSymbolResource(name: string, path: string, data: ArrayBufferLike) {
+        return !!this.net?.uploadSymbolResource(name, path, data);
     }
 }

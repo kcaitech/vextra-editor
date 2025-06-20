@@ -13,13 +13,11 @@ import {
     ArtboardView,
     BatchAction2,
     ContextSettings,
-    export_text,
+    IO,
     MarkerType,
-    Matrix,
     PathShapeView,
     PolygonShape,
     PolygonShapeView,
-    Shape,
     ShapeType,
     ShapeView,
     StarShape,
@@ -433,7 +431,7 @@ export function getText(shapes: ShapeView[]) {
     let first: Text | undefined;
     for (const shape of shapes) {
         if (shape instanceof TextShapeView) {
-            first = export_text(shape.text) as Text;
+            first = IO.Clipboard.export_text(shape.text) as Text;
             break;
         }
     }

@@ -145,7 +145,7 @@ const model_disable_state: ModelState = reactive({
     ovalOptions: false,
     clip: false,
 });
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!)
 
 function _calc_attri() {
     const selected = props.shapes;

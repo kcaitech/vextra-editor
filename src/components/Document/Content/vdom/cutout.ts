@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CutoutShapeView, EL } from "@kcdesign/data";
+import { CutoutShapeView, EL, GraphicsLibrary } from "@kcdesign/data";
 import { elpatch } from "./patch";
 
 export class CutoutShapeDom extends (CutoutShapeView) {
@@ -16,8 +16,8 @@ export class CutoutShapeDom extends (CutoutShapeView) {
     m_save_version: number = -1;
     m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");
 
-    render(): number {
-        const version: number = super.render();
+    render(gl: GraphicsLibrary): number {
+        const version: number = super.render(gl);
         if (version !== this.m_save_version || !this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;
@@ -27,9 +27,9 @@ export class CutoutShapeDom extends (CutoutShapeView) {
         return version;
     }
 
-    asyncRender(): number {
+    asyncRender(gl: GraphicsLibrary): number {
         if (!this.el && this.parent) this.m_ctx.setDirty(this.parent); // 子对象更新后，parent也要更新
-        const version: number = super.asyncRender();
+        const version: number = super.asyncRender(gl);
         if (version !== this.m_save_version || !this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;

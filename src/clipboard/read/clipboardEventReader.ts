@@ -9,7 +9,7 @@
  */
 
 import { Bundle } from "@/clipboard";
-import { svgParser as SVGParse } from "@kcdesign/data";
+import { IO } from "@kcdesign/data";
 import { Reader } from "@/clipboard/read/reader";
 import { Context } from "@/context";
 
@@ -77,7 +77,7 @@ export class ClipboardEventReader extends Reader {
             } else if (item.type === "text/plain") {
                 const result = item.result;
                 if (this.maySvgText(result)) {
-                    const svg = SVGParse.parse(result);
+                    const svg = IO.SvgParser.parse(result);
                     const svgs = bundle["SVG"];
                     svgs ? svgs.push(svg) : bundle["SVG"] = [svg];
                 } else bundle["plain"] = result;

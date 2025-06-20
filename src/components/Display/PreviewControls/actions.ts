@@ -346,7 +346,7 @@ export class ProtoAction {
             initComsMap(domCtx.comsMap);
             const view = new SymbolDom(domCtx, { data: sym });
             view.layout();
-            view.render();
+            view.render('SVG');
             const animate = this.smartAmimateTransition(action);
             this.executeSmartShape(down_shape, view, animate)
             const timer = setTimeout(() => {

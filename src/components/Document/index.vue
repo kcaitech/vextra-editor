@@ -72,7 +72,7 @@ function selectionWatcher(t: number | string) {
     const ctx: Context = props.context as Context;
     if (t === Selection.CHANGE_PAGE) {
         curPage.value = ctx.selection.selectedPage;
-        curPage.value?.m_ctx.setIsDoc(true); // 区分原型页和文档页
+        curPage.value?.ctx.setIsDoc(true); // 区分原型页和文档页
     }
 }
 
@@ -116,7 +116,7 @@ function init_watcher() {
     ctx.component.watch(component_watcher);
     ctx.tool.watch(tool_watcher);
     ctx.data.watch(documentWatcher);
-    ctx.repo.setOnChange((id: string) => {
+    ctx.repo.onChange((id: string) => {
         emit('changeCmdId', id);
     });
 }

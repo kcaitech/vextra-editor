@@ -18,11 +18,13 @@ import {
     ImageScaleMode,
     Stop,
     FillMask,
-    ShapeView, Api, SymbolRefView, GradientType, Matrix, Point2D,
+    ShapeView, SymbolRefView, GradientType, Matrix, Point2D,
     FillType,
     BorderPaintsAsyncApi
 } from "@kcdesign/data";
 import { v4 } from "uuid";
+import { Repo } from "@kcdesign/data";
+type Api = Repo.Api;
 
 export class PaintsPicker extends ColorPickerEditor {
     paint: Fill | undefined;
@@ -42,7 +44,7 @@ export class PaintsPicker extends ColorPickerEditor {
 
     private get editor(): BorderPaintsAsyncApi {
         return (this.m_api as unknown as BorderPaintsAsyncApi)
-            ?? (this.m_api = new BorderPaintsAsyncApi(this.context.coopRepo, this.context.data, this.page));
+            ?? (this.m_api = new BorderPaintsAsyncApi(this.context.repo, this.context.data, this.page));
     }
 
     protected commit() {

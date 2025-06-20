@@ -35,7 +35,7 @@ import {
     ShapeType,
     TextBehaviour,
     TextShapeView,
-    cloneGradient,
+    IO,
     TextVerAlign,
     TextHorAlign,
     Color
@@ -130,7 +130,7 @@ const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const rowHeight = ref();
 const row_height = ref(`${t('attr.auto')}`)
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!)
 const keydownVal = ref<boolean>(false)
 const isAutoLineHeight = ref<boolean>(true);
 const cloverVisible = computed<boolean>(() => !(textCtx.value.mask || textCtx.value.mixed));
@@ -527,7 +527,7 @@ function onColorChange(e: Event, type: string) {
 
 const set_gradient_opacity = (opacity: number) => {
     if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
+    const g = IO.Clipboard.cloneGradient(gradient.value);
     g.gradientOpacity = opacity;
     editor_gradient(g);
 }

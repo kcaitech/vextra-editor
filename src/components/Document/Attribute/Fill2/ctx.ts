@@ -10,13 +10,13 @@
 
 import {
     Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
-    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, Api, StyleMangerMember
+    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, Repo, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
-
+type Api = Repo.Api;
 export type FillCatch = {
     fill: Fill;
 }

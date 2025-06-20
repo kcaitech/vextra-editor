@@ -80,7 +80,7 @@ function assemble() {
     
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
-        pageDom.dom.render();
+        pageDom.dom.render('SVG');
         pageDom.ctx.loop(window.requestAnimationFrame);
         if (pageDom.dom.childs && props.selected) {
             props.context.selection.replaceSelectShape(pageDom.dom.childs[0]);

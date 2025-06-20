@@ -14,12 +14,14 @@ import { onMounted, onUnmounted, ref } from "vue";
 import {
     FillsAsyncApi,
     ColVector3D,
-    ShapeView, Fill, SymbolRefView, Api,
+    ShapeView, Fill, SymbolRefView, Repo,
     Transform
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { DragKit } from "@/components/common/draggable";
 import { CursorType } from "@/utils/cursor";
+
+type Api = Repo.Api;
 
 interface Props {
     context: Context;
@@ -56,7 +58,7 @@ const dragKit = new DragKit({
         if (!shape) return;
 
         const page = ctx.selection.selectedPage!;
-        if (!editor) editor = new FillsAsyncApi(ctx.coopRepo, ctx.data, page);
+        if (!editor) editor = new FillsAsyncApi(ctx.repo, ctx.data, page);
         const rootXY = ctx.workspace.getRootXY(event);
         const matrix2root = ctx.selection.selectedShapes[0].matrix2Root().inverse;
         const xy = matrix2root.computeCoord3(rootXY);

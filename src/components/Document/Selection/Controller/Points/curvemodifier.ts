@@ -30,7 +30,7 @@ export class CurveModifier {
 
     private get api(): PathModifier {
         return this.m_api ?? (this.m_api = (() => {
-            return new PathModifier(this.context.coopRepo, this.context.data, this.context.selection.selectedPage!);
+            return new PathModifier(this.context.repo, this.context.data, this.context.selection.selectedPage!);
         })());
     }
 

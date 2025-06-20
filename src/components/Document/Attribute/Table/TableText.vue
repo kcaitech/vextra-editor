@@ -11,12 +11,11 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
-import SelectFont from '../Text/SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick, shallowRef } from 'vue';
+import { onMounted, ref, onUnmounted, watch, shallowRef } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, TableCellType, AsyncTextAttrEditor } from "@kcdesign/data";
+import { AttrGetter, TableView, Text, TableCellView, FillType, Gradient, GradientType, BasicArray, Stop, Matrix, TableCellType, AsyncTextAttrEditor, IO } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, Color } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';
@@ -616,7 +615,7 @@ const alpha_message = (type: string) => {
 
 const set_gradient_opacity = (opacity: number) => {
     if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
+    const g = IO.Clipboard.cloneGradient(gradient.value);
     g.gradientOpacity = opacity;
     editor_gradient(g);
 }
@@ -884,7 +883,7 @@ const togger_gradient_type = (type: GradientType, fillType: FillType) => {
 function gradient_stop_color_change(color: Color, index: number) {
     if (!gradient.value) return;
     let g: Gradient;
-    g = cloneGradient(gradient.value);
+    g = IO.Clipboard.cloneGradient(gradient.value);
     if (g) {
         g.stops[index].color = color;
     }
@@ -917,7 +916,7 @@ function gradient_stop_color_change(color: Color, index: number) {
 function gradient_add_stop(position: number, color: Color, id: string) {
     if (!gradient.value) return;
     const stop = new Stop(new BasicArray(), id, position, color);
-    const g = cloneGradient(gradient.value);
+    const g = IO.Clipboard.cloneGradient(gradient.value);
     g.stops.push(stop);
     const s = g.stops as BasicArray<Stop>;
     s.forEach((v, i) => {
@@ -939,14 +938,14 @@ function gradient_add_stop(position: number, color: Color, id: string) {
 
 function gradient_stop_delete(index: number) {
     if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
+    const g = IO.Clipboard.cloneGradient(gradient.value);
     g.stops.splice(index, 1);
     editor_gradient(g);
 }
 
 function gradient_reverse() {
     if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
+    const g = IO.Clipboard.cloneGradient(gradient.value);
     const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
     for (let _i = 0, _l = g.stops.length; _i < _l; _i++) {
         const _stop = g.stops[_i];
@@ -958,7 +957,7 @@ function gradient_reverse() {
 }
 function gradient_rotate() {
     if (!gradient.value) return;
-    const g = cloneGradient(gradient.value);
+    const g = IO.Clipboard.cloneGradient(gradient.value);
     const { from, to } = g;
     const gradientType = g.gradientType;
     if (gradientType === GradientType.Linear) {

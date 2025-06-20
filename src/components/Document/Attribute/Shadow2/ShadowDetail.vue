@@ -46,7 +46,7 @@ const colorHex = ref<string>(toHex(props.data.shadow.color).slice(1));
 const alpha = ref<string>(Math.round(props.data.shadow.color.alpha * 100) + '%');
 const colors = ref<Color[]>([props.data.shadow.color] as Color[]);
 const rgba = ref<RGBACatch>({ R: 0, G: 0, B: 0, A: 0.3, position: 1 });
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!);
 
 const colorPanelStatus = reactive<ElementStatus>({ id: '#color-piker-gen-2-panel', visible: false });
 const colorPanelStatusMgr = new ElementManager(

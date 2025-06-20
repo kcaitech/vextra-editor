@@ -31,13 +31,13 @@ export class AutoLayoutHandler extends TransformHandler {
     }
 
     createApiCaller(downXY?: XY) {
-        this.asyncApiCaller = new AutoLayoutModify(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new AutoLayoutModify(this.context.repo, this.context.data, this.page);
         this.isTransApi = false;
         this.fixedPoint = downXY || { x: 0, y: 0 };
     }
 
     createTransApiCaller() {
-        this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page, this.shapes);
+        this.asyncApiCaller = new Transporter(this.context.repo, this.context.data, this.page, this.shapes);
         this.isTransApi = true;
     }
 

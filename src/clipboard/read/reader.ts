@@ -9,7 +9,7 @@
  */
 
 import { Shape, ResourceMgr } from "@kcdesign/data";
-import { svgParser as parse_svg} from "@kcdesign/data";
+import { IO } from "@kcdesign/data";
 import { Context } from "@/context";
 
 export class Reader {
@@ -25,7 +25,7 @@ export class Reader {
     }> {
         return new Promise(resolve => {
             const reader = new FileReader();
-            reader.onload = (event) => resolve(parse_svg.parse(event.target!.result as string));
+            reader.onload = (event) => resolve(IO.SvgParser.parse(event.target!.result as string));
             reader.readAsText(file);
         });
     }

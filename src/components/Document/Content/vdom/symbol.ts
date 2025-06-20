@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, SymbolView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, SymbolView } from "@kcdesign/data";
 import { NodeType, optiRender, optiSetDirty, OptiType } from "./optinode";
 
 export class SymbolDom extends (SymbolView) {
@@ -26,13 +26,13 @@ export class SymbolDom extends (SymbolView) {
         this.optiel_dirty = true;
     }
 
-    render(): number {
-        const version: number = super.render();
+    render(gl: GraphicsLibrary): number {
+        const version: number = super.render(gl);
         optiRender(this, version);
         return version;
     }
-    asyncRender(): number {
-        const version: number = super.asyncRender();
+    asyncRender(gl: GraphicsLibrary): number {
+        const version: number = super.asyncRender(gl);
         optiRender(this, version);
         return version;
     }

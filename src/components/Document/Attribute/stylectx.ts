@@ -25,7 +25,7 @@ export class StyleCtx {
     }
 
     get repo() {
-        return this.context.coopRepo;
+        return this.context.repo;
     }
 
     get page() {

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, BoolShapeView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, BoolShapeView } from "@kcdesign/data";
 import { NodeType, optiRender, optiSetDirty, OptiType } from "./optinode";
 
 export class BoolShapeDom extends (BoolShapeView) {
@@ -27,14 +27,14 @@ export class BoolShapeDom extends (BoolShapeView) {
         this.optiel_dirty = true;
     }
 
-    render(): number {
-        const version: number = super.render();
+    render(gl: GraphicsLibrary): number {
+        const version: number = super.render(gl);
         optiRender(this, version);
         return version;
     }
-    asyncRender(): number {
+    asyncRender(gl: GraphicsLibrary): number {
         // if (!this.el && this.parent) this.m_ctx.setDirty(this.parent); // 子对象更新后，parent也要更新
-        const version: number = super.asyncRender();
+        const version: number = super.asyncRender(gl);
         optiRender(this, version);
         return version;
     }

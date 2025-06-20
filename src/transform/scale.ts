@@ -85,7 +85,7 @@ export class ScaleHandler extends BoundHandler {
     }
 
     createApiCaller() {
-        this.asyncApiCaller = new Scaler(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new Scaler(this.context.repo, this.context.data, this.page);
 
         this.workspace.scaling(true);
         this.workspace.setSelectionViewUpdater(false);

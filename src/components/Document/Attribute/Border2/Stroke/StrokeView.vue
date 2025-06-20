@@ -35,7 +35,7 @@ const positonOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
 ]);
 const isActived = ref(false);
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!);
 
 const positoSelected = () => {
     if (props.manager.fillCtx.strokeInfo?.position === 'mixed') {

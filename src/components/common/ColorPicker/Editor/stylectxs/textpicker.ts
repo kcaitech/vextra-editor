@@ -16,13 +16,15 @@ import {
     Color,
     TextAsyncApi,
     Stop,
-    ShapeView, Api, GradientType, Matrix, Point2D,
+    ShapeView, GradientType, Matrix, Point2D,
     FillType,
     AttrGetter,
     TextShapeView,
-    ShapeType
+    ShapeType,
+    Repo
 } from "@kcdesign/data";
 import { v4 } from "uuid";
+type Api = Repo.Api;
 
 export class TextPicker extends ColorPickerEditor {
     format: AttrGetter | undefined
@@ -35,7 +37,7 @@ export class TextPicker extends ColorPickerEditor {
 
     private get editor(): TextAsyncApi {
         return (this.m_api as unknown as TextAsyncApi)
-            ?? (this.m_api = new TextAsyncApi(this.context.coopRepo, this.context.data, this.page));
+            ?? (this.m_api = new TextAsyncApi(this.context.repo, this.context.data, this.page));
     }
 
     protected commit() {

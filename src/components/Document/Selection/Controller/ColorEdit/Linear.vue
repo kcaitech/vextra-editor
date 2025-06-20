@@ -32,7 +32,10 @@ import {
     Stop,
     TextShapeView,
     Transform,
-    cloneGradient, Api, ShapeView, SymbolRefView
+    IO,
+    ShapeView,
+    SymbolRefView,
+    Repo
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
@@ -41,6 +44,7 @@ import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
 
+type Api = Repo.Api;
 type Dot = {
     x: number;
     y: number;
@@ -186,7 +190,7 @@ function createFillGradientStop(stop: Stop) {
     const locate = props.context.color.locate!;
     const idx = locate.index;
     const shape = props.context.selection.flat[0];
-    const editor = gradientEditor = new GradientEditor(props.context.coopRepo);
+    const editor = gradientEditor = new GradientEditor(props.context.repo);
     const page = props.context.selection.selectedPage!;
 
     let maskId = locate.type === 'fills' ? shape.fillsMask : shape.borderFillsMask;
@@ -314,7 +318,7 @@ const dot_mousemove = (e: MouseEvent) => {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             if (locate.type !== 'text') {
-                gradientEditor = new GradientEditor(props.context.coopRepo);
+                gradientEditor = new GradientEditor(props.context.repo);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
                 const editor = props.context.editor4TextShape(shape as TextShapeView);
@@ -400,7 +404,7 @@ const add_stop = (e: MouseEvent) => {
     const stop = new Stop(new BasicArray(), v4(), position, _stop.color);
     if (locate.type === 'text') {
         const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-        const new_gradient = cloneGradient(gradient);
+        const new_gradient = IO.Clipboard.cloneGradient(gradient);
         new_gradient.stops.push(stop);
         const s = new_gradient.stops as BasicArray<Stop>;
         s.sort((a, b) => {
@@ -487,7 +491,7 @@ const stop_mousemove = (e: MouseEvent) => {
                 const editor = props.context.editor4TextShape(shape as TextShapeView);
                 gradientTextEditor = editor.asyncSetTextGradient([shape] as TextShapeView[], gradient, textIndex, selectLength);
             } else {
-                gradientEditor = gradientEditor ?? new GradientEditor(props.context.coopRepo);
+                gradientEditor = gradientEditor ?? new GradientEditor(props.context.repo);
             }
         }
     }

@@ -13,12 +13,9 @@ import { Bundle, Clipboard, RefShapeBase, SourceBundle } from "@/clipboard";
 import {
     Text,
     TableCellType,
-    import_text,
-    export_text,
     Transform,
     CurvePoint,
     ContactLineView,
-    export_shape,
     adapt2Shape,
     PathShape,
     Document,
@@ -26,7 +23,7 @@ import {
     SymbolRefView,
     RefUnbind,
     StyleMangerMember,
-    exportMask
+    IO
 } from "@kcdesign/data";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
@@ -58,7 +55,7 @@ export class Writer {
         exportCtx.styles.forEach(v => {
             const mask = document.stylesMgr.getSync(v);
             if (!mask) return;
-            masks.push(exportMask(mask) as StyleMangerMember);
+            masks.push(IO.Clipboard.exportMask(mask) as StyleMangerMember);
         });
         return masks;
     }
@@ -116,7 +113,7 @@ export class Writer {
         cells.forEach(i => {
             if (i.cell?.cellType !== TableCellType.Text) return;
             if (!first_text && i.cell.text) {
-                first_text = import_text(this.context.data, i.cell.text) as Text;
+                first_text = IO.Clipboard.import_text(this.context.data, i.cell.text) as Text;
             }
             const t = i.cell.text?.getText(0, i.cell.text?.length || 0) || '';
             if (!t.length) return;
@@ -135,7 +132,7 @@ export class Writer {
     async write(cache: Bundle, event?: ClipboardEvent) {
         const text = this.text;
         if (text) {
-            const _text = export_text(text);
+            const _text = IO.Clipboard.export_text(text);
             const plain_text = text.getText(0, text.length);
             const html = this.encode(Clipboard.paras, _text, plain_text);
             const text_html = new Blob([html || ''], { type: 'text/html' });
@@ -165,7 +162,7 @@ export class Writer {
                 position_map.set(shape.id, (shape.matrix2Root()));
                 if (shape instanceof ContactLineView) points_map.set(shape.id, shape.getPoints());
             }
-            const { shapes: _shapes, ctx } = export_shape(shapes.map((s => adapt2Shape(s))));
+            const { shapes: _shapes, ctx } = IO.Clipboard.export_shape(shapes.map((s => adapt2Shape(s))));
             if (!_shapes) return;
             for (let i = 0, len = _shapes.length; i < len; i++) {
                 const shape = _shapes[i];

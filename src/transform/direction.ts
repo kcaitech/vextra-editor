@@ -145,7 +145,7 @@ export class Direction {
 
         const page = context.selection.selectedPage!;
         this.page = page;
-        this.api = new LinearApi(context.coopRepo, context.data, page);
+        this.api = new LinearApi(context.repo, context.data, page);
         this.style = new StyleManager(context);
         this.directionCalc = new DirectionCalc();
         this.boardMgr = new KeyboardMgr(context)

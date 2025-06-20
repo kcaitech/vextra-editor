@@ -14,7 +14,8 @@ import {
     ColVector3D,
     CtrlElementType,
     ShapeView,
-    Transform, XYsBounding
+    Transform,
+    utils
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
@@ -185,7 +186,7 @@ function updateDotLayout() {
     const { [0]:col0, [1]:col1, [2]:col2, [3]:col3 } = cols;
 
 
-    const box = XYsBounding([{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, {
+    const box = utils.XYsBounding([{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, {
         x: col3.x,
         y: col3.y
     }]);

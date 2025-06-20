@@ -22,7 +22,7 @@ import {
     FillType,
     GroupShapeView,
     TableView,
-    importGradient
+    basicio
 } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
@@ -328,7 +328,7 @@ function parseColorForStorage(color: Color): string {
 
 export function parseColorFormStorage(c: string): Color | Gradient {
     if (c.includes('gradient')) {
-        return importGradient(JSON.parse(c.slice('gradient/'.length)));
+        return basicio.importGradient(JSON.parse(c.slice('gradient/'.length)));
     } else {
         let _c: any[] = c.split(split);
         _c = _c.map(i => Number(i));

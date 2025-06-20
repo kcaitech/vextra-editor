@@ -68,7 +68,7 @@ const hovered = ref<BlendMode>();
 const modeList = ref<HTMLDivElement[]>();
 const panel = ref<HTMLDivElement>();
 let opacity_editor: AsyncOpacityEditor | undefined = undefined;
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!)
 
 function showMenu(e: MouseEvent) {
     if (popoverVisible.value) return popoverVisible.value = false;

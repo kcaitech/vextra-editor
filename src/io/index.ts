@@ -9,8 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { exportVext, TransactDataGuard } from "@kcdesign/data";
-import { importVext } from "@kcdesign/data";
+import { IO } from "@kcdesign/data";
 
 export function downloadByLink(content: Blob, name: string) {
     const link = document.createElement('a');
@@ -21,7 +20,7 @@ export function downloadByLink(content: Blob, name: string) {
 }
 
 export async function exportDocument(context: Context) {
-    const content = await exportVext(context.data, 'blob') as Blob;
+    const content = await IO.exportVext(context.data, 'blob') as Blob;
     const name = context.data.name;
     const reg = new RegExp('(.sketch|.fig|.vext|.moss)$', 'img');
     // if (context.env === ContextEnvironment.Client) {

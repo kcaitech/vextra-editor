@@ -46,7 +46,7 @@ const topThickness = ref<number | string>(0);
 const rightThickness = ref<number | string>(0);
 const bottomThickness = ref<number | string>(0);
 const leftThickness = ref<number | string>(0);
-const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!);
+const linearApi = new LinearApi(props.context.repo, props.context.data, props.context.selection.selectedPage!);
 
 let flat: ShapeView[] | undefined = undefined;
 

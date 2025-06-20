@@ -139,6 +139,7 @@ onUnmounted(() => {
         display: flex;
         height: 40px;
         position: relative;
+        justify-content: center;
 
         >.tab {
             cursor: pointer;

@@ -26,7 +26,7 @@ export class backgroundColorPicker extends ColorPickerEditor {
 
     private get api(): backgorundAsyncApi {
         return (this.m_api as unknown as backgorundAsyncApi)
-            ?? (this.m_api = new backgorundAsyncApi(this.context.coopRepo, this.context.data, this.page));
+            ?? (this.m_api = new backgorundAsyncApi(this.context.repo, this.context.data, this.page));
     }
 
     setSolidColor(c: RGBACatch): void {
