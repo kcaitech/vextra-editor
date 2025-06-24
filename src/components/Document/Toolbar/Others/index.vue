@@ -12,7 +12,6 @@
 import Scale from './Scale.vue';
 import { Context } from '@/context';
 import LableToggle from './LableToggle.vue';
-import Review from './Review/index.vue';
 
 const props = defineProps<{
     context: Context
@@ -21,7 +20,6 @@ const props = defineProps<{
 const plugins = props.context.pluginsMgr.search2('toolbar.others');
 const comps: { component: any, params?: any }[] = []
 
-comps.push({ component: Review })
 comps.push(...plugins.begin)
 comps.push({ component: LableToggle })
 comps.push({ component: Scale })
