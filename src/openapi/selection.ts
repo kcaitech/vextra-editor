@@ -8,8 +8,9 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+import { ImageRefShape } from "@/context/selection";
 import { DocSelectionData } from "@/context/user";
-import { IWatchable, PageView, ShapeView } from "@kcdesign/data";
+import { IWatchable, PageView, Shape, ShapeView } from "@kcdesign/data";
 
 export namespace SelectionEvents {
     export const text_change = 'text_change'
@@ -37,4 +38,6 @@ export interface ISelection extends IWatchable {
     userSelectionData(data: DocSelectionData[]): void;
 
     getViews(offsetX: number, offsetY: number): ShapeView[];
+
+    getShapesUsingImage(imageRef: string): ImageRefShape[]
 }

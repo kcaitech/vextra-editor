@@ -22,7 +22,8 @@ import {
     TableCellType,
     TidyUpAlign,
     IO,
-    Repo
+    Repo,
+    FillType
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -70,6 +71,13 @@ export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 export const enum SelectionTheme {
     Normal = '#1878F5',
     Symbol = '#7F58F9'
+}
+
+export interface ImageRefShape {
+    name: string;
+    id: string;
+    pageId: string;
+    pageName: string;
 }
 
 export class Selection extends WatchableObject implements Repo.ISave4Restore, ISelection {
@@ -221,7 +229,7 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
      * @returns 符合检索条件的图形
      */
     getLayers(position: PageXY): ShapeView[] {
-        position = {x: position.x, y: position.y};
+        position = { x: position.x, y: position.y };
         const result: ShapeView[] = [];
         if (this.scout) {
             const page = this.m_selectPage;
@@ -428,7 +436,7 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
             const colStart = this.tableSelection.tableColStart;
             const colEnd = this.tableSelection.tableColEnd;
             if (!(rowStart < 0 && rowEnd < 0 && colStart < 0 && colEnd < 0)) {
-                state.table = {isRowOrCol: false, rows: [], cols: []}
+                state.table = { isRowOrCol: false, rows: [], cols: [] }
                 const rowCount = table.rowHeights.length;
                 const colCount = table.colWidths.length;
                 if (rowStart === 0 && rowEnd === rowCount - 1) {
@@ -722,5 +730,24 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
 
     get flat() {
         return this.m_flat ?? (this.m_flat = getShapesForStyle(this.m_selectShapes));
+    }
+
+    getShapesUsingImage(imageRef: string): ImageRefShape[] {
+        const pages = this.m_document.pagesMgr.resource;
+        const ret: Array<{ name: string; id: string; pageId: string; pageName: string }> = [];
+        for (const page of pages) {
+            const shapes = page.childs;
+            for (const shape of shapes) {
+                const fills = shape.style.fills;
+                if (fills.length === 0) continue;
+                for (const fill of fills) {
+                    if (fill.fillType !== FillType.Pattern) continue;
+                    if (fill.imageRef === imageRef) {
+                        ret.push({ name: shape.name, id: shape.id, pageId: page.id, pageName: page.name });
+                    }
+                }
+            }
+        }
+        return ret;
     }
 }
