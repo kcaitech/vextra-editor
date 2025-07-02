@@ -734,8 +734,10 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
 
     getShapesUsingImage(imageRef: string): ImageRefShape[] {
         const pages = this.m_document.pagesMgr.resource;
+        const pagesList = this.m_document.pagesList;
         const ret: Array<{ name: string; id: string; pageId: string; pageName: string }> = [];
         for (const page of pages) {
+            const pageName = pagesList.find(p => p.id === page.id)?.name ?? page.name;
             const shapes = page.childs;
             for (const shape of shapes) {
                 const fills = shape.style.fills;
@@ -743,7 +745,7 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
                 for (const fill of fills) {
                     if (fill.fillType !== FillType.Pattern) continue;
                     if (fill.imageRef === imageRef) {
-                        ret.push({ name: shape.name, id: shape.id, pageId: page.id, pageName: page.name });
+                        ret.push({ name: shape.name, id: shape.id, pageId: page.id, pageName: pageName });
                     }
                 }
             }
