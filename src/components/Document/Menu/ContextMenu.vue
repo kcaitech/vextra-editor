@@ -477,13 +477,27 @@ function outline() {
     emits('close');
 }
 
-const plugins = props.context.pluginsMgr.search2("content.menu");
-let comps: { component: any, params?: any }[] = [];
+const UIComps: { component: any, params?: any }[] = [];
+const ClipboardComps: { component: any, params?: any }[] = [];
 
 watchEffect(() => {
-    comps=[]
     if (props.items.has(MenuItemType.Comment)) {
-        comps.push({
+        UIComps.length = 0;
+        const plugins = props.context.pluginsMgr.search2("content.menu");
+        UIComps.push({
+            component: () => {
+                return h(plugins.end[0].component, {
+                    params: plugins.end[0].params,
+                    context: props.context,
+                    onClose: () => emits('close')
+                })
+            }
+        });
+    }
+    if (props.items.has(MenuItemType.CopyAs)) {
+        ClipboardComps.length = 0;
+        const plugins = props.context.pluginsMgr.search2("content.menu.copy_link_to_selection");
+        ClipboardComps.push({
             component: () => {
                 return h(plugins.end[0].component, {
                     params: plugins.end[0].params,
@@ -548,6 +562,8 @@ import { group, ungroup } from "@/utils/group_ungroup";
                     <span>{{ t('clipboard.pasteStyle') }}</span>
                     <Key code="Ctrl Alt V" />
                 </div>
+                <component v-if="ClipboardComps.length" v-for="c in ClipboardComps" :is=c.component
+                           :context="props.context" :params="c.params"/>
             </div>
         </div>
         <div v-if="items.has(MenuItemType.Cut)" class="menu-item" @click="cut">
@@ -631,7 +647,8 @@ import { group, ungroup } from "@/utils/group_ungroup";
                     fill-rule="evenodd" fill="inherit" fill-opacity="1" />
             </svg>
         </div>
-        <component v-if="comps.length" v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <component v-if="UIComps.length" v-for="c in UIComps" :is=c.component :context="props.context"
+                   :params="c.params"/>
         <div v-if="items.has(MenuItemType.Operation)" @click="operation" class="menu-item">
             <span>{{ context.layout.next }}</span>
             <Key code="Ctrl \"></Key>

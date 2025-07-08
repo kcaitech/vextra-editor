@@ -54,6 +54,7 @@ export type PluginLocate =
     'devmode.toolbar.tools' | 
     'preview.toolbar.home' |
     'preview.toolbar.others' |
+    'content.menu.copy_link_to_selection' |
     'content.menu';
 
 export interface IPlugin {

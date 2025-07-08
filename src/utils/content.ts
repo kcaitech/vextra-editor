@@ -571,23 +571,28 @@ export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
         const { x, y, width, height } = item.frame;
         const m = item.matrix2Root(); // 图层到Root；
         const clientTransform = (matrix);
-        m.multi(clientTransform); // root 到 client
-        points.push(...m.transform([
-            ColVector3D.FromXY(x, y),
-            ColVector3D.FromXY(x + width, y),
-            ColVector3D.FromXY(x + width, y + height),
-            ColVector3D.FromXY(x, y + height),
-        ]));
+        m.multiAtLeft(clientTransform); // root 到 client
+        points.push(...[
+            { x, y },
+            { x: x + width, y },
+            { x: x + width, y: y + height },
+            { x, y: y + height }
+        ].map(i => m.computeCoord3(i)));
     }
     const box = XYsBounding(points);
-    const width = box.right - box.left;
-    const height = box.bottom - box.top;
     const root = context.workspace.root;
-    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
-    if (del.x || del.y) {
-        matrix.trans(del.x, del.y);
+    const centerClient = {
+        x: (root.right - root.x) / 2,
+        y: (root.bottom - root.y) / 2
+    };
+    const centerShape = {
+        x: (box.right + box.left) / 2,
+        y: (box.bottom + box.top) / 2
     }
+    const dx = centerClient.x - centerShape.x;
+    const dy = centerClient.y - centerShape.y;
+ 
+    matrix.trans(dx, dy);
     context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
