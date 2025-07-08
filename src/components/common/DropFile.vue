@@ -15,7 +15,7 @@
             <div class="content" @click="picker.invoke()">
                 <SvgIcon :icon="drop_here_icon" class-name="drop-icon" />
                 <!-- <DropHereIcon /> -->
-                <p class="tip">Click or Drop Sketch/Fig/Vext Files Here</p>
+                <p class="tip">Click or Drop Sketch/Fig/Vext/SVG Files Here</p>
             </div>
             <slot />
         </div>
@@ -32,7 +32,7 @@ const emit = defineEmits<{
     (e: 'pick', value: File): void;
 }>();
 
-const picker = new FilePicker('.sketch,.fig,.vext,.moss', (file) => {
+const picker = new FilePicker('.sketch,.fig,.vext,.svg', (file) => {
     emit('pick', file)
 });
 

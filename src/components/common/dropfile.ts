@@ -35,11 +35,12 @@ function onDragEnter(event: DragEvent) {
   event.preventDefault();
 }
 
+const fileTypes = ['.sketch', '.fig', '.vext', '.svg'];
 function onDrop(event: DragEvent) {
   event.preventDefault();
   const file = Array.from(event.dataTransfer?.files || []).find((file) => {
     const filename = file.name.toLowerCase();
-    return filename.endsWith('.sketch') || filename.endsWith('.fig');
+    return fileTypes.some(type => filename.endsWith(type));
   });
   if (file) {
     fileRef.value = file;

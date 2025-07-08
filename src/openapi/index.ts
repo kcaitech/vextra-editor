@@ -18,5 +18,5 @@ export * from "./workspace"
 export * from "./toolbox"
 export type DocumentProps = (
     { source: 'storage', storage: IO.IStorage, path: string, fid: string, versionId: string } |
-    { source: 'file', file: File, fmt: 'vext' | 'sketch' | 'fig' | 'moss' } |
+    { source: 'file', file: File, fmt: 'vext' | 'sketch' | 'fig' | 'svg' } |
     { source: 'new' })

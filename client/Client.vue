@@ -18,7 +18,7 @@ const state = ref<"home"|"editor">("home")
 const context = shallowRef<IContext | undefined>(undefined);
 
 async function onPickFile(file: File) {
-    const fmt =  ['vext', 'moss', 'sketch', 'fig'].filter(ext => file.name.endsWith(ext))[0]
+    const fmt =  ['vext', 'sketch', 'fig', 'svg'].filter(ext => file.name.endsWith(ext))[0]
     if (!fmt) return;
     const result = await openDocument({
         source: "file",

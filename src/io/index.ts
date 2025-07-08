@@ -22,10 +22,6 @@ export function downloadByLink(content: Blob, name: string) {
 export async function exportDocument(context: Context) {
     const content = await IO.exportVext(context.data, 'blob') as Blob;
     const name = context.data.name;
-    const reg = new RegExp('(.sketch|.fig|.vext|.moss)$', 'img');
-    // if (context.env === ContextEnvironment.Client) {
-        downloadByLink(content, name.replace(reg, '') + '.vext');
-    // } else {
-    //     downloadByLink(content, name.replace(reg, '') + '.moss');
-    // }
+    const reg = new RegExp('(.sketch|.fig|.vext)$', 'img');
+    downloadByLink(content, name.replace(reg, '') + '.vext');
 }
