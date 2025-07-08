@@ -40,6 +40,4 @@ export interface ISelection extends IWatchable {
     getViews(offsetX: number, offsetY: number): ShapeView[];
 
     getShapesUsingImage(imageRef: string): ImageRefShape[]
-
-    getSelectionLink(): string;
 }

@@ -750,9 +750,5 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
         }
         return ret;
     }
-    getSelectionLink(): string {
-        const selectedShape = this.selectedShapes[0];
-        if (!selectedShape) throw new Error('Wrong selection');
-        return `${window.location.href}/${this.selectedPage!.id}/${selectedShape.id}`;
-    }
+
 }
