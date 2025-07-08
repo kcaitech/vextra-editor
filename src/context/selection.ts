@@ -21,8 +21,8 @@ import {
     WatchableObject,
     TableCellType,
     TidyUpAlign,
-    IO,
-    Repo
+    Repo,
+    FillType
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -722,5 +722,32 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
 
     get flat() {
         return this.m_flat ?? (this.m_flat = getShapesForStyle(this.m_selectShapes));
+    }
+
+    getShapesUsingImage(imageRef: string): ImageRefShape[] {
+        const pages = this.m_document.pagesMgr.resource;
+        const pagesList = this.m_document.pagesList;
+        const ret: Array<{ name: string; id: string; pageId: string; pageName: string }> = [];
+        for (const page of pages) {
+            const pageName = pagesList.find(p => p.id === page.id)?.name ?? page.name;
+            const shapes = page.childs;
+            for (const shape of shapes) {
+                const fills = shape.style.fills;
+                if (fills.length === 0) continue;
+                for (const fill of fills) {
+                    if (fill.fillType !== FillType.Pattern) continue;
+                    if (fill.imageRef === imageRef) {
+                        ret.push({ name: shape.name, id: shape.id, pageId: page.id, pageName: pageName });
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
+    getSelectionLink(): string {
+        const selectedShape = this.selectedShapes[0];
+        if (!selectedShape) throw new Error('Wrong selection');
+        return `${window.location.href}/${this.selectedPage!.id}/${selectedShape.id}`;
     }
 }
