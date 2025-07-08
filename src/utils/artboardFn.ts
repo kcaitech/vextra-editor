@@ -19,7 +19,7 @@ import {
     Fill,
     BasicArray,
     FillType,
-    creator
+    Creator
 } from '@kcdesign/data';
 import { isTarget2 } from './common';
 import { Context } from '@/context';
@@ -133,7 +133,7 @@ export function insertFrameTemplate(context: Context) {
         frame.y = y;
         const fillColor = new Color(1, 255, 255, 255);
         const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, fillColor);
-        let artboard: Shape | false = creator.newArtboard(tf.name, frame, context.data.stylesMgr, fill);
+        let artboard: Shape | false = Creator.newArtboard(tf.name, frame, context.data.stylesMgr, fill);
         artboard = editor.insert(parent.data, shapes.length, artboard, true);
         context.nextTick(parent, () => {
             if (artboard) {
