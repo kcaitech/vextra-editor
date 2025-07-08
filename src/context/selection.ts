@@ -22,7 +22,6 @@ import {
     TableCellType,
     TidyUpAlign,
     Repo,
-    FillType
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -70,6 +69,13 @@ export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 export const enum SelectionTheme {
     Normal = '#1878F5',
     Symbol = '#7F58F9'
+}
+
+export interface ImageRefShape {
+    name: string;
+    id: string;
+    pageId: string;
+    pageName: string;
 }
 
 export class Selection extends WatchableObject implements Repo.ISave4Restore, ISelection {
@@ -221,7 +227,7 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
      * @returns 符合检索条件的图形
      */
     getLayers(position: PageXY): ShapeView[] {
-        position = {x: position.x, y: position.y};
+        position = { x: position.x, y: position.y };
         const result: ShapeView[] = [];
         if (this.scout) {
             const page = this.m_selectPage;
@@ -428,7 +434,7 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
             const colStart = this.tableSelection.tableColStart;
             const colEnd = this.tableSelection.tableColEnd;
             if (!(rowStart < 0 && rowEnd < 0 && colStart < 0 && colEnd < 0)) {
-                state.table = {isRowOrCol: false, rows: [], cols: []}
+                state.table = { isRowOrCol: false, rows: [], cols: [] }
                 const rowCount = table.rowHeights.length;
                 const colCount = table.colWidths.length;
                 if (rowStart === 0 && rowEnd === rowCount - 1) {
@@ -744,7 +750,6 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
         }
         return ret;
     }
-
     getSelectionLink(): string {
         const selectedShape = this.selectedShapes[0];
         if (!selectedShape) throw new Error('Wrong selection');
