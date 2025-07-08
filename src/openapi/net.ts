@@ -13,5 +13,5 @@ export interface INet {
 
     genThumbnail(name: string, contentType: string, data: ArrayBufferLike): Promise<boolean>
 
-    uploadSymbolResource(name: string, path: string, data: ArrayBufferLike): Promise<boolean>
+    // uploadSymbolResource(name: string, path: string, data: ArrayBufferLike): Promise<boolean>
 }

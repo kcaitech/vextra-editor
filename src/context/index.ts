@@ -407,8 +407,4 @@ export class Context extends WatchableObject implements IContext {
     updateThumbnail() {
         this.m_menu.notify(Menu.GEN_THUMBNAIL);
     }
-
-    async uploadSymbolResource(name: string, path: string, data: ArrayBufferLike) {
-        return !!this.net?.uploadSymbolResource(name, path, data);
-    }
 }
