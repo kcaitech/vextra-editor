@@ -9,7 +9,7 @@
  */
 
 
-import { IO, Repo, TransactDataGuard, Document, creator, DocEditor } from "@kcdesign/data";
+import { IO, Repo, TransactDataGuard, Document, Creator, DocEditor } from "@kcdesign/data";
 import { initDataModule } from "./basic/initmodule";
 import i18n from "@/i18n";
 import { DocumentProps } from "./openapi";
@@ -39,7 +39,7 @@ async function _open(props: DocumentProps, repoCreator: (data: Document, guard: 
             repo = repoCreator(data, transact)
         }
     } else if (props.source === 'new') {
-        data = creator.newDocument(t('system.new_file'), transact);
+        data = Creator.newDocument(t('system.new_file'), transact);
         repo = repoCreator(data, transact)
         repo.startInitData();
         const editor = new DocEditor(data, repo);
