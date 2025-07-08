@@ -21,7 +21,7 @@ import {
     WatchableObject,
     TableCellType,
     TidyUpAlign,
-    Repo,
+    Repo, FillType,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
