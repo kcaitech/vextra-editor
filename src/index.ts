@@ -42,4 +42,4 @@ export { DragKit } from "./components/common/draggable";
 
 export { ShapeDescContext } from "./components/common/ShapeDesc/shapeDescContext";
 
-export { openDocument, exportDocument } from "./functions";
+export { openDocument, exportDocument, supportedFormats } from "./functions";

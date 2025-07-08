@@ -18,6 +18,30 @@ import { IContext } from "./openapi";
 
 const t = (i18n as any).global.t;
 
+export const supportedFormats = ['vext', 'sketch', 'fig', 'svg'];
+
+async function _openFile(props: DocumentProps, transact: TransactDataGuard, repoCreator: (data: Document, guard: TransactDataGuard) => Repo.IRepository) {
+    if (props.source !== 'file') throw new Error('Invalid source');
+    let repo: Repo.IRepository | undefined;
+    let data: Document | undefined;
+    if (props.fmt === 'sketch') {
+        data = await IO.importSketch(props.file, transact);
+        repo = repoCreator(data, transact)
+    } else if (props.fmt === 'fig') {
+        data = await IO.importFigma(props.file, transact)
+        repo = repoCreator(data, transact)
+    } else if (props.fmt === 'vext') {
+        data = await IO.importVext(props.file, transact);
+        repo = repoCreator(data, transact)
+    } else if (props.fmt === 'svg') {
+        data = await IO.importSvg(props.file, transact);
+        if (data) repo = repoCreator(data, transact)
+    }
+    if (data) {
+        return { data, repo: repo! }
+    }
+}
+
 async function _open(props: DocumentProps, repoCreator: (data: Document, guard: TransactDataGuard) => Repo.IRepository) {
     await initDataModule();
     const transact = new TransactDataGuard();
@@ -28,18 +52,10 @@ async function _open(props: DocumentProps, repoCreator: (data: Document, guard: 
         data = document
         repo = repoCreator(data, transact)
     } else if (props.source === 'file') {
-        if (props.fmt === 'sketch') {
-            data = await IO.importSketch(props.file, transact);
-            repo = repoCreator(data, transact)
-        } else if (props.fmt === 'fig') {
-            data = await IO.importFigma(props.file, transact)
-            repo = repoCreator(data, transact)
-        } else if (props.fmt === 'vext') {
-            data = await IO.importVext(props.file, transact);
-            repo = repoCreator(data, transact)
-        } else if (props.fmt === 'svg') {
-            data = await IO.importSvg(props.file, transact);
-            if (data) repo = repoCreator(data, transact)
+        const result = await _openFile(props, transact, repoCreator);
+        if (result) {
+            repo = result.repo;
+            data = result.data;
         }
     } else if (props.source === 'new') {
         data = Creator.newDocument(t('system.new_file'), transact);

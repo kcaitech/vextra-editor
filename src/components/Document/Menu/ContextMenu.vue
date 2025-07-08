@@ -484,7 +484,7 @@ watchEffect(() => {
     if (props.items.has(MenuItemType.Comment)) {
         UIComps.length = 0;
         const plugins = props.context.pluginsMgr.search2("content.menu");
-        UIComps.push({
+        if (plugins.end.length) UIComps.push({
             component: () => {
                 return h(plugins.end[0].component, {
                     params: plugins.end[0].params,
@@ -497,7 +497,7 @@ watchEffect(() => {
     if (props.items.has(MenuItemType.CopyAs)) {
         ClipboardComps.length = 0;
         const plugins = props.context.pluginsMgr.search2("content.menu.copy_link_to_selection");
-        ClipboardComps.push({
+        if (plugins.end.length) ClipboardComps.push({
             component: () => {
                 return h(plugins.end[0].component, {
                     params: plugins.end[0].params,
