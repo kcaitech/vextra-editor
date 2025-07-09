@@ -12,8 +12,8 @@ import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/colore
 import { BasicArray, Color, Shadow, ShadowAsyncApi, ShadowMask, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { Repo } from "@kcdesign/data";
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 
 export class ShadowColorPicker extends ColorPickerEditor {
     shadow: Shadow | undefined;
@@ -66,7 +66,7 @@ export class ShadowColorPicker extends ColorPickerEditor {
 
     getApiParams(shadow: Shadow, c: RGBACatch): Function[] {
         if (shadow.parent?.parent instanceof ShadowMask) {
-            return [(api: Api) => {
+            return [(api: Operator) => {
                 api.setShadowColor(this.shadow!, new Color(c.A, c.R, c.G, c.B));
             }];
         } else {
@@ -79,13 +79,13 @@ export class ShadowColorPicker extends ColorPickerEditor {
                     shadows.push(view.getShadows());
                 }
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.api.getShadowsVariable(api, this.page, view);
                     api.setShadowColor(variable.value[this.index], new Color(c.A, c.R, c.G, c.B));
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 for (const _shadows of shadows) {
                     api.setShadowColor(_shadows[this.index], new Color(c.A, c.R, c.G, c.B));
                 }

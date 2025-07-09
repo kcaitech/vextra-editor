@@ -23,8 +23,8 @@ import {
     BorderPaintsAsyncApi
 } from "@kcdesign/data";
 import { v4 } from "uuid";
-import { Repo } from "@kcdesign/data";
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 
 export class PaintsPicker extends ColorPickerEditor {
     paint: Fill | undefined;
@@ -53,7 +53,7 @@ export class PaintsPicker extends ColorPickerEditor {
         this.m_index = undefined;
     }
 
-    private setType(api: Api, fill: Fill, type: string): void {
+    private setType(api: Operator, fill: Fill, type: string): void {
         if (type === FillType.SolidColor) {
             api.setFillType(fill, FillType.SolidColor);
             if (fill.gradient) {
@@ -76,7 +76,7 @@ export class PaintsPicker extends ColorPickerEditor {
         super.modifyFillType(type);
         this.updateSelection();
         if (this.paint.parent?.parent instanceof FillMask) {
-            this.editor.modifyFillType([(api: Api) => {
+            this.editor.modifyFillType([(api: Operator) => {
                 this.setType(api, this.paint!, type);
             }]);
             this.commit();
@@ -88,13 +88,13 @@ export class PaintsPicker extends ColorPickerEditor {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getBorder().strokePaints);
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             views.forEach(view => {
                 const variable = this.editor.getBorderVariable(api, this.page, view);
                 this.setType(api, variable.value.strokePaints[this.index], type);
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             fills.forEach((_fills) => {
                 this.setType(api, _fills[this.index], type);
             })
@@ -110,7 +110,7 @@ export class PaintsPicker extends ColorPickerEditor {
         if (!this.paint) return;
         this.updateSelection();
         if (this.paint.parent?.parent instanceof FillMask) {
-            this.editor.modifySolidColor([(api: Api) => {
+            this.editor.modifySolidColor([(api: Operator) => {
                 api.setFillColor(this.paint!, new Color(c.A, c.R, c.G, c.B));
             }]);
             this.commit();
@@ -122,13 +122,13 @@ export class PaintsPicker extends ColorPickerEditor {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getBorder().strokePaints);
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             views.forEach(view => {
                 const variable = this.editor.getBorderVariable(api, this.page, view);
                 api.setFillColor(variable.value.strokePaints[this.index], new Color(c.A, c.R, c.G, c.B));
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             fills.forEach((_fills) => {
                 api.setFillColor(_fills[this.index], new Color(c.A, c.R, c.G, c.B));
             })
@@ -154,19 +154,19 @@ export class PaintsPicker extends ColorPickerEditor {
     solidDragging(c: RGBACatch): void {
         super.setSolidColor(c);
         if (this.paint!.parent?.parent instanceof FillMask) {
-            this.editor.modifySolidColor([(api: Api) => {
+            this.editor.modifySolidColor([(api: Operator) => {
                 api.setFillColor(this.paint!, new Color(c.A, c.R, c.G, c.B));
             }]);
             return;
         }
 
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             this.m_views.forEach(view => {
                 const variable = this.editor.getBorderVariable(api, this.page, view);
                 api.setFillColor(variable.value.strokePaints[this.index], new Color(c.A, c.R, c.G, c.B));
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.m_fills.forEach((_fills) => {
                 api.setFillColor(_fills[this.index], new Color(c.A, c.R, c.G, c.B));
             })
@@ -207,7 +207,7 @@ export class PaintsPicker extends ColorPickerEditor {
             return gradientCopy;
         }
         if (this.paint?.parent?.parent instanceof FillMask) {
-            this.editor.createGradientStop([(api: Api) => {
+            this.editor.createGradientStop([(api: Operator) => {
                 api.setFillGradient(this.paint!, getCopy());
             }]);
         } else {
@@ -217,13 +217,13 @@ export class PaintsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getBorder().strokePaints[this.index]);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getBorderVariable(api, this.page, view);
                     api.setFillGradient(variable.value.strokePaints[this.index], getCopy());
                 })
             };
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((fill) => api.setFillGradient(fill, getCopy()));
             };
             this.editor.createGradientStop([modifyVariable, modifyLocal]);
@@ -242,7 +242,7 @@ export class PaintsPicker extends ColorPickerEditor {
             return gradientCopy;
         }
         if (this.paint?.parent?.parent instanceof FillMask) {
-            this.editor.removeGradientStop([(api: Api) => {
+            this.editor.removeGradientStop([(api: Operator) => {
                 api.setFillGradient(this.paint!, getCopy());
             }])
         } else {
@@ -252,13 +252,13 @@ export class PaintsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getBorder().strokePaints[this.index]);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getBorderVariable(api, this.page, view);
                     api.setFillGradient(variable.value.strokePaints[this.index], getCopy());
                 })
             };
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((fill) => api.setFillGradient(fill, getCopy()));
             };
             this.editor.removeGradientStop([modifyVariable, modifyLocal]);
@@ -278,7 +278,7 @@ export class PaintsPicker extends ColorPickerEditor {
             return copy;
         }
         if (this.paint.parent?.parent instanceof FillMask) {
-            this.editor.modifyStopColorOnce([(api: Api) => {
+            this.editor.modifyStopColorOnce([(api: Operator) => {
                 api.setFillGradient(this.paint!, getCopy());
             }]);
         } else {
@@ -288,13 +288,13 @@ export class PaintsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getBorder().strokePaints[this.index]);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getBorderVariable(api, this.page, view);
                     api.setFillGradient(variable.value[this.index], getCopy());
                 })
             };
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((fill) => api.setFillGradient(fill, getCopy()));
             };
             this.editor.modifyStopColorOnce([modifyVariable, modifyLocal]);
@@ -319,19 +319,19 @@ export class PaintsPicker extends ColorPickerEditor {
             return copy;
         }
         if (this.paint!.parent?.parent instanceof FillMask) {
-            this.editor.modifyStopColor([(api: Api) => {
+            this.editor.modifyStopColor([(api: Operator) => {
                 api.setFillGradient(this.paint!, getCopy());
             }]);
             return;
         }
 
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             this.m_views.forEach(view => {
                 const variable = this.editor.getBorderVariable(api, this.page, view);
                 api.setFillGradient(variable.value.strokePaints[this.index], getCopy());
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.m_fills.forEach((_fills) => {
                 api.setFillGradient(_fills[this.index], getCopy());
             })
@@ -364,17 +364,17 @@ export class PaintsPicker extends ColorPickerEditor {
             return copy;
         };
         if (this.paint.parent?.parent instanceof FillMask) {
-            this.editor.modifyStopPosition([(api: Api) => {
+            this.editor.modifyStopPosition([(api: Operator) => {
                 api.setFillGradient(this.paint!, getCopy());
             }]);
         } else {
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 this.m_views.forEach(view => {
                     const variable = this.editor.getBorderVariable(api, this.page, view);
                     api.setFillGradient(variable.value.strokePaints[this.index], getCopy());
                 });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 this.m_fills.forEach((_fills) => {
                     api.setFillGradient(_fills[this.index], getCopy());
                 })
@@ -409,7 +409,7 @@ export class PaintsPicker extends ColorPickerEditor {
             return copy;
         }
         if (this.paint.parent?.parent instanceof FillMask) {
-            this.editor.removeGradientStop([(api: Api) => {
+            this.editor.removeGradientStop([(api: Operator) => {
                 api.setFillGradient(this.paint!, getCopy());
             }])
         } else {
@@ -419,13 +419,13 @@ export class PaintsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getBorder().strokePaints);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getBorderVariable(api, this.page, view);
                     api.setFillGradient(variable.value.strokePaints[this.index], getCopy());
                 });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((_fills) => {
                     api.setFillGradient(_fills[this.index], getCopy());
                 })
@@ -464,7 +464,7 @@ export class PaintsPicker extends ColorPickerEditor {
             return copy;
         }
         if (this.paint.parent?.parent instanceof FillMask) {
-            this.editor.removeGradientStop([(api: Api) => {
+            this.editor.removeGradientStop([(api: Operator) => {
                 api.setFillGradient(this.paint!, getCopy());
             }])
         } else {
@@ -474,13 +474,13 @@ export class PaintsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getBorder().strokePaints);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getBorderVariable(api, this.page, view);
                     api.setFillGradient(variable.value.strokePaints[this.index], getCopy());
                 });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((_fills) => {
                     api.setFillGradient(_fills[this.index], getCopy());
                 })

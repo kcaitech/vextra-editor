@@ -21,10 +21,10 @@ import {
     AttrGetter,
     TextShapeView,
     ShapeType,
-    Repo
 } from "@kcdesign/data";
 import { v4 } from "uuid";
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 
 export class TextPicker extends ColorPickerEditor {
     format: AttrGetter | undefined
@@ -65,7 +65,7 @@ export class TextPicker extends ColorPickerEditor {
         }
     }
 
-    private setType(api: Api, textShape: TextShapeView, type: string): void {
+    private setType(api: Operator, textShape: TextShapeView, type: string): void {
         const shape = this.editor.shape4edit(api, textShape);
         const page = this.page.data;
         const fillType = type === FillType.SolidColor ? FillType.SolidColor : FillType.Gradient;
@@ -96,7 +96,7 @@ export class TextPicker extends ColorPickerEditor {
     modifyFillType(type: string): void {
         super.modifyFillType(type);
         this.updateSelection();
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((shape) => {
                 this.setType(api, shape, type);
             })
@@ -110,7 +110,7 @@ export class TextPicker extends ColorPickerEditor {
     setSolidColor(c: RGBACatch): void {
         super.setSolidColor(c);
         this.updateSelection();
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;
@@ -143,7 +143,7 @@ export class TextPicker extends ColorPickerEditor {
     /* 拖拽修改纯色 */
     solidDragging(c: RGBACatch): void {
         super.setSolidColor(c);
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;
@@ -196,7 +196,7 @@ export class TextPicker extends ColorPickerEditor {
             })
             return gradientCopy;
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;
@@ -226,7 +226,7 @@ export class TextPicker extends ColorPickerEditor {
             gradientCopy.stops.splice(stopAt, 1);
             return gradientCopy;
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;
@@ -255,7 +255,7 @@ export class TextPicker extends ColorPickerEditor {
             copy.stops[stopAt].color = new Color(c.A, c.R, c.G, c.B);
             return copy;
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;
@@ -287,7 +287,7 @@ export class TextPicker extends ColorPickerEditor {
             copy.stops[stopAt].color = new Color(c.A, c.R, c.G, c.B);
             return copy;
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;
@@ -323,7 +323,7 @@ export class TextPicker extends ColorPickerEditor {
             copy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
             return copy;
         };
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;
@@ -362,7 +362,7 @@ export class TextPicker extends ColorPickerEditor {
             copy.stops = reversedStops;
             return copy;
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;
@@ -407,7 +407,7 @@ export class TextPicker extends ColorPickerEditor {
             }
             return copy;
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.textShapes.forEach((s) => {
                 const shape = this.editor.shape4edit(api, s);
                 const page = this.page.data;

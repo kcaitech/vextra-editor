@@ -10,13 +10,14 @@
 
 import {
     Fill, FillMask, FillType, Gradient, PaintFilter, PatternTransform, Stop,
-    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, Repo, StyleMangerMember
+    Color, BasicArray, ArtboardView, FillModifier, ShapeView, SymbolRefView, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 export type FillCatch = {
     fill: Fill;
 }
@@ -115,7 +116,7 @@ export class FillsContextMgr extends StyleCtx {
         if (mask) {
             const color = new Color(0.2, 0, 0, 0);
             const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
-            const caller = (api: Api) => {
+            const caller = (api: Operator) => {
                 api.addFillAt(mask.fills, fill, mask.fills.length);
             }
             missions.push(caller);
@@ -141,10 +142,10 @@ export class FillsContextMgr extends StyleCtx {
             }
         }
 
-        const modifyLocalFills = (api: Api) => {
+        const modifyLocalFills = (api: Operator) => {
             actions.forEach(action => api.addFillAt(action.fills, action.fill, action.fills.length));
         };
-        const modifySymbolRefFills = (api: Api) => {
+        const modifySymbolRefFills = (api: Operator) => {
             for (const action of viewActions) {
                 const variable = this.editor.getFillsVariable(api, this.page, action.view);
                 api.addFillAt(variable.value, this.editor.importFill(action.fill), variable.value.length);
@@ -172,14 +173,14 @@ export class FillsContextMgr extends StyleCtx {
             const editor = this.editor;
             const master = this.flat[0].getFills().map(i => editor.importFill(i));
 
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 if (!containers.length) return;
                 for (const fillContainer of containers) {
                     api.deleteFills(fillContainer, 0, fillContainer.length);
                     api.addFills(fillContainer, master.map(i => editor.importFill(i)));
                 }
             };
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 if (!views.length) return;
                 for (const view of views) {
                     const fills = editor.getFillsVariable(api, this.page, view).value;
@@ -196,7 +197,7 @@ export class FillsContextMgr extends StyleCtx {
     remove(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
-            this.editor.removeFill([(api: Api) => {
+            this.editor.removeFill([(api: Operator) => {
                 if (mask.fills.length === 1) return;
                 api.deleteFillAt(mask.fills, this.getIndexByFill(fill));
             }]);
@@ -209,10 +210,10 @@ export class FillsContextMgr extends StyleCtx {
                     views.push(view);
                 } else actions.push({ fills: view.getFills(), index });
             }
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 actions.forEach(action => api.deleteFillAt(action.fills, action.index));
             }
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.deleteFillAt(variable.value, index);
@@ -226,7 +227,7 @@ export class FillsContextMgr extends StyleCtx {
     /* 隐藏或显示一条填充 */
     modifyVisible(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsEnabled([(api: Api) => {
+            this.editor.setFillsEnabled([(api: Operator) => {
                 api.setFillEnable(fill, !fill.isEnabled);
             }]);
         } else {
@@ -241,10 +242,10 @@ export class FillsContextMgr extends StyleCtx {
                     fills.push(view.getFills()[index]);
                 }
             }
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 for (const fill of fills) api.setFillEnable(fill, enable);
             }
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.setFillEnable(variable.value[index], enable);
@@ -283,7 +284,7 @@ export class FillsContextMgr extends StyleCtx {
     /* 修改一条纯色填充的颜色 */
     modifyFillColor(color: Color, fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.editor.setFillsColor([(api: Api) => {
+            this.editor.setFillsColor([(api: Operator) => {
                 api.setFillColor(fill, color);
             }]);
         } else {
@@ -294,10 +295,10 @@ export class FillsContextMgr extends StyleCtx {
                 if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
                 else fillsPacks.push({ fill: view.getFills()[index], color });
             }
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 for (const pack of fillsPacks) api.setFillColor(pack.fill, pack.color);
             }
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 if (!views.length) return;
                 for (const view of views) {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
@@ -312,7 +313,7 @@ export class FillsContextMgr extends StyleCtx {
     /* 修改渐变色的透明度 */
     modifyGradientOpacity(fill: Fill, opacity: number) {
         if (fill.parent?.parent instanceof FillMask) {
-            const mission = (api: Api) => {
+            const mission = (api: Operator) => {
                 const gradient = fill.gradient!;
                 api.setGradientOpacity(gradient, opacity);
             }
@@ -325,13 +326,13 @@ export class FillsContextMgr extends StyleCtx {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[index]);
             }
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 for (const fill of fills) {
                     const gradient = fill.gradient!;
                     api.setGradientOpacity(gradient, opacity);
                 }
             }
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     const fill = variable.value[index];

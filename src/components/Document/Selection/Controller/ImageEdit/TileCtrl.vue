@@ -14,14 +14,14 @@ import { onMounted, onUnmounted, ref } from "vue";
 import {
     FillsAsyncApi,
     ColVector3D,
-    ShapeView, Fill, SymbolRefView, Repo,
+    ShapeView, Fill, SymbolRefView,
     Transform
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { DragKit } from "@/components/common/draggable";
 import { CursorType } from "@/utils/cursor";
-
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 
 interface Props {
     context: Context;
@@ -87,13 +87,13 @@ const dragKit = new DragKit({
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills()[locate.index]);
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             for (const view of views) {
                 const variable = editor!.getFillsVariable(api, page, view);
                 api.setFillImageScale(variable.value[locate.index], scale);
             }
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             for (const fill of fills) api.setFillImageScale(fill, scale);
         }
         editor!.modifyTileScale2([modifyVariable, modifyLocal]);

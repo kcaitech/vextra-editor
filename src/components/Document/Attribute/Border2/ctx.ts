@@ -22,7 +22,6 @@ import {
     BorderMaskType,
     BorderModifier,
     SideType,
-    Repo,
     SymbolRefView,
     Border,
     MarkerType,
@@ -34,7 +33,8 @@ import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/compo
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import { FillCatch, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 
 function stringifyFills(sye: { shape: ShapeView, fills: Fill[] }) {
     if (sye.shape.borderFillsMask) return sye.shape.borderFillsMask;
@@ -302,7 +302,7 @@ export class StrokeFillContextMgr extends StyleCtx {
         if (mask) {
             const color = new Color(1, 0, 0, 0);
             const fill = new Fill(new BasicArray(0), v4(), true, FillType.SolidColor, color);
-            const caller = (api: Api) => {
+            const caller = (api: Operator) => {
                 api.addFillAt(mask.fills, fill, mask.fills.length);
             }
             missions.push(caller);
@@ -320,10 +320,10 @@ export class StrokeFillContextMgr extends StyleCtx {
                 actions.push({ fills: view.style.borders.strokePaints, fill: fill });
             }
         }
-        const modifyLocalFills = (api: Api) => {
+        const modifyLocalFills = (api: Operator) => {
             actions.forEach(action => api.addFillAt(action.fills, action.fill, action.fills.length));
         };
-        const modifySymbolRefFills = (api: Api) => {
+        const modifySymbolRefFills = (api: Operator) => {
             for (const action of viewActions) {
                 const variable = this.borderEditor.getBorderVariable(api, this.page, action.view).value as Border;
                 api.addFillAt(variable.strokePaints, this.borderEditor.importFill(action.fill), variable.strokePaints.length);
@@ -350,14 +350,14 @@ export class StrokeFillContextMgr extends StyleCtx {
             const borderEditor = this.borderEditor;
             const master = this.flat[0].getBorder().strokePaints.map(i => borderEditor.importFill(i));
 
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 if (!containers.length) return;
                 for (const fillContainer of containers) {
                     api.deleteFills(fillContainer, 0, fillContainer.length);
                     api.addFills(fillContainer, master.map(i => borderEditor.importFill(i)));
                 }
             };
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 if (!views.length) return;
                 for (const view of views) {
                     const border = borderEditor.getBorderVariable(api, this.page, view).value as Border;
@@ -373,7 +373,7 @@ export class StrokeFillContextMgr extends StyleCtx {
     remove(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
             const mask = fill.parent.parent as FillMask;
-            this.borderEditor.removeFill([(api: Api) => {
+            this.borderEditor.removeFill([(api: Operator) => {
                 api.deleteFillAt(mask.fills, this.getIndexByFill(fill));
             }]);
         } else {
@@ -388,10 +388,10 @@ export class StrokeFillContextMgr extends StyleCtx {
                     views.push(view);
                 } else actions.push({ fills: view.getBorder().strokePaints, index });
             }
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 actions.forEach(action => api.deleteFillAt(action.fills, action.index));
             }
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.borderEditor.getBorderVariable(api, this.page, view).value as Border;
                     api.deleteFillAt(variable.strokePaints, index);
@@ -408,7 +408,7 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     modifyVisible(fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.borderEditor.setFillsEnabled([(api: Api) => {
+            this.borderEditor.setFillsEnabled([(api: Operator) => {
                 api.setFillEnable(fill, !fill.isEnabled);
             }]);
         } else {
@@ -421,10 +421,10 @@ export class StrokeFillContextMgr extends StyleCtx {
                     views.push(view);
                 } else fills.push(view.getBorder().strokePaints[index]);
             }
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 for (const fill of fills) api.setFillEnable(fill, enable);
             }
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.borderEditor.getBorderVariable(api, this.page, view).value as Border;
                     api.setFillEnable(variable.strokePaints[index], enable);
@@ -461,7 +461,7 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     modifyFillColor(color: Color, fill: Fill) {
         if (fill.parent?.parent instanceof FillMask) {
-            this.borderEditor.setFillsColor([(api: Api) => {
+            this.borderEditor.setFillsColor([(api: Operator) => {
                 api.setFillColor(fill, color);
             }]);
         } else {
@@ -472,10 +472,10 @@ export class StrokeFillContextMgr extends StyleCtx {
                 if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
                 else fillsPacks.push({ fill: view.getBorder().strokePaints[index], color });
             }
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 for (const pack of fillsPacks) api.setFillColor(pack.fill, pack.color);
             }
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.borderEditor.getBorderVariable(api, this.page, view).value as Border;
                     api.setFillColor(variable.strokePaints[index], color);
@@ -488,7 +488,7 @@ export class StrokeFillContextMgr extends StyleCtx {
 
     modifyGradientOpacity(fill: Fill, opacity: number) {
         if (fill.parent?.parent instanceof FillMask) {
-            const mission = (api: Api) => {
+            const mission = (api: Operator) => {
                 const gradient = fill.gradient!;
                 api.setGradientOpacity(gradient, opacity);
             }
@@ -501,13 +501,13 @@ export class StrokeFillContextMgr extends StyleCtx {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getBorder().strokePaints[index]);
             }
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 for (const fill of fills) {
                     const gradient = fill.gradient!;
                     api.setGradientOpacity(gradient, opacity);
                 }
             }
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.borderEditor.getBorderVariable(api, this.page, view).value as Border;
                     const fill = variable.strokePaints[index];
@@ -559,14 +559,14 @@ export class StrokeFillContextMgr extends StyleCtx {
             else local.push(view);
         }
         const editor = this.borderEditor;
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             local.forEach(view => {
                 const border = view.style.borders;
                 const side = getSideInfo(border, type);
                 api.setBorderSide(view.style.borders, side);
             });
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             refs.forEach(view => {
                 const variable = editor.getBorderVariable(api, this.page, view);
                 const side = getSideInfo(variable.value, type)

@@ -26,7 +26,7 @@ import {
     Stop,
     TextShapeView,
     Transform,
-    Repo, IO, ShapeView, SymbolRefView
+    IO, ShapeView, SymbolRefView
 } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
@@ -35,7 +35,8 @@ import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
 import { computed } from 'vue';
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 const props = defineProps<{
     context: Context;
     matrix: Matrix;
@@ -83,7 +84,7 @@ function modifyApex(position: XY, apex: 'modifyFrom' | 'modifyTo') {
     const page = props.context.selection.selectedPage!;
     if (maskId) {
         const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
-        editor[apex]([(api: Api) => modifyGradientPosition(api, mask.fills[locate.index])]);
+        editor[apex]([(api: Operator) => modifyGradientPosition(api, mask.fills[locate.index])]);
     } else if (locate.type === 'fills') {
         const views: ShapeView[] = [];
         const fills: Fill[] = [];
@@ -92,10 +93,10 @@ function modifyApex(position: XY, apex: 'modifyFrom' | 'modifyTo') {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills()[index]);
         }
-        const modifyVariables = (api: Api) => {
+        const modifyVariables = (api: Operator) => {
             for (const view of views) modifyGradientPosition(api, editor.getFillsVariable(api, page, view).value[index]);
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             for (const fill of fills) modifyGradientPosition(api, fill);
         }
         editor[apex]([modifyVariables, modifyLocal]);
@@ -107,16 +108,16 @@ function modifyApex(position: XY, apex: 'modifyFrom' | 'modifyTo') {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getBorder().strokePaints[index]);
         }
-        const modifyVariables = (api: Api) => {
+        const modifyVariables = (api: Operator) => {
             for (const view of views) modifyGradientPosition(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             for (const fill of fills) modifyGradientPosition(api, fill);
         }
         editor[apex]([modifyVariables, modifyLocal]);
     }
 
-    function modifyGradientPosition(api: Api, fill: Fill) {
+    function modifyGradientPosition(api: Operator, fill: Fill) {
         const key = apex === "modifyFrom" ? "from" : "to";
         const gradient = fill.gradient!;
         const gradientCopy = editor.importGradient(gradient);
@@ -137,7 +138,7 @@ function createFillGradientStop(stop: Stop) {
     if (maskId) {
         const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
         const fill = mask.fills[idx];
-        editor.createStop([(api: Api) => insetStop(api, fill)]);
+        editor.createStop([(api: Operator) => insetStop(api, fill)]);
     } else if (locate.type === 'fills') {
         const views: ShapeView[] = [];
         const fills: Fill[] = [];
@@ -146,10 +147,10 @@ function createFillGradientStop(stop: Stop) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills()[index]);
         }
-        const modifyVariables = (api: Api) => {
+        const modifyVariables = (api: Operator) => {
             for (const view of views) insetStop(api, editor.getFillsVariable(api, page, view).value[index]);
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             for (const fill of fills) insetStop(api, fill);
         }
         editor.createStop([modifyVariables, modifyLocal]);
@@ -161,16 +162,16 @@ function createFillGradientStop(stop: Stop) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getBorder().strokePaints[index]);
         }
-        const modifyVariables = (api: Api) => {
+        const modifyVariables = (api: Operator) => {
             for (const view of views) insetStop(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             for (const fill of fills) insetStop(api, fill);
         }
         editor.createStop([modifyVariables, modifyLocal]);
     }
 
-    function insetStop(api: Api, fill: Fill) {
+    function insetStop(api: Operator, fill: Fill) {
         const gradient = fill.gradient!;
         const gradientCopy = editor.importGradient(gradient);
         gradientCopy.stops.push(stop);
@@ -187,7 +188,7 @@ function modifyStopPosition(position: number, id: string) {
     const page = props.context.selection.selectedPage!;
     if (maskId) {
         const mask = props.context.data.stylesMgr.getSync(maskId) as FillMask;
-        editor.modifyStopPosition([(api: Api) => modifyStopPosition(api, mask.fills[locate.index])]);
+        editor.modifyStopPosition([(api: Operator) => modifyStopPosition(api, mask.fills[locate.index])]);
     } else if (locate.type === 'fills') {
         const views: ShapeView[] = [];
         const fills: Fill[] = [];
@@ -196,10 +197,10 @@ function modifyStopPosition(position: number, id: string) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills()[index]);
         }
-        const modifyVariables = (api: Api) => {
+        const modifyVariables = (api: Operator) => {
             for (const view of views) modifyStopPosition(api, editor.getFillsVariable(api, page, view).value[index]);
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             for (const fill of fills) modifyStopPosition(api, fill);
         }
         editor.modifyStopPosition([modifyVariables, modifyLocal]);
@@ -211,16 +212,16 @@ function modifyStopPosition(position: number, id: string) {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getBorder().strokePaints[index]);
         }
-        const modifyVariables = (api: Api) => {
+        const modifyVariables = (api: Operator) => {
             for (const view of views) modifyStopPosition(api, editor.getBorderVariable(api, page, view).value.strokePaints[index]);
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             for (const fill of fills) modifyStopPosition(api, fill);
         }
         editor.modifyStopPosition([modifyVariables, modifyLocal]);
     }
 
-    function modifyStopPosition(api: Api, fill: Fill) {
+    function modifyStopPosition(api: Operator, fill: Fill) {
         const gradient = fill.gradient!;
         const gradientCopy = editor.importGradient(gradient);
         const stop = gradientCopy.stops.find(i => i.id === id);

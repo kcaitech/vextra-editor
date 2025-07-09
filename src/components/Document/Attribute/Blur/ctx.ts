@@ -10,7 +10,6 @@
 
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import {
-    Repo,
     BasicArray,
     Blur,
     BlurMask,
@@ -22,7 +21,8 @@ import {
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
 import { v4 } from "uuid";
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 
 export type BlurCatch = {
     enable: boolean;
@@ -118,10 +118,10 @@ export class BlurContextMgr extends StyleCtx {
                 views.push(view);
             }
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             views.forEach(view => api.addBlur(view.style, this.editor.importBlur(blur)));
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             needOverride.forEach(view => {
                 const variable = this.editor.getBlurVariable(api, this.page, view);
                 api.shapeModifyVariable(this.page.data, variable, this.editor.importBlur(blur));
@@ -149,12 +149,12 @@ export class BlurContextMgr extends StyleCtx {
                 }
             }
 
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 locals.forEach((view: ShapeView) => {
                     api.addBlur(view.style, editor.importBlur(blur));
                 });
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 links.forEach(view => {
                     const variable = editor.getBlurVariable(api, this.page, view);
                     api.shapeModifyVariable(this.page.data, variable, editor.importBlur(blur));
@@ -167,7 +167,7 @@ export class BlurContextMgr extends StyleCtx {
 
     modifyBlurType(blur: Blur, type: BlurType) {
         if (blur.parent instanceof BlurMask) {
-            this.editor.modifyBlurType([(api: Api) => {
+            this.editor.modifyBlurType([(api: Operator) => {
                 api.shapeModifyBlurType(blur, type);
             }]);
         } else {
@@ -180,12 +180,12 @@ export class BlurContextMgr extends StyleCtx {
                     locals.push(view);
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 locals.forEach((view: ShapeView) => {
                     api.shapeModifyBlurType(view.blur!, type);
                 });
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 links.forEach(view => {
                     const variable = this.editor.getBlurVariable(api, this.page, view);
                     api.shapeModifyBlurType(variable.value, type);
@@ -199,7 +199,7 @@ export class BlurContextMgr extends StyleCtx {
     modifyEnable(blur: Blur) {
         const enabled = !blur.isEnabled;
         if (blur.parent instanceof BlurMask) {
-            this.editor.modifyBlurEnabled([(api: Api) => {
+            this.editor.modifyBlurEnabled([(api: Operator) => {
                 api.shapeModifyBlurEnabled(blur, !blur.isEnabled);
             }]);
         } else {
@@ -213,12 +213,12 @@ export class BlurContextMgr extends StyleCtx {
                 }
             }
             
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 locals.forEach((view: ShapeView) => {
                     api.shapeModifyBlurEnabled(view.blur!, enabled);
                 });
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 links.forEach(view => {
                     const variable = this.editor.getBlurVariable(api, this.page, view);
                     api.shapeModifyBlurEnabled(variable.value, enabled);
@@ -231,7 +231,7 @@ export class BlurContextMgr extends StyleCtx {
 
     modifyBlurSaturation(blur: Blur, value: number) {
         if (blur.parent instanceof BlurMask) {
-            this.editor.modifyBlurSaturation([(api: Api) => {
+            this.editor.modifyBlurSaturation([(api: Operator) => {
                 api.shapeModifyBlurSaturation(blur, value);
             }]);
         } else {
@@ -244,12 +244,12 @@ export class BlurContextMgr extends StyleCtx {
                     locals.push(view);
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 locals.forEach((view: ShapeView) => {
                     api.shapeModifyBlurSaturation(view.blur!, value);
                 });
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 links.forEach(view => {
                     const variable = this.editor.getBlurVariable(api, this.page, view);
                     api.shapeModifyBlurSaturation(variable.value, value);
@@ -272,12 +272,12 @@ export class BlurContextMgr extends StyleCtx {
             }
         }
 
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             locals.forEach((view: ShapeView) => {
                 api.deleteBlur(view.style);
             });
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             links.forEach(view => {
                 const variable = this.editor.getBlurVariable(api, this.page, view);
                 api.shapeModifyVariable(this.page.data, variable, undefined);

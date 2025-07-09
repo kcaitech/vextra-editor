@@ -28,8 +28,8 @@ import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
 import { modify_imgs } from "@/utils/content";
-import { Repo } from "@kcdesign/data";
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 
 
 export class FillsPicker extends ColorPickerEditor {
@@ -59,7 +59,7 @@ export class FillsPicker extends ColorPickerEditor {
         this.m_index = undefined;
     }
 
-    private setType(api: Api, fill: Fill, type: string): void {
+    private setType(api: Operator, fill: Fill, type: string): void {
         if (type === FillType.SolidColor) {
             api.setFillType(fill, FillType.SolidColor);
             if (fill.gradient) {
@@ -82,7 +82,7 @@ export class FillsPicker extends ColorPickerEditor {
         super.modifyFillType(type);
         this.updateSelection();
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.modifyFillType([(api: Api) => {
+            this.editor.modifyFillType([(api: Operator) => {
                 this.setType(api, this.fill!, type);
             }]);
             this.commit();
@@ -94,13 +94,13 @@ export class FillsPicker extends ColorPickerEditor {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             views.forEach(view => {
                 const variable = this.editor.getFillsVariable(api, this.page, view);
                 this.setType(api, variable.value[this.index], type);
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             fills.forEach((_fills) => {
                 this.setType(api, _fills[this.index], type);
             })
@@ -116,7 +116,7 @@ export class FillsPicker extends ColorPickerEditor {
         if (!this.fill) return;
         this.updateSelection();
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.modifySolidColor([(api: Api) => {
+            this.editor.modifySolidColor([(api: Operator) => {
                 api.setFillColor(this.fill!, new Color(c.A, c.R, c.G, c.B));
             }]);
             this.commit();
@@ -129,13 +129,13 @@ export class FillsPicker extends ColorPickerEditor {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             views.forEach(view => {
                 const variable = this.editor.getFillsVariable(api, this.page, view);
                 api.setFillColor(variable.value[this.index], new Color(c.A, c.R, c.G, c.B));
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             fills.forEach((_fills) => {
                 api.setFillColor(_fills[this.index], new Color(c.A, c.R, c.G, c.B));
             })
@@ -160,19 +160,19 @@ export class FillsPicker extends ColorPickerEditor {
     solidDragging(c: RGBACatch): void {
         super.setSolidColor(c);
         if (this.fill!.parent?.parent instanceof FillMask) {
-            this.editor.modifySolidColor([(api: Api) => {
+            this.editor.modifySolidColor([(api: Operator) => {
                 api.setFillColor(this.fill!, new Color(c.A, c.R, c.G, c.B));
             }]);
             return;
         }
 
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             this.m_views.forEach(view => {
                 const variable = this.editor.getFillsVariable(api, this.page, view);
                 api.setFillColor(variable.value[this.index], new Color(c.A, c.R, c.G, c.B));
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.m_fills.forEach((_fills) => {
                 api.setFillColor(_fills[this.index], new Color(c.A, c.R, c.G, c.B));
             })
@@ -213,7 +213,7 @@ export class FillsPicker extends ColorPickerEditor {
             return gradientCopy;
         }
         if (this.fill?.parent?.parent instanceof FillMask) {
-            this.editor.createGradientStop([(api: Api) => {
+            this.editor.createGradientStop([(api: Operator) => {
                 api.setFillGradient(this.fill!, getCopy());
             }]);
         } else {
@@ -223,13 +223,13 @@ export class FillsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.setFillGradient(variable.value[this.index], getCopy());
                 })
             };
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((fill) => api.setFillGradient(fill, getCopy()));
             };
             this.editor.createGradientStop([modifyVariable, modifyLocal]);
@@ -248,7 +248,7 @@ export class FillsPicker extends ColorPickerEditor {
             return gradientCopy;
         }
         if (this.fill?.parent?.parent instanceof FillMask) {
-            this.editor.removeGradientStop([(api: Api) => {
+            this.editor.removeGradientStop([(api: Operator) => {
                 api.setFillGradient(this.fill!, getCopy());
             }])
         } else {
@@ -258,13 +258,13 @@ export class FillsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.setFillGradient(variable.value[this.index], getCopy());
                 })
             };
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((fill) => api.setFillGradient(fill, getCopy()));
             };
             this.editor.removeGradientStop([modifyVariable, modifyLocal]);
@@ -284,7 +284,7 @@ export class FillsPicker extends ColorPickerEditor {
             return copy;
         }
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.modifyStopColorOnce([(api: Api) => {
+            this.editor.modifyStopColorOnce([(api: Operator) => {
                 api.setFillGradient(this.fill!, getCopy());
             }]);
         } else {
@@ -294,13 +294,13 @@ export class FillsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills()[this.index]);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.setFillGradient(variable.value[this.index], getCopy());
                 })
             };
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((fill) => api.setFillGradient(fill, getCopy()));
             };
             this.editor.modifyStopColorOnce([modifyVariable, modifyLocal]);
@@ -325,19 +325,19 @@ export class FillsPicker extends ColorPickerEditor {
             return copy;
         }
         if (this.fill!.parent?.parent instanceof FillMask) {
-            this.editor.modifyStopColor([(api: Api) => {
+            this.editor.modifyStopColor([(api: Operator) => {
                 api.setFillGradient(this.fill!, getCopy());
             }]);
             return;
         }
 
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             this.m_views.forEach(view => {
                 const variable = this.editor.getFillsVariable(api, this.page, view);
                 api.setFillGradient(variable.value[this.index], getCopy());
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             this.m_fills.forEach((_fills) => {
                 api.setFillGradient(_fills[this.index], getCopy());
             })
@@ -370,17 +370,17 @@ export class FillsPicker extends ColorPickerEditor {
             return copy;
         };
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.modifyStopPosition([(api: Api) => {
+            this.editor.modifyStopPosition([(api: Operator) => {
                 api.setFillGradient(this.fill!, getCopy());
             }]);
         } else {
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 this.m_views.forEach(view => {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.setFillGradient(variable.value[this.index], getCopy());
                 });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 this.m_fills.forEach((_fills) => {
                     api.setFillGradient(_fills[this.index], getCopy());
                 })
@@ -415,7 +415,7 @@ export class FillsPicker extends ColorPickerEditor {
             return copy;
         }
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.removeGradientStop([(api: Api) => {
+            this.editor.removeGradientStop([(api: Operator) => {
                 api.setFillGradient(this.fill!, getCopy());
             }])
         } else {
@@ -425,13 +425,13 @@ export class FillsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.setFillGradient(variable.value[this.index], getCopy());
                 });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((_fills) => {
                     api.setFillGradient(_fills[this.index], getCopy());
                 })
@@ -470,7 +470,7 @@ export class FillsPicker extends ColorPickerEditor {
             return copy;
         }
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.removeGradientStop([(api: Api) => {
+            this.editor.removeGradientStop([(api: Operator) => {
                 api.setFillGradient(this.fill!, getCopy());
             }])
         } else {
@@ -480,13 +480,13 @@ export class FillsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.setFillGradient(variable.value[this.index], getCopy());
                 });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((_fills) => {
                     api.setFillGradient(_fills[this.index], getCopy());
                 })
@@ -501,7 +501,7 @@ export class FillsPicker extends ColorPickerEditor {
         if (!this.fill) return;
         this.updateSelection();
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.modifyObjectFit([(api: Api) => {
+            this.editor.modifyObjectFit([(api: Operator) => {
                 api.setFillScaleMode(this.fill!, type);
                 if (type === ImageScaleMode.Tile) {
                     if (!this.fill!.scale) api.setFillImageScale(this.fill!, 0.5);
@@ -516,7 +516,7 @@ export class FillsPicker extends ColorPickerEditor {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             views.forEach(view => {
                 const variable = this.editor.getFillsVariable(api, this.page, view);
                 api.setFillScaleMode(variable.value[this.index], type);
@@ -525,7 +525,7 @@ export class FillsPicker extends ColorPickerEditor {
                 }
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             fills.forEach((_fills) => {
                 api.setFillScaleMode(_fills[this.index], type);
                 if (type === ImageScaleMode.Tile) {
@@ -544,7 +544,7 @@ export class FillsPicker extends ColorPickerEditor {
         const val = Math.max(2, getNumberFromInputEvent(event)) / 100;
         if (isNaN(val)) return;
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.modifyTileScale([(api: Api) => {
+            this.editor.modifyTileScale([(api: Operator) => {
                 api.setFillImageScale(this.fill!, val);
             }]);
             this.commit();
@@ -556,13 +556,13 @@ export class FillsPicker extends ColorPickerEditor {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             views.forEach(view => {
                 const variable = this.editor.getFillsVariable(api, this.page, view);
                 api.setFillImageScale(variable.value[this.index], val);
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             fills.forEach((_fills) => {
                 api.setFillImageScale(_fills[this.index], val);
             })
@@ -578,7 +578,7 @@ export class FillsPicker extends ColorPickerEditor {
         this.updateSelection();
         const rotate = ((this.fill?.rotation ?? 0) + 90) % 360;
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.rotateImg([(api: Api) => api.setFillImageRotate(this.fill!, rotate)]);
+            this.editor.rotateImg([(api: Operator) => api.setFillImageRotate(this.fill!, rotate)]);
             this.commit();
             return;
         }
@@ -588,13 +588,13 @@ export class FillsPicker extends ColorPickerEditor {
             if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
             else fills.push(view.getFills());
         }
-        const modifyVariable = (api: Api) => {
+        const modifyVariable = (api: Operator) => {
             views.forEach(view => {
                 const variable = this.editor.getFillsVariable(api, this.page, view);
                 api.setFillImageRotate(variable.value[this.index], rotate);
             });
         }
-        const modifyLocal = (api: Api) => {
+        const modifyLocal = (api: Operator) => {
             fills.forEach((_fills) => api.setFillImageRotate(_fills[this.index], rotate));
         }
         this.editor.rotateImg([modifyVariable, modifyLocal]);
@@ -609,7 +609,7 @@ export class FillsPicker extends ColorPickerEditor {
         this.updateSelection();
         if (!this.fill) return [];
         if (this.fill.parent?.parent instanceof FillMask) {
-            const mission = (api: Api) => {
+            const mission = (api: Operator) => {
                 api.setFillImageRef(this.context.data, this.fill!, ref, media);
                 api.setFillImageOriginWidth(this.fill!, width);
                 api.setFillImageOriginHeight(this.fill!, height);
@@ -622,7 +622,7 @@ export class FillsPicker extends ColorPickerEditor {
                 if (view instanceof SymbolRefView || view.isVirtualShape) views.push(view);
                 else fills.push(view.getFills());
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 views.forEach(view => {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     const fill = variable.value[this.index];
@@ -631,7 +631,7 @@ export class FillsPicker extends ColorPickerEditor {
                     api.setFillImageOriginHeight(fill, height);
                 });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 fills.forEach((_fills) => {
                     const fill = _fills[this.index];
                     api.setFillImageRef(this.context.data, fill, ref, media);
@@ -682,17 +682,17 @@ export class FillsPicker extends ColorPickerEditor {
         if (!this.fill) return;
         const key = type as PaintFilterType;
         if (this.fill.parent?.parent instanceof FillMask) {
-            this.editor.modifyFillImageFilter([(api: Api) => {
+            this.editor.modifyFillImageFilter([(api: Operator) => {
                 api.setFillImageFilter(this.fill!, key, val);
             }]);
         } else {
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 this.m_views.forEach(view => {
                     const variable = this.editor.getFillsVariable(api, this.page, view);
                     api.setFillImageFilter(variable.value[this.index], key, val);
                 });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 this.m_fills.forEach((_fills) => {
                     api.setFillImageFilter(_fills[this.index], key, val);
                 })

@@ -15,11 +15,11 @@ import {
     ShadowMask,
     ShadowPosition,
     ShadowsModifier,
-    Repo,
     ShapeView, SymbolRefView, StyleMangerMember
 } from "@kcdesign/data";
 import { Context } from "@/context";
-type Api = Repo.Api;
+import { Opt } from "@kcdesign/data";
+type Operator = Opt.Operator;
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
@@ -123,7 +123,7 @@ export class ShadowsContextMgr extends StyleCtx {
         if (mask) {
             const color = new Color(0.3, 0, 0, 0);
             const shadow = new Shadow(new BasicArray(), v4(), true, 10, color, 0, 4, 0, ShadowPosition.Outer);
-            this.editor.createShadow([(api: Api) => {
+            this.editor.createShadow([(api: Operator) => {
                 api.addShadow(mask.shadows, shadow, mask.shadows.length);
             }]);
         } else {
@@ -138,10 +138,10 @@ export class ShadowsContextMgr extends StyleCtx {
                     actions.push({ shadows: view.getShadows(), shadow });
                 }
             }
-            const modifyLocalShadows = (api: Api) => {
+            const modifyLocalShadows = (api: Operator) => {
                 actions.forEach(action => api.addShadow(action.shadows, action.shadow, action.shadows.length));
             };
-            const modifySymbolRefShadows = (api: Api) => {
+            const modifySymbolRefShadows = (api: Operator) => {
                 for (const action of viewActions) {
                     const variable = this.editor.getShadowsVariable(api, this.page, action.view);
                     api.addShadow(variable.value, action.shadow, variable.value.length);
@@ -166,14 +166,14 @@ export class ShadowsContextMgr extends StyleCtx {
             }
             const editor = this.editor;
             const master = this.flat[0].getShadows().map(i => editor.importShadow(i));
-            const modifyLocalFills = (api: Api) => {
+            const modifyLocalFills = (api: Operator) => {
                 if (!containers.length) return;
                 for (const container of containers) {
                     api.deleteShadows(container, 0, container.length);
                     api.addShadows(container, master.map(i => editor.importShadow(i)));
                 }
             };
-            const modifyVariableFills = (api: Api) => {
+            const modifyVariableFills = (api: Operator) => {
                 if (!views.length) return;
                 for (const view of views) {
                     const fills = editor.getShadowsVariable(api, this.page, view).value;
@@ -191,7 +191,7 @@ export class ShadowsContextMgr extends StyleCtx {
         const index = this.getIndexByShadow(shadow);
         if (shadow.parent?.parent instanceof ShadowMask) {
             const mask = shadow.parent.parent as ShadowMask;
-            this.editor.removeShadows([(api: Api) => {
+            this.editor.removeShadows([(api: Operator) => {
                 if (mask.shadows.length === 1) return;
                 api.deleteShadowAt(mask.shadows, index);
             }]);
@@ -205,10 +205,10 @@ export class ShadowsContextMgr extends StyleCtx {
                     shadowsContainer.push(view.getShadows());
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 shadowsContainer.forEach(container => api.deleteShadowAt(container, index));
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getShadowsVariable(api, this.page, view);
                     api.deleteShadowAt(variable.value, index);
@@ -223,7 +223,7 @@ export class ShadowsContextMgr extends StyleCtx {
         const enable = !shadow.isEnabled;
 
         if (shadow.parent?.parent instanceof ShadowMask) {
-            this.editor.setShadowEnabled([(api: Api) => {
+            this.editor.setShadowEnabled([(api: Operator) => {
                 api.setShadowEnable(shadow, enable);
             }]);
         } else {
@@ -236,10 +236,10 @@ export class ShadowsContextMgr extends StyleCtx {
                     shadows.push(view.getShadows()[index]);
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 for (const shadow of shadows) api.setShadowEnable(shadow, enable);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getShadowsVariable(api, this.page, view);
                     api.setShadowEnable(variable.value[index], enable);
@@ -252,7 +252,7 @@ export class ShadowsContextMgr extends StyleCtx {
 
     private modifyRGBA(event: Event, shadow: Shadow, color: Color) {
         if (shadow.parent?.parent instanceof ShadowMask) {
-            this.editor.setShadowsColor([(api: Api) => {
+            this.editor.setShadowsColor([(api: Operator) => {
                 api.setShadowColor(shadow, color);
             }]);
         } else {
@@ -263,10 +263,10 @@ export class ShadowsContextMgr extends StyleCtx {
                 if (view.isVirtualShape || view instanceof SymbolRefView) views.push(view);
                 else shadowsPacks.push({ shadow: view.getShadows()[index], color });
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 for (const pack of shadowsPacks) api.setShadowColor(pack.shadow, pack.color);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 if (!views.length) return;
                 for (const view of views) {
                     const variable = this.editor.getShadowsVariable(api, this.page, view);
@@ -300,7 +300,7 @@ export class ShadowsContextMgr extends StyleCtx {
     modifyShadowPosition(shadow: Shadow, position: ShadowPosition) {
         const index = this.getIndexByShadow(shadow);
         if (shadow.parent?.parent instanceof ShadowMask) {
-            this.editor.setShadowsPosition([(api: Api) => {
+            this.editor.setShadowsPosition([(api: Operator) => {
                 api.setShadowPosition(shadow, position);
             }]);
         } else {
@@ -313,10 +313,10 @@ export class ShadowsContextMgr extends StyleCtx {
                     shadows.push(view.getShadows()[index]);
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 for (const shadow of shadows) api.setShadowPosition(shadow, position);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getShadowsVariable(api, this.page, view);
                     api.setShadowPosition(variable.value[index], position);
@@ -331,7 +331,7 @@ export class ShadowsContextMgr extends StyleCtx {
         if (isNaN(offsetX)) return;
         const index = this.getIndexByShadow(shadow);
         if (shadow.parent?.parent instanceof ShadowMask) {
-            this.editor.setShadowOffsetX([(api: Api) => {
+            this.editor.setShadowOffsetX([(api: Operator) => {
                 api.setShadowOffsetX(shadow, offsetX);
             }]);
         } else {
@@ -344,10 +344,10 @@ export class ShadowsContextMgr extends StyleCtx {
                     shadows.push(view.getShadows()[index]);
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 for (const shadow of shadows) api.setShadowOffsetX(shadow, offsetX);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getShadowsVariable(api, this.page, view);
                     api.setShadowOffsetX(variable.value[index], offsetX);
@@ -362,7 +362,7 @@ export class ShadowsContextMgr extends StyleCtx {
         if (isNaN(offsetY)) return;
         const index = this.getIndexByShadow(shadow);
         if (shadow.parent?.parent instanceof ShadowMask) {
-            this.editor.setShadowOffsetY([(api: Api) => {
+            this.editor.setShadowOffsetY([(api: Operator) => {
                 api.setShadowOffsetY(shadow, offsetY);
             }]);
         } else {
@@ -375,10 +375,10 @@ export class ShadowsContextMgr extends StyleCtx {
                     shadows.push(view.getShadows()[index]);
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 for (const shadow of shadows) api.setShadowOffsetY(shadow, offsetY);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getShadowsVariable(api, this.page, view);
                     api.setShadowOffsetY(variable.value[index], offsetY);
@@ -393,7 +393,7 @@ export class ShadowsContextMgr extends StyleCtx {
         if (isNaN(blur)) return;
         const index = this.getIndexByShadow(shadow);
         if (shadow.parent?.parent instanceof ShadowMask) {
-            this.editor.setShadowsBlur([(api: Api) => {
+            this.editor.setShadowsBlur([(api: Operator) => {
                 api.setShadowBlur(shadow, blur);
             }]);
         } else {
@@ -406,10 +406,10 @@ export class ShadowsContextMgr extends StyleCtx {
                     shadows.push(view.getShadows()[index]);
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 for (const shadow of shadows) api.setShadowBlur(shadow, blur);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getShadowsVariable(api, this.page, view);
                     api.setShadowBlur(variable.value[index], blur);
@@ -424,7 +424,7 @@ export class ShadowsContextMgr extends StyleCtx {
         if (isNaN(spread)) return;
         const index = this.getIndexByShadow(shadow);
         if (shadow.parent?.parent instanceof ShadowMask) {
-            this.editor.setShadowSpread([(api: Api) => {
+            this.editor.setShadowSpread([(api: Operator) => {
                 api.setShadowSpread(shadow, spread);
             }]);
         } else {
@@ -437,10 +437,10 @@ export class ShadowsContextMgr extends StyleCtx {
                     shadows.push(view.getShadows()[index]);
                 }
             }
-            const modifyLocal = (api: Api) => {
+            const modifyLocal = (api: Operator) => {
                 for (const shadow of shadows) api.setShadowSpread(shadow, spread);
             }
-            const modifyVariable = (api: Api) => {
+            const modifyVariable = (api: Operator) => {
                 for (const view of views) {
                     const variable = this.editor.getShadowsVariable(api, this.page, view);
                     api.setShadowSpread(variable.value[index], spread);
