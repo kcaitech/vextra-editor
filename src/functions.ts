@@ -18,7 +18,7 @@ import { IContext } from "./openapi";
 
 const t = (i18n as any).global.t;
 
-export const supportedFormats = ['vext', 'sketch', 'fig', 'svg'];
+export { supportedFormats } from "./basic/consts";
 
 async function _openFile(props: DocumentProps, transact: TransactDataGuard, repoCreator: (data: Document, guard: TransactDataGuard) => Repo.IRepository) {
     if (props.source !== 'file') throw new Error('Invalid source');

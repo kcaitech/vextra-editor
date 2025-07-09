@@ -9,12 +9,13 @@
  */
 
 <template>
-  <input ref="input" @change="onFilePicked" type="file" accept=".sketch,.fig" style="display: none" />
+  <input ref="input" @change="onFilePicked" type="file" :accept="supportedFormats.map(ext => `.${ext}`).join(',')" style="display: none" />
   <button @click="onClick">Open File</button>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { supportedFormats } from '@/basic/consts';
 
 const emit = defineEmits<{
   (e: 'pick', value: File): void;

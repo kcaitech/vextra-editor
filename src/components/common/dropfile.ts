@@ -8,6 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+import { supportedFormats } from '@/basic/consts';
 import { ref, onMounted, onUnmounted } from 'vue';
 
 const fileRef = ref<File>();
@@ -35,7 +36,7 @@ function onDragEnter(event: DragEvent) {
   event.preventDefault();
 }
 
-const fileTypes = ['.sketch', '.fig', '.vext', '.svg'];
+const fileTypes = supportedFormats.map(ext => `.${ext}`);
 function onDrop(event: DragEvent) {
   event.preventDefault();
   const file = Array.from(event.dataTransfer?.files || []).find((file) => {

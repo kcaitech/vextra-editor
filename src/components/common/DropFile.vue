@@ -26,13 +26,14 @@ import { ref, onUnmounted } from 'vue';
 import { FilePicker } from './filepicker';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import drop_here_icon from '@/assets/icons/svg/drop-here.svg';
+import { supportedFormats } from '@/basic/consts';
 const active = ref(false);
 
 const emit = defineEmits<{
     (e: 'pick', value: File): void;
 }>();
 
-const picker = new FilePicker('.sketch,.fig,.vext,.svg', (file) => {
+const picker = new FilePicker(supportedFormats.map(ext => `.${ext}`).join(','), (file) => {
     emit('pick', file)
 });
 

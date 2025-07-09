@@ -1,0 +1,1 @@
+export const supportedFormats = ['vext', 'sketch', 'fig', 'svg'];

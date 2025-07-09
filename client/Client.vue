@@ -10,15 +10,14 @@
 
 <script setup lang="ts">
 import { ref, shallowRef } from 'vue';
-import DropFile from '@/components/common/DropFile.vue';
-
 import { IContext, DocumentProps, openDocument, DocumentVue } from '@/index';
+import { supportedFormats } from '@/basic/consts';
 
 const state = ref<"home"|"editor">("home")
 const context = shallowRef<IContext | undefined>(undefined);
 
 async function onPickFile(file: File) {
-    const fmt =  ['vext', 'sketch', 'fig', 'svg'].filter(ext => file.name.endsWith(ext))[0]
+    const fmt =  supportedFormats.map(ext => `.${ext}`).filter(ext => file.name.endsWith(ext))[0]
     if (!fmt) return;
     const result = await openDocument({
         source: "file",
