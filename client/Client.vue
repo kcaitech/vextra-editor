@@ -12,19 +12,27 @@
 import { ref, shallowRef } from 'vue';
 import { IContext, DocumentProps, openDocument, DocumentVue } from '@/index';
 import { supportedFormats } from '@/basic/consts';
+import DropFile from '@/components/common/DropFile.vue';
 
 const state = ref<"home"|"editor">("home")
 const context = shallowRef<IContext | undefined>(undefined);
 
 async function onPickFile(file: File) {
-    const fmt =  supportedFormats.map(ext => `.${ext}`).filter(ext => file.name.endsWith(ext))[0]
-    if (!fmt) return;
+    const fmt = supportedFormats.find(f => file.name.endsWith(`.${f}`))
+    if (!fmt) {
+        console.log("Unsupported file format", fmt);
+        return;
+    };
+    console.log("Opening file", file.name);
     const result = await openDocument({
         source: "file",
         file,
-        fmt: fmt as any
+        fmt
     } as DocumentProps);
-    if (!result) return;
+    if (!result) {
+        console.log("Failed to open file", file.name);
+        return;
+    };
     context.value = result;
     result.selection.selectPage(result.data.pagesList[0]?.id);
     state.value = "editor"
