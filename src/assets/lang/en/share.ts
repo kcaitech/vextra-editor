@@ -22,46 +22,4 @@ export const share = {
     document_permission: 'Document permission',
     reviewable: 'Reviewable',
     no_document: 'No such document',
-
-}
-
-export const permission = {
-    no_authority_to_rename: '当前没有重命名的权限'
-}
-
-export const apply = {
-    file_access_request: "File access request",
-    applicant: "Applicant",
-    access_file: "Access file",
-    authority: 'Authority:',
-    remarks: 'Remarks',
-    agree: 'Agree',
-    refuse: 'Refuse',
-    maximum_share: 'The file has reached the maximum number of shares. Contact the creator',
-    request_access: 'You have applied for access several times, please wait for the creator to process',
-    no_file_access_permission: 'No file access permission',
-    file_attribution: 'File attribution',
-    apply_for_permission: 'Apply for permission',
-    read_only: 'Read only',
-    apply_for_edit: 'Apply for edit',
-    please_remarks: 'Please enter application remarks',
-    file_deleted: 'The file has been deleted, or the creator has closed the share',
-    authorization_failure: 'Authorization failure',
-    notification_message: 'Notification message',
-    application_documents: 'Application',
-    have_agreed: 'Have agreed',
-    rejected: 'Rejected',
-    no_message_received: 'No message received',
-    link_not: 'Link does not exist',
-    not_passed: 'The application failed, please modify the information or contact the creator and re-apply',
-    project_apply: 'Application to join project',
-    project: 'project',
-    team: 'Team',
-    team_apply: 'Join team application',
-    file: 'File',
-    apply_team: 'Apply to join the team:',
-    apply_project: 'Application project:',
-    apply: 'apply',
-    tips_team: 'you apply to join the team',
-    tips_project: 'you apply to join the project'
 }
