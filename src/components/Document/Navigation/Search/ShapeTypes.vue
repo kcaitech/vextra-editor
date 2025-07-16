@@ -33,7 +33,7 @@ const props = defineProps<Props>();
 const all_types = ref<SelectedItem[]>([]);
 const hoverIndex = ref(-1);
 const template: SelectedItem[] = Array.from(Object.values(ShapeType)).filter(i => ![
-    ShapeType.Triangle, ShapeType.TableCell, ShapeType.Table2, ShapeType.Table, ShapeType.SymbolUnion,ShapeType.Path2,
+    ShapeType.Triangle, ShapeType.TableCell, ShapeType.Table, ShapeType.SymbolUnion,
 ].includes(i)).map(type => {
     if (type === ShapeType.SymbolRef) {
         type = 'instance' as ShapeType;

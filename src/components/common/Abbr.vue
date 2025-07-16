@@ -44,11 +44,9 @@ icons[ShapeType.SymbolRef] = layer_symbol_ref_icon;
 icons[ShapeType.SymbolUnion] = layer_symbol_union_icon;
 icons[ShapeType.Symbol] = layer_symbol_icon;
 icons[ShapeType.Table] = layer_table_icon;
-icons[ShapeType.Table2] = layer_table_icon;
 icons[ShapeType.Artboard] = layer_artboard_icon;
 icons[ShapeType.Contact] = layer_contact_icon;
 icons[ShapeType.Cutout] = layer_cutout_icon;
-icons[ShapeType.Image] = layer_image_icon;
 
 const icons_name: { [key: string]: string } = {}
 icons_name[ShapeType.Text] = 'layer_text_icon';

@@ -173,7 +173,6 @@ export function getSideThickness(side: BorderSideSetting): number | false {
 export const customizable = [
     ShapeType.Rectangle,
     ShapeType.Artboard,
-    ShapeType.Image,
     ShapeType.Symbol,
     ShapeType.SymbolRef,
     ShapeType.SymbolUnion

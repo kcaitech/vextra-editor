@@ -1181,7 +1181,7 @@ function image_reader(context: Context, val: any, contentType: string, t: Functi
     if (contentType === "image/svg+xml") {
         return SVGReader(context, val, _xy);
     }
-    const item: SystemClipboardItem = { type: ShapeType.Image, contentType, content: '' };
+    const item: SystemClipboardItem = { type: ShapeType.Rectangle, contentType, content: '' };
     const frame: { width: number, height: number } = { width: 100, height: 100 };
     const img = new Image();
     img.onload = function () {

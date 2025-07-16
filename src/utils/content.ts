@@ -76,7 +76,7 @@ export function get_image_name(brothers: ShapeView[], name: string) {
     name = name.trim();
     const renamebrothers = brothers.filter((item: ShapeView) => {
         const _n: any = item.name.split(' ');
-        return item.type === ShapeType.Image && _n[0] === name;
+        return _n[0] === name;
     });
     const repeats: number = renamebrothers.length;
     return repeats ? `${name} ${repeats + 1}` : name;

@@ -246,7 +246,6 @@ icons[ShapeType.Table] = layer_table_icon;
 icons[ShapeType.Artboard] = layer_artboard_icon;
 icons[ShapeType.Contact] = layer_contact_icon;
 icons[ShapeType.Cutout] = layer_cutout_icon;
-icons[ShapeType.Image] = layer_image_icon;
 
 function icon_class() {
     const shape = props.data.shape;

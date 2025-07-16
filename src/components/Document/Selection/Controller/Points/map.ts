@@ -18,6 +18,5 @@ export const point_map = new Map<ShapeType, any>([
     [ShapeType.Polygon, PointsContainerForPolygon],
     [ShapeType.Star, PointContainerForStar],
     [ShapeType.Rectangle, PointContainerForRect],
-    [ShapeType.Image, PointContainerForRect],
     [ShapeType.Oval, PointContainerForOval],
 ])

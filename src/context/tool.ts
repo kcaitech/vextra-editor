@@ -47,7 +47,6 @@ const A2R = new Map([
     [Action.AddLine, ShapeType.Line],
     [Action.AddFrame, ShapeType.Artboard],
     [Action.AddText, ShapeType.Text],
-    [Action.AddImage, ShapeType.Image],
     [Action.AddArrow, ShapeType.Line],
     [Action.AddTable, ShapeType.Table],
     [Action.AddContact, ShapeType.Contact],
