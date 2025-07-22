@@ -466,14 +466,14 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
         // text
         const textShape = this.textSelection.shape;
         if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0 && textShape) {
-            state.text = new Repo.ArrayOpSelection(v4(), textShape.text.getCrdtPath(),
+            state.text = new Repo.TextSelection(v4(), textShape.text.getCrdtPath(),
                 Number.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
                 this.textSelection.cursorEnd - this.textSelection.cursorStart)
         }
         return state;
     }
 
-    saveText(path: string[]): Repo.ArrayOpSelection | undefined {
+    saveText(path: string[]): Repo.TextSelection | undefined {
         const shape = this.focusTextShape;
         if (!shape) return;
         const text = shape.text;
@@ -482,13 +482,13 @@ export class Selection extends WatchableObject implements Repo.ISave4Restore, IS
         if (path.length !== curPath.length) return;
         if (Repo.isDiffStringArr(path, curPath)) return;
         if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0) {
-            return new Repo.ArrayOpSelection(v4(), path,
+            return new Repo.TextSelection(v4(), path,
                 Number.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
                 this.textSelection.cursorEnd - this.textSelection.cursorStart)
         }
     }
 
-    restoreText(op: Repo.ArrayOpSelection): void {
+    restoreText(op: Repo.ITextSelection): void {
         const path = op.path;
         const shape = this.focusTextShape;
         if (!shape) return;
