@@ -15,13 +15,13 @@
 ## 安装
 
 ```bash
-npm i @vextra/editor
+npm i @kcaitech/vextra-editor
 ```
 
 ## 快速开始
 
 ```ts
-import { openDocument } from '@vextra/editor';
+import { openDocument } from '@kcaitech/vextra-editor';
 
 const result = await openDocument({
   // 传入你的文档参数
@@ -37,7 +37,7 @@ const result = await openDocument({
 #### 启动client界面
 
 ```bash
-npm install
+npm i
 npm run client
 
 # 打开samples目录文件
@@ -46,7 +46,7 @@ npm run client
 ### lib开发
 
 ```bash
-npm install
+npm i
 npm run dev
 ```
 
