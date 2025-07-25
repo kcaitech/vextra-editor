@@ -13,7 +13,7 @@ import { get_vari_value_for_ref, is_circular_ref2, RefAttriListItem } from "@/ut
 import { onMounted, onUnmounted, onUpdated, ref, watch } from "vue";
 import { Context } from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
-import { Shape } from "@kcdesign/data";
+import { Shape } from "@kcaitech/vextra-core";
 import { Component } from "@/context/component";
 import { message } from "@/utils/message";
 import { ArrowDown } from '@element-plus/icons-vue'

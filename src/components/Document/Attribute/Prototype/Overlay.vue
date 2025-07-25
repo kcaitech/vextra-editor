@@ -60,7 +60,7 @@
 <script setup lang="ts">
 import ColorPicker from "@/components/common/ColorPicker/index.vue";
 import { Reg_HEX } from "@/utils/color";
-import { Color, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayBackgroundType, OverlayPositionType, OverlayPosition, OverlayMargin } from "@kcdesign/data";
+import { Color, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayBackgroundType, OverlayPositionType, OverlayPosition, OverlayMargin } from "@kcaitech/vextra-core";
 import { message } from "@/utils/message";
 import { onMounted, ref, watch } from "vue";
 import { Context } from "@/context";

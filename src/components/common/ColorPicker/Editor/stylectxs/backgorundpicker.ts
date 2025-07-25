@@ -9,7 +9,7 @@
  */
 
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { Color, Shadow, backgorundAsyncApi, ShadowMask } from "@kcdesign/data";
+import { Color, Shadow, backgorundAsyncApi, ShadowMask } from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 

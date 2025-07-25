@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShapeView, Matrix, PathShapeView, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
+import { GroupShapeView, Matrix, PathShapeView, ShapeType, ShapeView, SymbolRefView } from "@kcaitech/vextra-core";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { IScout as Scout } from "@/openapi";

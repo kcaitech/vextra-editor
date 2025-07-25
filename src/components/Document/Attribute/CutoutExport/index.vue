@@ -18,7 +18,7 @@ import {
     ExportVisibleScaleType,
     ShapeType,
     ShapeView
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { ref, onMounted, onUnmounted, reactive, nextTick, watch, toRaw } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';

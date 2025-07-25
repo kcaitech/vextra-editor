@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GraphicsLibrary, LineView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, LineView } from "@kcaitech/vextra-core";
 import { elpatch } from "./patch";
 
 export class LineDom extends (LineView) {

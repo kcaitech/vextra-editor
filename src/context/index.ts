@@ -26,7 +26,7 @@ import {
     PageEditor,
     ShapeEditor,
     TextShapeEditor
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
 import { Menu } from "./menu";

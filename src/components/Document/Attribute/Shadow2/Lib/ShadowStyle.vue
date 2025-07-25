@@ -27,7 +27,7 @@ import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
 import SearchInput from "@/components/common/SearchInput.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import ShadowMaskPanelItem from './ShadowMaskPanelItem.vue';
-import { StyleSheet } from "@kcdesign/data"
+import { StyleSheet } from "@kcaitech/vextra-core"
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { ShadowsContextMgr } from '../ctx';
 import { useI18n } from 'vue-i18n';

@@ -20,7 +20,7 @@ import {
     ShapeView,
     SymbolRefView,
     utils
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import { genRectPath } from "../../common";
 import { is_shape_in_selected } from "@/utils/scout";

@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { StackAlign } from '@kcdesign/data';
+import { StackAlign } from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import { useI18n } from "vue-i18n";
 import Tooltip from '@/components/common/Tooltip.vue';

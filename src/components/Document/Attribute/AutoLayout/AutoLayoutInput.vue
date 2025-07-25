@@ -9,7 +9,7 @@
  */
 
 <script lang="ts" setup>
-import { StackSizing } from "@kcdesign/data";
+import { StackSizing } from "@kcaitech/vextra-core";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import Tooltip from '@/components/common/Tooltip.vue';

@@ -15,7 +15,7 @@ import {
     GroupShape,
     ShapeView,
     adapt2Shape,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { ClientXY, PageXY, XY } from "@/context/selection";
 import { debounce } from "lodash";
 import { compare_layer_3 } from "@/utils/group_ungroup";

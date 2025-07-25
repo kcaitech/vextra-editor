@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
-import { AsyncApiCaller, PageView, ShapeView } from "@kcdesign/data";
+import { AsyncApiCaller, PageView, ShapeView } from "@kcaitech/vextra-core";
 import { Tool } from "@/context/tool";
 import { KeyboardMgr } from "@/keyboard";
 

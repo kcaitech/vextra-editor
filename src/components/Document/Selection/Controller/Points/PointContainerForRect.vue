@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
-import { ColVector3D, CurvePoint, Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
+import { ColVector3D, CurvePoint, Matrix, PolygonShapeView, ShapeFrame } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint, getRadiusValue } from './common';
 import { fixedZero } from '@/utils/common';

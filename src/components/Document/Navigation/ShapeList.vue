@@ -23,7 +23,7 @@ import {
     ShapeDirListIter2 as ShapeDirListIter,
     ShapeType,
     ShapeView
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';

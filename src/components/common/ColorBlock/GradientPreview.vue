@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { Gradient, GradientType } from "@kcdesign/data";
+import { Gradient, GradientType } from "@kcaitech/vextra-core";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { getHorizontalAngle } from "@/utils/common";
 import { toRGBA } from "@/components/common/ColorPicker/utils";

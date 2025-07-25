@@ -12,7 +12,7 @@
 import PointsPathEditContainer from "@/components/Document/Selection/Controller/Points/PointsPenMode.vue";
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
-import { Matrix } from "@kcdesign/data";
+import { Matrix } from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 

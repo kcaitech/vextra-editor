@@ -11,7 +11,7 @@
 <script setup lang='ts'>
 import { watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcaitech/vextra-core';
 import { Point } from "../SelectionView.vue";
 import { useController } from "./controller";
 import { genRectPath } from "../common";

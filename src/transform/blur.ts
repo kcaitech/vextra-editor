@@ -10,7 +10,7 @@
 
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { Blur, BlurMask, blurModifyHandler, ShapeView } from "@kcdesign/data";
+import { Blur, BlurMask, blurModifyHandler, ShapeView } from "@kcaitech/vextra-core";
 import { getShapesForStyle } from "@/utils/style";
 
 export class BlurHandler extends TransformHandler {

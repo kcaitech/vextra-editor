@@ -10,8 +10,8 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, TableCell, TableCellView, TextShape, TextShapeView } from '@kcdesign/data';
-import { Shape, Text } from '@kcdesign/data';
+import { Matrix, TableCell, TableCellView, TextShape, TextShapeView } from '@kcaitech/vextra-core';
+import { Shape, Text } from '@kcaitech/vextra-core';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
 import { throttle } from '../../common';
 import { handleKeyEvent } from './keyhandler';

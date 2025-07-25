@@ -9,8 +9,8 @@
  */
 
 import { Context } from "@/context";
-import { TextShapeView, TableCellView } from "@kcdesign/data";
-import { TextShapeEditor } from "@kcdesign/data";
+import { TextShapeView, TableCellView } from "@kcaitech/vextra-core";
+import { TextShapeEditor } from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import { Attribute } from "@/context/atrribute";
 import { down_while_is_text_editing } from "@/utils/mouse";

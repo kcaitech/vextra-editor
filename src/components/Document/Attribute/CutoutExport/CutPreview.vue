@@ -14,7 +14,7 @@ import {
     ExportFormat,
     ShapeType,
     ShapeView
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import {
     getCutoutShape,

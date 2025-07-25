@@ -10,7 +10,7 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CtrlElementType } from '@kcdesign/data';
+import { CtrlElementType } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';

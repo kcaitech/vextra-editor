@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcaitech/vextra-core';
 import { onMounted, ref } from 'vue';
 interface Props {
     shape: ShapeView

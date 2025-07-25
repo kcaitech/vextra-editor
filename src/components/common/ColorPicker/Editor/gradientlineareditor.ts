@@ -9,7 +9,7 @@
  */
 
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { Gradient, GradientType } from "@kcdesign/data";
+import { Gradient, GradientType } from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 
 export type GradientCatch = {

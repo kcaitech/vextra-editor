@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Matrix } from "@kcdesign/data";
+import { Matrix } from "@kcaitech/vextra-core";
 // 标注相对位置
 enum Direction {
     TL = 'Top-Left',

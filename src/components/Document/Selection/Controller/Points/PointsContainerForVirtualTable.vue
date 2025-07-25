@@ -13,7 +13,7 @@ import { Context } from '@/context';
 import {
     Matrix,
     ShapeView,
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, watch, ref, reactive } from 'vue';
 import { Point } from "../../SelectionView.vue";
 import { WorkSpace } from '@/context/workspace';

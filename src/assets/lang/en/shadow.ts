@@ -1,4 +1,4 @@
-import { BlurType, ShadowPosition } from "@kcdesign/data";
+import { BlurType, ShadowPosition } from "@kcaitech/vextra-core";
 
 export const shadow: any = {
     shadow: "Shadow",

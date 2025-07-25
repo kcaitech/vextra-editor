@@ -15,7 +15,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
 import { ArrowDown } from '@element-plus/icons-vue';
-import { Border, BorderPosition, BorderSideSetting, BorderStyle, Color, CornerType, FillType, SideType, Fill } from '@kcdesign/data';
+import { Border, BorderPosition, BorderSideSetting, BorderStyle, Color, CornerType, FillType, SideType, Fill } from '@kcaitech/vextra-core';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { useI18n } from 'vue-i18n';
 import LableTootip from './LableTootip.vue';

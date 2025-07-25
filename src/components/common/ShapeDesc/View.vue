@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2025 KCai Technology (https://kcaitech.com). All rights reserved.
+ *
+ * This file is part of the Vextra project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 <script setup lang="ts">
 import { ShapeDescContext } from "@/components/common/ShapeDesc/shapeDescContext";
 import {
@@ -17,7 +27,7 @@ import {
     Page,
     ShapeType,
     Transform
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";

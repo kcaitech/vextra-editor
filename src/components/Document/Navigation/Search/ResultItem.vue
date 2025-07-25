@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted, watch, onUpdated, computed } from "vue";
-import { ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
+import { ShapeType, ShapeView, SymbolUnionShape } from '@kcaitech/vextra-core';
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
 import { is_valid_data } from "@/utils/shapelist";

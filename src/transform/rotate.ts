@@ -14,7 +14,7 @@ import {
     Rotator,
     ShapeView,
     Transform,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { BoundHandler, FrameLike } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";

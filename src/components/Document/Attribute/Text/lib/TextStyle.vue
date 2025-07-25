@@ -32,7 +32,7 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
-import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
+import { StyleSheet } from "@kcaitech/vextra-core/dist/types/data/typesdefine";
 import { TextContextMgr } from "../ctx";
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import SearchInput from "@/components/common/SearchInput.vue";

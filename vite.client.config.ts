@@ -17,7 +17,6 @@ export default defineConfig({
     base: undefined,
     define: Object.entries({
         global: 'window',
-        ENV_SUFFIX: process.env.ENV_SUFFIX,
         IS_PRODUCTION: PRODUCTION,
         IS_DEV_SERVER: isDevServer,
     }).reduce((res, [key, value]) => {

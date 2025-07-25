@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { Assist, PageXY2 } from '@/context/assist';
 import { ClientXY, PageXY } from '@/context/selection';
-import { Matrix } from '@kcdesign/data';
+import { Matrix } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import Path from "@/components/Document/Toolbar/Buttons/Path.vue";
 

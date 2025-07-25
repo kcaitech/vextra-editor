@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Matrix, ShapeView, ArtboardView, SymbolView, GroupShapeView, Shape, ShapeType, GroupShape, ColVector3D, utils } from "@kcdesign/data";
+import { Matrix, ShapeView, ArtboardView, SymbolView, GroupShapeView, Shape, ShapeType, GroupShape, ColVector3D, utils } from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 

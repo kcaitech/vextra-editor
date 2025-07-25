@@ -13,7 +13,7 @@ import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import PanelItem from "@/components/Document/Attribute/StyleLib/PanelItem.vue";
-import { TextMask, TextAttr } from "@kcdesign/data";
+import { TextMask, TextAttr } from "@kcaitech/vextra-core";
 import { TextContextMgr } from "../ctx";
 import ModifyTextMaskPanel from "../lib/ModifyTextMaskPanel.vue";
 

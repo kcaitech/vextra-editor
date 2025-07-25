@@ -10,7 +10,7 @@
 
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { ColorPicker, ShapeView } from "@kcdesign/data";
+import { ColorPicker, ShapeView } from "@kcaitech/vextra-core";
 
 export class ColorHandler extends TransformHandler {
     readonly shapes: ShapeView[] = [];

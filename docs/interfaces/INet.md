@@ -1,20 +1,33 @@
-[kcdesign-editor - v1.0.88](../README.md) / [Exports](../modules.md) / INet
+[kcdesign-editor - v1.0.0](../README.md) / [Exports](../modules.md) / INet
 
 # Interface: INet
-
-## Hierarchy
-
-- `ICoopNet`
-
-  ↳ **`INet`**
 
 ## Table of contents
 
 ### Methods
 
+- [genThumbnail](INet.md#genthumbnail)
 - [upload](INet.md#upload)
 
 ## Methods
+
+### genThumbnail
+
+▸ **genThumbnail**(`name`, `contentType`, `data`): `Promise`\<`boolean`\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `name` | `string` |
+| `contentType` | `string` |
+| `data` | `ArrayBufferLike` |
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+___
 
 ### upload
 

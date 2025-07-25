@@ -16,7 +16,7 @@ import {
     RadiusType,
     ShapeView,
     StyleMangerMember,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { v4 } from "uuid";
 import { StyleCtx } from "../../stylectx";
 import { MaskInfo } from "../../basic";

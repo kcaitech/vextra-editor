@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from "@/context";
-import { ShadowMask } from "@kcdesign/data";
+import { ShadowMask } from "@kcaitech/vextra-core";
 import { onMounted, onUnmounted, ref } from "vue";
 import ShadowItem from "@/components/Document/Attribute/Shadow2/ShadowItem.vue";
 import { useI18n } from "vue-i18n";

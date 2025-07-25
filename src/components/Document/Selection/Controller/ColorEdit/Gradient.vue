@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { GradientType, Matrix } from '@kcdesign/data';
+import { GradientType, Matrix } from '@kcaitech/vextra-core';
 import { onMounted, ref } from 'vue';
 import { gradient_map } from "./map";
 import { dbl_action } from '@/utils/mouse_interactive';

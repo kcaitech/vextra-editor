@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { SymbolShape } from "@kcdesign/data";
+import { SymbolShape } from "@kcaitech/vextra-core";
 import ShapeCard from "@/components/common/ShapeCard.vue";
 
 interface Props {

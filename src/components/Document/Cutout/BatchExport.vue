@@ -20,7 +20,7 @@ import {
     ShapeFrame,
     ShapeType,
     ShapeView
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import PageCard from "@/components/common/PageCard.vue";
 import { useI18n } from "vue-i18n";

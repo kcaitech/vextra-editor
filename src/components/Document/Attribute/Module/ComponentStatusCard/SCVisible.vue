@@ -12,7 +12,7 @@
 import { Context } from "@/context";
 import { AttriListItem, delete_variable, modify_variable } from "@/utils/symbol";
 import { nextTick, ref } from "vue";
-import { Variable, VariableType } from "@kcdesign/data";
+import { Variable, VariableType } from "@kcaitech/vextra-core";
 import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";

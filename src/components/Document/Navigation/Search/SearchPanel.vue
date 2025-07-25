@@ -16,7 +16,7 @@ import ResultItem, { ItemData } from "./ResultItem.vue";
 import TextResultItem, { TItemData } from "./TextResultItem.vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { ShapeType, ShapeView, TextShapeView } from '@kcdesign/data';
+import { ShapeType, ShapeView, TextShapeView } from '@kcaitech/vextra-core';
 import { Navi } from '@/context/navigate';
 import { locateShape } from "@/space/locate";
 import { multi_select_shape } from "@/utils/listview";

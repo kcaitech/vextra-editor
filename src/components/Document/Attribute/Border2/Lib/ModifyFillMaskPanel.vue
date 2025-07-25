@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from "@/context";
-import { FillMask } from "@kcdesign/data";
+import { FillMask } from "@kcaitech/vextra-core";
 import { FillCatch } from "@/components/Document/Attribute/Fill2/ctx";
 import { onMounted, onUnmounted, ref } from "vue";
 import FillItem from "../PaintItem.vue";

@@ -12,7 +12,7 @@
 import { Context } from "@/context";
 import { AttriListItem, delete_variable, is_status_allow_to_delete } from "@/utils/symbol";
 import { reactive, ref } from "vue";
-import { Variable } from "@kcdesign/data";
+import { Variable } from "@kcaitech/vextra-core";
 import { useI18n } from "vue-i18n";
 import StatusAttrPanel from "./StatusAttrPanel.vue";
 

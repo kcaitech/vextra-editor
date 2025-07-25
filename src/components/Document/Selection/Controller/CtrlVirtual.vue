@@ -11,13 +11,13 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcaitech/vextra-core';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { Selection, SelectionTheme } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
-import { Shape } from "@kcdesign/data";
+import { Shape } from "@kcaitech/vextra-core";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 interface Props {
     context: Context

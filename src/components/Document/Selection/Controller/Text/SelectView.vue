@@ -10,8 +10,8 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { TableCellView, Text, TextShapeView } from '@kcdesign/data';
-import { Matrix } from '@kcdesign/data';
+import { TableCellView, Text, TextShapeView } from '@kcaitech/vextra-core';
+import { Matrix } from '@kcaitech/vextra-core';
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { genRectPath } from '../../common';

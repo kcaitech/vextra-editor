@@ -15,7 +15,7 @@ import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { BorderStyle, CornerType, ShapeType } from "@kcdesign/data";
+import { BorderStyle, CornerType, ShapeType } from "@kcaitech/vextra-core";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border, get_actions_border_style, get_borders_corner } from '@/utils/shape_style';

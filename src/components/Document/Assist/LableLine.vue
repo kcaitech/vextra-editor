@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { Matrix, PathShapeView, ShapeView } from "@kcdesign/data";
+import { Matrix, PathShapeView, ShapeView } from "@kcaitech/vextra-core";
 import { XYsBounding } from "@/utils/common";
 import { WorkSpace } from '@/context/workspace'
 import { Selection } from '@/context/selection';

@@ -14,14 +14,14 @@ import { Context } from "@/context";
 import { __angle, __anther_side_xy, __round_curve_point } from "@/utils/pathedit";
 import { Path } from "@/context/path";
 import { WorkSpace } from "@/context/workspace";
-import { Matrix, PathShapeView, PathType } from "@kcdesign/data";
+import { Matrix, PathShapeView, PathType } from "@kcaitech/vextra-core";
 import {
     add_blur_for_window,
     add_move_and_up_for_document,
     remove_blur_from_window,
     remove_move_and_up_from_document
 } from "@/utils/mouse_interactive";
-import { CurvePoint } from "@kcdesign/data";
+import { CurvePoint } from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 import { check_drag_action } from "@/utils/mouse";
 import { PathEditor } from "@/path/pathEdit";

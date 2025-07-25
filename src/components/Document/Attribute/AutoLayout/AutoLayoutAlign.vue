@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { StackAlign, StackMode, StackSizing, StackWrap } from '@kcdesign/data';
+import { StackAlign, StackMode, StackSizing, StackWrap } from '@kcaitech/vextra-core';
 import WrapAlignBox from './WrapAlignBox.vue';
 import HorAlignBox from './HorAlignBox.vue';
 import VerAlignBox from './VerAlignBox.vue';

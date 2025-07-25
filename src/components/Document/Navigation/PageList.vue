@@ -16,8 +16,8 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
-import { Page } from "@kcdesign/data";
-import { Document, PageListItem } from "@kcdesign/data";
+import { Page } from "@kcaitech/vextra-core";
+import { Document, PageListItem } from "@kcaitech/vextra-core";
 import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
 import { Tool } from "@/context/tool";
 import { copyLink } from "@/utils/clipboard";

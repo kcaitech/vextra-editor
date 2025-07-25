@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import CardWrap from "./CardWrap.vue";
-import { ShapeView } from "@kcdesign/data";
+import { ShapeView } from "@kcaitech/vextra-core";
 
 interface Props {
     context: Context

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Matrix, TableCellView } from "@kcdesign/data";
+import { Matrix, TableCellView } from "@kcaitech/vextra-core";
 import { Context } from '@/context';
 import { ref } from "vue";
 import { useControllerCustom } from "../controller";

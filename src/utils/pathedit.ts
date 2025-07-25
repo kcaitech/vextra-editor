@@ -21,7 +21,7 @@ import {
     ShapeView,
     GroupShapeView,
     Transform,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Action } from "@/context/tool";
 
 export type Segment = {

@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { Context } from "@/context";
-import { Matrix, PageView } from "@kcdesign/data";
+import { Matrix, PageView } from "@kcaitech/vextra-core";
 import { message } from "@/utils/message";
 
 type Props = {

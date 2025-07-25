@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { ResourceMgr, Shape, Transform, } from "@kcdesign/data";
+import { ResourceMgr, Shape, Transform, } from "@kcaitech/vextra-core";
 import { ClipboardEventReader } from "@/clipboard/read/clipboardEventReader";
 import { NavigatorClipboardReader } from "@/clipboard/read/navigatorClipboardReader";
 import { BundleHandler } from "@/clipboard/bundleHandler";

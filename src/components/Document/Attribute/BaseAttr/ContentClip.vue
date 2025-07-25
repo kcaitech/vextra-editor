@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
-import { ArtboardView, ShapeType } from "@kcdesign/data";
+import { ArtboardView, ShapeType } from "@kcaitech/vextra-core";
 import { useI18n } from "vue-i18n";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 

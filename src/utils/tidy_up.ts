@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { ArtboardView, ColVector3D, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboardView, ColVector3D, Matrix, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { XYsBounding } from "./common";
 import { getShapeFrame } from "./content";
 import { Selection, XY } from "@/context/selection";

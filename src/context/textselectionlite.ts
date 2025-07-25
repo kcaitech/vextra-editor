@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Text, SpanAttr, WatchableObject, TextShapeView, TableCellView, TextAttr } from "@kcdesign/data";
+import { Text, SpanAttr, WatchableObject, TextShapeView, TableCellView, TextAttr } from "@kcaitech/vextra-core";
 import { Selection } from "./selection"
 import { ITextSelection } from "@/openapi/selection";
 

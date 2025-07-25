@@ -34,7 +34,7 @@ import {
     BasicArray,
     PrototypeEasingType,
     PrototypeEasingBezier
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import bezier1_icon from '@/assets/icons/svg/bezier1.svg';

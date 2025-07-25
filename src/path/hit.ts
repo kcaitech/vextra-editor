@@ -9,7 +9,7 @@
  */
 
 import { XY } from "@/context/selection";
-import { CurvePoint, Matrix, PathSegment } from "@kcdesign/data";
+import { CurvePoint, Matrix, PathSegment } from "@kcaitech/vextra-core";
 import { convertQuadratic2Cubic } from "@/path/common";
 import { Context } from "@/context";
 

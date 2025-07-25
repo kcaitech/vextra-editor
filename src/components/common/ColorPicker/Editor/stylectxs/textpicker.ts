@@ -21,9 +21,9 @@ import {
     AttrGetter,
     TextShapeView,
     ShapeType,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { v4 } from "uuid";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 
 export class TextPicker extends ColorPickerEditor {

@@ -13,7 +13,7 @@ import {
     ColVector3D,
     ShapeView, SymbolView,
     Transform
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { isShapeOut } from "@/utils/assist";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { markRaw } from "vue";

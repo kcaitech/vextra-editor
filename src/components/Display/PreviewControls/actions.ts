@@ -30,7 +30,7 @@ import {
     ShapeType,
     ShapeView,
     SymbolRefView
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { nextTick } from "vue";
 
 export interface EventIndex {

@@ -10,8 +10,8 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Text, Shape, TextShape, TableCell, ShapeView, TextShapeView, TableCellView } from '@kcdesign/data';
-import { Matrix } from '@kcdesign/data';
+import { Text, Shape, TextShape, TableCell, ShapeView, TextShapeView, TableCellView } from '@kcaitech/vextra-core';
+import { Matrix } from '@kcaitech/vextra-core';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { genRectPath } from '../../common';
 const props = defineProps<{

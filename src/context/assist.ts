@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ArtboardView, GroupShapeView, GuideAxis, PathShapeView, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { ArtboardView, GroupShapeView, GuideAxis, PathShapeView, ShapeType, ShapeView, WatchableObject } from "@kcaitech/vextra-core";
 import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {

@@ -12,7 +12,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Tool } from "@/context/tool";
-import { ContactForm, ContactType } from "@kcdesign/data";
+import { ContactForm, ContactType } from "@kcaitech/vextra-core";
 import { ClientXY, PageXY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 interface Props {

@@ -9,7 +9,7 @@
  */
 
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { FillType, GradientType } from "@kcdesign/data";
+import { FillType, GradientType } from "@kcaitech/vextra-core";
 
 export interface IColorPicker {
     /**

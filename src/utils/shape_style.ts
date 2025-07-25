@@ -33,7 +33,7 @@ import {
     MarkerType,
     CornerType,
     BorderSideSetting
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { v4 } from "uuid";
 
 interface FillItem {

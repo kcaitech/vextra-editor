@@ -132,7 +132,7 @@ import down_icon from '@/assets/icons/svg/down.svg';
 import white_select_icon from '@/assets/icons/svg/white-select.svg';
 import page_select_icon from '@/assets/icons/svg/page-select.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';
-import { TextMask } from "@kcdesign/data";
+import { TextMask } from "@kcaitech/vextra-core";
 
 </script>
 

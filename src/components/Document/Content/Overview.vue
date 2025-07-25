@@ -10,7 +10,7 @@
 
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { Matrix } from '@kcdesign/data';
+import { Matrix } from '@kcaitech/vextra-core';
 import { nextTick, onBeforeMount, ref, watch } from 'vue';
 import Simple from './Simple.vue';
 import { WorkSpace } from '@/context/workspace';

@@ -14,7 +14,7 @@ import { ref, onMounted, onUnmounted, watch, shallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextTransformType, TableView, TableCell, TableCellView, TableCellType, UnderlineType, StrikethroughType } from "@kcdesign/data";
+import { AttrGetter, TextTransformType, TableView, TableCell, TableCellView, TableCellType, UnderlineType, StrikethroughType } from "@kcaitech/vextra-core";
 import { Selection } from '@/context/selection';
 import { TableSelection } from '@/context/tableselection';
 import { WorkSpace } from '@/context/workspace';

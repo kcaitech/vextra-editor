@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CurvePoint, Shape, ShapeView } from "@kcdesign/data";
+import { CurvePoint, Shape, ShapeView } from "@kcaitech/vextra-core";
 import { get_artboard_list_by_point, get_common_environment } from "./artboardFn";
 import { Context } from "@/context";
 

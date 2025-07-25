@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { ClientXY, Selection } from "@/context/selection";
-import { Matrix, Shape, ShapeView } from '@kcdesign/data';
+import { Matrix, Shape, ShapeView } from '@kcaitech/vextra-core';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { Tool } from '@/context/tool';

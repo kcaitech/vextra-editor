@@ -16,7 +16,7 @@ import {
     PathType,
     ShapeFrame,
     ShapeView
-} from "@kcdesign/data"
+} from "@kcaitech/vextra-core"
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
 

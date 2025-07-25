@@ -1,4 +1,4 @@
-import { GradientType, ShapeType } from "@kcdesign/data";
+import { GradientType, ShapeType } from "@kcaitech/vextra-core";
 export const shape: any = {
     group: "编组",
     page: "页面",

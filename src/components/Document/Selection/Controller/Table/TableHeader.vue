@@ -16,7 +16,7 @@ import {
     TableLayout,
     TableView,
     Transform
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { CellMenu } from '@/context/menu'

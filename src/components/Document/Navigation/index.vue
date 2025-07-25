@@ -14,7 +14,7 @@ import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import { useI18n } from 'vue-i18n';
-import { PageView } from "@kcdesign/data";
+import { PageView } from "@kcaitech/vextra-core";
 import { Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
 

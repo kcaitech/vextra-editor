@@ -12,7 +12,7 @@
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
 import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
 import { useI18n } from "vue-i18n";
-import { ImageScaleMode } from "@kcdesign/data";
+import { ImageScaleMode } from "@kcaitech/vextra-core";
 import rotate90_icon from "@/assets/icons/svg/rotate90.svg";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import SelectBanana from "@/components/common/Select/SelectBanana.vue";

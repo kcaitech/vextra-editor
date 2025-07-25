@@ -16,7 +16,7 @@ import {
     PageView,
     ShapeType,
     ShapeView,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { StyleManager } from "@/transform/style";
 import { hidden_selection } from "@/utils/content";
 import { BasicError } from "@/basic/error";

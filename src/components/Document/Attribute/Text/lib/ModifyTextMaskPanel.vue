@@ -93,7 +93,7 @@ import MaskBaseInfo from "@/components/Document/Attribute/StyleLib/MaskBaseInfo.
 import ListHeader from "@/components/Document/Attribute/StyleLib/ListHeader.vue";
 
 import { Context } from '@/context';
-import { TextMask, UnderlineType, StrikethroughType, TextTransformType } from '@kcdesign/data';
+import { TextMask, UnderlineType, StrikethroughType, TextTransformType } from '@kcaitech/vextra-core';
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format_value, is_mac } from '@/utils/common';

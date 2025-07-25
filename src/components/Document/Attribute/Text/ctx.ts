@@ -21,7 +21,7 @@ import {
     Color,
     BulletNumbers,
     BulletNumbersType,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
 import { v4 } from "uuid";

@@ -21,7 +21,7 @@ import {
     Transform,
     TranslateUnit,
     Transporter, AutoLayout,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
 import { debounce, throttle } from "lodash";

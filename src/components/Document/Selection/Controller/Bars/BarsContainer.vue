@@ -10,7 +10,7 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { ColVector3D, CtrlElementType, ShapeView } from '@kcdesign/data';
+import { ColVector3D, CtrlElementType, ShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';

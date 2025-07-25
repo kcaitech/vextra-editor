@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CutoutShapeView, EL, GraphicsLibrary } from "@kcdesign/data";
+import { CutoutShapeView, EL, GraphicsLibrary } from "@kcaitech/vextra-core";
 import { elpatch } from "./patch";
 
 export class CutoutShapeDom extends (CutoutShapeView) {

@@ -13,7 +13,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, onUpdated, ref, shallowRef } from 'vue';
-import { ArtboardView, GroupShapeView, ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
+import { ArtboardView, GroupShapeView, ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcaitech/vextra-core"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill2/Index.vue'

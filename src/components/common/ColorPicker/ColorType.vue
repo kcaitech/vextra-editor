@@ -15,7 +15,7 @@ import linear_gradient_icon from "@/assets/icons/svg/linear-gradient.svg";
 import radial_gradient_icon from "@/assets/icons/svg/radial-gradient.svg";
 import fill_image_icon from "@/assets/icons/svg/fill-image.svg";
 
-import { FillType, GradientType } from '@kcdesign/data';
+import { FillType, GradientType } from '@kcaitech/vextra-core';
 
 defineProps<{
     value: string;

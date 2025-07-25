@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { Menu } from "@/context/menu";
 import { ClientXY, PageXY } from "@/context/selection";
 import { scout_once, XYsBounding } from "@/utils/common";

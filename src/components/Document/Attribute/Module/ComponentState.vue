@@ -14,7 +14,7 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
 import { is_conflict_comp, is_wrong_bind, states_tag_values_sort, StatusValueItem } from "@/utils/symbol";
-import { ShapeView, SymbolView } from "@kcdesign/data"
+import { ShapeView, SymbolView } from "@kcaitech/vextra-core"
 import TypeHeader from '../TypeHeader.vue';
 import { Warning } from '@element-plus/icons-vue';
 

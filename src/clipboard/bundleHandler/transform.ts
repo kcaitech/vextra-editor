@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Shape, ShapeType, GroupShape, ColVector3D, GroupShapeView, ArtboardView, SymbolView, adapt2Shape, Page, IO, ShapeView, SymbolRefShape, SymbolShape, Transform } from "@kcdesign/data";
+import { Shape, ShapeType, GroupShape, ColVector3D, GroupShapeView, ArtboardView, SymbolView, adapt2Shape, Page, IO, ShapeView, SymbolRefShape, SymbolShape, Transform } from "@kcaitech/vextra-core";
 import { XYsBounding } from "@/utils/common";
 import { Context } from "@/context";
 import { SourceBundle } from "@/clipboard";

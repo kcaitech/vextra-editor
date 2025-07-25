@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GraphicsLibrary, SymbolView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, SymbolView } from "@kcaitech/vextra-core";
 import { NodeType, optiRender, optiSetDirty, OptiType } from "./optinode";
 
 export class SymbolDom extends (SymbolView) {

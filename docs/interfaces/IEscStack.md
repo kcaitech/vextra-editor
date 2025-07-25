@@ -1,4 +1,4 @@
-[kcdesign-editor - v1.0.88](../README.md) / [Exports](../modules.md) / IEscStack
+[kcdesign-editor - v1.0.0](../README.md) / [Exports](../modules.md) / IEscStack
 
 # Interface: IEscStack
 
@@ -6,20 +6,14 @@
 
 ### Methods
 
-- [remove](IEscStack.md#remove)
+- [execute](IEscStack.md#execute)
 - [save](IEscStack.md#save)
 
 ## Methods
 
-### remove
+### execute
 
-▸ **remove**(`key`): `void`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `key` | `string` |
+▸ **execute**(): `void`
 
 #### Returns
 

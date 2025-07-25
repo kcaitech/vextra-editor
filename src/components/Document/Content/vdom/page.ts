@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GraphicsLibrary, Matrix, objectId, PageView, PropsType, ShapeView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, Matrix, objectId, PageView, PropsType, ShapeView } from "@kcaitech/vextra-core";
 import { elpatch } from "./patch";
 import { DomCtx } from "./domctx";
 import { NodeType, opti2none, optiNode, OptiStatus, OptiType, unOptiNode } from "./optinode";

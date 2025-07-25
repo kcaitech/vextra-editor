@@ -12,7 +12,7 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection, SelectionTheme } from "@/context/selection";
-import { CtrlElementType, Matrix, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
+import { CtrlElementType, Matrix, PathShapeView, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";

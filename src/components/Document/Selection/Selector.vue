@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { find4select, Matrix, ShapeFrame, ShapeView } from '@kcdesign/data';
+import { find4select, Matrix, ShapeFrame, ShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, watch, watchEffect } from 'vue';
 import { XY } from '@/context/selection';
 export interface SelectorFrame {

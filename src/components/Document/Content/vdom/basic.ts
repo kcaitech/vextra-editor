@@ -10,4 +10,4 @@
 
 
 
-export { stringh } from "@kcdesign/data"
+export { stringh } from "@kcaitech/vextra-core"

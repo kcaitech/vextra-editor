@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ImageScaleMode } from "@kcdesign/data";
+import { ImageScaleMode } from "@kcaitech/vextra-core";
 import Crop from './Crop.vue';
 import TileCtrl from './TileCtrl.vue'
 export const image_mode_map = new Map<ImageScaleMode, any>([

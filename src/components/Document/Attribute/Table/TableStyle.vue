@@ -9,7 +9,7 @@
  */
 
 <script lang="ts" setup>
-import { ShapeView } from '@kcdesign/data';
+import { ShapeView } from '@kcaitech/vextra-core';
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';

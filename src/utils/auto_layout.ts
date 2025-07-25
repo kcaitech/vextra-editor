@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Artboard, ArtboardView, GroupShapeView, Shape, ShapeType, SymbolRefView } from "@kcdesign/data";
+import { Artboard, ArtboardView, GroupShapeView, Shape, ShapeType, SymbolRefView } from "@kcaitech/vextra-core";
 import { compare_layer_3, filter_for_group1 } from "./group_ungroup";
 import { getName } from "./content";
 import { Selection } from "@/context/selection";

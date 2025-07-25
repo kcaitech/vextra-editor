@@ -23,7 +23,7 @@ import {
     GroupShapeView,
     TableView,
     basicio
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';

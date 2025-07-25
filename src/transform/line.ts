@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CtrlElementType, CurvePoint, LineHandleApiCaller, Matrix, PathShapeView } from "@kcdesign/data";
+import { CtrlElementType, CurvePoint, LineHandleApiCaller, Matrix, PathShapeView } from "@kcaitech/vextra-core";
 import { TransformHandler } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";

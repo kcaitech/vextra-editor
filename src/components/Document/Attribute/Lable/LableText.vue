@@ -14,7 +14,7 @@ import LableType from './LableType.vue'
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
-import { Color, Para, ShapeType, TextShape, TextShapeView, Stop, FillType } from '@kcdesign/data';
+import { Color, Para, ShapeType, TextShape, TextShapeView, Stop, FillType } from '@kcaitech/vextra-core';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { isEqual, uniqWith } from 'lodash';
 import LableTootip from './LableTootip.vue';

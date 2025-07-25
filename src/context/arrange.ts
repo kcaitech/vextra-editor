@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { WatchableObject } from "@kcdesign/data";
+import { WatchableObject } from "@kcaitech/vextra-core";
 
 export class Arrange extends WatchableObject {
     static FLEX_START = 1;

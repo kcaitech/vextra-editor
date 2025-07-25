@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { Page, ResizingConstraints2, adapt2Shape } from '@kcdesign/data';
+import { Page, ResizingConstraints2, adapt2Shape } from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import Select, { SelectItem, SelectSource } from './ConstraintSelect.vue';

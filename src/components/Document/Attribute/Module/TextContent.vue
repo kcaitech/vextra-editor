@@ -14,7 +14,7 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { OverrideType, Variable, VariableType, Text, SymbolView, ShapeType, ShapeView } from '@kcdesign/data';
+import { OverrideType, Variable, VariableType, Text, SymbolView, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import SelectLayerInput from './SelectLayerInput.vue';
 import {
     create_var_by_type,

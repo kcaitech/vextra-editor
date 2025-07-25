@@ -1,4 +1,4 @@
-[kcdesign-editor - v1.0.88](../README.md) / [Exports](../modules.md) / IContext
+[kcdesign-editor - v1.0.0](../README.md) / [Exports](../modules.md) / IContext
 
 # Interface: IContext
 
@@ -10,13 +10,18 @@
 
 ## Table of contents
 
+### Properties
+
+- [env](IContext.md#env)
+- [inactive](IContext.md#inactive)
+
 ### Accessors
 
 - [curAction](IContext.md#curaction)
 - [data](IContext.md#data)
-- [documentInfo](IContext.md#documentinfo)
 - [escstack](IContext.md#escstack)
 - [pluginsMgr](IContext.md#pluginsmgr)
+- [repo](IContext.md#repo)
 - [selection](IContext.md#selection)
 - [storage](IContext.md#storage)
 - [toolbox](IContext.md#toolbox)
@@ -24,16 +29,26 @@
 
 ### Methods
 
-- [hasPendingSyncCmd](IContext.md#haspendingsynccmd)
-- [lastRemoteCmdVersion](IContext.md#lastremotecmdversion)
 - [nextTick](IContext.md#nexttick)
 - [registKeyHandler](IContext.md#registkeyhandler)
 - [rename](IContext.md#rename)
 - [setCurAction](IContext.md#setcuraction)
 - [setCustomLoading](IContext.md#setcustomloading)
-- [setDocumentInfo](IContext.md#setdocumentinfo)
 - [setNet](IContext.md#setnet)
 - [setReadonly](IContext.md#setreadonly)
+- [updateThumbnail](IContext.md#updatethumbnail)
+
+## Properties
+
+### env
+
+• **env**: [`ContextEnvironment`](../enums/ContextEnvironment.md)
+
+___
+
+### inactive
+
+• **inactive**: `boolean`
 
 ## Accessors
 
@@ -57,20 +72,6 @@ ___
 
 ___
 
-### documentInfo
-
-• `get` **documentInfo**(): `Object`
-
-#### Returns
-
-`Object`
-
-| Name | Type |
-| :------ | :------ |
-| `name` | `string` |
-
-___
-
 ### escstack
 
 • `get` **escstack**(): [`IEscStack`](IEscStack.md)
@@ -88,6 +89,16 @@ ___
 #### Returns
 
 [`IPluginsMgr`](IPluginsMgr.md)
+
+___
+
+### repo
+
+• `get` **repo**(): `IRepository`
+
+#### Returns
+
+`IRepository`
 
 ___
 
@@ -130,26 +141,6 @@ ___
 [`IWorkspace`](IWorkspace.md)
 
 ## Methods
-
-### hasPendingSyncCmd
-
-▸ **hasPendingSyncCmd**(): `boolean`
-
-#### Returns
-
-`boolean`
-
-___
-
-### lastRemoteCmdVersion
-
-▸ **lastRemoteCmdVersion**(): `undefined` \| `string`
-
-#### Returns
-
-`undefined` \| `string`
-
-___
 
 ### nextTick
 
@@ -233,23 +224,6 @@ ___
 
 ___
 
-### setDocumentInfo
-
-▸ **setDocumentInfo**(`info`): `void`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `info` | `Object` |
-| `info.name` | `string` |
-
-#### Returns
-
-`void`
-
-___
-
 ### setNet
 
 ▸ **setNet**(`net`): `void`
@@ -275,6 +249,16 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `readonly` | `boolean` |
+
+#### Returns
+
+`void`
+
+___
+
+### updateThumbnail
+
+▸ **updateThumbnail**(): `void`
 
 #### Returns
 

@@ -11,7 +11,7 @@
 import { Context } from "@/context";
 import { PageXY2, PointGroup1, PT4P1, PT4P2 } from "@/context/assist";
 import { PageXY } from "@/context/selection";
-import { Matrix, PathShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, PathShapeView, Shape, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { debounce } from "lodash";
 import { is_straight } from "@/utils/attri_setting";
 

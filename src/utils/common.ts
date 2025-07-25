@@ -21,7 +21,7 @@ import {
     ShapeView,
     adapt2Shape,
     ContactLineView
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { hidden_selection, selectShapes } from './content';

@@ -15,7 +15,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
 import { ArrowDown } from '@element-plus/icons-vue';
-import { Color, Fill, FillType } from '@kcdesign/data';
+import { Color, Fill, FillType } from '@kcaitech/vextra-core';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import LableTootip from './LableTootip.vue';
 import { useI18n } from 'vue-i18n'

@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import { ColorCtx } from "@/context/color";
-import { PathShapeView, ShapeView, TableCellType, TableView } from "@kcdesign/data";
+import { PathShapeView, ShapeView, TableCellType, TableView } from "@kcaitech/vextra-core";
 import { ReferLineHandler } from "@/components/Document/Rule/refer";
 import { PathClipper } from "@/path/clipper";
 

@@ -23,7 +23,7 @@ import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
-import { ColVector3D, ShapeSize, ShapeView, Transform, IO, utils } from "@kcdesign/data";
+import { ColVector3D, ShapeSize, ShapeView, Transform, IO, utils } from "@kcaitech/vextra-core";
 import { ScaleUniformer } from "@/transform/scaleUniform";
 
 const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();

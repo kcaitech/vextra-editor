@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GraphicsLibrary, GroupShapeView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, GroupShapeView } from "@kcaitech/vextra-core";
 import { NodeType, optiRender, optiSetDirty, OptiType } from "./optinode";
 
 export class GroupShapeDom extends (GroupShapeView) {

@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
-import { StyleMangerMember, StyleSheet } from "@kcdesign/data";
+import { StyleMangerMember, StyleSheet } from "@kcaitech/vextra-core";
 import { mask_map } from "./map";
 
 const props = defineProps<{

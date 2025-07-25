@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { WatchableObject, ShapeType, TableView, TableCellView } from "@kcdesign/data";
+import { WatchableObject, ShapeType, TableView, TableCellView } from "@kcaitech/vextra-core";
 import { Context } from ".";
 
 export class TableSelection extends WatchableObject {

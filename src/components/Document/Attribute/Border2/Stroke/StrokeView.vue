@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { getSideThickness, StrokeFillContextMgr } from '../ctx';
 import BorderDetail from './BorderDetail.vue';
-import { BorderPosition, LinearApi, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
+import { BorderPosition, LinearApi, PathShapeView, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import thickness_icon from '@/assets/icons/svg/thickness.svg';
 import SvgIcon from '@/components/common/SvgIcon.vue';

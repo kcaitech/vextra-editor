@@ -17,7 +17,7 @@ import ComponentState from './ComponentState.vue';
 import LayerShow from './LayerShow.vue';
 import TextContent from './TextContent.vue';
 import ComponentInstance from './ComponentInstance.vue';
-import { ShapeView, ShapeType, SymbolView, SymbolRefView } from '@kcdesign/data';
+import { ShapeView, ShapeType, SymbolView, SymbolRefView } from '@kcaitech/vextra-core';
 import { is_state_selection } from "@/utils/symbol";
 
 interface Props {

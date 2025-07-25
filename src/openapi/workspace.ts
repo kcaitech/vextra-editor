@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { IWatchable, Matrix } from "@kcdesign/data";
+import { IWatchable, Matrix } from "@kcaitech/vextra-core";
 
 export namespace WorkspaceEvents {
     export const transform_change = 'transform_change'

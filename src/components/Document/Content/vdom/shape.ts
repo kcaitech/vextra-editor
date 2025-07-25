@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GraphicsLibrary, ShapeView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, ShapeView } from "@kcaitech/vextra-core";
 import { elpatch } from "./patch";
 
 export class ShapeDom extends (ShapeView) {

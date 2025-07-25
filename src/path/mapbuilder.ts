@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Matrix, PathShapeView } from "@kcdesign/data";
+import { Matrix, PathShapeView } from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
 

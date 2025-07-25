@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, stringh, ShapeView, Matrix } from "@kcdesign/data";
+import { EL, stringh, ShapeView, Matrix } from "@kcaitech/vextra-core";
 import { batchSetAttribute, createElement, elpatch } from "./patch";
 
 

@@ -29,7 +29,7 @@ import {
     SymbolRefView,
     SymbolShape, SymbolView,
     TableView,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { WorkSpace } from '@/context/workspace';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
@@ -37,12 +37,12 @@ import { adjust_content_xy } from "./clipboard";
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
 import { is_circular_ref2, is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
-import { IO } from "@kcdesign/data";
+import { IO } from "@kcaitech/vextra-core";
 import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/imageLoader";
-import { UploadAssets } from "@kcdesign/data";
+import { UploadAssets } from "@kcaitech/vextra-core";
 import { isTarget } from "@/utils/scout";
 
 export interface Media {

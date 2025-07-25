@@ -11,7 +11,7 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch } from "vue";
 import { Context } from "@/context";
-import { ArtboardView, ShapeType, ShapeView, SymbolRefView } from '@kcdesign/data';
+import { ArtboardView, ShapeType, ShapeView, SymbolRefView } from '@kcaitech/vextra-core';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";

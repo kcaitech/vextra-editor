@@ -17,7 +17,7 @@ import {
     TableCellView,
     TableView,
     Transform
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';

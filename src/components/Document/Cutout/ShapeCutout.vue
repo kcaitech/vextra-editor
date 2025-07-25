@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { Matrix, PageView, CutoutShapeView, CutoutShape, ShapeView, ShapeType } from '@kcdesign/data';
+import { Matrix, PageView, CutoutShapeView, CutoutShape, ShapeView, ShapeType } from '@kcaitech/vextra-core';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import renderCutout from './renderCutout.vue';

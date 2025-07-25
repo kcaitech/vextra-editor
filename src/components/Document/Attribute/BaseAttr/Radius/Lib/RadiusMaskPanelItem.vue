@@ -9,7 +9,7 @@
  */
 
 <script lang="ts" setup>
-import { RadiusMask } from "@kcdesign/data";
+import { RadiusMask } from "@kcaitech/vextra-core";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import ModifyRadiusStyle from "./ModifyRadiusMaskPanel.vue";
 import { Context } from "@/context";

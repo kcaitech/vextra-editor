@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ShapeView } from "@kcdesign/data";
+import { ShapeView } from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 import { hidden_selection } from "@/utils/content";
 import { ElementManager } from "@/components/common/elementmanager";

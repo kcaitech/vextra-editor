@@ -14,7 +14,7 @@ import { Selection } from '@/context/selection';
 import { Context } from '@/context';
 import ToolButton from './ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
-import { BoolOp, BoolShapeView, ShapeType, ShapeView } from '@kcdesign/data';
+import { BoolOp, BoolShapeView, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n'
 import { message } from '@/utils/message';
 import SvgIcon from '@/components/common/SvgIcon.vue';

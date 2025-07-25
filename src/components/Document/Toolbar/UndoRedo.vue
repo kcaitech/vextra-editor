@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { TransactDataGuard } from "@kcdesign/data";
+import { TransactDataGuard } from "@kcaitech/vextra-core";
 import { ref } from "@vue/reactivity";
 import { onBeforeUpdate, onMounted, onUnmounted } from "vue"
 // import Icon from "@/components/common/Icon.vue";

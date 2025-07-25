@@ -14,7 +14,7 @@
  */
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { ArtboardView, PolygonShapeView, ShapeView, PathShapeView, SymbolRefView, Path } from '@kcdesign/data';
+import { ArtboardView, PolygonShapeView, ShapeView, PathShapeView, SymbolRefView, Path } from '@kcaitech/vextra-core';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";

@@ -1,4 +1,4 @@
-import { ExportFormatNameingScheme } from "@kcdesign/data"
+import { ExportFormatNameingScheme } from "@kcaitech/vextra-core"
 
 export const cutoutExport: any = {
     cutoutNotBool: '切图图层不支持布尔操作',

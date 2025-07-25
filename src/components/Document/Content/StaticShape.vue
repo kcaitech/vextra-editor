@@ -25,7 +25,7 @@ import {
     BorderStyle,
     CornerType,
     SideType
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { onBeforeMount, onMounted, onUnmounted, ref } from "vue";
 import { PageDom } from "@/components/Document/Content/vdom/page";

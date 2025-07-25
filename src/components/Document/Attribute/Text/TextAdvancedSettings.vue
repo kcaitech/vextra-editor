@@ -24,7 +24,7 @@ import { ref, onMounted, onUnmounted, watch, watchEffect, computed, reactive } f
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType, TextShapeView, adapt2Shape, UnderlineType, StrikethroughType, TextAttr, TextMask } from "@kcdesign/data";
+import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType, TextShapeView, adapt2Shape, UnderlineType, StrikethroughType, TextAttr, TextMask } from "@kcaitech/vextra-core";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { format_value } from "@/utils/common";

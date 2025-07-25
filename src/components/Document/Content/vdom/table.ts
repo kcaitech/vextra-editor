@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GraphicsLibrary, TableView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, TableView } from "@kcaitech/vextra-core";
 import { elpatch } from "./patch";
 
 export class TableDom extends (TableView) {

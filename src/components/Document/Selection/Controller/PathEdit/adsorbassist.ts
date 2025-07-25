@@ -10,7 +10,7 @@
 
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
-import { Matrix } from "@kcdesign/data";
+import { Matrix } from "@kcaitech/vextra-core";
 import { roundBy } from "@/path/common";
 
 export const AdsorbConfigLocalKey = 'AdsorbAssist';

@@ -20,7 +20,7 @@
 
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { ArtboardView, Shape, ShapeType, ShapeView, SymbolView } from '@kcdesign/data';
+import { ArtboardView, Shape, ShapeType, ShapeView, SymbolView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, watch } from 'vue';
 import {
     align_left,

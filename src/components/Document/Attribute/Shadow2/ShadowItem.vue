@@ -17,7 +17,7 @@ import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
 import ShadowDetail from "./ShadowDetail.vue";
 import { ShadowCatch, ShadowsContextMgr } from "./ctx";
-import { ShadowPosition } from "@kcdesign/data";
+import { ShadowPosition } from "@kcaitech/vextra-core";
 import SelectBanana from "@/components/common/Select/SelectBanana.vue";
 import { onMounted, watch } from "vue";
 import { last } from "lodash";

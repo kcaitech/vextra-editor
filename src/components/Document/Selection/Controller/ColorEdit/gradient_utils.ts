@@ -22,8 +22,8 @@ import {
     AttrGetter,
     Fill,
     FillMask
-} from "@kcdesign/data";
-import { basicio } from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
+import { basicio } from "@kcaitech/vextra-core";
 import { v4 } from "uuid";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 

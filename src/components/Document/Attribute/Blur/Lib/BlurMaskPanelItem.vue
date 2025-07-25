@@ -13,7 +13,7 @@ import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import PanelItem from "@/components/Document/Attribute/StyleLib/PanelItem.vue";
-import { BlurMask, BlurType } from "@kcdesign/data";
+import { BlurMask, BlurType } from "@kcaitech/vextra-core";
 import { BlurContextMgr } from "@/components/Document/Attribute/Blur/ctx";
 import ModifyBlurMaskPanel from "@/components/Document/Attribute/Blur/Lib/ModifyBlurMaskPanel.vue";
 

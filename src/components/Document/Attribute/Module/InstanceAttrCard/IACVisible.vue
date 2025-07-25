@@ -13,7 +13,7 @@ import { RefAttriListItem } from "@/utils/symbol";
 
 import { Context } from "@/context";
 import { onMounted, onUpdated, ref, watch } from "vue";
-import { OverrideType, ShapeView, GroupShapeView, VariableType } from "@kcdesign/data";
+import { OverrideType, ShapeView, GroupShapeView, VariableType } from "@kcaitech/vextra-core";
 
 interface Props {
     context: Context

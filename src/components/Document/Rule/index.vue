@@ -13,7 +13,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { ArtboardView, GuideAxis, PageView, ShapeView } from '@kcdesign/data';
+import { ArtboardView, GuideAxis, PageView, ShapeView } from '@kcaitech/vextra-core';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";

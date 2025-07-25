@@ -22,8 +22,8 @@ import {
     BorderMask,
     BorderMaskType,
     RadiusMask,
-} from "@kcdesign/data";
-import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
+} from "@kcaitech/vextra-core";
+import { StyleSheet } from "@kcaitech/vextra-core/dist/types/data/typesdefine";
 
 export interface Mask {
     id: string;

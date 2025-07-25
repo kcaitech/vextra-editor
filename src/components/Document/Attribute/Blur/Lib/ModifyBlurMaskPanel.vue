@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from "@/context";
-import { BlurMask } from "@kcdesign/data";
+import { BlurMask } from "@kcaitech/vextra-core";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import PanelHeader from "@/components/Document/Attribute/StyleLib/PanelHeader.vue";

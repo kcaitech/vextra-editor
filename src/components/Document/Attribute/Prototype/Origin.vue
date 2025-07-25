@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { ShapeView, PrototypeStartingPoint, PageView, SymbolRefView } from "@kcdesign/data"
+import { ShapeView, PrototypeStartingPoint, PageView, SymbolRefView } from "@kcaitech/vextra-core"
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import add_icon from '@/assets/icons/svg/add.svg';

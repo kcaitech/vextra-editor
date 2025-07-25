@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import { ColVector3D, Matrix, Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit } from "@kcdesign/data";
+import { ColVector3D, Matrix, Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit } from "@kcaitech/vextra-core";
 import { AnchorType } from "@/components/Document/Attribute/Scale/index";
 
 type Box = {

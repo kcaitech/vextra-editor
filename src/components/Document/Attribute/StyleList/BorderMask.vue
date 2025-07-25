@@ -16,7 +16,7 @@ import { ref } from "vue";
 import { Context } from "@/context";
 import StrokeMaskPanelItem from "@/components/Document/Attribute/Border2/Lib/StrokeMaskPanelItem.vue"
 import { BorderFillsContext, StrokeFillContextMgr } from "../Border2/ctx";
-import { BorderMask } from "@kcdesign/data";
+import { BorderMask } from "@kcaitech/vextra-core";
 
 const { t } = useI18n();
 const props = defineProps<{

@@ -13,7 +13,7 @@ import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, TableCell, TableShape, TableView } from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, TableCell, TableShape, TableView } from "@kcaitech/vextra-core";
 import { Selection } from '@/context/selection';
 
 interface Props {

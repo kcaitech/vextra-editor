@@ -18,7 +18,7 @@ import { ref, watch } from "vue";
 import { Context } from "@/context";
 import { onMounted, onUpdated } from "vue";
 import { useI18n } from "vue-i18n";
-import { OverrideType, SymbolShape } from "@kcdesign/data";
+import { OverrideType, SymbolShape } from "@kcaitech/vextra-core";
 import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
 import { genOptions } from "@/utils/common";
 

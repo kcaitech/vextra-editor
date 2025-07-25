@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Matrix, PolygonShapeView } from '@kcdesign/data';
+import { Matrix, PolygonShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { ArcFreeModifier, ArcKey } from "@/components/Document/Selection/Controller/Points/arc";

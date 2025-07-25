@@ -14,8 +14,8 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { SymbolView, TextShapeView } from '@kcdesign/data';
-import { VariableType } from '@kcdesign/data';
+import { SymbolView, TextShapeView } from '@kcaitech/vextra-core';
+import { VariableType } from '@kcaitech/vextra-core';
 import {
     AttriListItem,
     create_var_by_type,

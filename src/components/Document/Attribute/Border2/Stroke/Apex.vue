@@ -12,7 +12,7 @@
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderApexStyleItem from './BorderApexStyleItem.vue';
 import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue';
-import { MarkerType, PathShapeView } from '@kcdesign/data';
+import { MarkerType, PathShapeView } from '@kcaitech/vextra-core';
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { genOptions } from '@/utils/common';
 import { Context } from '@/context';

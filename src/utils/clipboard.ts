@@ -28,7 +28,7 @@ import {
     Transform,
     IO,
     basicio
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
 import { hidden_selection, Media, SVGReader } from '@/utils/content';
@@ -41,7 +41,7 @@ import { WorkSpace } from "@/context/workspace";
 import { BorderData } from "@/utils/shape_style";
 import { flattenShapes } from "@/utils/cutout";
 import { getText } from "@/utils/attri_setting";
-import { UploadAssets } from "@kcdesign/data";
+import { UploadAssets } from "@kcaitech/vextra-core";
 import { StyleManager } from "@/transform/style";
 import { ImageLoader } from "@/imageLoader";
 import { BasicError } from '@/basic/error';

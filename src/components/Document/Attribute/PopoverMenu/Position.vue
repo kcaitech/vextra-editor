@@ -14,9 +14,9 @@ import { ref, onMounted, reactive, computed, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { ShapeView } from '@kcdesign/data';
+import { ShapeView } from '@kcaitech/vextra-core';
 import { genOptions } from '@/utils/common';
-import { ResizingConstraints } from '@kcdesign/data';
+import { ResizingConstraints } from '@kcaitech/vextra-core';
 
 type Side = 'top' | 'right' | 'bottom' | 'left' | 'width' | 'height' | 'center';
 interface Controller {

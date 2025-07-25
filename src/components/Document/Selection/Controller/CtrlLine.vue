@@ -18,7 +18,7 @@ import PointContainerForStraightLine from "./Points/PointsContainerForStraightLi
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
-import { Matrix, Path, ShapeView } from "@kcdesign/data";
+import { Matrix, Path, ShapeView } from "@kcaitech/vextra-core";
 
 interface Props {
     context: Context

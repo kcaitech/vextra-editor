@@ -12,7 +12,7 @@
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import ColorType from "@/components/common/ColorPicker/ColorType.vue";
-import { FillType } from "@kcdesign/data";
+import { FillType } from "@kcaitech/vextra-core";
 import { GradientCatch } from "@/components/common/ColorPicker/Editor/gradientlineareditor";
 import { PatternCatch } from "@/components/common/ColorPicker/Editor/patternlineareditor";
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";

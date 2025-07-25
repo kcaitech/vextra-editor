@@ -13,10 +13,10 @@ import {
     ColVector3D, GroupShapeView, ImagePack,
     Shape, ShapeView, SVGParseResult,
     Transform, UploadAssets,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
-import { IO } from "@kcdesign/data";
+import { IO } from "@kcaitech/vextra-core";
 import { upload_image } from "@/utils/content";
 import { XY } from "@/context/selection";
 

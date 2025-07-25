@@ -22,7 +22,7 @@ import {
     ShapeFrame,
     ShapeType,
     ShapeView
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
 import { Assist } from "@/context/assist";

@@ -16,7 +16,7 @@ import {
     ShapeView,
     Transform,
     utils
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame } from '@/utils/common';

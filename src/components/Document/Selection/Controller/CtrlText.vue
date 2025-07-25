@@ -11,7 +11,7 @@
 <script setup lang='ts'>
 import { computed, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY, Selection, SelectionTheme } from '@/context/selection';
-import { Matrix, TextShapeView } from '@kcdesign/data';
+import { Matrix, TextShapeView } from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";

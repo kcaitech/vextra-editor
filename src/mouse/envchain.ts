@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ShapeView, ShapeType, GroupShapeView } from "@kcdesign/data";
+import { ShapeView, ShapeType, GroupShapeView } from "@kcaitech/vextra-core";
 import { debounce } from "lodash";
 
 export type EnvChain = {

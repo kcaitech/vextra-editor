@@ -16,7 +16,7 @@ import { ref } from "vue";
 import { Context } from "@/context";
 import { TextContext, TextContextMgr } from "../Text/ctx";
 import TextMaskPanelItem from "@/components/Document/Attribute/Text/lib/TextMaskPanelItem.vue";
-import { TextMask } from "@kcdesign/data";
+import { TextMask } from "@kcaitech/vextra-core";
 
 const { t } = useI18n();
 const props = defineProps<{

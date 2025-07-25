@@ -27,7 +27,7 @@ import {
     PathShapeView,
     Transform,
     SymbolView
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { is_straight } from "@/utils/attri_setting";
 
 function getFrameAnchor(view: ShapeView) {

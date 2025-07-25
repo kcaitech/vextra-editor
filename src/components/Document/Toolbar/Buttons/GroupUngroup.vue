@@ -17,7 +17,7 @@ import {
     GroupShape,
     GroupShapeView,
     ShapeType,
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';

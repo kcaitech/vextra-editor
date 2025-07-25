@@ -16,7 +16,7 @@ import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/Document/Menu/ContextMenu.vue'
 import { Component } from '@/context/component';
-import { Shape } from '@kcdesign/data';
+import { Shape } from '@kcaitech/vextra-core';
 import { shape_track } from '@/utils/content';
 import { SymbolListItem } from '@/utils/symbol';
 import { KeyboardMgr } from '@/keyboard';

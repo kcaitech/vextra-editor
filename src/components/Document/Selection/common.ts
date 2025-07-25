@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ColVector3D } from "@kcdesign/data";
+import { ColVector3D } from "@kcaitech/vextra-core";
 
 export function genRectPath(points: { x: number, y: number }[]): string {
     let path = ""

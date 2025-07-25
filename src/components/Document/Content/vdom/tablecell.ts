@@ -8,8 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GraphicsLibrary, TableCellView } from "@kcdesign/data";
-import { DViewCtx, PropsType, ShapeFrame } from "@kcdesign/data";
+import { EL, GraphicsLibrary, TableCellView } from "@kcaitech/vextra-core";
+import { DViewCtx, PropsType, ShapeFrame } from "@kcaitech/vextra-core";
 import { IMAGE_DEFAULT } from "./common";
 import { elpatch } from "./patch";
 

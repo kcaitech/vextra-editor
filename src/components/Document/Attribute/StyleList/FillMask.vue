@@ -15,7 +15,7 @@ import { ref } from "vue";
 import { Context } from "@/context";
 import FillMaskPanelItem from '@/components/Document/Attribute/Fill2/Lib/FillMaskPanelItem.vue';
 import { FillsContext, FillsContextMgr } from "../Fill2/ctx";
-import { FillMask } from "@kcdesign/data";
+import { FillMask } from "@kcaitech/vextra-core";
 import down_icon from '@/assets/icons/svg/down.svg';
 
 const { t } = useI18n();

@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import { TransformHandler } from "./handler";
-import { PointModifyHandler, ShapeView } from "@kcdesign/data";
+import { PointModifyHandler, ShapeView } from "@kcaitech/vextra-core";
 
 export enum PointActionType {
     Count = 'count',

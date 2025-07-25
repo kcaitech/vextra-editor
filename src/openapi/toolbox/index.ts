@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { IEventEmitter } from "@kcdesign/data";
+import { IEventEmitter } from "@kcaitech/vextra-core";
 import { IScout } from "./scout";
 
 export * from "./scout"

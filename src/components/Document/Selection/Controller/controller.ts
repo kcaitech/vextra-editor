@@ -16,7 +16,7 @@ import {
     PathShapeView,
     PathType,
     ShapeView,
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { ClientXY, PageXY, Selection } from "@/context/selection";

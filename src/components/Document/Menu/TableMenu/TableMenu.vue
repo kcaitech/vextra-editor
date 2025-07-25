@@ -12,7 +12,7 @@
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { XY, Selection } from '@/context/selection';
-import { TableView } from "@kcdesign/data";
+import { TableView } from "@kcaitech/vextra-core";
 import { Context } from '@/context';
 import { TableSelection } from '@/context/tableselection';
 import { MenuItemType } from "@/components/Document/Menu/index";

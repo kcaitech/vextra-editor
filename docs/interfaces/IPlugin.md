@@ -1,4 +1,4 @@
-[kcdesign-editor - v1.0.88](../README.md) / [Exports](../modules.md) / IPlugin
+[kcdesign-editor - v1.0.0](../README.md) / [Exports](../modules.md) / IPlugin
 
 # Interface: IPlugin
 

@@ -16,7 +16,7 @@ import { ref } from "vue";
 import { Context } from "@/context";
 import RadiusMaskPanelItem from '@/components/Document/Attribute/BaseAttr/Radius/Lib/RadiusMaskPanelItem.vue';
 import { RadiusContextMgr, RadiusContext } from "../BaseAttr/Radius/ctx";
-import { RadiusMask } from "@kcdesign/data";
+import { RadiusMask } from "@kcaitech/vextra-core";
 
 const { t } = useI18n();
 const props = defineProps<{

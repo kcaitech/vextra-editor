@@ -33,7 +33,7 @@ export default defineConfig({
         },
         sourcemap: !PRODUCTION,
         rollupOptions: {
-            external: ['vue', 'element-plus', 'jszip', 'lodash', 'moment', 'uuid', 'vue-i18n', '@kcdesign/data'],
+            external: ['vue', 'element-plus', 'jszip', 'lodash', 'moment', 'uuid', 'vue-i18n', '@kcaitech/vextra-core'],
             output: {
                 dir: 'dist'
             },

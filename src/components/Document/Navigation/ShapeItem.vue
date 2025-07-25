@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { Shape, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import { Context } from "@/context";
 import { get_name } from "@/utils/shapelist";
 import { Tool } from "@/context/tool";

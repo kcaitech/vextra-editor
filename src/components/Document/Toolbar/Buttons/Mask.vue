@@ -15,7 +15,7 @@ import { Context } from '@/context';
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { Selection } from "@/context/selection";
 import { useMask } from "@/components/Document/Creator/execute";
-import { ShapeType } from "@kcdesign/data";
+import { ShapeType } from "@kcaitech/vextra-core";
 
 const { t } = useI18n()
 const props = defineProps<{

@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import ComponentWonderCard from '@/components/Document/Navigation/Component/ComponentWonderCard.vue'
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { GroupShape, GroupShapeView, Shape, ShapeView, SymbolShape, adapt2Shape } from '@kcdesign/data';
+import { GroupShape, GroupShapeView, Shape, ShapeView, SymbolShape, adapt2Shape } from '@kcaitech/vextra-core';
 import { Component } from '@/context/component';
 import { is_content, ref_symbol } from '@/utils/content';
 interface Props {

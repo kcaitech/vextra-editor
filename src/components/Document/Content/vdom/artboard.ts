@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ArtboardView, EL, GraphicsLibrary } from "@kcdesign/data";
+import { ArtboardView, EL, GraphicsLibrary } from "@kcaitech/vextra-core";
 import { NodeType, optiRender, optiSetDirty } from "./optinode";
 
 // const MAX_NODE_SUPPORT = 50; // 小于这个的不转成image了

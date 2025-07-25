@@ -15,7 +15,7 @@ import {
     PathShapeView,
     PathType,
     WatchableObject
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Context } from ".";
 import { Segment } from "@/utils/pathedit";
 import { Action } from "./tool";

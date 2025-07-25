@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { ShapeView } from "@kcdesign/data";
+import { ShapeView } from "@kcaitech/vextra-core";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import BlurStyle from '@/components/Document/Attribute/Blur/Lib/BlurStyle.vue';

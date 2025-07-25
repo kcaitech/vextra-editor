@@ -20,7 +20,7 @@ import {
     BasicArray,
     FillType,
     Creator
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { isTarget2 } from './common';
 import { Context } from '@/context';
 import { Action } from '@/context/tool';

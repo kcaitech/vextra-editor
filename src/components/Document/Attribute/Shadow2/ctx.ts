@@ -16,9 +16,9 @@ import {
     ShadowPosition,
     ShadowsModifier,
     ShapeView, SymbolRefView, StyleMangerMember
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Context } from "@/context";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";

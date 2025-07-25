@@ -11,7 +11,7 @@
 <script setup lang='ts'>
 import { onMounted, onUnmounted, watchEffect, ref, reactive, computed } from "vue";
 import { Context } from "@/context";
-import { ContactLineView, Matrix } from '@kcdesign/data';
+import { ContactLineView, Matrix } from '@kcaitech/vextra-core';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { Selection, SelectionTheme } from "@/context/selection";

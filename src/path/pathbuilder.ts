@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { PathShapeView } from "@kcdesign/data";
+import { PathShapeView } from "@kcaitech/vextra-core";
 
 /**
  * @description todo 路径编辑的控件绘制

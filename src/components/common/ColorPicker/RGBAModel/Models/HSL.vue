@@ -12,7 +12,7 @@
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 import {  HSL2RGB, RGB2HSL, verifiedVal } from "@/components/common/ColorPicker/utils";
 import { onUnmounted, ref, watchEffect } from "vue";
-import { Color } from "@kcdesign/data";
+import { Color } from "@kcaitech/vextra-core";
 
 const props = defineProps<{ stop: RGBACatch }>();
 const emits = defineEmits<{

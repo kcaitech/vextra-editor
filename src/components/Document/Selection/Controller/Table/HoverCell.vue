@@ -10,7 +10,7 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { TableCell, TableShape, TableCellType, Matrix, ShapeFrame, TableCellView, TableView } from '@kcdesign/data';
+import { TableCell, TableShape, TableCellType, Matrix, ShapeFrame, TableCellView, TableView } from '@kcaitech/vextra-core';
 import { reactive, ref, watchEffect } from 'vue';
 import { v4 as uuid } from "uuid"
 import { useImagePicker } from './loadimage';

@@ -34,7 +34,7 @@ import {
     TableCellType,
     TableCellView,
     TextShapeView
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Tool } from "@/context/tool";
 import { make_symbol } from "@/utils/symbol";
 import { Navi } from "@/context/navigate";

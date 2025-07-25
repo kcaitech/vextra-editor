@@ -13,7 +13,7 @@ import { Context } from "@/context";
 import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./PreviewShapeItem.vue";
-import { PageView, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { PageView, Shape, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n';
 import { debounce } from "lodash";
 import { Navi } from "@/context/navigate";

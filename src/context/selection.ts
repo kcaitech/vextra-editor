@@ -22,9 +22,9 @@ import {
     TableCellType,
     TidyUpAlign,
     Repo, FillType,
-} from "@kcdesign/data";
-import { Document } from "@kcdesign/data";
-import { Shape } from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
+import { Document } from "@kcaitech/vextra-core";
+import { Shape } from "@kcaitech/vextra-core";
 import {
     finder_layers,
     finder_contact,

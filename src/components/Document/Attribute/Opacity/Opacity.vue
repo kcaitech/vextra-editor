@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import { AsyncOpacityEditor, BlendMode, ContextSettings, LinearApi, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncOpacityEditor, BlendMode, ContextSettings, LinearApi, ShapeView, adapt2Shape } from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';

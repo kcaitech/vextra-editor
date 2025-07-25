@@ -16,7 +16,7 @@ import {
     PaddingDir,
     ShapeView,
     Transporter
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 
 export class AutoLayoutHandler extends TransformHandler {

@@ -14,7 +14,7 @@ import LableType from './LableType.vue'
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import { get_height, get_rotation, get_width, get_xy } from '@/utils/attri_setting';
-import { ShapeView } from '@kcdesign/data';
+import { ShapeView } from '@kcaitech/vextra-core';
 import { Menu } from '@/context/menu';
 import LableTootip from './LableTootip.vue';
 import { useI18n } from 'vue-i18n'

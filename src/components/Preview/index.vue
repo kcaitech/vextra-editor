@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
-import { PageView } from '@kcdesign/data';
+import { PageView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
 import { initDataModule } from '@/basic/initmodule';
 import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'

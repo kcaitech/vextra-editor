@@ -10,7 +10,7 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, TableCellType, TableLayout, TableView, TableCellView } from '@kcdesign/data';
+import { Matrix, TableCellType, TableLayout, TableView, TableCellView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";

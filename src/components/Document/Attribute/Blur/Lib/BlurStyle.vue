@@ -30,7 +30,7 @@
 import { Context } from '@/context';
 import { onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import CreateBlurStyle from './ModifyBlurMaskPanel.vue';
-import { StyleSheet } from "@kcdesign/data/dist/types/data/typesdefine";
+import { StyleSheet } from "@kcaitech/vextra-core/dist/types/data/typesdefine";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import SearchInput from "@/components/common/SearchInput.vue";

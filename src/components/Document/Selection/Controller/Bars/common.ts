@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { ResizingConstraints, ShapeView } from "@kcdesign/data";
+import { ResizingConstraints, ShapeView } from "@kcaitech/vextra-core";
 
 /**
  * @description 获取a点到b点的距离

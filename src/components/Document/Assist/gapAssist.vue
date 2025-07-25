@@ -14,7 +14,7 @@ import { Assist } from '@/context/assist';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
-import { ArtboardView, Matrix, PathShapeView, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboardView, Matrix, PathShapeView, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 interface Props {

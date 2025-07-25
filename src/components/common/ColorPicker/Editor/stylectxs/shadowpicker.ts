@@ -9,10 +9,10 @@
  */
 
 import { ColorPickerEditor } from "@/components/common/ColorPicker/Editor/coloreditor";
-import { BasicArray, Color, Shadow, ShadowAsyncApi, ShadowMask, ShapeView, SymbolRefView } from "@kcdesign/data";
+import { BasicArray, Color, Shadow, ShadowAsyncApi, ShadowMask, ShapeView, SymbolRefView } from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 
 export class ShadowColorPicker extends ColorPickerEditor {

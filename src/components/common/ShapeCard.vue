@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { adapt2Shape, DViewCtx, Shape, ShapeView } from "@kcdesign/data";
+import { adapt2Shape, DViewCtx, Shape, ShapeView } from "@kcaitech/vextra-core";
 import { markRaw, onMounted, onUnmounted, ref } from "vue";
 import { elpatch } from "@/components/Document/Content/vdom/patch";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";

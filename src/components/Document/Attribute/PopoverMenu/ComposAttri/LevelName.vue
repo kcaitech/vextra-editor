@@ -9,7 +9,7 @@
  */
 
 <script lang="ts" setup>
-import { ShapeView, ShapeType } from "@kcdesign/data";
+import { ShapeView, ShapeType } from "@kcaitech/vextra-core";
 import { onMounted, ref } from "vue";
 
 interface Props {

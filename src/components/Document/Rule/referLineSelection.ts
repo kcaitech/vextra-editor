@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ArtboardView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboardView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 import { formatNumber, ReferUnit } from "@/components/Document/Rule/refer";
 import { scout } from "@/utils/scout";

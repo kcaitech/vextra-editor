@@ -25,7 +25,7 @@ import {
     Variable,
     VariableType,
     adapt2Shape,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { compare_layer_3 } from "./group_ungroup";
 import { debounce } from "lodash";
 import { v4 } from "uuid";

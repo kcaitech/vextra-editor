@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { IO } from '@kcdesign/data'
+import { IO } from '@kcaitech/vextra-core'
 
 export * from './plugins'
 export * from "./context"

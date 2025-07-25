@@ -22,7 +22,7 @@ import {
     ShapeType,
     ShapeView,
     Transform
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { XYsBounding } from './common';

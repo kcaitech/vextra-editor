@@ -9,7 +9,7 @@
  */
 
 import { Bundle } from "@/clipboard";
-import { IO } from "@kcdesign/data";
+import { IO } from "@kcaitech/vextra-core";
 import { Reader } from "@/clipboard/read/reader";
 import { Context } from "@/context";
 import { message } from "@/utils/message";

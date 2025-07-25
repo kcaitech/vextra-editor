@@ -28,7 +28,7 @@ import {
     ShapeType,
     ShapeView,
     Transform
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import { v4 } from "uuid";
 import { collect } from "@/utils/artboardFn";

@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Text, VariableType } from '@kcdesign/data';
+import { Text, VariableType } from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n';
 import { onMounted, ref, watch } from 'vue';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';

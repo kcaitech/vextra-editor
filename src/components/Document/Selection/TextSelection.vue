@@ -10,7 +10,7 @@
 
 <script setup lang='ts'>
 import { onMounted, onUnmounted, ref, reactive, watch } from 'vue';
-import { Matrix, TextShape, Shape, ShapeView, TextShapeView } from '@kcdesign/data';
+import { Matrix, TextShape, Shape, ShapeView, TextShapeView } from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import SelectView from './Controller/Text/SelectBySearch.vue';

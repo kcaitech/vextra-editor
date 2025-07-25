@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { StackMode, StackSizing, StackWrap, StackAlign, StackSize, ShapeView, ArtboardView } from "@kcdesign/data";
+import { StackMode, StackSizing, StackWrap, StackAlign, StackSize, ShapeView, ArtboardView } from "@kcaitech/vextra-core";
 
 export type AutolayoutCtx = {
     stackSpacing: number | string;

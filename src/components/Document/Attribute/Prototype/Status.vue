@@ -33,7 +33,7 @@ import {
     RefAttriListItem,
     StatusValueItem
 } from "@/utils/symbol";
-import { ShapeView, SymbolRefView, SymbolView } from '@kcdesign/data';
+import { ShapeView, SymbolRefView, SymbolView } from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n';
 import { genOptions } from '@/utils/common';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';

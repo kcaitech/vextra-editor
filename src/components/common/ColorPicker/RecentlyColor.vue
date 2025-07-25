@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { Color, Gradient } from "@kcdesign/data";
+import { Color, Gradient } from "@kcaitech/vextra-core";
 import { useI18n } from "vue-i18n";
 import { color_recent_storage, parseColorFormStorage } from "@/components/common/ColorPicker/utils";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue"

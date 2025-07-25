@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted } from 'vue';
-import { PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
+import { PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,

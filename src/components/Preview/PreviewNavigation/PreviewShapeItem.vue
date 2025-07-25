@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { onUnmounted, ref } from "vue";
-import { ShapeView } from '@kcdesign/data';
+import { ShapeView } from '@kcaitech/vextra-core';
 import { Context } from "@/context";
 import { get_name } from "@/utils/shapelist";
 import { useI18n } from 'vue-i18n';

@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import LevelName from "@/components/Document/Attribute/PopoverMenu/ComposAttri/LevelName.vue";
-import {ShapeView} from "@kcdesign/data";
+import {ShapeView} from "@kcaitech/vextra-core";
 import {onMounted, onUnmounted, ref} from "vue";
 import ShapeCard from "@/components/common/ShapeCard.vue";
 

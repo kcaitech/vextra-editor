@@ -9,7 +9,7 @@
  */
 
 import { XY } from "@/context/selection";
-import { PageView, ShadowPosition, ShapeType, ShapeView } from "@kcdesign/data";
+import { PageView, ShadowPosition, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { isTarget2 } from '@/utils/common';
 export function getCutoutShape(shape: ShapeView, page: PageView, selectedShapes: Map<string, ShapeView>) {
     if (!shape.parent) return;

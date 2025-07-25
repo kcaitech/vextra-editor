@@ -10,7 +10,7 @@
 
 import { ImageRefShape } from "@/context/selection";
 import { DocSelectionData } from "@/context/user";
-import { IWatchable, PageView, Shape, ShapeView } from "@kcdesign/data";
+import { IWatchable, PageView, Shape, ShapeView } from "@kcaitech/vextra-core";
 
 export namespace SelectionEvents {
     export const text_change = 'text_change'

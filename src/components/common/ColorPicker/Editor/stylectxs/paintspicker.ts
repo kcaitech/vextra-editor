@@ -21,9 +21,9 @@ import {
     ShapeView, SymbolRefView, GradientType, Matrix, Point2D,
     FillType,
     BorderPaintsAsyncApi
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { v4 } from "uuid";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 
 export class PaintsPicker extends ColorPickerEditor {

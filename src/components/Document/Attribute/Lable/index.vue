@@ -18,7 +18,7 @@ import LableText from "./LableText.vue";
 import LableMultiSelect from "./LableMultiSelect.vue";
 import { onMounted, onUnmounted, ref } from "vue";
 import { Selection } from '@/context/selection';
-import { ShapeType, ShapeView } from "@kcdesign/data";
+import { ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { useI18n } from 'vue-i18n';
 import CutoutExport from "../CutoutExport/index.vue"
 import { debounce } from "lodash";

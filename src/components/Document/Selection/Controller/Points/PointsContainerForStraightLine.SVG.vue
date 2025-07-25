@@ -10,7 +10,7 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CtrlElementType, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { CtrlElementType, Matrix, PathShapeView, ShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame } from '@/utils/common';

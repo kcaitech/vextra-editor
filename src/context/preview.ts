@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Matrix, PageView, PrototypeActions, Shape, ShapeType, ShapeView, Transform, WatchableObject } from "@kcdesign/data";
+import { Matrix, PageView, PrototypeActions, Shape, ShapeType, ShapeView, Transform, WatchableObject } from "@kcaitech/vextra-core";
 import { Context } from ".";
 // import { router } from "@/router";
 import { getFrameList } from "@/utils/preview";

@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { ShapeView } from "@kcdesign/data";
+import { ShapeView } from "@kcaitech/vextra-core";
 
 
 export class SelectionCtx {

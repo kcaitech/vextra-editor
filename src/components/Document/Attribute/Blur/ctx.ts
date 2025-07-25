@@ -17,11 +17,11 @@ import {
     Point2D, BlurModifier,
     ShapeView,
     SymbolRefView, StyleMangerMember
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import { Context } from "@/context";
 import { v4 } from "uuid";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 
 export type BlurCatch = {

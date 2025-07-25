@@ -10,7 +10,7 @@
 
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, ShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { XY } from '@/context/selection';
 import { get_path_by_point } from './common';

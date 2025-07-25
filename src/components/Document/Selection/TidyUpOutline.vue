@@ -12,7 +12,7 @@
 import { onMounted, onUnmounted, ref, } from "vue";
 import { Context } from "@/context";
 import { Point } from "./SelectionView.vue";
-import { ColVector3D, Matrix } from "@kcdesign/data";
+import { ColVector3D, Matrix } from "@kcaitech/vextra-core";
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 

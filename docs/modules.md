@@ -1,14 +1,30 @@
-[kcdesign-editor - v1.0.88](README.md) / Exports
+[kcdesign-editor - v1.0.0](README.md) / Exports
 
-# kcdesign-editor - v1.0.88
+# kcdesign-editor - v1.0.0
 
 ## Table of contents
+
+### References
+
+- [MobileDocumentVue](modules.md#mobiledocumentvue)
+- [PreviewVue](modules.md#previewvue)
+- [StaticShape](modules.md#staticshape)
+- [View](modules.md#view)
 
 ### Namespaces
 
 - [ContextEvents](modules/ContextEvents.md)
 - [SelectionEvents](modules/SelectionEvents.md)
 - [WorkspaceEvents](modules/WorkspaceEvents.md)
+
+### Enumerations
+
+- [ContextEnvironment](enums/ContextEnvironment.md)
+
+### Classes
+
+- [DragKit](classes/DragKit.md)
+- [ShapeDescContext](classes/ShapeDescContext.md)
 
 ### Interfaces
 
@@ -26,64 +42,75 @@
 ### Type Aliases
 
 - [DocumentProps](modules.md#documentprops)
+- [DocumentRootInfo](modules.md#documentrootinfo)
 - [PluginLocate](modules.md#pluginlocate)
 
 ### Variables
 
 - [DocumentVue](modules.md#documentvue)
-- [MobileDocumentVue](modules.md#mobiledocumentvue)
-- [PreviewVue](modules.md#previewvue)
-- [StaticShape](modules.md#staticshape)
 - [i18n](modules.md#i18n)
+- [supportedFormats](modules.md#supportedformats)
 
 ### Functions
 
+- [exportDocument](modules.md#exportdocument)
+- [initModule](modules.md#initmodule)
 - [openDocument](modules.md#opendocument)
-- [useComment](modules.md#usecomment)
 
-## Type Aliases
-
-### DocumentProps
-
-Ƭ **DocumentProps**: \{ `fid`: `string` ; `path`: `string` ; `source`: ``"storage"`` ; `storage`: `IStorage` ; `versionId`: `string`  } \| \{ `file`: `File` ; `fmt`: ``"vext"`` \| ``"svg"`` \| ``"sketch"`` \| ``"fig"`` ; `source`: ``"file"``  } \| \{ `source`: ``"new"``  }
-
-___
-
-### PluginLocate
-
-Ƭ **PluginLocate**: ``"toolbar.home"`` \| ``"toolbar.home.menu"`` \| ``"toolbar.others"`` \| ``"toolbar.tools"`` \| ``"toolbar.tools.efficient"`` \| ``"navigation"`` \| ``"content"`` \| ``"attributes"`` \| ``"devmode.toolbar.tools"`` \| ``"preview.toolbar.home"`` \| ``"preview.toolbar.others"`` \| ``"content.menu"``
-
-## Variables
-
-### DocumentVue
-
-• `Const` **DocumentVue**: `DefineComponent`\<{}, {}, `any`\> = `_DocumentVue`
-
-___
+## References
 
 ### MobileDocumentVue
 
-• `Const` **MobileDocumentVue**: `DefineComponent`\<{}, {}, `any`\> = `_MobileDocumentVue`
-
-移动端文档编辑器组件
-
-**`Component`**
+Renames and re-exports [DocumentVue](modules.md#documentvue)
 
 ___
 
 ### PreviewVue
 
-• `Const` **PreviewVue**: `DefineComponent`\<{}, {}, `any`\> = `_PreviewVue`
-
-预览组件
-
-**`Component`**
+Renames and re-exports [DocumentVue](modules.md#documentvue)
 
 ___
 
 ### StaticShape
 
-• `Const` **StaticShape**: `DefineComponent`\<{}, {}, `any`\> = `_StaticShape`
+Renames and re-exports [DocumentVue](modules.md#documentvue)
+
+___
+
+### View
+
+Renames and re-exports [DocumentVue](modules.md#documentvue)
+
+## Type Aliases
+
+### DocumentProps
+
+Ƭ **DocumentProps**: \{ `fid`: `string` ; `path`: `string` ; `source`: ``"storage"`` ; `storage`: `IO.IStorage` ; `versionId`: `string`  } \| \{ `file`: `File` ; `fmt`: ``"vext"`` \| ``"sketch"`` \| ``"fig"`` \| ``"svg"`` ; `source`: ``"file"``  } \| \{ `source`: ``"new"``  }
+
+___
+
+### DocumentRootInfo
+
+Ƭ **DocumentRootInfo**: `Object`
+
+#### Type declaration
+
+| Name | Type |
+| :------ | :------ |
+| `id` | `string` |
+| `name` | `string` |
+
+___
+
+### PluginLocate
+
+Ƭ **PluginLocate**: ``"toolbar.home"`` \| ``"toolbar.home.menu"`` \| ``"toolbar.others"`` \| ``"toolbar.tools"`` \| ``"toolbar.tools.efficient"`` \| ``"navigation"`` \| ``"content"`` \| ``"attributes"`` \| ``"devmode.toolbar.tools"`` \| ``"preview.toolbar.home"`` \| ``"preview.toolbar.others"`` \| ``"content.menu.copy_link_to_selection"`` \| ``"content.menu"``
+
+## Variables
+
+### DocumentVue
+
+• `Const` **DocumentVue**: `DefineComponent`\<{}, {}, `any`\>
 
 ___
 
@@ -98,19 +125,59 @@ ___
 | `en` | `__module` |
 | `zh` | `__module` |
 
+___
+
+### supportedFormats
+
+• `Const` **supportedFormats**: `string`[]
+
 ## Functions
 
-### openDocument
+### exportDocument
 
-▸ **openDocument**(`props`): `Promise`\<`undefined` \| [`IContext`](interfaces/IContext.md)\>
-
-打开文档
+▸ **exportDocument**(`context`): `Promise`\<`Blob`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `props` | [`DocumentProps`](modules.md#documentprops) |
+| `context` | [`IContext`](interfaces/IContext.md) |
+
+#### Returns
+
+`Promise`\<`Blob`\>
+
+___
+
+### initModule
+
+▸ **initModule**(`measure?`, `text2path?`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `measure?` | (`text`: `string`, `font`: `string`) => `undefined` \| `TextMetrics` |
+| `text2path?` | (`font`: `string`, `fontSize`: `number`, `italic`: `boolean`, `weight`: `number`, `charCode`: `number`) => `string` |
+
+#### Returns
+
+`void`
+
+___
+
+### openDocument
+
+▸ **openDocument**(`props`, `repoCreator?`): `Promise`\<`undefined` \| [`IContext`](interfaces/IContext.md)\>
+
+打开文档
+
+#### Parameters
+
+| Name | Type | Default value |
+| :------ | :------ | :------ |
+| `props` | [`DocumentProps`](modules.md#documentprops) | `undefined` |
+| `repoCreator` | (`data`: `Document`, `guard`: `TransactDataGuard`) => `IRepository` | `createRepo` |
 
 #### Returns
 
@@ -119,19 +186,3 @@ ___
 **`See`**
 
 DocumentProps
-
-___
-
-### useComment
-
-▸ **useComment**(`context`): `void`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `context` | `Context` |
-
-#### Returns
-
-`void`

@@ -15,7 +15,7 @@ import ComponentContainer from './ComponentContainer.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import ComponentSearchPanel from './ComponentSearchPanel.vue';
-import { Page, SymbolShape } from '@kcdesign/data';
+import { Page, SymbolShape } from '@kcaitech/vextra-core';
 import { classification_level_page, get_search_symbol_list, search_symbol_by_keywords } from '@/utils/symbol';
 import { debounce } from 'lodash';
 import Border from "@/components/Document/Attribute/Border/Border.vue";

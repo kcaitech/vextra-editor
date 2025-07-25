@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
 import { Action, Tool } from '@/context/tool';
-import { ContactForm, CurvePoint, PathShapeView } from '@kcdesign/data';
+import { ContactForm, CurvePoint, PathShapeView } from '@kcaitech/vextra-core';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import ContactInit from '../Toolbar/ContactInit.vue';
 import { Cursor } from '@/context/cursor';

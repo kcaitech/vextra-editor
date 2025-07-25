@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Matrix, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, PathShapeView, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { XYsBounding } from "@/utils/common";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";

@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ShapeView, Variable, VariableType } from '@kcdesign/data';
+import { ShapeView, Variable, VariableType } from '@kcaitech/vextra-core';
 import { ArrowDown } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { onMounted, ref } from 'vue';

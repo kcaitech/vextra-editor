@@ -30,7 +30,7 @@ import {
     Fill,
     TextShapeView,
     FillMask,
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { ClientXY } from '@/context/selection';

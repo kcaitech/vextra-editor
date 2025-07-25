@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { ArtboardView, ColVector3D, Matrix } from '@kcdesign/data';
+import { ArtboardView, ColVector3D, Matrix } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 type Box = {

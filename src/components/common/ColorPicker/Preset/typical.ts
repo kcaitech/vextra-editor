@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Color } from "@kcdesign/data";
+import { Color } from "@kcaitech/vextra-core";
 
 const t1 = new Color(1, 255, 255, 255);
 const t2 = new Color(1, 245, 245, 245);

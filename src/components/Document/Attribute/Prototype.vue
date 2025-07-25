@@ -235,7 +235,7 @@ import right_arrows_icon from '@/assets/icons/svg/right-arrows.svg';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType, SymbolView, PageView } from "@kcdesign/data"
+import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType, SymbolView, PageView } from "@kcaitech/vextra-core"
 import { debounce, throttle } from 'lodash';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
@@ -261,13 +261,13 @@ import {
     ScrollDirection,
     ScrollBehavior,
     PrototypeEasingBezier
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { v4 } from 'uuid';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { get_var_for_ref, states_tag_values_sort } from '@/utils/symbol';
 import { flattenShapes } from '@/utils/cutout';
 import { hover } from '@/utils/listview';
-// import { PrototypeEasingBezier } from '@kcdesign/data/dist/types/data';
+// import { PrototypeEasingBezier } from '@kcaitech/vextra-core/dist/types/data';
 
 enum Animation {
     INSTANT = 'INSTANT_TRANSITION',

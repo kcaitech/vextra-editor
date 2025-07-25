@@ -9,7 +9,7 @@
  */
 
 import { measure } from "@/layout/text/measure";
-import { initModule as initData } from "@kcdesign/data";
+import { initModule as initData } from "@kcaitech/vextra-core";
 import { text2path } from "@kcaitech/text2path";
 
 let __inited: boolean = false;

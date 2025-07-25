@@ -26,7 +26,7 @@ import Navigation from './Navigation/index.vue';
 import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
-import { PageView } from '@kcdesign/data';
+import { PageView } from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
 import Bridge from "@/components/Document/Bridge.vue";

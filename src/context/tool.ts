@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { ShapeType, ShapeView, WatchableObject } from "@kcaitech/vextra-core";
 import { Context } from ".";
 import { ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
 import { XY } from "@/context/selection";

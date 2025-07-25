@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import BorderCustomInput from './BorderCustomInput.vue';
-import { LinearApi, ShapeView, SideType } from '@kcdesign/data';
+import { LinearApi, ShapeView, SideType } from '@kcaitech/vextra-core';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';

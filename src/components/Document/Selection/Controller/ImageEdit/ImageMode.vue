@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ImageScaleMode, ShapeType } from '@kcdesign/data';
+import { ImageScaleMode, ShapeType } from '@kcaitech/vextra-core';
 import { onMounted, ref } from 'vue';
 import { image_mode_map } from "./map";
 import { dbl_action } from '@/utils/mouse_interactive';

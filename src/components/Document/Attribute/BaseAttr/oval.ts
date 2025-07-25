@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { PathShapeView, ShapeView } from "@kcdesign/data";
+import { PathShapeView, ShapeView } from "@kcaitech/vextra-core";
 
 export interface OvalOptions {
     start: number | string;

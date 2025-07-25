@@ -13,7 +13,7 @@ import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
 import { useI18n } from 'vue-i18n';
-import { VariableType } from '@kcdesign/data';
+import { VariableType } from '@kcaitech/vextra-core';
 
 const { t } = useI18n();
 

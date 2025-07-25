@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { Color } from "@kcdesign/data";
+import { Color } from "@kcaitech/vextra-core";
 import { typical } from "@/components/common/ColorPicker/Preset/typical";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
 

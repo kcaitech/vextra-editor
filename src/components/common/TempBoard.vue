@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from "@/context";
-import { ShapeView } from "@kcdesign/data";
+import { ShapeView } from "@kcaitech/vextra-core";
 import { onMounted, onUnmounted, ref, reactive, toRaw, nextTick } from "vue";
 import { Menu } from "@/context/menu";
 import PageCard from "@/components/common/PageCard.vue";

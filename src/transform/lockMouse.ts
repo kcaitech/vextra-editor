@@ -10,7 +10,7 @@
 
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { LockMouseHandler, Shadow, ShapeView, SideType, TidyUpAlign, UniformScaleUnit } from "@kcdesign/data";
+import { LockMouseHandler, Shadow, ShapeView, SideType, TidyUpAlign, UniformScaleUnit } from "@kcaitech/vextra-core";
 
 export class LockMouse extends TransformHandler {
     private transType: 'scaling' | 'translating' | 'rotating' = 'translating';

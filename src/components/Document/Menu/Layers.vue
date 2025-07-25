@@ -9,7 +9,7 @@
  */
 
 <script setup lang='ts'>
-import { Shape, ShapeView } from "@kcdesign/data";
+import { Shape, ShapeView } from "@kcaitech/vextra-core";
 import { computed, ref } from 'vue';
 import { Context } from '@/context'
 import SvgIcon from "@/components/common/SvgIcon.vue";

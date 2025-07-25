@@ -12,7 +12,7 @@ import { SelectionCtx } from "@/components/common/ColorPicker/Editor/basic";
 import { Context } from "@/context";
 import { IColorPicker, IGradientModifier, IPatternModifier } from "@/components/common/ColorPicker/Editor/basic/icolorpicker";
 import { RGBACatch } from "@/components/common/ColorPicker/Editor/solidcolorlineareditor";
-import { AsyncApiCaller, Color, PageEditor } from "@kcdesign/data";
+import { AsyncApiCaller, Color, PageEditor } from "@kcaitech/vextra-core";
 import { hidden_selection } from "@/utils/content";
 import { updateRecently } from "@/components/common/ColorPicker/utils";
 

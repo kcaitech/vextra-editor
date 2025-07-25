@@ -12,7 +12,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
-import { Matrix } from "@kcdesign/data";
+import { Matrix } from "@kcaitech/vextra-core";
 import { User } from "@/context/user";
 
 interface Props {

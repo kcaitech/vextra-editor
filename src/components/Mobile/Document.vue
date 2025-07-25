@@ -15,7 +15,7 @@ import { Context } from "@/context";
 import {
     Matrix,
     PageView,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { useI18n } from "vue-i18n";
 import { insertNetworkInfo } from "@/utils/message";
 import { WorkSpace } from "@/context/workspace";

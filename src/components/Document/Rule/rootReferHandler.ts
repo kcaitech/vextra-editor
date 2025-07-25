@@ -10,7 +10,7 @@
 
 import { genPath, ReferUnit } from "@/components/Document/Rule/refer";
 import { Context } from "@/context";
-import { PageView, GuideAxis } from "@kcdesign/data";
+import { PageView, GuideAxis } from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 
 /**

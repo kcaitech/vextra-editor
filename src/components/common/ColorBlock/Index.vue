@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { AttrGetter, Border, Color, Fill, FillType, Gradient } from "@kcdesign/data";
+import { AttrGetter, Border, Color, Fill, FillType, Gradient } from "@kcaitech/vextra-core";
 import { onUnmounted, ref, watch } from "vue";
 import { DEFAULT_IMAGE } from "@/context/atrribute";
 

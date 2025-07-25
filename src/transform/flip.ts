@@ -13,7 +13,7 @@ import {
     ColVector3D,
     ShapeView,
     Transform,
-} from "@kcdesign/data"
+} from "@kcaitech/vextra-core"
 import { XYsBounding } from "@/utils/common";
 
 /**

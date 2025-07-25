@@ -1,4 +1,4 @@
-import { BlendMode, BorderPosition, StackSizing } from "@kcdesign/data"
+import { BlendMode, BorderPosition, StackSizing } from "@kcaitech/vextra-core"
 
 export const system = {
     incorrect_input: '输入有误！',

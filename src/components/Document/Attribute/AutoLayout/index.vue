@@ -24,7 +24,7 @@ import {
     StackSizing,
     StackWrap,
     SymbolRefView
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { computeString, getName } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import AutoLayoutInput from "./AutoLayoutInput.vue"

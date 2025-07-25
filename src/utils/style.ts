@@ -9,7 +9,7 @@
  */
 
 import { flattenShapes } from "@/utils/cutout";
-import { GroupShapeView, ShapeType, ShapeView } from "@kcdesign/data";
+import { GroupShapeView, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 
 export function getShapesForStyle(shapes: ShapeView[]) {
     const __shapes: ShapeView[] = [];

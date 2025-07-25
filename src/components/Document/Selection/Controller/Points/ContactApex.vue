@@ -20,7 +20,7 @@ import {
     ShapeType,
     ShapeView,
     ContactLineModifier, Shape
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";

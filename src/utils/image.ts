@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D, ArtboardView, GroupShapeView } from '@kcdesign/data';
+import { ExportFormatNameingScheme, ExportFormat, ShapeType, ShapeView, ColVector3D, ArtboardView, GroupShapeView } from '@kcaitech/vextra-core';
 import { getGroupChildBounds, getShadowMax, parentIsArtboard } from '@/utils/cutout';
 import JSZip from 'jszip';
 import { XYsBounding } from './common';

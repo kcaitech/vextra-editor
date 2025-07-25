@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-// import { IStorage } from "@kcdesign/data"
+// import { IStorage } from "@kcaitech/vextra-core"
 
 // export type StorageOptions = {
 //     endPoint: string

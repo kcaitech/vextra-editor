@@ -9,7 +9,7 @@
  */
 
 <script lang="ts" setup>
-import { Color } from "@kcdesign/data";
+import { Color } from "@kcaitech/vextra-core";
 import { onUnmounted, ref, watch } from "vue";
 
 const props = defineProps<{ params: { data: Color, disabledAlpha: boolean } }>();

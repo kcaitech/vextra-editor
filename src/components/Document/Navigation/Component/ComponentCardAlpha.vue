@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { h, nextTick, onMounted, onUnmounted, ref, shallowRef, toRaw } from 'vue';
-import { GroupShape, ShapeType, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
+import { GroupShape, ShapeType, SymbolShape, SymbolUnionShape } from "@kcaitech/vextra-core";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';

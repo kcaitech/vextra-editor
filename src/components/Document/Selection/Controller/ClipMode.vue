@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
-import { Matrix } from "@kcdesign/data";
+import { Matrix } from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import ClipSlice from "./Bars/ClipSlice.vue";
 import { Action } from "@/context/tool";

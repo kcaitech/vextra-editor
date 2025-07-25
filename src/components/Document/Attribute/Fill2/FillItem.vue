@@ -17,7 +17,7 @@ import { FillCatch, FillsContextMgr } from "@/components/Document/Attribute/Fill
 import { h, nextTick, onUnmounted, reactive, ref, watch, watchEffect } from "vue";
 import { selectAllOnFocus } from "@/components/Document/Attribute/basic";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
-import { Fill, FillType, GradientType } from "@kcdesign/data";
+import { Fill, FillType, GradientType } from "@kcaitech/vextra-core";
 import { useI18n } from "vue-i18n";
 import CheckBox from "@/components/common/CheckBox.vue";
 import { ElementManager, ElementStatus } from "@/components/common/elementmanager";

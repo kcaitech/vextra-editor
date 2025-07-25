@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL } from "@kcdesign/data";
+import { EL } from "@kcaitech/vextra-core";
 import _ from "lodash";
 
 const xmlns = "http://www.w3.org/2000/svg";

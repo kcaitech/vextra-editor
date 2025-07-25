@@ -17,7 +17,7 @@ import { nextTick, onMounted, onUnmounted, onUpdated, ref } from "vue";
 import { StatusValueItem, get_tag_value } from "@/utils/symbol";
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
-import { SymbolShape, SymbolView } from "@kcdesign/data";
+import { SymbolShape, SymbolView } from "@kcaitech/vextra-core";
 
 interface Props {
     context: Context

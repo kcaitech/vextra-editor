@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ViewType, ShapeType } from "@kcdesign/data";
+import { ViewType, ShapeType } from "@kcaitech/vextra-core";
 
 import { ArtboardDom } from "./artboard";
 import { ContactLineDom } from "./contactline";

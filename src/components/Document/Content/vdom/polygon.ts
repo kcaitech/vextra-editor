@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, GraphicsLibrary, PolygonShapeView } from "@kcdesign/data";
+import { EL, GraphicsLibrary, PolygonShapeView } from "@kcaitech/vextra-core";
 import { elpatch } from "./patch";
 
 export class PolygonShapeDom extends (PolygonShapeView) {

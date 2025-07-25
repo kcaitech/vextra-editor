@@ -15,7 +15,7 @@ import { checkTidyUpShapesOrder, getSelectedWidthHeight, getVisibleShapes, layou
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Point } from '../SelectionView.vue';
 import { Selection, XY } from '@/context/selection';
-import { ColVector3D, Matrix, ShapeView } from '@kcdesign/data';
+import { ColVector3D, Matrix, ShapeView } from '@kcaitech/vextra-core';
 import { WorkSpace } from '@/context/workspace';
 import { CursorType } from '@/utils/cursor';
 import { LockMouse } from '@/transform/lockMouse';

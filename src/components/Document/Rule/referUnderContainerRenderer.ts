@@ -9,7 +9,7 @@
  */
 
 import { genPath, ReferUnit } from "@/components/Document/Rule/refer";
-import { ArtboardView, GuideAxis, PageView, ShapeView } from "@kcdesign/data";
+import { ArtboardView, GuideAxis, PageView, ShapeView } from "@kcaitech/vextra-core";
 import { isShapeOut } from "@/utils/assist";
 import { Context } from "@/context";
 import { XY } from "@/context/selection";

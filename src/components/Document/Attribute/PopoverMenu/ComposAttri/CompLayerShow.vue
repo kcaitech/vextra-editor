@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { SymbolShape, SymbolView, Variable, VariableType } from '@kcdesign/data';
+import { SymbolShape, SymbolView, Variable, VariableType } from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n';
 import { is_valid_name } from "@/utils/symbol";
 

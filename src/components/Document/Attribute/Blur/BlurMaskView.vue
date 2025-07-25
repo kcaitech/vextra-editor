@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from "@/context";
-import { Blur, BlurType } from "@kcdesign/data";
+import { Blur, BlurType } from "@kcaitech/vextra-core";
 import { onUnmounted, ref, watchEffect } from "vue";
 import { MaskInfo } from "@/components/Document/Attribute/basic";
 import MaskPort from "@/components/Document/Attribute/StyleLib/MaskPort.vue";

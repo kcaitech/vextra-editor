@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { DViewCtx, ShapeView, GraphicsLibrary } from "@kcdesign/data";
+import { DViewCtx, ShapeView, GraphicsLibrary } from "@kcaitech/vextra-core";
 import { markRaw } from "vue";
 
 export class DomCtx extends DViewCtx {

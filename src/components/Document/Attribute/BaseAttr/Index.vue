@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ArtboardView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlign } from '@kcdesign/data';
+import { ArtboardView, ShapeType, ShapeView, TextBehaviour, TextShapeView, TidyUpAlign } from '@kcaitech/vextra-core';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -62,7 +62,7 @@ import {
     whetherNeedTidyUp
 } from '@/utils/tidy_up';
 import { WorkSpace } from '@/context/workspace';
-import { LinearApi } from "@kcdesign/data"
+import { LinearApi } from "@kcaitech/vextra-core"
 import { sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import ContentClip from "@/components/Document/Attribute/BaseAttr/ContentClip.vue";
 import x_icon from "@/assets/icons/svg/X.svg";

@@ -12,7 +12,7 @@
 import { Context } from "@/context";
 import PopoverHeader from "@/components/common/PopoverHeader.vue";
 import { useI18n } from "vue-i18n";
-import { Variable } from "@kcdesign/data";
+import { Variable } from "@kcaitech/vextra-core";
 import { AttriListItem } from "@/utils/symbol";
 
 const props = defineProps<{ context: Context, variable: Variable, item: AttriListItem }>();

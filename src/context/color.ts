@@ -9,7 +9,7 @@
  */
 
 import { GradientFrom } from "@/components/Document/Selection/Controller/ColorEdit/gradient_utils";
-import { WatchableObject, Gradient, GradientType, ImageScaleMode } from "@kcdesign/data";
+import { WatchableObject, Gradient, GradientType, ImageScaleMode } from "@kcaitech/vextra-core";
 
 export class ColorCtx extends WatchableObject {
     static CHANGE_STOP = 1;

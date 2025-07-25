@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Matrix, WatchableObject } from "@kcdesign/data";
+import { Matrix, WatchableObject } from "@kcaitech/vextra-core";
 import { Context } from "./index";
 import { Clipboard } from "@/utils/clipboard";
 import { PageXY, XY } from "./selection";

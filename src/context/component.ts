@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import {Shape, ShapeView, Variable, WatchableObject} from "@kcdesign/data";
+import {Shape, ShapeView, Variable, WatchableObject} from "@kcaitech/vextra-core";
 import {Context} from ".";
 
 export class Component extends WatchableObject {

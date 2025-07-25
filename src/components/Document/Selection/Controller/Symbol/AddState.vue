@@ -17,7 +17,7 @@ import {
     ShapeView,
     SymbolView, 
     Transform
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Point } from "@/components/Document/Selection/SelectionView.vue";

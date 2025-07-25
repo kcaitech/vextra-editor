@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { PathShapeView, CurvePoint } from "@kcdesign/data";
+import { PathShapeView, CurvePoint } from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 
 interface ClipResult {

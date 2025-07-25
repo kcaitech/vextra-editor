@@ -9,7 +9,7 @@
  */
 
 import { Selection } from "@/context/selection";
-import { ShapeType, ShapeView } from "@kcdesign/data";
+import { ShapeType, ShapeView } from "@kcaitech/vextra-core";
 
 export class SelectedShapesWatcher {
     private readonly watchedShapes: Map<string, ShapeView> = new Map();

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ContactLineView, EL, GraphicsLibrary } from "@kcdesign/data";
+import { ContactLineView, EL, GraphicsLibrary } from "@kcaitech/vextra-core";
 import { elpatch } from "./patch";
 
 export class ContactLineDom extends (ContactLineView) {

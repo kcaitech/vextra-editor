@@ -39,7 +39,7 @@ import filled_circle_icon from '@/assets/icons/svg/filled-circle.svg';
 import filled_square_icon from '@/assets/icons/svg/filled-square.svg';
 import round_icon from '@/assets/icons/svg/round.svg';
 import square_icon from '@/assets/icons/svg/square.svg';
-import { MarkerType } from '@kcdesign/data';
+import { MarkerType } from '@kcaitech/vextra-core';
 const iconMap:{[key: string]: string} = {
     [MarkerType.Line]: line_icon,
     [MarkerType.FilledArrow]: filled_arrow_icon,

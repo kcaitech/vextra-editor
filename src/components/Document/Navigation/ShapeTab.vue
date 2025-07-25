@@ -21,7 +21,7 @@ import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
-import { PageView } from "@kcdesign/data";
+import { PageView } from "@kcaitech/vextra-core";
 import { Navi } from "@/context/navigate";
 
 const props = defineProps<{ context: Context, page: PageView }>();

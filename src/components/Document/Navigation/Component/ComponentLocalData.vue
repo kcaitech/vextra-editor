@@ -23,7 +23,7 @@ import {
     init_status_set_by_symbol,
     clear_scroll_target
 } from '@/utils/symbol';
-import { Page } from "@kcdesign/data";
+import { Page } from "@kcaitech/vextra-core";
 import { Selection } from '@/context/selection';
 
 interface Props {

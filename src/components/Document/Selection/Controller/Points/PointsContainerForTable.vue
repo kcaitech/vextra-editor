@@ -15,7 +15,7 @@ import {
     CtrlElementType,
     ShapeView,
     Transform
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";

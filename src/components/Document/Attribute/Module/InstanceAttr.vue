@@ -14,7 +14,7 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref} from 'vue'
 import {get_shape_within_document, shape_track} from '@/utils/content';
-import {Shape, ShapeType, ShapeView, SymbolRefShape, SymbolRefView, adapt2Shape} from '@kcdesign/data';
+import {Shape, ShapeType, ShapeView, SymbolRefShape, SymbolRefView, adapt2Shape} from '@kcaitech/vextra-core';
 import {
     get_var_for_ref,
     is_able_to_unbind,

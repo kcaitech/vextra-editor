@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Shape, ShapeDirList2 as ShapeDirList, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { Shape, ShapeDirList2 as ShapeDirList, ShapeType, ShapeView, adapt2Shape } from "@kcaitech/vextra-core";
 import { fit } from "@/utils/shapelist";
 import { isInner } from "./content";
 import { WorkSpace } from "@/context/workspace";

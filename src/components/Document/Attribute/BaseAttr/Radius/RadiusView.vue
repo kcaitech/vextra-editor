@@ -19,7 +19,7 @@ import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { LockMouse } from '@/transform/lockMouse';
 import { onUnmounted, ref } from 'vue';
-import { LinearApi } from '@kcdesign/data';
+import { LinearApi } from '@kcaitech/vextra-core';
 import { sortValue } from '../oval';
 import { useI18n } from "vue-i18n";
 import { computeString } from "@/utils/content";

@@ -9,7 +9,7 @@
  */
 
 <script lang="ts" setup>
-import { Fill, FillMask } from "@kcdesign/data";
+import { Fill, FillMask } from "@kcaitech/vextra-core";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import ColorBlock from "@/components/common/ColorBlock/Index.vue"
 import ModifyFillStyle from "@/components/Document/Attribute/Fill2/Lib/ModifyFillMaskPanel.vue";

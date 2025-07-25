@@ -29,7 +29,7 @@ import SearchInput from "@/components/common/SearchInput.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import FillMaskPanelItem from './FillMaskPanelItem.vue';
 import FillMaskGridItem from '@/components/Document/Attribute/StyleLib/FillMaskGridItem.vue';
-import { FillMask, FillType, StyleSheet } from "@kcdesign/data"
+import { FillMask, FillType, StyleSheet } from "@kcaitech/vextra-core"
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { StrokeFillContextMgr } from '../ctx';
 import { useI18n } from "vue-i18n";

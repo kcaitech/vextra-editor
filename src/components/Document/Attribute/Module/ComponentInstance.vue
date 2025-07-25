@@ -26,10 +26,10 @@ import {
     Variable,
     adapt2Shape,
     ShapeType
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { MoreFilled } from '@element-plus/icons-vue';
-import { VariableType } from '@kcdesign/data';
+import { VariableType } from '@kcaitech/vextra-core';
 import {
     create_var_by_type,
     get_symbol_by_layer, get_x_type_option,

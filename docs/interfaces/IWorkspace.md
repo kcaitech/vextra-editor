@@ -1,4 +1,4 @@
-[kcdesign-editor - v1.0.88](../README.md) / [Exports](../modules.md) / IWorkspace
+[kcdesign-editor - v1.0.0](../README.md) / [Exports](../modules.md) / IWorkspace
 
 # Interface: IWorkspace
 
@@ -38,13 +38,13 @@ ___
 
 ### element
 
-• `get` **element**(): `undefined` \| `HTMLElement`
+• `get` **element**(): `HTMLElement`
 
 文档内容所在dom元素
 
 #### Returns
 
-`undefined` \| `HTMLElement`
+`HTMLElement`
 
 ___
 

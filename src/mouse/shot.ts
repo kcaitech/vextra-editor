@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { Matrix, ShapeView } from "@kcdesign/data";
+import { Matrix, ShapeView } from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 
 export class Shot {

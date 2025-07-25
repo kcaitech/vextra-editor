@@ -9,7 +9,7 @@
  */
 
 import {Context} from "@/context";
-import { ArtboardView, assign, GroupShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboardView, assign, GroupShapeView, Shape, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import {is_part_of_symbolref, is_state} from "@/utils/symbol";
 import { getName } from "@/utils/content";
 

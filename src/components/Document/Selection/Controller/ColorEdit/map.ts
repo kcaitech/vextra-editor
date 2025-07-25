@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { GradientType } from "@kcdesign/data";
+import { GradientType } from "@kcaitech/vextra-core";
 import Linear from "./Linear.vue";
 import Radial from "./Radial.vue";
 import Angular from "./Angular.vue";

@@ -36,7 +36,7 @@ import {
     ShapeView,
     Transform,
     utils,
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
 import { finderShape, getFrameList, getScrollShape, scrollAtrboard, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";

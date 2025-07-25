@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import {VariableType} from "@kcdesign/data";
+import {VariableType} from "@kcaitech/vextra-core";
 import Status from "./IACStatus.vue";
 import SymbolRef from "./IACSymbolRef.vue";
 import Text from "./IACText.vue";

@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { CutoutShape, CutoutShapeView, Matrix, ShapeType, adapt2Shape } from '@kcdesign/data';
+import { CutoutShape, CutoutShapeView, Matrix, ShapeType, adapt2Shape } from '@kcaitech/vextra-core';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../Selection/common';
 import { WorkSpace } from '@/context/workspace';

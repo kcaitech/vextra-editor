@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ArtboardView, ColVector3D, Matrix, StackSizing, PaddingDir } from '@kcdesign/data';
+import { ArtboardView, ColVector3D, Matrix, StackSizing, PaddingDir } from '@kcaitech/vextra-core';
 import { Selection, XY } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { fixedZero } from '@/utils/common';

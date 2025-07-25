@@ -17,7 +17,7 @@ import gear_icon from '@/assets/icons/svg/gear.svg';
 import ShadowInput from './ShadowInput.vue';
 import { format_value } from '@/utils/common';
 import ColorBlock from "@/components/common/ColorBlock/Index.vue";
-import { Color, Fill, FillType, LinearApi, Shadow, ShadowMask, ShapeType } from '@kcdesign/data';
+import { Color, Fill, FillType, LinearApi, Shadow, ShadowMask, ShapeType } from '@kcaitech/vextra-core';
 import { selectAllOnFocus } from '../basic';
 import { toHex } from '@/utils/color';
 import { ref, watchEffect, onUnmounted, reactive } from 'vue';

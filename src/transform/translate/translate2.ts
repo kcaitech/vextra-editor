@@ -13,7 +13,7 @@ import {
     ArtboardView, AutoLayout, BorderPosition, ColVector3D, Matrix, MigrateItem, PageView, ShapeFrame,
     ShapeType, ShapeView, StackMode, SymbolView, Transform, TranslateUnit, Transporter,
     PathShapeView, layoutShapesOrder2, getShapeFrame
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
 import { Tool } from "@/context/tool";

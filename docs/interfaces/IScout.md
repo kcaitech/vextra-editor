@@ -1,4 +1,4 @@
-[kcdesign-editor - v1.0.88](../README.md) / [Exports](../modules.md) / IScout
+[kcdesign-editor - v1.0.0](../README.md) / [Exports](../modules.md) / IScout
 
 # Interface: IScout
 

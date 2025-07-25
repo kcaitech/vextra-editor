@@ -8,8 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Shape, ResourceMgr } from "@kcdesign/data";
-import { IO } from "@kcdesign/data";
+import { Shape, ResourceMgr } from "@kcaitech/vextra-core";
+import { IO } from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 
 export class Reader {

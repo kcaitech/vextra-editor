@@ -9,7 +9,7 @@
  */
 
 <script lang="ts" setup>
-import { BorderMask } from "@kcdesign/data";
+import { BorderMask } from "@kcaitech/vextra-core";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import ModifyStrokeStyle from "./ModifyStrokeMaskPanel.vue";
 import { Context } from "@/context";

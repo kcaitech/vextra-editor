@@ -24,7 +24,7 @@ import {
     RefUnbind,
     StyleMangerMember,
     IO
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { v4 } from "uuid";
 

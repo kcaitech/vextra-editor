@@ -16,7 +16,7 @@ import { ref } from "vue";
 import { Context } from "@/context";
 import { BlurContext, BlurContextMgr } from "../Blur/ctx";
 import BlurMaskPanelItem from "@/components/Document/Attribute/Blur/Lib/BlurMaskPanelItem.vue";
-import { BlurMask } from "@kcdesign/data";
+import { BlurMask } from "@kcaitech/vextra-core";
 
 const { t } = useI18n();
 const props = defineProps<{

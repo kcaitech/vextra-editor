@@ -9,7 +9,7 @@
  */
 
 import { XY } from "@/context/selection";
-import { CurvePoint, PathShapeView, PathModifier, Transform } from "@kcdesign/data";
+import { CurvePoint, PathShapeView, PathModifier, Transform } from "@kcaitech/vextra-core";
 import { DragKit } from "@/components/common/draggable";
 import { Context } from "@/context";
 

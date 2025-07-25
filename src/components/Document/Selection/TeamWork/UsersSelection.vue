@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, reactive, nextTick } from 'vue'
 import { Context } from '@/context'
-import { Matrix, Shape, ShapeView, TextShape } from "@kcdesign/data";
+import { Matrix, Shape, ShapeView, TextShape } from "@kcaitech/vextra-core";
 import { XYsBounding } from "@/utils/common";
 import { genRectPath } from '../common'
 import { WorkSpace } from '@/context/workspace'

@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import { TransformHandler } from "@/transform/handler";
-import { ArtboardView, GuideAxis, Matrix, ReferHandleApiCaller, ShapeView } from "@kcdesign/data";
+import { ArtboardView, GuideAxis, Matrix, ReferHandleApiCaller, ShapeView } from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 import { isShapeOut } from "@/utils/assist";
 

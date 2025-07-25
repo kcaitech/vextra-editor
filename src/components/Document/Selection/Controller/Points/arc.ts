@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { AsyncApiCaller, PathShapeView, OvalModifier, Matrix, Transform } from "@kcdesign/data";
+import { AsyncApiCaller, PathShapeView, OvalModifier, Matrix, Transform } from "@kcaitech/vextra-core";
 import { Context } from '@/context';
 
 export interface Dot {

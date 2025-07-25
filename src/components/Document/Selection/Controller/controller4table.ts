@@ -8,16 +8,16 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ShapeType, TableGridItem, TableCellType, TableCell, TableView, ShapeView, TableCellView } from '@kcdesign/data';
+import { ShapeType, TableGridItem, TableCellType, TableCell, TableView, ShapeView, TableCellView } from '@kcaitech/vextra-core';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
+import { Matrix } from '@kcaitech/vextra-core';
 import { ClientXY } from "@/context/selection";
 import { Wheel } from "@/utils/wheel";
 import { get_range, keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection, TableArea } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
-import { AsyncTransfer } from "@kcdesign/data";
+import { AsyncTransfer } from "@kcaitech/vextra-core";
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
 import { TextSelectionLite as TextSelection } from '@/context/textselectionlite';

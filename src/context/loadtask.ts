@@ -9,7 +9,7 @@
  */
 
 import { Task, TaskMgr, TaskPriority } from "@/basic/taskmgr";
-import { Document } from "@kcdesign/data";
+import { Document } from "@kcaitech/vextra-core";
 
 export function startLoadTask(data: Document, taskMgr: TaskMgr) {
     const pagelist = data.pagesList.slice(0);

@@ -16,7 +16,7 @@ import CheckBox from "@/components/common/CheckBox.vue";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import SelectBanana from "@/components/common/Select/SelectBanana.vue";
 import BlurDetail from "@/components/Document/Attribute/Blur/BlurDetail.vue";
-import { BlurType } from "@kcdesign/data";
+import { BlurType } from "@kcaitech/vextra-core";
 import { useI18n } from "vue-i18n";
 
 const { context, blur, manager } = defineProps<{

@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { ColorCtx } from '@/context/color';
 import { fixedZero } from '@/utils/common';
-import { ImageScaleMode } from '@kcdesign/data';
+import { ImageScaleMode } from '@kcaitech/vextra-core';
 import { v4 } from 'uuid';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

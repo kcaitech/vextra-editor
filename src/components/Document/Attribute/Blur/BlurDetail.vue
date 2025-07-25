@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { nextTick, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { LinearApi, Blur, BlurMask } from '@kcdesign/data';
+import { LinearApi, Blur, BlurMask } from '@kcaitech/vextra-core';
 import { hidden_selection } from '@/utils/content';
 import { watchEffect } from 'vue';
 import { BlurHandler } from '@/transform/blur';

@@ -1,5 +1,5 @@
 
-import { ImageScaleMode } from "@kcdesign/data";
+import { ImageScaleMode } from "@kcaitech/vextra-core";
 
 export const pattern: any = {
     image: 'image'

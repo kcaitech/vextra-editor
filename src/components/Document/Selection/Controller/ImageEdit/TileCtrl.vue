@@ -16,11 +16,11 @@ import {
     ColVector3D,
     ShapeView, Fill, SymbolRefView,
     Transform
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import { DragKit } from "@/components/common/draggable";
 import { CursorType } from "@/utils/cursor";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 
 interface Props {

@@ -12,7 +12,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { BasicArray, Color, Fill, FillType, Shape, ShapeType, TableCell, TableCellView, TableShape, TableView, Text } from '@kcdesign/data';
+import { BasicArray, Color, Fill, FillType, Shape, ShapeType, TableCell, TableCellView, TableShape, TableView, Text } from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';

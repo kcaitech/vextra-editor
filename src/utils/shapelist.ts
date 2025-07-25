@@ -10,7 +10,7 @@
 
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
-import { Shape, ShapeType, ShapeView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import { Shape, ShapeType, ShapeView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcaitech/vextra-core";
 import { XYsBounding } from "./common";
 import { WorkSpace } from "@/context/workspace";
 import { is_part_of_symbol } from "./symbol";

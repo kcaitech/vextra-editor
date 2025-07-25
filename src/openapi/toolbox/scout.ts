@@ -11,7 +11,7 @@
 import {
     Matrix,
     ShapeView,
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 
 interface XY {
     x: number,

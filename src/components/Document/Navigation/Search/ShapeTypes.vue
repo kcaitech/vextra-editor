@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import { Context } from '@/context';
-import { ShapeType } from '@kcdesign/data';
+import { ShapeType } from '@kcaitech/vextra-core';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

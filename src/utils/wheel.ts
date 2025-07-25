@@ -11,7 +11,7 @@
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
-import { Matrix } from "@kcdesign/data";
+import { Matrix } from "@kcaitech/vextra-core";
 export enum EffectType {
     NEW_SHAPE = 'new shape',
     TRANS = 'trans'

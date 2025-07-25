@@ -15,7 +15,7 @@ import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { get_search_symbol_list, search_symbol_by_keywords } from '@/utils/symbol';
 import { debounce } from 'lodash';
-import { Page, SymbolShape } from '@kcdesign/data';
+import { Page, SymbolShape } from '@kcaitech/vextra-core';
 import ComponentSearchPanel from './ComponentSearchPanel.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";

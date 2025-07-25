@@ -13,7 +13,7 @@ import ColorPicker from "@/components/common/ColorPicker/Index2.vue";
 import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Context } from "@/context";
-import { Color, Page, PageView, FillType } from "@kcdesign/data";
+import { Color, Page, PageView, FillType } from "@kcaitech/vextra-core";
 import { Reg_HEX, toHex } from "@/utils/color";
 import { message } from "@/utils/message";
 import { debounce } from "@/utils/timing_util";

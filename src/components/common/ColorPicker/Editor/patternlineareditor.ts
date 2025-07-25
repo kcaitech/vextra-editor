@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Fill, ImageScaleMode } from "@kcdesign/data";
+import { Fill, ImageScaleMode } from "@kcaitech/vextra-core";
 import { DEFAULT_IMAGE } from "@/context/atrribute";
 
 export type PatternFilter = {

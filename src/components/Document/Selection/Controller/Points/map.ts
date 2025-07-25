@@ -12,7 +12,7 @@ import PointsContainerForPolygon from "./PointsContainerForPolygon.vue";
 import PointContainerForStar from "./PointContainerForStar.vue";
 import PointContainerForRect from "./PointContainerForRect.vue";
 import PointContainerForOval from "./PointContainerForOval.vue";
-import { ShapeType } from "@kcdesign/data";
+import { ShapeType } from "@kcaitech/vextra-core";
 
 export const point_map = new Map<ShapeType, any>([
     [ShapeType.Polygon, PointsContainerForPolygon],

@@ -23,12 +23,12 @@ import {
     PaintFilterType,
     ShapeView, SymbolRefView, GradientType, Matrix, Point2D,
     FillType
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { v4 } from "uuid";
 import { getNumberFromInputEvent } from "@/components/Document/Attribute/basic";
 import { ImageLoader } from "@/imageLoader";
 import { modify_imgs } from "@/utils/content";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 
 

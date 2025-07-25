@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, reactive, watch } from "vue";
 import { Context } from "@/context";
-import { PageView, ShapeView } from "@kcdesign/data";
+import { PageView, ShapeView } from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import { Selection } from "@/context/selection"
 import { TitleAttri, TitleRenderer } from "@/components/Document/Content/titleRenderer";

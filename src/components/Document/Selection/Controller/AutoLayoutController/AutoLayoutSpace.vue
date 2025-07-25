@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection, XY } from '@/context/selection';
-import { ArtboardView, BorderPosition, ColVector3D, Matrix, PaddingDir, ShapeView, StackMode, StackSizing, layoutShapesOrder2 } from '@kcdesign/data';
+import { ArtboardView, BorderPosition, ColVector3D, Matrix, PaddingDir, ShapeView, StackMode, StackSizing, layoutShapesOrder2 } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';

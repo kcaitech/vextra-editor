@@ -14,7 +14,7 @@ import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { ArtboardView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboardView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY, XY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';

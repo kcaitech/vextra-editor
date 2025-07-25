@@ -12,7 +12,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
 import { Close } from '@element-plus/icons-vue'
-import { TableView } from '@kcdesign/data';
+import { TableView } from '@kcaitech/vextra-core';
 import { useI18n } from 'vue-i18n';
 import { KeyboardMgr } from '@/keyboard';
 const { t } = useI18n();

@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { ShapeType, ShapeView } from "@kcdesign/data";
+import { ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { searchCommentShape } from "@/utils/comment";
 import { is_part_of_symbol } from "@/utils/symbol";
 

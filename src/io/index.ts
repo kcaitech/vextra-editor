@@ -9,7 +9,7 @@
  */
 
 import { Context } from "@/context";
-import { IO } from "@kcdesign/data";
+import { IO } from "@kcaitech/vextra-core";
 
 export function downloadByLink(content: Blob, name: string) {
     const link = document.createElement('a');

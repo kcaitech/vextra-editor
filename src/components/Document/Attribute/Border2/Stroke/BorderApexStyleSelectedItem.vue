@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
-import { MarkerType } from '@kcdesign/data';
+import { MarkerType } from '@kcaitech/vextra-core';
 import { computed, watch } from 'vue'
 const props = defineProps<{
     data: SelectItem | null

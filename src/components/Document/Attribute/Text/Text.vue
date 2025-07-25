@@ -39,7 +39,7 @@ import {
     TextVerAlign,
     TextHorAlign,
     Color
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';

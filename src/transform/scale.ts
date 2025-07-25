@@ -13,7 +13,7 @@ import { BoundHandler, FrameLike } from "./handler";
 import {
     ColVector3D, CtrlElementType, Scaler, ShapeSize, ShapeView, SymbolView, UniformScaleUnit,
     ArtboardView, GroupShapeView, SymbolRefView, Transform
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
 import { Attribute } from "@/context/atrribute";

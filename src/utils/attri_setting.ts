@@ -26,7 +26,7 @@ import {
     SymbolView,
     Text,
     TextShapeView
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
 import { XY } from "@/context/selection";

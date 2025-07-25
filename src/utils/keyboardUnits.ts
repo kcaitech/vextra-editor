@@ -37,7 +37,7 @@ import { message } from "./message";
 import { permIsEdit } from "./permission";
 import { Menu } from "@/context/menu";
 import { hexToX } from "@/components/common/ColorPicker/utils";
-import { ArtboardView, Color, ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
+import { ArtboardView, Color, ShapeType, ShapeView, SymbolView } from "@kcaitech/vextra-core";
 import { Attribute } from "@/context/atrribute";
 import {
     useArrow,

@@ -16,7 +16,7 @@ import { ref } from "vue";
 import { Context } from "@/context";
 import ShaodwMaskPanelItem from '@/components/Document/Attribute/Shadow2/Lib/ShadowMaskPanelItem.vue';
 import { ShadowsContext, ShadowsContextMgr } from "../Shadow2/ctx";
-import { ShadowMask } from "@kcdesign/data";
+import { ShadowMask } from "@kcaitech/vextra-core";
 
 const { t } = useI18n();
 const props = defineProps<{

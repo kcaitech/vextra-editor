@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
-import { ArtboardView, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboardView, Matrix, ShapeType, ShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 import layer_image_icon from '@/assets/icons/svg/layer-image.svg';

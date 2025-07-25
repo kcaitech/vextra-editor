@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Document, IWatchable, PageView, Repo } from "@kcdesign/data";
+import { Document, IWatchable, PageView, Repo } from "@kcaitech/vextra-core";
 import { INet } from "./net";
 import { IPluginsMgr } from "./plugins";
 import { ISelection } from "./selection";

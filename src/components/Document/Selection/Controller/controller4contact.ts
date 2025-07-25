@@ -19,7 +19,7 @@ import {
     shutdown_menu
 } from "@/utils/mouse";
 import { TranslateHandler } from "@/transform/translate/translate";
-import { ContactLineView } from "@kcdesign/data";
+import { ContactLineView } from "@kcaitech/vextra-core";
 import { DBL_CLICK } from "@/const";
 
 function useControllerCustom(context: Context, i18nT: Function) {

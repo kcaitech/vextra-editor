@@ -1,4 +1,4 @@
-import { ExportFormatNameingScheme } from "@kcdesign/data"
+import { ExportFormatNameingScheme } from "@kcaitech/vextra-core"
 
 export const cutoutExport: any = {
     cutoutNotBool: "The Cutout layer does not support Boolean operations",

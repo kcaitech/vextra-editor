@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { ref, nextTick, toRaw } from 'vue'
-import { ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
+import { ShapeType, ShapeView, SymbolView } from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';

@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { XY } from '@/context/selection';
 import { PointActionType, PointHandler } from '@/transform/point';
-import { CurvePoint, ShapeFrame, StarShapeView } from '@kcdesign/data';
+import { CurvePoint, ShapeFrame, StarShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint, getRadiusValue } from './common';
 import { bezierCurvePoint } from '@/utils/pathedit';

@@ -11,7 +11,7 @@
 <script lang="ts" setup>
 import {Context} from '@/context';
 import ComponentListView from './ComponentListView.vue';
-import {SymbolShape} from '@kcdesign/data';
+import {SymbolShape} from '@kcaitech/vextra-core';
 import {onMounted, ref} from 'vue';
 import {useI18n} from 'vue-i18n';
 

@@ -22,7 +22,7 @@ import {
     PrototypeTransitionType,
     sessionRefIdKey,
     ShapeView
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { delayAction, EventIndex, ProtoAction } from './actions';
 

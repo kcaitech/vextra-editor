@@ -12,7 +12,7 @@
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Segment, get_segments } from '@/utils/pathedit';
-import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, ShapeView } from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { get_path_by_point } from '../Points/common';
 import { PathClipper } from "@/path/clipper";

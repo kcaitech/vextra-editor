@@ -30,7 +30,7 @@ import {
     IO,
     ShapeView,
     SymbolRefView,
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -39,7 +39,7 @@ import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
 import { computed } from 'vue';
 import { SelectedShapesWatcher } from "@/components/common/selectionwatcher";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 
 type DotType = 'from' | 'to' | 'ellipse';

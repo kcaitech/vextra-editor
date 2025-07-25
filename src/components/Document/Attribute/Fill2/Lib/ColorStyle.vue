@@ -30,7 +30,7 @@ import SearchInput from "@/components/common/SearchInput.vue";
 import SheetPanel from "@/components/Document/Attribute/StyleLib/SheetPanel.vue";
 import FillMaskPanelItem from './FillMaskPanelItem.vue';
 import FillMaskGridItem from '@/components/Document/Attribute/StyleLib/FillMaskGridItem.vue';
-import { StyleSheet } from "@kcdesign/data"
+import { StyleSheet } from "@kcaitech/vextra-core"
 import { FillsContextMgr } from "@/components/Document/Attribute/Fill2/ctx";
 import { SheetCatch } from "@/components/Document/Attribute/stylectx";
 import { useI18n } from 'vue-i18n';

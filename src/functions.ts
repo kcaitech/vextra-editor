@@ -9,7 +9,7 @@
  */
 
 
-import { IO, Repo, TransactDataGuard, Document, Creator, DocEditor } from "@kcdesign/data";
+import { IO, Repo, TransactDataGuard, Document, Creator, DocEditor } from "@kcaitech/vextra-core";
 import { initDataModule } from "./basic/initmodule";
 import i18n from "@/i18n";
 import { DocumentProps } from "./openapi";

@@ -12,7 +12,7 @@
 import { ref, watchEffect } from 'vue';
 import ArgsSelect from './ArgsSelect.vue';
 import { Context } from '@/context';
-import { ExportFormatNameingScheme, ShapeView } from '@kcdesign/data';
+import { ExportFormatNameingScheme, ShapeView } from '@kcaitech/vextra-core';
 import { Menu } from '@/context/menu';
 import { FormatItems } from './index.vue';
 import { useI18n } from 'vue-i18n';

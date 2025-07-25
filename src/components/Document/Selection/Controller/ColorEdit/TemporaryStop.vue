@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { to_rgba } from './gradient_utils';
-import { Color } from '@kcdesign/data';
+import { Color } from '@kcaitech/vextra-core';
 
 interface Props {
     stop: { x: number, y: number, color: Color }

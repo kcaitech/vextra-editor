@@ -15,7 +15,7 @@ import {
     CurvePoint,
     Matrix,
     ContactLineModifier
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";

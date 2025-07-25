@@ -11,7 +11,7 @@
 import { Context } from "@/context";
 import { canBeTarget, isTarget, finder_group } from "./scout";
 import { PageXY } from "@/context/selection";
-import { GroupShape, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { GroupShape, Shape, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { IScout } from "@/openapi";
 export function searchCommentShape(context: Context, position: PageXY) {
     const scout = context.selection.scout;

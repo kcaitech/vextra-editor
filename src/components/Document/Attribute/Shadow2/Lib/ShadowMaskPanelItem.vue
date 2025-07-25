@@ -9,7 +9,7 @@
  */
 
 <script lang="ts" setup>
-import { Shadow, ShadowMask } from "@kcdesign/data";
+import { Shadow, ShadowMask } from "@kcaitech/vextra-core";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import ModifyShadowStyle from "@/components/Document/Attribute/Shadow2/Lib/ModifyShadowMaskPanel.vue";
 import { Context } from "@/context";

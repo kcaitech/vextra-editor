@@ -9,7 +9,7 @@
  */
 
 <script setup lang="ts">
-import { Matrix, Page, PageView } from '@kcdesign/data';
+import { Matrix, Page, PageView } from '@kcaitech/vextra-core';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';

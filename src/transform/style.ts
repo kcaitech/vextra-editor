@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ArtboardView, ShapeView, SymbolView } from "@kcdesign/data";
+import { ArtboardView, ShapeView, SymbolView } from "@kcaitech/vextra-core";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { Context } from "@/context";
 import { Selection } from "@/context/selection";

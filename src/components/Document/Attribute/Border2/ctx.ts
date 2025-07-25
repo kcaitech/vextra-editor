@@ -26,14 +26,14 @@ import {
     Border,
     MarkerType,
     StyleMangerMember
-} from "@kcdesign/data";
+} from "@kcaitech/vextra-core";
 import { Context } from "@/context";
 import { BorderData, get_actions_border_Apex, get_actions_border_endpoint, get_actions_border_exchange, getDideStr } from "@/utils/shape_style";
 import { getNumberFromInputEvent, getRGBFromInputEvent, MaskInfo } from "@/components/Document/Attribute/basic";
 import { v4 } from "uuid";
 import { StyleCtx } from "@/components/Document/Attribute/stylectx";
 import { FillCatch, stringifyFilter, stringifyGradient, stringifyPatternTransform } from "../Fill2/ctx";
-import { Opt } from "@kcdesign/data";
+import { Opt } from "@kcaitech/vextra-core";
 type Operator = Opt.Operator;
 
 function stringifyFills(sye: { shape: ShapeView, fills: Fill[] }) {

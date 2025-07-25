@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { WatchableObject } from "@kcdesign/data";
+import { WatchableObject } from "@kcaitech/vextra-core";
 // import { DocSelectionData } from "@/communication/modules/doc_selection_op"
 export class TeamWork extends WatchableObject {
     static CHANGE_USER_STATE = 1;

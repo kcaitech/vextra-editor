@@ -16,7 +16,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
-import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
+import { AsyncPathEditor, CurveMode, CurvePoint, PathShapeView, PathType, ShapeView } from "@kcaitech/vextra-core";
 import { Selection } from "@/context/selection";
 import CommonInput from "@/components/common/CommonInput.vue";
 import { format_value as format } from '@/utils/common';

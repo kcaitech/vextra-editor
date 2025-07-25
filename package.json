@@ -1,28 +1,41 @@
 {
-    "name": "@kcdesign/editor",
-    "description": "kcdesign editor",
-    "version": "1.1.5",
+    "name": "@kcaitech/vextra-editor",
+    "description": "kcaitech vextra editor module",
+    "version": "1.0.0",
     "private": false,
     "type": "module",
     "author": "kcaitech.com",
     "module": "./dist/index.es.js",
     "types": "./dist/types/index.d.ts",
+    "license": "AGPL-3.0",
+    "files": [
+        "dist"
+    ],
+    "keywords": [
+        "vextra",
+        "vextra-editor",
+        "figma",
+        "sketch"
+    ],
+    "productName": "vextra-editor",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kcaitech/vextra-editor.git"
+    },
     "publishConfig": {
-        "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
+        "registry": "https://registry.npmjs.org/",
+        "access": "public"
     },
     "scripts": {
         "dev": "cross-env NODE_ENV=development vite build --mode development --watch",
         "client": "cross-env IS_DEV_SERVER=1 vite dev --mode development --config vite.client.config.ts",
-        "build-proto": "vite build --config ./vite.proto.config.ts",
         "build": "node --max-old-space-size=8192 ./node_modules/vite/bin/vite.js build",
         "doc": "typedoc --options ./typedoc.json",
-        "test": "jest",
-        "test:watch": "jest --watch"
+        "test": "jest"
     },
     "dependencies": {
         "@kcaitech/text2path": "^1.0.0",
-        "@kcdesign/data": "file:../kcdesign-data",
-        "@msgpack/msgpack": "^3.0.0-beta2",
+        "@kcaitech/vextra-core": "^1.0.3",
         "element-plus": "2.3.0",
         "jszip": "^3.10.1",
         "lodash": "^4.17.21",
@@ -91,6 +104,5 @@
         "last 2 versions",
         "not dead",
         "not ie 11"
-    ],
-    "keywords": []
+    ]
 }

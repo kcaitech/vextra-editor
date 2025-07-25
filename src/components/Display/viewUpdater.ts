@@ -18,7 +18,7 @@ import {
     PrototypeTransitionType,
     ShapeView,
     ArtboardView
-} from '@kcdesign/data';
+} from '@kcaitech/vextra-core';
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { throttle } from "lodash";

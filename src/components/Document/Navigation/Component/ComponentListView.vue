@@ -13,7 +13,7 @@ import { Context } from '@/context';
 import ComponentCardAlpha from './ComponentCardAlpha.vue';
 import ComponentCardBeta from './ComponentCardBeta.vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, toRaw, watch } from 'vue';
-import { GroupShape, Shape, SymbolShape, SymbolUnionShape } from '@kcdesign/data';
+import { GroupShape, Shape, SymbolShape, SymbolUnionShape } from '@kcaitech/vextra-core';
 import { shape_track } from '@/utils/content';
 import { ClientXY } from '@/context/selection';
 import { is_dbl_action } from '@/utils/action';

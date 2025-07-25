@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import {Shape, ShapeView, WatchableObject} from "@kcdesign/data";
+import {Shape, ShapeView, WatchableObject} from "@kcaitech/vextra-core";
 
 interface TextSelection {
     shape: ShapeView

@@ -1,4 +1,4 @@
-[kcdesign-editor - v1.0.88](../README.md) / [Exports](../modules.md) / ISelection
+[kcdesign-editor - v1.0.0](../README.md) / [Exports](../modules.md) / ISelection
 
 # Interface: ISelection
 
@@ -19,6 +19,8 @@
 
 ### Methods
 
+- [getShapesUsingImage](ISelection.md#getshapesusingimage)
+- [getViews](ISelection.md#getviews)
 - [locateShape](ISelection.md#locateshape)
 - [selectPage](ISelection.md#selectpage)
 - [selectShape](ISelection.md#selectshape)
@@ -65,6 +67,39 @@ ___
 [`ITextSelection`](ITextSelection.md)
 
 ## Methods
+
+### getShapesUsingImage
+
+▸ **getShapesUsingImage**(`imageRef`): `ImageRefShape`[]
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `imageRef` | `string` |
+
+#### Returns
+
+`ImageRefShape`[]
+
+___
+
+### getViews
+
+▸ **getViews**(`offsetX`, `offsetY`): `ShapeView`[]
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `offsetX` | `number` |
+| `offsetY` | `number` |
+
+#### Returns
+
+`ShapeView`[]
+
+___
 
 ### locateShape
 

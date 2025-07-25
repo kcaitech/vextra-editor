@@ -21,7 +21,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
-import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, Shape, ShapeType, ShapeView } from "@kcaitech/vextra-core";
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection"
 import { XYsBounding } from "@/utils/common";

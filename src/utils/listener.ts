@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Shape } from "@kcdesign/data";
+import { Shape } from "@kcaitech/vextra-core";
 import { debounce } from "lodash";
 
 export class CommonShapesListener {

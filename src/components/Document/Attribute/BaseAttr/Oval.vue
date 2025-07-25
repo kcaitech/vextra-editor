@@ -13,7 +13,7 @@ import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Context } from "@/context";
 import { OvalData, OvalOptions, sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { hidden_selection } from "@/utils/content";
-import { LinearApi } from "@kcdesign/data"
+import { LinearApi } from "@kcaitech/vextra-core"
 import Tooltip from "@/components/common/Tooltip.vue";
 import { LockedPointer } from "@/components/Document/Attribute/LockedPointer/lockedpointer";
 import { LockMouse } from "@/transform/lockMouse";
