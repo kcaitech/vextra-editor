@@ -15,13 +15,13 @@ A visual editor for design file parsing and editing, supporting multiple design 
 ## Installation
 
 ```bash
-npm i @vextra/editor
+npm i @kcaitech/vextra-editor
 ```
 
 ## Quick Start
 
 ```ts
-import { openDocument } from '@vextra/editor';
+import { openDocument } from '@kcaitech/vextra-editor';
 
 const result = await openDocument({
   // Pass your document parameters
@@ -36,7 +36,7 @@ const result = await openDocument({
 #### Start the client interface
 
 ```bash
-npm install
+npm i
 npm run client
 
 # Open files in the samples directory
@@ -45,7 +45,7 @@ npm run client
 ### Library Development
 
 ```bash
-npm install
+npm i
 npm run dev
 ```
 
