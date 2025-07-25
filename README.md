@@ -1,13 +1,15 @@
-# vextra editor
+# Vextra Editor
+
+![Vextra Editor Example](example.png)
 
 ## Project Introduction
-A editor for design file parsing and editing, supporting multiple design file formats (such as Figma, Sketch, etc.). It can be used for secondary development, design preview, property editing, batch export, and other scenarios. It is suitable for design tool development, online collaboration, automated design file processing, and other requirements.
+A visual editor for design file parsing and editing, supporting multiple design file formats (such as Figma, Sketch, etc.). It can be used for secondary development, design preview, property editing, batch export, and other scenarios. Suitable for design tool development, online collaboration, automated design file processing, and other requirements.
 
 ## Key Features
 - Support for parsing and rendering multiple design file formats
 - Rich property panels and layer operations
 - Componentized, extensible frontend architecture
-- Support for advanced features like batch image cutting, export, auto layout, etc.
+- Support for advanced features like batch image cutting, export, auto-layout, etc.
 - Excellent local development and secondary development support
 
 ## Installation
@@ -31,28 +33,21 @@ const result = await openDocument({
 
 ## Local Development
 
-### Install Dependencies
-
-```bash
-npm install
-```
-
-### Start Development Environment
-
-#### Start Core Library
-
-```bash
-npm run dev
-```
-
-#### Start Client Interface
+#### Start the client interface
 
 ```bash
 cd client
 npm install
 npm run client
 
-# Open files in the samples directory for use
+# Open files in the samples directory
+```
+
+### Library Development
+
+```bash
+npm install
+npm run dev
 ```
 
 ## License

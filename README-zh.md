@@ -1,5 +1,7 @@
 # vextra editor
 
+![Vextra Editor Example](example.png)
+
 ## 项目简介
 一款面向设计稿解析与编辑的可视化编辑器，支持多种设计文件格式（如 Figma、Sketch 等），可用于二次开发、设计稿预览、属性编辑、批量导出等场景。适用于设计工具开发、在线协作、自动化设计稿处理等需求。
 
@@ -32,20 +34,6 @@ const result = await openDocument({
 
 ## 本地开发
 
-### 安装依赖
-
-```bash
-npm install
-```
-
-### 启动开发环境
-
-#### 启动核心库
-
-```bash
-npm run dev
-```
-
 #### 启动client界面
 
 ```bash
@@ -53,7 +41,14 @@ cd client
 npm install
 npm run client
 
-# 打开samples目录文件进行使用
+# 打开samples目录文件
+```
+
+### lib开发
+
+```bash
+npm install
+npm run dev
 ```
 
 ## License
