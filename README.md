@@ -1,7 +1,7 @@
 # vextra editor
 
 ## Project Introduction
-vextra editor is a visual editor for design file parsing and editing, supporting multiple design file formats (such as Figma, Sketch, etc.). It can be used for secondary development, design preview, property editing, batch export, and other scenarios. It is suitable for design tool development, online collaboration, automated design file processing, and other requirements.
+A editor for design file parsing and editing, supporting multiple design file formats (such as Figma, Sketch, etc.). It can be used for secondary development, design preview, property editing, batch export, and other scenarios. It is suitable for design tool development, online collaboration, automated design file processing, and other requirements.
 
 ## Key Features
 - Support for parsing and rendering multiple design file formats
@@ -55,6 +55,11 @@ npm run client
 # Open files in the samples directory for use
 ```
 
-## LICENSE
+## License
 
-AGPL-3.0
+This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE.txt) file for details.
+
+## Author
+
+[KCai Technology](https://kcaitech.com)
+[Vextra Official Website](https://vextra.cn)
