@@ -37,7 +37,6 @@ const result = await openDocument({
 #### 启动client界面
 
 ```bash
-cd client
 npm install
 npm run client
 
