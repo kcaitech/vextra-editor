@@ -1,7 +1,7 @@
 {
     "name": "@kcaitech/vextra-editor",
     "description": "kcaitech vextra editor module",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "private": false,
     "type": "module",
     "author": "kcaitech.com",
