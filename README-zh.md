@@ -57,5 +57,5 @@ This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE.
 
 ## Author
 
-[KCai Technology](https://kcaitech.com)
-[Vextra Official Website](https://vextra.cn)
+- [KCai Technology](https://kcaitech.com)
+- [Vextra Official Website](https://vextra.cn)
